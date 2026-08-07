@@ -1416,7 +1416,7 @@ function runPredict(){
             : '<span style="color:var(--ink-soft);">―</span>';
           return `<tr>
             <td><span class="num-badge" style="width:22px;height:22px;font-size:11px;background:${col.bg};color:${col.text};display:inline-flex;align-items:center;justify-content:center;border-radius:50%;">${b.course}</span></td>
-            <td>${b.player.name}</td>
+            <td><a href="#" class="predict-player-link" data-reg="${b.player.reg}" style="color:var(--wave); text-decoration:underline; cursor:pointer;" title="クリックで選手データを表示">${b.player.name}</a></td>
             <td class="num" style="font-weight:800; color:var(--wave);">${b.pct}%</td>
             <td class="num" style="font-weight:800; color:#e3b23c;">${b.pct3}%</td>
             <td class="num">${r0(b.base)}%<br><span style="font-size:10px;color:var(--ink-soft);">本人コース別×全国平均の縮小推定（n=${b.laneN}）</span></td>
@@ -1438,6 +1438,34 @@ function runPredict(){
       あくまで「事前の目安」として使い、当日情報が得られる場合はそちらを優先してください。</span>
     </div>
   `;
+
+  box.querySelectorAll('.predict-player-link').forEach(a=>{
+    a.addEventListener('click', (e)=>{
+      e.preventDefault();
+      goToPlayerDetail(a.dataset.reg);
+    });
+  });
+}
+
+// 出走表予想タブの選手名クリック → 選手データタブへ移動し、その選手の検索・詳細内訳を表示
+function goToPlayerDetail(reg){
+  document.querySelectorAll('.page-tab').forEach(b=>b.classList.toggle('active', b.dataset.page==='players'));
+  PAGE_IDS.forEach(id=>{
+    document.getElementById('page-'+id).style.display = (id==='players') ? '' : 'none';
+  });
+  if(!window.__playersRendered){ renderPlayers(); window.__playersRendered = true; }
+
+  const searchInput = document.getElementById('playerSearch');
+  playerSearchTerm = reg;
+  if(searchInput) searchInput.value = reg;
+  renderPlayers();
+
+  renderPlayerGrade(reg);
+  renderPlayerVenue(reg);
+  renderPlayerKimarite(reg);
+
+  const detailEl = document.getElementById('playerGradeDetail');
+  if(detailEl) detailEl.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 renderPlayers();
