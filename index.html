@@ -136,7 +136,20 @@
   @media (max-width:640px){
     .lanes{grid-template-columns:repeat(3,1fr);}
     .lane .win{font-size:18px;}
+    table{ font-size:13px; }
   }
+
+  /* ---- テーブルの横スクロール対応（スマホでの変な折り返し防止） ---- */
+  table{
+    display:block;
+    max-width:100%;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    white-space:nowrap;
+  }
+  th, td{ white-space:nowrap; }
+  .calc-note-body{ white-space:normal; max-width:200px; margin-left:auto; }
+  .entry-name-input, .entry-empty-hint{ white-space:normal; }
 
   .page-tabs{display:flex; gap:8px; margin-bottom:22px;}
   .page-tab{
@@ -179,6 +192,17 @@
   table.entry-table tbody tr:last-child td{border-bottom:none;}
   table.entry-table tbody tr:hover td{background:rgba(10,31,51,.02);}
   table.entry-table td.num{text-align:right; font-variant-numeric:tabular-nums;}
+  .calc-note{margin-top:3px; text-align:right;}
+  .calc-note summary{
+    font-size:11px; color:var(--wave); cursor:pointer; list-style:none; display:inline-block;
+    font-weight:600; user-select:none;
+  }
+  .calc-note summary::-webkit-details-marker{display:none;}
+  .calc-note summary::before{content:"詳細 ▸"; }
+  .calc-note[open] summary::before{content:"閉じる ▾";}
+  .calc-note .calc-note-body{
+    margin-top:4px; font-size:11.5px; color:var(--ink-soft); text-align:right; line-height:1.5;
+  }
   .entry-lane-badge{
     width:30px; height:30px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
     font-weight:800; font-size:15px; border:1px solid rgba(10,31,51,.12);
@@ -1758,6 +1782,9 @@ function runPredict(){
 
   box.innerHTML = `
     <div class="trend-note" style="margin-bottom:10px;">対象グレード: <strong>${GRADE_LABELS[grade]}</strong>／較正済みモデル（縮小推定＋Isotonic較正、2026年1-7月の実データ検証済み）。コース別基準値には「${venue}のコース別実測データ」を経験ベイズで反映しています（会場考慮ベース）。コース別成績は本人の全グレード合算実績を使用しています。</div>
+    <div style="display:flex; justify-content:flex-end; margin-bottom:6px;">
+      <button type="button" id="toggleAllCalcNotes" style="font-size:12px; font-weight:600; color:var(--wave); background:transparent; border:1px solid rgba(0,102,255,.35); border-radius:999px; padding:4px 12px; cursor:pointer;">算出根拠をすべて表示</button>
+    </div>
     <table>
       <thead><tr>
         <th>コース</th><th>選手</th><th class="num">予想勝率(較正後)</th><th class="num">予想3連対率(較正後)</th>
@@ -1775,8 +1802,8 @@ function runPredict(){
             <td><a href="#" class="predict-player-link" data-reg="${b.player.reg}" style="color:var(--wave); text-decoration:underline; cursor:pointer;" title="クリックで選手データを表示">${b.player.name}</a></td>
             <td class="num" style="font-weight:800; color:var(--wave);">${b.pct}%</td>
             <td class="num" style="font-weight:800; color:#e3b23c;">${b.pct3}%</td>
-            <td class="num">${r0(b.base)}%<br><span style="font-size:11.5px;color:var(--ink-soft);">本人コース別実績（n=${b.laneN}）× 会場考慮ベース／${b.venueBaseSource}</span></td>
-            <td class="num">×${b.localFactor.toFixed(2)}<br><span style="font-size:11.5px;color:var(--ink-soft);">${b.localSource}</span></td>
+            <td class="num">${r0(b.base)}%<details class="calc-note"><summary></summary><div class="calc-note-body">本人コース別実績（n=${b.laneN}）× 会場考慮ベース／${b.venueBaseSource}</div></details></td>
+            <td class="num">×${b.localFactor.toFixed(2)}<details class="calc-note"><summary></summary><div class="calc-note-body">${b.localSource}</div></details></td>
             <td class="num">${stText}</td>
             <td style="font-size:12.5px;">${warn}</td>
           </tr>`;
@@ -1794,6 +1821,17 @@ function runPredict(){
       あくまで「事前の目安」として使い、当日情報が得られる場合はそちらを優先してください。</span>
     </div>
   `;
+
+  const toggleAllBtn = document.getElementById('toggleAllCalcNotes');
+  if(toggleAllBtn){
+    toggleAllBtn.addEventListener('click', ()=>{
+      const notes = box.querySelectorAll('.calc-note');
+      const shouldOpen = toggleAllBtn.dataset.open !== 'true';
+      notes.forEach(n => n.open = shouldOpen);
+      toggleAllBtn.dataset.open = shouldOpen ? 'true' : 'false';
+      toggleAllBtn.textContent = shouldOpen ? '算出根拠をすべて隠す' : '算出根拠をすべて表示';
+    });
+  }
 
   box.querySelectorAll('.predict-player-link').forEach(a=>{
     a.addEventListener('click', (e)=>{
