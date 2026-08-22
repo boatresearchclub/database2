@@ -2898,6 +2898,9 @@ function initPredictPage(){
       if(window.__todayPicksRendered) renderTodayPicks();
     }, 30000);
   }
+
+  // GitHubへ自動配備された当日TXTがあれば、画面初期化後に差し替える。
+  setTimeout(()=>{ autoLoadHostedRaceCardToday(); }, 0);
 }
 
 // 締切時刻を日本時間（JST）として比較し、レース番号カードの締切済み表示に使う。
@@ -3394,6 +3397,73 @@ function collapseRaceCardFold(){
   if(!toggle || !body) return;
   body.style.display = 'none';
   toggle.textContent = '番組表の読み込み ▸';
+}
+
+
+// GitHub Pages上の当日公式TXTを自動読み込みする。
+// Windows側の BRC_AUTO_RACECARD.py が racecards/today.TXT を毎日更新する。
+async function autoLoadHostedRaceCardToday(){
+  const statusBox = document.getElementById('raceCardFileStatus');
+  try{
+    const jstToday = getJstDateLabel();
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(jstToday)) return false;
+
+    const yymmdd = jstToday.replace(/-/g, '').slice(2);
+    const sourceName = `B${yymmdd}.TXT`;
+    const url = `racecards/today.TXT?v=${encodeURIComponent(jstToday)}`;
+
+    if(statusBox){
+      statusBox.textContent = `本日の番組表を確認中: ${sourceName}`;
+      statusBox.style.color = '';
+    }
+
+    const res = await fetch(url, {cache:'no-store'});
+    if(!res.ok){
+      if(statusBox && !statusBox.textContent.includes('読込成功')){
+        statusBox.textContent = `本日の自動番組表はまだ未反映です（${sourceName}）`;
+        statusBox.style.color = '';
+      }
+      return false;
+    }
+
+    const buf = await res.arrayBuffer();
+    let txt;
+    try{
+      txt = new TextDecoder('shift_jis').decode(buf);
+    }catch(e){
+      txt = new TextDecoder('utf-8').decode(buf);
+    }
+
+    const data = parseOfficialRaceCardText(txt);
+    if(data.date && data.date !== jstToday){
+      throw new Error(`番組表日付が一致しません: ${data.date}`);
+    }
+
+    RACE_CARDS_TODAY = data.cards;
+    RACE_INFO_TODAY = normalizeRaceInfoDayLabels(data.info);
+    RACE_MOTOR_TODAY = data.motor || {};
+    TODAY_LABEL = data.date || jstToday;
+
+    const label = document.getElementById('raceCardDateLabel');
+    if(label) label.textContent = TODAY_LABEL;
+    saveRaceCardForToday(`auto:${sourceName}`);
+    populateDaySelect();
+    collapseRaceCardFold();
+    invalidateTodayPicks(true);
+
+    if(statusBox){
+      statusBox.textContent = `本日の公式番組表を自動読込: ${sourceName}（${Object.keys(RACE_INFO_TODAY).length}会場）`;
+      statusBox.style.color = '';
+    }
+    return true;
+  }catch(e){
+    console.warn('本日の番組表自動読込に失敗しました', e);
+    if(statusBox){
+      statusBox.textContent = `自動読込エラー: ${e.message}`;
+      statusBox.style.color = '#e5484d';
+    }
+    return false;
+  }
 }
 
 // 番組表ファイルの差し替え処理
