@@ -963,6 +963,33 @@
     #page-venue #venueGradeDetail{margin-top:20px !important;}
   }
 
+
+  /* ---- 風情報：スマホ表示を5列で収める ---- */
+  #windRefBox{ max-width:100%; overflow:hidden; }
+  #windRefBox .wind-table-wrap{ width:100%; overflow:hidden; }
+  #windRefBox table.wind-ref-table{ width:100%; table-layout:fixed; font-size:13px; }
+  #windRefBox table.wind-ref-table th,
+  #windRefBox table.wind-ref-table td{ padding:6px 4px; white-space:nowrap; text-align:center; }
+  #windRefBox table.wind-ref-table th:first-child,
+  #windRefBox table.wind-ref-table td:first-child{ width:15%; }
+  #windRefBox table.wind-ref-table th:nth-child(2){ width:20%; }
+  #windRefBox table.wind-ref-table th:nth-child(3){ width:22%; }
+  #windRefBox table.wind-ref-table th:nth-child(4){ width:23%; }
+  #windRefBox table.wind-ref-table th:nth-child(5){ width:20%; }
+  @media (max-width:640px){
+    #windRefBox{ padding:10px 6px !important; }
+    #windRefBox table.wind-ref-table{ font-size:12px !important; }
+    #windRefBox table.wind-ref-table th,
+    #windRefBox table.wind-ref-table td{ padding:5px 2px !important; letter-spacing:-.02em; }
+    #windRefBox .wind-title{ font-size:13px !important; line-height:1.5; }
+    #windRefBox .wind-note{ font-size:10.5px !important; }
+  }
+  @media (max-width:390px){
+    #windRefBox table.wind-ref-table{ font-size:11px !important; }
+    #windRefBox table.wind-ref-table th,
+    #windRefBox table.wind-ref-table td{ padding:4px 1px !important; }
+  }
+
 </style>
 </head>
 <body>
@@ -2899,7 +2926,8 @@ function initPredictPage(){
     }, 30000);
   }
 
-  // GitHubへ自動配備された当日TXTがあれば、画面初期化後に差し替える。
+  // BRC_AUTO_RACECARD_CALL_V1
+  // GitHubへ配備された当日TXTがあれば、画面初期化後に自動読込する。
   setTimeout(()=>{ autoLoadHostedRaceCardToday(); }, 0);
 }
 
@@ -3400,7 +3428,8 @@ function collapseRaceCardFold(){
 }
 
 
-// GitHub Pages上の当日公式TXTを自動読み込みする。
+// BRC_AUTO_RACECARD_LOADER_V1
+// GitHub上の当日公式TXTを自動読み込みする。
 // Windows側の BRC_AUTO_RACECARD.py が racecards/today.TXT を毎日更新する。
 async function autoLoadHostedRaceCardToday(){
   const statusBox = document.getElementById('raceCardFileStatus');
@@ -3823,10 +3852,10 @@ function renderWindRef(venue, dir, speed){
 
   const fmtPt = (v)=>{
     if(v==null || !Number.isFinite(Number(v))) return '<span style="color:var(--ink-soft);">—</span>';
-    const x = Number(v);
+    const x = Math.round(Number(v));
     const sign = x>0 ? '+' : '';
     const color = x>0 ? '#2f8f5b' : (x<0 ? '#d1373f' : 'var(--ink-soft)');
-    return `<span style="color:${color}; font-weight:800;">${sign}${x.toFixed(2)}pt</span>`;
+    return `<span style="color:${color}; font-weight:800;">${sign}${x}pt</span>`;
   };
   const nBadge = (n)=>{
     const color = n < 20 ? '#d1373f' : (n < 50 ? '#b07a00' : (n < 100 ? 'var(--ink-soft)' : '#2f8f5b'));
@@ -3837,9 +3866,9 @@ function renderWindRef(venue, dir, speed){
     const x = combo[String(c)];
     if(!x) return null;
     return `<tr>
-      <td>コース${c}</td>
-      <td class="num">${Number(x.base).toFixed(1)}%</td>
-      <td class="num"><strong>${Number(x.rate).toFixed(1)}%</strong></td>
+      <td><strong>${c}</strong></td>
+      <td class="num">${Math.round(Number(x.base))}%</td>
+      <td class="num"><strong>${Math.round(Number(x.rate))}%</strong></td>
       <td class="num">${fmtPt(x.dev)}</td>
       <td class="num">${nBadge(Number(x.n))}</td>
     </tr>`;
@@ -3847,18 +3876,18 @@ function renderWindRef(venue, dir, speed){
 
   box.style.display = '';
   box.innerHTML = `
-    <div style="font-size:14px; color:var(--ink-soft); margin-bottom:8px;">
+    <div class="wind-title" style="font-size:14px; color:var(--ink-soft); margin-bottom:8px;">
       🌬️ <strong>${venue}・${effectiveDir}${speedKey}m</strong> の組み合わせ別1着率
-      <span style="font-size:11.5px;">（2023/1/1〜2026/7/31 約3.5年・生実測 / N併記 / 予想確率には未加算）</span>
+      <span class="wind-note" style="font-size:11.5px;">（2023/1/1〜2026/7/31 約3.5年・生実測 / N併記 / 予想確率には未加算）</span>
     </div>
-    <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
-      <table style="font-size:13.5px; width:100%;">
+    <div class="wind-table-wrap">
+      <table class="wind-ref-table">
         <thead><tr>
-          <th></th>
-          <th class="num" style="white-space:normal;">場平均<br><span style="font-weight:400;">23-26/7</span></th>
-          <th class="num" style="white-space:normal;">${effectiveDir}${speedKey}m<br><span style="font-weight:400;">生実測</span></th>
-          <th class="num" style="white-space:normal;">場平均差</th>
-          <th class="num" style="white-space:normal;">N数</th>
+          <th>枠</th>
+          <th class="num">場平均</th>
+          <th class="num">${effectiveDir}${speedKey}m</th>
+          <th class="num">平均との差</th>
+          <th class="num">N</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
