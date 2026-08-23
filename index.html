@@ -990,6 +990,43 @@
     #windRefBox table.wind-ref-table td{ padding:4px 1px !important; }
   }
 
+
+  /* ---- 会場別攻略：1着コース×決まり手 相手傾向 ---- */
+  .ck-section{margin-top:28px; padding-top:2px;}
+  .ck-title{font-size:16px !important; margin-bottom:14px !important;}
+  .ck-label{font-size:11px; font-weight:800; color:var(--ink-soft); letter-spacing:.08em; margin:10px 0 6px;}
+  .ck-tabs{display:flex; flex-wrap:wrap; gap:7px; margin-bottom:8px;}
+  .ck-tabs .tab{padding:7px 13px; border-radius:10px; font-size:13px; background:#fff; color:var(--line-white);}
+  .ck-tabs .tab.active{background:var(--wave); color:#fff; border-color:var(--wave); box-shadow:0 2px 8px rgba(0,87,219,.18);}
+  .ck-kim-tabs .tab{min-width:78px; text-align:center;}
+  .ck-summary{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:14px 0 10px; padding:10px 12px; border-radius:10px; background:rgba(0,87,219,.055); border:1px solid rgba(0,87,219,.12);}
+  .ck-summary-main{font-size:13px; font-weight:800; color:var(--line-white);}
+  .ck-summary-n{font-size:12px; color:var(--ink-soft); white-space:nowrap;}
+  .ck-opp-list{display:flex; flex-direction:column; gap:7px;}
+  .ck-opp-row{display:grid; grid-template-columns:92px minmax(0,1fr) minmax(0,1fr); align-items:center; gap:8px; padding:10px 11px; border:1px solid rgba(10,31,51,.08); border-radius:11px; background:#fff;}
+  .ck-opp-row.is-top{border-color:rgba(0,87,219,.26); background:linear-gradient(90deg,rgba(0,87,219,.055),#fff 52%);}
+  .ck-course{display:flex; align-items:center; gap:7px; min-width:0;}
+  .ck-course-badge{width:27px; height:27px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:900; flex:0 0 auto;}
+  .ck-course-name{font-size:12.5px; font-weight:800; white-space:nowrap;}
+  .ck-rank-pill{display:inline-block; margin-left:4px; padding:2px 5px; border-radius:999px; font-size:9px; font-weight:800; color:var(--wave); background:rgba(0,87,219,.08); vertical-align:1px;}
+  .ck-metric{display:flex; align-items:baseline; justify-content:flex-end; gap:6px; min-width:0;}
+  .ck-metric-label{font-size:11px; color:var(--ink-soft); white-space:nowrap;}
+  .ck-metric-value{font-size:18px; font-weight:850; font-variant-numeric:tabular-nums; white-space:nowrap; letter-spacing:-.02em;}
+  .ck-metric-value.secondary{font-size:16px; font-weight:750; color:#42516a;}
+  @media (max-width:480px){
+    .ck-tabs{gap:6px;}
+    .ck-tabs .tab{padding:7px 10px; font-size:12.5px;}
+    .ck-opp-row{grid-template-columns:78px 1fr 1fr; gap:5px; padding:9px 8px;}
+    .ck-course{gap:5px;}
+    .ck-course-badge{width:25px;height:25px;border-radius:6px;font-size:13px;}
+    .ck-course-name{font-size:11.5px;}
+    .ck-rank-pill{display:none;}
+    .ck-metric{gap:4px;}
+    .ck-metric-label{font-size:10px;}
+    .ck-metric-value{font-size:17px;}
+    .ck-metric-value.secondary{font-size:15px;}
+  }
+
 </style>
 </head>
 <body>
@@ -1068,12 +1105,14 @@
         <div class="card-sub" id="venueNigeSub" style="margin-bottom:10px;"></div>
         <div id="venueNige" style="display:flex; flex-direction:column; gap:6px;"></div>
       </div>
-      <div style="margin-top:26px;">
-        <h2 style="font-size:15px;">頭コース×決まり手 相手傾向</h2>
-        <div id="ckTabs" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;"></div>
-        <div id="ckKimariteTabs" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;"></div>
-        <div class="card-sub" id="ckSub" style="margin-bottom:10px;"></div>
-        <div id="ckOpp" style="display:flex; flex-direction:column; gap:6px;"></div>
+      <div class="ck-section">
+        <h2 class="ck-title">1着コース×決まり手 相手傾向</h2>
+        <div class="ck-label">1着コース</div>
+        <div id="ckTabs" class="ck-tabs"></div>
+        <div class="ck-label">決まり手</div>
+        <div id="ckKimariteTabs" class="ck-tabs ck-kim-tabs"></div>
+        <div class="ck-summary" id="ckSub"></div>
+        <div id="ckOpp" class="ck-opp-list"></div>
       </div>
     </section>
   </div><!-- /page-venue -->
@@ -2629,7 +2668,7 @@ function renderNigeBars(box, d){
 
 // ---- Head-course x kimarite -> opponent-course tendency ----
 const CK_DATA = JSON.parse(document.getElementById('data-course-kimarite-opp').textContent);
-const CK_KIM_ORDER = ['まくり','まくり差し','差し'];
+const CK_KIM_ORDER = ['差し','まくり','まくり差し'];
 let ckState = { venue: null, head: null, kim: null };
 function renderVenueCourseKimarite(venue){
   const tabsBox = document.getElementById('ckTabs');
@@ -2657,7 +2696,7 @@ function renderCkKimariteTabs(){
   if(!d){ box.innerHTML=''; document.getElementById('ckOpp').innerHTML=''; document.getElementById('ckSub').textContent=''; return; }
   const kims = CK_KIM_ORDER.filter(k=>d[k]);
   if(!kims.includes(ckState.kim)) ckState.kim = kims[0];
-  box.innerHTML = kims.map(k=>`<button type="button" class="tab ${k===ckState.kim?'active':''}" data-ck-kim="${k}" style="background:${k===ckState.kim?'var(--wave)':''}; color:${k===ckState.kim?'var(--navy-deep)':''};">${k}</button>`).join('');
+  box.innerHTML = kims.map(k=>`<button type="button" class="tab ${k===ckState.kim?'active':''}" data-ck-kim="${k}">${k}</button>`).join('');
   box.querySelectorAll('button[data-ck-kim]').forEach(btn=>{
     btn.addEventListener('click', ()=>{ ckState.kim = btn.getAttribute('data-ck-kim'); renderCkOpp(); });
   });
@@ -2667,28 +2706,34 @@ function renderCkOpp(){
   const sub = document.getElementById('ckSub');
   const box = document.getElementById('ckOpp');
   const entry = CK_DATA[ckState.venue] && CK_DATA[ckState.venue][ckState.head] && CK_DATA[ckState.venue][ckState.head][ckState.kim];
-  if(!entry){ sub.textContent=''; box.innerHTML=''; return; }
-  sub.textContent = `n=${entry.n.toLocaleString('ja-JP')}`;
-  const opps = Object.entries(entry.opp).map(([c,v])=>({c:Number(c), top2:v.top2, top3:v.top3})).sort((a,b)=>b.top2-a.top2);
-  const maxPct = Math.max(...opps.map(e=>Math.max(e.top2,e.top3)), 1);
+  if(!entry){ sub.innerHTML=''; box.innerHTML=''; return; }
+
+  sub.innerHTML = `
+    <div class="ck-summary-main">${ckState.head}コース1着 × ${ckState.kim}</div>
+    <div class="ck-summary-n">n=${entry.n.toLocaleString('ja-JP')}</div>
+  `;
+
+  const opps = Object.entries(entry.opp)
+    .map(([c,v])=>({c:Number(c), top2:Math.round(Number(v.top2)||0), top3:Math.round(Number(v.top3)||0)}))
+    .sort((a,b)=>b.top2-a.top2 || b.top3-a.top3 || a.c-b.c);
+  const maxTop2 = opps.length ? opps[0].top2 : -1;
+
   box.innerHTML = opps.map(e=>{
     const col = LANE_COLORS[e.c];
-    const w2 = (e.top2/maxPct*100).toFixed(0);
-    const w3 = (e.top3/maxPct*100).toFixed(0);
+    const isTop = e.top2 === maxTop2;
     return `
-    <div style="display:flex; align-items:center; gap:10px;">
-      <div style="width:22px; height:22px; border-radius:6px; background:${col.bg}; color:${col.text}; display:flex; align-items:center; justify-content:center; font-size:13.5px; font-weight:800; flex-shrink:0;">${e.c}</div>
-      <div style="flex:1; display:flex; flex-direction:column; gap:3px;">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <div style="width:34px; font-size:11.5px; color:var(--ink-soft); flex-shrink:0;">2着率</div>
-          <div class="bar-track" style="flex:1;"><div class="bar-fill" style="width:${w2}%; background:${col.bg};"></div></div>
-          <div style="width:48px; text-align:right; font-size:13px; font-variant-numeric:tabular-nums; flex-shrink:0;">${e.top2}%</div>
-        </div>
-        <div style="display:flex; align-items:center; gap:8px;">
-          <div style="width:34px; font-size:11.5px; color:var(--ink-soft); flex-shrink:0;">3着率</div>
-          <div class="bar-track" style="flex:1;"><div class="bar-fill" style="width:${w3}%; background:${col.bg}; opacity:.6;"></div></div>
-          <div style="width:48px; text-align:right; font-size:13px; font-variant-numeric:tabular-nums; flex-shrink:0;">${e.top3}%</div>
-        </div>
+    <div class="ck-opp-row ${isTop?'is-top':''}">
+      <div class="ck-course">
+        <div class="ck-course-badge" style="background:${col.bg}; color:${col.text};">${e.c}</div>
+        <div class="ck-course-name">${e.c}コース${isTop?'<span class="ck-rank-pill">2着最多</span>':''}</div>
+      </div>
+      <div class="ck-metric">
+        <span class="ck-metric-label">2着率</span>
+        <span class="ck-metric-value">${e.top2}%</span>
+      </div>
+      <div class="ck-metric">
+        <span class="ck-metric-label">3着率</span>
+        <span class="ck-metric-value secondary">${e.top3}%</span>
       </div>
     </div>`;
   }).join('');
