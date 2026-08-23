@@ -1142,17 +1142,8 @@
           </label>
           <button class="tab" id="raceCardReset" style="background:rgba(10,31,51,.08);">埋め込みデータに戻す</button>
           <span id="raceCardFileStatus" style="font-size:13.5px; color:var(--ink-soft);"></span>
-          <label class="tab" style="background:rgba(10,31,51,.08); cursor:pointer; margin:0;">
-            SG前日結果を反映（公式K*.TXT）
-            <input type="file" id="sgEloResultFileInput" accept=".txt,text/plain" multiple style="display:none;">
-          </label>
-          <button class="tab" id="sgEloResultReset" style="background:rgba(10,31,51,.08);">SG Elo履歴をクリア</button>
-          <span id="sgEloStatus" style="font-size:13.5px; color:var(--ink-soft);"></span>
           <span style="font-size:12.5px; color:var(--ink-soft); flex-basis:100%;">
             ※ 公式サイト配布の番組表（LZH）は、あらかじめ解凍ソフト（Lhaplus等）で .TXT を取り出してからアップロードしてください（LZHのまま読み込むことはできません）。
-          </span>
-          <span style="font-size:12px; color:var(--ink-soft); flex-basis:100%;">
-            ※ SG 3連対率は、2026-08-02終了時点の固定Eloを基準に、前日までのSG公式成績を反映できた場合だけ日次Elo補正します。不足時はBRC Serverの3連対率をそのまま使用します。
           </span>
         </div>
       </div>
@@ -2700,9 +2691,17 @@ function renderCkKimariteTabs(){
   if(!d){ box.innerHTML=''; document.getElementById('ckOpp').innerHTML=''; document.getElementById('ckSub').textContent=''; return; }
   const kims = CK_KIM_ORDER.filter(k=>d[k]);
   if(!kims.includes(ckState.kim)) ckState.kim = kims[0];
-  box.innerHTML = kims.map(k=>`<button type="button" class="tab ${k===ckState.kim?'active':''}" data-ck-kim="${k}">${k}</button>`).join('');
+  box.innerHTML = kims.map(k=>`<button type="button" class="tab ${k===ckState.kim?'active':''}" data-ck-kim="${k}" aria-pressed="${k===ckState.kim?'true':'false'}">${k}</button>`).join('');
   box.querySelectorAll('button[data-ck-kim]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{ ckState.kim = btn.getAttribute('data-ck-kim'); renderCkOpp(); });
+    btn.addEventListener('click', ()=>{
+      ckState.kim = btn.getAttribute('data-ck-kim');
+      box.querySelectorAll('button[data-ck-kim]').forEach(b=>{
+        const isActive = b.getAttribute('data-ck-kim') === ckState.kim;
+        b.classList.toggle('active', isActive);
+        b.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
+      renderCkOpp();
+    });
   });
   renderCkOpp();
 }
@@ -2876,14 +2875,6 @@ function initPredictPage(){
   populateDaySelect();
 
   document.getElementById('raceCardFileInput').addEventListener('change', onRaceCardFileSelected);
-  document.getElementById('sgEloResultFileInput').addEventListener('change', onSgEloResultFilesSelected);
-  document.getElementById('sgEloResultReset').addEventListener('click', ()=>{
-    clearSgEloHistory();
-    document.getElementById('sgEloResultFileInput').value = '';
-    refreshSgEloStatus();
-    invalidateTodayPicks(true);
-    if(window.__predictBoatsCurrent) runPredict();
-  });
   document.getElementById('raceCardReset').addEventListener('click', ()=>{
     RACE_CARDS_TODAY = DEFAULT_RACE_CARDS_TODAY;
     RACE_INFO_TODAY = DEFAULT_RACE_INFO_TODAY;
@@ -2894,11 +2885,9 @@ function initPredictPage(){
     document.getElementById('raceCardFileStatus').textContent = '';
     document.getElementById('raceCardFileInput').value = '';
     populateDaySelect();
-    refreshSgEloStatus();
     invalidateTodayPicks(true);
   });
 
-  refreshSgEloStatus();
   if(restoredRaceCard){
     const statusBox = document.getElementById('raceCardFileStatus');
     if(statusBox){
@@ -3323,215 +3312,6 @@ function isKnownFemaleRacer(reg){
 function isAllFemaleRaceRegs(regs){
   return Array.isArray(regs) && regs.length === 6 && regs.every(reg => isKnownFemaleRacer(reg));
 }
-// ============================================================
-// SG日次Elo 3連対率補正
-// 探索: 2023-24 / gamma選定: 2025 / 2026は完全OOS。
-// 2026-08-02終了時点までの確定SG結果を初期状態に内包し、以後は公式K*.TXTの
-// 「前日まで」の結果だけをlocalStorageへ保存して決定論的にreplayする。
-// ============================================================
-const SG_ELO_BASELINE = {"version":"sg_daily_elo_v1","baseline_date":"2026-08-02","half_life_days":180.0,"eta":0.3,"gamma_top3":0.55,"course_effects":[1.226339990881189,0.03262131411604924,0.06700852674870363,-0.16015828301282364,-0.42935282822148474,-0.736458720511591],"players":{"3024":{"r":0.007717889090313318,"last":"2023-10-28"},"3159":{"r":-0.11838892660026805,"last":"2025-10-24"},"3257":{"r":-0.6107250698982667,"last":"2024-05-26"},"3302":{"r":-0.0921171822484759,"last":"2026-08-02"},"3388":{"r":-0.19090664947363017,"last":"2026-05-31"},"3415":{"r":-0.058050788070217796,"last":"2026-08-02"},"3422":{"r":-0.037725219968353076,"last":"2026-05-31"},"3474":{"r":0.0037368482339083576,"last":"2026-08-02"},"3532":{"r":0.17746930484039816,"last":"2025-10-24"},"3541":{"r":-0.22000619423768247,"last":"2024-03-20"},"3556":{"r":0.2264214919846836,"last":"2024-06-30"},"3557":{"r":-0.2154272353428975,"last":"2023-07-23"},"3590":{"r":0.07632081500691436,"last":"2026-05-31"},"3623":{"r":-0.39635444771624145,"last":"2025-03-30"},"3716":{"r":-0.29192826789286447,"last":"2026-08-02"},"3719":{"r":-0.3678292370150792,"last":"2026-08-02"},"3721":{"r":0.47500702005747936,"last":"2026-06-28"},"3737":{"r":0.16327755353391082,"last":"2025-10-26"},"3744":{"r":0.014545466575461366,"last":"2024-06-30"},"3779":{"r":0.00819830719574679,"last":"2026-08-02"},"3780":{"r":-0.05923682315361353,"last":"2024-09-01"},"3783":{"r":-0.2290959439971668,"last":"2026-08-02"},"3849":{"r":-0.13085504056292868,"last":"2026-03-29"},"3854":{"r":-0.07030373429776317,"last":"2025-12-21"},"3874":{"r":-0.6951078973792428,"last":"2024-07-28"},"3876":{"r":-0.17219258776503288,"last":"2026-03-29"},"3897":{"r":0.4549265559552793,"last":"2026-08-02"},"3898":{"r":0.07415189180107701,"last":"2025-10-26"},"3900":{"r":-0.42446103028591187,"last":"2023-03-20"},"3908":{"r":-0.3152929448255897,"last":"2025-06-01"},"3918":{"r":0.0011201308163349272,"last":"2025-03-30"},"3941":{"r":0.29640582920599445,"last":"2026-08-02"},"3942":{"r":0.10160634191183891,"last":"2025-08-30"},"3946":{"r":0.01017729020996961,"last":"2026-06-28"},"3952":{"r":0.18391320385222248,"last":"2024-10-27"},"3959":{"r":0.1201467354595417,"last":"2026-08-02"},"3960":{"r":-0.23521951053140655,"last":"2026-08-02"},"3961":{"r":-0.006836025703840731,"last":"2023-08-27"},"3978":{"r":-0.3380835126969625,"last":"2026-08-02"},"3996":{"r":-0.21110072724904733,"last":"2023-06-25"},"4002":{"r":-0.20682835482688341,"last":"2023-03-21"},"4013":{"r":-0.3167434683838094,"last":"2026-06-28"},"4014":{"r":0.08561645930321397,"last":"2026-08-02"},"4019":{"r":-0.3803988225563715,"last":"2026-03-28"},"4024":{"r":-0.21075019138626286,"last":"2026-08-02"},"4028":{"r":-0.44543228394602774,"last":"2024-09-01"},"4030":{"r":-0.46546302818868945,"last":"2026-08-02"},"4042":{"r":-0.35873737671824524,"last":"2023-07-21"},"4044":{"r":0.1959302554181061,"last":"2026-08-02"},"4050":{"r":-0.05952594109269009,"last":"2025-10-26"},"4055":{"r":-0.4192988378673771,"last":"2025-03-30"},"4061":{"r":-0.2519139067946614,"last":"2026-06-28"},"4074":{"r":-0.17407512574061312,"last":"2023-08-27"},"4075":{"r":-0.2215512794398313,"last":"2026-08-02"},"4095":{"r":0.09017282036259623,"last":"2024-07-28"},"4148":{"r":0.018619890049170168,"last":"2024-07-28"},"4166":{"r":0.3635301099726378,"last":"2026-08-02"},"4168":{"r":-0.23850449696740042,"last":"2026-06-28"},"4188":{"r":0.46183397116397296,"last":"2026-03-29"},"4190":{"r":-0.5326477405065184,"last":"2024-05-26"},"4205":{"r":0.2527021001458641,"last":"2026-08-02"},"4208":{"r":-0.07474107273987204,"last":"2025-10-26"},"4230":{"r":-0.22773248477553354,"last":"2026-03-29"},"4236":{"r":0.2910995907732431,"last":"2025-10-26"},"4237":{"r":0.1718036372359767,"last":"2026-06-28"},"4238":{"r":0.5889507610854944,"last":"2026-03-29"},"4256":{"r":-0.23870510902054473,"last":"2026-06-28"},"4262":{"r":0.40063259460987427,"last":"2026-08-02"},"4266":{"r":-0.21126648250994154,"last":"2026-08-02"},"4288":{"r":-0.6285162338655927,"last":"2025-03-30"},"4290":{"r":-0.11821806792886656,"last":"2026-08-02"},"4294":{"r":0.02437912138368563,"last":"2024-10-27"},"4296":{"r":-0.5273475720567896,"last":"2024-06-30"},"4297":{"r":0.02756648699376578,"last":"2023-03-21"},"4305":{"r":0.10202392577263064,"last":"2025-10-26"},"4320":{"r":0.6347670333527805,"last":"2026-08-01"},"4324":{"r":-0.016325732363762856,"last":"2026-06-28"},"4330":{"r":-0.5530371672266454,"last":"2025-03-30"},"4335":{"r":-0.05712523301988881,"last":"2025-03-30"},"4337":{"r":0.29512900315076573,"last":"2026-08-02"},"4342":{"r":0.09351295056463794,"last":"2026-05-31"},"4344":{"r":0.5818103374721203,"last":"2026-08-02"},"4350":{"r":-0.08870364572154041,"last":"2026-06-28"},"4352":{"r":0.21783380806886465,"last":"2025-03-30"},"4357":{"r":-0.16800505944527647,"last":"2025-10-26"},"4361":{"r":0.05973607635323077,"last":"2026-03-29"},"4362":{"r":-0.14816544305354315,"last":"2026-06-28"},"4364":{"r":0.09397359426480484,"last":"2024-12-22"},"4370":{"r":-0.23156014387935397,"last":"2026-03-28"},"4371":{"r":0.020881546174123612,"last":"2026-08-02"},"4387":{"r":-0.3575653443973741,"last":"2025-05-30"},"4391":{"r":-0.1297253772342296,"last":"2025-07-25"},"4397":{"r":-0.03645227578024623,"last":"2025-12-21"},"4398":{"r":0.2147142577184829,"last":"2025-03-30"},"4418":{"r":0.3303367125144566,"last":"2026-08-02"},"4427":{"r":0.07420611725588819,"last":"2026-03-29"},"4444":{"r":0.4728554441738236,"last":"2026-06-28"},"4445":{"r":0.6070623293458822,"last":"2026-06-28"},"4448":{"r":-0.10656769859657003,"last":"2023-10-29"},"4450":{"r":-0.18193500289220096,"last":"2026-03-29"},"4456":{"r":-0.6589458493091375,"last":"2026-07-30"},"4459":{"r":-0.1335299350469643,"last":"2026-08-02"},"4468":{"r":-0.05639566186431483,"last":"2025-12-21"},"4477":{"r":-0.03442057018766323,"last":"2026-08-02"},"4482":{"r":-0.505594739878821,"last":"2026-05-31"},"4494":{"r":0.23296117283908785,"last":"2026-06-28"},"4497":{"r":-0.2116247034293033,"last":"2025-08-31"},"4500":{"r":0.2117550859611157,"last":"2026-06-28"},"4502":{"r":0.4078862628204086,"last":"2026-08-02"},"4503":{"r":0.2230022285296664,"last":"2026-08-02"},"4504":{"r":-0.5904600158915262,"last":"2026-06-28"},"4524":{"r":-0.18803752767093018,"last":"2026-06-28"},"4528":{"r":0.15404936284926318,"last":"2025-07-27"},"4532":{"r":-0.13928290838263763,"last":"2025-10-26"},"4535":{"r":0.16842989873981223,"last":"2025-10-25"},"4537":{"r":0.09868541358776398,"last":"2026-06-28"},"4544":{"r":0.17075232661384107,"last":"2025-10-25"},"4546":{"r":0.12978321334803816,"last":"2025-06-01"},"4547":{"r":-0.5391501528721734,"last":"2026-08-01"},"4566":{"r":0.1864114439627897,"last":"2026-06-28"},"4571":{"r":-0.6941824633410135,"last":"2026-06-28"},"4573":{"r":-0.1026686141577616,"last":"2026-08-02"},"4586":{"r":0.7129078031713236,"last":"2026-08-02"},"4590":{"r":-0.4436278521316359,"last":"2026-08-02"},"4604":{"r":-0.26945094871322567,"last":"2026-08-02"},"4643":{"r":-0.12340655857024789,"last":"2023-07-22"},"4659":{"r":0.275501048909852,"last":"2026-08-02"},"4677":{"r":0.06776880262297438,"last":"2025-03-30"},"4682":{"r":0.315709165174211,"last":"2026-08-01"},"4685":{"r":0.029090499637277,"last":"2025-06-01"},"4686":{"r":0.47834117167119666,"last":"2026-07-31"},"4688":{"r":0.030292076921656752,"last":"2025-08-31"},"4715":{"r":-0.34112485988319013,"last":"2024-09-01"},"4719":{"r":0.11580327017986511,"last":"2026-08-02"},"4732":{"r":-0.008196959441878773,"last":"2026-03-28"},"4736":{"r":0.13186313813479064,"last":"2024-10-27"},"4739":{"r":-0.5064075795554892,"last":"2025-07-27"},"4757":{"r":-0.21867076877833114,"last":"2026-08-02"},"4760":{"r":0.28311925851463404,"last":"2026-08-02"},"4762":{"r":0.003813369523181509,"last":"2026-03-29"},"4787":{"r":0.009871210839327793,"last":"2025-06-29"},"4804":{"r":-0.06645627289031844,"last":"2023-08-27"},"4816":{"r":-0.19295200183864591,"last":"2023-06-25"},"4823":{"r":-0.22337033932723377,"last":"2023-05-28"},"4825":{"r":0.2880826886839305,"last":"2023-05-28"},"4826":{"r":-0.10144995846880711,"last":"2025-12-20"},"4831":{"r":0.26871476810921824,"last":"2025-12-21"},"4832":{"r":-0.10625607937971307,"last":"2026-08-02"},"4847":{"r":-0.10931757895331799,"last":"2026-08-02"},"4848":{"r":0.5051191950962268,"last":"2026-07-31"},"4851":{"r":0.2706300422923501,"last":"2026-08-02"},"4856":{"r":-0.3686995369387947,"last":"2025-12-21"},"4886":{"r":-0.14607473013191774,"last":"2026-08-02"},"4907":{"r":0.04622412984259835,"last":"2026-03-29"},"4908":{"r":0.06606561827633982,"last":"2026-03-29"},"4914":{"r":0.07332087803670748,"last":"2026-08-02"},"4926":{"r":-0.011743196355734536,"last":"2024-10-27"},"4932":{"r":0.014050929740049012,"last":"2026-08-02"},"4933":{"r":-0.49647822090418414,"last":"2026-08-02"},"4939":{"r":0.08189957440816481,"last":"2026-03-29"},"4959":{"r":-0.1537791870530676,"last":"2026-08-02"},"4961":{"r":-0.2843263015494209,"last":"2026-05-31"},"4963":{"r":0.0030164270304717383,"last":"2026-05-31"},"4965":{"r":0.022767623119643227,"last":"2026-08-02"},"4980":{"r":0.04385054842608899,"last":"2026-08-02"},"5015":{"r":-0.16896984673524473,"last":"2023-10-28"},"5026":{"r":0.013764805125115728,"last":"2023-05-28"},"5043":{"r":0.10884954372546038,"last":"2026-03-29"},"5068":{"r":0.3294906608188097,"last":"2026-03-29"},"5084":{"r":0.20562005115784004,"last":"2026-03-29"},"5088":{"r":-0.030048127088396243,"last":"2026-05-31"},"5112":{"r":0.07099961402988503,"last":"2026-03-29"},"5121":{"r":0.6332223803390472,"last":"2026-08-01"},"5142":{"r":-0.24803360411371528,"last":"2026-05-31"},"5163":{"r":0.03493230407293317,"last":"2026-08-02"},"5174":{"r":-0.019925155900269748,"last":"2025-05-31"},"5193":{"r":-0.31808543055132205,"last":"2026-05-31"},"5196":{"r":-0.18622924005242827,"last":"2026-05-31"},"5217":{"r":-0.06021400882536156,"last":"2026-05-30"},"5224":{"r":0.303724160879299,"last":"2026-08-01"},"5267":{"r":-0.2510351136250953,"last":"2026-05-31"},"5281":{"r":-0.6636561851963642,"last":"2026-05-31"},"5340":{"r":-0.07837557314987564,"last":"2026-08-02"}}};
-const SG_ELO_HISTORY_KEY = 'brc_sg_daily_elo_history_v1';
-const SG_ELO_CALENDAR_AFTER_BASELINE = ["2026-08-25", "2026-08-26", "2026-08-27", "2026-08-28", "2026-08-29", "2026-08-30", "2026-10-27", "2026-10-28", "2026-10-29", "2026-10-30", "2026-10-31", "2026-11-01", "2026-11-24", "2026-11-25", "2026-11-26", "2026-11-27", "2026-11-28", "2026-11-29", "2026-12-15", "2026-12-16", "2026-12-17", "2026-12-18", "2026-12-19", "2026-12-20"];
-
-function sgEloDateMs(d){ return Date.parse(String(d)+'T00:00:00Z'); }
-function sgEloDaysBetween(a,b){ return (sgEloDateMs(b)-sgEloDateMs(a))/86400000; }
-function sgEloSigmoid(x){ return x>=0 ? 1/(1+Math.exp(-x)) : Math.exp(x)/(1+Math.exp(x)); }
-function sgEloLogit(p){ const q=Math.max(1e-8,Math.min(1-1e-8,p)); return Math.log(q/(1-q)); }
-
-function loadSgEloHistory(){
-  try{
-    const x=JSON.parse(localStorage.getItem(SG_ELO_HISTORY_KEY)||'{}');
-    return x && typeof x==='object' ? x : {};
-  }catch(_e){ return {}; }
-}
-function saveSgEloHistory(h){ try{ localStorage.setItem(SG_ELO_HISTORY_KEY,JSON.stringify(h||{})); return true; }catch(_e){ return false; } }
-function clearSgEloHistory(){ try{ localStorage.removeItem(SG_ELO_HISTORY_KEY); }catch(_e){} }
-
-function requiredSgEloDatesBefore(dateLabel){
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(dateLabel||''))) return [];
-  return SG_ELO_CALENDAR_AFTER_BASELINE.filter(d=>d < dateLabel);
-}
-function getSgEloCoverage(dateLabel){
-  const history=loadSgEloHistory();
-  const required=requiredSgEloDatesBefore(dateLabel);
-  const missing=required.filter(d=>!history[d] || history[d].covered!==true);
-  return {history,required,missing,ready:missing.length===0};
-}
-
-function cloneSgEloBaselineState(){
-  const rating={}, last={};
-  Object.entries(SG_ELO_BASELINE.players||{}).forEach(([reg,v])=>{ rating[reg]=Number(v.r)||0; last[reg]=String(v.last||SG_ELO_BASELINE.baseline_date); });
-  return {rating,last};
-}
-function applySgEloDayToState(state,dayObj){
-  const date=String(dayObj?.date||'');
-  const races=Array.isArray(dayObj?.races) ? [...dayObj.races].sort((a,b)=>String(a.venue).localeCompare(String(b.venue),'ja') || Number(a.raceNo)-Number(b.raceNo)) : [];
-  const regs=[...new Set(races.flatMap(r=>Array.isArray(r.rows)?r.rows.map(q=>String(q.reg)):[]))];
-  regs.forEach(reg=>{
-    const old=Number(state.rating[reg]||0);
-    const ld=state.last[reg];
-    state.rating[reg]=ld ? old*Math.pow(0.5,sgEloDaysBetween(ld,date)/Number(SG_ELO_BASELINE.half_life_days||180)) : old;
-    state.last[reg]=date;
-  });
-  const work=Object.assign({},state.rating);
-  races.forEach(race=>{
-    const rows=[...(race.rows||[])].sort((a,b)=>Number(a.course)-Number(b.course));
-    if(rows.length!==6) return;
-    const u=rows.map(q=>Number(work[String(q.reg)]||0)+Number(SG_ELO_BASELINE.course_effects[Number(q.course)-1]||0));
-    const delta={}; rows.forEach(q=>delta[String(q.reg)]=0);
-    for(let i=0;i<6;i++) for(let j=i+1;j<6;j++){
-      const obs=Number(rows[i].rank)<Number(rows[j].rank)?1:0;
-      const e=obs-sgEloSigmoid(u[i]-u[j]);
-      delta[String(rows[i].reg)]+=Number(SG_ELO_BASELINE.eta||0.30)*e;
-      delta[String(rows[j].reg)]-=Number(SG_ELO_BASELINE.eta||0.30)*e;
-    }
-    rows.forEach(q=>{ const reg=String(q.reg); work[reg]=Number(work[reg]||0)+delta[reg]/5; });
-  });
-  regs.forEach(reg=>state.rating[reg]=Number(work[reg]||0));
-  return state;
-}
-function replaySgEloStateBefore(dateLabel){
-  const cov=getSgEloCoverage(dateLabel);
-  if(!cov.ready) return {ready:false,missing:cov.missing,state:null};
-  const state=cloneSgEloBaselineState();
-  Object.keys(cov.history).filter(d=>d>SG_ELO_BASELINE.baseline_date && d<dateLabel).sort().forEach(d=>{
-    if(cov.history[d]?.covered) applySgEloDayToState(state,cov.history[d]);
-  });
-  return {ready:true,missing:[],state};
-}
-function sgEloRatingAtDate(state,reg,dateLabel){
-  const key=String(reg);
-  const raw=Number(state.rating[key]||0);
-  const ld=state.last[key];
-  return ld ? raw*Math.pow(0.5,sgEloDaysBetween(ld,dateLabel)/Number(SG_ELO_BASELINE.half_life_days||180)) : raw;
-}
-
-function parseOfficialResultTextForSgElo(text,sourceName=''){
-  const lines=String(text||'').replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
-  const byDate={}; let i=0, sgBlocks=0;
-  while(i<lines.length){
-    const bm=lines[i].match(/^(\d{2})KBGN\s*$/);
-    if(!bm){ i++; continue; }
-    const venue=BOAT_VENUE_CODE[bm[1]]||''; let j=i+1,block=[];
-    while(j<lines.length && !/^\d{2}KEND\s*$/.test(lines[j])){ block.push(lines[j]); j++; }
-    let title='';
-    for(let a=0;a<block.length;a++) if(block[a].includes('＊＊＊')&&block[a].includes('競走成績')){
-      for(let b=a+1;b<block.length;b++) if(block[b].trim()){ title=block[b].trim(); break; }
-      break;
-    }
-    if(!isTrueSgTitle(title)){ i=j+1; continue; }
-    sgBlocks++; let date='';
-    for(const raw of block){ const m=zen2han(raw).match(/(\d{4})\s*\/\s*(\d{1,2})\s*\/\s*(\d{1,2})/); if(m){ date=`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`; break; } }
-    if(!date){ i=j+1; continue; }
-    const day=byDate[date]||(byDate[date]={date,covered:true,races:[],sourceName});
-    let k=0;
-    while(k<block.length){
-      const head=zen2han(block[k]); const rm=head.match(/^\s*(\d{1,2})\s*[RＲ]/);
-      if(!rm){ k++; continue; }
-      const raceNo=Number(rm[1]); const rows=[]; let q=k+1;
-      while(q<block.length){
-        const ln=zen2han(block[q]);
-        if(q>k+1 && /^\s*\d{1,2}\s*[RＲ]/.test(ln)) break;
-        const m=ln.match(/^\s*(\S{1,3})\s+([1-6])\s+(\d{4})\s+.*?\s+(\d{1,3})\s+(\d{1,3})\s+(\d+\.\d{2})\s+([1-6])\s+(?:F?\d+\.\d+|L?\d+\.\d+|\S+)\s+/);
-        if(m) rows.push({status:m[1],boat:Number(m[2]),reg:m[3],course:Number(m[7]),rank:/^\d+$/.test(m[1])?Number(m[1]):99});
-        q++;
-      }
-      if(rows.length===6){
-        const regs=rows.map(r=>r.reg);
-        const strict=rows.every(r=>r.boat===r.course) && new Set(rows.map(r=>r.boat)).size===6 && new Set(rows.map(r=>r.course)).size===6;
-        const ladies=/チャレンジカップ/.test(normalizeGradeTitle(title)) && isAllFemaleRaceRegs(regs);
-        if(strict && !ladies) day.races.push({venue,raceNo,rows:rows.map(r=>({boat:r.boat,course:r.course,reg:r.reg,rank:r.rank}))});
-      }
-      k=q;
-    }
-    i=j+1;
-  }
-  return {days:Object.values(byDate),sgBlocks};
-}
-
-function readSgEloFileBuffer(file){ return new Promise((resolve,reject)=>{ const r=new FileReader(); r.onload=()=>resolve(r.result); r.onerror=()=>reject(new Error('ファイル読込失敗')); r.readAsArrayBuffer(file); }); }
-async function onSgEloResultFilesSelected(ev){
-  const files=[...(ev.target.files||[])]; const box=document.getElementById('sgEloStatus');
-  if(!files.length) return;
-  try{
-    const history=loadSgEloHistory(); let imported=0,accepted=0,ignoredBaseline=0;
-    for(const file of files){
-      const buf=await readSgEloFileBuffer(file); let text;
-      try{ text=new TextDecoder('shift_jis').decode(buf); }catch(_e){ text=new TextDecoder('utf-8').decode(buf); }
-      const parsed=parseOfficialResultTextForSgElo(text,file.name);
-      if(parsed.sgBlocks===0) continue;
-      parsed.days.forEach(day=>{
-        if(day.date<=SG_ELO_BASELINE.baseline_date){ ignoredBaseline++; return; }
-        history[day.date]=day; imported++; accepted+=day.races.length;
-      });
-    }
-    saveSgEloHistory(history); refreshSgEloStatus(); invalidateTodayPicks(true);
-    if(window.__predictBoatsCurrent) runPredict();
-    if(imported===0 && ignoredBaseline===0){ box.textContent='SG成績ブロックが見つかりませんでした'; box.style.color='#e5484d'; }
-    else if(imported===0 && ignoredBaseline>0){ box.textContent=`読込データは初期状態（${SG_ELO_BASELINE.baseline_date}）に含まれています`; box.style.color=''; }
-    else { box.textContent=`SG Elo更新: ${imported}日 / 採用${accepted}R（進入変更等は除外）`; box.style.color=''; }
-  }catch(e){ box.textContent=`SG Elo読込エラー: ${e.message}`; box.style.color='#e5484d'; }
-}
-
-function refreshSgEloStatus(){
-  const box=document.getElementById('sgEloStatus'); if(!box) return;
-  const hasSg=Object.values(RACE_INFO_TODAY||{}).some(v=>isTrueSgTitle(v?.title||''));
-  const h=loadSgEloHistory(); const n=Object.keys(h).length;
-  if(!hasSg){ box.textContent=`SG Elo: 待機（結果履歴${n}日）`; box.style.color='var(--ink-soft)'; return; }
-  const cov=getSgEloCoverage(TODAY_LABEL);
-  if(cov.ready){ box.textContent=`SG Elo: 適用可能（${SG_ELO_BASELINE.baseline_date}＋前日まで反映）`; box.style.color='#2f8f5b'; }
-  else { box.textContent=`SG Elo: 未適用・不足日 ${cov.missing.slice(0,3).join('、')}${cov.missing.length>3?'ほか':''}`; box.style.color='#d1373f'; }
-}
-
-
-function enforceSgEloTop3Logit300(boats){
-  if(!Array.isArray(boats) || boats.length!==6) return false;
-  const logits=boats.map(b=>{
-    const raw=Number.isFinite(b.pct3Float)?Number(b.pct3Float):Number(b.pct3);
-    if(!Number.isFinite(raw)) return NaN;
-    const p=Math.max(0.000001,Math.min(0.999999,raw/100));
-    return Math.log(p/(1-p));
-  });
-  if(logits.some(x=>!Number.isFinite(x))) return false;
-  let lo=-15,hi=15;
-  for(let k=0;k<50;k++){
-    const mid=(lo+hi)/2;
-    const sum=logits.reduce((a,z)=>a+1/(1+Math.exp(-(z+mid))),0);
-    if(sum<3) lo=mid; else hi=mid;
-  }
-  const shift=(lo+hi)/2;
-  boats.forEach((b,i)=>{
-    b.pct3Float=100/(1+Math.exp(-(logits[i]+shift)));
-    b.pct3=Math.round(b.pct3Float);
-    b.sgEloLogit300Applied=true;
-  });
-  return true;
-}
-
-function applySgDailyEloTop3Correction(boats,grade,dateLabel){
-  boats.forEach(b=>{ b.sgEloTop3Applied=false; b.sgEloRel=null; b.pct3BeforeSgElo=null; });
-  window.__lastSgEloPredictionStatus={applied:false,reason:'SG以外'};
-  if(grade!=='SG') return false;
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(dateLabel||''))){ window.__lastSgEloPredictionStatus={applied:false,reason:'日付不明'}; return false; }
-  const rep=replaySgEloStateBefore(dateLabel);
-  if(!rep.ready){ window.__lastSgEloPredictionStatus={applied:false,reason:`前日結果不足: ${rep.missing.join('、')}`,missing:rep.missing}; return false; }
-  const vals=boats.map(b=>sgEloRatingAtDate(rep.state,b.player.reg,dateLabel));
-  const mean=vals.reduce((a,v)=>a+v,0)/vals.length;
-  boats.forEach((b,idx)=>{
-    const raw=Number.isFinite(b.pct3Float)?b.pct3Float:Number(b.pct3);
-    if(!Number.isFinite(raw)) return;
-    b.pct3BeforeSgElo=raw; b.sgEloRel=vals[idx]-mean;
-    b.pct3Float=100*sgEloSigmoid(sgEloLogit(raw/100)+Number(SG_ELO_BASELINE.gamma_top3||0.55)*b.sgEloRel);
-    b.pct3=Math.round(b.pct3Float); b.sgEloTop3Applied=true;
-  });
-  const ok=boats.every(b=>b.sgEloTop3Applied) && enforceSgEloTop3Logit300(boats);
-  if(!ok){ boats.forEach(b=>b.sgEloTop3Applied=false); window.__lastSgEloPredictionStatus={applied:false,reason:'補正計算失敗'}; return false; }
-  boats.forEach(b=>b.pct3AfterSgElo=b.pct3Float);
-  window.__lastSgEloPredictionStatus={applied:true,reason:'前日まで反映'};
-  return true;
-}
-
-
 function resolveRaceGrade(venue, raceNo){
   const info = RACE_INFO_TODAY?.[venue];
   const title = String(info?.title || '');
@@ -3784,7 +3564,6 @@ function onRaceCardFileSelected(ev){
     statusBox.style.color = '';
     populateDaySelect();
     collapseRaceCardFold();
-    refreshSgEloStatus();
     invalidateTodayPicks(true);
   };
 
@@ -4737,11 +4516,6 @@ async function runPredict(){
   // 平均ST欄の相対差表示だけを作る。予測へのST補正はWorker内で完結している。
   prepareRelativeSTDisplayMeta(boats);
 
-  // SGだけ、BRC Serverが返した3連対率へ日次Eloを後段追加する。
-  // gamma=0.55は2025 Validationで固定。2026は完全OOS確認だけに使用。
-  // 前日結果が不足している場合は補正せず、Server値をそのまま採用する。
-  const sgEloTop3Applied = applySgDailyEloTop3Correction(boats, grade, TODAY_LABEL);
-
   // 2着率もWorker応答を正式値として使用する。
 
   const sorted = [...boats].sort((a,b)=>b.pct-a.pct);
@@ -4749,7 +4523,6 @@ async function runPredict(){
   box.innerHTML = `
     ${buildCurrentRaceSummaryHtml(venue)}
     ${buildInReliabilityCardHtmlFromServer(workerPrediction.inReliability)}
-    ${grade==='SG' ? `<div class="trend-note" style="margin:-2px 0 10px;color:${sgEloTop3Applied?'#2f8f5b':'#d1373f'};">SG Elo 3連対補正: <strong>${sgEloTop3Applied?'適用済':'未適用'}</strong>${sgEloTop3Applied?'（前日までのSG結果）':`（${window.__lastSgEloPredictionStatus?.reason||'状態不明'}）`}</div>` : ''}
     <div id="predictTableWrap" style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
     <table class="predict-table">
       <thead><tr>
@@ -4772,7 +4545,7 @@ async function runPredict(){
             <td><span class="num-badge" style="width:22px;height:22px;font-size:12.5px;background:${col.bg};color:${col.text};${b.course===1?'border:1.5px solid rgba(10,31,51,.35);box-sizing:border-box;':''}display:inline-flex;align-items:center;justify-content:center;border-radius:50%;">${b.course}</span></td>
             <td><a href="#" style="color:var(--wave); text-decoration:none; cursor:pointer;" onclick="event.preventDefault(); togglePredictPlayer(${b.course}, '${b.player.reg}', '${venue}');" title="タップで選手データを表示/非表示">${b.player.name}</a></td>
             <td class="num" style="font-weight:800; color:var(--wave); cursor:pointer; text-decoration:none;" onclick="togglePredictScenario(${b.course})" title="タップでこのコースが勝った場合の他艇の展開シナリオ傾向を表示/非表示">${b.pct}%${(()=>{ const diff = b.pct - Math.round(b.venueAvgWin); const sign = diff > 0 ? '+' : ''; const col2 = diff > 0 ? '#2f8f5b' : (diff < 0 ? '#d1373f' : 'var(--ink-soft)'); return `<div style="font-size:11px; font-weight:600; color:${col2}; margin-top:1px;" title="${venue}${b.course}コースの場基準勝率${r0(b.venueAvgWin)}%との差">場基準比 ${sign}${diff}pt</div>`; })()}</td>
-            <td class="num" style="font-weight:800; color:#e3b23c;" title="${b.sgEloTop3Applied ? `BRC Server ${b.pct3BeforeSgElo.toFixed(2)}% → SG Elo補正 ${b.pct3Float.toFixed(2)}% / Elo相対 ${b.sgEloRel>=0?'+':''}${b.sgEloRel.toFixed(3)}` : 'BRC Server 3連対率'}">${b.pct3}%${b.sgEloTop3Applied?`<div style="font-size:9.5px;font-weight:700;color:#2f8f5b;margin-top:1px;white-space:nowrap;">SG Elo</div>`:''}</td>
+            <td class="num" style="font-weight:800; color:#e3b23c;">${b.pct3}%</td>
             <td class="num" title="${stCourse ? `n=${stCourse.n}（直近1年・${b.course}コース）` : (b.player.avg_st_rank != null ? `n=${b.player.st_n}（全体）` : '')}">${stText}${b.stCorrApplied && Number.isFinite(b.stGap) ? `<div style="font-size:10.5px;color:${b.stGap<0?'#2f8f5b':(b.stGap>0?'#d1373f':'var(--ink-soft)')};margin-top:1px;">差 ${b.stGap>=0?'+':''}${b.stGap.toFixed(2)}</div>` : ''}</td>
             <td class="num">${(()=>{
               if(b.motor2 == null || !b.motorGrade) return '<span style="color:var(--ink-soft);">―</span>';
@@ -4797,7 +4570,6 @@ async function runPredict(){
     </div>
     ${buildWindPanelHtml()}
     ${buildRecommendedBetsHtmlFromServer(workerPrediction)}
-    ${grade==='SG' && sgEloTop3Applied ? `<div class="trend-note" style="margin-top:-6px;font-size:10.5px;color:var(--ink-soft);">※ SG Eloは3連対率表示へ後段反映。BRC推奨買い目・イン信頼度はBRC Server判定を維持しています。</div>` : ''}
     <div class="trend-note" style="margin-top:2px; font-size:12px; color:var(--ink-soft);">勝率をタップすると展開傾向を表示します。</div>
     <div class="trend-note fold-lead" style="margin-top:12px;">
       本命候補: <strong>${sorted[0].player.name}</strong>（コース${sorted[0].course}・予想勝率${sorted[0].pct}%）／
