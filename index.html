@@ -4672,7 +4672,7 @@ function buildMotorCellHtml(b,venue){
   const gcol=MOTOR_GRADE_COLOR[b.motorGrade]||'var(--ink-soft)';
   const d=getMotorDetail(venue,b.motorNo,b.motor2);
   const nHtml=d && Number.isFinite(Number(d.n)) ? `<span class="motor-cell-n">N${Number(d.n)}</span>` : '';
-  const core=`<span class="motor-cell-grade" style="color:${gcol};">${b.motorGrade}</span><span class="motor-cell-rate">${Math.round(b.motor2)}%</span>${nHtml}`;
+  const core=`<span class="motor-cell-grade" style="color:${gcol};">${b.motorGrade}</span><span class="motor-cell-rate">(${Math.round(b.motor2)}%)</span>${nHtml}`;
   if(!d || b.motorNo==null) return `<span style="display:inline-block;text-align:center;">${core}</span>`;
   return `<button type="button" class="motor-cell-btn" onclick="event.stopPropagation();openMotorDetail(${b.course});" title="${b.motorNo}号機の履歴を表示">${core}</button>`;
 }
