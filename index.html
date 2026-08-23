@@ -2137,7 +2137,7 @@ function renderPlayerKimarite(reg){
       return;
   }
   const overallHtml = Object.entries(d.overall).map(([k,pct])=>kimariteBar(k,pct)).join('');
-  const courseNums = Object.keys(d.by_course).map(Number).filter(c=>c>=2).sort((a,b)=>a-b);
+  const courseNums = Object.keys(d.by_course).map(Number).filter(c=>c>=2 && Number(d.by_course[String(c)]?.n || 0) >= 1).sort((a,b)=>a-b);
   const courseHtml = courseNums.map(c=>{
     const cd = d.by_course[String(c)];
     const col = LANE_COLORS[c];
@@ -2159,9 +2159,9 @@ function renderPlayerKimarite(reg){
         <div style="font-size:13.5px; font-weight:700; color:var(--ink-soft); margin-bottom:8px;">全体（全コース合算）</div>
         ${overallHtml}
       </div>
-      <div style="font-size:13.5px; font-weight:700; color:var(--ink-soft); margin-bottom:10px;">コース別内訳（勝利数3件以上のコースのみ）</div>
+      <div style="font-size:13.5px; font-weight:700; color:var(--ink-soft); margin-bottom:10px;">コース別内訳（勝利数1件以上のコース）</div>
       <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px;">
-        ${courseHtml || '<div style="color:var(--ink-soft); font-size:13.5px;">コース別の内訳を出すには勝利数が不足しています。</div>'}
+        ${courseHtml || '<div style="color:var(--ink-soft); font-size:13.5px;">コース別の勝利データがありません。</div>'}
       </div>
       ${loseCourseHtml(reg)}
     </section>
