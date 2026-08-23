@@ -220,7 +220,7 @@
   table.scenario-table{ width:max-content; min-width:100%; max-width:none; table-layout:auto; }
   table.scenario-table th, table.scenario-table td{ white-space:nowrap; }
 
-  /* ---- 出走表AIの結果テーブル：スマホでは主要4列（コース・選手・予想勝率・予想3連対率）だけを
+  /* ---- 出走表予想の結果テーブル：スマホでは主要4列（コース・選手・予想勝率・予想3連対率）だけを
      表示して横スクロールなしで収め、「すべて表示」を押すと全列＋横スクロールに切り替え可能にする ---- */
   table.predict-table{ table-layout:auto; }
   table.predict-table th, table.predict-table td{ white-space:nowrap; }
@@ -627,7 +627,7 @@
     box-shadow:0 8px 14px -14px rgba(10,31,51,.55);
   }
 
-  /* 出走表AIの会場・レース選択は固定しない。通常どおりページと一緒にスクロール */
+  /* 出走表予想の会場・レース選択は固定しない。通常どおりページと一緒にスクロール */
   .venue-race-picker{
     position:relative;
     top:auto;
@@ -875,7 +875,7 @@
   }
 
 
-  /* ---- BRC会員認証：出走表AIタブ ---- */
+  /* ---- BRC会員認証：出走表予想タブ ---- */
   .brc-auth-gate{
     min-height:420px; display:flex; align-items:center; justify-content:center;
     padding:28px 14px;
@@ -1048,7 +1048,7 @@
   <div class="page-tabs">
     <button class="page-tab active" data-page="players">選手データ</button>
     <button class="page-tab" data-page="venue">会場別攻略</button>
-    <button class="page-tab" data-page="predict" id="brcPredictTab">🔒 出走表AI</button>
+    <button class="page-tab" data-page="predict" id="brcPredictTab">🔒 出走表予想</button>
     <button class="page-tab" data-page="today">本日厳選</button>
   </div>
 
@@ -1127,20 +1127,22 @@
       <div class="brc-auth-card">
         <div class="brc-auth-mark">🔒</div>
         <h2 class="brc-auth-title">BRC MEMBERS</h2>
-        <div class="brc-auth-sub" id="brcAuthSub">出走表AIはBRC会員限定です。発行された会員IDとパスワードでログインしてください。</div>
+        <div class="brc-auth-sub" id="brcAuthSub">出走表予想はBRC会員限定です。発行された会員IDとパスワードでログインしてください。</div>
         <form id="brcLoginForm" autocomplete="on">
-          <label class="brc-auth-field"><span>会員ID</span><input id="brcLoginId" type="text" inputmode="text" autocomplete="username" autocapitalize="characters" spellcheck="false" placeholder="BRC0000" required></label>
+          <label class="brc-auth-field"><span>会員ID</span><input id="brcLoginId" type="text" inputmode="text" autocomplete="username" autocapitalize="characters" spellcheck="false" placeholder="BRC002" required></label>
           <label class="brc-auth-field"><span>パスワード</span><input id="brcLoginPassword" type="password" autocomplete="current-password" required></label>
           <button class="brc-auth-submit" id="brcLoginSubmit" type="submit">ログインして開く</button>
         </form>
         <div class="brc-auth-message" id="brcAuthMessage" aria-live="polite"></div>
+        <div class="brc-auth-help">YOOR加入確認後に発行された会員IDでログインできます。</div>
+        <div style="text-align:center;"><button type="button" class="brc-logout-btn" id="brcGateLogoutBtn" style="display:none; margin-top:10px; padding:8px 14px;">ログアウトして別IDでログイン</button></div>
         <div class="brc-salon-guide"><strong>入会希望の方へ</strong><br>公式LINEにキーワード <span class="brc-salon-keyword">【サロン】</span> と返信してください。<br>入会のご案内を配信します。</div>
       </div>
     </div>
     <div id="brcPredictProtected" style="display:none;">
       <div class="brc-member-bar"><span id="brcMemberBadge" class="brc-member-badge">BRC MEMBER</span><button type="button" class="brc-logout-btn" id="brcLogoutBtn">ログアウト</button></div>
     <section class="card">
-      <h2>出走表AI</h2>
+      <h2>出走表予想</h2>
       <div class="note-fold" style="margin-bottom:6px;" id="raceCardFoldWrap">
         <button type="button" class="note-fold-toggle" id="raceCardFoldToggle" onclick="var b=this.nextElementSibling; var s=(b.style.display!=='none'); b.style.display=s?'none':'flex'; this.textContent=s?'番組表の読み込み ▸':'番組表の読み込み ▾';">番組表の読み込み ▾</button>
         <div class="card-sub fold-body" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
@@ -1488,27 +1490,20 @@ function brcRenderGate(state='login', user=null){
   const tab=document.getElementById('brcPredictTab');
   if(gate) gate.style.display='flex';
   if(protectedBox) protectedBox.style.display='none';
-  if(tab) tab.textContent='🔒 出走表AI';
+  if(tab) tab.textContent='🔒 出走表予想';
   if(form) form.style.display = state==='login' ? '' : 'none';
   if(sub){
     if(state==='inactive') sub.textContent='ログインは確認できましたが、このアカウントには現在BRC会員権限がありません。YOOR会員登録状況をご確認ください。';
     else if(state==='checking') sub.textContent='BRC会員情報を確認しています…';
-    else sub.textContent='出走表AIはBRC会員限定です。発行された会員IDとパスワードでログインしてください。';
+    else sub.textContent='出走表予想はBRC会員限定です。発行された会員IDとパスワードでログインしてください。';
   }
+  const gateLogoutBtn=document.getElementById('brcGateLogoutBtn');
   if(state==='inactive'){
     const memberId=brcDisplayMemberId(user);
     brcSetAuthMessage(memberId ? `ログイン中: ${memberId}` : 'ログインは確認できましたが、会員権限が無効です。','info');
-    if(gate && !document.getElementById('brcGateLogoutBtn')){
-      const help=gate.querySelector('.brc-auth-help');
-      if(help){
-        const btn=document.createElement('button');
-        btn.type='button'; btn.id='brcGateLogoutBtn'; btn.className='brc-logout-btn'; btn.textContent='別アカウントでログイン';
-        btn.style.marginTop='10px'; btn.addEventListener('click',brcLogout);
-        help.insertAdjacentElement('afterend',btn);
-      }
-    }
+    if(gateLogoutBtn) gateLogoutBtn.style.display='inline-block';
   }else{
-    const btn=document.getElementById('brcGateLogoutBtn'); if(btn) btn.remove();
+    if(gateLogoutBtn) gateLogoutBtn.style.display='none';
   }
 }
 function brcRenderMember(user){
@@ -1520,7 +1515,7 @@ function brcRenderMember(user){
   const tab=document.getElementById('brcPredictTab');
   if(gate) gate.style.display='none';
   if(protectedBox) protectedBox.style.display='';
-  if(tab) tab.textContent='出走表AI';
+  if(tab) tab.textContent='出走表予想';
   const memberId=brcDisplayMemberId(user);
   if(badge) badge.textContent = memberId ? `BRC MEMBER · ${memberId}` : 'BRC MEMBER';
   brcSetAuthMessage('');
@@ -1604,6 +1599,8 @@ function brcInitAuthUi(){
   }
   const logout=document.getElementById('brcLogoutBtn');
   if(logout && !logout.dataset.bound){logout.dataset.bound='1'; logout.addEventListener('click',brcLogout);}
+  const gateLogout=document.getElementById('brcGateLogoutBtn');
+  if(gateLogout && !gateLogout.dataset.bound){gateLogout.dataset.bound='1'; gateLogout.addEventListener('click',brcLogout);}
   // 保存済みセッションが有効なら、ページ表示時点で会員状態だけ先に復元する。
   brcEnsurePredictAccess({silent:true});
 }
@@ -2260,8 +2257,8 @@ function renderPlayerScenario(reg){
   renderScenarioTable();
 }
 
-// 出走表AIタブ：予想勝率タップで、その選手×そのコース限定の展開シナリオ傾向を表示/非表示
-// 出走表AIタブ：選手名タップで、その選手の選手データ（グレード別・コース別成績＋該当会場での成績）を表示/非表示
+// 出走表予想タブ：予想勝率タップで、その選手×そのコース限定の展開シナリオ傾向を表示/非表示
+// 出走表予想タブ：選手名タップで、その選手の選手データ（グレード別・コース別成績＋該当会場での成績）を表示/非表示
 function togglePredictPlayer(course, reg, venue){
   const row = document.getElementById(`predict-pl-row-${course}`);
   if(!row) return;
@@ -2346,7 +2343,7 @@ function predictRecentCourseKimariteHtml(reg, course){
   `;
 }
 
-// 出走表AIタブ：予想勝率タップで「そのコースの艇が勝った場合」に他艇がどう着順を残す傾向にあるかを表示
+// 出走表予想タブ：予想勝率タップで「そのコースの艇が勝った場合」に他艇がどう着順を残す傾向にあるかを表示
 function togglePredictScenario(course){
   const row = document.getElementById(`predict-sc-row-${course}`);
   if(!row) return;
@@ -3661,7 +3658,7 @@ function onRaceCardFileSelected(ev){
   reader.readAsArrayBuffer(file);
 }
 
-// 当日の番組表（RACE_CARDS_TODAY）から該当レースの6艇を出走表AIの入力欄に自動入力する
+// 当日の番組表（RACE_CARDS_TODAY）から該当レースの6艇を出走表予想の入力欄に自動入力する
 function loadTodaysRace(venue, raceNo){
   const metaBox = document.getElementById('predictRaceMeta');
   const races = RACE_CARDS_TODAY[venue];
@@ -4319,14 +4316,14 @@ async function renderTodayPicks(force=false){
     <thead><tr><th>会場</th><th class="num">締め切り</th><th class="num">イン逃げ率</th><th class="num">モーター</th></tr></thead>
     <tbody>${rows.map(r=>{
       const passed=isRaceDeadlinePassed(r.deadline);
-      return `<tr class="today-pick-row${passed?' deadline-passed':''}" data-venue="${r.venue}" data-race="${r.raceNo}" tabindex="0" role="button" aria-label="${r.venue}${r.raceNo}Rを出走表AIで開く">
+      return `<tr class="today-pick-row${passed?' deadline-passed':''}" data-venue="${r.venue}" data-race="${r.raceNo}" tabindex="0" role="button" aria-label="${r.venue}${r.raceNo}Rを出走表予想で開く">
         <td><span class="today-race-name">${r.venue}${r.raceNo}R</span></td>
         <td class="num">${r.deadline||'―'}</td>
         <td class="num"><span class="today-in-pct">${Math.round(r.inPct)}%</span></td>
         <td class="num">${todayMotorHtml(r)}</td>
       </tr>`;
     }).join('')}</tbody></table></div>
-    <div class="today-picks-note">行をタップすると、そのレースを「出走表AI」で開きます。モーターは1号艇の当該レース内相対評価です。${cache.skipped?` 判定不可 ${cache.skipped}件。`:''}</div>`;
+    <div class="today-picks-note">行をタップすると、そのレースを「出走表予想」で開きます。モーターは1号艇の当該レース内相対評価です。${cache.skipped?` 判定不可 ${cache.skipped}件。`:''}</div>`;
 
   body.querySelectorAll('.today-pick-row').forEach(tr=>{
     const open=()=>openTodayPickRace(tr.dataset.venue,tr.dataset.race);
@@ -4496,7 +4493,7 @@ async function runPredict(){
     }
     if(err && err.status === 403){
       brcRenderGate('inactive');
-      brcSetAuthMessage('現在このアカウントでは出走表AIを利用できません。');
+      brcSetAuthMessage('現在このアカウントでは出走表予想を利用できません。');
       return;
     }
     preBox.innerHTML = '<div style="color:#e5484d; font-size:14.5px;">予想APIに接続できませんでした。少し時間をおいてもう一度お試しください。</div>';
@@ -4624,7 +4621,7 @@ document.addEventListener('DOMContentLoaded', () => {
   enforceSemifinalDayUi();
 });
 
-// 出走表AIタブの選手名クリック → 選手データタブへ移動し、その選手の検索・詳細内訳を表示
+// 出走表予想タブの選手名クリック → 選手データタブへ移動し、その選手の検索・詳細内訳を表示
 function goToPlayerDetail(reg){
   document.querySelectorAll('.page-tab').forEach(b=>b.classList.toggle('active', b.dataset.page==='players'));
   PAGE_IDS.forEach(id=>{
