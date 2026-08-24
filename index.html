@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Boat Research Club ～データベース～</title>
 <!-- BRC_SG_SPECIAL_REPORT_20260824 -->
+<!-- BRC_SG_BET_GUIDE_SIMPLIFIED_20260824 -->
 <!-- BRC_SG_MOTOR_SECOND_AXIS_20260824 -->
 <!-- BRC_IN_RELIABILITY_ABS_WIN_THRESHOLDS_20260824 -->
 <!-- BRC_VENUE_CK_HEAD1_INTEGRATED_20260823 -->
@@ -1198,6 +1199,50 @@
     .sg-motor-row{grid-template-columns:47px 40px 1fr;padding:8px 9px;}
   }
 
+
+  /* ---- SG特集：舟券へ直結する「使い方」 ---- */
+  .sg-howto{
+    border:1px solid #bcd5f5;
+    background:linear-gradient(180deg,#f5f9ff 0%,#fff 100%);
+    border-radius:15px;
+    padding:16px;
+    margin:0 0 18px;
+    box-shadow:0 8px 24px rgba(0,87,219,.055);
+  }
+  .sg-howto-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px;}
+  .sg-howto-title{font-size:17px;font-weight:950;color:#07182a;letter-spacing:-.02em;}
+  .sg-howto-sub{font-size:10.5px;color:#6b7d91;white-space:nowrap;}
+  .sg-howto-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+  .sg-howto-item{min-width:0;border:1px solid #dce7f4;background:#fff;border-radius:11px;padding:11px 10px;}
+  .sg-howto-kicker{font-size:9.5px;font-weight:900;color:#67809b;letter-spacing:.06em;margin-bottom:3px;}
+  .sg-howto-item b{display:block;font-size:14px;line-height:1.4;color:#0a1f33;margin-bottom:7px;}
+  .sg-bet-example{
+    display:flex;align-items:center;justify-content:center;min-height:34px;padding:6px 8px;
+    border-radius:8px;background:#eef5ff;color:#0b5fcb;font-size:13px;font-weight:950;
+    letter-spacing:.015em;text-align:center;
+  }
+  .sg-howto-item:nth-child(2) .sg-bet-example{background:#fff6df;color:#8a6200;}
+  .sg-howto-item:nth-child(3) .sg-bet-example{background:#fff0f0;color:#a52626;}
+  .sg-howto-note{margin-top:10px;padding:9px 10px;border-radius:9px;background:#07182a;color:#eaf3ff;font-size:11.5px;line-height:1.65;}
+  .sg-howto-note strong{color:#fff;}
+  .sg-live-bet{
+    margin-top:8px;padding:7px 8px;border-radius:8px;background:#f4f8fd;
+    color:#274664;font-size:11px;line-height:1.55;font-weight:750;
+  }
+  .sg-live-bet b{color:#0b5fcb;margin-right:5px;}
+  .sg-action{font-size:13px;}
+  .sg-action strong{color:#0a4d9d;}
+  @media(max-width:640px){
+    .sg-howto{padding:13px 11px;}
+    .sg-howto-head{display:block;}
+    .sg-howto-sub{display:block;margin-top:2px;}
+    .sg-howto-grid{grid-template-columns:1fr;gap:7px;}
+    .sg-howto-item{display:grid;grid-template-columns:74px minmax(0,1fr);column-gap:8px;align-items:center;padding:9px;}
+    .sg-howto-kicker{grid-column:1;font-size:9px;margin:0;}
+    .sg-howto-item b{grid-column:2;margin:0;font-size:13.5px;}
+    .sg-bet-example{grid-column:1 / -1;margin-top:7px;min-height:32px;font-size:12.5px;}
+  }
+
 </style>
 </head>
 <body>
@@ -1241,19 +1286,40 @@
         <div id="sgLiveRaces" class="sg-live-races"></div>
       </section>
 
-      <div class="sg-lead">
-        桐生で行われる今回のSGに向けて、過去の桐生G1/G2を<strong>2024探索 → 2025検証 → 2026完全OOS</strong>で分離して再検証しました。攻略条件は開催前に判定でき、2026でも方向が残った3つに限定。さらに抽選後は、過去SGでOOS再現した<strong>モーター評価を「第2評価軸」</strong>として重ねます。モーターは本体の勝率予測には加算しません。
-      </div>
+      <section class="sg-howto">
+        <div class="sg-howto-head">
+          <div class="sg-howto-title">このSGは「着順の置き方」を3つだけ覚える</div>
+          <div class="sg-howto-sub">頭候補は出走表AI・展示で決める</div>
+        </div>
+        <div class="sg-howto-grid">
+          <div class="sg-howto-item">
+            <div class="sg-howto-kicker">① 基本形</div>
+            <b>5号艇を3着に残す</b>
+            <div class="sg-bet-example">頭候補 − 相手 − ⑤</div>
+          </div>
+          <div class="sg-howto-item">
+            <div class="sg-howto-kicker">② 2号艇が差し型</div>
+            <b>5号艇を2・3着へ上げる</b>
+            <div class="sg-bet-example">頭候補 − ⑤ − 相手<br>＋ 頭候補 − 相手 − ⑤</div>
+          </div>
+          <div class="sg-howto-item">
+            <div class="sg-howto-kicker">③ 4頭強警戒</div>
+            <b>4号艇を1着候補へ上げる</b>
+            <div class="sg-bet-example">④ − 相手 − 相手</div>
+          </div>
+        </div>
+        <div class="sg-howto-note"><strong>モーターの使い方：</strong>モーター単独で新しい頭を作らない。上の「狙う艇」と好モーターが重なった時だけ、その型の優先度を一段上げる。</div>
+      </section>
 
-      <div class="sg-section-head"><h3>今節の攻略3ポイント</h3><span class="sg-section-en">Race Research</span></div>
+      <div class="sg-section-head"><h3>なぜこの3パターンを狙うのか</h3><span class="sg-section-en">Evidence</span></div>
 
       <section class="sg-story-card card-1">
         <div class="sg-card-top">
-          <div><div class="sg-card-no">POINT 01｜BASIC</div><div class="sg-card-title">桐生5号艇は「3着残り」に注意</div></div>
+          <div><div class="sg-card-no">POINT 01｜BASIC</div><div class="sg-card-title">基本形｜5号艇は「3着」に置く</div></div>
           <span class="sg-badge">桐生G1/G2・OOS</span>
         </div>
-        <div class="sg-card-copy">5コース全体を強く評価するのではなく、狙いは<strong>3連単の3着</strong>。厳密再計算では、5号艇3着率が2024・2025・2026のすべてで他場G1/G2を上回りました。</div>
-        <div class="sg-action">5号艇を3着候補から安易に消さない</div>
+        <div class="sg-card-copy">桐生では5号艇の<strong>「3着残り」</strong>が3年連続で他場G1/G2を上回りました。5頭を狙う条件ではなく、3着欄から落としすぎないための基本ルールです。</div>
+        <div class="sg-action"><strong>舟券：</strong>「頭候補 − 相手 − ⑤」を1枚残す</div>
         <div class="sg-evidence">
           <div class="sg-evi"><small>2024</small><strong>21.5%</strong><span>他場 18.9%</span></div>
           <div class="sg-evi"><small>2025</small><strong>27.6%</strong><span>他場 18.8%</span></div>
@@ -1263,11 +1329,11 @@
 
       <section class="sg-story-card card-2">
         <div class="sg-card-top">
-          <div><div class="sg-card-no">POINT 02｜KIRYU FLAG</div><div class="sg-card-title">2号艇が「差し型」なら5号艇を警戒</div></div>
+          <div><div class="sg-card-no">POINT 02｜KIRYU FLAG</div><div class="sg-card-title">差し型2号艇なら、5号艇を「2・3着」へ</div></div>
           <span class="sg-badge">桐生特化・OOS</span>
         </div>
-        <div class="sg-card-copy">2号艇選手の直近365日で、<strong>2C差し勝利率15%以上・N≥10</strong>が発動条件。全国SGでは再現しなかった一方、桐生では2025検証・2026 OOSでも5号艇の3連対率が上昇しました。</div>
-        <div class="sg-action">条件該当時は5号艇の2・3着残りを普段より意識</div>
+        <div class="sg-card-copy">2号艇が<strong>2C差し勝利率15%以上・N≥10</strong>なら、5号艇は「3着だけ」から<strong>2・3着候補へ昇格</strong>。桐生で2025検証・2026 OOSとも再現しています。</div>
+        <div class="sg-action"><strong>舟券：</strong>「頭候補 − ⑤ − 相手」＋「頭候補 − 相手 − ⑤」</div>
         <div class="sg-evidence">
           <div class="sg-evi"><small>2024</small><strong>50.0%</strong><span>非該当 43.4%</span></div>
           <div class="sg-evi"><small>2025</small><strong>65.4%</strong><span>非該当 40.6%</span></div>
@@ -1277,16 +1343,16 @@
 
       <section class="sg-story-card card-3">
         <div class="sg-card-top">
-          <div><div class="sg-card-no">POINT 03｜HEAD FLAG</div><div class="sg-card-title">4号艇の「頭」は1号艇の弱点から見る</div></div>
+          <div><div class="sg-card-no">POINT 03｜HEAD FLAG</div><div class="sg-card-title">4頭強警戒なら、4号艇を「1着」へ</div></div>
           <span class="sg-badge">SG年次OOS＋桐生特化</span>
         </div>
-        <div class="sg-card-copy">4号艇だけを見るより、まず1号艇の<strong>1Cまくられ率5%</strong>を境界にする方が桐生では明確でした。さらに4号艇が<strong>4Cまくり率10%以上・N≥10</strong>なら「強警戒」へ引き上げます。</div>
+        <div class="sg-card-copy">見る順番は<strong>1号艇 → 4号艇</strong>。1号艇の1Cまくられ率が5%以上で4頭を警戒し、さらに4号艇が<strong>4Cまくり率10%以上・N≥10</strong>なら「頭候補」に昇格します。</div>
         <div class="sg-tier">
           <div class="sg-tier-item low"><b>4頭評価 低</b><span>1号艇の1Cまくられ率<br><strong>&lt; 5%</strong>（N≥10）</span></div>
           <div class="sg-tier-item mid"><b>4頭注意</b><span>1号艇の1Cまくられ率<br><strong>≥ 5%</strong></span></div>
           <div class="sg-tier-item high"><b>🔥 4頭強警戒</b><span>上記＋4号艇の4Cまくり率<br><strong>≥ 10%</strong>（N≥10）</span></div>
         </div>
-        <div class="sg-action">強警戒では4号艇を「相手」だけでなく頭まで検討</div>
+        <div class="sg-action"><strong>舟券：</strong>強警戒＝「④ − 相手 − 相手」／注意＝4は2・3着まで／低＝4頭を優先しない</div>
         <div class="sg-evidence">
           <div class="sg-evi"><small>強警戒 2024</small><strong>23.8%</strong><span>4号艇1着</span></div>
           <div class="sg-evi"><small>強警戒 2025</small><strong>30.0%</strong><span>4号艇1着</span></div>
@@ -1301,7 +1367,7 @@
           <span class="sg-badge">確率には未加算</span>
         </div>
         <div class="sg-card-copy">過去SGを開催前のモーター2連対率で固定すると、<strong>場内上位10%</strong>は2023–24探索・2025検証・2026 OOSのすべてで2連対率が上昇しました。今回の桐生はさらに、選手力・コース有利を差し引いた残差、展示傾向、直近推移から65基を再評価しています。</div>
-        <div class="sg-action">攻略条件と好機力が同じ「狙う艇」に重なった時は優先度を一段上げて確認</div>
+        <div class="sg-action"><strong>使い方：</strong>モーター単独で頭を増やさない。②の5号艇・③の4号艇と好機力が重なった時だけ、その舟券型を優先</div>
         <div class="sg-evidence">
           <div class="sg-evi"><small>SG上位10% 2023–24</small><strong>+6.5pt</strong><span>2連対差</span></div>
           <div class="sg-evi"><small>SG上位10% 2025</small><strong>+5.5pt</strong><span>2連対差</span></div>
@@ -2113,7 +2179,7 @@ function renderSpecialLivePanel(){
   }
   const strategyEnabled=day<=4;
   note.textContent=strategyEnabled
-    ? `${day===1?'初日':day+'日目'}｜①5号艇3着残りは全レース共通。②③＋モーターの重複を表示します。`
+    ? `${day===1?'初日':day+'日目'}｜基本は⑤を3着。②なら⑤を2・3着、③強警戒なら④を1着候補へ上げます。`
     : `${day===5?'5日目':'最終日'}｜①〜③は予選検証対象外。モーター評価のみ表示します。`;
 
   let n2=0,nHigh=0,nMid=0,nLow=0,nCombo=0;
@@ -2166,10 +2232,20 @@ function renderSpecialLivePanel(){
     if(f2) sub.push(`2号艇 ${brcSpecialPlayerName(r2)}`);
     if(tier==='high') sub.push(`4号艇 ${brcSpecialPlayerName(r4)}`);
     hotMotors.slice(0,2).forEach(x=>sub.push(`${x.lane}号艇 ${brcSpecialPlayerName(String(regs[x.lane-1]))} M${x.no}`));
-    cards.push(`<div class="sg-live-race"><div class="sg-live-race-top"><span>${rno}R</span><span style="font-size:10px;color:#77889b;font-weight:700;">${sub.join(' / ')}</span></div><div class="sg-live-race-tags">${tags.join('')}</div></div>`);
+    const betGuide=[];
+    if(strategyEnabled){
+      if(f2) betGuide.push('⑤を2・3着');
+      else betGuide.push('⑤を3着');
+      if(tier==='high') betGuide.push('④を1着候補');
+      else if(tier==='mid') betGuide.push('④は2・3着まで');
+      if(combo2 || combo4) betGuide.push('🔥 好機力重複で優先度UP');
+    }else if(hasMotor){
+      betGuide.push('モーター評価のみ');
+    }
+    cards.push(`<div class="sg-live-race"><div class="sg-live-race-top"><span>${rno}R</span><span style="font-size:10px;color:#77889b;font-weight:700;">${sub.join(' / ')}</span></div><div class="sg-live-race-tags">${tags.join('')}</div>${betGuide.length?`<div class="sg-live-bet"><b>舟券</b>${betGuide.join(' ／ ')}</div>`:''}</div>`);
   });
   if(strategyEnabled){
-    counts.innerHTML=`<span class="sg-live-count">② 5注意 ${n2}R</span><span class="sg-live-count">③ 強警戒 ${nHigh}R</span><span class="sg-live-count">③ 注意 ${nMid}R</span><span class="sg-live-count">BRC特注 ${motorSSet.size}基</span><span class="sg-live-count">条件×好機力 ${nCombo}件</span>`;
+    counts.innerHTML=`<span class="sg-live-count">基本 ⑤3着 全R</span><span class="sg-live-count">② ⑤を2・3着 ${n2}R</span><span class="sg-live-count">③ ④頭 ${nHigh}R</span><span class="sg-live-count">③ ④相手 ${nMid}R</span><span class="sg-live-count">条件×好機力 ${nCombo}件</span>`;
   }else{
     counts.innerHTML=`<span class="sg-live-count">①〜③ 予選検証対象外</span><span class="sg-live-count">BRC特注 ${motorSSet.size}基</span>`;
   }
