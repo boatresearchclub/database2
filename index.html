@@ -2170,8 +2170,8 @@ function brcSpecialTier(reg1,reg4){
 function brcSpecialMotorTicketGuide(lane, meta){
   if(!meta || !(meta.grade==='S'||meta.grade==='A'||meta.sgBand==='TOP10')) return '';
   const isS=meta.grade==='S';
-  if(!isS) return 'A｜迷った候補を残す';
-  const guides={1:'S｜頭を強化',2:'S｜2・3着から切らない',3:'S｜頭候補まで',4:'S｜基本2着まで',5:'S｜3着残し強化',6:'S｜AI・展示が伴えば3着'};
+  if(!isS) return 'A｜AI候補なら採用';
+  const guides={1:'S｜1着評価UP',2:'S｜2・3着評価UP',3:'S｜1着候補まで',4:'S｜2着まで評価UP',5:'S｜3着評価UP',6:'S｜AI・展示が良ければ3着'};
   return guides[Number(lane)]||'S｜舟券評価UP';
 }
 function renderSpecialLivePanel(){
@@ -2235,24 +2235,24 @@ function renderSpecialLivePanel(){
     if(!hasStrategy && !hasMotor && !combo2 && !combo4) return;
 
     const tags=[];
-    if(f2) tags.push(`<span class="sg-live-flag f2">② ⑤を2・3着へ</span>`);
-    if(tier==='high') tags.push(`<span class="sg-live-flag f4">③ ④を1着候補へ</span>`);
-    else if(tier==='mid') tags.push(`<span class="sg-live-flag mid">③ ④を相手に残す</span>`);
-    if(combo2) tags.push(`<span class="sg-live-flag combo">🔥 ⑤相手強化×好機力</span>`);
-    if(combo4) tags.push(`<span class="sg-live-flag combo">🔥 ④頭条件×好機力</span>`);
+    if(f2) tags.push(`<span class="sg-live-flag f2">5号艇｜2・3着候補</span>`);
+    if(tier==='high') tags.push(`<span class="sg-live-flag f4">4号艇｜1着候補</span>`);
+    else if(tier==='mid') tags.push(`<span class="sg-live-flag mid">4号艇｜2・3着候補</span>`);
+    if(combo2) tags.push(`<span class="sg-live-flag combo">🔥 5号艇｜2・3着＋好モーター</span>`);
+    if(combo4) tags.push(`<span class="sg-live-flag combo">🔥 4号艇｜1着条件＋好モーター</span>`);
     hotMotors.forEach(x=>{
       const label=brcSpecialMotorTicketGuide(x.lane,x.meta);
-      tags.push(`<span class="sg-live-flag ${x.kind==='S'?'motor':'motor-top'}">⚡ ${x.lane}号艇 M${x.no} ${label}</span>`);
+      tags.push(`<span class="sg-live-flag ${x.kind==='S'?'motor':'motor-top'}">⚡ ${x.lane}号艇｜${x.no}号機 ${label}</span>`);
     });
 
     const sub=[];
     if(f2) sub.push(`2号艇 ${brcSpecialPlayerName(r2)}`);
     if(tier==='high') sub.push(`4号艇 ${brcSpecialPlayerName(r4)}`);
-    hotMotors.slice(0,2).forEach(x=>sub.push(`${x.lane}号艇 ${brcSpecialPlayerName(String(regs[x.lane-1]))} M${x.no}`));
+    hotMotors.slice(0,2).forEach(x=>sub.push(`${x.lane}号艇 ${brcSpecialPlayerName(String(regs[x.lane-1]))}｜${x.no}号機`));
     cards.push(`<div class="sg-live-race"><div class="sg-live-race-top"><span>${rno}R</span><span style="font-size:10px;color:#77889b;font-weight:700;">${sub.join(' / ')}</span></div><div class="sg-live-race-tags">${tags.join('')}</div></div>`);
   });
   if(strategyEnabled){
-    counts.innerHTML=`<span class="sg-live-count">⑤を2・3着 ${n2}R</span><span class="sg-live-count">④頭候補 ${nHigh}R</span><span class="sg-live-count">④相手 ${nMid}R</span><span class="sg-live-count">Sモーター ${motorSSet.size}基</span><span class="sg-live-count">条件×好機力 ${nCombo}件</span>`;
+    counts.innerHTML=`<span class="sg-live-count">5号艇 2・3着 ${n2}R</span><span class="sg-live-count">4号艇 1着候補 ${nHigh}R</span><span class="sg-live-count">4号艇 2・3着 ${nMid}R</span><span class="sg-live-count">Sモーター ${motorSSet.size}基</span><span class="sg-live-count">条件＋好モーター ${nCombo}件</span>`;
   }else{
     counts.innerHTML=`<span class="sg-live-count">①〜③ 予選検証対象外</span><span class="sg-live-count">BRC特注 ${motorSSet.size}基</span>`;
   }
