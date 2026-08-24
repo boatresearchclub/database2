@@ -2114,14 +2114,13 @@ function renderSpecialMotorWatchList(){
     .sort((a,b)=>(a.scoreRank||999)-(b.scoreRank||999));
   el.innerHTML=rows.map(m=>{
     const cls=m.grade==='S'?'s':'a';
-    const raw=m.rate!=null?`${Number(m.rate).toFixed(1)}%`:'―';
-    const sg=m.sgBand==='TOP10'?'・SG上位10%':'';
     const u=users[String(m.motor)]||null;
     const userHtml=u
       ? `<div class="sg-motor-user"><strong>${u.name}</strong><span>${u.reg}</span></div>`
       : `<div class="sg-motor-user pending"><strong>番組表読込後に使用選手を自動表示</strong></div>`;
     const label=m.grade==='S'?'特注｜舟券評価を1段UP':'好機｜迷った候補を残す';
-    return `<div class="sg-motor-row"><div class="sg-motor-no">${m.motor}号機</div><span class="sg-motor-grade ${cls}">${m.grade}</span><div class="sg-motor-info">${userHtml}<b>${label}</b>${sg}<br><span style="font-size:9.5px;color:#7b8a9c;">参考 2連率 ${raw}</span></div></div>`;
+    const sub=m.grade==='S'?'枠が決まると、その枠に合う着順の使い方を表示':'A単独では買い目を増やさない';
+    return `<div class="sg-motor-row"><div class="sg-motor-no">${m.motor}号機</div><span class="sg-motor-grade ${cls}">${m.grade}</span><div class="sg-motor-info">${userHtml}<b>${label}</b><br><span style="font-size:9.5px;color:#7b8a9c;">${sub}</span></div></div>`;
   }).join('');
 }
 const BRC_SG_MEMORIAL_TITLE = '第72回ボートレースメモリアル';
