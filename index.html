@@ -3038,8 +3038,8 @@ function initPredictPage(){
     }, 30000);
   }
 
-  // BRC_AUTO_RACECARD_CALL_V1
-  // GitHubへ配備された当日TXTがあれば、画面初期化後に自動読込する。
+  // BRC_AUTO_RACECARD_CALL_V2
+  // 当日TXTを初期表示直後に確認。未反映ならV2側で自動再試行する。
   setTimeout(()=>{ autoLoadHostedRaceCardToday(); }, 0);
 }
 
@@ -3544,19 +3544,41 @@ function collapseRaceCardFold(){
 }
 
 
-// BRC_AUTO_RACECARD_LOADER_V1
+// BRC_AUTO_RACECARD_LOADER_V2
 // GitHub上の当日公式TXTを自動読み込みする。
-// Windows側の BRC_AUTO_RACECARD.py が racecards/today.TXT を毎日更新する。
+// 前日ファイルが一時的に残っていてもエラー扱いにせず、本日分が反映されるまで自動再試行する。
+function scheduleHostedRaceCardRetry(delayMs=60000){
+  if(window.__brcRaceCardRetryTimer) clearTimeout(window.__brcRaceCardRetryTimer);
+  window.__brcRaceCardRetryTimer = setTimeout(()=>{ autoLoadHostedRaceCardToday(); }, delayMs);
+}
+
+function setRaceCardWaitingForToday(jstToday){
+  if(TODAY_LABEL === jstToday) return;
+  clearStoredRaceCard();
+  RACE_CARDS_TODAY = {};
+  RACE_INFO_TODAY = {};
+  RACE_MOTOR_TODAY = {};
+  RACE_MOTOR_NO_TODAY = {};
+  TODAY_LABEL = jstToday;
+  const label = document.getElementById('raceCardDateLabel');
+  if(label) label.textContent = `${jstToday}（読込待ち）`;
+  try{ populateDaySelect(); }catch(_e){}
+  try{ invalidateTodayPicks(true); }catch(_e){}
+}
+
 async function autoLoadHostedRaceCardToday(){
   const statusBox = document.getElementById('raceCardFileStatus');
+  const jstToday = getJstDateLabel();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(jstToday)) return false;
+
+  const yymmdd = jstToday.replace(/-/g, '').slice(2);
+  const sourceName = `B${yymmdd}.TXT`;
+  const url = `racecards/today.TXT?v=${Date.now()}`;
+
+  // 埋め込みデータや前日のlocalStorageを「今日の番組表」として見せない。
+  setRaceCardWaitingForToday(jstToday);
+
   try{
-    const jstToday = getJstDateLabel();
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(jstToday)) return false;
-
-    const yymmdd = jstToday.replace(/-/g, '').slice(2);
-    const sourceName = `B${yymmdd}.TXT`;
-    const url = `racecards/today.TXT?v=${encodeURIComponent(jstToday)}`;
-
     if(statusBox){
       statusBox.textContent = `本日の番組表を確認中: ${sourceName}`;
       statusBox.style.color = '';
@@ -3564,10 +3586,11 @@ async function autoLoadHostedRaceCardToday(){
 
     const res = await fetch(url, {cache:'no-store'});
     if(!res.ok){
-      if(statusBox && !statusBox.textContent.includes('読込成功')){
-        statusBox.textContent = `本日の自動番組表はまだ未反映です（${sourceName}）`;
+      if(statusBox){
+        statusBox.textContent = `本日の番組表を反映待ちです（${sourceName}）`;
         statusBox.style.color = '';
       }
+      scheduleHostedRaceCardRetry();
       return false;
     }
 
@@ -3581,12 +3604,19 @@ async function autoLoadHostedRaceCardToday(){
 
     const data = parseOfficialRaceCardText(txt);
     if(data.date && data.date !== jstToday){
-      throw new Error(`番組表日付が一致しません: ${data.date}`);
+      // GitHub / Cloudflare側が前日版を返している間は、異常ではなく配信反映待ちとして扱う。
+      if(statusBox){
+        statusBox.textContent = `本日分を反映待ちです（現在 ${data.date} → ${jstToday}）`;
+        statusBox.style.color = '';
+      }
+      scheduleHostedRaceCardRetry();
+      return false;
     }
 
     RACE_CARDS_TODAY = data.cards;
     RACE_INFO_TODAY = normalizeRaceInfoDayLabels(data.info);
     RACE_MOTOR_TODAY = data.motor || {};
+    RACE_MOTOR_NO_TODAY = data.motorNo || {};
     TODAY_LABEL = data.date || jstToday;
 
     const label = document.getElementById('raceCardDateLabel');
@@ -3596,6 +3626,10 @@ async function autoLoadHostedRaceCardToday(){
     collapseRaceCardFold();
     invalidateTodayPicks(true);
 
+    if(window.__brcRaceCardRetryTimer){
+      clearTimeout(window.__brcRaceCardRetryTimer);
+      window.__brcRaceCardRetryTimer = null;
+    }
     if(statusBox){
       statusBox.textContent = `本日の公式番組表を自動読込: ${sourceName}（${Object.keys(RACE_INFO_TODAY).length}会場）`;
       statusBox.style.color = '';
@@ -3604,9 +3638,10 @@ async function autoLoadHostedRaceCardToday(){
   }catch(e){
     console.warn('本日の番組表自動読込に失敗しました', e);
     if(statusBox){
-      statusBox.textContent = `自動読込エラー: ${e.message}`;
-      statusBox.style.color = '#e5484d';
+      statusBox.textContent = `番組表を再確認します: ${e.message}`;
+      statusBox.style.color = '';
     }
+    scheduleHostedRaceCardRetry();
     return false;
   }
 }
