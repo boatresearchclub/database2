@@ -7,6 +7,7 @@
 <title>Boat Research Club ～データベース～</title>
 <!-- BRC_SG_SPECIAL_REPORT_20260824 -->
 <!-- BRC_SG_MOTOR_SECOND_AXIS_20260824 -->
+<!-- BRC_SG_LOW_MOTOR_WARNING_20260824 -->
 <!-- BRC_IN_RELIABILITY_ABS_WIN_THRESHOLDS_20260824 -->
 <!-- BRC_VENUE_CK_HEAD1_INTEGRATED_20260823 -->
 <!-- BRC_RACE_DAY_SIMPLE_RULE_V6_20260822 -->
@@ -1189,6 +1190,8 @@
   .sg-live-flag.motor{background:#edf9f2;color:#1f7046;border:1px solid #bfe6cf;}
   .sg-live-flag.motor-top{background:#eef3ff;color:#274f9d;border:1px solid #cbd8f5;}
   .sg-live-flag.combo{background:#fff0f0;color:#a51f2d;border:1px solid #f0b8bd;box-shadow:0 2px 7px rgba(165,31,45,.08);}
+  .sg-live-flag.motor-low{background:#fff7e8;color:#8a5a00;border:1px solid #edcf8b;}
+
   .sg-motor-def{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 12px;}
   .sg-motor-def span{display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:850;border:1px solid #dce6f0;background:#f8fafc;color:#466079;}
   .sg-motor-def .s{background:#edf9f2;border-color:#bfe6cf;color:#1f7046;}
@@ -1235,11 +1238,14 @@
   .sg-motor-use span{display:block;font-size:9.5px;line-height:1.45;color:#708197;}
   .sg-motor-use.is-hot{background:#fff7f7;border-color:#efc9cc;}
   .sg-motor-use.is-hot strong{color:#a32323;}
-  .sg-motor-policy{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0;}
+  .sg-motor-policy{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:10px 0;}
   .sg-motor-policy > div{border-radius:10px;padding:10px;border:1px solid #e1e8f0;background:#fafcfe;font-size:10.5px;line-height:1.55;color:#5f7186;}
   .sg-motor-policy b{display:block;font-size:12px;margin-bottom:3px;color:#173b62;}
   .sg-motor-policy .policy-s{background:#eef9f2;border-color:#c2e4cf;}
   .sg-motor-policy .policy-s b{color:#176a3e;}
+  .sg-motor-policy .policy-low{background:#fff8ea;border-color:#efd49b;}
+  .sg-motor-policy .policy-low b{color:#8a5a00;}
+
   @media(max-width:640px){
     .sg-howto{padding:14px 12px;}
     .sg-howto-title{font-size:18px;}
@@ -1386,13 +1392,14 @@
       <div class="sg-section-head"><h3>モーター評価は「何着に置くか」で使う</h3><span class="sg-section-en">Motor to Ticket</span></div>
       <section class="sg-story-card">
         <div class="sg-card-top">
-          <div><div class="sg-card-no">MOTOR｜SECOND AXIS</div><div class="sg-card-title">Sは舟券評価を1段上げる。Aは迷った時に残す</div></div>
+          <div><div class="sg-card-no">MOTOR｜SECOND AXIS</div><div class="sg-card-title">好機は上げる、低評価は下げる。枠ごとに使い分ける</div></div>
           <span class="sg-badge">確率には未加算</span>
         </div>
-        <div class="sg-card-copy">モーターは単独で買い目を作るのではなく、<strong>出走表AIや①〜③で狙っている艇を後押しする材料</strong>として使います。内部の研究値は表面から外し、S/Aと枠別の使い方だけを見れば判断できるようにします。</div>
+        <div class="sg-card-copy">モーターは単独で買い目を作るのではなく、<strong>出走表AIや①〜③で選んだ艇の評価を上下させる材料</strong>として使います。S/Aはプラス評価、開催前2連対率が場内下位25%のモーターは低評価として、検証が再現した枠だけ減点表示します。</div>
         <div class="sg-motor-policy">
           <div class="policy-s"><b>🔥 S｜特注</b>舟券評価を<strong>1段上げる</strong>。枠に応じて頭・2着・3着の置き場所を強める。</div>
           <div><b>⚡ A｜好機</b>新しい買い目をAだけで増やさず、<strong>迷った候補を残す材料</strong>として使う。</div>
+          <div class="policy-low"><b>⚠ 低評価｜場内下位25%</b><strong>2・3枠は明確に減点</strong>。4・5枠は弱めの注意。1・6枠は警告しない。</div>
         </div>
         <div class="sg-motor-use-grid">
           <div class="sg-motor-use"><b>1枠 × S</b><strong>頭を強化</strong><span>出走表AIでも1頭なら信頼を一段上げる。</span></div>
@@ -1402,9 +1409,9 @@
           <div class="sg-motor-use is-hot"><b>5枠 × S</b><strong>3着残しを強化</strong><span>今回の桐生①②と重なると⑤の優先度UP。</span></div>
           <div class="sg-motor-use"><b>6枠 × S</b><strong>単独では買い足さない</strong><span>AI・展示が伴う時だけ3着候補へ。</span></div>
         </div>
-        <div class="sg-action">①〜③の「狙う艇」とS/Aが重なった時に優先度UP。モーターだけで頭を増やさない</div>
+        <div class="sg-action">①〜③の「狙う艇」とS/Aが重なれば優先度UP。低評価が重なれば枠に応じてDOWN。モーターだけで自動的に消さない</div>
         <div id="sgMotorWatchList" class="sg-motor-watch"></div>
-        <div class="sg-motor-note">表示するS/Aは開催前までのデータで固定。内部では選手力・枠条件を考慮して機力を評価していますが、その研究値を予想勝率へ直接足してはいません。</div>
+        <div class="sg-motor-note">S/Aと低評価は開催前までのデータで固定。低評価は過去SGで再現した減点材料ですが、自動消し条件ではありません。研究値を予想勝率へ直接足してはいません。</div>
       </section>
 
       <div class="sg-method">
@@ -2112,6 +2119,21 @@ function brcSpecialMotorIsGood(no){
   const m=brcSpecialMotorMeta(no);
   return !!(m && (m.grade==='S'||m.grade==='A'||m.sgBand==='TOP10'));
 }
+function brcSpecialMotorIsLow(no){
+  const m=brcSpecialMotorMeta(no);
+  // 過去SGで検証した定義に合わせ、開催前2連対率の場内下位25%を低評価とする。
+  // 65基では概ね rateRank 50位以下。S/Aとは別軸で、1・6枠には警告を出さない。
+  return !!(m && Number.isFinite(Number(m.rateRank)) && Number(m.rateRank)>=50);
+}
+function brcSpecialLowMotorTicketGuide(lane){
+  const guides={
+    2:'2・3着評価DOWN',
+    3:'2・3着評価DOWN',
+    4:'2着評価ややDOWN',
+    5:'3着優先度ややDOWN'
+  };
+  return guides[Number(lane)]||'';
+}
 function brcSpecialMotorLabel(no){
   const m=brcSpecialMotorMeta(no); if(!m) return '';
   if(m.grade==='S') return 'BRC特注';
@@ -2199,7 +2221,7 @@ function renderSpecialLivePanel(){
     ? `${day===1?'初日':day+'日目'}｜基本は⑤を3着。条件発動時だけ⑤を2着まで、または④を頭へ格上げします。`
     : `${day===5?'5日目':'最終日'}｜①〜③は予選検証対象外。モーター評価のみ表示します。`;
 
-  let n2=0,nHigh=0,nMid=0,nLow=0,nCombo=0;
+  let n2=0,nHigh=0,nMid=0,nLow=0,nCombo=0,nLowMotorWarn=0;
   const motorSSet=new Set();
   const cards=[];
   Object.keys(races).sort((a,b)=>Number(a)-Number(b)).forEach(rno=>{
@@ -2212,6 +2234,7 @@ function renderSpecialLivePanel(){
     if(tier==='high') nHigh++; else if(tier==='mid') nMid++; else if(tier==='low') nLow++;
 
     const hotMotors=[];
+    const lowMotors=[];
     for(let i=0;i<6;i++){
       const mm=brcSpecialMotorMeta(mnos[i]);
       if(!mm) continue;
@@ -2220,6 +2243,11 @@ function renderSpecialLivePanel(){
         hotMotors.push({lane:i+1,no:mm.motor,meta:mm,kind:'S'});
       }else if(mm.sgBand==='TOP10'){
         hotMotors.push({lane:i+1,no:mm.motor,meta:mm,kind:'TOP10'});
+      }
+      const lowGuide=brcSpecialLowMotorTicketGuide(i+1);
+      if(lowGuide && brcSpecialMotorIsLow(mm.motor)){
+        lowMotors.push({lane:i+1,no:mm.motor,meta:mm,guide:lowGuide});
+        nLowMotorWarn++;
       }
     }
 
@@ -2231,7 +2259,7 @@ function renderSpecialLivePanel(){
     if(combo4) nCombo++;
 
     const hasStrategy=f2 || tier==='high' || tier==='mid';
-    const hasMotor=hotMotors.length>0;
+    const hasMotor=hotMotors.length>0 || lowMotors.length>0;
     if(!hasStrategy && !hasMotor && !combo2 && !combo4) return;
 
     const tags=[];
@@ -2244,19 +2272,26 @@ function renderSpecialLivePanel(){
       const label=brcSpecialMotorTicketGuide(x.lane,x.meta);
       tags.push(`<span class="sg-live-flag ${x.kind==='S'?'motor':'motor-top'}">⚡ ${x.lane}号艇｜${x.no}号機 ${label}</span>`);
     });
+    lowMotors.forEach(x=>{
+      tags.push(`<span class="sg-live-flag motor-low">⚠ ${x.lane}号艇｜${x.no}号機 低評価｜${x.guide}</span>`);
+    });
 
     const sub=[];
     if(f2) sub.push(`2号艇 ${brcSpecialPlayerName(r2)}`);
     if(tier==='high') sub.push(`4号艇 ${brcSpecialPlayerName(r4)}`);
     hotMotors.slice(0,2).forEach(x=>sub.push(`${x.lane}号艇 ${brcSpecialPlayerName(String(regs[x.lane-1]))}｜${x.no}号機`));
+    lowMotors.slice(0,2).forEach(x=>{
+      const text=`${x.lane}号艇 ${brcSpecialPlayerName(String(regs[x.lane-1]))}｜${x.no}号機`;
+      if(!sub.includes(text)) sub.push(text);
+    });
     cards.push(`<div class="sg-live-race"><div class="sg-live-race-top"><span>${rno}R</span><span style="font-size:10px;color:#77889b;font-weight:700;">${sub.join(' / ')}</span></div><div class="sg-live-race-tags">${tags.join('')}</div></div>`);
   });
   if(strategyEnabled){
-    counts.innerHTML=`<span class="sg-live-count">5号艇 2・3着 ${n2}R</span><span class="sg-live-count">4号艇 1着候補 ${nHigh}R</span><span class="sg-live-count">4号艇 2・3着 ${nMid}R</span><span class="sg-live-count">Sモーター ${motorSSet.size}基</span><span class="sg-live-count">条件＋好モーター ${nCombo}件</span>`;
+    counts.innerHTML=`<span class="sg-live-count">5号艇 2・3着 ${n2}R</span><span class="sg-live-count">4号艇 1着候補 ${nHigh}R</span><span class="sg-live-count">4号艇 2・3着 ${nMid}R</span><span class="sg-live-count">Sモーター ${motorSSet.size}基</span><span class="sg-live-count">条件＋好モーター ${nCombo}件</span><span class="sg-live-count">低評価モーター警告 ${nLowMotorWarn}件</span>`;
   }else{
-    counts.innerHTML=`<span class="sg-live-count">①〜③ 予選検証対象外</span><span class="sg-live-count">BRC特注 ${motorSSet.size}基</span>`;
+    counts.innerHTML=`<span class="sg-live-count">①〜③ 予選検証対象外</span><span class="sg-live-count">BRC特注 ${motorSSet.size}基</span><span class="sg-live-count">低評価モーター警告 ${nLowMotorWarn}件</span>`;
   }
-  racesEl.innerHTML=cards.length ? cards.join('') : '<div class="sg-live-empty">今日のプラス条件・上位モーター該当表示はありません。</div>';
+  racesEl.innerHTML=cards.length ? cards.join('') : '<div class="sg-live-empty">今日の攻略条件・モーター警告の該当表示はありません。</div>';
 }
 function initSpecialPage(){
   // 出走表AIをまだ開いていなくても、同日保存済み番組表があれば復元して特集へ反映。
