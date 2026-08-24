@@ -1158,6 +1158,16 @@
   .sg-inline-watch.hot .sg-inline-watch-title{color:#a52c2c;}
   .sg-inline-watch-count{font-size:9.5px;font-weight:800;color:#8190a2;white-space:nowrap;}
   .sg-inline-watch .sg-player-chips{max-height:none;}
+  .sg-trigger-label{display:inline-flex;align-items:center;gap:6px;margin-bottom:6px;padding:4px 8px;border-radius:999px;background:#eef5ff;color:#155ba8;border:1px solid #c9dcf4;font-size:10px;font-weight:950;}
+  .sg-trigger-label.hot{background:#fff0f0;color:#a52c2c;border-color:#f0c4c4;}
+  .sg-trigger-explain{font-size:11.5px;font-weight:850;color:#173b62;line-height:1.65;margin-bottom:8px;}
+  .sg-target-box{margin:10px 0 12px;padding:11px 12px;border-radius:11px;background:linear-gradient(90deg,#edf5ff,#f8fbff);border:1px solid #cfe0f5;}
+  .sg-target-box.hot{background:linear-gradient(90deg,#fff0f0,#fff9f9);border-color:#f1c6c6;}
+  .sg-target-kicker{font-size:9.5px;font-weight:950;letter-spacing:.08em;color:#6e86a0;margin-bottom:3px;}
+  .sg-target-main{font-size:15px;font-weight:950;color:#0a1f33;line-height:1.45;}
+  .sg-target-main strong{color:#0b67de;font-size:17px;}
+  .sg-target-box.hot .sg-target-main strong{color:#b82f2f;}
+  .sg-target-note{margin-top:3px;font-size:10.5px;color:#607086;line-height:1.55;}
 
   .sg-method{border-top:1px solid #e4ebf3;margin-top:24px;padding:16px 3px 0;color:#66788d;font-size:11px;line-height:1.8;}
   .sg-method strong{color:#304a64;}
@@ -1274,14 +1284,14 @@
             <div class="sg-bet-note">5号艇を頭や2着へ無理に上げる条件ではなく、まず3着残し。</div>
           </div>
           <div class="sg-bet-card">
-            <div class="sg-bet-label">② 2号艇が差し型</div>
-            <div class="sg-bet-main">⑤を2・3着へ上げる</div>
+            <div class="sg-bet-label">② 2号艇に差し型</div>
+            <div class="sg-bet-main">狙うのは⑤の2・3着</div>
             <div class="sg-bet-ticket">頭候補 − ⑤ − 相手<br>頭候補 − 相手 − ⑤</div>
-            <div class="sg-bet-note">2号艇を頭固定する条件ではありません。変化するのは5号艇の相手評価。</div>
+            <div class="sg-bet-note">差し型の選手が2号艇に入ったレースをチェック。買いを強めるのは5号艇。</div>
           </div>
           <div class="sg-bet-card hot">
-            <div class="sg-bet-label">③ 4頭強警戒</div>
-            <div class="sg-bet-main">④を1着候補へ上げる</div>
+            <div class="sg-bet-label">③ 4号艇にまくり型</div>
+            <div class="sg-bet-main">条件成立なら④を頭へ</div>
             <div class="sg-bet-ticket">④ − 相手 − 相手</div>
             <div class="sg-bet-note">1号艇の弱点と4号艇のまくり型が重なった時だけ、4頭まで格上げ。</div>
           </div>
@@ -1320,16 +1330,22 @@
 
       <section class="sg-story-card card-2">
         <div class="sg-card-top">
-          <div><div class="sg-card-no">POINT 02｜5号艇 相手強化</div><div class="sg-card-title">2号艇が差し型なら、⑤を2着まで上げる</div></div>
+          <div><div class="sg-card-no">POINT 02｜5号艇 相手強化</div><div class="sg-card-title">差し型の選手が2号艇なら、狙うのは⑤</div></div>
           <span class="sg-badge">桐生特化・OOS</span>
         </div>
         <div class="sg-card-copy">2号艇の選手が直近365日で<strong>2枠差し勝利率15%以上・N≥10</strong>なら発動。この条件は「2号艇が差して勝つ」という予想ではありません。実際に上がったのは<strong>5号艇の3連対率</strong>です。</div>
-        <span class="sg-stat-kind">下の数値＝5号艇の3連対率</span>
-        <div class="sg-action">⑤を2・3着へ。頭は出走表AI・展示・展開から別に決める</div>
         <div class="sg-inline-watch">
-          <div class="sg-inline-watch-head"><span class="sg-inline-watch-title">この条件を見る選手</span><span class="sg-inline-watch-count">2号艇に入った時｜17人</span></div>
+          <div class="sg-trigger-label">発動側｜2号艇</div>
+          <div class="sg-trigger-explain">↓ この選手が<strong>2号艇に入ったレース</strong>をチェック</div>
+          <div class="sg-inline-watch-head"><span class="sg-inline-watch-title">2号艇チェック対象</span><span class="sg-inline-watch-count">17人</span></div>
           <div class="sg-player-chips"><span class="sg-player-chip">島村隆幸</span><span class="sg-player-chip">関浩哉</span><span class="sg-player-chip">宮之原輝紀</span><span class="sg-player-chip">毒島誠</span><span class="sg-player-chip">柳生泰二</span><span class="sg-player-chip">馬場貴也</span><span class="sg-player-chip">瓜生正義</span><span class="sg-player-chip">土屋智則</span><span class="sg-player-chip">大峯豊</span><span class="sg-player-chip">西岡顕心</span><span class="sg-player-chip">峰竜太</span><span class="sg-player-chip">河合佑樹</span><span class="sg-player-chip">池田浩二</span><span class="sg-player-chip">山口剛</span><span class="sg-player-chip">桑原悠</span><span class="sg-player-chip">松井繁</span><span class="sg-player-chip">大上卓人</span></div>
         </div>
+        <div class="sg-target-box">
+          <div class="sg-target-kicker">舟券で狙う艇</div>
+          <div class="sg-target-main"><strong>⑤ 5号艇</strong>を2・3着へ上げる</div>
+          <div class="sg-target-note">上の17人を5号艇で狙う条件ではありません。頭候補は出走表AI・展示・展開から別に決めます。</div>
+        </div>
+        <span class="sg-stat-kind">下の数値＝この条件が出たレースの5号艇3連対率</span>
         <div class="sg-evidence">
           <div class="sg-evi"><small>2024</small><strong>50.0%</strong><span>非該当 43.4%</span></div>
           <div class="sg-evi"><small>2025</small><strong>65.4%</strong><span>非該当 40.6%</span></div>
@@ -1348,11 +1364,18 @@
           <div class="sg-tier-item mid"><b>4頭注意</b><span>1号艇の1枠まくられ率<br><strong>≥ 5%</strong></span></div>
           <div class="sg-tier-item high"><b>🔥 4頭強警戒</b><span>上記＋4号艇の4枠まくり率<br><strong>≥ 10%</strong>（N≥10）</span></div>
         </div>
-        <div class="sg-action">強警戒なら「④ − 相手 − 相手」を追加。注意止まりなら④は相手評価まで</div>
         <div class="sg-inline-watch hot">
-          <div class="sg-inline-watch-head"><span class="sg-inline-watch-title">4枠まくり型の対象選手</span><span class="sg-inline-watch-count">4号艇に入った時｜11人</span></div>
+          <div class="sg-trigger-label hot">発動側｜4号艇</div>
+          <div class="sg-trigger-explain">↓ この選手が<strong>4号艇に入ったレース</strong>をチェック</div>
+          <div class="sg-inline-watch-head"><span class="sg-inline-watch-title">4号艇チェック対象</span><span class="sg-inline-watch-count">11人</span></div>
           <div class="sg-player-chips"><span class="sg-player-chip hot">菅章哉</span><span class="sg-player-chip hot">定松勇樹</span><span class="sg-player-chip hot">久田敏之</span><span class="sg-player-chip hot">宮之原輝紀</span><span class="sg-player-chip hot">和田兼輔</span><span class="sg-player-chip hot">関浩哉</span><span class="sg-player-chip hot">峰竜太</span><span class="sg-player-chip hot">石渡鉄兵</span><span class="sg-player-chip hot">井口佳典</span><span class="sg-player-chip hot">大峯豊</span><span class="sg-player-chip hot">吉田拡郎</span></div>
         </div>
+        <div class="sg-target-box hot">
+          <div class="sg-target-kicker">舟券で狙う艇</div>
+          <div class="sg-target-main">1号艇の弱点まで重なれば<strong>④ 4号艇を1着候補へ</strong></div>
+          <div class="sg-target-note">4号艇チェック対象だけでは頭固定しません。1号艇の1枠まくられ率5%以上まで重なって「強警戒」です。</div>
+        </div>
+        <div class="sg-action">強警戒なら「④ − 相手 − 相手」を追加。注意止まりなら④は相手評価まで</div>
         <div class="sg-evidence">
           <div class="sg-evi"><small>強警戒 2024</small><strong>23.8%</strong><span>4号艇1着率</span></div>
           <div class="sg-evi"><small>強警戒 2025</small><strong>30.0%</strong><span>4号艇1着率</span></div>
