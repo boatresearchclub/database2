@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Boat Research Club ～データベース～</title>
+<!-- BRC_SG_SPECIAL_REPORT_20260824 -->
 <!-- BRC_VENUE_CK_HEAD1_INTEGRATED_20260823 -->
 <!-- BRC_RACE_DAY_SIMPLE_RULE_V6_20260822 -->
 <!-- BRC_SEMIFINAL_DAY_ROOTFIX_V5_20260822 -->
@@ -1036,6 +1037,113 @@
     .ck-metric-value{font-size:17px;}
     .ck-metric-value.secondary{font-size:15px;}
   }
+
+
+  /* ==========================================================
+     BRC SG SPECIAL REPORT 2026-08-24
+     第72回ボートレースメモリアル 特集記事
+     ========================================================== */
+  .page-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap;}
+  .page-tabs::-webkit-scrollbar{display:none;}
+  .page-tab{flex:0 0 auto;white-space:nowrap;}
+  .page-tab.sg-special-tab{position:relative;}
+  .page-tab.sg-special-tab::after{
+    content:"NEW"; position:absolute; top:-6px; right:-5px; padding:1px 5px;
+    border-radius:999px; background:#e5484d; color:#fff; font-size:8px; font-weight:900;
+    letter-spacing:.04em; line-height:1.45; box-shadow:0 2px 8px rgba(229,72,77,.25);
+  }
+  .page-tab.sg-special-tab.active::after{background:#0a1f33;}
+
+  #page-special{--sg-ink:#07182a;--sg-blue:#065fe7;--sg-blue2:#0c77ff;--sg-line:#dce8f8;}
+  .sg-article{max-width:920px;margin:0 auto 44px;}
+  .sg-hero{
+    position:relative;overflow:hidden;border-radius:18px;padding:30px 28px 28px;
+    color:#fff;background:
+      radial-gradient(540px 240px at 92% 15%,rgba(35,139,255,.43),transparent 65%),
+      radial-gradient(420px 250px at 18% 120%,rgba(20,93,215,.42),transparent 70%),
+      linear-gradient(135deg,#06182b 0%,#0a2543 56%,#08203b 100%);
+    box-shadow:0 18px 44px rgba(5,28,53,.16);margin-bottom:18px;
+  }
+  .sg-hero::after{
+    content:"SG";position:absolute;right:-10px;bottom:-58px;font-size:190px;font-weight:950;
+    letter-spacing:-.09em;color:rgba(255,255,255,.045);line-height:1;pointer-events:none;
+  }
+  .sg-kicker{display:flex;align-items:center;gap:9px;font-size:11px;font-weight:900;letter-spacing:.18em;color:#8ec4ff;text-transform:uppercase;}
+  .sg-kicker::before{content:"";width:24px;height:2px;background:#3d9cff;border-radius:2px;}
+  .sg-hero h2{position:relative;z-index:1;margin:13px 0 6px;font-size:clamp(25px,5vw,38px);line-height:1.2;letter-spacing:-.035em;font-weight:900;}
+  .sg-hero-sub{position:relative;z-index:1;font-size:14px;color:#c8d9ee;margin-bottom:18px;}
+  .sg-hero-tags{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:7px;}
+  .sg-hero-tag{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.075);border-radius:999px;font-size:11px;font-weight:800;color:#eef7ff;}
+  .sg-hero-tag.accent{background:#0b6bea;border-color:#0b6bea;color:#fff;}
+
+  .sg-live-panel{border:1px solid #cfe1f7;background:linear-gradient(180deg,#f8fbff,#fff);border-radius:15px;padding:16px;margin-bottom:20px;box-shadow:0 7px 22px rgba(10,31,51,.045);}
+  .sg-live-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;}
+  .sg-live-title{font-size:15px;font-weight:900;color:var(--sg-ink);}
+  .sg-live-date{font-size:11px;color:#64748b;white-space:nowrap;}
+  .sg-live-note{font-size:12px;color:#52647a;line-height:1.65;}
+  .sg-live-counts{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0;}
+  .sg-live-count{padding:4px 8px;border-radius:999px;background:#eef5ff;color:#134d95;font-size:10.5px;font-weight:800;}
+  .sg-live-races{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;margin-top:12px;}
+  .sg-live-race{border:1px solid #e0eaf5;background:#fff;border-radius:11px;padding:10px 11px;}
+  .sg-live-race-top{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:900;color:#0a1f33;}
+  .sg-live-race-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;}
+  .sg-live-flag{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:10px;font-weight:900;line-height:1.35;}
+  .sg-live-flag.f2{background:#fff4d9;color:#8a6200;border:1px solid #f0d996;}
+  .sg-live-flag.f4{background:#ffe8e8;color:#a32323;border:1px solid #f4bcbc;}
+  .sg-live-flag.mid{background:#eaf3ff;color:#155ba8;border:1px solid #c5dcfa;}
+  .sg-live-empty{margin-top:10px;padding:13px;border:1px dashed #cad8e8;border-radius:10px;color:#66778c;font-size:12px;text-align:center;background:#fbfdff;}
+
+  .sg-lead{padding:5px 4px 7px;margin-bottom:16px;font-size:14px;line-height:1.9;color:#253c55;}
+  .sg-section-head{display:flex;align-items:end;justify-content:space-between;gap:10px;margin:26px 2px 12px;}
+  .sg-section-head h3{margin:0;font-size:19px;letter-spacing:-.02em;color:#0a1f33;}
+  .sg-section-en{font-size:9.5px;letter-spacing:.16em;color:#7290ae;font-weight:900;text-transform:uppercase;}
+
+  .sg-story-card{position:relative;border:1px solid #dce6f1;background:#fff;border-radius:15px;padding:19px 18px 17px;margin-bottom:11px;box-shadow:0 7px 24px rgba(10,31,51,.04);overflow:hidden;}
+  .sg-story-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#1e75e7;}
+  .sg-story-card.card-1::before{background:#d8a50f;}
+  .sg-story-card.card-3::before{background:#da4747;}
+  .sg-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+  .sg-card-no{font-size:11px;font-weight:950;letter-spacing:.12em;color:#7190ae;margin-bottom:3px;}
+  .sg-card-title{font-size:18px;font-weight:950;color:#07182a;letter-spacing:-.02em;line-height:1.35;}
+  .sg-badge{flex:0 0 auto;display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;background:#eef5ff;color:#1259a5;font-size:9.5px;font-weight:900;border:1px solid #cadef6;}
+  .sg-card-copy{font-size:13px;line-height:1.75;color:#425a72;margin:9px 0 12px;}
+  .sg-action{display:flex;align-items:center;gap:8px;background:#f5f9ff;border-radius:10px;padding:9px 11px;font-size:12.5px;font-weight:850;color:#163d6c;margin-bottom:12px;}
+  .sg-action::before{content:"→";display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#0b67de;color:#fff;font-size:12px;flex:0 0 auto;}
+  .sg-evidence{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+  .sg-evi{background:#f8fafc;border:1px solid #e6edf5;border-radius:9px;padding:8px 7px;text-align:center;}
+  .sg-evi small{display:block;font-size:9px;color:#75879a;font-weight:800;margin-bottom:2px;}
+  .sg-evi strong{display:block;font-size:15px;color:#0c315d;font-variant-numeric:tabular-nums;}
+  .sg-evi span{display:block;font-size:8.5px;color:#8190a2;margin-top:1px;}
+
+  .sg-tier{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0;}
+  .sg-tier-item{border-radius:10px;padding:10px 8px;border:1px solid #e1e8f0;background:#fafcfe;}
+  .sg-tier-item b{display:block;font-size:12px;margin-bottom:4px;}
+  .sg-tier-item span{display:block;font-size:10.5px;color:#5e7084;line-height:1.5;}
+  .sg-tier-item.low b{color:#56708e}.sg-tier-item.mid b{color:#1765ba}.sg-tier-item.high{background:#fff5f5;border-color:#f4cccc}.sg-tier-item.high b{color:#b82f2f}
+
+  .sg-player-columns{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .sg-player-box{border:1px solid #e0e8f1;background:#fff;border-radius:13px;padding:14px;}
+  .sg-player-box h4{margin:0 0 4px;font-size:14px;color:#0a1f33;}
+  .sg-player-box p{margin:0 0 9px;font-size:10.5px;color:#728197;}
+  .sg-player-chips{display:flex;flex-wrap:wrap;gap:5px;max-height:126px;overflow:auto;}
+  .sg-player-chip{display:inline-flex;padding:4px 7px;border-radius:999px;background:#f3f7fb;border:1px solid #dde7f1;color:#334d67;font-size:10.5px;font-weight:750;}
+  .sg-player-chip.hot{background:#fff3f3;border-color:#f3c6c6;color:#9c2727;}
+
+  .sg-method{border-top:1px solid #e4ebf3;margin-top:24px;padding:16px 3px 0;color:#66788d;font-size:11px;line-height:1.8;}
+  .sg-method strong{color:#304a64;}
+  .sg-disclaimer{margin-top:11px;border-radius:11px;background:#f5f7fa;padding:11px 12px;font-size:10.5px;color:#607086;line-height:1.7;}
+  @media(max-width:640px){
+    .sg-article{margin-left:-2px;margin-right:-2px;}
+    .sg-hero{padding:24px 17px 22px;border-radius:14px;}
+    .sg-hero::after{font-size:130px;bottom:-37px;right:-5px;}
+    .sg-live-panel{padding:13px 12px;}
+    .sg-story-card{padding:16px 13px 14px;border-radius:13px;}
+    .sg-card-title{font-size:16.5px;}
+    .sg-evidence{gap:5px;}.sg-evi{padding:7px 4px}.sg-evi strong{font-size:13.5px;}
+    .sg-tier{grid-template-columns:1fr;}
+    .sg-player-columns{grid-template-columns:1fr;}
+    .sg-player-chips{max-height:none;}
+  }
 </style>
 </head>
 <body>
@@ -1049,7 +1157,110 @@
     <button class="page-tab" data-page="venue">会場別攻略</button>
     <button class="page-tab" data-page="predict" id="brcPredictTab">🔒 出走表AI</button>
     <button class="page-tab" data-page="today">本日厳選</button>
+    <button class="page-tab sg-special-tab" data-page="special">SG特集</button>
   </div>
+
+
+
+  <div id="page-special" style="display:none;">
+    <article class="sg-article">
+      <section class="sg-hero">
+        <div class="sg-kicker">BRC SPECIAL REPORT</div>
+        <h2>第72回<br>ボートレースメモリアル特集</h2>
+        <div class="sg-hero-sub">桐生｜2026.08.25–08.30　開催前研究から絞った「予選4日間」の攻略ポイント</div>
+        <div class="sg-hero-tags">
+          <span class="sg-hero-tag accent">2026 完全OOS確認</span>
+          <span class="sg-hero-tag">予選1〜4日目限定</span>
+          <span class="sg-hero-tag">モーター未使用</span>
+          <span class="sg-hero-tag">予想確率には未加算</span>
+        </div>
+      </section>
+
+      <section id="sgLivePanel" class="sg-live-panel" aria-live="polite">
+        <div class="sg-live-head">
+          <div>
+            <div class="sg-live-title">今日の特集条件</div>
+            <div id="sgLiveNote" class="sg-live-note">番組表を読み込むと、桐生の条件該当レースをここに表示します。</div>
+          </div>
+          <div id="sgLiveDate" class="sg-live-date">―</div>
+        </div>
+        <div id="sgLiveCounts" class="sg-live-counts"></div>
+        <div id="sgLiveRaces" class="sg-live-races"></div>
+      </section>
+
+      <div class="sg-lead">
+        桐生で行われる今回のSGに向けて、過去の桐生G1/G2を<strong>2024探索 → 2025検証 → 2026完全OOS</strong>で分離して再検証しました。採用したのは、開催前に判定でき、2026でも方向が残った3つだけです。数字は今回の勝率予測ではなく、過去検証の実績として掲載しています。
+      </div>
+
+      <div class="sg-section-head"><h3>今節の攻略3ポイント</h3><span class="sg-section-en">Race Research</span></div>
+
+      <section class="sg-story-card card-1">
+        <div class="sg-card-top">
+          <div><div class="sg-card-no">POINT 01｜BASIC</div><div class="sg-card-title">桐生5号艇は「3着残り」に注意</div></div>
+          <span class="sg-badge">桐生G1/G2・OOS</span>
+        </div>
+        <div class="sg-card-copy">5コース全体を強く評価するのではなく、狙いは<strong>3連単の3着</strong>。厳密再計算では、5号艇3着率が2024・2025・2026のすべてで他場G1/G2を上回りました。</div>
+        <div class="sg-action">5号艇を3着候補から安易に消さない</div>
+        <div class="sg-evidence">
+          <div class="sg-evi"><small>2024</small><strong>21.5%</strong><span>他場 18.9%</span></div>
+          <div class="sg-evi"><small>2025</small><strong>27.6%</strong><span>他場 18.8%</span></div>
+          <div class="sg-evi"><small>2026 OOS</small><strong>26.7%</strong><span>他場 18.7%</span></div>
+        </div>
+      </section>
+
+      <section class="sg-story-card card-2">
+        <div class="sg-card-top">
+          <div><div class="sg-card-no">POINT 02｜KIRYU FLAG</div><div class="sg-card-title">2号艇が「差し型」なら5号艇を警戒</div></div>
+          <span class="sg-badge">桐生特化・OOS</span>
+        </div>
+        <div class="sg-card-copy">2号艇選手の直近365日で、<strong>2C差し勝利率15%以上・N≥10</strong>が発動条件。全国SGでは再現しなかった一方、桐生では2025検証・2026 OOSでも5号艇の3連対率が上昇しました。</div>
+        <div class="sg-action">条件該当時は5号艇の2・3着残りを普段より意識</div>
+        <div class="sg-evidence">
+          <div class="sg-evi"><small>2024</small><strong>50.0%</strong><span>非該当 43.4%</span></div>
+          <div class="sg-evi"><small>2025</small><strong>65.4%</strong><span>非該当 40.6%</span></div>
+          <div class="sg-evi"><small>2026 OOS</small><strong>45.5%</strong><span>非該当 26.3%</span></div>
+        </div>
+      </section>
+
+      <section class="sg-story-card card-3">
+        <div class="sg-card-top">
+          <div><div class="sg-card-no">POINT 03｜HEAD FLAG</div><div class="sg-card-title">4号艇の「頭」は1号艇の弱点から見る</div></div>
+          <span class="sg-badge">SG年次OOS＋桐生特化</span>
+        </div>
+        <div class="sg-card-copy">4号艇だけを見るより、まず1号艇の<strong>1Cまくられ率5%</strong>を境界にする方が桐生では明確でした。さらに4号艇が<strong>4Cまくり率10%以上・N≥10</strong>なら「強警戒」へ引き上げます。</div>
+        <div class="sg-tier">
+          <div class="sg-tier-item low"><b>4頭評価 低</b><span>1号艇の1Cまくられ率<br><strong>&lt; 5%</strong>（N≥10）</span></div>
+          <div class="sg-tier-item mid"><b>4頭注意</b><span>1号艇の1Cまくられ率<br><strong>≥ 5%</strong></span></div>
+          <div class="sg-tier-item high"><b>🔥 4頭強警戒</b><span>上記＋4号艇の4Cまくり率<br><strong>≥ 10%</strong>（N≥10）</span></div>
+        </div>
+        <div class="sg-action">強警戒では4号艇を「相手」だけでなく頭まで検討</div>
+        <div class="sg-evidence">
+          <div class="sg-evi"><small>強警戒 2024</small><strong>23.8%</strong><span>4号艇1着</span></div>
+          <div class="sg-evi"><small>強警戒 2025</small><strong>30.0%</strong><span>4号艇1着</span></div>
+          <div class="sg-evi"><small>強警戒 2026 OOS</small><strong>25.0%</strong><span>4号艇1着</span></div>
+        </div>
+      </section>
+
+      <div class="sg-section-head"><h3>条件対象選手</h3><span class="sg-section-en">Pre-Race Watchlist</span></div>
+      <div class="sg-player-columns">
+        <section class="sg-player-box">
+          <h4>② 2C差し型｜17人</h4>
+          <p>この選手が2号艇に入った時、5号艇注意フラグの対象。</p>
+          <div class="sg-player-chips"><span class="sg-player-chip">島村隆幸</span><span class="sg-player-chip">関浩哉</span><span class="sg-player-chip">宮之原輝紀</span><span class="sg-player-chip">毒島誠</span><span class="sg-player-chip">柳生泰二</span><span class="sg-player-chip">馬場貴也</span><span class="sg-player-chip">瓜生正義</span><span class="sg-player-chip">土屋智則</span><span class="sg-player-chip">大峯豊</span><span class="sg-player-chip">西岡顕心</span><span class="sg-player-chip">峰竜太</span><span class="sg-player-chip">河合佑樹</span><span class="sg-player-chip">池田浩二</span><span class="sg-player-chip">山口剛</span><span class="sg-player-chip">桑原悠</span><span class="sg-player-chip">松井繁</span><span class="sg-player-chip">大上卓人</span></div>
+        </section>
+        <section class="sg-player-box">
+          <h4>③ 4Cまくり型｜11人</h4>
+          <p>1号艇の弱点条件と重なると「4頭強警戒」。</p>
+          <div class="sg-player-chips"><span class="sg-player-chip hot">菅章哉</span><span class="sg-player-chip hot">定松勇樹</span><span class="sg-player-chip hot">久田敏之</span><span class="sg-player-chip hot">宮之原輝紀</span><span class="sg-player-chip hot">和田兼輔</span><span class="sg-player-chip hot">関浩哉</span><span class="sg-player-chip hot">峰竜太</span><span class="sg-player-chip hot">石渡鉄兵</span><span class="sg-player-chip hot">井口佳典</span><span class="sg-player-chip hot">大峯豊</span><span class="sg-player-chip hot">吉田拡郎</span></div>
+        </section>
+      </div>
+
+      <div class="sg-method">
+        <strong>検証設計：</strong> 桐生G1/G2の1〜4日目を対象に、各レース日より前365日の実績のみ使用。過去実績は艇番と実際の進入コースが一致した出走だけで集計。2024年を探索、2025年を検証、2026年を完全OOSとして条件を固定しています。
+      </div>
+      <div class="sg-disclaimer">※ 本特集は研究データです。BRC本体の1着率・3連対率には加算していません。モーター抽選結果も現段階では使用していません。攻略フラグは初日〜4日目のみ有効で、5日目・最終日は「予選検証対象外」として停止します。</div>
+    </article>
+  </div><!-- /page-special -->
 
   <div id="page-players">
     <section class="card">
@@ -1256,7 +1467,7 @@ function r0(v){
 }
 
 // ---- Page tabs ----
-const PAGE_IDS = ['players','venue','predict','today'];
+const PAGE_IDS = ['players','venue','predict','today','special'];
 
 // ---- BRC会員認証（会員ID UI → 内部メール変換 → Supabase Auth + brc_members RLS） ----
 // Publishable key はブラウザ公開前提。service_role / secret key は絶対にここへ置かない。
@@ -1650,8 +1861,97 @@ document.querySelectorAll('.page-tab').forEach(btn=>{
       if(allowed && !window.__predictRendered){ initPredictPage(); window.__predictRendered = true; }
     }
     if(target==='today'){ initTodayPicksPage(); }
+    if(target==='special'){ initSpecialPage(); }
   });
 });
+
+
+
+// ---- SG特集：第72回ボートレースメモリアル（2026-08-24事前固定） ----
+const BRC_SG_MEMORIAL_FLAGS = {"3415":{"name":"松井繁","c1_n":52,"c1_makurarare_rate":0.09615384615384616,"c2_n":43,"c2_sashi_rate":0.16279069767441862,"c4_n":37,"c4_makuri_rate":0.0,"flag2":true,"flag4":false},"3590":{"name":"濱野谷憲吾","c1_n":61,"c1_makurarare_rate":0.16393442622950818,"c2_n":40,"c2_sashi_rate":0.125,"c4_n":45,"c4_makuri_rate":0.06666666666666667,"flag2":false,"flag4":false},"3716":{"name":"石渡鉄兵","c1_n":49,"c1_makurarare_rate":0.12244897959183673,"c2_n":36,"c2_sashi_rate":0.027777777777777776,"c4_n":37,"c4_makuri_rate":0.10810810810810811,"flag2":false,"flag4":true},"3783":{"name":"瓜生正義","c1_n":54,"c1_makurarare_rate":0.14814814814814814,"c2_n":36,"c2_sashi_rate":0.19444444444444445,"c4_n":29,"c4_makuri_rate":0.034482758620689655,"flag2":true,"flag4":false},"3854":{"name":"吉川元浩","c1_n":56,"c1_makurarare_rate":0.10714285714285714,"c2_n":34,"c2_sashi_rate":0.11764705882352941,"c4_n":34,"c4_makuri_rate":0.0,"flag2":false,"flag4":false},"3897":{"name":"白井英治","c1_n":45,"c1_makurarare_rate":0.08888888888888889,"c2_n":34,"c2_sashi_rate":0.08823529411764706,"c4_n":35,"c4_makuri_rate":0.02857142857142857,"flag2":false,"flag4":false},"3941":{"name":"池田浩二","c1_n":60,"c1_makurarare_rate":0.08333333333333333,"c2_n":35,"c2_sashi_rate":0.17142857142857143,"c4_n":35,"c4_makuri_rate":0.08571428571428572,"flag2":true,"flag4":false},"3942":{"name":"寺田祥","c1_n":62,"c1_makurarare_rate":0.12903225806451613,"c2_n":36,"c2_sashi_rate":0.1111111111111111,"c4_n":30,"c4_makuri_rate":0.03333333333333333,"flag2":false,"flag4":false},"3959":{"name":"坪井康晴","c1_n":52,"c1_makurarare_rate":0.09615384615384616,"c2_n":35,"c2_sashi_rate":0.14285714285714285,"c4_n":32,"c4_makuri_rate":0.0625,"flag2":false,"flag4":false},"4013":{"name":"中島孝平","c1_n":59,"c1_makurarare_rate":0.0847457627118644,"c2_n":36,"c2_sashi_rate":0.08333333333333333,"c4_n":37,"c4_makuri_rate":0.05405405405405406,"flag2":false,"flag4":false},"4024":{"name":"井口佳典","c1_n":44,"c1_makurarare_rate":0.18181818181818182,"c2_n":40,"c2_sashi_rate":0.05,"c4_n":37,"c4_makuri_rate":0.10810810810810811,"flag2":false,"flag4":true},"4030":{"name":"森高一真","c1_n":48,"c1_makurarare_rate":0.10416666666666667,"c2_n":47,"c2_sashi_rate":0.0425531914893617,"c4_n":40,"c4_makuri_rate":0.05,"flag2":false,"flag4":false},"4061":{"name":"萩原秀人","c1_n":59,"c1_makurarare_rate":0.1016949152542373,"c2_n":42,"c2_sashi_rate":0.09523809523809523,"c4_n":38,"c4_makuri_rate":0.0,"flag2":false,"flag4":false},"4166":{"name":"吉田拡郎","c1_n":65,"c1_makurarare_rate":0.03076923076923077,"c2_n":37,"c2_sashi_rate":0.13513513513513514,"c4_n":40,"c4_makuri_rate":0.1,"flag2":false,"flag4":true},"4188":{"name":"久田敏之","c1_n":52,"c1_makurarare_rate":0.038461538461538464,"c2_n":35,"c2_sashi_rate":0.11428571428571428,"c4_n":32,"c4_makuri_rate":0.15625,"flag2":false,"flag4":true},"4205":{"name":"山口剛","c1_n":49,"c1_makurarare_rate":0.08163265306122448,"c2_n":35,"c2_sashi_rate":0.17142857142857143,"c4_n":29,"c4_makuri_rate":0.034482758620689655,"flag2":true,"flag4":false},"4237":{"name":"大峯豊","c1_n":60,"c1_makurarare_rate":0.08333333333333333,"c2_n":38,"c2_sashi_rate":0.18421052631578946,"c4_n":38,"c4_makuri_rate":0.10526315789473684,"flag2":true,"flag4":true},"4238":{"name":"毒島誠","c1_n":47,"c1_makurarare_rate":0.06382978723404255,"c2_n":24,"c2_sashi_rate":0.20833333333333334,"c4_n":17,"c4_makuri_rate":0.058823529411764705,"flag2":true,"flag4":false},"4262":{"name":"馬場貴也","c1_n":65,"c1_makurarare_rate":0.09230769230769231,"c2_n":39,"c2_sashi_rate":0.20512820512820512,"c4_n":39,"c4_makuri_rate":0.05128205128205128,"flag2":true,"flag4":false},"4266":{"name":"長田頼宗","c1_n":53,"c1_makurarare_rate":0.03773584905660377,"c2_n":35,"c2_sashi_rate":0.08571428571428572,"c4_n":36,"c4_makuri_rate":0.0,"flag2":false,"flag4":false},"4320":{"name":"峰竜太","c1_n":53,"c1_makurarare_rate":0.05660377358490566,"c2_n":34,"c2_sashi_rate":0.17647058823529413,"c4_n":25,"c4_makuri_rate":0.12,"flag2":true,"flag4":true},"4337":{"name":"平本真之","c1_n":57,"c1_makurarare_rate":0.07017543859649122,"c2_n":36,"c2_sashi_rate":0.1111111111111111,"c4_n":35,"c4_makuri_rate":0.08571428571428572,"flag2":false,"flag4":false},"4344":{"name":"新田雄史","c1_n":49,"c1_makurarare_rate":0.14285714285714285,"c2_n":37,"c2_sashi_rate":0.05405405405405406,"c4_n":36,"c4_makuri_rate":0.05555555555555555,"flag2":false,"flag4":false},"4350":{"name":"篠崎元志","c1_n":65,"c1_makurarare_rate":0.03076923076923077,"c2_n":39,"c2_sashi_rate":0.10256410256410256,"c4_n":32,"c4_makuri_rate":0.09375,"flag2":false,"flag4":false},"4352":{"name":"下條雄太郎","c1_n":47,"c1_makurarare_rate":0.06382978723404255,"c2_n":27,"c2_sashi_rate":0.07407407407407407,"c4_n":32,"c4_makuri_rate":0.0,"flag2":false,"flag4":false},"4361":{"name":"柳生泰二","c1_n":56,"c1_makurarare_rate":0.05357142857142857,"c2_n":34,"c2_sashi_rate":0.20588235294117646,"c4_n":29,"c4_makuri_rate":0.06896551724137931,"flag2":true,"flag4":false},"4362":{"name":"土屋智則","c1_n":44,"c1_makurarare_rate":0.09090909090909091,"c2_n":31,"c2_sashi_rate":0.1935483870967742,"c4_n":33,"c4_makuri_rate":0.0,"flag2":true,"flag4":false},"4366":{"name":"前沢丈史","c1_n":66,"c1_makurarare_rate":0.13636363636363635,"c2_n":47,"c2_sashi_rate":0.14893617021276595,"c4_n":42,"c4_makuri_rate":0.023809523809523808,"flag2":false,"flag4":false},"4371":{"name":"西山貴浩","c1_n":44,"c1_makurarare_rate":0.06818181818181818,"c2_n":33,"c2_sashi_rate":0.09090909090909091,"c4_n":30,"c4_makuri_rate":0.03333333333333333,"flag2":false,"flag4":false},"4418":{"name":"茅原悠紀","c1_n":62,"c1_makurarare_rate":0.0967741935483871,"c2_n":34,"c2_sashi_rate":0.11764705882352941,"c4_n":33,"c4_makuri_rate":0.030303030303030304,"flag2":false,"flag4":false},"4444":{"name":"桐生順平","c1_n":44,"c1_makurarare_rate":0.11363636363636363,"c2_n":29,"c2_sashi_rate":0.06896551724137931,"c4_n":30,"c4_makuri_rate":0.06666666666666667,"flag2":false,"flag4":false},"4445":{"name":"宮地元輝","c1_n":46,"c1_makurarare_rate":0.043478260869565216,"c2_n":37,"c2_sashi_rate":0.05405405405405406,"c4_n":34,"c4_makuri_rate":0.08823529411764706,"flag2":false,"flag4":false},"4446":{"name":"和田兼輔","c1_n":58,"c1_makurarare_rate":0.0,"c2_n":43,"c2_sashi_rate":0.13953488372093023,"c4_n":34,"c4_makuri_rate":0.14705882352941177,"flag2":false,"flag4":true},"4477":{"name":"篠崎仁志","c1_n":53,"c1_makurarare_rate":0.11320754716981132,"c2_n":43,"c2_sashi_rate":0.11627906976744186,"c4_n":35,"c4_makuri_rate":0.0,"flag2":false,"flag4":false},"4494":{"name":"河合佑樹","c1_n":40,"c1_makurarare_rate":0.15,"c2_n":29,"c2_sashi_rate":0.1724137931034483,"c4_n":28,"c4_makuri_rate":0.03571428571428571,"flag2":true,"flag4":false},"4497":{"name":"桑原悠","c1_n":56,"c1_makurarare_rate":0.07142857142857142,"c2_n":42,"c2_sashi_rate":0.16666666666666666,"c4_n":32,"c4_makuri_rate":0.0625,"flag2":true,"flag4":false},"4547":{"name":"中田竜太","c1_n":49,"c1_makurarare_rate":0.20408163265306123,"c2_n":31,"c2_sashi_rate":0.06451612903225806,"c4_n":41,"c4_makuri_rate":0.024390243902439025,"flag2":false,"flag4":false},"4571":{"name":"菅章哉","c1_n":36,"c1_makurarare_rate":0.1111111111111111,"c2_n":28,"c2_sashi_rate":0.14285714285714285,"c4_n":17,"c4_makuri_rate":0.5882352941176471,"flag2":false,"flag4":true},"4586":{"name":"磯部誠","c1_n":50,"c1_makurarare_rate":0.04,"c2_n":36,"c2_sashi_rate":0.027777777777777776,"c4_n":37,"c4_makuri_rate":0.05405405405405406,"flag2":false,"flag4":false},"4604":{"name":"岩瀬裕亮","c1_n":55,"c1_makurarare_rate":0.03636363636363636,"c2_n":44,"c2_sashi_rate":0.09090909090909091,"c4_n":41,"c4_makuri_rate":0.04878048780487805,"flag2":false,"flag4":false},"4682":{"name":"大上卓人","c1_n":46,"c1_makurarare_rate":0.06521739130434782,"c2_n":37,"c2_sashi_rate":0.16216216216216217,"c4_n":41,"c4_makuri_rate":0.024390243902439025,"flag2":true,"flag4":false},"4685":{"name":"島村隆幸","c1_n":59,"c1_makurarare_rate":0.0847457627118644,"c2_n":33,"c2_sashi_rate":0.2727272727272727,"c4_n":33,"c4_makuri_rate":0.09090909090909091,"flag2":true,"flag4":false},"4686":{"name":"丸野一樹","c1_n":44,"c1_makurarare_rate":0.11363636363636363,"c2_n":42,"c2_sashi_rate":0.11904761904761904,"c4_n":28,"c4_makuri_rate":0.03571428571428571,"flag2":false,"flag4":false},"4719":{"name":"上條暢嵩","c1_n":60,"c1_makurarare_rate":0.03333333333333333,"c2_n":34,"c2_sashi_rate":0.058823529411764705,"c4_n":37,"c4_makuri_rate":0.02702702702702703,"flag2":false,"flag4":false},"4787":{"name":"椎名豊","c1_n":57,"c1_makurarare_rate":0.0,"c2_n":38,"c2_sashi_rate":0.07894736842105263,"c4_n":34,"c4_makuri_rate":0.08823529411764706,"flag2":false,"flag4":false},"4831":{"name":"羽野直也","c1_n":41,"c1_makurarare_rate":0.14634146341463414,"c2_n":31,"c2_sashi_rate":0.12903225806451613,"c4_n":26,"c4_makuri_rate":0.0,"flag2":false,"flag4":false},"4847":{"name":"佐藤隆太郎","c1_n":44,"c1_makurarare_rate":0.13636363636363635,"c2_n":36,"c2_sashi_rate":0.05555555555555555,"c4_n":29,"c4_makuri_rate":0.0,"flag2":false,"flag4":false},"4848":{"name":"仲谷颯仁","c1_n":52,"c1_makurarare_rate":0.1346153846153846,"c2_n":39,"c2_sashi_rate":0.10256410256410256,"c4_n":33,"c4_makuri_rate":0.0,"flag2":false,"flag4":false},"4851":{"name":"関浩哉","c1_n":45,"c1_makurarare_rate":0.08888888888888889,"c2_n":43,"c2_sashi_rate":0.23255813953488372,"c4_n":31,"c4_makuri_rate":0.12903225806451613,"flag2":true,"flag4":true},"4939":{"name":"宮之原輝紀","c1_n":57,"c1_makurarare_rate":0.03508771929824561,"c2_n":38,"c2_sashi_rate":0.21052631578947367,"c4_n":32,"c4_makuri_rate":0.15625,"flag2":true,"flag4":true},"5121":{"name":"定松勇樹","c1_n":52,"c1_makurarare_rate":0.09615384615384616,"c2_n":44,"c2_sashi_rate":0.13636363636363635,"c4_n":35,"c4_makuri_rate":0.17142857142857143,"flag2":false,"flag4":true},"5224":{"name":"西岡顕心","c1_n":58,"c1_makurarare_rate":0.06896551724137931,"c2_n":39,"c2_sashi_rate":0.1794871794871795,"c4_n":36,"c4_makuri_rate":0.05555555555555555,"flag2":true,"flag4":false}};
+const BRC_SG_MEMORIAL_TITLE = '第72回ボートレースメモリアル';
+
+function brcSpecialDayNumber(info){
+  const raw=String((info && (info.rawDay||info.day))||'').replace(/[\s　]/g,'')
+    .replace(/[０-９]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-0xFEE0));
+  if(raw==='初日'||raw==='1'||raw==='1日目') return 1;
+  const m=raw.match(/^([1-6])日目$/); if(m) return Number(m[1]);
+  if(raw==='準優日') return 5;
+  if(raw==='最終日') return 6;
+  if(/^2026-08-(2[5-9]|30)$/.test(String(TODAY_LABEL||''))){
+    const d=Number(String(TODAY_LABEL).slice(-2)); return d-24;
+  }
+  return null;
+}
+function brcSpecialPlayerName(reg){
+  const d=BRC_SG_MEMORIAL_FLAGS[String(reg)];
+  if(d && d.name) return d.name;
+  const p=(typeof PLAYERS!=='undefined' && PLAYERS[String(reg)]) || null;
+  return p ? p.name : String(reg||'');
+}
+function brcSpecialIsMemorial(info){
+  const t=String((info&&info.title)||'');
+  return t.includes('ボートレースメモリアル') || t.includes('メモリアル');
+}
+function brcSpecialTier(reg1,reg4){
+  const a=BRC_SG_MEMORIAL_FLAGS[String(reg1)], b=BRC_SG_MEMORIAL_FLAGS[String(reg4)];
+  if(!a || a.c1_n<10) return null;
+  if(a.c1_makurarare_rate < .05) return 'low';
+  if(b && b.c4_n>=10 && b.c4_makuri_rate>=.10) return 'high';
+  return 'mid';
+}
+function renderSpecialLivePanel(){
+  const note=document.getElementById('sgLiveNote'), dateEl=document.getElementById('sgLiveDate');
+  const counts=document.getElementById('sgLiveCounts'), racesEl=document.getElementById('sgLiveRaces');
+  if(!note||!dateEl||!counts||!racesEl) return;
+  const info=(typeof RACE_INFO_TODAY!=='undefined' && RACE_INFO_TODAY['桐生']) || null;
+  const races=(typeof RACE_CARDS_TODAY!=='undefined' && RACE_CARDS_TODAY['桐生']) || null;
+  dateEl.textContent=(typeof TODAY_LABEL!=='undefined' && TODAY_LABEL) ? TODAY_LABEL : '―';
+  counts.innerHTML=''; racesEl.innerHTML='';
+  if(!info || !races || !brcSpecialIsMemorial(info)){
+    note.textContent='メモリアルの桐生番組表を読み込むと、条件該当レースをここに表示します。';
+    racesEl.innerHTML='<div class="sg-live-empty">現在読み込まれている番組表は特集対象ではありません。</div>';
+    return;
+  }
+  const day=brcSpecialDayNumber(info);
+  if(day==null){
+    note.textContent='開催日を判定できませんでした。番組表の日次情報を確認してください。';
+    return;
+  }
+  if(day>=5){
+    note.textContent='5日目・最終日は予選検証対象外です。攻略フラグの判定を停止しています。';
+    counts.innerHTML='<span class="sg-live-count">予選検証対象外</span>';
+    racesEl.innerHTML='<div class="sg-live-empty">準優・優勝戦は番組選抜構造が異なるため、この3条件を適用しません。</div>';
+    return;
+  }
+  note.textContent=`${day===1?'初日':day+'日目'}｜①「5号艇3着残り注意」は全レース共通。②③の該当レースを下に表示します。`;
+  let n2=0,nHigh=0,nMid=0,nLow=0;
+  const cards=[];
+  Object.keys(races).sort((a,b)=>Number(a)-Number(b)).forEach(rno=>{
+    const regs=races[rno]; if(!Array.isArray(regs)||regs.length<4) return;
+    const r1=String(regs[0]),r2=String(regs[1]),r4=String(regs[3]);
+    const f2=!!BRC_SG_MEMORIAL_FLAGS[r2]?.flag2;
+    const tier=brcSpecialTier(r1,r4);
+    if(f2) n2++; if(tier==='high') nHigh++; else if(tier==='mid') nMid++; else if(tier==='low') nLow++;
+    // 上部は買い目判断に効く positive flags を中心に掲載。lowだけのレースは件数にのみ含める。
+    if(!f2 && tier!=='high' && tier!=='mid') return;
+    const tags=[];
+    if(f2) tags.push(`<span class="sg-live-flag f2">② 5号艇注意</span>`);
+    if(tier==='high') tags.push(`<span class="sg-live-flag f4">③ 4頭強警戒</span>`);
+    else if(tier==='mid') tags.push(`<span class="sg-live-flag mid">③ 4頭注意</span>`);
+    const sub=[];
+    if(f2) sub.push(`2号艇 ${brcSpecialPlayerName(r2)}`);
+    if(tier==='high') sub.push(`4号艇 ${brcSpecialPlayerName(r4)}`);
+    cards.push(`<div class="sg-live-race"><div class="sg-live-race-top"><span>${rno}R</span><span style="font-size:10px;color:#77889b;font-weight:700;">${sub.join(' / ')}</span></div><div class="sg-live-race-tags">${tags.join('')}</div></div>`);
+  });
+  counts.innerHTML=`<span class="sg-live-count">② 5注意 ${n2}R</span><span class="sg-live-count">③ 強警戒 ${nHigh}R</span><span class="sg-live-count">③ 注意 ${nMid}R</span><span class="sg-live-count">③ 低 ${nLow}R</span>`;
+  racesEl.innerHTML=cards.length ? cards.join('') : '<div class="sg-live-empty">今日の②③のプラス条件該当レースはありません。①5号艇3着残り注意のみ共通です。</div>';
+}
+function initSpecialPage(){
+  // 出走表AIをまだ開いていなくても、同日保存済み番組表があれば復元して特集へ反映。
+  try{ if(typeof restoreRaceCardForToday==='function') restoreRaceCardForToday(); }catch(_e){}
+  renderSpecialLivePanel();
+}
 
 // 会場の表示順：北（桐生）から南（大村）へ。公式の場コード順（01〜24）に準拠。
 const VENUE_ORDER = [
@@ -2950,6 +3250,7 @@ function initPredictPage(){
     document.getElementById('raceCardFileInput').value = '';
     populateDaySelect();
     invalidateTodayPicks(true);
+    if(document.getElementById('page-special')) renderSpecialLivePanel();
   });
 
   if(restoredRaceCard){
@@ -3801,6 +4102,7 @@ function loadTodaysRace(venue, raceNo){
   metaBox.innerHTML = '';
 
   renderDeadlineSchedule();
+  if(document.getElementById('page-special')) renderSpecialLivePanel();
 }
 
 // 出走表テーブルの1行分（登録番号・コース別勝率・3連対率・平均ST順）を、
