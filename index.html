@@ -4759,7 +4759,10 @@ function motorDetailData(){
 function getMotorDetail(venue,motorNo,motor2){
   if(motorNo==null) return null;
   const data=motorDetailData();
-  if(!data || data.date!==TODAY_LABEL) return null;
+  // 機歴データは「作成日当日の番組表専用」ではなく、同一モーター期なら翌日以降も有効。
+  // 日付が変わるたび data.date !== TODAY_LABEL で全機歴が無効化されていたため、
+  // 厳密な日付一致は要求しない。モーター番号＋2連対率一致で同一機を確認する。
+  if(!data || !data.venues) return null;
   const x=data.venues?.[venue]?.motors?.[String(motorNo)] || null;
   if(!x) return null;
   if(Number.isFinite(Number(motor2)) && Number.isFinite(Number(x.rate)) && Math.abs(Number(x.rate)-Number(motor2))>0.02) return null;
