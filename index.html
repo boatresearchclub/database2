@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Boat Research Club ～データベース～</title>
+<!-- BRC_ORIGINAL_EXHIBITION_PHASE2_ADJUSTMENT_20260825 -->
 <!-- BRC_SG_SPECIAL_REPORT_20260824 -->
 <!-- BRC_SG_MOTOR_SECOND_AXIS_20260824 -->
 <!-- BRC_SG_LOW_MOTOR_WARNING_20260824 -->
@@ -1642,6 +1643,11 @@ let currentDatabasePage = 'players';
 const BRC_SUPABASE_URL = 'https://wchvzhftwxraqgihochk.supabase.co';
 const BRC_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_ix5nZCzuhx013fMyAmy5wQ_I_naLXAI';
 const BRC_API_URL = 'https://brc-api.sk48159212.workers.dev';
+// ---- BRC オリジナル展示ライブ連携 Phase 2 ----
+// Cloudflare Live Workerを作成後、このURLだけ実URLへ変更する。
+// 空欄の間は外部通信せず、展示補正は発火しない。
+const BRC_LIVE_EXHIBITION_API_URL = 'https://brc-live-exhibition.sk48159212.workers.dev';
+
 const BRC_SESSION_STORAGE_KEY = 'brc_supabase_session_v1';
 const BRC_MEMBER_EMAIL_DOMAIN = 'members.example.com'; // 会員IDをSupabase Auth用の内部メールへ変換（外部送信には使用しない）
 let BRC_MEMBER_ACTIVE = false;
@@ -3480,6 +3486,274 @@ function getJstDateLabel(){
   return `${map.year}-${map.month}-${map.day}`;
 }
 
+
+// ===== オリジナル展示ライブ連携 Phase 2 =====
+// Python収集 → Live Worker → INDEX。
+// 展示総合値は6艇平均との差を +優位 / -劣位 とし、±1.0秒で上限、0.1秒単位へ丸める。
+// 進入変更レースと江戸川は確率補正しない。
+// 1着率は補正後も6艇合計100%、3連対率はlogit制約で6艇合計300%を維持する。
+const BRC_LIVE_EXHIBITION_POLL_MS = 30 * 1000;
+const BRC_EXHIBITION_ADJUSTMENT_VERSION = 'w020-course-diff-v1-20260825';
+const BRC_EXHIBITION_ADJUSTMENT_MATRIX = {"1":{"-1.0":{"win":-0.215411,"top3":-0.327964},"-0.9":{"win":-0.19387,"top3":-0.295168},"-0.8":{"win":-0.172329,"top3":-0.262372},"-0.7":{"win":-0.150788,"top3":-0.229575},"-0.6":{"win":-0.129246,"top3":-0.196779},"-0.5":{"win":-0.107705,"top3":-0.163982},"-0.4":{"win":-0.086164,"top3":-0.131186},"-0.3":{"win":-0.064623,"top3":-0.098389},"-0.2":{"win":-0.043082,"top3":-0.065593},"-0.1":{"win":-0.021541,"top3":-0.032796},"0.0":{"win":0.0,"top3":0.0},"0.1":{"win":0.021541,"top3":0.032796},"0.2":{"win":0.043082,"top3":0.065593},"0.3":{"win":0.064623,"top3":0.098389},"0.4":{"win":0.086164,"top3":0.131186},"0.5":{"win":0.107705,"top3":0.163982},"0.6":{"win":0.129246,"top3":0.196779},"0.7":{"win":0.150788,"top3":0.229575},"0.8":{"win":0.172329,"top3":0.262372},"0.9":{"win":0.19387,"top3":0.295168},"1.0":{"win":0.215411,"top3":0.327964}},"2":{"-1.0":{"win":-0.322093,"top3":-0.389986},"-0.9":{"win":-0.289884,"top3":-0.350987},"-0.8":{"win":-0.257674,"top3":-0.311989},"-0.7":{"win":-0.225465,"top3":-0.27299},"-0.6":{"win":-0.193256,"top3":-0.233992},"-0.5":{"win":-0.161046,"top3":-0.194993},"-0.4":{"win":-0.128837,"top3":-0.155994},"-0.3":{"win":-0.096628,"top3":-0.116996},"-0.2":{"win":-0.064419,"top3":-0.077997},"-0.1":{"win":-0.032209,"top3":-0.038999},"0.0":{"win":0.0,"top3":0.0},"0.1":{"win":0.032209,"top3":0.038999},"0.2":{"win":0.064419,"top3":0.077997},"0.3":{"win":0.096628,"top3":0.116996},"0.4":{"win":0.128837,"top3":0.155994},"0.5":{"win":0.161046,"top3":0.194993},"0.6":{"win":0.193256,"top3":0.233992},"0.7":{"win":0.225465,"top3":0.27299},"0.8":{"win":0.257674,"top3":0.311989},"0.9":{"win":0.289884,"top3":0.350987},"1.0":{"win":0.322093,"top3":0.389986}},"3":{"-1.0":{"win":-0.311437,"top3":-0.437671},"-0.9":{"win":-0.280294,"top3":-0.393904},"-0.8":{"win":-0.24915,"top3":-0.350137},"-0.7":{"win":-0.218006,"top3":-0.30637},"-0.6":{"win":-0.186862,"top3":-0.262603},"-0.5":{"win":-0.155719,"top3":-0.218836},"-0.4":{"win":-0.124575,"top3":-0.175069},"-0.3":{"win":-0.093431,"top3":-0.131301},"-0.2":{"win":-0.062287,"top3":-0.087534},"-0.1":{"win":-0.031144,"top3":-0.043767},"0.0":{"win":0.0,"top3":0.0},"0.1":{"win":0.031144,"top3":0.043767},"0.2":{"win":0.062287,"top3":0.087534},"0.3":{"win":0.093431,"top3":0.131301},"0.4":{"win":0.124575,"top3":0.175069},"0.5":{"win":0.155719,"top3":0.218836},"0.6":{"win":0.186862,"top3":0.262603},"0.7":{"win":0.218006,"top3":0.30637},"0.8":{"win":0.24915,"top3":0.350137},"0.9":{"win":0.280294,"top3":0.393904},"1.0":{"win":0.311437,"top3":0.437671}},"4":{"-1.0":{"win":-0.320004,"top3":-0.358272},"-0.9":{"win":-0.288003,"top3":-0.322445},"-0.8":{"win":-0.256003,"top3":-0.286618},"-0.7":{"win":-0.224003,"top3":-0.250791},"-0.6":{"win":-0.192002,"top3":-0.214963},"-0.5":{"win":-0.160002,"top3":-0.179136},"-0.4":{"win":-0.128001,"top3":-0.143309},"-0.3":{"win":-0.096001,"top3":-0.107482},"-0.2":{"win":-0.064001,"top3":-0.071654},"-0.1":{"win":-0.032,"top3":-0.035827},"0.0":{"win":0.0,"top3":0.0},"0.1":{"win":0.032,"top3":0.035827},"0.2":{"win":0.064001,"top3":0.071654},"0.3":{"win":0.096001,"top3":0.107482},"0.4":{"win":0.128001,"top3":0.143309},"0.5":{"win":0.160002,"top3":0.179136},"0.6":{"win":0.192002,"top3":0.214963},"0.7":{"win":0.224003,"top3":0.250791},"0.8":{"win":0.256003,"top3":0.286618},"0.9":{"win":0.288003,"top3":0.322445},"1.0":{"win":0.320004,"top3":0.358272}},"5":{"-1.0":{"win":-0.345123,"top3":-0.405345},"-0.9":{"win":-0.310611,"top3":-0.36481},"-0.8":{"win":-0.276099,"top3":-0.324276},"-0.7":{"win":-0.241586,"top3":-0.283741},"-0.6":{"win":-0.207074,"top3":-0.243207},"-0.5":{"win":-0.172562,"top3":-0.202672},"-0.4":{"win":-0.138049,"top3":-0.162138},"-0.3":{"win":-0.103537,"top3":-0.121603},"-0.2":{"win":-0.069025,"top3":-0.081069},"-0.1":{"win":-0.034512,"top3":-0.040534},"0.0":{"win":0.0,"top3":0.0},"0.1":{"win":0.034512,"top3":0.040534},"0.2":{"win":0.069025,"top3":0.081069},"0.3":{"win":0.103537,"top3":0.121603},"0.4":{"win":0.138049,"top3":0.162138},"0.5":{"win":0.172562,"top3":0.202672},"0.6":{"win":0.207074,"top3":0.243207},"0.7":{"win":0.241586,"top3":0.283741},"0.8":{"win":0.276099,"top3":0.324276},"0.9":{"win":0.310611,"top3":0.36481},"1.0":{"win":0.345123,"top3":0.405345}},"6":{"-1.0":{"win":-0.466062,"top3":-0.456979},"-0.9":{"win":-0.419456,"top3":-0.411281},"-0.8":{"win":-0.37285,"top3":-0.365584},"-0.7":{"win":-0.326243,"top3":-0.319886},"-0.6":{"win":-0.279637,"top3":-0.274188},"-0.5":{"win":-0.233031,"top3":-0.22849},"-0.4":{"win":-0.186425,"top3":-0.182792},"-0.3":{"win":-0.139819,"top3":-0.137094},"-0.2":{"win":-0.093212,"top3":-0.091396},"-0.1":{"win":-0.046606,"top3":-0.045698},"0.0":{"win":0.0,"top3":0.0},"0.1":{"win":0.046606,"top3":0.045698},"0.2":{"win":0.093212,"top3":0.091396},"0.3":{"win":0.139819,"top3":0.137094},"0.4":{"win":0.186425,"top3":0.182792},"0.5":{"win":0.233031,"top3":0.22849},"0.6":{"win":0.279637,"top3":0.274188},"0.7":{"win":0.326243,"top3":0.319886},"0.8":{"win":0.37285,"top3":0.365584},"0.9":{"win":0.419456,"top3":0.411281},"1.0":{"win":0.466062,"top3":0.456979}}};
+let __brcLiveExhibitionPollTimer = null;
+let __brcLiveExhibitionPollSeq = 0;
+
+function brcVenueCodeFromName(venue){
+  for(const [code,name] of Object.entries(BOAT_VENUE_CODE || {})){
+    if(name === venue) return code;
+  }
+  return '';
+}
+
+function brcClamp(v,lo,hi){ return Math.max(lo,Math.min(hi,v)); }
+function brcSigmoid(x){ return 1/(1+Math.exp(-x)); }
+function brcLogit(p){
+  const q=brcClamp(Number(p),1e-7,1-1e-7);
+  return Math.log(q/(1-q));
+}
+function brcExhibitionDiffBucket(diff){
+  const d=brcClamp(Number(diff),-1,1);
+  if(!Number.isFinite(d)) return null;
+  const r=Math.round(d*10)/10;
+  return Math.abs(r)<0.00001 ? 0 : r;
+}
+function brcExhibitionMatrixCell(course,diff){
+  const d=brcExhibitionDiffBucket(diff);
+  if(d===null) return null;
+  const key=d.toFixed(1);
+  return BRC_EXHIBITION_ADJUSTMENT_MATRIX?.[String(Number(course))]?.[key] || null;
+}
+function brcConstrainLogitProbabilities(probs,targetSum){
+  if(!Array.isArray(probs) || probs.length!==6) return probs;
+  const logits=probs.map(p=>brcLogit(p));
+  let lo=-20, hi=20;
+  for(let i=0;i<64;i++){
+    const mid=(lo+hi)/2;
+    const s=logits.reduce((a,l)=>a+brcSigmoid(l+mid),0);
+    if(s<targetSum) lo=mid; else hi=mid;
+  }
+  const off=(lo+hi)/2;
+  return logits.map(l=>brcSigmoid(l+off));
+}
+function brcProbabilityArrow(deltaPt,threshold){
+  const d=Number(deltaPt);
+  if(!Number.isFinite(d)) return '→';
+  if(d>threshold) return '↗';
+  if(d<-threshold) return '↘';
+  return '→';
+}
+function brcProbabilityDeltaColor(deltaPt,threshold){
+  const d=Number(deltaPt);
+  if(!Number.isFinite(d) || Math.abs(d)<=threshold) return 'var(--ink-soft)';
+  return d>0 ? '#2f8f5b' : '#d1373f';
+}
+
+function brcLiveExhibitionEligible(liveRace){
+  return !!(
+    liveRace &&
+    (liveRace.fixed_course === true || String(liveRace.fixed_course).toLowerCase() === 'true') &&
+    (liveRace.eligible_for_exhibition_adjustment === true || String(liveRace.eligible_for_exhibition_adjustment).toLowerCase() === 'true')
+  );
+}
+
+async function brcFetchLiveExhibition(venue, raceNo){
+  if(!BRC_LIVE_EXHIBITION_API_URL) return null;
+  const code = brcVenueCodeFromName(venue);
+  const r = Number(raceNo);
+  if(!code || !Number.isFinite(r) || r < 1 || r > 12) return null;
+  const date = TODAY_LABEL || getJstDateLabel();
+  const qs = new URLSearchParams({date, venue_code:code, race_no:String(r)});
+  try{
+    const res = await fetch(`${BRC_LIVE_EXHIBITION_API_URL}/live-exhibition?${qs.toString()}`, {
+      method:'GET', cache:'no-store', headers:{'Accept':'application/json'}
+    });
+    if(res.status === 404) return null;
+    if(!res.ok) throw new Error(`live_exhibition_http_${res.status}`);
+    const obj = await res.json();
+    if(!obj || obj.ok !== true || !obj.race || !Array.isArray(obj.race.boats)) return null;
+    if(String(obj.race.date) !== String(date)) return null;
+    if(String(obj.race.venue_code).padStart(2,'0') !== String(code).padStart(2,'0')) return null;
+    if(Number(obj.race.race_no) !== r) return null;
+    const nums = obj.race.boats.map(x=>Number(x.boat_no)).sort((a,b)=>a-b);
+    if(nums.join(',') !== '1,2,3,4,5,6') return null;
+    return obj.race;
+  }catch(err){
+    console.warn('BRC live exhibition fetch failed:', err);
+    return null;
+  }
+}
+
+function brcApplyExhibitionAdjustmentsToBoats(boats,liveRace){
+  if(!Array.isArray(boats) || boats.length!==6) return false;
+  const byBoat=new Map(Array.isArray(liveRace?.boats) ? liveRace.boats.map(x=>[Number(x.boat_no),x]) : []);
+  boats.forEach(b=>{
+    if(Number.isFinite(Number(b.basePctFloat))) b.pctFloat=Number(b.basePctFloat);
+    if(Number.isFinite(Number(b.basePct3Float))) b.pct3Float=Number(b.basePct3Float);
+    if(Number.isFinite(Number(b.basePct2))) b.pct2=Number(b.basePct2);
+    b.pct=Math.round(Number(b.pctFloat)||0);
+    b.pct3=Math.round(Number(b.pct3Float)||0);
+    b.exhibition=byBoat.get(Number(b.course)) || null;
+    b.exhibitionApplied=false;
+    b.exhibitionDiffBucket=null;
+    b.exhibitionWinDeltaPt=0;
+    b.exhibitionTop3DeltaPt=0;
+  });
+  if(!brcLiveExhibitionEligible(liveRace)) return false;
+
+  const cells=[];
+  for(const b of boats){
+    const raw=Number(b.exhibition?.relative_diff_capped ?? b.exhibition?.relative_diff);
+    const bucket=brcExhibitionDiffBucket(raw);
+    const cell=brcExhibitionMatrixCell(b.course,bucket);
+    if(bucket===null || !cell || !Number.isFinite(Number(cell.win)) || !Number.isFinite(Number(cell.top3))) return false;
+    cells.push({b,bucket,cell});
+  }
+
+  const winPre=cells.map(x=>brcSigmoid(brcLogit(Number(x.b.basePctFloat)/100)+Number(x.cell.win)));
+  const top3Pre=cells.map(x=>brcSigmoid(brcLogit(Number(x.b.basePct3Float)/100)+Number(x.cell.top3)));
+  const winAdj=brcConstrainLogitProbabilities(winPre,1.0);
+  const top3Adj=brcConstrainLogitProbabilities(top3Pre,3.0);
+
+  cells.forEach((x,i)=>{
+    const b=x.b;
+    b.exhibitionDiffBucket=x.bucket;
+    b.pctFloat=winAdj[i]*100;
+    b.pct3Float=top3Adj[i]*100;
+    b.pct=Math.round(b.pctFloat);
+    b.pct3=Math.round(b.pct3Float);
+    b.exhibitionWinDeltaPt=b.pctFloat-Number(b.basePctFloat);
+    b.exhibitionTop3DeltaPt=b.pct3Float-Number(b.basePct3Float);
+    b.exhibitionApplied=true;
+  });
+  return true;
+}
+
+function brcExhibitionDiffText(b){
+  const d=Number(b?.exhibitionDiffBucket);
+  if(!Number.isFinite(d)) return '';
+  return `${d>0?'+':''}${d.toFixed(1)}秒`;
+}
+function brcBuildExhibitionProbabilitySubHtml(b,kind){
+  if(!b) return '';
+  if(b.exhibitionApplied){
+    const isTop3=kind==='top3';
+    const delta=Number(isTop3?b.exhibitionTop3DeltaPt:b.exhibitionWinDeltaPt);
+    const threshold=isTop3?2.0:0.75;
+    const arrow=brcProbabilityArrow(delta,threshold);
+    const color=brcProbabilityDeltaColor(delta,threshold);
+    const sign=delta>0?'+':'';
+    return `<div class="live-exhibition-slot" data-live-exhibition-course="${Number(b.course)||0}" style="font-size:10.5px;font-weight:700;color:${color};margin-top:2px;line-height:1.25;" title="オリジナル展示の6艇相対差を0.1秒単位で確率補正。"><span>展示 ${sign}${delta.toFixed(1)}pt ${arrow}</span><span style="display:block;font-size:9.5px;font-weight:600;color:var(--ink-soft);">差 ${brcExhibitionDiffText(b)}</span></div>`;
+  }
+  const ex=b.exhibition;
+  if(!ex) return '';
+  const d=Number(ex.relative_diff_capped ?? ex.relative_diff);
+  if(!Number.isFinite(d)) return '';
+  const eligible=brcLiveExhibitionEligible(window.__currentLiveExhibition);
+  const sign=d>0?'+':'';
+  return `<div class="live-exhibition-slot" data-live-exhibition-course="${Number(b.course)||0}" style="font-size:10px;font-weight:650;color:${eligible?'var(--ink-soft)':'#8a5a00'};margin-top:2px;">展示差 ${sign}${d.toFixed(2)}秒${eligible?'':' 対象外'}</div>`;
+}
+function brcBuildWinCellInner(b,venue){
+  const diff=b.pct-Math.round(b.venueAvgWin);
+  const sign=diff>0?'+':'';
+  const col2=diff>0?'#2f8f5b':(diff<0?'#d1373f':'var(--ink-soft)');
+  return `${b.pct}%<div style="font-size:11px;font-weight:600;color:${col2};margin-top:1px;" title="${venue}${b.course}コースの場基準勝率${r0(b.venueAvgWin)}%との差">場基準比 ${sign}${diff}pt</div>${brcBuildExhibitionProbabilitySubHtml(b,'win')}`;
+}
+function brcBuildTop3CellInner(b){
+  return `${b.pct3}%${brcBuildExhibitionProbabilitySubHtml(b,'top3')}`;
+}
+function brcBuildPredictLeadSummaryHtml(boats){
+  if(!Array.isArray(boats)||boats.length!==6) return '';
+  const sorted=[...boats].sort((a,b)=>b.pctFloat-a.pctFloat);
+  const sorted3=[...boats].sort((a,b)=>b.pct3Float-a.pct3Float);
+  return `本命候補: <strong>${sorted[0].player.name}</strong>（コース${sorted[0].course}・予想勝率${sorted[0].pct}%）／ 3連対率トップ: <strong>${sorted3[0].player.name}</strong>（コース${sorted3[0].course}・予想3連対率${sorted3[0].pct3}%）`;
+}
+
+function buildLiveExhibitionStatusHtml(liveRace, venue='', raceNo=0){
+  if(!raceNo) return '';
+  const code=brcVenueCodeFromName(venue);
+  if(code==='03'){
+    return `<div id="liveExhibitionCard" style="margin:10px 0 12px;border:1px solid rgba(10,31,51,.12);background:rgba(10,31,51,.025);border-radius:10px;padding:10px 12px;"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><strong style="font-size:13px;">オリジナル展示</strong><span style="font-size:11.5px;font-weight:800;color:var(--ink-soft);">江戸川は対象外</span></div><div style="margin-top:4px;font-size:10.5px;color:var(--ink-soft);">江戸川はオリジナル展示データがないため補正しません。</div></div>`;
+  }
+  if(!BRC_LIVE_EXHIBITION_API_URL){
+    return `<div id="liveExhibitionCard" style="margin:10px 0 12px;border:1px solid rgba(10,31,51,.12);background:rgba(10,31,51,.025);border-radius:10px;padding:10px 12px;"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><strong style="font-size:13px;">オリジナル展示</strong><span style="font-size:11px;color:var(--ink-soft);">ライブ連携未設定</span></div><div style="margin-top:4px;font-size:10.5px;color:var(--ink-soft);">Live Worker URL設定後、展示差を自動取得して確率へ反映します。</div></div>`;
+  }
+  if(!liveRace){
+    return `<div id="liveExhibitionCard" style="margin:10px 0 12px;border:1px solid rgba(10,31,51,.12);background:rgba(10,31,51,.025);border-radius:10px;padding:10px 12px;"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><strong style="font-size:13px;">オリジナル展示</strong><span style="font-size:11px;color:var(--ink-soft);">データ待ち</span></div><div style="margin-top:4px;font-size:10.5px;color:var(--ink-soft);">30秒ごとに確認しています。</div></div>`;
+  }
+  const fixed=liveRace.fixed_course===true || String(liveRace.fixed_course).toLowerCase()==='true';
+  const eligible=brcLiveExhibitionEligible(liveRace);
+  const badge=eligible?'展示反映済み':(fixed?'取得済み・補正対象外':'進入変更・補正なし');
+  const badgeColor=eligible?'#2f8f5b':'#d1373f';
+  const captured=liveRace.captured_at_jst||'―';
+  return `<div id="liveExhibitionCard" style="margin:10px 0 12px;border:1px solid rgba(0,102,255,.18);background:rgba(0,102,255,.025);border-radius:10px;padding:10px 12px;"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><strong style="font-size:13px;">オリジナル展示</strong><span style="font-size:11.5px;font-weight:800;color:${badgeColor};">${badge}</span><span style="font-size:10.5px;color:var(--ink-soft);">取得 ${captured}</span></div><div style="margin-top:4px;font-size:10.5px;color:var(--ink-soft);">${eligible?'6艇相対差を0.1秒単位で1着率・3連対率へ反映。':'進入変更時は既存確率を維持します。'}</div></div>`;
+}
+
+function brcRefreshExhibitionAdjustedDom(liveRace,venue,raceNo){
+  window.__currentLiveExhibition=liveRace||null;
+  const boats=window.__predictBoatsCurrent;
+  if(!Array.isArray(boats)||boats.length!==6) return;
+  const applied=brcApplyExhibitionAdjustmentsToBoats(boats,liveRace);
+  window.__currentExhibitionApplied=applied;
+
+  const worker=window.__predictWorkerCurrent;
+  const grade=window.__predictGradeCurrent;
+  const apiBoats=window.__predictApiBoatsCurrent || [];
+  let local=window.__currentLocalInReliability || null;
+  const p1=boats.find(b=>Number(b.course)===1);
+  if(worker?.inReliability && p1){
+    local=classifyInReliabilityByWinPct(p1.pctFloat,grade,apiBoats.map(b=>b.reg),worker.inReliability) || local;
+    if(local){ worker.uiInReliability=local; window.__currentLocalInReliability=local; }
+  }
+  for(const b of boats){
+    const w=document.getElementById(`predict-win-cell-${b.course}`);
+    if(w) w.innerHTML=brcBuildWinCellInner(b,venue);
+    const t=document.getElementById(`predict-top3-cell-${b.course}`);
+    if(t) t.innerHTML=brcBuildTop3CellInner(b);
+  }
+  const inCard=document.getElementById('inReliabilityCard');
+  if(inCard && local){
+    const wrap=document.createElement('div'); wrap.innerHTML=buildInReliabilityCardHtmlFromServer(local).trim();
+    if(wrap.firstElementChild) inCard.replaceWith(wrap.firstElementChild);
+  }
+  const rec=document.getElementById('recommendedBetsCard');
+  if(rec && worker){
+    const wrap=document.createElement('div'); wrap.innerHTML=buildRecommendedBetsHtmlFromServer(worker,local,applied).trim();
+    if(wrap.firstElementChild) rec.replaceWith(wrap.firstElementChild);
+  }
+  const summary=document.getElementById('predictSummaryLead');
+  if(summary) summary.innerHTML=brcBuildPredictLeadSummaryHtml(boats);
+}
+
+function brcUpdateLiveExhibitionDom(liveRace,venue,raceNo){
+  const card=document.getElementById('liveExhibitionCard');
+  if(card){
+    const wrap=document.createElement('div'); wrap.innerHTML=buildLiveExhibitionStatusHtml(liveRace,venue,raceNo).trim();
+    if(wrap.firstElementChild) card.replaceWith(wrap.firstElementChild);
+  }
+  brcRefreshExhibitionAdjustedDom(liveRace,venue,raceNo);
+}
+
+function brcStopLiveExhibitionPolling(){
+  __brcLiveExhibitionPollSeq++;
+  if(__brcLiveExhibitionPollTimer){ clearInterval(__brcLiveExhibitionPollTimer); __brcLiveExhibitionPollTimer=null; }
+}
+function brcStartLiveExhibitionPolling(venue,raceNo){
+  brcStopLiveExhibitionPolling();
+  const r=Number(raceNo);
+  if(!BRC_LIVE_EXHIBITION_API_URL || !venue || !r || brcVenueCodeFromName(venue)==='03') return;
+  const seq=__brcLiveExhibitionPollSeq;
+  const poll=async()=>{
+    if(seq!==__brcLiveExhibitionPollSeq) return;
+    const currentVenue=document.getElementById('predictVenue')?.value||'';
+    const currentRace=Number(document.getElementById('predictRaceNo')?.value||0);
+    if(currentVenue!==venue || currentRace!==r){ brcStopLiveExhibitionPolling(); return; }
+    const liveRace=await brcFetchLiveExhibition(venue,r);
+    if(seq!==__brcLiveExhibitionPollSeq) return;
+    brcUpdateLiveExhibitionDom(liveRace,venue,r);
+  };
+  __brcLiveExhibitionPollTimer=setInterval(poll,BRC_LIVE_EXHIBITION_POLL_MS);
+}
+
 function clearStoredRaceCard(){
   try{ localStorage.removeItem(RACE_CARD_STORAGE_KEY); }catch(_e){}
   try{ localStorage.removeItem(LEGACY_RACE_CARD_STORAGE_KEY); }catch(_e){}
@@ -4899,7 +5173,7 @@ function buildInReliabilityCardHtmlFromServer(info){
   const pct=Number(info.pct);
   const color=info.color||'var(--ink-soft)', bg=info.bg||'rgba(10,31,51,.04)', border=info.border||'rgba(10,31,51,.15)';
   const note=info.women ? '女子戦S基準76%' : (info.sg ? 'SGは強イン否定なし' : '全国共通基準');
-  return `<div class="in-reliability-compact" style="border:1px solid ${border}; background:${bg};" title="${note}">
+  return `<div id="inReliabilityCard" class="in-reliability-compact" style="border:1px solid ${border}; background:${bg};" title="${note}">
     <span class="irc-label">イン逃げ信頼度</span>
     <span class="irc-rank" style="color:${color};">${info.rank||'―'}</span>
     <span class="irc-diff" style="color:${color};">1号艇 ${pct.toFixed(1)}%</span>
@@ -5206,12 +5480,13 @@ function buildCurrentRaceSummaryHtml(venue){
 // BRC推奨買い目・展開分類・安全側確率・逃げ時補助はBRC Serverで計算
 // INDEXは返却結果を描画するだけで、計算式・閾値・較正表を保持しない。
 // ============================================================
-function buildRecommendedBetsHtmlFromServer(workerPrediction, localInReliability=null){
+function buildRecommendedBetsHtmlFromServer(workerPrediction, localInReliability=null, exhibitionApplied=false){
   const r=workerPrediction?.recommendation;
   const uiRank=localInReliability?.rank || r?.rank || '―';
   if(!r) return '';
+  const exhibitionNote = exhibitionApplied ? '<span style="font-size:10px;font-weight:800;color:#8a5a00;border:1px solid rgba(227,178,60,.32);background:rgba(227,178,60,.08);border-radius:999px;padding:2px 7px;">確率は展示反映済み・買い目は展示未反映</span>' : '';
   if(!r.recommended){
-    return `<div id="recommendedBetsCard" style="margin:12px 0 14px;border:1px solid rgba(227,178,60,.35);background:rgba(227,178,60,.06);border-radius:12px;padding:13px 14px;"><div style="font-size:14px;font-weight:800;color:#a8790a;">BRC推奨買い目</div><div style="margin-top:7px;font-size:14px;font-weight:700;">推奨なし</div><div style="margin-top:4px;font-size:12px;color:var(--ink-soft);">${r.reason||'展開が拮抗しています。'}</div></div>`;
+    return `<div id="recommendedBetsCard" style="margin:12px 0 14px;border:1px solid rgba(227,178,60,.35);background:rgba(227,178,60,.06);border-radius:12px;padding:13px 14px;"><div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;"><span style="font-size:14px;font-weight:800;color:#a8790a;">BRC推奨買い目</span>${exhibitionNote}</div><div style="margin-top:7px;font-size:14px;font-weight:700;">推奨なし</div><div style="margin-top:4px;font-size:12px;color:var(--ink-soft);">${r.reason||'展開が拮抗しています。'}</div></div>`;
   }
   const picks=Array.isArray(r.picks)?r.picks:[];
   const chips=picks.map(k=>`<span style="display:inline-block;border:1px solid rgba(0,102,255,.25);background:#fff;border-radius:7px;padding:5px 8px;font-weight:800;font-size:14px;">${k}</span>`).join(' ');
@@ -5231,7 +5506,7 @@ function buildRecommendedBetsHtmlFromServer(workerPrediction, localInReliability
   })() : '';
   const safe=Number(r.safe), target=Number(r.target120), raw=Number(r.raw), cal=Number(r.cal);
   return `<div id="recommendedBetsCard" style="margin:12px 0 14px;border:1px solid rgba(0,102,255,.22);background:rgba(0,102,255,.035);border-radius:12px;padding:13px 14px;">
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:14px;font-weight:800;color:var(--wave);">BRC推奨買い目</span><span style="font-size:13px;font-weight:800;">${Number(r.pointCount)||picks.length}点</span></div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:14px;font-weight:800;color:var(--wave);">BRC推奨買い目</span><span style="font-size:13px;font-weight:800;">${Number(r.pointCount)||picks.length}点</span>${exhibitionNote}</div>
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;">${chips}</div>
     <div style="display:flex;flex-wrap:wrap;gap:7px 18px;margin-top:11px;font-size:13px;"><span>想定的中率 <strong style="color:var(--wave);">${Number.isFinite(safe)?(safe*100).toFixed(1):'―'}%</strong></span><span>参加目安 合成オッズ <strong>${Number.isFinite(target)?target.toFixed(2):'―'}倍以上</strong></span></div>
     <details style="margin-top:8px;"><summary style="cursor:pointer;color:var(--ink-soft);font-size:11.5px;">詳細を見る</summary><div style="font-size:11.5px;color:var(--ink-soft);line-height:1.6;margin-top:5px;">タイプ：${r.typeLabel||r.type||'―'} ／ イン信頼度：${uiRank} ／ 攻め艇：${r.attackBoat||'―'}号艇（${r.attackStyle||'―'}）<br>校正前セット確率 ${Number.isFinite(raw)?(raw*100).toFixed(1):'―'}% → Validation校正 ${Number.isFinite(cal)?(cal*100).toFixed(1):'―'}% → 安全補正 ${Number.isFinite(safe)?(safe*100).toFixed(1):'―'}%</div></details>
@@ -5245,6 +5520,8 @@ function buildRecommendedBetsHtmlFromServer(workerPrediction, localInReliability
 async function runPredict(){
   const venue = document.getElementById('predictVenue').value;
   const grade = document.getElementById('predictGrade').value;
+  const raceNoLive = Number(document.getElementById('predictRaceNo')?.value || 0);
+  const liveExhibitionPromise = raceNoLive ? brcFetchLiveExhibition(venue, raceNoLive) : Promise.resolve(null);
 
   // 会員限定Workerへ「会場・グレード・6艇の登録番号」だけを送り、
   // 1着率・3連対率の正式値を取得する。計算式・学習統計はINDEXに保持しない。
@@ -5286,6 +5563,15 @@ async function runPredict(){
     return;
   }
 
+
+  const liveExhibitionRace = await liveExhibitionPromise;
+  const liveExhibitionByBoat = new Map(
+    Array.isArray(liveExhibitionRace?.boats)
+      ? liveExhibitionRace.boats.map(x => [Number(x.boat_no), x])
+      : []
+  );
+  window.__currentLiveExhibition = liveExhibitionRace || null;
+
   const boats = [];
   for(let c=1;c<=6;c++){
     const raw = document.getElementById('boat-'+c).value;
@@ -5314,9 +5600,11 @@ async function runPredict(){
       pctFloat, pct:Number.isFinite(Number(ww?.pct))?Number(ww.pct):Math.round(pctFloat),
       pctRaw:pctFloat, pctCal:pctFloat, winWfApplied:true, attack17Applied:false,
       pct3Float, pct3:Number.isFinite(Number(tw?.pct))?Number(tw.pct):Math.round(pct3Float),
-      playerSource:'BRC protected server model', venueBaseSource:'BRC protected server model',
+      basePctFloat:pctFloat, basePct3Float:pct3Float, basePct2:pct2Server,
+      playerSource:'BRC protected server model + original exhibition overlay', venueBaseSource:'BRC protected server model',
       laneN:Number(laneStatAll.n)||0, venueN:venueNServer, venueAvgWin:venueAvgWinNow, pct2:pct2Server,
-      motor2, motorNo
+      motor2, motorNo,
+      exhibition: liveExhibitionByBoat.get(c) || null
     });
   }
 
@@ -5325,9 +5613,14 @@ async function runPredict(){
     box.innerHTML = '<div style="color:#e5484d; font-size:14.5px;">6艇分の選手データを作成できませんでした。</div>';
     return;
   }
+  const exhibitionApplied = brcApplyExhibitionAdjustmentsToBoats(boats, liveExhibitionRace);
   window.__predictBoatsCurrent = boats;
+  window.__predictWorkerCurrent = workerPrediction;
+  window.__predictGradeCurrent = grade;
+  window.__predictApiBoatsCurrent = apiBoats;
+  window.__currentExhibitionApplied = exhibitionApplied;
 
-  // 最終1号艇1着率から確定版イン信頼度をINDEX側で統一判定。
+  // 展示反映後の最終1号艇1着率から確定版イン信頼度をINDEX側で統一判定。
   const p1ForReliability=boats.find(b=>Number(b.course)===1);
   const localInReliability=classifyInReliabilityByWinPct(
     p1ForReliability?.pctFloat,
@@ -5340,6 +5633,7 @@ async function runPredict(){
     return;
   }
   workerPrediction.uiInReliability=localInReliability;
+  window.__currentLocalInReliability=localInReliability;
 
   // モーター2連対率をこのレース6艇の中で相対評価し、A〜Eのランクを各艇に付与。
   const motorGrades = computeMotorGrades(boats);
@@ -5350,10 +5644,9 @@ async function runPredict(){
 
   // 2着率もWorker応答を正式値として使用する。
 
-  const sorted = [...boats].sort((a,b)=>b.pct-a.pct);
-  const sorted3 = [...boats].sort((a,b)=>b.pct3-a.pct3);
   box.innerHTML = `
     ${buildCurrentRaceSummaryHtml(venue)}
+    ${buildLiveExhibitionStatusHtml(liveExhibitionRace, venue, raceNoLive)}
     ${buildInReliabilityCardHtmlFromServer(localInReliability)}
     <div id="predictTableWrap" style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
     <table class="predict-table">
@@ -5376,8 +5669,8 @@ async function runPredict(){
           return `<tr>
             <td><span class="num-badge" style="width:22px;height:22px;font-size:12.5px;background:${col.bg};color:${col.text};${b.course===1?'border:1.5px solid rgba(10,31,51,.35);box-sizing:border-box;':''}display:inline-flex;align-items:center;justify-content:center;border-radius:50%;">${b.course}</span></td>
             <td><a href="#" style="color:var(--wave); text-decoration:none; cursor:pointer;" onclick="event.preventDefault(); togglePredictPlayer(${b.course}, '${b.player.reg}', '${venue}');" title="タップで選手詳細を表示">${b.player.name}</a></td>
-            <td class="num" style="font-weight:800; color:var(--wave); cursor:pointer; text-decoration:none;" onclick="togglePredictScenario(${b.course})" title="タップでこのコースが勝った場合の展開シナリオを表示">${b.pct}%${(()=>{ const diff = b.pct - Math.round(b.venueAvgWin); const sign = diff > 0 ? '+' : ''; const col2 = diff > 0 ? '#2f8f5b' : (diff < 0 ? '#d1373f' : 'var(--ink-soft)'); return `<div style="font-size:11px; font-weight:600; color:${col2}; margin-top:1px;" title="${venue}${b.course}コースの場基準勝率${r0(b.venueAvgWin)}%との差">場基準比 ${sign}${diff}pt</div>`; })()}</td>
-            <td class="num" style="font-weight:800; color:#e3b23c;">${b.pct3}%</td>
+            <td id="predict-win-cell-${b.course}" class="num" style="font-weight:800; color:var(--wave); cursor:pointer; text-decoration:none;" onclick="togglePredictScenario(${b.course})" title="タップでこのコースが勝った場合の展開シナリオを表示">${brcBuildWinCellInner(b,venue)}</td>
+            <td id="predict-top3-cell-${b.course}" class="num" style="font-weight:800; color:#e3b23c;">${brcBuildTop3CellInner(b)}</td>
             <td class="num" title="${stCourse ? `n=${stCourse.n}（直近1年・${b.course}コース）` : (b.player.avg_st_rank != null ? `n=${b.player.st_n}（全体）` : '')}">${stText}${b.stCorrApplied && Number.isFinite(b.stGap) ? `<div style="font-size:10.5px;color:${b.stGap<0?'#2f8f5b':(b.stGap>0?'#d1373f':'var(--ink-soft)')};margin-top:1px;">差 ${b.stGap>=0?'+':''}${b.stGap.toFixed(2)}</div>` : ''}</td>
             <td class="num">${(()=>{
               if(b.motor2 == null || !b.motorGrade) return '<span style="color:var(--ink-soft);">―</span>';
@@ -5390,15 +5683,13 @@ async function runPredict(){
     </table>
     </div>
     ${buildWindPanelHtml()}
-    ${buildRecommendedBetsHtmlFromServer(workerPrediction, localInReliability)}
+    ${buildRecommendedBetsHtmlFromServer(workerPrediction, localInReliability, exhibitionApplied)}
     <div class="trend-note" style="margin-top:2px; font-size:12px; color:var(--ink-soft);">選手名をタップすると選手詳細、勝率をタップすると展開傾向、モーターをタップすると機歴を表示します。</div>
-    <div class="trend-note fold-lead" style="margin-top:12px;">
-      本命候補: <strong>${sorted[0].player.name}</strong>（コース${sorted[0].course}・予想勝率${sorted[0].pct}%）／
-      3連対率トップ: <strong>${sorted3[0].player.name}</strong>（コース${sorted3[0].course}・予想3連対率${sorted3[0].pct3}%）
-    </div>
+    <div id="predictSummaryLead" class="trend-note fold-lead" style="margin-top:12px;">${brcBuildPredictLeadSummaryHtml(boats)}</div>
   `;
 
   bindWindPanel(venue);
+  brcStartLiveExhibitionPolling(venue, raceNoLive);
   // データ保存値や判定経路に関係なく、画面上のレース種別が準優勝戦なら最終表示を準優日にする。
   enforceSemifinalDayUi();
 }
