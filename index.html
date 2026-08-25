@@ -6,6 +6,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Boat Research Club ～データベース～</title>
 <!-- BRC_ORIGINAL_EXHIBITION_PHASE2_ADJUSTMENT_20260825 -->
+<!-- BRC_MOBILE_LIVE_REFRESH_FIX_20260825 -->
+<!-- BRC_EXHIBITION_PHASE3_1_AUDIT_FIX_20260825 -->
 <!-- BRC_SG_SPECIAL_REPORT_20260824 -->
 <!-- BRC_SG_MOTOR_SECOND_AXIS_20260824 -->
 <!-- BRC_SG_LOW_MOTOR_WARNING_20260824 -->
@@ -3491,8 +3493,12 @@ function getJstDateLabel(){
 // Python収集 → Live Worker → INDEX。
 // 展示総合値は6艇平均との差を +優位 / -劣位 とし、±1.0秒で上限、0.1秒単位へ丸める。
 // 進入変更レースと江戸川は確率補正しない。
-// 1着率は補正後も6艇合計100%、3連対率はlogit制約で6艇合計300%を維持する。
+// 展示補正前の確率総量を維持する。一般戦3連対率は元のlogit300%整合を維持する。
 const BRC_LIVE_EXHIBITION_POLL_MS = 30 * 1000;
+const BRC_LIVE_EXHIBITION_POLL_NEAR_MS = 15 * 1000;
+const BRC_LIVE_EXHIBITION_POLL_FINAL_MS = 10 * 1000;
+const BRC_LIVE_EXHIBITION_FINAL_MIN = 5;
+const BRC_LIVE_EXHIBITION_NEAR_MIN = 15;
 const BRC_EXHIBITION_ADJUSTMENT_VERSION = 'w020-course-diff-v1-20260825';
 const BRC_EXHIBITION_ADJUSTMENT_MATRIX = {"1":{"-1.0":{"win":-0.215411,"top3":-0.327964},"-0.9":{"win":-0.19387,"top3":-0.295168},"-0.8":{"win":-0.172329,"top3":-0.262372},"-0.7":{"win":-0.150788,"top3":-0.229575},"-0.6":{"win":-0.129246,"top3":-0.196779},"-0.5":{"win":-0.107705,"top3":-0.163982},"-0.4":{"win":-0.086164,"top3":-0.131186},"-0.3":{"win":-0.064623,"top3":-0.098389},"-0.2":{"win":-0.043082,"top3":-0.065593},"-0.1":{"win":-0.021541,"top3":-0.032796},"0.0":{"win":0.0,"top3":0.0},"0.1":{"win":0.021541,"top3":0.032796},"0.2":{"win":0.043082,"top3":0.065593},"0.3":{"win":0.064623,"top3":0.098389},"0.4":{"win":0.086164,"top3":0.131186},"0.5":{"win":0.107705,"top3":0.163982},"0.6":{"win":0.129246,"top3":0.196779},"0.7":{"win":0.150788,"top3":0.229575},"0.8":{"win":0.172329,"top3":0.262372},"0.9":{"win":0.19387,"top3":0.295168},"1.0":{"win":0.215411,"top3":0.327964}},"2":{"-1.0":{"win":-0.322093,"top3":-0.389986},"-0.9":{"win":-0.289884,"top3":-0.350987},"-0.8":{"win":-0.257674,"top3":-0.311989},"-0.7":{"win":-0.225465,"top3":-0.27299},"-0.6":{"win":-0.193256,"top3":-0.233992},"-0.5":{"win":-0.161046,"top3":-0.194993},"-0.4":{"win":-0.128837,"top3":-0.155994},"-0.3":{"win":-0.096628,"top3":-0.116996},"-0.2":{"win":-0.064419,"top3":-0.077997},"-0.1":{"win":-0.032209,"top3":-0.038999},"0.0":{"win":0.0,"top3":0.0},"0.1":{"win":0.032209,"top3":0.038999},"0.2":{"win":0.064419,"top3":0.077997},"0.3":{"win":0.096628,"top3":0.116996},"0.4":{"win":0.128837,"top3":0.155994},"0.5":{"win":0.161046,"top3":0.194993},"0.6":{"win":0.193256,"top3":0.233992},"0.7":{"win":0.225465,"top3":0.27299},"0.8":{"win":0.257674,"top3":0.311989},"0.9":{"win":0.289884,"top3":0.350987},"1.0":{"win":0.322093,"top3":0.389986}},"3":{"-1.0":{"win":-0.311437,"top3":-0.437671},"-0.9":{"win":-0.280294,"top3":-0.393904},"-0.8":{"win":-0.24915,"top3":-0.350137},"-0.7":{"win":-0.218006,"top3":-0.30637},"-0.6":{"win":-0.186862,"top3":-0.262603},"-0.5":{"win":-0.155719,"top3":-0.218836},"-0.4":{"win":-0.124575,"top3":-0.175069},"-0.3":{"win":-0.093431,"top3":-0.131301},"-0.2":{"win":-0.062287,"top3":-0.087534},"-0.1":{"win":-0.031144,"top3":-0.043767},"0.0":{"win":0.0,"top3":0.0},"0.1":{"win":0.031144,"top3":0.043767},"0.2":{"win":0.062287,"top3":0.087534},"0.3":{"win":0.093431,"top3":0.131301},"0.4":{"win":0.124575,"top3":0.175069},"0.5":{"win":0.155719,"top3":0.218836},"0.6":{"win":0.186862,"top3":0.262603},"0.7":{"win":0.218006,"top3":0.30637},"0.8":{"win":0.24915,"top3":0.350137},"0.9":{"win":0.280294,"top3":0.393904},"1.0":{"win":0.311437,"top3":0.437671}},"4":{"-1.0":{"win":-0.320004,"top3":-0.358272},"-0.9":{"win":-0.288003,"top3":-0.322445},"-0.8":{"win":-0.256003,"top3":-0.286618},"-0.7":{"win":-0.224003,"top3":-0.250791},"-0.6":{"win":-0.192002,"top3":-0.214963},"-0.5":{"win":-0.160002,"top3":-0.179136},"-0.4":{"win":-0.128001,"top3":-0.143309},"-0.3":{"win":-0.096001,"top3":-0.107482},"-0.2":{"win":-0.064001,"top3":-0.071654},"-0.1":{"win":-0.032,"top3":-0.035827},"0.0":{"win":0.0,"top3":0.0},"0.1":{"win":0.032,"top3":0.035827},"0.2":{"win":0.064001,"top3":0.071654},"0.3":{"win":0.096001,"top3":0.107482},"0.4":{"win":0.128001,"top3":0.143309},"0.5":{"win":0.160002,"top3":0.179136},"0.6":{"win":0.192002,"top3":0.214963},"0.7":{"win":0.224003,"top3":0.250791},"0.8":{"win":0.256003,"top3":0.286618},"0.9":{"win":0.288003,"top3":0.322445},"1.0":{"win":0.320004,"top3":0.358272}},"5":{"-1.0":{"win":-0.345123,"top3":-0.405345},"-0.9":{"win":-0.310611,"top3":-0.36481},"-0.8":{"win":-0.276099,"top3":-0.324276},"-0.7":{"win":-0.241586,"top3":-0.283741},"-0.6":{"win":-0.207074,"top3":-0.243207},"-0.5":{"win":-0.172562,"top3":-0.202672},"-0.4":{"win":-0.138049,"top3":-0.162138},"-0.3":{"win":-0.103537,"top3":-0.121603},"-0.2":{"win":-0.069025,"top3":-0.081069},"-0.1":{"win":-0.034512,"top3":-0.040534},"0.0":{"win":0.0,"top3":0.0},"0.1":{"win":0.034512,"top3":0.040534},"0.2":{"win":0.069025,"top3":0.081069},"0.3":{"win":0.103537,"top3":0.121603},"0.4":{"win":0.138049,"top3":0.162138},"0.5":{"win":0.172562,"top3":0.202672},"0.6":{"win":0.207074,"top3":0.243207},"0.7":{"win":0.241586,"top3":0.283741},"0.8":{"win":0.276099,"top3":0.324276},"0.9":{"win":0.310611,"top3":0.36481},"1.0":{"win":0.345123,"top3":0.405345}},"6":{"-1.0":{"win":-0.466062,"top3":-0.456979},"-0.9":{"win":-0.419456,"top3":-0.411281},"-0.8":{"win":-0.37285,"top3":-0.365584},"-0.7":{"win":-0.326243,"top3":-0.319886},"-0.6":{"win":-0.279637,"top3":-0.274188},"-0.5":{"win":-0.233031,"top3":-0.22849},"-0.4":{"win":-0.186425,"top3":-0.182792},"-0.3":{"win":-0.139819,"top3":-0.137094},"-0.2":{"win":-0.093212,"top3":-0.091396},"-0.1":{"win":-0.046606,"top3":-0.045698},"0.0":{"win":0.0,"top3":0.0},"0.1":{"win":0.046606,"top3":0.045698},"0.2":{"win":0.093212,"top3":0.091396},"0.3":{"win":0.139819,"top3":0.137094},"0.4":{"win":0.186425,"top3":0.182792},"0.5":{"win":0.233031,"top3":0.22849},"0.6":{"win":0.279637,"top3":0.274188},"0.7":{"win":0.326243,"top3":0.319886},"0.8":{"win":0.37285,"top3":0.365584},"0.9":{"win":0.419456,"top3":0.411281},"1.0":{"win":0.466062,"top3":0.456979}}};
 let __brcLiveExhibitionPollTimer = null;
@@ -3563,6 +3569,8 @@ async function brcFetchLiveExhibition(venue, raceNo){
   if(!code || !Number.isFinite(r) || r < 1 || r > 12) return null;
   const date = TODAY_LABEL || getJstDateLabel();
   const qs = new URLSearchParams({date, venue_code:code, race_no:String(r)});
+  // Safari / PWA / 中間キャッシュ対策。毎回ユニークURLで最新KVを取得する。
+  qs.set('_', String(Date.now()));
   try{
     const res = await fetch(`${BRC_LIVE_EXHIBITION_API_URL}/live-exhibition?${qs.toString()}`, {
       method:'GET', cache:'no-store', headers:{'Accept':'application/json'}
@@ -3611,8 +3619,13 @@ function brcApplyExhibitionAdjustmentsToBoats(boats,liveRace){
 
   const winPre=cells.map(x=>brcSigmoid(brcLogit(Number(x.b.basePctFloat)/100)+Number(x.cell.win)));
   const top3Pre=cells.map(x=>brcSigmoid(brcLogit(Number(x.b.basePct3Float)/100)+Number(x.cell.top3)));
-  const winAdj=brcConstrainLogitProbabilities(winPre,1.0);
-  const top3Adj=brcConstrainLogitProbabilities(top3Pre,3.0);
+  // 展示補正は既存モデルの確率総量を変えず、艇間の配分だけを動かす。
+  // 一般戦は元モデルがlogit300%整合済みなので実質300%を維持し、
+  // SG/G1G2/G3等は各グレードの補正前合計をそのまま維持する。
+  const winTarget=cells.reduce((sum,x)=>sum+(Number(x.b.basePctFloat)||0)/100,0);
+  const top3Target=cells.reduce((sum,x)=>sum+(Number(x.b.basePct3Float)||0)/100,0);
+  const winAdj=brcConstrainLogitProbabilities(winPre,winTarget);
+  const top3Adj=brcConstrainLogitProbabilities(top3Pre,top3Target);
 
   cells.forEach((x,i)=>{
     const b=x.b;
@@ -3678,7 +3691,7 @@ function buildLiveExhibitionStatusHtml(liveRace, venue='', raceNo=0){
     return `<div id="liveExhibitionCard" style="margin:10px 0 12px;border:1px solid rgba(10,31,51,.12);background:rgba(10,31,51,.025);border-radius:10px;padding:10px 12px;"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><strong style="font-size:13px;">オリジナル展示</strong><span style="font-size:11px;color:var(--ink-soft);">ライブ連携未設定</span></div><div style="margin-top:4px;font-size:10.5px;color:var(--ink-soft);">Live Worker URL設定後、展示差を自動取得して確率へ反映します。</div></div>`;
   }
   if(!liveRace){
-    return `<div id="liveExhibitionCard" style="margin:10px 0 12px;border:1px solid rgba(10,31,51,.12);background:rgba(10,31,51,.025);border-radius:10px;padding:10px 12px;"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><strong style="font-size:13px;">オリジナル展示</strong><span style="font-size:11px;color:var(--ink-soft);">データ待ち</span></div><div style="margin-top:4px;font-size:10.5px;color:var(--ink-soft);">30秒ごとに確認しています。</div></div>`;
+    return `<div id="liveExhibitionCard" style="margin:10px 0 12px;border:1px solid rgba(10,31,51,.12);background:rgba(10,31,51,.025);border-radius:10px;padding:10px 12px;"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><strong style="font-size:13px;">オリジナル展示</strong><span style="font-size:11px;color:var(--ink-soft);">データ待ち</span></div><div style="margin-top:4px;font-size:10.5px;color:var(--ink-soft);">自動更新中です。締切15分前から15秒間隔、5分前から10秒間隔で確認します。</div></div>`;
   }
   const fixed=liveRace.fixed_course===true || String(liveRace.fixed_course).toLowerCase()==='true';
   const eligible=brcLiveExhibitionEligible(liveRace);
@@ -3733,25 +3746,81 @@ function brcUpdateLiveExhibitionDom(liveRace,venue,raceNo){
   brcRefreshExhibitionAdjustedDom(liveRace,venue,raceNo);
 }
 
+function brcLiveExhibitionMinutesToDeadline(venue,raceNo){
+  try{
+    const info=RACE_INFO_TODAY?.[venue] || {};
+    const timeStr=info.deadlines?.[String(Number(raceNo))] || '';
+    const m=String(timeStr).match(/^(\d{1,2}):(\d{2})$/);
+    const date=TODAY_LABEL || getJstDateLabel();
+    if(!m || !/^\d{4}-\d{2}-\d{2}$/.test(String(date))) return null;
+    const ms=Date.parse(`${date}T${m[1].padStart(2,'0')}:${m[2]}:00+09:00`);
+    return Number.isFinite(ms) ? (ms-Date.now())/60000 : null;
+  }catch(_e){ return null; }
+}
+function brcLiveExhibitionNextPollMs(venue,raceNo){
+  const min=brcLiveExhibitionMinutesToDeadline(venue,raceNo);
+  if(Number.isFinite(min)){
+    if(min <= BRC_LIVE_EXHIBITION_FINAL_MIN && min >= -2) return BRC_LIVE_EXHIBITION_POLL_FINAL_MS;
+    if(min <= BRC_LIVE_EXHIBITION_NEAR_MIN && min >= -2) return BRC_LIVE_EXHIBITION_POLL_NEAR_MS;
+  }
+  return BRC_LIVE_EXHIBITION_POLL_MS;
+}
 function brcStopLiveExhibitionPolling(){
   __brcLiveExhibitionPollSeq++;
-  if(__brcLiveExhibitionPollTimer){ clearInterval(__brcLiveExhibitionPollTimer); __brcLiveExhibitionPollTimer=null; }
+  if(__brcLiveExhibitionPollTimer){ clearTimeout(__brcLiveExhibitionPollTimer); __brcLiveExhibitionPollTimer=null; }
+}
+function brcCurrentLiveExhibitionSelection(){
+  const venue=document.getElementById('predictVenue')?.value || document.getElementById('predictRaceDay')?.value || '';
+  const raceNo=Number(document.getElementById('predictRaceNo')?.value||0);
+  return {venue,raceNo};
+}
+function brcForceLiveExhibitionRefresh(){
+  const {venue,raceNo}=brcCurrentLiveExhibitionSelection();
+  if(BRC_LIVE_EXHIBITION_API_URL && venue && raceNo && brcVenueCodeFromName(venue)!=='03'){
+    brcStartLiveExhibitionPolling(venue,raceNo);
+  }
+}
+function brcBindLiveExhibitionLifecycle(){
+  if(window.__brcLiveExhibitionLifecycleBound) return;
+  window.__brcLiveExhibitionLifecycleBound=true;
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible') brcForceLiveExhibitionRefresh();
+  });
+  window.addEventListener('pageshow',()=>brcForceLiveExhibitionRefresh());
+  window.addEventListener('focus',()=>brcForceLiveExhibitionRefresh());
+  window.addEventListener('online',()=>brcForceLiveExhibitionRefresh());
 }
 function brcStartLiveExhibitionPolling(venue,raceNo){
   brcStopLiveExhibitionPolling();
+  brcBindLiveExhibitionLifecycle();
   const r=Number(raceNo);
   if(!BRC_LIVE_EXHIBITION_API_URL || !venue || !r || brcVenueCodeFromName(venue)==='03') return;
   const seq=__brcLiveExhibitionPollSeq;
-  const poll=async()=>{
+  let inFlight=false;
+  const schedule=()=>{
     if(seq!==__brcLiveExhibitionPollSeq) return;
-    const currentVenue=document.getElementById('predictVenue')?.value||'';
-    const currentRace=Number(document.getElementById('predictRaceNo')?.value||0);
-    if(currentVenue!==venue || currentRace!==r){ brcStopLiveExhibitionPolling(); return; }
-    const liveRace=await brcFetchLiveExhibition(venue,r);
-    if(seq!==__brcLiveExhibitionPollSeq) return;
-    brcUpdateLiveExhibitionDom(liveRace,venue,r);
+    __brcLiveExhibitionPollTimer=setTimeout(()=>poll('timer'),brcLiveExhibitionNextPollMs(venue,r));
   };
-  __brcLiveExhibitionPollTimer=setInterval(poll,BRC_LIVE_EXHIBITION_POLL_MS);
+  const poll=async(reason='timer')=>{
+    if(seq!==__brcLiveExhibitionPollSeq) return;
+    const current=brcCurrentLiveExhibitionSelection();
+    if(current.venue!==venue || current.raceNo!==r){ brcStopLiveExhibitionPolling(); return; }
+    // iPhone/iPadはバックグラウンドでWebタイマーを止めることがある。
+    // 復帰時は visibilitychange/pageshow/focus から即時取得する。
+    if(document.visibilityState==='hidden' && reason==='timer'){ schedule(); return; }
+    if(inFlight){ schedule(); return; }
+    inFlight=true;
+    try{
+      const liveRace=await brcFetchLiveExhibition(venue,r);
+      if(seq!==__brcLiveExhibitionPollSeq) return;
+      brcUpdateLiveExhibitionDom(liveRace,venue,r);
+    }finally{
+      inFlight=false;
+      schedule();
+    }
+  };
+  // レースを開いた瞬間に即取得。最初の30秒待ちをなくす。
+  poll('start');
 }
 
 function clearStoredRaceCard(){
