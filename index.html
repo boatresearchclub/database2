@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Boat Research Club ～データベース～</title>
 <!-- BRC_RACECARD_HISTORY_LOCK_20260827 -->
+<!-- BRC_HISTORICAL_EXHIBITION_REPLAY_20260827 -->
 <!-- BRC_EXHIBITION_ENTRY_NOTICE_20260826 -->
 <!-- BRC_SLIT_AL_DISPLAY_20260826 -->
 <!-- BRC_SLIT_OUTER_HEAD_UPGRADE_20260826 -->
@@ -1884,7 +1885,7 @@
         <div class="racecard-history-main">
           <span class="racecard-history-title">🔒 過去検証中</span>
           <span class="racecard-history-date" id="raceCardHistoryDate">-</span>
-          <span class="racecard-history-note">当日番組表への自動切替・ライブ展示更新を停止しています。</span>
+          <span class="racecard-history-note">当日番組表への自動切替は停止中。表示中の日付・会場・Rに一致する保存済み展示だけを照合します。</span>
         </div>
         <button type="button" class="racecard-history-return" id="raceCardReturnToday">本日に戻る</button>
       </div>
@@ -4401,10 +4402,19 @@ function brcBuildPredictLeadSummaryHtml(boats){
 function buildLiveExhibitionStatusHtml(liveRace, venue='', raceNo=0){
   if(!raceNo) return '';
   const code=brcVenueCodeFromName(venue);
+  const historical=brcIsHistoricalRaceCardMode();
   const eligible=code!=='03' && !!BRC_LIVE_EXHIBITION_API_URL && !!liveRace && brcLiveExhibitionEligible(liveRace);
-  const label=eligible?'展示評価反映済':'展示評価未反映';
-  const color=eligible?'#2f8f5b':'var(--ink-soft)';
-  return `<div id="liveExhibitionCard" style="margin:10px 0 12px;border:1px solid rgba(0,102,255,.18);background:rgba(0,102,255,.025);border-radius:10px;padding:10px 12px;"><span style="font-size:12px;font-weight:800;color:${color};">${label}</span></div>`;
+  let label='展示評価未反映';
+  let color='var(--ink-soft)';
+  if(historical){
+    if(eligible){ label='過去展示評価 反映済'; color='#2f8f5b'; }
+    else if(liveRace){ label='過去展示データ取得済・補正対象外'; color='#8a5a00'; }
+    else { label='過去展示データなし'; color='var(--ink-soft)'; }
+  }else if(eligible){
+    label='展示評価反映済'; color='#2f8f5b';
+  }
+  const sub=historical ? `<span style="display:block;margin-top:3px;font-size:10px;font-weight:600;color:var(--ink-soft);">${TODAY_LABEL} / ${venue} ${Number(raceNo)}R の保存データのみ使用</span>` : '';
+  return `<div id="liveExhibitionCard" style="margin:10px 0 12px;border:1px solid rgba(0,102,255,.18);background:rgba(0,102,255,.025);border-radius:10px;padding:10px 12px;"><span style="font-size:12px;font-weight:800;color:${color};">${label}</span>${sub}</div>`;
 }
 
 function brcRefreshExhibitionAdjustedDom(liveRace,venue,raceNo){
@@ -4497,11 +4507,19 @@ function brcCurrentLiveExhibitionSelection(){
   return {venue,raceNo};
 }
 function brcForceLiveExhibitionRefresh(){
-  if(brcIsHistoricalRaceCardMode()){ brcStopLiveExhibitionPolling(); return; }
   const {venue,raceNo}=brcCurrentLiveExhibitionSelection();
-  if(BRC_LIVE_EXHIBITION_API_URL && venue && raceNo){
-    brcStartLiveExhibitionPolling(venue,raceNo);
+  if(!BRC_LIVE_EXHIBITION_API_URL || !venue || !raceNo) return;
+  // 過去検証中はタイマー監視を行わず、ロック日付に一致する保存済み展示を1回だけ照合する。
+  // brcFetchLiveExhibition() 側で date / venue_code / race_no を厳密照合するため、当日展示は混入しない。
+  if(brcIsHistoricalRaceCardMode()){
+    brcStopLiveExhibitionPolling();
+    brcFetchLiveExhibition(venue,raceNo).then(liveRace=>{
+      const current=brcCurrentLiveExhibitionSelection();
+      if(current.venue===venue && current.raceNo===Number(raceNo)) brcUpdateLiveExhibitionDom(liveRace,venue,Number(raceNo));
+    }).catch(()=>{});
+    return;
   }
+  brcStartLiveExhibitionPolling(venue,raceNo);
 }
 function brcBindLiveExhibitionLifecycle(){
   if(window.__brcLiveExhibitionLifecycleBound) return;
@@ -4515,10 +4533,20 @@ function brcBindLiveExhibitionLifecycle(){
 }
 function brcStartLiveExhibitionPolling(venue,raceNo){
   brcStopLiveExhibitionPolling();
-  if(brcIsHistoricalRaceCardMode()) return;
   brcBindLiveExhibitionLifecycle();
   const r=Number(raceNo);
   if(!BRC_LIVE_EXHIBITION_API_URL || !venue || !r) return;
+  // 過去日は自動ポーリングしない。ロック中の日付で保存済み展示を1回だけ取得する。
+  if(brcIsHistoricalRaceCardMode()){
+    const seq=__brcLiveExhibitionPollSeq;
+    brcFetchLiveExhibition(venue,r).then(liveRace=>{
+      if(seq!==__brcLiveExhibitionPollSeq) return;
+      const current=brcCurrentLiveExhibitionSelection();
+      if(current.venue!==venue || current.raceNo!==r) return;
+      brcUpdateLiveExhibitionDom(liveRace,venue,r);
+    }).catch(()=>{});
+    return;
+  }
   const seq=__brcLiveExhibitionPollSeq;
   let inFlight=false;
   const schedule=()=>{
@@ -5548,7 +5576,7 @@ function onRaceCardFileSelected(ev){
     document.getElementById('raceCardDateLabel').textContent = TODAY_LABEL;
     renderRaceCardModeUi();
     statusBox.textContent = isHistorical
-      ? `読込成功: ${file.name}（${sourceLabel} / ${Object.keys(RACE_INFO_TODAY).length}会場）・過去検証モードで固定`
+      ? `読込成功: ${file.name}（${sourceLabel} / ${Object.keys(RACE_INFO_TODAY).length}会場）・過去検証モードで固定／各Rの保存済み展示を照合`
       : `読込成功: ${file.name}（${sourceLabel} / ${Object.keys(RACE_INFO_TODAY).length}会場）${savedForToday ? '・本日中は自動保持' : ''}`;
     statusBox.style.color = '';
     populateDaySelect();
@@ -6558,7 +6586,7 @@ async function runPredict(){
   const venue = document.getElementById('predictVenue').value;
   const grade = document.getElementById('predictGrade').value;
   const raceNoLive = Number(document.getElementById('predictRaceNo')?.value || 0);
-  const liveExhibitionPromise = (!brcIsHistoricalRaceCardMode() && raceNoLive) ? brcFetchLiveExhibition(venue, raceNoLive) : Promise.resolve(null);
+  const liveExhibitionPromise = raceNoLive ? brcFetchLiveExhibition(venue, raceNoLive) : Promise.resolve(null);
 
   // 会員限定Workerへ「会場・グレード・6艇の登録番号」だけを送り、
   // 1着率・3連対率の正式値を取得する。計算式・学習統計はINDEXに保持しない。
