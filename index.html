@@ -245,11 +245,11 @@
        nowrapのまま（折り返させない）にする。 */
     #predictTableWrap:not(.show-all-cols) table.predict-table{ table-layout:fixed; width:100%; min-width:0; max-width:100%; }
     #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(1){ width:8%; }
-    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(2){ width:24%; }
-    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(3){ width:14%; }
+    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(2){ width:27%; }
+    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(3){ width:13%; }
     #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(4){ width:8%; }
-    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(5){ width:15%; }
-    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(6){ width:15%; }
+    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(5){ width:14%; }
+    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(6){ width:14%; }
     #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(7){ width:16%; }
     #predictTableWrap:not(.show-all-cols) table.predict-table td:nth-child(2){ overflow:hidden; text-overflow:ellipsis; }
     table.predict-table{ font-size:12px; }
@@ -946,6 +946,23 @@
   #predictResult .predict-table tbody td{ padding-top:9px; padding-bottom:9px; }
   #predictResult .predict-table tbody tr:not([id]) td{ border-bottom:1px solid rgba(10,31,51,.07); }
   #predictResult .predict-table tbody tr:not([id]):last-child td{ border-bottom:0; }
+  /* 出走表AI：列と各行の左右バランスを統一 */
+  #predictResult .predict-table th:nth-child(1),
+  #predictResult .predict-table td:nth-child(1){ text-align:center; }
+  #predictResult .predict-table th:nth-child(2),
+  #predictResult .predict-table td:nth-child(2){ text-align:left; }
+  #predictResult .predict-table th:nth-child(n+3):nth-child(-n+7),
+  #predictResult .predict-table td:nth-child(n+3):nth-child(-n+7){ text-align:center !important; }
+  #predictResult .predict-table td:nth-child(2) a{ color:var(--line-white) !important; font-weight:800; }
+  #predictResult .predict-table td:nth-child(3),
+  #predictResult .predict-table td:nth-child(5){ color:var(--line-white) !important; }
+  .exhibition-arrow-icon{
+    display:inline-block; width:20px; height:20px; vertical-align:middle; overflow:visible;
+  }
+  .exhibition-arrow-icon line, .exhibition-arrow-icon polyline{
+    fill:none; stroke:currentColor; stroke-width:2.3; stroke-linecap:round; stroke-linejoin:round;
+    vector-effect:non-scaling-stroke;
+  }
   #predictResult .trend-note{ opacity:.82; }
   #page-predict > #brcPredictProtected > section.card{ box-shadow:0 10px 30px rgba(10,31,51,.04); }
   @media (max-width:640px){
@@ -3691,10 +3708,18 @@ function brcBuildExhibitionArrowCellInner(b){
   if(Number.isFinite(w)) vals.push(w/0.75);
   if(Number.isFinite(t)) vals.push(t/2.0);
   const score=vals.reduce((a,v)=>a+v,0)/vals.length;
-  const arrow = score>2 ? '↑' : score>1 ? '↗' : score<-2 ? '↓' : score<-1 ? '↘' : '→';
+  const dir = score>2 ? 'up' : score>1 ? 'up-right' : score<-2 ? 'down' : score<-1 ? 'down-right' : 'right';
+  const label = dir==='up'?'↑':dir==='up-right'?'↗':dir==='down'?'↓':dir==='down-right'?'↘':'→';
   const color = Math.abs(score)<=1 ? 'var(--ink-soft)' : (score>0 ? '#2f8f5b' : '#d1373f');
-  return `<span aria-label="展示評価" style="color:${color};font-size:1.12em;font-weight:900;line-height:1;">${arrow}</span>`;
+  const rotation = dir==='up' ? -90 : dir==='up-right' ? -45 : dir==='down-right' ? 45 : dir==='down' ? 90 : 0;
+  return `<span aria-label="展示評価 ${label}" title="展示評価 ${label}" style="display:inline-flex;align-items:center;justify-content:center;color:${color};line-height:1;">
+    <svg class="exhibition-arrow-icon" viewBox="0 0 24 24" aria-hidden="true" style="transform:rotate(${rotation}deg);">
+      <line x1="4" y1="12" x2="19" y2="12"></line>
+      <polyline points="14,7 19,12 14,17"></polyline>
+    </svg>
+  </span>`;
 }
+
 function brcBuildPredictLeadSummaryHtml(boats){
   if(!Array.isArray(boats)||boats.length!==6) return '';
   const sorted=[...boats].sort((a,b)=>b.pctFloat-a.pctFloat);
@@ -5795,10 +5820,10 @@ async function runPredict(){
               : '<span style="color:var(--ink-soft);">―</span>';
           return `<tr>
             <td><span class="num-badge" style="width:22px;height:22px;font-size:12.5px;background:${col.bg};color:${col.text};${b.course===1?'border:1.5px solid rgba(10,31,51,.35);box-sizing:border-box;':''}display:inline-flex;align-items:center;justify-content:center;border-radius:50%;">${b.course}</span></td>
-            <td><a href="#" style="color:var(--wave); text-decoration:none; cursor:pointer;" onclick="event.preventDefault(); togglePredictPlayer(${b.course}, '${b.player.reg}', '${venue}');" title="タップで選手詳細を表示">${b.player.name}</a></td>
-            <td id="predict-win-cell-${b.course}" class="num" style="font-weight:800; color:var(--wave); cursor:pointer; text-decoration:none;" onclick="togglePredictScenario(${b.course})" title="タップでこのコースが勝った場合の展開シナリオを表示">${brcBuildWinCellInner(b,venue)}</td>
+            <td><a href="#" style="color:var(--line-white); text-decoration:none; cursor:pointer; font-weight:800;" onclick="event.preventDefault(); togglePredictPlayer(${b.course}, '${b.player.reg}', '${venue}');" title="タップで選手詳細を表示">${b.player.name}</a></td>
+            <td id="predict-win-cell-${b.course}" class="num" style="font-weight:800; color:var(--line-white); cursor:pointer; text-decoration:none;" onclick="togglePredictScenario(${b.course})" title="タップでこのコースが勝った場合の展開シナリオを表示">${brcBuildWinCellInner(b,venue)}</td>
             <td id="predict-exhibition-cell-${b.course}" class="num" style="text-align:center;">${brcBuildExhibitionArrowCellInner(b)}</td>
-            <td id="predict-top3-cell-${b.course}" class="num" style="font-weight:800; color:#e3b23c;">${brcBuildTop3CellInner(b)}</td>
+            <td id="predict-top3-cell-${b.course}" class="num" style="font-weight:800; color:var(--line-white);">${brcBuildTop3CellInner(b)}</td>
             <td class="num" title="${stCourse ? `n=${stCourse.n}（直近1年・${b.course}コース）` : (b.player.avg_st_rank != null ? `n=${b.player.st_n}（全体）` : '')}">${stText}</td>
             <td class="num">${(()=>{
               if(b.motor2 == null || !b.motorGrade) return '<span style="color:var(--ink-soft);">―</span>';
