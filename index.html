@@ -486,9 +486,10 @@
     border-radius:9px; padding:8px 11px; margin-bottom:10px;
     font-size:13px; line-height:1.2;
   }
-  .in-reliability-compact .irc-label{font-weight:700; color:var(--ink-soft); white-space:nowrap;}
-  .in-reliability-compact .irc-rank{font-size:21px; font-weight:900; line-height:1;}
-  .in-reliability-compact .irc-diff{margin-left:auto; font-weight:800; white-space:nowrap;}
+  .in-reliability-compact .irc-label{font-weight:700; color:var(--ink-soft); white-space:nowrap; flex:0 0 auto;}
+  .in-reliability-compact .irc-rank{font-size:21px; font-weight:900; line-height:1; white-space:nowrap; flex:0 0 auto;}
+  .in-reliability-compact .irc-diff{margin-left:auto; font-weight:800; white-space:nowrap; display:flex; align-items:baseline; gap:8px; min-width:0;}
+  .in-reliability-compact .irc-venue-base{margin-left:0 !important; white-space:nowrap;}
   .race-summary-compact{
     margin:0 0 10px; padding:2px 1px 0; color:var(--line-white);
   }
@@ -506,8 +507,17 @@
   .race-summary-bottom .rs-title{font-weight:800; color:var(--wave);}
   #predictRaceMeta{display:none !important;}
   @media (max-width:420px){
-    .in-reliability-compact{gap:7px; padding:7px 9px; font-size:12px;}
-    .in-reliability-compact .irc-rank{font-size:19px;}
+    .in-reliability-compact{gap:6px; padding:8px 9px; font-size:11.5px;}
+    .in-reliability-compact .irc-label{font-size:11px;}
+    .in-reliability-compact .irc-rank{font-size:18px; letter-spacing:-.04em;}
+    .in-reliability-compact .irc-diff{font-size:11.5px; gap:1px; flex-direction:column; align-items:flex-end; line-height:1.2;}
+    .in-reliability-compact .irc-venue-base{font-size:10.5px !important;}
+  }
+  @media (max-width:360px){
+    .in-reliability-compact{gap:5px; padding-left:7px; padding-right:7px;}
+    .in-reliability-compact .irc-label{font-size:10.5px;}
+    .in-reliability-compact .irc-rank{font-size:16.5px;}
+    .in-reliability-compact .irc-diff{font-size:11px;}
   }
 
   /* ---- 選手詳細：縦長を避ける5タブ切り替え ---- */
@@ -3096,8 +3106,8 @@ function renderInlinePredictScenario(course){
         <td style="padding:5px 4px;">${r.k}</td>
         <td style="padding:5px 4px; white-space:nowrap;">${r.n}</td>
         <td style="padding:5px 4px; white-space:nowrap; font-weight:700; color:var(--line-white);">${r.ar!=null ? r.ar.toFixed(2) : '-'}</td>
-        <td style="padding:5px 4px; white-space:nowrap;">${brcBuildScenarioPlaceRateHtml(r.t2,b)}</td>
-        <td style="padding:5px 4px; white-space:nowrap;">${brcBuildScenarioPlaceRateHtml(r.t3,b)}</td>
+        <td style="padding:5px 4px; white-space:nowrap;">${brcBuildScenarioPlaceRateHtml(r.t2,b,'second')}</td>
+        <td style="padding:5px 4px; white-space:nowrap;">${brcBuildScenarioPlaceRateHtml(r.t3,b,'third')}</td>
         <td style="padding:5px 4px; white-space:nowrap;">${r0(r.t3p)}%</td>
         <td style="padding:5px 4px;">${scenarioRelBar(r.n)}</td>
       </tr>`).join('');
@@ -3125,8 +3135,8 @@ function renderInlinePredictScenario(course){
                 <td style="padding:6px 4px;">全体</td>
                 <td style="padding:6px 4px; white-space:nowrap;">${totalN}</td>
                 <td style="padding:6px 4px; white-space:nowrap;">${avgAr!=null ? avgAr.toFixed(2) : '-'}</td>
-                <td style="padding:6px 4px; white-space:nowrap;">${brcBuildScenarioPlaceRateHtml(avgT2,b)}</td>
-                <td style="padding:6px 4px; white-space:nowrap;">${brcBuildScenarioPlaceRateHtml(avgT3,b)}</td>
+                <td style="padding:6px 4px; white-space:nowrap;">${brcBuildScenarioPlaceRateHtml(avgT2,b,'second')}</td>
+                <td style="padding:6px 4px; white-space:nowrap;">${brcBuildScenarioPlaceRateHtml(avgT3,b,'third')}</td>
                 <td style="padding:6px 4px; white-space:nowrap;">${r0(avgT3p)}%</td>
                 <td style="padding:6px 4px;">${scenarioRelBar(totalN)}</td>
               </tr>
@@ -3513,7 +3523,7 @@ function getJstDateLabel(){
 // ===== オリジナル展示ライブ連携 Phase 2 =====
 // Python収集 → Live Worker → INDEX。
 // 展示総合値は6艇平均との差を +優位 / -劣位 とし、±1.0秒で上限、0.1秒単位へ丸める。
-// 進入変更レースと江戸川は確率補正しない。
+// 進入変更レースと江戸川（独自マトリックス未構築）は確率補正しない。
 // 展示補正前の確率総量を維持する。一般戦3連対率は元のlogit300%整合を維持する。
 const BRC_LIVE_EXHIBITION_POLL_MS = 30 * 1000;
 const BRC_LIVE_EXHIBITION_POLL_NEAR_MS = 15 * 1000;
@@ -3631,6 +3641,10 @@ function brcApplyExhibitionAdjustmentsToBoats(boats,liveRace){
     b.exhibitionDiffBucket=null;
     b.exhibitionWinDeltaPt=0;
     b.exhibitionTop3DeltaPt=0;
+    b.exhibitionSecondDeltaPt=0;
+    b.exhibitionThirdDeltaPt=0;
+    b.exhibitionSecondPct=Number.isFinite(Number(b.basePct2)) ? Number(b.basePct2) : 0;
+    b.exhibitionThirdPct=Math.max(0,(Number(b.basePct3Float)||0)-(Number(b.basePctFloat)||0)-(Number(b.basePct2)||0));
   });
   if(!brcLiveExhibitionEligible(liveRace)) return false;
 
@@ -3662,6 +3676,22 @@ function brcApplyExhibitionAdjustmentsToBoats(boats,liveRace){
     b.pct3=Math.round(b.pct3Float);
     b.exhibitionWinDeltaPt=b.pctFloat-Number(b.basePctFloat);
     b.exhibitionTop3DeltaPt=b.pct3Float-Number(b.basePct3Float);
+
+    // 2着・3着はWorkerの展示前2着率を基準に、展示後の「3着内かつ1着以外」の
+    // 確率量を展示前の2着:3着比で再配分して表示用の影響方向を求める。
+    // 1着率・3連対率の正式補正ロジックには影響させない。
+    const baseWin=Math.max(0,Number(b.basePctFloat)||0);
+    const baseTop3=Math.max(0,Number(b.basePct3Float)||0);
+    const baseSecond=Math.max(0,Number(b.basePct2)||0);
+    const baseRest=Math.max(0,baseTop3-baseWin);
+    const safeBaseSecond=Math.min(baseSecond,baseRest);
+    const baseThird=Math.max(0,baseRest-safeBaseSecond);
+    const secondShare=baseRest>1e-9 ? safeBaseSecond/baseRest : 0.5;
+    const adjustedRest=Math.max(0,Number(b.pct3Float)-Number(b.pctFloat));
+    b.exhibitionSecondPct=adjustedRest*secondShare;
+    b.exhibitionThirdPct=Math.max(0,adjustedRest-b.exhibitionSecondPct);
+    b.exhibitionSecondDeltaPt=b.exhibitionSecondPct-safeBaseSecond;
+    b.exhibitionThirdDeltaPt=b.exhibitionThirdPct-baseThird;
     b.exhibitionApplied=true;
   });
   return true;
@@ -3712,15 +3742,15 @@ function brcBuildTop3CellInner(b){
   return `<span style="display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;"><span>${b.pct3}%</span>${arrow}</span>`;
 }
 
-// 展開シナリオ内の2着率・3着率に付ける「今回展示」の方向表示。
-// 2着率/3着率そのものを直接補正している値ではなく、当該艇の今回展示が
-// 3連対側へ与えている方向を、深掘り画面で補助表示する。
-function brcBuildScenarioPlaceExhibitionArrow(b){
+// 展開シナリオ内の2着率・3着率に付ける今回展示の方向表示。
+// 2着/3着の表示用デルタは、展示後の3連対内残存確率を展示前の2着:3着比で再配分して算出。
+function brcBuildScenarioPlaceExhibitionArrow(b,kind){
   if(!b?.exhibitionApplied) return '';
-  return brcBuildExhibitionProbabilityArrowIcon(b.exhibitionTop3DeltaPt,2.0);
+  const delta=kind==='third' ? Number(b.exhibitionThirdDeltaPt) : Number(b.exhibitionSecondDeltaPt);
+  return brcBuildExhibitionProbabilityArrowIcon(delta,1.0);
 }
-function brcBuildScenarioPlaceRateHtml(rate,b){
-  const arrow=brcBuildScenarioPlaceExhibitionArrow(b);
+function brcBuildScenarioPlaceRateHtml(rate,b,kind='second'){
+  const arrow=brcBuildScenarioPlaceExhibitionArrow(b,kind);
   return `<span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;white-space:nowrap;"><span>${r0(rate)}%</span>${arrow}</span>`;
 }
 
@@ -3754,7 +3784,13 @@ function brcRefreshExhibitionAdjustedDom(liveRace,venue,raceNo){
   const p1=boats.find(b=>Number(b.course)===1);
   if(worker?.inReliability && p1){
     local=classifyInReliabilityByWinPct(p1.pctFloat,grade,apiBoats.map(b=>b.reg),worker.inReliability) || local;
-    if(local){ worker.uiInReliability=local; window.__currentLocalInReliability=local; }
+    if(local){
+      local.venueBaseDiff=Number.isFinite(Number(p1.venueAvgWin))
+        ? Number(p1.pctFloat)-Number(p1.venueAvgWin)
+        : null;
+      worker.uiInReliability=local;
+      window.__currentLocalInReliability=local;
+    }
   }
   for(const b of boats){
     const w=document.getElementById(`predict-win-cell-${b.course}`);
@@ -5318,7 +5354,7 @@ function buildInReliabilityCardHtmlFromServer(info){
   const pct=Number(info.pct);
   const venueBaseDiff=Number(info.venueBaseDiff);
   const venueBaseText=Number.isFinite(venueBaseDiff)
-    ? ` <span style="margin-left:8px;font-size:.9em;font-weight:800;">場基準比 ${venueBaseDiff>=0?'+':''}${Math.round(venueBaseDiff)}pt</span>`
+    ? ` <span class="irc-venue-base" style="font-size:.9em;font-weight:800;">場基準比 ${venueBaseDiff>=0?'+':''}${Math.round(venueBaseDiff)}pt</span>`
     : '';
   const color=info.color||'var(--ink-soft)', bg=info.bg||'rgba(10,31,51,.04)', border=info.border||'rgba(10,31,51,.15)';
   const note=info.women ? '女子戦S基準76%' : (info.sg ? 'SGは強イン否定なし' : '全国共通基準');
