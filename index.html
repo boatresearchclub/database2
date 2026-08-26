@@ -3096,8 +3096,8 @@ function renderInlinePredictScenario(course){
         <td style="padding:5px 4px;">${r.k}</td>
         <td style="padding:5px 4px; white-space:nowrap;">${r.n}</td>
         <td style="padding:5px 4px; white-space:nowrap; font-weight:700; color:var(--line-white);">${r.ar!=null ? r.ar.toFixed(2) : '-'}</td>
-        <td style="padding:5px 4px; white-space:nowrap;">${r0(r.t2)}%</td>
-        <td style="padding:5px 4px; white-space:nowrap;">${r0(r.t3)}%</td>
+        <td style="padding:5px 4px; white-space:nowrap;">${brcBuildScenarioPlaceRateHtml(r.t2,b)}</td>
+        <td style="padding:5px 4px; white-space:nowrap;">${brcBuildScenarioPlaceRateHtml(r.t3,b)}</td>
         <td style="padding:5px 4px; white-space:nowrap;">${r0(r.t3p)}%</td>
         <td style="padding:5px 4px;">${scenarioRelBar(r.n)}</td>
       </tr>`).join('');
@@ -3125,8 +3125,8 @@ function renderInlinePredictScenario(course){
                 <td style="padding:6px 4px;">全体</td>
                 <td style="padding:6px 4px; white-space:nowrap;">${totalN}</td>
                 <td style="padding:6px 4px; white-space:nowrap;">${avgAr!=null ? avgAr.toFixed(2) : '-'}</td>
-                <td style="padding:6px 4px; white-space:nowrap;">${r0(avgT2)}%</td>
-                <td style="padding:6px 4px; white-space:nowrap;">${r0(avgT3)}%</td>
+                <td style="padding:6px 4px; white-space:nowrap;">${brcBuildScenarioPlaceRateHtml(avgT2,b)}</td>
+                <td style="padding:6px 4px; white-space:nowrap;">${brcBuildScenarioPlaceRateHtml(avgT3,b)}</td>
                 <td style="padding:6px 4px; white-space:nowrap;">${r0(avgT3p)}%</td>
                 <td style="padding:6px 4px;">${scenarioRelBar(totalN)}</td>
               </tr>
@@ -3147,7 +3147,7 @@ function renderInlinePredictScenario(course){
       <button class="motor-detail-close" type="button" onclick="closePredictDetail()" aria-label="閉じる">×</button>
     </div>
     ${winnerBoat ? `<div class="motor-detail-topstats predict-detail-scenario-stats"><div class="motor-detail-stat"><b>${winnerBoat.pct}%</b><span>予想勝率</span></div><div class="motor-detail-stat"><b>${winnerBoat.pct3}%</b><span>3連対率</span></div><div class="motor-detail-stat"><b>${course}</b><span>コース</span></div><div class="motor-detail-stat"><b>${others.length}</b><span>相手艇</span></div></div>` : ''}
-    <div class="predict-detail-note">各艇について「コース${course}の艇が勝った場合」の、その艇自身の着順傾向です。標本信頼度はN基準で、的中確率ではありません。</div>
+    <div class="predict-detail-note">2着率・3着率の矢印は今回展示の評価方向です。標本信頼度はN基準で、的中確率ではありません。</div>
     ${boatSectionsHtml}
   `;
 }
@@ -3710,6 +3710,18 @@ function brcBuildWinCellInner(b,venue){
 function brcBuildTop3CellInner(b){
   const arrow=b?.exhibitionApplied ? brcBuildExhibitionProbabilityArrowIcon(b.exhibitionTop3DeltaPt,2.0) : '';
   return `<span style="display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;"><span>${b.pct3}%</span>${arrow}</span>`;
+}
+
+// 展開シナリオ内の2着率・3着率に付ける「今回展示」の方向表示。
+// 2着率/3着率そのものを直接補正している値ではなく、当該艇の今回展示が
+// 3連対側へ与えている方向を、深掘り画面で補助表示する。
+function brcBuildScenarioPlaceExhibitionArrow(b){
+  if(!b?.exhibitionApplied) return '';
+  return brcBuildExhibitionProbabilityArrowIcon(b.exhibitionTop3DeltaPt,2.0);
+}
+function brcBuildScenarioPlaceRateHtml(rate,b){
+  const arrow=brcBuildScenarioPlaceExhibitionArrow(b);
+  return `<span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;white-space:nowrap;"><span>${r0(rate)}%</span>${arrow}</span>`;
 }
 
 function brcBuildPredictLeadSummaryHtml(boats){
