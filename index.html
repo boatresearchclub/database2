@@ -3670,13 +3670,10 @@ function brcBuildExhibitionProbabilitySubHtml(b,kind){
   return `<div class="live-exhibition-slot" data-live-exhibition-course="${Number(b.course)||0}" style="font-size:10px;font-weight:650;color:${eligible?'var(--ink-soft)':'#8a5a00'};margin-top:2px;">展示差 ${sign}${d.toFixed(2)}秒${eligible?'':' 対象外'}</div>`;
 }
 function brcBuildWinCellInner(b,venue){
-  const diff=b.pct-Math.round(b.venueAvgWin);
-  const sign=diff>0?'+':'';
-  const col2=diff>0?'#2f8f5b':(diff<0?'#d1373f':'var(--ink-soft)');
-  return `${b.pct}%<div style="font-size:11px;font-weight:600;color:${col2};margin-top:1px;" title="${venue}${b.course}コースの場基準勝率${r0(b.venueAvgWin)}%との差">場基準比 ${sign}${diff}pt</div>${brcBuildExhibitionProbabilitySubHtml(b,'win')}`;
+  return `${b.pct}%`;
 }
 function brcBuildTop3CellInner(b){
-  return `${b.pct3}%${brcBuildExhibitionProbabilitySubHtml(b,'top3')}`;
+  return `${b.pct3}%`;
 }
 function brcBuildPredictLeadSummaryHtml(boats){
   if(!Array.isArray(boats)||boats.length!==6) return '';
@@ -3688,21 +3685,10 @@ function brcBuildPredictLeadSummaryHtml(boats){
 function buildLiveExhibitionStatusHtml(liveRace, venue='', raceNo=0){
   if(!raceNo) return '';
   const code=brcVenueCodeFromName(venue);
-  if(code==='03'){
-    return `<div id="liveExhibitionCard" style="margin:10px 0 12px;border:1px solid rgba(10,31,51,.12);background:rgba(10,31,51,.025);border-radius:10px;padding:10px 12px;"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><strong style="font-size:13px;">オリジナル展示</strong><span style="font-size:11.5px;font-weight:800;color:var(--ink-soft);">江戸川は対象外</span></div><div style="margin-top:4px;font-size:10.5px;color:var(--ink-soft);">江戸川はオリジナル展示データがないため補正しません。</div></div>`;
-  }
-  if(!BRC_LIVE_EXHIBITION_API_URL){
-    return `<div id="liveExhibitionCard" style="margin:10px 0 12px;border:1px solid rgba(10,31,51,.12);background:rgba(10,31,51,.025);border-radius:10px;padding:10px 12px;"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><strong style="font-size:13px;">オリジナル展示</strong><span style="font-size:11px;color:var(--ink-soft);">ライブ連携未設定</span></div><div style="margin-top:4px;font-size:10.5px;color:var(--ink-soft);">Live Worker URL設定後、展示差を自動取得して確率へ反映します。</div></div>`;
-  }
-  if(!liveRace){
-    return `<div id="liveExhibitionCard" style="margin:10px 0 12px;border:1px solid rgba(10,31,51,.12);background:rgba(10,31,51,.025);border-radius:10px;padding:10px 12px;"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><strong style="font-size:13px;">オリジナル展示</strong><span style="font-size:11px;color:var(--ink-soft);">データ待ち</span></div><div style="margin-top:4px;font-size:10.5px;color:var(--ink-soft);">自動更新中です。締切15分前から15秒間隔、5分前から10秒間隔で確認します。</div></div>`;
-  }
-  const fixed=liveRace.fixed_course===true || String(liveRace.fixed_course).toLowerCase()==='true';
-  const eligible=brcLiveExhibitionEligible(liveRace);
-  const badge=eligible?'展示反映済み':(fixed?'取得済み・補正対象外':'進入変更・補正なし');
-  const badgeColor=eligible?'#2f8f5b':'#d1373f';
-  const captured=liveRace.captured_at_jst||'―';
-  return `<div id="liveExhibitionCard" style="margin:10px 0 12px;border:1px solid rgba(0,102,255,.18);background:rgba(0,102,255,.025);border-radius:10px;padding:10px 12px;"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><strong style="font-size:13px;">オリジナル展示</strong><span style="font-size:11.5px;font-weight:800;color:${badgeColor};">${badge}</span><span style="font-size:10.5px;color:var(--ink-soft);">取得 ${captured}</span></div><div style="margin-top:4px;font-size:10.5px;color:var(--ink-soft);">${eligible?'6艇相対差を0.1秒単位で1着率・3連対率へ反映。':'進入変更時は既存確率を維持します。'}</div></div>`;
+  const eligible=code!=='03' && !!BRC_LIVE_EXHIBITION_API_URL && !!liveRace && brcLiveExhibitionEligible(liveRace);
+  const label=eligible?'展示評価反映済':'展示評価未反映';
+  const color=eligible?'#2f8f5b':'var(--ink-soft)';
+  return `<div id="liveExhibitionCard" style="margin:10px 0 12px;border:1px solid rgba(0,102,255,.18);background:rgba(0,102,255,.025);border-radius:10px;padding:10px 12px;"><span style="font-size:12px;font-weight:800;color:${color};">${label}</span></div>`;
 }
 
 function brcRefreshExhibitionAdjustedDom(liveRace,venue,raceNo){
