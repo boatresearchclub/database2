@@ -952,6 +952,14 @@
     text-align:center; color:var(--ink-soft); font-size:12px; line-height:1.75;
   }
   .brc-salon-guide strong{color:var(--navy); font-weight:900;}
+  .brc-line-link{
+    display:flex; align-items:center; justify-content:center; gap:6px; width:100%;
+    margin:9px 0 8px; padding:10px 12px; border-radius:9px;
+    background:#06c755; color:#fff; text-decoration:none; font-weight:900; font-size:13px;
+    box-shadow:0 2px 8px rgba(6,199,85,.16); transition:.15s;
+  }
+  .brc-line-link:hover{filter:brightness(.96); transform:translateY(-1px);}
+  .brc-line-link:active{transform:translateY(0);}
   .brc-salon-keyword{
     display:inline-block; margin:0 3px; padding:2px 8px; border-radius:999px;
     background:rgba(0,87,219,.09); color:var(--wave); font-weight:900; letter-spacing:.04em;
@@ -1729,7 +1737,7 @@
         <div class="brc-auth-message" id="brcAuthMessage" aria-live="polite"></div>
         <div class="brc-auth-help">YOOR加入確認後に発行された会員IDでログインできます。</div>
         <div style="text-align:center;"><button type="button" class="brc-logout-btn" id="brcGateLogoutBtn" style="display:none; margin-top:10px; padding:8px 14px;">ログアウトして別IDでログイン</button></div>
-        <div class="brc-salon-guide"><strong>入会希望の方へ</strong><br>公式LINEにキーワード <span class="brc-salon-keyword">【サロン】</span> と返信してください。<br>入会のご案内を配信します。</div>
+        <div class="brc-salon-guide"><strong>入会希望の方へ</strong><a class="brc-line-link" href="https://lin.ee/7N8eGk6" target="_blank" rel="noopener noreferrer">公式LINEを開く</a>公式LINEにキーワード <span class="brc-salon-keyword">【サロン】</span> と返信してください。<br>入会のご案内を配信します。</div>
       </div>
     </div>
     <div id="brcPredictProtected" style="display:none;">
