@@ -12,6 +12,7 @@
 <!-- BRC_SLIT_AL_DISPLAY_20260826 -->
 <!-- BRC_SLIT_OUTER_HEAD_UPGRADE_20260826 -->
 <!-- BRC_SLIT_2TO1_IN_RELIABILITY_20260827 -->
+<!-- BRC_SLIT_RATE_ARROW_UI_20260827 -->
 <!-- BRC_ORIGINAL_EXHIBITION_PHASE2_ADJUSTMENT_20260825 -->
 <!-- BRC_MOBILE_LIVE_REFRESH_FIX_20260825 -->
 <!-- BRC_EXHIBITION_PHASE3_1_AUDIT_FIX_20260825 -->
@@ -533,6 +534,17 @@
   }
   .slit-eval-sep{display:none;}
   .slit-eval-muted{color:var(--ink-soft); font-weight:700;}
+  /* 2026-08-27: 検証済み着率方向を艇ごとに直接表示 */
+  .slit-rate-row{
+    display:inline-flex; align-items:center; gap:6px; min-width:0; flex:0 0 auto;
+    padding:2px 0; white-space:nowrap;
+  }
+  .slit-rate-metrics{display:inline-flex;align-items:center;gap:5px;flex-wrap:nowrap;white-space:nowrap;}
+  .slit-rate-metric{font-size:11.5px;font-weight:900;letter-spacing:-.01em;white-space:nowrap;}
+  .slit-rate-up{color:#b4232c;}
+  .slit-rate-down{color:#1f5fb0;}
+  .slit-rate-generic{font-size:11.5px;font-weight:850;color:var(--line-white);white-space:nowrap;}
+  .slit-rate-note{font-size:10px;font-weight:700;color:var(--ink-soft);white-space:nowrap;}
   @media (max-width:420px){
     .slit-eval-compact{gap:6px;padding:8px 9px;font-size:11px;align-items:flex-start;}
     .slit-eval-label{font-size:10.5px;padding-top:1px;}
@@ -541,6 +553,9 @@
     .slit-eval-pair,.slit-eval-copy{font-size:11px;}
     .slit-eval-boat{width:22px;height:22px;font-size:11px;}
     .slit-eval-strong,.slit-eval-head{font-size:9.5px;padding:2px 5px;}
+    .slit-rate-row{gap:5px;}
+    .slit-rate-metrics{gap:4px;}
+    .slit-rate-metric,.slit-rate-generic{font-size:10.5px;}
   }
   .exhibition-race-notice{
     display:flex; align-items:center; gap:6px; flex-wrap:wrap;
@@ -4100,13 +4115,15 @@ function brcBuildExhibitionRaceNoticeHtml(liveRace){
   return `<div id="exhibitionRaceNotice" class="exhibition-race-notice"${items.length?'':' style="display:none;"'}>${items.join('')}</div>`;
 }
 
-// ===== 展示スリット評価（Slit AL）2026-08-26 =====
-// 2023-24ロジック探索 → 2025検証 → 2026完全OOSで確認した表示専用フラグ。
-// 条件: 枠=展示進入 / 外側艇の公式展示タイムが内側艇より0.10秒以上速い /
-//       外側艇の直近1年・今回コース平均ST順位が0.5以上良い / 両艇ST N>=5。
-// 確率への再加点は行わない。表示は優位艇→比較対象艇（例: ⑤→④）。2→1・3→2・4→3は既存の攻め相性B以上と一致時だけ「強」。
-// 5→4は5C累積勝率>=10%(N>=10)で「⑤頭浮上」、6→5は6C累積勝率>=3%(N>=10)で「⑥頭注意」へ昇格。
-// 外枠頭昇格は2023-24探索・2025検証・2026完全OOSで再現確認済み。
+// ===== 展示スリット評価（Slit AL）2026-08-27 着率矢印UI =====
+// 2023-24ロジック探索 → 2025検証 → 2026完全OOS → 2026年8月固定OOSで確認。
+// AL条件そのものは従来どおり。一般戦だけ、再現した実測着率方向を艇ごとに表示する。
+// 1着率・2着率・3連対率の矢印は「予想確率への加減」ではなく、AL発動時の過去実測差の方向。
+// 3着率は着順移動で誤読しやすいためUIでは表示しない。
+// ②→①は一般戦かつ現行イン信頼度「強イン否定」の時だけ詳細矢印を表示。
+// ⑤・⑥は検証済み頭条件成立時のみ1着 ↗ → ↑ へ昇格。
+// 過去日はST_COURSEが当時点スナップショットではないため、未来情報混入回避としてスリット評価自体を非表示。
+// 進入は liveRace.fixed_course===true を確認できた場合だけ判定する。
 const BRC_SLIT_EXHIBITION_GAP_SEC = 0.10;
 const BRC_SLIT_ST_RANK_GAP = 0.50;
 const BRC_SLIT_ST_MIN_N = 5;
@@ -4115,9 +4132,6 @@ const BRC_SLIT_HEAD_MIN_N = 10;
 const BRC_SLIT_C5_HEAD_WIN_PCT = 10.0;
 const BRC_SLIT_C6_HEAD_WIN_PCT = 3.0;
 
-function brcSlitCircledBoatNo(n){
-  return ({1:'①',2:'②',3:'③',4:'④',5:'⑤',6:'⑥'})[Number(n)] || String(n||'');
-}
 function brcSlitPlainBoatNo(n){
   const boat=Number(n);
   return Number.isInteger(boat) && boat>=1 && boat<=6 ? String(boat) : String(n||'');
@@ -4127,10 +4141,6 @@ function brcSlitBoatBadgeHtml(n){
   const mark=brcSlitPlainBoatNo(boat);
   if(!Number.isInteger(boat) || boat<1 || boat>6) return mark;
   return `<span class="slit-eval-boat slit-eval-lane${boat}" aria-label="${boat}号艇">${mark}</span>`;
-}
-function brcSlitCopyHtml(text){
-  const map={'①':1,'②':2,'③':3,'④':4,'⑤':5,'⑥':6};
-  return String(text||'').replace(/[①②③④⑤⑥]/g,m=>brcSlitBoatBadgeHtml(map[m]));
 }
 function brcSlitBoolTrue(v){
   return v===true || String(v).toLowerCase()==='true' || String(v)==='1';
@@ -4151,7 +4161,6 @@ function brcSlitAttackCompatibilityGrade(boats, outerCourse){
   const out=LOSE_COURSE_DATA?.[String(outer.player.reg)]?.[String(oc)];
   if(!one || !out || Number(one.n)<BRC_SLIT_ATTACK_MIN_N || Number(out.n)<BRC_SLIT_ATTACK_MIN_N) return null;
 
-  // 1→2: 1差され × 2差し / 2→3・3→4: 1まくられ × 3・4まくり
   const innerRate=oc===2 ? Number(one.sr) : Number(one.mr);
   const outerRate=oc===2 ? Number(out.sr) : Number(out.mr);
   if(!Number.isFinite(innerRate) || !Number.isFinite(outerRate)) return null;
@@ -4168,46 +4177,105 @@ function brcSlitOuterHeadUpgrade(boats,outerCourse){
   const n=Number(stat?.n);
   const win=Number(stat?.win);
   if(!Number.isFinite(n) || !Number.isFinite(win) || n<BRC_SLIT_HEAD_MIN_N) return null;
-  if(oc===5 && win>=BRC_SLIT_C5_HEAD_WIN_PCT) return {badge:'頭',copy:'⑤頭浮上',n,win};
-  if(oc===6 && win>=BRC_SLIT_C6_HEAD_WIN_PCT) return {badge:'頭',copy:'⑥頭注意',n,win};
+  if(oc===5 && win>=BRC_SLIT_C5_HEAD_WIN_PCT) return {n,win};
+  if(oc===6 && win>=BRC_SLIT_C6_HEAD_WIN_PCT) return {n,win};
   return null;
 }
-function brcSlitInThreatCopy(inReliability){
+function brcSlitStrongInDenial(inReliability){
   const rank=String(inReliability?.rank||'').trim();
-  const strong=!!inReliability?.strong || rank==='強イン否定';
-  // 現行表示のイン信頼度で2025→2026OOS監査。S〜Dは警戒固定せず、Eは②浮上、強イン否定のみイン警戒。
-  if(strong) return 'イン警戒・②攻め浮上';
-  if(rank==='E') return '②攻め浮上';
-  return '②スリット優位';
-}
-function brcSlitOuter2StrongAllowed(inReliability){
-  const rank=String(inReliability?.rank||'').trim();
-  // ②→①の「強」はAL×2差し相性B以上が再現した強イン否定時だけ表示。
   return !!inReliability?.strong || rank==='強イン否定';
 }
-function brcSlitEvaluationState(boats,liveRace,inReliability=null){
-  const raceBoats=Array.isArray(liveRace?.boats) ? liveRace.boats : [];
-  if(!liveRace || raceBoats.length!==6) return {status:'waiting',items:[]};
+function brcSlitCurrentRaceGrade(){
+  const daySel=document.getElementById('predictRaceDay');
+  const raceSel=document.getElementById('predictRaceNo');
+  const venue=String(daySel?.value||document.getElementById('predictVenue')?.value||'');
+  const raceNo=String(raceSel?.value||'');
+  if(venue && raceNo){
+    try{return resolveRaceGrade(venue,raceNo)||'一般';}catch(_e){}
+  }
+  return String(window.__predictGradeCurrent||document.getElementById('predictGrade')?.value||'一般');
+}
+function brcSlitIsGeneralRace(){
+  if(brcSlitCurrentRaceGrade()!=='一般') return false;
+  // タイトルだけで女子カテゴリを拾えない一般開催名もあるため、6艇全員女子のレースは保守的に詳細矢印対象外。
+  const venue=String(document.getElementById('predictRaceDay')?.value||document.getElementById('predictVenue')?.value||'');
+  const raceNo=String(document.getElementById('predictRaceNo')?.value||'');
+  const regs=venue&&raceNo ? RACE_CARDS_TODAY?.[venue]?.[raceNo] : null;
+  if(typeof isAllFemaleRaceRegs==='function' && isAllFemaleRaceRegs(regs)) return false;
+  return true;
+}
 
-  // AL検証は枠=進入のみ。進入変更レースは判定しない。
+// metric: win=1着率 / second=2着率 / top3=3連対率
+// arrow: ↑ ↗ ↘ ↓。方向は2025→2026OOSで再現した範囲だけ固定表示。
+function brcSlitRateProfile(outerCourse, headUpgrade, inReliability){
+  const oc=Number(outerCourse);
+  if(oc===2){
+    if(!brcSlitStrongInDenial(inReliability)) return null;
+    return {
+      outer:{win:'↑',top3:'↑'},
+      inner:{win:'↘',top3:'↘'}
+    };
+  }
+  if(oc===3 || oc===4){
+    return {
+      outer:{win:'↑',second:'↗',top3:'↑'},
+      inner:{win:'↘',second:'↘',top3:'↓'}
+    };
+  }
+  if(oc===5 || oc===6){
+    return {
+      outer:{win:headUpgrade?'↑':'↗',second:'↗',top3:'↑'},
+      inner:{win:'↘',second:'↘',top3:'↓'}
+    };
+  }
+  return null;
+}
+function brcSlitArrowSign(arrow){
+  return (arrow==='↑'||arrow==='↗') ? 1 : (arrow==='↓'||arrow==='↘') ? -1 : 0;
+}
+function brcSlitArrowStrength(arrow){
+  return (arrow==='↑'||arrow==='↓') ? 2 : (arrow==='↗'||arrow==='↘') ? 1 : 0;
+}
+function brcSlitMergeMetric(target,key,arrow){
+  if(!arrow) return;
+  if(target.__conflicts?.[key]) return;
+  const prev=target[key];
+  if(!prev){ target[key]=arrow; return; }
+  const ps=brcSlitArrowSign(prev), ns=brcSlitArrowSign(arrow);
+  if(ps!==ns){ target[key]=null; target.__conflicts=target.__conflicts||{}; target.__conflicts[key]=true; return; }
+  if(target.__conflicts?.[key]) return;
+  if(brcSlitArrowStrength(arrow)>brcSlitArrowStrength(prev)) target[key]=arrow;
+}
+function brcSlitEvaluationState(boats,liveRace,inReliability=null){
+  // 表示日が本日(JST)以外なら未来ST混入を避けるため表示しない。履歴ロックの有無に依存させない。
+  const shownDate=String(TODAY_LABEL||'');
+  if(/^\d{4}-\d{2}-\d{2}$/.test(shownDate) && shownDate!==getJstDateLabel()){
+    return {status:'historical-hidden',items:[],rows:[]};
+  }
+
+  const raceBoats=Array.isArray(liveRace?.boats) ? liveRace.boats : [];
+  if(!liveRace || raceBoats.length!==6) return {status:'waiting',items:[],rows:[]};
+
+  // 進入が6艇とも確認済みかつ枠なりの時だけ判定。
   const fixedKnown=liveRace.fixed_course!==null && liveRace.fixed_course!==undefined && String(liveRace.fixed_course)!=='';
-  if(fixedKnown && !brcSlitBoolTrue(liveRace.fixed_course)) return {status:'excluded',reason:'進入変更',items:[]};
+  if(!fixedKnown) return {status:'entry-waiting',items:[],rows:[]};
+  if(!brcSlitBoolTrue(liveRace.fixed_course)) return {status:'excluded',reason:'進入変更',items:[],rows:[]};
 
   const byBoat=new Map();
   raceBoats.forEach(x=>{
     const n=Number(x?.boat_no);
     if(Number.isInteger(n)&&n>=1&&n<=6) byBoat.set(n,x);
   });
-  if(byBoat.size!==6) return {status:'waiting',items:[]};
+  if(byBoat.size!==6) return {status:'waiting',items:[],rows:[]};
   for(let n=1;n<=6;n++){
     const e=brcSlitNumber(byBoat.get(n)?.entry_course);
-    if(e!==null && e!==n) return {status:'excluded',reason:'進入変更',items:[]};
+    if(e!==null && e!==n) return {status:'excluded',reason:'進入変更',items:[],rows:[]};
   }
 
   const ex={};
   for(let n=1;n<=6;n++){
     const v=brcSlitNumber(byBoat.get(n)?.exhibition_time);
-    if(v===null) return {status:'waiting',items:[]};
+    if(v===null) return {status:'waiting',items:[],rows:[]};
     ex[n]=v;
   }
 
@@ -4223,46 +4291,86 @@ function brcSlitEvaluationState(boats,liveRace,inReliability=null){
     }
   }
 
-  const labelByOuter={
-    2:brcSlitInThreatCopy(inReliability),
-    3:'③攻め強',
-    4:'④攻め強',
-    5:'⑤相手浮上',
-    6:'⑥相手浮上'
-  };
+  const general=brcSlitIsGeneralRace();
   const items=[];
   for(let inner=1;inner<=5;inner++){
     const outer=inner+1;
     if(!st[inner] || !st[outer]) continue;
-    // 展示タイム・ST順位とも小さい方が優位。
     const exGap=ex[inner]-ex[outer];
     const stGap=st[inner].avg-st[outer].avg;
     if(exGap+1e-9 < BRC_SLIT_EXHIBITION_GAP_SEC || stGap+1e-9 < BRC_SLIT_ST_RANK_GAP) continue;
     const compatGrade=brcSlitAttackCompatibilityGrade(boats,outer);
-    const displayStrong=!!compatGrade && (outer!==2 || brcSlitOuter2StrongAllowed(inReliability));
     const headUpgrade=brcSlitOuterHeadUpgrade(boats,outer);
-    items.push({
-      inner,outer,exGap,stGap,
-      strong:displayStrong,compatGrade:compatGrade||'',
-      head:!!headUpgrade,headInfo:headUpgrade||null,
-      copy:headUpgrade?.copy || labelByOuter[outer]
-    });
+    const profile=general ? brcSlitRateProfile(outer,!!headUpgrade,inReliability) : null;
+    items.push({inner,outer,exGap,stGap,compatGrade:compatGrade||'',headInfo:headUpgrade||null,profile});
   }
-  items.sort((a,b)=>(Number(b.strong)-Number(a.strong)) || (Number(b.head)-Number(a.head)) || a.inner-b.inner);
-  return {status:items.length?'active':(stIncomplete?'partial':'none'),items};
+
+  if(!items.length) return {status:stIncomplete?'partial':'none',items:[],rows:[]};
+
+  // 艇ごとへ集約。同一艇・同一指標で↑系と↓系が衝突した場合、その指標だけ非表示。
+  const rowMap=new Map();
+  const ensureRow=(boat)=>{
+    if(!rowMap.has(boat)) rowMap.set(boat,{boat,metrics:{},generic:false,titles:[],order:999});
+    return rowMap.get(boat);
+  };
+  for(const x of items){
+    const title=`${x.outer}号艇→${x.inner}号艇 / 展示差 +${x.exGap.toFixed(2)}秒 / ST順位差 +${x.stGap.toFixed(1)}${x.compatGrade?` / 攻め相性${x.compatGrade}`:''}${x.headInfo?` / ${x.outer}C勝率 ${x.headInfo.win.toFixed(1)}% (N=${x.headInfo.n})`:''}`;
+    const pairOrder=x.inner*10;
+    if(x.profile){
+      const ro=ensureRow(x.outer), ri=ensureRow(x.inner);
+      ro.order=Math.min(ro.order,pairOrder);
+      ri.order=Math.min(ri.order,pairOrder+1);
+      ro.titles.push(title); ri.titles.push(title);
+      for(const [k,a] of Object.entries(x.profile.outer)) brcSlitMergeMetric(ro.metrics,k,a);
+      for(const [k,a] of Object.entries(x.profile.inner)) brcSlitMergeMetric(ri.metrics,k,a);
+    }else{
+      // 詳細矢印を出さないカテゴリ、または②→①が強イン否定でない場合は「スリット優位」のみ。
+      const ro=ensureRow(x.outer);
+      ro.order=Math.min(ro.order,pairOrder);
+      ro.generic=true;
+      ro.titles.push(title);
+    }
+  }
+
+  // 詳細指標がある艇ではgenericを併記しない。解釈の二重化を避ける。
+  const metricOrder=['win','second','top3'];
+  const rows=[...rowMap.values()].map(r=>{
+    const clean={};
+    for(const k of metricOrder){ if(r.metrics[k]) clean[k]=r.metrics[k]; }
+    const hasMetrics=Object.keys(clean).length>0;
+    return {...r,metrics:clean,generic:r.generic && !hasMetrics};
+  }).filter(r=>Object.keys(r.metrics).length || r.generic)
+    // 各ALペアごとに「優位艇 → 内側艇」の順で読めるように並べる。
+    .sort((a,b)=>a.order-b.order || a.boat-b.boat);
+
+  return {status:rows.length?'active':(stIncomplete?'partial':'none'),items,rows,general};
+}
+function brcSlitMetricLabel(key){
+  return key==='win' ? '1着' : key==='second' ? '2着' : key==='top3' ? '3連対' : key;
 }
 function brcBuildSlitEvaluationHtml(boats,liveRace,inReliability=null){
   const state=brcSlitEvaluationState(boats,liveRace,inReliability);
+  if(state.status==='historical-hidden'){
+    return '<div id="slitEvaluationCard" class="slit-eval-compact" style="display:none;"></div>';
+  }
+
   let body='';
   if(state.status==='active'){
-    body=state.items.map((x,i)=>{
-      // 表示方向は「優位艇 → 比較対象艇」。AL判定は外側艇が内側艇に対して優位なので outer → inner。
-      const pair=`${brcSlitBoatBadgeHtml(x.outer)}<span class="slit-eval-arrow">→</span>${brcSlitBoatBadgeHtml(x.inner)}`;
-      const title=`${x.outer}号艇が${x.inner}号艇に対してスリット優位 / 展示差 +${x.exGap.toFixed(2)}秒 / ST順位差 +${x.stGap.toFixed(1)}${x.compatGrade?` / 攻め相性${x.compatGrade}`:''}${x.headInfo?` / ${x.outer}C勝率 ${x.headInfo.win.toFixed(1)}% (N=${x.headInfo.n})`:''}`;
-      return `<span class="slit-eval-item" title="${title}"><span class="slit-eval-pair">${pair}</span>${x.strong?'<span class="slit-eval-strong">強</span>':''}<span class="slit-eval-copy">${brcSlitCopyHtml(x.copy)}</span></span>`;
+    body=state.rows.map(r=>{
+      const title=(r.titles||[]).join(' / ');
+      if(r.generic){
+        return `<span class="slit-rate-row" title="${title}">${brcSlitBoatBadgeHtml(r.boat)}<span class="slit-rate-generic">スリット優位</span></span>`;
+      }
+      const order=['win','second','top3'];
+      const metrics=order.filter(k=>r.metrics[k]).map(k=>{
+        const a=r.metrics[k];
+        const cls=brcSlitArrowSign(a)>0?'slit-rate-up':'slit-rate-down';
+        return `<span class="slit-rate-metric ${cls}">${brcSlitMetricLabel(k)}${a}</span>`;
+      }).join('');
+      return `<span class="slit-rate-row" title="${title}">${brcSlitBoatBadgeHtml(r.boat)}<span class="slit-rate-metrics">${metrics}</span></span>`;
     }).join('');
   }else{
-    const text=state.status==='excluded' ? '判定対象外' : state.status==='partial' ? '一部データ不足' : state.status==='none' ? '該当なし' : '展示待ち';
+    const text=state.status==='excluded' ? '判定対象外' : state.status==='entry-waiting' ? '進入確認待ち' : state.status==='partial' ? '一部データ不足' : state.status==='none' ? '該当なし' : '展示待ち';
     const title=state.reason ? ` title="${state.reason}"` : '';
     body=`<span class="slit-eval-muted"${title}>―　${text}</span>`;
   }
@@ -6791,7 +6899,7 @@ async function runPredict(){
           </div>
           <div class="predict-guide-item">
             <div class="predict-guide-key">展示スリット評価</div>
-            <div class="predict-guide-text">隣り合う艇の展示タイム差とコース別平均ST順位差から、外側艇が内側艇へかける圧力を評価します。攻め相性まで重なる検証済み条件は「強」と表示します。予想勝率・3連対率には直接加算していません。</div>
+            <div class="predict-guide-text">隣り合う艇の展示タイム差とコース別平均ST順位差からスリット優位を判定します。一般戦では2025検証→2026完全OOSで再現した1着率・2着率・3連対率の方向を「↑ / ↗ / ↘ / ↓」で表示し、その他カテゴリは「スリット優位」のみ表示します。②→①は強イン否定時だけ詳細表示し、⑤・⑥は検証済み頭条件で1着の矢印が昇格します。3着率は着順移動で誤読しやすいため表示しません。過去日は未来ST混入を避けるため非表示です。予想勝率・3連対率そのものへは再加算していません。</div>
           </div>
           <div class="predict-guide-item">
             <div class="predict-guide-key">勝率</div>
