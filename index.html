@@ -7,6 +7,7 @@
 <title>Boat Research Club ～データベース～</title>
 <!-- BRC_EXHIBITION_ENTRY_NOTICE_20260826 -->
 <!-- BRC_SLIT_AL_DISPLAY_20260826 -->
+<!-- BRC_SLIT_OUTER_HEAD_UPGRADE_20260826 -->
 <!-- BRC_ORIGINAL_EXHIBITION_PHASE2_ADJUSTMENT_20260825 -->
 <!-- BRC_MOBILE_LIVE_REFRESH_FIX_20260825 -->
 <!-- BRC_EXHIBITION_PHASE3_1_AUDIT_FIX_20260825 -->
@@ -502,12 +503,29 @@
   .slit-eval-label{font-weight:800; color:var(--ink-soft); white-space:nowrap; flex:0 0 auto;}
   .slit-eval-items{display:flex; align-items:center; gap:6px; flex-wrap:wrap; min-width:0;}
   .slit-eval-item{display:inline-flex; align-items:center; gap:5px; min-width:0;}
-  .slit-eval-pair{font-weight:900; color:var(--navy); white-space:nowrap;}
-  .slit-eval-copy{font-weight:800; color:var(--line-white); white-space:nowrap;}
+  .slit-eval-pair{display:inline-flex;align-items:center;gap:3px;font-weight:900;color:var(--navy);white-space:nowrap;}
+  .slit-eval-copy{display:inline-flex;align-items:center;gap:2px;font-weight:800;color:var(--line-white);white-space:nowrap;}
+  .slit-eval-boat{
+    width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+    font-size:10.5px;font-weight:900;line-height:1;border:1px solid rgba(10,31,51,.16);
+    box-shadow:0 1px 2px rgba(10,31,51,.08);flex:0 0 auto;vertical-align:middle;
+  }
+  .slit-eval-lane1{background:var(--lane1);color:var(--lane1-text);border-color:#718096;}
+  .slit-eval-lane2{background:var(--lane2);color:var(--lane2-text);border-color:var(--lane2);}
+  .slit-eval-lane3{background:var(--lane3);color:var(--lane3-text);border-color:var(--lane3);}
+  .slit-eval-lane4{background:var(--lane4);color:var(--lane4-text);border-color:var(--lane4);}
+  .slit-eval-lane5{background:var(--lane5);color:var(--lane5-text);border-color:#c4972d;}
+  .slit-eval-lane6{background:var(--lane6);color:var(--lane6-text);border-color:var(--lane6);}
+  .slit-eval-arrow{font-weight:900;color:var(--ink-soft);line-height:1;}
   .slit-eval-strong{
     display:inline-flex; align-items:center; justify-content:center; padding:2px 6px;
     border-radius:999px; border:1px solid rgba(209,55,63,.28);
     background:rgba(209,55,63,.08); color:#b4232c; font-size:10px; font-weight:900; line-height:1.2;
+  }
+  .slit-eval-head{
+    display:inline-flex; align-items:center; justify-content:center; padding:2px 6px;
+    border-radius:999px; border:1px solid rgba(0,87,219,.24);
+    background:rgba(0,87,219,.09); color:var(--wave); font-size:10px; font-weight:900; line-height:1.2;
   }
   .slit-eval-sep{color:rgba(61,74,99,.45); font-weight:700;}
   .slit-eval-muted{color:var(--ink-soft); font-weight:700;}
@@ -517,7 +535,8 @@
     .slit-eval-items{gap:4px 5px;}
     .slit-eval-item{gap:4px;}
     .slit-eval-pair,.slit-eval-copy{font-size:11px;}
-    .slit-eval-strong{font-size:9.5px;padding:2px 5px;}
+    .slit-eval-boat{width:17px;height:17px;font-size:10px;}
+    .slit-eval-strong,.slit-eval-head{font-size:9.5px;padding:2px 5px;}
   }
   .exhibition-race-notice{
     display:flex; align-items:center; gap:6px; flex-wrap:wrap;
@@ -4035,14 +4054,29 @@ function brcBuildExhibitionRaceNoticeHtml(liveRace){
 // 2023-24ロジック探索 → 2025検証 → 2026完全OOSで確認した表示専用フラグ。
 // 条件: 枠=展示進入 / 外側艇の公式展示タイムが内側艇より0.10秒以上速い /
 //       外側艇の直近1年・今回コース平均ST順位が0.5以上良い / 両艇ST N>=5。
-// 確率への再加点は行わない。①→②・②→③・③→④は既存の攻め相性B以上と一致時だけ「強」。
+// 確率への再加点は行わない。表示は優位艇→比較対象艇（例: ⑤→④）。2→1・3→2・4→3は既存の攻め相性B以上と一致時だけ「強」。
+// 5→4は5C累積勝率>=10%(N>=10)で「⑤頭浮上」、6→5は6C累積勝率>=3%(N>=10)で「⑥頭注意」へ昇格。
+// 外枠頭昇格は2023-24探索・2025検証・2026完全OOSで再現確認済み。
 const BRC_SLIT_EXHIBITION_GAP_SEC = 0.10;
 const BRC_SLIT_ST_RANK_GAP = 0.50;
 const BRC_SLIT_ST_MIN_N = 5;
 const BRC_SLIT_ATTACK_MIN_N = 10;
+const BRC_SLIT_HEAD_MIN_N = 10;
+const BRC_SLIT_C5_HEAD_WIN_PCT = 10.0;
+const BRC_SLIT_C6_HEAD_WIN_PCT = 3.0;
 
 function brcSlitCircledBoatNo(n){
   return ({1:'①',2:'②',3:'③',4:'④',5:'⑤',6:'⑥'})[Number(n)] || String(n||'');
+}
+function brcSlitBoatBadgeHtml(n){
+  const boat=Number(n);
+  const mark=brcSlitCircledBoatNo(boat);
+  if(!Number.isInteger(boat) || boat<1 || boat>6) return mark;
+  return `<span class="slit-eval-boat slit-eval-lane${boat}" aria-label="${boat}号艇">${mark}</span>`;
+}
+function brcSlitCopyHtml(text){
+  const map={'①':1,'②':2,'③':3,'④':4,'⑤':5,'⑥':6};
+  return String(text||'').replace(/[①②③④⑤⑥]/g,m=>brcSlitBoatBadgeHtml(map[m]));
 }
 function brcSlitBoolTrue(v){
   return v===true || String(v).toLowerCase()==='true' || String(v)==='1';
@@ -4070,6 +4104,18 @@ function brcSlitAttackCompatibilityGrade(boats, outerCourse){
   if(innerRate>=0.20 && outerRate>=0.20) return 'S';
   if(innerRate>=0.15 && outerRate>=0.15) return 'A';
   if(innerRate>=0.10 && outerRate>=0.10) return 'B';
+  return null;
+}
+function brcSlitOuterHeadUpgrade(boats,outerCourse){
+  const oc=Number(outerCourse);
+  if(![5,6].includes(oc) || !Array.isArray(boats)) return null;
+  const outer=boats.find(b=>Number(b.course)===oc);
+  const stat=outer?.player?.lane_excl?.[String(oc)];
+  const n=Number(stat?.n);
+  const win=Number(stat?.win);
+  if(!Number.isFinite(n) || !Number.isFinite(win) || n<BRC_SLIT_HEAD_MIN_N) return null;
+  if(oc===5 && win>=BRC_SLIT_C5_HEAD_WIN_PCT) return {badge:'頭',copy:'⑤頭浮上',n,win};
+  if(oc===6 && win>=BRC_SLIT_C6_HEAD_WIN_PCT) return {badge:'頭',copy:'⑥頭注意',n,win};
   return null;
 }
 function brcSlitEvaluationState(boats,liveRace){
@@ -4126,9 +4172,15 @@ function brcSlitEvaluationState(boats,liveRace){
     const stGap=st[inner].avg-st[outer].avg;
     if(exGap+1e-9 < BRC_SLIT_EXHIBITION_GAP_SEC || stGap+1e-9 < BRC_SLIT_ST_RANK_GAP) continue;
     const compatGrade=brcSlitAttackCompatibilityGrade(boats,outer);
-    items.push({inner,outer,exGap,stGap,strong:!!compatGrade,compatGrade:compatGrade||'',copy:labelByOuter[outer]});
+    const headUpgrade=brcSlitOuterHeadUpgrade(boats,outer);
+    items.push({
+      inner,outer,exGap,stGap,
+      strong:!!compatGrade,compatGrade:compatGrade||'',
+      head:!!headUpgrade,headInfo:headUpgrade||null,
+      copy:headUpgrade?.copy || labelByOuter[outer]
+    });
   }
-  items.sort((a,b)=>(Number(b.strong)-Number(a.strong)) || a.inner-b.inner);
+  items.sort((a,b)=>(Number(b.strong)-Number(a.strong)) || (Number(b.head)-Number(a.head)) || a.inner-b.inner);
   return {status:items.length?'active':(stIncomplete?'partial':'none'),items};
 }
 function brcBuildSlitEvaluationHtml(boats,liveRace){
@@ -4136,9 +4188,10 @@ function brcBuildSlitEvaluationHtml(boats,liveRace){
   let body='';
   if(state.status==='active'){
     body=state.items.map((x,i)=>{
-      const pair=`${brcSlitCircledBoatNo(x.inner)}→${brcSlitCircledBoatNo(x.outer)}`;
-      const title=`展示差 +${x.exGap.toFixed(2)}秒 / ST順位差 +${x.stGap.toFixed(1)}${x.compatGrade?` / 攻め相性${x.compatGrade}`:''}`;
-      return `${i?'<span class="slit-eval-sep">／</span>':''}<span class="slit-eval-item" title="${title}"><span class="slit-eval-pair">${pair}</span>${x.strong?'<span class="slit-eval-strong">強</span>':''}<span class="slit-eval-copy">${x.copy}</span></span>`;
+      // 表示方向は「優位艇 → 比較対象艇」。AL判定は外側艇が内側艇に対して優位なので outer → inner。
+      const pair=`${brcSlitBoatBadgeHtml(x.outer)}<span class="slit-eval-arrow">→</span>${brcSlitBoatBadgeHtml(x.inner)}`;
+      const title=`${x.outer}号艇が${x.inner}号艇に対してスリット優位 / 展示差 +${x.exGap.toFixed(2)}秒 / ST順位差 +${x.stGap.toFixed(1)}${x.compatGrade?` / 攻め相性${x.compatGrade}`:''}${x.headInfo?` / ${x.outer}C勝率 ${x.headInfo.win.toFixed(1)}% (N=${x.headInfo.n})`:''}`;
+      return `${i?'<span class="slit-eval-sep">／</span>':''}<span class="slit-eval-item" title="${title}"><span class="slit-eval-pair">${pair}</span>${x.strong?'<span class="slit-eval-strong">強</span>':''}${x.head?'<span class="slit-eval-head">頭</span>':''}<span class="slit-eval-copy">${brcSlitCopyHtml(x.copy)}</span></span>`;
     }).join('');
   }else{
     const text=state.status==='excluded' ? '判定対象外' : state.status==='partial' ? '一部データ不足' : state.status==='none' ? '該当なし' : '展示待ち';
