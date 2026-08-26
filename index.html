@@ -972,12 +972,18 @@
   }
   #predictResult .prob-eval-row .exhibition-arrow-icon{ width:17px; height:17px; }
   @media (max-width:640px){
-    #predictResult .predict-player-name{ min-height:22px; }
-    #predictResult .predict-exhibition-label{ min-height:19px; margin-top:2px; font-size:9px; }
-    #predictResult .prob-value{ min-height:22px; }
-    #predictResult .prob-eval-row{ min-height:19px; margin-top:2px; }
-    #predictResult .prob-eval-row .exhibition-arrow-icon{ width:15px; height:15px; }
-    #predictResult .prob-eval-hyphen{ font-size:14px; }
+    #predictResult .predict-player-name{ min-height:24px; }
+    #predictResult .predict-player-name a{
+      font-size:14.5px !important; line-height:1.2 !important; font-weight:800 !important;
+      letter-spacing:-.02em;
+    }
+    #predictResult .predict-exhibition-label{ min-height:19px; margin-top:3px; font-size:10.5px !important; line-height:1 !important; }
+    #predictResult .prob-value{
+      min-height:24px; font-size:16.5px !important; line-height:1.05 !important; font-weight:850 !important;
+    }
+    #predictResult .prob-eval-row{ min-height:19px; margin-top:3px; }
+    #predictResult .prob-eval-row .exhibition-arrow-icon{ width:16px; height:16px; }
+    #predictResult .prob-eval-hyphen{ font-size:15px; }
   }
 
   /* ---- User-facing cleanup: prediction UI ---- */
