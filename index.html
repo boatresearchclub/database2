@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Boat Research Club ～データベース～</title>
+<!-- BRC_EXHIBITION_ENTRY_NOTICE_20260826 -->
 <!-- BRC_ORIGINAL_EXHIBITION_PHASE2_ADJUSTMENT_20260825 -->
 <!-- BRC_MOBILE_LIVE_REFRESH_FIX_20260825 -->
 <!-- BRC_EXHIBITION_PHASE3_1_AUDIT_FIX_20260825 -->
@@ -490,6 +491,17 @@
   .in-reliability-compact .irc-rank{font-size:21px; font-weight:900; line-height:1; white-space:nowrap; flex:0 0 auto;}
   .in-reliability-compact .irc-diff{margin-left:auto; font-weight:800; white-space:nowrap; display:flex; align-items:baseline; gap:8px; min-width:0;}
   .in-reliability-compact .irc-venue-base{margin-left:0 !important; white-space:nowrap;}
+  .exhibition-race-notice{
+    display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+    margin:-4px 1px 10px; padding:0 2px;
+    font-size:11.5px; line-height:1.45; font-weight:700; color:#8a5a00;
+  }
+  .exhibition-race-notice .ern-item{white-space:nowrap;}
+  .exhibition-race-notice .ern-missing{color:var(--ink-soft);}
+  .exhibition-race-notice .ern-absence{color:#d1373f;}
+  @media (max-width:420px){
+    .exhibition-race-notice{font-size:10.5px; gap:4px; margin-top:-3px;}
+  }
   .race-summary-compact{
     margin:0 0 10px; padding:2px 1px 0; color:var(--line-white);
   }
@@ -3689,13 +3701,86 @@ async function brcFetchLiveExhibition(venue, raceNo){
     if(String(obj.race.date) !== String(date)) return null;
     if(String(obj.race.venue_code).padStart(2,'0') !== String(code).padStart(2,'0')) return null;
     if(Number(obj.race.race_no) !== r) return null;
-    const nums = obj.race.boats.map(x=>Number(x.boat_no)).sort((a,b)=>a-b);
-    if(nums.join(',') !== '1,2,3,4,5,6') return null;
+    // 進入変更・欠場表示のため、艇データが6艇未満でもレース情報自体は受け取る。
+    // 展示確率補正は別関数側で6艇完全データを要求するため、部分データが誤って補正に使われることはない。
+    const nums = obj.race.boats.map(x=>Number(x.boat_no)).filter(n=>Number.isInteger(n)&&n>=1&&n<=6);
+    if(!nums.length || new Set(nums).size !== nums.length) return null;
     return obj.race;
   }catch(err){
     console.warn('BRC live exhibition fetch failed:', err);
     return null;
   }
+}
+
+function brcCircledBoatNo(n){
+  return ({1:'①',2:'②',3:'③',4:'④',5:'⑤',6:'⑥'})[Number(n)] || String(n||'');
+}
+function brcNormalizeBoatStatusText(v){
+  return String(v ?? '').replace(/[\s　]+/g,'').toUpperCase();
+}
+function brcIsConfirmedAbsenceStatus(v){
+  const s=brcNormalizeBoatStatusText(v);
+  if(!s) return false;
+  // 明示的な欠場・取消だけを「欠場」と表示する。F/Lは展示STフラグなので対象外。
+  return /^(K0|K1|K2|K3)$/.test(s) || /欠場|取消|CANCEL|SCRATCH|WITHDRAW/.test(s);
+}
+function brcCollectConfirmedAbsentBoats(liveRace){
+  const out=new Set();
+  const add=n=>{ n=Number(n); if(Number.isInteger(n)&&n>=1&&n<=6) out.add(n); };
+  const race=liveRace||{};
+  const arrays=[race.absent_boats,race.scratched_boats,race.withdrawn_boats,race.cancelled_boats];
+  arrays.forEach(a=>{ if(Array.isArray(a)) a.forEach(x=>add(typeof x==='object' ? (x.boat_no??x.boat) : x)); });
+  const maps=[race.boat_statuses,race.status_by_boat];
+  maps.forEach(m=>{
+    if(m && typeof m==='object' && !Array.isArray(m)){
+      Object.entries(m).forEach(([k,v])=>{ if(brcIsConfirmedAbsenceStatus(typeof v==='object'?(v.status??v.code??v.label):v)) add(k); });
+    }
+  });
+  (Array.isArray(race.boats)?race.boats:[]).forEach(b=>{
+    const candidates=[b.status,b.exhibition_status,b.race_status,b.boat_status,b.status_code,b.cancel_status];
+    if(candidates.some(brcIsConfirmedAbsenceStatus)) add(b.boat_no);
+  });
+  return out;
+}
+function brcBuildExhibitionRaceNoticeHtml(liveRace){
+  const boats=Array.isArray(liveRace?.boats) ? liveRace.boats : [];
+  const byBoat=new Map();
+  boats.forEach(b=>{
+    const n=Number(b?.boat_no);
+    if(Number.isInteger(n)&&n>=1&&n<=6) byBoat.set(n,b);
+  });
+  const confirmedAbsent=brcCollectConfirmedAbsentBoats(liveRace);
+  const missing=[];
+  for(let n=1;n<=6;n++) if(!byBoat.has(n) && !confirmedAbsent.has(n)) missing.push(n);
+
+  const items=[];
+  [...confirmedAbsent].sort((a,b)=>a-b).forEach(n=>{
+    items.push(`<span class="ern-item ern-absence">※${n}号艇欠場</span>`);
+  });
+  missing.forEach(n=>{
+    items.push(`<span class="ern-item ern-missing">※${n}号艇 展示情報未取得</span>`);
+  });
+
+  // entry_course順に艇番を並べる。6艇揃っている通常進入 ①②③④⑤⑥ は表示しない。
+  // 欠場が確定している場合は残った艇だけの展示進入も表示できる。
+  const entryRows=[...byBoat.values()]
+    .map(b=>({boat:Number(b.boat_no),course:Number(b.entry_course)}))
+    .filter(x=>Number.isInteger(x.boat)&&Number.isInteger(x.course)&&x.course>=1&&x.course<=6)
+    .sort((a,b)=>a.course-b.course || a.boat-b.boat);
+  const uniqueCourses=new Set(entryRows.map(x=>x.course));
+  if(entryRows.length>=2 && uniqueCourses.size===entryRows.length){
+    const sequence=entryRows.map(x=>x.boat);
+    const expected=[1,2,3,4,5,6].filter(n=>!confirmedAbsent.has(n));
+    const sameExpected=sequence.length===expected.length && sequence.every((n,i)=>n===expected[i]);
+    // 6艇揃っていれば「変更があった時だけ」。欠場確定時は残った艇の展示進入も併記する。
+    if((entryRows.length===6 && confirmedAbsent.size===0 && !sameExpected) || confirmedAbsent.size>0){
+      const seqText=sequence.map(brcCircledBoatNo).join('');
+      const prefix=(entryRows.length===6 && confirmedAbsent.size===0) ? '※展示進入変更あり' : '※展示進入';
+      items.push(`<span class="ern-item">${prefix}　${seqText}</span>`);
+    }
+  }
+
+  return `<div id="exhibitionRaceNotice" class="exhibition-race-notice"${items.length?'':' style="display:none;"'}>${items.join('')}</div>`;
 }
 
 function brcApplyExhibitionAdjustmentsToBoats(boats,liveRace){
@@ -3881,6 +3966,11 @@ function brcRefreshExhibitionAdjustedDom(liveRace,venue,raceNo){
   if(inCard && local){
     const wrap=document.createElement('div'); wrap.innerHTML=buildInReliabilityCardHtmlFromServer(local).trim();
     if(wrap.firstElementChild) inCard.replaceWith(wrap.firstElementChild);
+  }
+  const notice=document.getElementById('exhibitionRaceNotice');
+  if(notice){
+    const wrap=document.createElement('div'); wrap.innerHTML=brcBuildExhibitionRaceNoticeHtml(liveRace).trim();
+    if(wrap.firstElementChild) notice.replaceWith(wrap.firstElementChild);
   }
   const rec=document.getElementById('recommendedBetsCard');
   if(rec && worker){
@@ -5916,6 +6006,7 @@ async function runPredict(){
   box.innerHTML = `
     ${buildCurrentRaceSummaryHtml(venue)}
     ${buildInReliabilityCardHtmlFromServer(localInReliability)}
+    ${brcBuildExhibitionRaceNoticeHtml(liveExhibitionRace)}
     <div id="predictTableWrap" style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
     <table class="predict-table">
       <thead><tr>
