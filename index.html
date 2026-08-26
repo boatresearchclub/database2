@@ -3547,9 +3547,14 @@ function brcConstrainLogitProbabilities(probs,targetSum){
 }
 function brcProbabilityArrow(deltaPt,threshold){
   const d=Number(deltaPt);
-  if(!Number.isFinite(d)) return '→';
-  if(d>threshold) return '↗';
-  if(d<-threshold) return '↘';
+  const t=Math.abs(Number(threshold));
+  if(!Number.isFinite(d) || !Number.isFinite(t) || t<=0) return '→';
+  // 5段階表示：強上昇 / 上昇 / 横ばい / 下降 / 強下降
+  // 従来の判定閾値を「通常矢印」の境界として維持し、2倍以上を強矢印にする。
+  if(d>t*2) return '↑';
+  if(d>t) return '↗';
+  if(d<-t*2) return '↓';
+  if(d<-t) return '↘';
   return '→';
 }
 function brcProbabilityDeltaColor(deltaPt,threshold){
@@ -3670,10 +3675,20 @@ function brcBuildExhibitionProbabilitySubHtml(b,kind){
   return `<div class="live-exhibition-slot" data-live-exhibition-course="${Number(b.course)||0}" style="font-size:10px;font-weight:650;color:${eligible?'var(--ink-soft)':'#8a5a00'};margin-top:2px;">展示差 ${sign}${d.toFixed(2)}秒${eligible?'':' 対象外'}</div>`;
 }
 function brcBuildWinCellInner(b,venue){
-  return `${b.pct}%`;
+  const pct=`${b.pct}%`;
+  if(!b?.exhibitionApplied) return pct;
+  const delta=Number(b.exhibitionWinDeltaPt);
+  const arrow=brcProbabilityArrow(delta,0.75);
+  const color=brcProbabilityDeltaColor(delta,0.75);
+  return `${pct} <span aria-label="展示補正方向" style="color:${color};font-size:.82em;font-weight:900;vertical-align:.06em;">${arrow}</span>`;
 }
 function brcBuildTop3CellInner(b){
-  return `${b.pct3}%`;
+  const pct=`${b.pct3}%`;
+  if(!b?.exhibitionApplied) return pct;
+  const delta=Number(b.exhibitionTop3DeltaPt);
+  const arrow=brcProbabilityArrow(delta,2.0);
+  const color=brcProbabilityDeltaColor(delta,2.0);
+  return `${pct} <span aria-label="展示補正方向" style="color:${color};font-size:.82em;font-weight:900;vertical-align:.06em;">${arrow}</span>`;
 }
 function brcBuildPredictLeadSummaryHtml(boats){
   if(!Array.isArray(boats)||boats.length!==6) return '';
@@ -5267,12 +5282,16 @@ function classifyInReliabilityByWinPct(inPct, grade, regs, serverInfo=null){
 function buildInReliabilityCardHtmlFromServer(info){
   if(!info || !Number.isFinite(Number(info.pct))) return '';
   const pct=Number(info.pct);
+  const venueBaseDiff=Number(info.venueBaseDiff);
+  const venueBaseText=Number.isFinite(venueBaseDiff)
+    ? ` <span style="margin-left:8px;font-size:.9em;font-weight:800;">場基準比 ${venueBaseDiff>=0?'+':''}${Math.round(venueBaseDiff)}pt</span>`
+    : '';
   const color=info.color||'var(--ink-soft)', bg=info.bg||'rgba(10,31,51,.04)', border=info.border||'rgba(10,31,51,.15)';
   const note=info.women ? '女子戦S基準76%' : (info.sg ? 'SGは強イン否定なし' : '全国共通基準');
   return `<div id="inReliabilityCard" class="in-reliability-compact" style="border:1px solid ${border}; background:${bg};" title="${note}">
     <span class="irc-label">イン逃げ信頼度</span>
     <span class="irc-rank" style="color:${color};">${info.rank||'―'}</span>
-    <span class="irc-diff" style="color:${color};">1号艇 ${pct.toFixed(1)}%</span>
+    <span class="irc-diff" style="color:${color};">1号艇 ${Math.round(pct)}%${venueBaseText}</span>
   </div>`;
 }
 
@@ -5728,6 +5747,11 @@ async function runPredict(){
     box.innerHTML='<div style="color:#e5484d; font-size:14.5px;">イン信頼度を判定できませんでした。</div>';
     return;
   }
+  // イン信頼度カード専用：展示反映後の1号艇勝率と会場基準の差を表示。
+  // 勝率は整数四捨五入、場基準比も整数ptで表示する。
+  localInReliability.venueBaseDiff = Number.isFinite(Number(p1ForReliability?.venueAvgWin))
+    ? Number(p1ForReliability.pctFloat) - Number(p1ForReliability.venueAvgWin)
+    : null;
   workerPrediction.uiInReliability=localInReliability;
   window.__currentLocalInReliability=localInReliability;
 
