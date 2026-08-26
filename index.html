@@ -8,6 +8,7 @@
 <!-- BRC_EXHIBITION_ENTRY_NOTICE_20260826 -->
 <!-- BRC_SLIT_AL_DISPLAY_20260826 -->
 <!-- BRC_SLIT_OUTER_HEAD_UPGRADE_20260826 -->
+<!-- BRC_SLIT_2TO1_IN_RELIABILITY_20260827 -->
 <!-- BRC_ORIGINAL_EXHIBITION_PHASE2_ADJUSTMENT_20260825 -->
 <!-- BRC_MOBILE_LIVE_REFRESH_FIX_20260825 -->
 <!-- BRC_EXHIBITION_PHASE3_1_AUDIT_FIX_20260825 -->
@@ -4122,7 +4123,20 @@ function brcSlitOuterHeadUpgrade(boats,outerCourse){
   if(oc===6 && win>=BRC_SLIT_C6_HEAD_WIN_PCT) return {badge:'頭',copy:'⑥頭注意',n,win};
   return null;
 }
-function brcSlitEvaluationState(boats,liveRace){
+function brcSlitInThreatCopy(inReliability){
+  const rank=String(inReliability?.rank||'').trim();
+  const strong=!!inReliability?.strong || rank==='強イン否定';
+  // 現行表示のイン信頼度で2025→2026OOS監査。S〜Dは警戒固定せず、Eは②浮上、強イン否定のみイン警戒。
+  if(strong) return 'イン警戒・②攻め浮上';
+  if(rank==='E') return '②攻め浮上';
+  return '②スリット優位';
+}
+function brcSlitOuter2StrongAllowed(inReliability){
+  const rank=String(inReliability?.rank||'').trim();
+  // ②→①の「強」はAL×2差し相性B以上が再現した強イン否定時だけ表示。
+  return !!inReliability?.strong || rank==='強イン否定';
+}
+function brcSlitEvaluationState(boats,liveRace,inReliability=null){
   const raceBoats=Array.isArray(liveRace?.boats) ? liveRace.boats : [];
   if(!liveRace || raceBoats.length!==6) return {status:'waiting',items:[]};
 
@@ -4161,7 +4175,7 @@ function brcSlitEvaluationState(boats,liveRace){
   }
 
   const labelByOuter={
-    2:'イン警戒・②攻め浮上',
+    2:brcSlitInThreatCopy(inReliability),
     3:'③攻め強',
     4:'④攻め強',
     5:'⑤相手浮上',
@@ -4176,10 +4190,11 @@ function brcSlitEvaluationState(boats,liveRace){
     const stGap=st[inner].avg-st[outer].avg;
     if(exGap+1e-9 < BRC_SLIT_EXHIBITION_GAP_SEC || stGap+1e-9 < BRC_SLIT_ST_RANK_GAP) continue;
     const compatGrade=brcSlitAttackCompatibilityGrade(boats,outer);
+    const displayStrong=!!compatGrade && (outer!==2 || brcSlitOuter2StrongAllowed(inReliability));
     const headUpgrade=brcSlitOuterHeadUpgrade(boats,outer);
     items.push({
       inner,outer,exGap,stGap,
-      strong:!!compatGrade,compatGrade:compatGrade||'',
+      strong:displayStrong,compatGrade:compatGrade||'',
       head:!!headUpgrade,headInfo:headUpgrade||null,
       copy:headUpgrade?.copy || labelByOuter[outer]
     });
@@ -4187,8 +4202,8 @@ function brcSlitEvaluationState(boats,liveRace){
   items.sort((a,b)=>(Number(b.strong)-Number(a.strong)) || (Number(b.head)-Number(a.head)) || a.inner-b.inner);
   return {status:items.length?'active':(stIncomplete?'partial':'none'),items};
 }
-function brcBuildSlitEvaluationHtml(boats,liveRace){
-  const state=brcSlitEvaluationState(boats,liveRace);
+function brcBuildSlitEvaluationHtml(boats,liveRace,inReliability=null){
+  const state=brcSlitEvaluationState(boats,liveRace,inReliability);
   let body='';
   if(state.status==='active'){
     body=state.items.map((x,i)=>{
@@ -4391,7 +4406,7 @@ function brcRefreshExhibitionAdjustedDom(liveRace,venue,raceNo){
   }
   const slit=document.getElementById('slitEvaluationCard');
   if(slit){
-    const wrap=document.createElement('div'); wrap.innerHTML=brcBuildSlitEvaluationHtml(boats,liveRace).trim();
+    const wrap=document.createElement('div'); wrap.innerHTML=brcBuildSlitEvaluationHtml(boats,liveRace,local).trim();
     if(wrap.firstElementChild) slit.replaceWith(wrap.firstElementChild);
   }
   const notice=document.getElementById('exhibitionRaceNotice');
@@ -6519,7 +6534,7 @@ async function runPredict(){
   box.innerHTML = `
     ${buildCurrentRaceSummaryHtml(venue)}
     ${buildInReliabilityCardHtmlFromServer(localInReliability)}
-    ${brcBuildSlitEvaluationHtml(boats, liveExhibitionRace)}
+    ${brcBuildSlitEvaluationHtml(boats, liveExhibitionRace, localInReliability)}
     ${brcBuildExhibitionRaceNoticeHtml(liveExhibitionRace)}
     <div id="predictTableWrap" style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
     <table class="predict-table">
