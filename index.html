@@ -244,13 +244,12 @@
        選手名の列を広めに・数値列はやや狭めに個別指定し、数値セル自体は
        nowrapのまま（折り返させない）にする。 */
     #predictTableWrap:not(.show-all-cols) table.predict-table{ table-layout:fixed; width:100%; min-width:0; max-width:100%; }
-    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(1){ width:8%; }
-    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(2){ width:27%; }
-    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(3){ width:13%; }
-    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(4){ width:8%; }
+    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(1){ width:9%; }
+    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(2){ width:29%; }
+    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(3){ width:16%; }
+    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(4){ width:18%; }
     #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(5){ width:14%; }
     #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(6){ width:14%; }
-    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(7){ width:16%; }
     #predictTableWrap:not(.show-all-cols) table.predict-table td:nth-child(2){ overflow:hidden; text-overflow:ellipsis; }
     table.predict-table{ font-size:12px; }
     table.predict-table th, table.predict-table td{ padding:6px 4px; }
@@ -265,7 +264,7 @@
     }
     table.predict-table .st-mult-sub{white-space:nowrap !important; overflow-wrap:normal !important; line-height:1.05 !important;}
     table.predict-table .motor-rate-sub{white-space:nowrap !important; overflow-wrap:normal !important; font-size:10px !important; line-height:1.1 !important;}
-    table.predict-table th:nth-child(7){font-size:11px; letter-spacing:-.03em;}
+    table.predict-table th:nth-child(6){font-size:11px; letter-spacing:-.03em;}
   }
   #predictColToggleBtn{
     font-size:12px; font-weight:600; color:var(--wave); background:transparent;
@@ -951,11 +950,11 @@
   #predictResult .predict-table td:nth-child(1){ text-align:center; }
   #predictResult .predict-table th:nth-child(2),
   #predictResult .predict-table td:nth-child(2){ text-align:left; }
-  #predictResult .predict-table th:nth-child(n+3):nth-child(-n+7),
-  #predictResult .predict-table td:nth-child(n+3):nth-child(-n+7){ text-align:center !important; }
+  #predictResult .predict-table th:nth-child(n+3):nth-child(-n+6),
+  #predictResult .predict-table td:nth-child(n+3):nth-child(-n+6){ text-align:center !important; }
   #predictResult .predict-table td:nth-child(2) a{ color:var(--line-white) !important; font-weight:800; }
   #predictResult .predict-table td:nth-child(3),
-  #predictResult .predict-table td:nth-child(5){ color:var(--line-white) !important; }
+  #predictResult .predict-table td:nth-child(4){ color:var(--line-white) !important; }
   .exhibition-arrow-icon{
     display:inline-block; width:20px; height:20px; vertical-align:middle; overflow:visible;
   }
@@ -3692,32 +3691,25 @@ function brcBuildExhibitionProbabilitySubHtml(b,kind){
   const sign=d>0?'+':'';
   return `<div class="live-exhibition-slot" data-live-exhibition-course="${Number(b.course)||0}" style="font-size:10px;font-weight:650;color:${eligible?'var(--ink-soft)':'#8a5a00'};margin-top:2px;">展示差 ${sign}${d.toFixed(2)}秒${eligible?'':' 対象外'}</div>`;
 }
-function brcBuildWinCellInner(b,venue){
-  return `${b.pct}%`;
-}
-function brcBuildTop3CellInner(b){
-  return `${b.pct3}%`;
-}
-function brcBuildExhibitionArrowCellInner(b){
-  if(!b?.exhibitionApplied) return '<span style="color:var(--ink-soft);">―</span>';
-  // 1着・3連対の補正強度を同じ尺度へ正規化し、展示評価を1本の5段階矢印へ集約。
-  const w=Number(b.exhibitionWinDeltaPt);
-  const t=Number(b.exhibitionTop3DeltaPt);
-  if(!Number.isFinite(w) && !Number.isFinite(t)) return '<span style="color:var(--ink-soft);">―</span>';
-  const vals=[];
-  if(Number.isFinite(w)) vals.push(w/0.75);
-  if(Number.isFinite(t)) vals.push(t/2.0);
-  const score=vals.reduce((a,v)=>a+v,0)/vals.length;
-  const dir = score>2 ? 'up' : score>1 ? 'up-right' : score<-2 ? 'down' : score<-1 ? 'down-right' : 'right';
-  const label = dir==='up'?'↑':dir==='up-right'?'↗':dir==='down'?'↓':dir==='down-right'?'↘':'→';
-  const color = Math.abs(score)<=1 ? 'var(--ink-soft)' : (score>0 ? '#2f8f5b' : '#d1373f');
-  const rotation = dir==='up' ? -90 : dir==='up-right' ? -45 : dir==='down-right' ? 45 : dir==='down' ? 90 : 0;
-  return `<span aria-label="展示評価 ${label}" title="展示評価 ${label}" style="display:inline-flex;align-items:center;justify-content:center;color:${color};line-height:1;">
+function brcBuildExhibitionProbabilityArrowIcon(deltaPt,threshold){
+  if(!Number.isFinite(Number(deltaPt))) return '';
+  const label=brcProbabilityArrow(deltaPt,threshold);
+  const color=brcProbabilityDeltaColor(deltaPt,threshold);
+  const rotation = label==='↑' ? -90 : label==='↗' ? -45 : label==='↘' ? 45 : label==='↓' ? 90 : 0;
+  return `<span aria-label="展示 ${label}" title="展示 ${label}" style="display:inline-flex;align-items:center;justify-content:center;color:${color};line-height:1;flex:0 0 auto;">
     <svg class="exhibition-arrow-icon" viewBox="0 0 24 24" aria-hidden="true" style="transform:rotate(${rotation}deg);">
       <line x1="4" y1="12" x2="19" y2="12"></line>
       <polyline points="14,7 19,12 14,17"></polyline>
     </svg>
   </span>`;
+}
+function brcBuildWinCellInner(b,venue){
+  const arrow=b?.exhibitionApplied ? brcBuildExhibitionProbabilityArrowIcon(b.exhibitionWinDeltaPt,0.75) : '';
+  return `<span style="display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;"><span>${b.pct}%</span>${arrow}</span>`;
+}
+function brcBuildTop3CellInner(b){
+  const arrow=b?.exhibitionApplied ? brcBuildExhibitionProbabilityArrowIcon(b.exhibitionTop3DeltaPt,2.0) : '';
+  return `<span style="display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;"><span>${b.pct3}%</span>${arrow}</span>`;
 }
 
 function brcBuildPredictLeadSummaryHtml(boats){
@@ -3755,8 +3747,6 @@ function brcRefreshExhibitionAdjustedDom(liveRace,venue,raceNo){
   for(const b of boats){
     const w=document.getElementById(`predict-win-cell-${b.course}`);
     if(w) w.innerHTML=brcBuildWinCellInner(b,venue);
-    const e=document.getElementById(`predict-exhibition-cell-${b.course}`);
-    if(e) e.innerHTML=brcBuildExhibitionArrowCellInner(b);
     const t=document.getElementById(`predict-top3-cell-${b.course}`);
     if(t) t.innerHTML=brcBuildTop3CellInner(b);
   }
@@ -5804,7 +5794,6 @@ async function runPredict(){
       <thead><tr>
         <th>枠</th><th>選手</th>
         <th class="num">勝率</th>
-        <th class="num">展示</th>
         <th class="num">3連対率</th>
         <th class="num">平均ST</th><th class="num">モーター</th><th class="predict-col-opt">備考</th>
       </tr></thead>
@@ -5821,8 +5810,7 @@ async function runPredict(){
           return `<tr>
             <td><span class="num-badge" style="width:22px;height:22px;font-size:12.5px;background:${col.bg};color:${col.text};${b.course===1?'border:1.5px solid rgba(10,31,51,.35);box-sizing:border-box;':''}display:inline-flex;align-items:center;justify-content:center;border-radius:50%;">${b.course}</span></td>
             <td><a href="#" style="color:var(--line-white); text-decoration:none; cursor:pointer; font-weight:800;" onclick="event.preventDefault(); togglePredictPlayer(${b.course}, '${b.player.reg}', '${venue}');" title="タップで選手詳細を表示">${b.player.name}</a></td>
-            <td id="predict-win-cell-${b.course}" class="num" style="font-weight:800; color:var(--line-white); cursor:pointer; text-decoration:none;" onclick="togglePredictScenario(${b.course})" title="タップでこのコースが勝った場合の展開シナリオを表示">${brcBuildWinCellInner(b,venue)}</td>
-            <td id="predict-exhibition-cell-${b.course}" class="num" style="text-align:center;">${brcBuildExhibitionArrowCellInner(b)}</td>
+            <td id="predict-win-cell-${b.course}" class="num" style="font-weight:800; color:var(--line-white); cursor:pointer; text-decoration:none;" onclick="togglePredictScenario(${b.course})" title="タップでこのコースが勝った場合の2着・3着を含む展開シナリオを表示">${brcBuildWinCellInner(b,venue)}</td>
             <td id="predict-top3-cell-${b.course}" class="num" style="font-weight:800; color:var(--line-white);">${brcBuildTop3CellInner(b)}</td>
             <td class="num" title="${stCourse ? `n=${stCourse.n}（直近1年・${b.course}コース）` : (b.player.avg_st_rank != null ? `n=${b.player.st_n}（全体）` : '')}">${stText}</td>
             <td class="num">${(()=>{
@@ -5837,7 +5825,7 @@ async function runPredict(){
     </div>
     ${buildWindPanelHtml()}
     ${buildRecommendedBetsHtmlFromServer(workerPrediction, localInReliability, exhibitionApplied)}
-    <div class="trend-note" style="margin-top:2px; font-size:12px; color:var(--ink-soft);">選手名をタップすると選手詳細、勝率をタップすると展開傾向、モーターをタップすると機歴を表示します。</div>
+    <div class="trend-note" style="margin-top:2px; font-size:12px; color:var(--ink-soft);">選手名をタップすると選手詳細、勝率をタップすると2着率・3着率を含む展開傾向、モーターをタップすると機歴を表示します。</div>
     <div id="predictSummaryLead" class="trend-note fold-lead" style="margin-top:12px;">${brcBuildPredictLeadSummaryHtml(boats)}</div>
   `;
 
