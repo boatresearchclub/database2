@@ -501,14 +501,14 @@
     background:rgba(10,31,51,.025); font-size:12.5px; line-height:1.35;
   }
   .slit-eval-label{font-weight:800; color:var(--ink-soft); white-space:nowrap; flex:0 0 auto;}
-  .slit-eval-items{display:flex; align-items:center; gap:6px; flex-wrap:wrap; min-width:0;}
-  .slit-eval-item{display:inline-flex; align-items:center; gap:5px; min-width:0;}
-  .slit-eval-pair{display:inline-flex;align-items:center;gap:3px;font-weight:900;color:var(--navy);white-space:nowrap;}
-  .slit-eval-copy{display:inline-flex;align-items:center;gap:2px;font-weight:800;color:var(--line-white);white-space:nowrap;}
+  .slit-eval-items{display:flex; align-items:flex-start; gap:8px 10px; flex-wrap:wrap; min-width:0;}
+  .slit-eval-item{display:inline-flex; align-items:center; gap:6px; min-width:0; flex:0 0 auto; white-space:nowrap;}
+  .slit-eval-pair{display:inline-flex;align-items:center;gap:4px;font-weight:900;color:var(--navy);white-space:nowrap;}
+  .slit-eval-copy{display:inline-flex;align-items:center;gap:3px;font-weight:800;color:var(--line-white);white-space:nowrap;}
   .slit-eval-boat{
-    width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
-    font-size:10.5px;font-weight:900;line-height:1;border:1px solid rgba(10,31,51,.16);
-    box-shadow:0 1px 2px rgba(10,31,51,.08);flex:0 0 auto;vertical-align:middle;
+    width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:800;line-height:1;border:1px solid rgba(10,31,51,.12);
+    box-shadow:none;flex:0 0 auto;vertical-align:middle;font-variant-numeric:tabular-nums;
   }
   .slit-eval-lane1{background:var(--lane1);color:var(--lane1-text);border-color:#718096;}
   .slit-eval-lane2{background:var(--lane2);color:var(--lane2-text);border-color:var(--lane2);}
@@ -527,15 +527,15 @@
     border-radius:999px; border:1px solid rgba(0,87,219,.24);
     background:rgba(0,87,219,.09); color:var(--wave); font-size:10px; font-weight:900; line-height:1.2;
   }
-  .slit-eval-sep{color:rgba(61,74,99,.45); font-weight:700;}
+  .slit-eval-sep{display:none;}
   .slit-eval-muted{color:var(--ink-soft); font-weight:700;}
   @media (max-width:420px){
     .slit-eval-compact{gap:6px;padding:8px 9px;font-size:11px;align-items:flex-start;}
     .slit-eval-label{font-size:10.5px;padding-top:1px;}
-    .slit-eval-items{gap:4px 5px;}
-    .slit-eval-item{gap:4px;}
+    .slit-eval-items{gap:6px 8px;}
+    .slit-eval-item{gap:5px;}
     .slit-eval-pair,.slit-eval-copy{font-size:11px;}
-    .slit-eval-boat{width:17px;height:17px;font-size:10px;}
+    .slit-eval-boat{width:22px;height:22px;font-size:11px;}
     .slit-eval-strong,.slit-eval-head{font-size:9.5px;padding:2px 5px;}
   }
   .exhibition-race-notice{
@@ -4068,9 +4068,13 @@ const BRC_SLIT_C6_HEAD_WIN_PCT = 3.0;
 function brcSlitCircledBoatNo(n){
   return ({1:'①',2:'②',3:'③',4:'④',5:'⑤',6:'⑥'})[Number(n)] || String(n||'');
 }
+function brcSlitPlainBoatNo(n){
+  const boat=Number(n);
+  return Number.isInteger(boat) && boat>=1 && boat<=6 ? String(boat) : String(n||'');
+}
 function brcSlitBoatBadgeHtml(n){
   const boat=Number(n);
-  const mark=brcSlitCircledBoatNo(boat);
+  const mark=brcSlitPlainBoatNo(boat);
   if(!Number.isInteger(boat) || boat<1 || boat>6) return mark;
   return `<span class="slit-eval-boat slit-eval-lane${boat}" aria-label="${boat}号艇">${mark}</span>`;
 }
@@ -4191,7 +4195,7 @@ function brcBuildSlitEvaluationHtml(boats,liveRace){
       // 表示方向は「優位艇 → 比較対象艇」。AL判定は外側艇が内側艇に対して優位なので outer → inner。
       const pair=`${brcSlitBoatBadgeHtml(x.outer)}<span class="slit-eval-arrow">→</span>${brcSlitBoatBadgeHtml(x.inner)}`;
       const title=`${x.outer}号艇が${x.inner}号艇に対してスリット優位 / 展示差 +${x.exGap.toFixed(2)}秒 / ST順位差 +${x.stGap.toFixed(1)}${x.compatGrade?` / 攻め相性${x.compatGrade}`:''}${x.headInfo?` / ${x.outer}C勝率 ${x.headInfo.win.toFixed(1)}% (N=${x.headInfo.n})`:''}`;
-      return `${i?'<span class="slit-eval-sep">／</span>':''}<span class="slit-eval-item" title="${title}"><span class="slit-eval-pair">${pair}</span>${x.strong?'<span class="slit-eval-strong">強</span>':''}${x.head?'<span class="slit-eval-head">頭</span>':''}<span class="slit-eval-copy">${brcSlitCopyHtml(x.copy)}</span></span>`;
+      return `<span class="slit-eval-item" title="${title}"><span class="slit-eval-pair">${pair}</span>${x.strong?'<span class="slit-eval-strong">強</span>':''}<span class="slit-eval-copy">${brcSlitCopyHtml(x.copy)}</span></span>`;
     }).join('');
   }else{
     const text=state.status==='excluded' ? '判定対象外' : state.status==='partial' ? '一部データ不足' : state.status==='none' ? '該当なし' : '展示待ち';
