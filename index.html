@@ -945,6 +945,41 @@
 
 
 
+  /* ---- 出走表AI：確率の展示評価を2段目に揃えて表示 ---- */
+  #predictResult .predict-player-cell,
+  #predictResult .predict-table td:nth-child(3),
+  #predictResult .predict-table td:nth-child(4){ vertical-align:middle; }
+  #predictResult .predict-player-name{ min-height:24px; display:flex; align-items:center; }
+  #predictResult .predict-exhibition-label{
+    min-height:22px; margin-top:3px; display:flex; align-items:center;
+    color:var(--ink-soft); font-size:10px; font-weight:700; line-height:1;
+    white-space:nowrap;
+  }
+  #predictResult .prob-cell-stack{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    min-width:0; line-height:1;
+  }
+  #predictResult .prob-value{
+    min-height:24px; display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap;
+  }
+  #predictResult .prob-eval-row{
+    min-height:22px; margin-top:3px; display:flex; align-items:center; justify-content:center;
+    line-height:1;
+  }
+  #predictResult .prob-eval-hyphen{
+    color:var(--ink-soft); font-size:16px; font-weight:700; line-height:1;
+  }
+  #predictResult .prob-eval-row .exhibition-arrow-icon{ width:17px; height:17px; }
+  @media (max-width:640px){
+    #predictResult .predict-player-name{ min-height:22px; }
+    #predictResult .predict-exhibition-label{ min-height:19px; margin-top:2px; font-size:9px; }
+    #predictResult .prob-value{ min-height:22px; }
+    #predictResult .prob-eval-row{ min-height:19px; margin-top:2px; }
+    #predictResult .prob-eval-row .exhibition-arrow-icon{ width:15px; height:15px; }
+    #predictResult .prob-eval-hyphen{ font-size:14px; }
+  }
+
   /* ---- User-facing cleanup: prediction UI ---- */
   #predictResult > .in-reliability-compact{ margin-top:2px; }
   #predictResult .predict-table{ border-collapse:separate; border-spacing:0; }
@@ -3764,8 +3799,8 @@ function brcBuildExhibitionProbabilityArrowIcon(deltaPt,threshold){
   </span>`;
 }
 function brcBuildProbabilityCell(value,arrowHtml){
-  const hasArrow=!!arrowHtml;
-  return `<span class="prob-arrow-wrap${hasArrow?'':' no-arrow'}"><span class="prob-value">${value}%</span>${hasArrow?`<span class="prob-arrow-slot">${arrowHtml}</span>`:''}</span>`;
+  const evalHtml=arrowHtml || '<span class="prob-eval-hyphen" aria-label="展示未反映">−</span>';
+  return `<div class="prob-cell-stack"><div class="prob-value">${value}%</div><div class="prob-eval-row">${evalHtml}</div></div>`;
 }
 function brcBuildWinCellInner(b,venue){
   const arrow=b?.exhibitionApplied ? brcBuildExhibitionProbabilityArrowIcon(b.exhibitionWinDeltaPt,0.75) : '';
@@ -5895,7 +5930,7 @@ async function runPredict(){
               : '<span style="color:var(--ink-soft);">―</span>';
           return `<tr>
             <td><span class="num-badge" style="width:22px;height:22px;font-size:12.5px;background:${col.bg};color:${col.text};${b.course===1?'border:1.5px solid rgba(10,31,51,.35);box-sizing:border-box;':''}display:inline-flex;align-items:center;justify-content:center;border-radius:50%;">${b.course}</span></td>
-            <td><a href="#" style="color:var(--line-white); text-decoration:none; cursor:pointer; font-weight:800;" onclick="event.preventDefault(); togglePredictPlayer(${b.course}, '${b.player.reg}', '${venue}');" title="タップで選手詳細を表示">${b.player.name}</a></td>
+            <td class="predict-player-cell"><div class="predict-player-name"><a href="#" style="color:var(--line-white); text-decoration:none; cursor:pointer; font-weight:800;" onclick="event.preventDefault(); togglePredictPlayer(${b.course}, '${b.player.reg}', '${venue}');" title="タップで選手詳細を表示">${b.player.name}</a></div><div class="predict-exhibition-label">展示評価</div></td>
             <td id="predict-win-cell-${b.course}" class="num" style="font-weight:800; color:var(--line-white); cursor:pointer; text-decoration:none;" onclick="togglePredictScenario(${b.course})" title="タップでこのコースが勝った場合の2着・3着を含む展開シナリオを表示">${brcBuildWinCellInner(b,venue)}</td>
             <td id="predict-top3-cell-${b.course}" class="num" style="font-weight:800; color:var(--line-white);">${brcBuildTop3CellInner(b)}</td>
             <td class="num" title="${stCourse ? `n=${stCourse.n}（直近1年・${b.course}コース）` : (b.player.avg_st_rank != null ? `n=${b.player.st_n}（全体）` : '')}">${stText}</td>
