@@ -1382,6 +1382,96 @@
   }
 
 </style>
+
+<style id="brc-predict-guide-style">
+.predict-guide{
+  margin:12px 0 14px;
+  border:1px solid rgba(10,31,51,.10);
+  border-radius:12px;
+  background:rgba(10,31,51,.025);
+  overflow:hidden;
+}
+.predict-guide > summary{
+  list-style:none;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:12px 14px;
+  color:var(--line-white);
+  font-size:13.5px;
+  font-weight:850;
+  user-select:none;
+}
+.predict-guide > summary::-webkit-details-marker{display:none;}
+.predict-guide > summary::after{
+  content:"＋";
+  flex:0 0 auto;
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(10,31,51,.06);
+  color:var(--ink-soft);
+  font-size:15px;
+  line-height:1;
+}
+.predict-guide[open] > summary::after{content:"−";}
+.predict-guide[open] > summary{
+  border-bottom:1px solid rgba(10,31,51,.08);
+}
+.predict-guide-body{padding:4px 14px 12px;}
+.predict-guide-group{padding-top:10px;}
+.predict-guide-group-title{
+  margin:0 0 5px;
+  color:var(--ink-soft);
+  font-size:10.5px;
+  font-weight:850;
+  letter-spacing:.04em;
+}
+.predict-guide-item{
+  display:grid;
+  grid-template-columns:112px minmax(0,1fr);
+  gap:10px;
+  padding:8px 0;
+  border-bottom:1px solid rgba(10,31,51,.055);
+}
+.predict-guide-item:last-child{border-bottom:0;}
+.predict-guide-key{
+  color:var(--line-white);
+  font-size:12px;
+  font-weight:850;
+  line-height:1.55;
+}
+.predict-guide-text{
+  color:var(--ink-soft);
+  font-size:11.5px;
+  line-height:1.65;
+}
+.predict-guide-badge{
+  display:inline-block;
+  margin-left:4px;
+  padding:1px 5px;
+  border:1px solid rgba(227,178,60,.30);
+  border-radius:999px;
+  background:rgba(227,178,60,.08);
+  color:#9a6a00;
+  font-size:9.5px;
+  font-weight:850;
+  vertical-align:1px;
+}
+@media(max-width:640px){
+  .predict-guide > summary{padding:11px 12px;font-size:13px;}
+  .predict-guide-body{padding:3px 12px 10px;}
+  .predict-guide-item{grid-template-columns:96px minmax(0,1fr);gap:8px;padding:7px 0;}
+  .predict-guide-key{font-size:11.5px;}
+  .predict-guide-text{font-size:11px;line-height:1.6;}
+}
+</style>
+
 </head>
 <body>
 <div class="wrap">
@@ -6071,9 +6161,73 @@ async function runPredict(){
       </tbody>
     </table>
     </div>
+
+    <details class="predict-guide">
+      <summary>出走データの見方</summary>
+      <div class="predict-guide-body">
+        <div class="predict-guide-group">
+          <div class="predict-guide-group-title">予測・評価</div>
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">イン信頼度</div>
+            <div class="predict-guide-text">1号艇の最終予想勝率をもとに、S〜E・強イン否定で段階評価。1号艇を頭で信頼するか、イン崩れを警戒するかの目安です。</div>
+          </div>
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">展示スリット評価<span class="predict-guide-badge">構築中</span></div>
+            <div class="predict-guide-text">展示のスリット位置と隣接艇との差から、1号艇の受けと攻め艇の圧力を評価する項目。現在ロジックを検証・構築中です。</div>
+          </div>
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">勝率</div>
+            <div class="predict-guide-text">選手・コース・会場などの過去データから算出した、そのレースで1着になる予測確率。展示取得後は展示タイム補正も反映します。</div>
+          </div>
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">3連対率</div>
+            <div class="predict-guide-text">その艇が1〜3着に入る予測確率。頭候補だけでなく、2着・3着の相手として残す判断にも使います。展示取得後は展示タイム補正も反映します。</div>
+          </div>
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">平均ST</div>
+            <div class="predict-guide-text">基本は直近1年・今回コースでの平均ST順位を表示。1位に近いほどスタートで前に出ている傾向です。表示しているのはSTタイムではなく順位です。</div>
+          </div>
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">モーター</div>
+            <div class="predict-guide-text">今節の6艇のモーター2連対率を相対比較し、A〜Eで評価。機力を見る補助材料で、予想勝率・3連対率には直接加算していません。</div>
+          </div>
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">展示評価</div>
+            <div class="predict-guide-text">今回の展示タイムが着率を上げる・下げる方向を矢印で表示。勝率・3連対率は確率へ補正し、展開シナリオでは2着・3着への影響方向を表示します。</div>
+          </div>
+        </div>
+
+        <div class="predict-guide-group">
+          <div class="predict-guide-group-title">タップすると見られるデータ</div>
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">名前を押す</div>
+            <div class="predict-guide-text">今回コースの決まり手、開催会場での成績、グレード別成績などを表示。1号艇は決まり手ではなく、1コースの敗因・弱点を確認できます。</div>
+          </div>
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">勝率を押す</div>
+            <div class="predict-guide-text">その艇が1着になった時、他の5艇が2着・3着に残る傾向を決まり手別・N数付きで確認できます。</div>
+          </div>
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">モーターを押す</div>
+            <div class="predict-guide-text">モーターの2連対率・N数・優出・優勝、前回使用者と着順、優勝戦出場歴などの機歴を確認できます。</div>
+          </div>
+        </div>
+
+        <div class="predict-guide-group">
+          <div class="predict-guide-group-title">参考・買い目</div>
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">風向・風速別1着率</div>
+            <div class="predict-guide-text">会場×風向×風速ごとのコース別1着率、場平均との差、N数を表示する参考データ。予想勝率・3連対率には加算していません。</div>
+          </div>
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">推奨買い目</div>
+            <div class="predict-guide-text">BRCの予測確率と展開分類から、3連単の組み合わせ・点数・想定的中率・参加目安オッズを提示。展開が拮抗する場合は「推奨なし」とします。現在、展示補正は確率には反映しますが推奨買い目には未反映です。</div>
+          </div>
+        </div>
+      </div>
+    </details>
     ${buildWindPanelHtml()}
     ${buildRecommendedBetsHtmlFromServer(workerPrediction, localInReliability, exhibitionApplied)}
-    <div class="trend-note" style="margin-top:2px; font-size:12px; color:var(--ink-soft);">選手名をタップすると選手詳細、勝率をタップすると2着率・3着率を含む展開傾向、モーターをタップすると機歴を表示します。</div>
     <div id="predictSummaryLead" class="trend-note fold-lead" style="margin-top:12px;">${brcBuildPredictLeadSummaryHtml(boats)}</div>
   `;
 
