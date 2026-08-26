@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Boat Research Club ～データベース～</title>
-<!-- BRC_SLIT_AL_DISPLAY_20260826 -->
+<!-- BRC_EXHIBITION_ENTRY_NOTICE_20260826 -->
 <!-- BRC_ORIGINAL_EXHIBITION_PHASE2_ADJUSTMENT_20260825 -->
 <!-- BRC_MOBILE_LIVE_REFRESH_FIX_20260825 -->
 <!-- BRC_EXHIBITION_PHASE3_1_AUDIT_FIX_20260825 -->
@@ -491,32 +491,30 @@
   .in-reliability-compact .irc-rank{font-size:21px; font-weight:900; line-height:1; white-space:nowrap; flex:0 0 auto;}
   .in-reliability-compact .irc-diff{margin-left:auto; font-weight:800; white-space:nowrap; display:flex; align-items:baseline; gap:8px; min-width:0;}
   .in-reliability-compact .irc-venue-base{margin-left:0 !important; white-space:nowrap;}
-  /* ---- 展示スリット評価：検証済みALを表示のみで導入（確率へ再加点しない） ---- */
-  .slit-eval-compact{
-    display:flex; align-items:center; gap:8px; width:100%;
-    border:1px solid rgba(10,31,51,.10); border-radius:9px;
-    padding:8px 11px; margin:-2px 0 10px;
-    background:rgba(10,31,51,.025); font-size:12.5px; line-height:1.35;
+  .exhibition-race-notice{
+    display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+    margin:-4px 1px 10px; padding:0 2px;
+    font-size:11.5px; line-height:1.45; font-weight:700; color:#8a5a00;
   }
-  .slit-eval-label{font-weight:800; color:var(--ink-soft); white-space:nowrap; flex:0 0 auto;}
-  .slit-eval-items{display:flex; align-items:center; gap:6px; flex-wrap:wrap; min-width:0;}
-  .slit-eval-item{display:inline-flex; align-items:center; gap:5px; min-width:0;}
-  .slit-eval-pair{font-weight:900; color:var(--navy); white-space:nowrap;}
-  .slit-eval-copy{font-weight:800; color:var(--line-white); white-space:nowrap;}
-  .slit-eval-strong{
-    display:inline-flex; align-items:center; justify-content:center; padding:2px 6px;
-    border-radius:999px; border:1px solid rgba(209,55,63,.28);
-    background:rgba(209,55,63,.08); color:#b4232c; font-size:10px; font-weight:900; line-height:1.2;
+  .exhibition-race-notice .ern-item{white-space:nowrap;}
+  .exhibition-race-notice .ern-missing{color:var(--ink-soft);}
+  .exhibition-race-notice .ern-absence{color:#d1373f;}
+  .exhibition-race-notice .ern-seq{display:inline-flex; align-items:center; gap:3px; vertical-align:middle; margin-left:2px;}
+  .exhibition-race-notice .ern-boat{
+    width:18px; height:18px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+    font-size:10.5px; font-weight:900; line-height:1; border:1px solid rgba(10,31,51,.16);
+    box-shadow:0 1px 2px rgba(10,31,51,.08); flex:0 0 auto;
   }
-  .slit-eval-sep{color:rgba(61,74,99,.45); font-weight:700;}
-  .slit-eval-muted{color:var(--ink-soft); font-weight:700;}
+  .exhibition-race-notice .ern-lane1{background:var(--lane1); color:var(--lane1-text); border-color:#718096;}
+  .exhibition-race-notice .ern-lane2{background:var(--lane2); color:var(--lane2-text); border-color:var(--lane2);}
+  .exhibition-race-notice .ern-lane3{background:var(--lane3); color:var(--lane3-text); border-color:var(--lane3);}
+  .exhibition-race-notice .ern-lane4{background:var(--lane4); color:var(--lane4-text); border-color:var(--lane4);}
+  .exhibition-race-notice .ern-lane5{background:var(--lane5); color:var(--lane5-text); border-color:#c4972d;}
+  .exhibition-race-notice .ern-lane6{background:var(--lane6); color:var(--lane6-text); border-color:var(--lane6);}
   @media (max-width:420px){
-    .slit-eval-compact{gap:6px;padding:8px 9px;font-size:11px;align-items:flex-start;}
-    .slit-eval-label{font-size:10.5px;padding-top:1px;}
-    .slit-eval-items{gap:4px 5px;}
-    .slit-eval-item{gap:4px;}
-    .slit-eval-pair,.slit-eval-copy{font-size:11px;}
-    .slit-eval-strong{font-size:9.5px;padding:2px 5px;}
+    .exhibition-race-notice{font-size:10.5px; gap:4px; margin-top:-3px;}
+    .exhibition-race-notice .ern-seq{gap:2px;}
+    .exhibition-race-notice .ern-boat{width:17px; height:17px; font-size:10px;}
   }
   .race-summary-compact{
     margin:0 0 10px; padding:2px 1px 0; color:var(--line-white);
@@ -953,7 +951,55 @@
     margin-top:16px; padding:13px 14px; border-top:1px solid rgba(10,31,51,.10);
     text-align:center; color:var(--ink-soft); font-size:12px; line-height:1.75;
   }
+
+  /* ---- 非会員向け 本日の無料2R ---- */
+  .brc-free-preview{
+    margin-top:16px; padding:14px 0 2px; border-top:1px solid rgba(10,31,51,.10);
+  }
+  .brc-free-preview-head{text-align:center; margin-bottom:10px;}
+  .brc-free-preview-title{font-size:13px; font-weight:900; color:var(--navy);}
+  .brc-free-preview-sub{margin-top:3px; font-size:10.5px; color:var(--ink-soft); line-height:1.5;}
+  .brc-free-preview-list{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .brc-free-card{
+    min-width:0; padding:10px; border:1px solid rgba(10,31,51,.10); border-radius:10px;
+    background:linear-gradient(160deg,rgba(0,87,219,.045),rgba(255,255,255,.9)); text-align:left;
+  }
+  .brc-free-card.reject{background:linear-gradient(160deg,rgba(209,55,63,.045),rgba(255,255,255,.9));}
+  .brc-free-kind{font-size:10px; font-weight:900; color:var(--wave);}
+  .brc-free-card.reject .brc-free-kind{color:#d1373f;}
+  .brc-free-race{margin-top:3px; font-size:16px; font-weight:900; color:var(--navy); white-space:nowrap;}
+  .brc-free-meta{margin-top:2px; min-height:17px; font-size:10.5px; color:var(--ink-soft); white-space:nowrap;}
+  .brc-free-open{
+    width:100%; margin-top:8px; padding:8px 7px; border:0; border-radius:8px; cursor:pointer;
+    background:var(--wave); color:#fff; font:inherit; font-size:11.5px; font-weight:900;
+  }
+  .brc-free-card.reject .brc-free-open{background:#d1373f;}
+  .brc-free-empty{grid-column:1/-1; padding:12px; text-align:center; font-size:11px; color:var(--ink-soft);}
+  .brc-free-result-banner{
+    display:none; margin:0 0 10px; padding:9px 11px; border-radius:9px;
+    border:1px solid rgba(0,87,219,.20); background:rgba(0,87,219,.055); color:var(--navy);
+    font-size:11.5px; font-weight:800; line-height:1.5;
+  }
+  #brcPredictProtected.brc-free-preview-mode .brc-free-result-banner{display:block;}
+  #brcPredictProtected.brc-free-preview-mode .venue-race-picker,
+  #brcPredictProtected.brc-free-preview-mode #raceCardFoldWrap,
+  #brcPredictProtected.brc-free-preview-mode #predictInputs,
+  #brcPredictProtected.brc-free-preview-mode #predictRun{display:none !important;}
+  #brcPredictProtected.brc-free-preview-mode .brc-member-badge{background:rgba(0,87,219,.09);color:var(--wave);}
+  @media(max-width:390px){
+    .brc-free-preview-list{grid-template-columns:1fr;}
+    .brc-free-race{font-size:15px;}
+  }
+
   .brc-salon-guide strong{color:var(--navy); font-weight:900;}
+  .brc-line-link{
+    display:flex; align-items:center; justify-content:center; gap:6px; width:100%;
+    margin:9px 0 8px; padding:10px 12px; border-radius:9px;
+    background:#06c755; color:#fff; text-decoration:none; font-weight:900; font-size:13px;
+    box-shadow:0 2px 8px rgba(6,199,85,.16); transition:.15s;
+  }
+  .brc-line-link:hover{filter:brightness(.96); transform:translateY(-1px);}
+  .brc-line-link:active{transform:translateY(0);}
   .brc-salon-keyword{
     display:inline-block; margin:0 3px; padding:2px 8px; border-radius:999px;
     background:rgba(0,87,219,.09); color:var(--wave); font-weight:900; letter-spacing:.04em;
@@ -1384,6 +1430,96 @@
   }
 
 </style>
+
+<style id="brc-predict-guide-style">
+.predict-guide{
+  margin:12px 0 14px;
+  border:1px solid rgba(10,31,51,.10);
+  border-radius:12px;
+  background:rgba(10,31,51,.025);
+  overflow:hidden;
+}
+.predict-guide > summary{
+  list-style:none;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:12px 14px;
+  color:var(--line-white);
+  font-size:13.5px;
+  font-weight:850;
+  user-select:none;
+}
+.predict-guide > summary::-webkit-details-marker{display:none;}
+.predict-guide > summary::after{
+  content:"＋";
+  flex:0 0 auto;
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(10,31,51,.06);
+  color:var(--ink-soft);
+  font-size:15px;
+  line-height:1;
+}
+.predict-guide[open] > summary::after{content:"−";}
+.predict-guide[open] > summary{
+  border-bottom:1px solid rgba(10,31,51,.08);
+}
+.predict-guide-body{padding:4px 14px 12px;}
+.predict-guide-group{padding-top:10px;}
+.predict-guide-group-title{
+  margin:0 0 5px;
+  color:var(--ink-soft);
+  font-size:10.5px;
+  font-weight:850;
+  letter-spacing:.04em;
+}
+.predict-guide-item{
+  display:grid;
+  grid-template-columns:112px minmax(0,1fr);
+  gap:10px;
+  padding:8px 0;
+  border-bottom:1px solid rgba(10,31,51,.055);
+}
+.predict-guide-item:last-child{border-bottom:0;}
+.predict-guide-key{
+  color:var(--line-white);
+  font-size:12px;
+  font-weight:850;
+  line-height:1.55;
+}
+.predict-guide-text{
+  color:var(--ink-soft);
+  font-size:11.5px;
+  line-height:1.65;
+}
+.predict-guide-badge{
+  display:inline-block;
+  margin-left:4px;
+  padding:1px 5px;
+  border:1px solid rgba(227,178,60,.30);
+  border-radius:999px;
+  background:rgba(227,178,60,.08);
+  color:#9a6a00;
+  font-size:9.5px;
+  font-weight:850;
+  vertical-align:1px;
+}
+@media(max-width:640px){
+  .predict-guide > summary{padding:11px 12px;font-size:13px;}
+  .predict-guide-body{padding:3px 12px 10px;}
+  .predict-guide-item{grid-template-columns:96px minmax(0,1fr);gap:8px;padding:7px 0;}
+  .predict-guide-key{font-size:11.5px;}
+  .predict-guide-text{font-size:11px;line-height:1.6;}
+}
+</style>
+
 </head>
 <body>
 <div class="wrap">
@@ -1640,12 +1776,20 @@
         </form>
         <div class="brc-auth-message" id="brcAuthMessage" aria-live="polite"></div>
         <div class="brc-auth-help">YOOR加入確認後に発行された会員IDでログインできます。</div>
+        <div class="brc-free-preview" id="brcFreePreview">
+          <div class="brc-free-preview-head">
+            <div class="brc-free-preview-title">本日の無料公開</div>
+            <div class="brc-free-preview-sub">本日厳選から「イン鉄板」「イン否定」を各1Rだけ無料公開</div>
+          </div>
+          <div id="brcFreePreviewBody" class="brc-free-preview-list"><div class="brc-free-empty">本日の無料レースを読み込み中...</div></div>
+        </div>
         <div style="text-align:center;"><button type="button" class="brc-logout-btn" id="brcGateLogoutBtn" style="display:none; margin-top:10px; padding:8px 14px;">ログアウトして別IDでログイン</button></div>
-        <div class="brc-salon-guide"><strong>入会希望の方へ</strong><br>公式LINEにキーワード <span class="brc-salon-keyword">【サロン】</span> と返信してください。<br>入会のご案内を配信します。</div>
+        <div class="brc-salon-guide"><strong>入会希望の方へ</strong><a class="brc-line-link" href="https://lin.ee/7N8eGk6" target="_blank" rel="noopener noreferrer">公式LINEを開く</a>公式LINEにキーワード <span class="brc-salon-keyword">【サロン】</span> と返信してください。<br>入会のご案内を配信します。</div>
       </div>
     </div>
     <div id="brcPredictProtected" style="display:none;">
       <div class="brc-member-bar"><span id="brcMemberBadge" class="brc-member-badge">BRC MEMBER</span><button type="button" class="brc-logout-btn" id="brcLogoutBtn">ログアウト</button></div>
+      <div id="brcFreePreviewBanner" class="brc-free-result-banner"></div>
     <section class="card">
       <h2>出走表AI</h2>
       <div class="note-fold" style="margin-bottom:6px;" id="raceCardFoldWrap">
@@ -1782,6 +1926,9 @@ let BRC_MEMBER_ACTIVE = false;
 let BRC_MEMBER_CHECKED_AT = 0;
 const BRC_MEMBERSHIP_RECHECK_MS = 60 * 1000; // 会員停止を最長約1分で反映
 let BRC_AUTH_BUSY = false;
+let BRC_FREE_PREVIEW_DATA = null;
+let BRC_FREE_PREVIEW_ACTIVE = null;
+let BRC_FREE_PREVIEW_LOADING = false;
 
 function brcGetStoredSession(){
   try{
@@ -1881,6 +2028,21 @@ async function brcCheckMembership(session){
 
   const active = !!(data && data.authorized === true);
   return {ok:active, user, reason:active?'active':'inactive'};
+}
+
+
+async function brcFreePreviewApi(input){
+  const res=await fetch(BRC_API_URL + '/free-preview',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Accept':'application/json'},
+    body:JSON.stringify(input)
+  });
+  let data=null; try{data=await res.json();}catch(_){data=null;}
+  if(!res.ok){
+    const err=new Error((data&&(data.message||data.reason||data.error))||`BRC free preview HTTP ${res.status}`);
+    err.status=res.status; err.data=data; throw err;
+  }
+  return data;
 }
 
 async function brcPredictApi(input){
@@ -1995,6 +2157,7 @@ function brcSetAuthMessage(message='', tone='error'){
 }
 function brcRenderGate(state='login', user=null){
   BRC_MEMBER_ACTIVE = false;
+  BRC_FREE_PREVIEW_ACTIVE = null;
   BRC_MEMBER_CHECKED_AT = 0;
   const gate=document.getElementById('brcPredictGate');
   const protectedBox=document.getElementById('brcPredictProtected');
@@ -2002,7 +2165,10 @@ function brcRenderGate(state='login', user=null){
   const sub=document.getElementById('brcAuthSub');
   const tab=document.getElementById('brcPredictTab');
   if(gate) gate.style.display='flex';
-  if(protectedBox) protectedBox.style.display='none';
+  if(protectedBox){ protectedBox.style.display='none'; protectedBox.classList.remove('brc-free-preview-mode'); }
+  const badge=document.getElementById('brcMemberBadge'); if(badge) badge.textContent='BRC MEMBER';
+  const logout=document.getElementById('brcLogoutBtn'); if(logout) logout.textContent='ログアウト';
+  const freeBanner=document.getElementById('brcFreePreviewBanner'); if(freeBanner) freeBanner.textContent='';
   if(tab) tab.textContent='🔒 出走表AI';
   if(form) form.style.display = state==='login' ? '' : 'none';
   if(sub){
@@ -2020,6 +2186,7 @@ function brcRenderGate(state='login', user=null){
   }
 }
 function brcRenderMember(user){
+  BRC_FREE_PREVIEW_ACTIVE = null;
   BRC_MEMBER_ACTIVE = true;
   BRC_MEMBER_CHECKED_AT = Date.now();
   const gate=document.getElementById('brcPredictGate');
@@ -2027,12 +2194,32 @@ function brcRenderMember(user){
   const badge=document.getElementById('brcMemberBadge');
   const tab=document.getElementById('brcPredictTab');
   if(gate) gate.style.display='none';
-  if(protectedBox) protectedBox.style.display='';
+  if(protectedBox){ protectedBox.style.display=''; protectedBox.classList.remove('brc-free-preview-mode'); }
+  const logout=document.getElementById('brcLogoutBtn'); if(logout) logout.textContent='ログアウト';
+  const freeBanner=document.getElementById('brcFreePreviewBanner'); if(freeBanner) freeBanner.textContent='';
   if(tab) tab.textContent='出走表AI';
   const memberId=brcDisplayMemberId(user);
   if(badge) badge.textContent = memberId ? `BRC MEMBER · ${memberId}` : 'BRC MEMBER';
   brcSetAuthMessage('');
 }
+
+function brcRenderFreePreviewMode(item){
+  BRC_MEMBER_ACTIVE=false;
+  BRC_FREE_PREVIEW_ACTIVE=item||null;
+  const gate=document.getElementById('brcPredictGate');
+  const protectedBox=document.getElementById('brcPredictProtected');
+  const badge=document.getElementById('brcMemberBadge');
+  const logout=document.getElementById('brcLogoutBtn');
+  const tab=document.getElementById('brcPredictTab');
+  const banner=document.getElementById('brcFreePreviewBanner');
+  if(gate) gate.style.display='none';
+  if(protectedBox){protectedBox.style.display=''; protectedBox.classList.add('brc-free-preview-mode');}
+  if(badge) badge.textContent=`FREE PREVIEW · ${item?.kind==='reject'?'イン否定':'イン鉄板'}`;
+  if(logout) logout.textContent='会員ログインへ';
+  if(tab) tab.textContent='無料公開レース';
+  if(banner) banner.textContent=`本日の無料公開 ${item?.venue||''}${item?.raceNo||''}R。この1レースのみ非会員でも出走表AIを閲覧できます。`;
+}
+
 async function brcEnsurePredictAccess({silent=false, force=false}={}){
   const membershipFresh = BRC_MEMBER_ACTIVE && BRC_MEMBER_CHECKED_AT && (Date.now() - BRC_MEMBER_CHECKED_AT < BRC_MEMBERSHIP_RECHECK_MS);
   if(membershipFresh && !force) return true;
@@ -2088,6 +2275,7 @@ async function brcLogin(identifier,password){
   }
 }
 async function brcLogout(){
+  BRC_FREE_PREVIEW_ACTIVE=null;
   const session=brcGetStoredSession();
   try{
     if(session && session.access_token){
@@ -3717,8 +3905,10 @@ async function brcFetchLiveExhibition(venue, raceNo){
     if(String(obj.race.date) !== String(date)) return null;
     if(String(obj.race.venue_code).padStart(2,'0') !== String(code).padStart(2,'0')) return null;
     if(Number(obj.race.race_no) !== r) return null;
-    const nums = obj.race.boats.map(x=>Number(x.boat_no)).sort((a,b)=>a-b);
-    if(nums.join(',') !== '1,2,3,4,5,6') return null;
+    // 進入変更・欠場表示のため、艇データが6艇未満でもレース情報自体は受け取る。
+    // 展示確率補正は別関数側で6艇完全データを要求するため、部分データが誤って補正に使われることはない。
+    const nums = obj.race.boats.map(x=>Number(x.boat_no)).filter(n=>Number.isInteger(n)&&n>=1&&n<=6);
+    if(!nums.length || new Set(nums).size !== nums.length) return null;
     return obj.race;
   }catch(err){
     console.warn('BRC live exhibition fetch failed:', err);
@@ -3726,122 +3916,91 @@ async function brcFetchLiveExhibition(venue, raceNo){
   }
 }
 
-
-// ===== 展示スリット評価（Slit AL）2026-08-26 =====
-// 2023-24ロジック探索 → 2025検証 → 2026完全OOSで確認した表示専用フラグ。
-// 条件: 枠=展示進入 / 外側艇の公式展示タイムが内側艇より0.10秒以上速い /
-//       外側艇の直近1年・今回コース平均ST順位が0.5以上良い / 両艇ST N>=5。
-// 確率への再加点は行わない。①→②・②→③・③→④は既存の攻め相性B以上と一致時だけ「強」。
-const BRC_SLIT_EXHIBITION_GAP_SEC = 0.10;
-const BRC_SLIT_ST_RANK_GAP = 0.50;
-const BRC_SLIT_ST_MIN_N = 5;
-const BRC_SLIT_ATTACK_MIN_N = 10;
-
-function brcSlitCircledBoatNo(n){
+function brcCircledBoatNo(n){
   return ({1:'①',2:'②',3:'③',4:'④',5:'⑤',6:'⑥'})[Number(n)] || String(n||'');
 }
-function brcSlitBoolTrue(v){
-  return v===true || String(v).toLowerCase()==='true' || String(v)==='1';
+function brcColoredBoatBadgeHtml(n){
+  const boat=Number(n);
+  const safe=(Number.isInteger(boat) && boat>=1 && boat<=6) ? boat : null;
+  if(!safe) return `<span class="ern-boat">${String(n??'')}</span>`;
+  return `<span class="ern-boat ern-lane${safe}">${safe}</span>`;
 }
-function brcSlitNumber(v){
-  if(v===null || v===undefined || String(v).trim()==='') return null;
-  const n=Number(v);
-  return Number.isFinite(n) ? n : null;
+function brcNormalizeBoatStatusText(v){
+  return String(v ?? '').replace(/[\s　]+/g,'').toUpperCase();
 }
-function brcSlitAttackCompatibilityGrade(boats, outerCourse){
-  const oc=Number(outerCourse);
-  if(![2,3,4].includes(oc) || !Array.isArray(boats)) return null;
-  const p1=boats.find(b=>Number(b.course)===1);
-  const outer=boats.find(b=>Number(b.course)===oc);
-  if(!p1?.player?.reg || !outer?.player?.reg) return null;
-
-  const one=LOSE1_DATA?.[String(p1.player.reg)]?.recent;
-  const out=LOSE_COURSE_DATA?.[String(outer.player.reg)]?.[String(oc)];
-  if(!one || !out || Number(one.n)<BRC_SLIT_ATTACK_MIN_N || Number(out.n)<BRC_SLIT_ATTACK_MIN_N) return null;
-
-  // 1→2: 1差され × 2差し / 2→3・3→4: 1まくられ × 3・4まくり
-  const innerRate=oc===2 ? Number(one.sr) : Number(one.mr);
-  const outerRate=oc===2 ? Number(out.sr) : Number(out.mr);
-  if(!Number.isFinite(innerRate) || !Number.isFinite(outerRate)) return null;
-  if(innerRate>=0.20 && outerRate>=0.20) return 'S';
-  if(innerRate>=0.15 && outerRate>=0.15) return 'A';
-  if(innerRate>=0.10 && outerRate>=0.10) return 'B';
-  return null;
+function brcIsConfirmedAbsenceStatus(v){
+  const s=brcNormalizeBoatStatusText(v);
+  if(!s) return false;
+  // 明示的な欠場・取消だけを「欠場」と表示する。F/Lは展示STフラグなので対象外。
+  return /^(K0|K1|K2|K3)$/.test(s) || /欠場|取消|CANCEL|SCRATCH|WITHDRAW/.test(s);
 }
-function brcSlitEvaluationState(boats,liveRace){
-  const raceBoats=Array.isArray(liveRace?.boats) ? liveRace.boats : [];
-  if(!liveRace || raceBoats.length!==6) return {status:'waiting',items:[]};
-
-  // AL検証は枠=進入のみ。進入変更レースは判定しない。
-  const fixedKnown=liveRace.fixed_course!==null && liveRace.fixed_course!==undefined && String(liveRace.fixed_course)!=='';
-  if(fixedKnown && !brcSlitBoolTrue(liveRace.fixed_course)) return {status:'excluded',reason:'進入変更',items:[]};
-
-  const byBoat=new Map();
-  raceBoats.forEach(x=>{
-    const n=Number(x?.boat_no);
-    if(Number.isInteger(n)&&n>=1&&n<=6) byBoat.set(n,x);
+function brcCollectConfirmedAbsentBoats(liveRace){
+  const out=new Set();
+  const add=n=>{ n=Number(n); if(Number.isInteger(n)&&n>=1&&n<=6) out.add(n); };
+  const race=liveRace||{};
+  const arrays=[race.absent_boats,race.scratched_boats,race.withdrawn_boats,race.cancelled_boats];
+  arrays.forEach(a=>{ if(Array.isArray(a)) a.forEach(x=>add(typeof x==='object' ? (x.boat_no??x.boat) : x)); });
+  const maps=[race.boat_statuses,race.status_by_boat];
+  maps.forEach(m=>{
+    if(m && typeof m==='object' && !Array.isArray(m)){
+      Object.entries(m).forEach(([k,v])=>{ if(brcIsConfirmedAbsenceStatus(typeof v==='object'?(v.status??v.code??v.label):v)) add(k); });
+    }
   });
-  if(byBoat.size!==6) return {status:'waiting',items:[]};
-  for(let n=1;n<=6;n++){
-    const e=brcSlitNumber(byBoat.get(n)?.entry_course);
-    if(e!==null && e!==n) return {status:'excluded',reason:'進入変更',items:[]};
+  (Array.isArray(race.boats)?race.boats:[]).forEach(b=>{
+    const candidates=[b.status,b.exhibition_status,b.race_status,b.boat_status,b.status_code,b.cancel_status];
+    if(candidates.some(brcIsConfirmedAbsenceStatus)) add(b.boat_no);
+  });
+  return out;
+}
+function brcBuildExhibitionRaceNoticeHtml(liveRace){
+  const boats=Array.isArray(liveRace?.boats) ? liveRace.boats : [];
+  const byBoat=new Map();
+  boats.forEach(b=>{
+    const n=Number(b?.boat_no);
+    if(Number.isInteger(n)&&n>=1&&n<=6) byBoat.set(n,b);
+  });
+  const confirmedAbsent=brcCollectConfirmedAbsentBoats(liveRace);
+  const missing=[];
+  for(let n=1;n<=6;n++) if(!byBoat.has(n) && !confirmedAbsent.has(n)) missing.push(n);
+
+  const items=[];
+  [...confirmedAbsent].sort((a,b)=>a-b).forEach(n=>{
+    items.push(`<span class="ern-item ern-absence">※${n}号艇欠場</span>`);
+  });
+
+  // 「展示情報未取得」は展示前の6艇未取得では出さない。
+  // 他艇で実際の展示データが取得できているのに、一部の艇だけ欠ける場合に限り表示する。
+  const hasValue=v=>v!==null && v!==undefined && String(v).trim()!=='' && Number.isFinite(Number(v));
+  const exhibitionStarted=boats.some(b=>
+    hasValue(b?.exhibition_time) || hasValue(b?.display_st) || hasValue(b?.lap_time) ||
+    hasValue(b?.turn_time) || hasValue(b?.straight_time)
+  );
+  if(exhibitionStarted){
+    missing.forEach(n=>{
+      items.push(`<span class="ern-item ern-missing">※${n}号艇 展示情報未取得</span>`);
+    });
   }
 
-  const ex={};
-  for(let n=1;n<=6;n++){
-    const v=brcSlitNumber(byBoat.get(n)?.exhibition_time);
-    if(v===null) return {status:'waiting',items:[]};
-    ex[n]=v;
-  }
-
-  const st={};
-  let stIncomplete=false;
-  for(const b of boats||[]){
-    const c=Number(b.course);
-    const d=ST_COURSE?.[String(b.player?.reg)]?.[String(c)];
-    if(d && Number.isFinite(Number(d.avg)) && Number(d.n)>=BRC_SLIT_ST_MIN_N){
-      st[c]={avg:Number(d.avg),n:Number(d.n)};
-    }else{
-      stIncomplete=true;
+  // entry_course順に艇番を並べる。6艇揃っている通常進入 ①②③④⑤⑥ は表示しない。
+  // 欠場が確定している場合は残った艇だけの展示進入も表示できる。
+  const entryRows=[...byBoat.values()]
+    .map(b=>({boat:Number(b.boat_no),course:Number(b.entry_course)}))
+    .filter(x=>Number.isInteger(x.boat)&&Number.isInteger(x.course)&&x.course>=1&&x.course<=6)
+    .sort((a,b)=>a.course-b.course || a.boat-b.boat);
+  const uniqueCourses=new Set(entryRows.map(x=>x.course));
+  if(entryRows.length>=2 && uniqueCourses.size===entryRows.length){
+    const sequence=entryRows.map(x=>x.boat);
+    const expected=[1,2,3,4,5,6].filter(n=>!confirmedAbsent.has(n));
+    const sameExpected=sequence.length===expected.length && sequence.every((n,i)=>n===expected[i]);
+    // 6艇揃っていれば「変更があった時だけ」。欠場確定時は残った艇の展示進入も併記する。
+    if((entryRows.length===6 && confirmedAbsent.size===0 && !sameExpected) || confirmedAbsent.size>0){
+      const seqText=`<span class="ern-seq">${sequence.map(brcColoredBoatBadgeHtml).join('')}</span>`;
+      const prefix=(entryRows.length===6 && confirmedAbsent.size===0) ? '※展示進入変更あり' : '※展示進入';
+      items.push(`<span class="ern-item">${prefix}　${seqText}</span>`);
     }
   }
 
-  const labelByOuter={
-    2:'イン警戒・②攻め浮上',
-    3:'③攻め強',
-    4:'④攻め強',
-    5:'⑤相手浮上',
-    6:'⑥相手浮上'
-  };
-  const items=[];
-  for(let inner=1;inner<=5;inner++){
-    const outer=inner+1;
-    if(!st[inner] || !st[outer]) continue;
-    // 展示タイム・ST順位とも小さい方が優位。
-    const exGap=ex[inner]-ex[outer];
-    const stGap=st[inner].avg-st[outer].avg;
-    if(exGap+1e-9 < BRC_SLIT_EXHIBITION_GAP_SEC || stGap+1e-9 < BRC_SLIT_ST_RANK_GAP) continue;
-    const compatGrade=brcSlitAttackCompatibilityGrade(boats,outer);
-    items.push({inner,outer,exGap,stGap,strong:!!compatGrade,compatGrade:compatGrade||'',copy:labelByOuter[outer]});
-  }
-  items.sort((a,b)=>(Number(b.strong)-Number(a.strong)) || a.inner-b.inner);
-  return {status:items.length?'active':(stIncomplete?'partial':'none'),items};
-}
-function brcBuildSlitEvaluationHtml(boats,liveRace){
-  const state=brcSlitEvaluationState(boats,liveRace);
-  let body='';
-  if(state.status==='active'){
-    body=state.items.map((x,i)=>{
-      const pair=`${brcSlitCircledBoatNo(x.inner)}→${brcSlitCircledBoatNo(x.outer)}`;
-      const title=`展示差 +${x.exGap.toFixed(2)}秒 / ST順位差 +${x.stGap.toFixed(1)}${x.compatGrade?` / 攻め相性${x.compatGrade}`:''}`;
-      return `${i?'<span class="slit-eval-sep">／</span>':''}<span class="slit-eval-item" title="${title}"><span class="slit-eval-pair">${pair}</span>${x.strong?'<span class="slit-eval-strong">強</span>':''}<span class="slit-eval-copy">${x.copy}</span></span>`;
-    }).join('');
-  }else{
-    const text=state.status==='excluded' ? '判定対象外' : state.status==='partial' ? '一部データ不足' : state.status==='none' ? '該当なし' : '展示待ち';
-    const title=state.reason ? ` title="${state.reason}"` : '';
-    body=`<span class="slit-eval-muted"${title}>―　${text}</span>`;
-  }
-  return `<div id="slitEvaluationCard" class="slit-eval-compact"><span class="slit-eval-label">展示スリット評価</span><span class="slit-eval-items">${body}</span></div>`;
+  return `<div id="exhibitionRaceNotice" class="exhibition-race-notice"${items.length?'':' style="display:none;"'}>${items.join('')}</div>`;
 }
 
 function brcApplyExhibitionAdjustmentsToBoats(boats,liveRace){
@@ -4028,10 +4187,10 @@ function brcRefreshExhibitionAdjustedDom(liveRace,venue,raceNo){
     const wrap=document.createElement('div'); wrap.innerHTML=buildInReliabilityCardHtmlFromServer(local).trim();
     if(wrap.firstElementChild) inCard.replaceWith(wrap.firstElementChild);
   }
-  const slit=document.getElementById('slitEvaluationCard');
-  if(slit){
-    const wrap=document.createElement('div'); wrap.innerHTML=brcBuildSlitEvaluationHtml(boats,liveRace).trim();
-    if(wrap.firstElementChild) slit.replaceWith(wrap.firstElementChild);
+  const notice=document.getElementById('exhibitionRaceNotice');
+  if(notice){
+    const wrap=document.createElement('div'); wrap.innerHTML=brcBuildExhibitionRaceNoticeHtml(liveRace).trim();
+    if(wrap.firstElementChild) notice.replaceWith(wrap.firstElementChild);
   }
   const rec=document.getElementById('recommendedBetsCard');
   if(rec && worker){
@@ -4081,7 +4240,7 @@ function brcCurrentLiveExhibitionSelection(){
 }
 function brcForceLiveExhibitionRefresh(){
   const {venue,raceNo}=brcCurrentLiveExhibitionSelection();
-  if(BRC_LIVE_EXHIBITION_API_URL && venue && raceNo){
+  if(BRC_LIVE_EXHIBITION_API_URL && venue && raceNo && brcVenueCodeFromName(venue)!=='03'){
     brcStartLiveExhibitionPolling(venue,raceNo);
   }
 }
@@ -4099,7 +4258,7 @@ function brcStartLiveExhibitionPolling(venue,raceNo){
   brcStopLiveExhibitionPolling();
   brcBindLiveExhibitionLifecycle();
   const r=Number(raceNo);
-  if(!BRC_LIVE_EXHIBITION_API_URL || !venue || !r) return;
+  if(!BRC_LIVE_EXHIBITION_API_URL || !venue || !r || brcVenueCodeFromName(venue)==='03') return;
   const seq=__brcLiveExhibitionPollSeq;
   let inFlight=false;
   const schedule=()=>{
@@ -4902,6 +5061,9 @@ function setRaceCardWaitingForToday(jstToday){
   if(label) label.textContent = `${jstToday}（読込待ち）`;
   try{ populateDaySelect(); }catch(_e){}
   try{ invalidateTodayPicks(true); }catch(_e){}
+  BRC_FREE_PREVIEW_DATA=null;
+  const freeBody=document.getElementById('brcFreePreviewBody');
+  if(freeBody) freeBody.innerHTML='<div class="brc-free-empty">本日の無料レースを更新中...</div>';
 }
 
 async function autoLoadHostedRaceCardToday(_opts={}){
@@ -4963,6 +5125,7 @@ async function autoLoadHostedRaceCardToday(_opts={}){
     populateDaySelect();
     collapseRaceCardFold();
     invalidateTodayPicks(true);
+    if(_opts.reason!=='free-preview'){ BRC_FREE_PREVIEW_DATA=null; setTimeout(()=>brcLoadFreePreview(true),0); }
 
     if(window.__brcRaceCardRetryTimer){
       clearTimeout(window.__brcRaceCardRetryTimer);
@@ -5629,6 +5792,76 @@ function buildTodayRaceSpec(venue, raceNo){
   };
 }
 
+
+function buildFreePreviewRacePool(){
+  const rows=[];
+  for(const venue of sortVenuesNorthToSouth(Object.keys(RACE_CARDS_TODAY||{}))){
+    const races=RACE_CARDS_TODAY[venue]||{};
+    for(const raceNo of Object.keys(races).map(Number).sort((a,b)=>a-b)){
+      const spec=buildTodayRaceSpec(venue,raceNo);
+      if(!spec) continue;
+      rows.push({
+        id:spec.id,venue:spec.venue,raceNo:spec.raceNo,grade:spec.grade,deadline:spec.deadline,
+        women:brcIsWomenRace(spec.grade,spec.apiBoats.map(b=>b.reg)),
+        boats:spec.apiBoats.map(b=>({course:b.course,reg:b.reg}))
+      });
+    }
+  }
+  return rows;
+}
+function brcFreeCardHtml(item,kind){
+  if(!item) return `<div class="brc-free-card ${kind==='reject'?'reject':''}"><div class="brc-free-kind">${kind==='reject'?'イン否定':'イン鉄板'}</div><div class="brc-free-meta" style="white-space:normal;margin-top:7px;">本日は該当レースなし</div></div>`;
+  const reject=kind==='reject';
+  return `<div class="brc-free-card${reject?' reject':''}">
+    <div class="brc-free-kind">${reject?'イン否定':'イン鉄板'} · 無料1R</div>
+    <div class="brc-free-race">${item.venue}${item.raceNo}R</div>
+    <div class="brc-free-meta">${item.deadline?`締切 ${item.deadline} · `:''}1号艇 ${Math.round(Number(item.inPct)||0)}%</div>
+    <button type="button" class="brc-free-open" data-free-kind="${kind}">無料で見る</button>
+  </div>`;
+}
+function brcRenderFreePreviewCards(){
+  const body=document.getElementById('brcFreePreviewBody');
+  if(!body) return;
+  const d=BRC_FREE_PREVIEW_DATA;
+  if(!d || d.free_preview!==true){body.innerHTML='<div class="brc-free-empty">本日の無料レースを取得できませんでした。</div>';return;}
+  body.innerHTML=brcFreeCardHtml(d.iron,'iron')+brcFreeCardHtml(d.reject,'reject');
+  body.querySelectorAll('[data-free-kind]').forEach(btn=>btn.addEventListener('click',()=>openBrcFreePreview(btn.dataset.freeKind)));
+}
+async function brcLoadFreePreview(force=false){
+  if(BRC_MEMBER_ACTIVE) return;
+  if(BRC_FREE_PREVIEW_LOADING) return;
+  if(BRC_FREE_PREVIEW_DATA && !force){brcRenderFreePreviewCards();return;}
+  const body=document.getElementById('brcFreePreviewBody');
+  if(body) body.innerHTML='<div class="brc-free-empty">本日の無料レースを読み込み中...</div>';
+  BRC_FREE_PREVIEW_LOADING=true;
+  try{
+    const jstToday=getJstDateLabel();
+    if(TODAY_LABEL!==jstToday || !RACE_INFO_TODAY || !Object.keys(RACE_INFO_TODAY).length){
+      await autoLoadHostedRaceCardToday({reason:'free-preview'});
+    }
+    const races=buildFreePreviewRacePool();
+    if(TODAY_LABEL!==jstToday || races.length<12) throw new Error('free_preview_racecard_not_ready');
+    const data=await brcFreePreviewApi({date:jstToday,races});
+    if(!data || data.free_preview!==true) throw new Error('free_preview_not_ready');
+    BRC_FREE_PREVIEW_DATA=data;
+    brcRenderFreePreviewCards();
+  }catch(err){
+    console.warn('BRC free preview failed:',err);
+    if(body) body.innerHTML='<div class="brc-free-empty">無料公開レースを準備中です。少し時間をおいて再度開いてください。</div>';
+  }finally{BRC_FREE_PREVIEW_LOADING=false;}
+}
+async function openBrcFreePreview(kind){
+  const item=BRC_FREE_PREVIEW_DATA?.[kind];
+  if(!item || !item.prediction) return;
+  document.querySelectorAll('.page-tabs > .page-tab').forEach(b=>b.classList.toggle('active',b.dataset.page==='predict'));
+  PAGE_IDS.forEach(id=>{const el=document.getElementById('page-'+id);if(el)el.style.display=(id==='predict')?'':'none';});
+  if(!window.__predictRendered){initPredictPage();window.__predictRendered=true;}
+  brcRenderFreePreviewMode(item);
+  loadTodaysRace(item.venue,String(item.raceNo));
+  const page=document.getElementById('page-predict'); if(page) page.scrollIntoView({behavior:'smooth',block:'start'});
+}
+window.addEventListener('load',()=>setTimeout(()=>brcLoadFreePreview(false),250));
+
 let TODAY_PICKS_PROMISE=null;
 
 function todayDeadlineMinutes(t){
@@ -5956,7 +6189,19 @@ async function runPredict(){
 
   let workerPrediction = null;
   try{
-    const apiResult = await brcPredictApi({venue, grade, boats:apiBoats});
+    let apiResult=null;
+    const freeItem=BRC_FREE_PREVIEW_ACTIVE;
+    const currentId=`${venue}:${raceNoLive}`;
+    const sameFreeBoats=!!(freeItem && Array.isArray(freeItem.prediction?.wins) && apiBoats.every(b=>freeItem.prediction.wins.some(w=>Number(w.course)===Number(b.course)&&String(w.reg)===String(b.reg))));
+    if(!BRC_MEMBER_ACTIVE && freeItem && freeItem.id===currentId && sameFreeBoats){
+      apiResult=freeItem.prediction;
+    }else if(!BRC_MEMBER_ACTIVE){
+      brcRenderGate('login');
+      brcSetAuthMessage('無料公開は本日指定された2レースのみ閲覧できます。');
+      return;
+    }else{
+      apiResult = await brcPredictApi({venue, grade, boats:apiBoats});
+    }
     if(!apiResult || apiResult.prediction_api !== true || !Array.isArray(apiResult.wins) || !Array.isArray(apiResult.top3s) || !Array.isArray(apiResult.baselines) || !Array.isArray(apiResult.seconds) || !apiResult.inReliability || !apiResult.recommendation){
       throw new Error('prediction_api_not_ready');
     }
@@ -6067,7 +6312,7 @@ async function runPredict(){
   box.innerHTML = `
     ${buildCurrentRaceSummaryHtml(venue)}
     ${buildInReliabilityCardHtmlFromServer(localInReliability)}
-    ${brcBuildSlitEvaluationHtml(boats, liveExhibitionRace)}
+    ${brcBuildExhibitionRaceNoticeHtml(liveExhibitionRace)}
     <div id="predictTableWrap" style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
     <table class="predict-table">
       <thead><tr>
@@ -6102,9 +6347,73 @@ async function runPredict(){
       </tbody>
     </table>
     </div>
+
+    <details class="predict-guide">
+      <summary>出走データの見方</summary>
+      <div class="predict-guide-body">
+        <div class="predict-guide-group">
+          <div class="predict-guide-group-title">予測・評価</div>
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">イン信頼度</div>
+            <div class="predict-guide-text">1号艇の最終予想勝率をもとに、S〜E・強イン否定で段階評価。1号艇を頭で信頼するか、イン崩れを警戒するかの目安です。</div>
+          </div>
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">展示スリット評価<span class="predict-guide-badge">構築中</span></div>
+            <div class="predict-guide-text">展示のスリット位置と隣接艇との差から、1号艇の受けと攻め艇の圧力を評価する項目。現在ロジックを検証・構築中です。</div>
+          </div>
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">勝率</div>
+            <div class="predict-guide-text">選手・コース・会場などの過去データから算出した、そのレースで1着になる予測確率。展示取得後は展示タイム補正も反映します。</div>
+          </div>
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">3連対率</div>
+            <div class="predict-guide-text">その艇が1〜3着に入る予測確率。頭候補だけでなく、2着・3着の相手として残す判断にも使います。展示取得後は展示タイム補正も反映します。</div>
+          </div>
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">平均ST</div>
+            <div class="predict-guide-text">基本は直近1年・今回コースでの平均ST順位を表示。1位に近いほどスタートで前に出ている傾向です。表示しているのはSTタイムではなく順位です。</div>
+          </div>
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">モーター</div>
+            <div class="predict-guide-text">今節の6艇のモーター2連対率を相対比較し、A〜Eで評価。機力を見る補助材料で、予想勝率・3連対率には直接加算していません。</div>
+          </div>
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">展示評価</div>
+            <div class="predict-guide-text">今回の展示タイムが着率を上げる・下げる方向を矢印で表示。勝率・3連対率は確率へ補正し、展開シナリオでは2着・3着への影響方向を表示します。</div>
+          </div>
+        </div>
+
+        <div class="predict-guide-group">
+          <div class="predict-guide-group-title">タップすると見られるデータ</div>
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">名前を押す</div>
+            <div class="predict-guide-text">今回コースの決まり手、開催会場での成績、グレード別成績などを表示。1号艇は決まり手ではなく、1コースの敗因・弱点を確認できます。</div>
+          </div>
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">勝率を押す</div>
+            <div class="predict-guide-text">その艇が1着になった時、他の5艇が2着・3着に残る傾向を決まり手別・N数付きで確認できます。</div>
+          </div>
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">モーターを押す</div>
+            <div class="predict-guide-text">モーターの2連対率・N数・優出・優勝、前回使用者と着順、優勝戦出場歴などの機歴を確認できます。</div>
+          </div>
+        </div>
+
+        <div class="predict-guide-group">
+          <div class="predict-guide-group-title">参考・買い目</div>
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">風向・風速別1着率</div>
+            <div class="predict-guide-text">会場×風向×風速ごとのコース別1着率、場平均との差、N数を表示する参考データ。予想勝率・3連対率には加算していません。</div>
+          </div>
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">推奨買い目</div>
+            <div class="predict-guide-text">BRCの予測確率と展開分類から、3連単の組み合わせ・点数・想定的中率・参加目安オッズを提示。展開が拮抗する場合は「推奨なし」とします。現在、展示補正は確率には反映しますが推奨買い目には未反映です。</div>
+          </div>
+        </div>
+      </div>
+    </details>
     ${buildWindPanelHtml()}
     ${buildRecommendedBetsHtmlFromServer(workerPrediction, localInReliability, exhibitionApplied)}
-    <div class="trend-note" style="margin-top:2px; font-size:12px; color:var(--ink-soft);">選手名をタップすると選手詳細、勝率をタップすると2着率・3着率を含む展開傾向、モーターをタップすると機歴を表示します。</div>
     <div id="predictSummaryLead" class="trend-note fold-lead" style="margin-top:12px;">${brcBuildPredictLeadSummaryHtml(boats)}</div>
   `;
 
