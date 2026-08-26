@@ -1998,6 +1998,10 @@ async function brcInitAuthUi(){
   }
 }
 window.addEventListener('load',brcInitAuthUi);
+// ログイン状態やタブ初期化順に左右されず、ページが開いている限り日付跨ぎを監視する。
+window.addEventListener('load', ()=>{
+  try{ brcStartRaceCardDayWatcher(); }catch(_e){}
+});
 
 // 会員をSupabase側で停止した場合、開きっぱなしでも最長約1分でロックへ戻す。
 setInterval(()=>{
@@ -4034,9 +4038,10 @@ function initPredictPage(){
     }, 30000);
   }
 
-  // BRC_AUTO_RACECARD_CALL_V2
-  // 当日TXTを初期表示直後に確認。未反映ならV2側で自動再試行する。
-  setTimeout(()=>{ autoLoadHostedRaceCardToday(); }, 0);
+  // BRC_AUTO_RACECARD_CALL_V3
+  // 当日TXTを初期表示直後に確認。さらに日付跨ぎ・アプリ復帰も監視する。
+  brcStartRaceCardDayWatcher();
+  setTimeout(()=>{ autoLoadHostedRaceCardToday({reason:'init'}); }, 0);
 }
 
 // 締切時刻を日本時間（JST）として比較し、レース番号カードの締切済み表示に使う。
@@ -4545,7 +4550,43 @@ function collapseRaceCardFold(){
 // 前日ファイルが一時的に残っていてもエラー扱いにせず、本日分が反映されるまで自動再試行する。
 function scheduleHostedRaceCardRetry(delayMs=60000){
   if(window.__brcRaceCardRetryTimer) clearTimeout(window.__brcRaceCardRetryTimer);
-  window.__brcRaceCardRetryTimer = setTimeout(()=>{ autoLoadHostedRaceCardToday(); }, delayMs);
+  window.__brcRaceCardRetryTimer = setTimeout(()=>{ autoLoadHostedRaceCardToday({reason:'retry'}); }, delayMs);
+}
+
+// BRC_RACECARD_DAY_ROLLOVER_FIX_20260826
+// 前日の番組表を正常読込したあと日付をまたぐと、従来は再試行タイマーが消えているため
+// 翌日の today.TXT を取りに行く契機がなかった。JST日付の変化とアプリ復帰を監視して即再取得する。
+function brcRaceCardNeedsTodayRefresh(){
+  const jstToday = getJstDateLabel();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(jstToday)) return false;
+  if(TODAY_LABEL !== jstToday) return true;
+  if(!RACE_INFO_TODAY || Object.keys(RACE_INFO_TODAY).length === 0) return true;
+  return false;
+}
+
+function brcRefreshRaceCardForCurrentDay(reason='watch'){
+  if(!brcRaceCardNeedsTodayRefresh()) return false;
+  // 同じ瞬間に focus / pageshow / visibilitychange が重なっても多重fetchしない。
+  if(window.__brcRaceCardRefreshInFlight) return false;
+  window.__brcRaceCardRefreshInFlight = true;
+  Promise.resolve(autoLoadHostedRaceCardToday({reason}))
+    .finally(()=>{ window.__brcRaceCardRefreshInFlight = false; });
+  return true;
+}
+
+function brcStartRaceCardDayWatcher(){
+  if(window.__brcRaceCardDayWatcher) return;
+  // iPhoneのバックグラウンド中はsetIntervalが止まることがあるため、これは補助監視。
+  // 復帰時は下のvisibilitychange/pageshow/focusで即時確認する。
+  window.__brcRaceCardDayWatcher = setInterval(()=>{
+    if(document.visibilityState === 'visible') brcRefreshRaceCardForCurrentDay('interval');
+  }, 30000);
+
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState === 'visible') brcRefreshRaceCardForCurrentDay('visibilitychange');
+  });
+  window.addEventListener('pageshow', ()=>brcRefreshRaceCardForCurrentDay('pageshow'));
+  window.addEventListener('focus', ()=>brcRefreshRaceCardForCurrentDay('focus'));
 }
 
 function setRaceCardWaitingForToday(jstToday){
@@ -4562,7 +4603,7 @@ function setRaceCardWaitingForToday(jstToday){
   try{ invalidateTodayPicks(true); }catch(_e){}
 }
 
-async function autoLoadHostedRaceCardToday(){
+async function autoLoadHostedRaceCardToday(_opts={}){
   const statusBox = document.getElementById('raceCardFileStatus');
   const jstToday = getJstDateLabel();
   if(!/^\d{4}-\d{2}-\d{2}$/.test(jstToday)) return false;
