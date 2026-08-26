@@ -966,8 +966,32 @@
   #predictResult .predict-table td:nth-child(3),
   #predictResult .predict-table td:nth-child(4){ color:var(--line-white) !important; }
   .exhibition-arrow-icon{
-    display:inline-block; width:20px; height:20px; vertical-align:middle; overflow:visible;
+    display:block; width:20px; height:20px; overflow:visible;
   }
+  /* 確率と展示矢印を別スロットに固定し、狭い画面でも重ならないようにする */
+  .prob-arrow-wrap{
+    display:grid; grid-template-columns:auto 20px; align-items:center; justify-content:center;
+    column-gap:5px; white-space:nowrap; width:100%; min-width:0;
+  }
+  .prob-arrow-wrap .prob-value{
+    display:block; text-align:right; font-variant-numeric:tabular-nums; line-height:1.1;
+  }
+  .prob-arrow-wrap .prob-arrow-slot{
+    width:20px; height:20px; display:flex; align-items:center; justify-content:center; flex:0 0 20px;
+  }
+  .prob-arrow-wrap.no-arrow{grid-template-columns:auto;}
+  .scenario-player-head{
+    display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:6px;
+    font-size:12.5px; font-weight:700;
+  }
+  .scenario-exhibition-badge{
+    display:inline-flex; align-items:center; gap:5px; margin-left:3px; padding:3px 7px;
+    border:1px solid rgba(10,31,51,.12); border-radius:999px; background:rgba(10,31,51,.025);
+    color:var(--ink-soft); font-size:10.5px; font-weight:800; line-height:1; white-space:nowrap;
+  }
+  .scenario-exhibition-badge .scenario-ex-label{color:var(--ink-soft);}
+  .scenario-exhibition-badge .scenario-ex-item{display:inline-flex;align-items:center;gap:2px;color:var(--line-white);}
+  .scenario-exhibition-badge .exhibition-arrow-icon{width:15px;height:15px;}
   .exhibition-arrow-icon line, .exhibition-arrow-icon polyline{
     fill:none; stroke:currentColor; stroke-width:2.3; stroke-linecap:round; stroke-linejoin:round;
     vector-effect:non-scaling-stroke;
@@ -979,6 +1003,12 @@
     #predictResult .predict-table thead th{ font-size:10.5px; padding:7px 2px; }
     #predictResult .predict-table tbody td{ padding:8px 2px; }
     #predictResult .predict-table td:nth-child(2) a{ font-weight:700; }
+    .prob-arrow-wrap{grid-template-columns:auto 18px;column-gap:3px;}
+    .prob-arrow-wrap .prob-arrow-slot{width:18px;height:18px;flex-basis:18px;}
+    .prob-arrow-wrap .exhibition-arrow-icon{width:18px;height:18px;}
+    .scenario-player-head{gap:5px;font-size:12px;}
+    .scenario-exhibition-badge{margin-left:0;padding:3px 6px;font-size:10px;gap:4px;}
+    .scenario-exhibition-badge .exhibition-arrow-icon{width:14px;height:14px;}
   }
 
   /* ---- UI clean v2: 選手データ / 会場データ ---- */
@@ -3089,8 +3119,8 @@ function renderInlinePredictScenario(course){
     if(!rows.length){
       return `
         <div style="margin-bottom:14px;">
-          <div style="font-size:12.5px; font-weight:700; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
-            ${scenarioLaneBadge(cc)} ${name}（登番${reg}）
+          <div class="scenario-player-head">
+            ${scenarioLaneBadge(cc)} <span>${name}（登番${reg}）</span>${brcBuildScenarioExhibitionBadge(b)}
           </div>
           <div style="font-size:11.5px; color:var(--ink-soft); padding:2px 2px 8px;">コース${course}勝利時のデータがありません。</div>
         </div>`;
@@ -3114,8 +3144,8 @@ function renderInlinePredictScenario(course){
 
     return `
       <div style="margin-bottom:16px;">
-        <div style="font-size:12.5px; font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
-          ${scenarioLaneBadge(cc)} ${name}（登番${reg}）
+        <div class="scenario-player-head">
+          ${scenarioLaneBadge(cc)} <span>${name}（登番${reg}）</span>${brcBuildScenarioExhibitionBadge(b)}
         </div>
         <div class="scenario-scroll" style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
           <table class="scenario-table compact-7" style="border-collapse:collapse; font-size:11.5px;">
@@ -3157,7 +3187,7 @@ function renderInlinePredictScenario(course){
       <button class="motor-detail-close" type="button" onclick="closePredictDetail()" aria-label="閉じる">×</button>
     </div>
     ${winnerBoat ? `<div class="motor-detail-topstats predict-detail-scenario-stats"><div class="motor-detail-stat"><b>${winnerBoat.pct}%</b><span>予想勝率</span></div><div class="motor-detail-stat"><b>${winnerBoat.pct3}%</b><span>3連対率</span></div><div class="motor-detail-stat"><b>${course}</b><span>コース</span></div><div class="motor-detail-stat"><b>${others.length}</b><span>相手艇</span></div></div>` : ''}
-    <div class="predict-detail-note">2着率・3着率の矢印は今回展示の評価方向です。標本信頼度はN基準で、的中確率ではありません。</div>
+    <div class="predict-detail-note">各選手名横の「展示評価」で、今回展示による2着・3着への影響方向を表示しています。標本信頼度はN基準で、的中確率ではありません。</div>
     ${boatSectionsHtml}
   `;
 }
@@ -3733,25 +3763,33 @@ function brcBuildExhibitionProbabilityArrowIcon(deltaPt,threshold){
     </svg>
   </span>`;
 }
+function brcBuildProbabilityCell(value,arrowHtml){
+  const hasArrow=!!arrowHtml;
+  return `<span class="prob-arrow-wrap${hasArrow?'':' no-arrow'}"><span class="prob-value">${value}%</span>${hasArrow?`<span class="prob-arrow-slot">${arrowHtml}</span>`:''}</span>`;
+}
 function brcBuildWinCellInner(b,venue){
   const arrow=b?.exhibitionApplied ? brcBuildExhibitionProbabilityArrowIcon(b.exhibitionWinDeltaPt,0.75) : '';
-  return `<span style="display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;"><span>${b.pct}%</span>${arrow}</span>`;
+  return brcBuildProbabilityCell(b.pct,arrow);
 }
 function brcBuildTop3CellInner(b){
   const arrow=b?.exhibitionApplied ? brcBuildExhibitionProbabilityArrowIcon(b.exhibitionTop3DeltaPt,2.0) : '';
-  return `<span style="display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;"><span>${b.pct3}%</span>${arrow}</span>`;
+  return brcBuildProbabilityCell(b.pct3,arrow);
 }
 
-// 展開シナリオ内の2着率・3着率に付ける今回展示の方向表示。
-// 2着/3着の表示用デルタは、展示後の3連対内残存確率を展示前の2着:3着比で再配分して算出。
+// 展開シナリオでは2着率・3着率の数値セルを汚さず、選手名横へ展示評価をまとめる。
 function brcBuildScenarioPlaceExhibitionArrow(b,kind){
   if(!b?.exhibitionApplied) return '';
   const delta=kind==='third' ? Number(b.exhibitionThirdDeltaPt) : Number(b.exhibitionSecondDeltaPt);
   return brcBuildExhibitionProbabilityArrowIcon(delta,1.0);
 }
 function brcBuildScenarioPlaceRateHtml(rate,b,kind='second'){
-  const arrow=brcBuildScenarioPlaceExhibitionArrow(b,kind);
-  return `<span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;white-space:nowrap;"><span>${r0(rate)}%</span>${arrow}</span>`;
+  return `<span style="white-space:nowrap;">${r0(rate)}%</span>`;
+}
+function brcBuildScenarioExhibitionBadge(b){
+  if(!b?.exhibitionApplied) return '';
+  const second=brcBuildScenarioPlaceExhibitionArrow(b,'second');
+  const third=brcBuildScenarioPlaceExhibitionArrow(b,'third');
+  return `<span class="scenario-exhibition-badge" title="今回展示が2着率・3着率へ与える方向"><span class="scenario-ex-label">展示評価</span><span class="scenario-ex-item">2着 ${second}</span><span class="scenario-ex-item">3着 ${third}</span></span>`;
 }
 
 function brcBuildPredictLeadSummaryHtml(boats){
