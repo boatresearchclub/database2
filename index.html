@@ -499,8 +499,22 @@
   .exhibition-race-notice .ern-item{white-space:nowrap;}
   .exhibition-race-notice .ern-missing{color:var(--ink-soft);}
   .exhibition-race-notice .ern-absence{color:#d1373f;}
+  .exhibition-race-notice .ern-seq{display:inline-flex; align-items:center; gap:3px; vertical-align:middle; margin-left:2px;}
+  .exhibition-race-notice .ern-boat{
+    width:18px; height:18px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+    font-size:10.5px; font-weight:900; line-height:1; border:1px solid rgba(10,31,51,.16);
+    box-shadow:0 1px 2px rgba(10,31,51,.08); flex:0 0 auto;
+  }
+  .exhibition-race-notice .ern-lane1{background:var(--lane1); color:var(--lane1-text); border-color:#718096;}
+  .exhibition-race-notice .ern-lane2{background:var(--lane2); color:var(--lane2-text); border-color:var(--lane2);}
+  .exhibition-race-notice .ern-lane3{background:var(--lane3); color:var(--lane3-text); border-color:var(--lane3);}
+  .exhibition-race-notice .ern-lane4{background:var(--lane4); color:var(--lane4-text); border-color:var(--lane4);}
+  .exhibition-race-notice .ern-lane5{background:var(--lane5); color:var(--lane5-text); border-color:#c4972d;}
+  .exhibition-race-notice .ern-lane6{background:var(--lane6); color:var(--lane6-text); border-color:var(--lane6);}
   @media (max-width:420px){
     .exhibition-race-notice{font-size:10.5px; gap:4px; margin-top:-3px;}
+    .exhibition-race-notice .ern-seq{gap:2px;}
+    .exhibition-race-notice .ern-boat{width:17px; height:17px; font-size:10px;}
   }
   .race-summary-compact{
     margin:0 0 10px; padding:2px 1px 0; color:var(--line-white);
@@ -3715,6 +3729,12 @@ async function brcFetchLiveExhibition(venue, raceNo){
 function brcCircledBoatNo(n){
   return ({1:'①',2:'②',3:'③',4:'④',5:'⑤',6:'⑥'})[Number(n)] || String(n||'');
 }
+function brcColoredBoatBadgeHtml(n){
+  const boat=Number(n);
+  const safe=(Number.isInteger(boat) && boat>=1 && boat<=6) ? boat : null;
+  if(!safe) return `<span class="ern-boat">${String(n??'')}</span>`;
+  return `<span class="ern-boat ern-lane${safe}">${safe}</span>`;
+}
 function brcNormalizeBoatStatusText(v){
   return String(v ?? '').replace(/[\s　]+/g,'').toUpperCase();
 }
@@ -3757,9 +3777,19 @@ function brcBuildExhibitionRaceNoticeHtml(liveRace){
   [...confirmedAbsent].sort((a,b)=>a-b).forEach(n=>{
     items.push(`<span class="ern-item ern-absence">※${n}号艇欠場</span>`);
   });
-  missing.forEach(n=>{
-    items.push(`<span class="ern-item ern-missing">※${n}号艇 展示情報未取得</span>`);
-  });
+
+  // 「展示情報未取得」は展示前の6艇未取得では出さない。
+  // 他艇で実際の展示データが取得できているのに、一部の艇だけ欠ける場合に限り表示する。
+  const hasValue=v=>v!==null && v!==undefined && String(v).trim()!=='' && Number.isFinite(Number(v));
+  const exhibitionStarted=boats.some(b=>
+    hasValue(b?.exhibition_time) || hasValue(b?.display_st) || hasValue(b?.lap_time) ||
+    hasValue(b?.turn_time) || hasValue(b?.straight_time)
+  );
+  if(exhibitionStarted){
+    missing.forEach(n=>{
+      items.push(`<span class="ern-item ern-missing">※${n}号艇 展示情報未取得</span>`);
+    });
+  }
 
   // entry_course順に艇番を並べる。6艇揃っている通常進入 ①②③④⑤⑥ は表示しない。
   // 欠場が確定している場合は残った艇だけの展示進入も表示できる。
@@ -3774,7 +3804,7 @@ function brcBuildExhibitionRaceNoticeHtml(liveRace){
     const sameExpected=sequence.length===expected.length && sequence.every((n,i)=>n===expected[i]);
     // 6艇揃っていれば「変更があった時だけ」。欠場確定時は残った艇の展示進入も併記する。
     if((entryRows.length===6 && confirmedAbsent.size===0 && !sameExpected) || confirmedAbsent.size>0){
-      const seqText=sequence.map(brcCircledBoatNo).join('');
+      const seqText=`<span class="ern-seq">${sequence.map(brcColoredBoatBadgeHtml).join('')}</span>`;
       const prefix=(entryRows.length===6 && confirmedAbsent.size===0) ? '※展示進入変更あり' : '※展示進入';
       items.push(`<span class="ern-item">${prefix}　${seqText}</span>`);
     }
