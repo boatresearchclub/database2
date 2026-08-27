@@ -1089,7 +1089,11 @@
 
   /* ---- 展示評価：選手別例外「要注意」 ---- */
   #predictResult .predict-exhibition-label{gap:5px;}
-  .brc-ex-alert-btn{border:1px solid rgba(227,178,60,.55);background:rgba(227,178,60,.12);color:#8a5a00;border-radius:999px;padding:2px 6px;font-size:9px;font-weight:900;line-height:1.15;cursor:pointer;white-space:nowrap;}
+  .brc-ex-alert-btn{border:1px solid rgba(227,178,60,.55);background:rgba(227,178,60,.12);color:#8a5a00;border-radius:999px;padding:2px 6px;font-size:9px;font-weight:900;line-height:1.15;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:2px;}
+  .brc-ex-alert-dir{font-size:11px;font-weight:1000;line-height:1;}
+  .brc-ex-alert-dir.up{color:#d73a49;}
+  .brc-ex-alert-dir.down{color:#1677c8;}
+  .brc-ex-alert-dir.flat{color:#6b7280;}
   .brc-ex-alert-btn:active{transform:translateY(1px);}
   .brc-ex-alert-pop{position:fixed;inset:0;z-index:10050;background:rgba(4,14,24,.56);display:flex;align-items:center;justify-content:center;padding:18px;}
   .brc-ex-alert-card{width:min(420px,94vw);max-height:82vh;overflow:auto;background:#fff;border-radius:14px;box-shadow:0 18px 55px rgba(0,0,0,.28);padding:17px;color:var(--line-white);}
@@ -4572,17 +4576,28 @@ function brcFindExhibitionPlayerAlert(b){
   return hits.sort((a,z)=>(rank[z['評価']]||0)-(rank[a['評価']]||0) || Number(z.N||0)-Number(a.N||0))[0]||null;
 }
 function brcSignedPt(v){ const n=Number(v); return Number.isFinite(n)?`${n>0?'+':''}${n.toFixed(1)}pt`:'―'; }
+// 選手別例外の「最終方向」。1着・2連対・3連対への本人効果をまとめ、
+// 小さなブレ（平均±1pt未満）は横ばいとして扱う。
+function brcExhibitionAlertFinalDirection(a){
+  const vals=['本人1着効果pt','本人2連対効果pt','本人3連対効果pt'].map(k=>Number(a?.[k])).filter(Number.isFinite);
+  if(!vals.length) return {mark:'→',cls:'flat',score:0};
+  const score=vals.reduce((x,y)=>x+y,0)/vals.length;
+  if(score>=1) return {mark:'↑',cls:'up',score};
+  if(score<=-1) return {mark:'↓',cls:'down',score};
+  return {mark:'→',cls:'flat',score};
+}
 function brcBuildExhibitionAlertButton(b){
   const a=brcFindExhibitionPlayerAlert(b); if(!a) return '';
   const payload=encodeURIComponent(JSON.stringify(a));
-  return `<button type="button" class="brc-ex-alert-btn" onclick="event.stopPropagation();brcShowExhibitionPlayerAlert(decodeURIComponent('${payload}'))" title="選手別の展示例外傾向を表示">⚠ 要注意</button>`;
+  const dir=brcExhibitionAlertFinalDirection(a);
+  return `<button type="button" class="brc-ex-alert-btn" onclick="event.stopPropagation();brcShowExhibitionPlayerAlert(decodeURIComponent('${payload}'))" title="選手別の展示例外傾向。最終方向 ${dir.mark}">⚠<span class="brc-ex-alert-dir ${dir.cls}">${dir.mark}</span></button>`;
 }
 function brcShowExhibitionPlayerAlert(raw){
   let a; try{a=JSON.parse(raw)}catch(e){return}
   document.getElementById('brcExAlertPop')?.remove();
   const pop=document.createElement('div'); pop.id='brcExAlertPop'; pop.className='brc-ex-alert-pop';
   pop.onclick=e=>{if(e.target===pop)pop.remove();};
-  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']}　展示評価・選手別傾向</div><div style="font-size:10.5px;color:var(--ink-soft);margin-top:3px;">${a['コース']}コース ／ 展示差 ${a['平均差帯']}秒 ／ N=${a.N}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-ex-alert-tag">⚠ ${a['INDEX表示案']}</div><div class="brc-ex-alert-grid"><span></span><span class="h">通常傾向</span><span class="h">本人傾向</span><span>1着率への影響</span><span class="v">${brcSignedPt(a['通常1着効果pt'])}</span><span class="v">${brcSignedPt(a['本人1着効果pt'])}</span><span>2連対率への影響</span><span class="v">${brcSignedPt(a['通常2連対効果pt'])}</span><span class="v">${brcSignedPt(a['本人2連対効果pt'])}</span><span>3連対率への影響</span><span class="v">${brcSignedPt(a['通常3連対効果pt'])}</span><span class="v">${brcSignedPt(a['本人3連対効果pt'])}</span></div><div class="brc-ex-alert-note">通常の展示評価と逆方向・弱まりが確認された選手別例外です。表示はS/A/B候補かつ今回のコース・展示差帯が一致した時だけ出ます。予測確率そのものには追加補正していません。</div></div>`;
+  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']}　展示評価・選手別傾向</div><div style="font-size:10.5px;color:var(--ink-soft);margin-top:3px;">${a['コース']}コース ／ 展示差 ${a['平均差帯']}秒 ／ N=${a.N}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-ex-alert-tag">⚠ ${brcExhibitionAlertFinalDirection(a).mark}　${a['INDEX表示案']}</div><div class="brc-ex-alert-grid"><span></span><span class="h">通常傾向</span><span class="h">本人傾向</span><span>1着率への影響</span><span class="v">${brcSignedPt(a['通常1着効果pt'])}</span><span class="v">${brcSignedPt(a['本人1着効果pt'])}</span><span>2連対率への影響</span><span class="v">${brcSignedPt(a['通常2連対効果pt'])}</span><span class="v">${brcSignedPt(a['本人2連対効果pt'])}</span><span>3連対率への影響</span><span class="v">${brcSignedPt(a['通常3連対効果pt'])}</span><span class="v">${brcSignedPt(a['本人3連対効果pt'])}</span></div><div class="brc-ex-alert-note">通常の展示評価と逆方向・弱まりが確認された選手別例外です。表示はS/A/B候補かつ今回のコース・展示差帯が一致した時だけ出ます。予測確率そのものには追加補正していません。</div></div>`;
   document.body.appendChild(pop);
 }
 
