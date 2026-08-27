@@ -15,6 +15,7 @@
 <!-- BRC_SLIT_2TO1_IN_RELIABILITY_20260827 -->
 <!-- BRC_SLIT_RATE_ARROW_UI_20260827 -->
 <!-- BRC_EXHIBITION_PLAYER_ALERT_20260827 -->
+<!-- BRC_EXHIBITION_PLAYER_ALERT_DIRECTION_20260827 -->
 <!-- BRC_ORIGINAL_EXHIBITION_PHASE2_ADJUSTMENT_20260825 -->
 <!-- BRC_MOBILE_LIVE_REFRESH_FIX_20260825 -->
 <!-- BRC_EXHIBITION_PHASE3_1_AUDIT_FIX_20260825 -->
@@ -1090,6 +1091,13 @@
   /* ---- 展示評価：選手別例外「要注意」 ---- */
   #predictResult .predict-exhibition-label{gap:5px;}
   .brc-ex-alert-btn{border:1px solid rgba(227,178,60,.55);background:rgba(227,178,60,.12);color:#8a5a00;border-radius:999px;padding:2px 6px;font-size:9px;font-weight:900;line-height:1.15;cursor:pointer;white-space:nowrap;}
+  .brc-ex-alert-btn.brc-ex-alert-up{border-color:rgba(180,35,44,.38);background:rgba(180,35,44,.08);color:#b4232c;}
+  .brc-ex-alert-btn.brc-ex-alert-down{border-color:rgba(31,95,176,.38);background:rgba(31,95,176,.08);color:#1f5fb0;}
+  .brc-ex-alert-btn.brc-ex-alert-flat{border-color:rgba(61,74,99,.28);background:rgba(61,74,99,.07);color:var(--ink-soft);}
+  .brc-ex-alert-direction{display:inline-flex;align-items:center;gap:5px;margin:0 0 9px;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:900;}
+  .brc-ex-alert-direction.up{background:rgba(180,35,44,.08);color:#b4232c;border:1px solid rgba(180,35,44,.28);}
+  .brc-ex-alert-direction.down{background:rgba(31,95,176,.08);color:#1f5fb0;border:1px solid rgba(31,95,176,.28);}
+  .brc-ex-alert-direction.flat{background:rgba(61,74,99,.07);color:var(--ink-soft);border:1px solid rgba(61,74,99,.20);}
   .brc-ex-alert-btn:active{transform:translateY(1px);}
   .brc-ex-alert-pop{position:fixed;inset:0;z-index:10050;background:rgba(4,14,24,.56);display:flex;align-items:center;justify-content:center;padding:18px;}
   .brc-ex-alert-card{width:min(420px,94vw);max-height:82vh;overflow:auto;background:#fff;border-radius:14px;box-shadow:0 18px 55px rgba(0,0,0,.28);padding:17px;color:var(--line-white);}
@@ -4576,17 +4584,29 @@ function brcFindExhibitionPlayerAlert(b){
   return hits.sort((a,z)=>(rank[z['評価']]||0)-(rank[a['評価']]||0) || Number(z.N||0)-Number(a.N||0))[0]||null;
 }
 function brcSignedPt(v){ const n=Number(v); return Number.isFinite(n)?`${n>0?'+':''}${n.toFixed(1)}pt`:'―'; }
+function brcGetExhibitionAlertDirection(a){
+  if(!a) return {symbol:'→',label:'横ばい',cls:'flat',btnCls:'brc-ex-alert-flat',score:0};
+  const vals=['本人1着効果pt','本人2連対効果pt','本人3連対効果pt'].map(k=>Number(a[k])).filter(Number.isFinite);
+  if(!vals.length) return {symbol:'→',label:'横ばい',cls:'flat',btnCls:'brc-ex-alert-flat',score:0};
+  // 1着・2連対・3連対の本人効果を平均し、最終的に展示がプラスかマイナスかを一目で示す。
+  const score=vals.reduce((s,v)=>s+v,0)/vals.length;
+  if(score>=1.0) return {symbol:'↑',label:'プラス傾向',cls:'up',btnCls:'brc-ex-alert-up',score};
+  if(score<=-1.0) return {symbol:'↓',label:'マイナス傾向',cls:'down',btnCls:'brc-ex-alert-down',score};
+  return {symbol:'→',label:'ほぼ横ばい',cls:'flat',btnCls:'brc-ex-alert-flat',score};
+}
 function brcBuildExhibitionAlertButton(b){
   const a=brcFindExhibitionPlayerAlert(b); if(!a) return '';
+  const d=brcGetExhibitionAlertDirection(a);
   const payload=encodeURIComponent(JSON.stringify(a));
-  return `<button type="button" class="brc-ex-alert-btn" onclick="event.stopPropagation();brcShowExhibitionPlayerAlert(decodeURIComponent('${payload}'))" title="選手別の展示例外傾向を表示">⚠ 要注意</button>`;
+  return `<button type="button" class="brc-ex-alert-btn ${d.btnCls}" onclick="event.stopPropagation();brcShowExhibitionPlayerAlert(decodeURIComponent('${payload}'))" title="選手本人の展示傾向：${d.label}。タップで詳細">⚠${d.symbol}</button>`;
 }
 function brcShowExhibitionPlayerAlert(raw){
   let a; try{a=JSON.parse(raw)}catch(e){return}
+  const d=brcGetExhibitionAlertDirection(a);
   document.getElementById('brcExAlertPop')?.remove();
   const pop=document.createElement('div'); pop.id='brcExAlertPop'; pop.className='brc-ex-alert-pop';
   pop.onclick=e=>{if(e.target===pop)pop.remove();};
-  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']}　展示評価・選手別傾向</div><div style="font-size:10.5px;color:var(--ink-soft);margin-top:3px;">${a['コース']}コース ／ 展示差 ${a['平均差帯']}秒 ／ N=${a.N}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-ex-alert-tag">⚠ ${a['INDEX表示案']}</div><div class="brc-ex-alert-grid"><span></span><span class="h">通常傾向</span><span class="h">本人傾向</span><span>1着率への影響</span><span class="v">${brcSignedPt(a['通常1着効果pt'])}</span><span class="v">${brcSignedPt(a['本人1着効果pt'])}</span><span>2連対率への影響</span><span class="v">${brcSignedPt(a['通常2連対効果pt'])}</span><span class="v">${brcSignedPt(a['本人2連対効果pt'])}</span><span>3連対率への影響</span><span class="v">${brcSignedPt(a['通常3連対効果pt'])}</span><span class="v">${brcSignedPt(a['本人3連対効果pt'])}</span></div><div class="brc-ex-alert-note">通常の展示評価と逆方向・弱まりが確認された選手別例外です。表示はS/A/B候補かつ今回のコース・展示差帯が一致した時だけ出ます。予測確率そのものには追加補正していません。</div></div>`;
+  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']}　展示評価・選手別傾向</div><div style="font-size:10.5px;color:var(--ink-soft);margin-top:3px;">${a['コース']}コース ／ 展示差 ${a['平均差帯']}秒 ／ N=${a.N}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-ex-alert-direction ${d.cls}">⚠ ${d.symbol} ${d.label}</div><div class="brc-ex-alert-tag">${a['INDEX表示案']}</div><div class="brc-ex-alert-grid"><span></span><span class="h">通常傾向</span><span class="h">本人傾向</span><span>1着率への影響</span><span class="v">${brcSignedPt(a['通常1着効果pt'])}</span><span class="v">${brcSignedPt(a['本人1着効果pt'])}</span><span>2連対率への影響</span><span class="v">${brcSignedPt(a['通常2連対効果pt'])}</span><span class="v">${brcSignedPt(a['本人2連対効果pt'])}</span><span>3連対率への影響</span><span class="v">${brcSignedPt(a['通常3連対効果pt'])}</span><span class="v">${brcSignedPt(a['本人3連対効果pt'])}</span></div><div class="brc-ex-alert-note">⚠の矢印は、本人の1着・2連対・3連対への実測影響を総合した方向です。通常の展示評価と逆方向・弱まりが確認された選手別例外だけ表示します。予測確率そのものには追加補正していません。</div></div>`;
   document.body.appendChild(pop);
 }
 
@@ -7047,7 +7067,7 @@ async function runPredict(){
           </div>
           <div class="predict-guide-item">
             <div class="predict-guide-key">展示評価</div>
-            <div class="predict-guide-text">今回の展示タイムが着率を上げる・下げる方向を矢印で表示。勝率・3連対率は確率へ補正し、展開シナリオでは2着・3着への影響方向を表示します。選手別に通常傾向と異なる展示特性が検証された条件では「⚠ 要注意」を表示し、タップすると通常傾向と本人傾向の差を確認できます。</div>
+            <div class="predict-guide-text">今回の展示タイムが着率を上げる・下げる方向を矢印で表示。勝率・3連対率は確率へ補正し、展開シナリオでは2着・3着への影響方向を表示します。選手別に通常傾向と異なる展示特性が検証された条件では「⚠↑ / ⚠↓ / ⚠→」で本人側の最終方向を表示し、タップすると通常傾向と本人傾向の差を確認できます。</div>
           </div>
         </div>
 
