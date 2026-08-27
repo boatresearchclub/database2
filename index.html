@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Boat Research Club ～データベース～</title>
+<!-- BRC_TIMEX_ARROW_THRESHOLDS_20260828 -->
 <!-- BRC_TIMEX_RENAME_20260828 -->
 <!-- BRC_ST_STABILITY_20260827 -->
 <!-- BRC_RACECARD_HISTORY_LOCK_20260827 -->
@@ -19,6 +20,7 @@
 <!-- BRC_EXHIBITION_PLAYER_ALERT_DIRECTION_20260827 -->
 <!-- BRC_EXHIBITION_PLAYER_ARROW_PERSONAL_20260827 -->
 <!-- BRC_EXHIBITION_PLAYER_PERSONAL_2312_20260828 -->
+<!-- BRC_TIMEX_UI_CONSISTENCY_FIX_20260828 -->
 <!-- BRC_ORIGINAL_EXHIBITION_PHASE2_ADJUSTMENT_20260825 -->
 <!-- BRC_MOBILE_LIVE_REFRESH_FIX_20260825 -->
 <!-- BRC_EXHIBITION_PHASE3_1_AUDIT_FIX_20260825 -->
@@ -1099,8 +1101,8 @@
   .brc-ex-alert-btn.brc-ex-alert-flat{border-color:rgba(61,74,99,.28);background:rgba(61,74,99,.07);color:var(--ink-soft);}
   .brc-ex-alert-btn.brc-ex-alert-watch{border-color:rgba(61,74,99,.20);background:rgba(61,74,99,.035);color:#667085;font-weight:800;}
   .brc-ex-alert-direction{display:inline-flex;align-items:center;gap:5px;margin:0 0 9px;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:900;}
-  .brc-ex-alert-direction.up{background:rgba(180,35,44,.08);color:#b4232c;border:1px solid rgba(180,35,44,.28);}
-  .brc-ex-alert-direction.down{background:rgba(31,95,176,.08);color:#1f5fb0;border:1px solid rgba(31,95,176,.28);}
+  .brc-ex-alert-direction.up{background:rgba(47,143,91,.08);color:#2f8f5b;border:1px solid rgba(47,143,91,.28);}
+  .brc-ex-alert-direction.down{background:rgba(209,55,63,.08);color:#d1373f;border:1px solid rgba(209,55,63,.28);}
   .brc-ex-alert-direction.flat{background:rgba(61,74,99,.07);color:var(--ink-soft);border:1px solid rgba(61,74,99,.20);}
   .brc-ex-alert-btn:active{transform:translateY(1px);}
   .brc-ex-alert-pop{position:fixed;inset:0;z-index:10050;background:rgba(4,14,24,.56);display:flex;align-items:center;justify-content:center;padding:18px;}
@@ -1113,8 +1115,8 @@
   .brc-ex-alert-grid .h{font-size:10px;color:var(--ink-soft);font-weight:800;}
   .brc-ex-alert-grid .v{font-variant-numeric:tabular-nums;font-weight:800;}
   .brc-ex-alert-note{margin-top:11px;font-size:10.5px;line-height:1.55;color:var(--ink-soft);}
-  .brc-ex-metric-up{color:#b4232c;}
-  .brc-ex-metric-down{color:#1f5fb0;}
+  .brc-ex-metric-up{color:#2f8f5b;}
+  .brc-ex-metric-down{color:#d1373f;}
   .brc-ex-metric-flat{color:var(--ink-soft);}
 
   /* ---- 出走表AI：確率のBRCタイムXを2段目に揃えて表示 ---- */
@@ -4031,21 +4033,23 @@ function brcConstrainLogitProbabilities(probs,targetSum){
   const off=(lo+hi)/2;
   return logits.map(l=>brcSigmoid(l+off));
 }
+// BRCタイムXの表示矢印は「予測確率そのもの」ではなく、着率への影響ptの強さを示す。
+// 共通閾値：|pt|<1.0 → / 1.0以上6.0未満 ↗↘ / 6.0以上11.0未満 ↑↓ / 11.0以上 ↑↑↓↓
+const BRC_TIMEX_ARROW_FLAT_PT=1.0;
+const BRC_TIMEX_ARROW_UP_PT=6.0;
+const BRC_TIMEX_ARROW_DOUBLE_PT=11.0;
 function brcProbabilityArrow(deltaPt,threshold){
   const d=Number(deltaPt);
-  const t=Math.abs(Number(threshold));
-  if(!Number.isFinite(d) || !Number.isFinite(t) || t<=0) return '→';
-  // 5段階表示：強上昇 / 上昇 / 横ばい / 下降 / 強下降
-  // 従来の判定閾値を「通常矢印」の境界として維持し、2倍以上を強矢印にする。
-  if(d>t*2) return '↑';
-  if(d>t) return '↗';
-  if(d<-t*2) return '↓';
-  if(d<-t) return '↘';
-  return '→';
+  if(!Number.isFinite(d)) return '→';
+  const a=Math.abs(d);
+  if(a < BRC_TIMEX_ARROW_FLAT_PT) return '→';
+  if(a < BRC_TIMEX_ARROW_UP_PT) return d>0 ? '↗' : '↘';
+  if(a < BRC_TIMEX_ARROW_DOUBLE_PT) return d>0 ? '↑' : '↓';
+  return d>0 ? '↑↑' : '↓↓';
 }
 function brcProbabilityDeltaColor(deltaPt,threshold){
   const d=Number(deltaPt);
-  if(!Number.isFinite(d) || Math.abs(d)<=threshold) return 'var(--ink-soft)';
+  if(!Number.isFinite(d) || Math.abs(d)<BRC_TIMEX_ARROW_FLAT_PT) return 'var(--ink-soft)';
   return d>0 ? '#2f8f5b' : '#d1373f';
 }
 
@@ -4529,8 +4533,11 @@ function brcBuildExhibitionProbabilitySubHtml(b,kind){
   if(!b) return '';
   if(b.exhibitionApplied){
     const isTop3=kind==='top3';
-    const delta=Number(isTop3?b.exhibitionTop3DeltaPt:b.exhibitionWinDeltaPt);
-    const threshold=isTop3?2.0:0.75;
+    const alert=brcFindExhibitionPlayerAlert(b);
+    const delta=alert
+      ? Number(alert[isTop3?'本人3連対効果pt':'本人1着効果pt'])
+      : Number(isTop3?b.exhibitionTop3DeltaPt:b.exhibitionWinDeltaPt);
+    const threshold=alert ? BRC_PERSONAL_TIMEX_ARROW_THRESHOLD_PT : (isTop3?2.0:0.75);
     const arrow=brcProbabilityArrow(delta,threshold);
     const color=brcProbabilityDeltaColor(delta,threshold);
     const sign=delta>0?'+':'';
@@ -4548,8 +4555,11 @@ function brcBuildExhibitionProbabilityArrowIcon(deltaPt,threshold){
   if(!Number.isFinite(Number(deltaPt))) return '';
   const label=brcProbabilityArrow(deltaPt,threshold);
   const color=brcProbabilityDeltaColor(deltaPt,threshold);
+  if(label==='↑↑' || label==='↓↓'){
+    return `<span aria-label="BRCタイムX ${label}" title="BRCタイムX ${label}" style="display:inline-flex;align-items:center;justify-content:center;color:${color};font-size:15px;font-weight:950;letter-spacing:-.12em;line-height:1;white-space:nowrap;flex:0 0 auto;padding-right:1px;">${label}</span>`;
+  }
   const rotation = label==='↑' ? -90 : label==='↗' ? -45 : label==='↘' ? 45 : label==='↓' ? 90 : 0;
-  return `<span aria-label="展示 ${label}" title="展示 ${label}" style="display:inline-flex;align-items:center;justify-content:center;color:${color};line-height:1;flex:0 0 auto;">
+  return `<span aria-label="BRCタイムX ${label}" title="BRCタイムX ${label}" style="display:inline-flex;align-items:center;justify-content:center;color:${color};line-height:1;flex:0 0 auto;">
     <svg class="exhibition-arrow-icon" viewBox="0 0 24 24" aria-hidden="true" style="transform:rotate(${rotation}deg);">
       <line x1="4" y1="12" x2="19" y2="12"></line>
       <polyline points="14,7 19,12 14,17"></polyline>
@@ -4561,11 +4571,11 @@ function brcBuildProbabilityCell(value,arrowHtml){
   return `<div class="prob-cell-stack"><div class="prob-value">${value}<span class="predict-unit">%</span></div><div class="prob-eval-row">${evalHtml}</div></div>`;
 }
 function brcBuildWinCellInner(b,venue){
-  // 要注意条件に一致する場合は、通常展示ロジックではなく選手固有の実測影響を5段階表示。
-  // 閾値: ↓ <= -10pt / ↘ -10~-5pt / → -5~+5pt / ↗ +5~+10pt / ↑ >= +10pt
+  // 要注意条件に一致する場合は、通常BRCタイムXではなく選手本人の実測影響を7段階表示。
+  // 個人傾向の矢印閾値はポップアップ・展開シナリオと共通化する。
   const alert=brcFindExhibitionPlayerAlert(b);
   const delta=alert ? Number(alert['本人1着効果pt']) : Number(b?.exhibitionWinDeltaPt);
-  const threshold=alert ? 5.0 : 0.75;
+  const threshold=alert ? BRC_PERSONAL_TIMEX_ARROW_THRESHOLD_PT : 0.75;
   const arrow=b?.exhibitionApplied ? brcBuildExhibitionProbabilityArrowIcon(delta,threshold) : '';
   return brcBuildProbabilityCell(b.pct,arrow);
 }
@@ -4573,7 +4583,7 @@ function brcBuildTop3CellInner(b){
   // 要注意条件に一致する場合は、3連対率も選手固有の実測影響へ置換。
   const alert=brcFindExhibitionPlayerAlert(b);
   const delta=alert ? Number(alert['本人3連対効果pt']) : Number(b?.exhibitionTop3DeltaPt);
-  const threshold=alert ? 5.0 : 2.0;
+  const threshold=alert ? BRC_PERSONAL_TIMEX_ARROW_THRESHOLD_PT : 2.0;
   const arrow=b?.exhibitionApplied ? brcBuildExhibitionProbabilityArrowIcon(delta,threshold) : '';
   return brcBuildProbabilityCell(b.pct3,arrow);
 }
@@ -4588,28 +4598,43 @@ function brcParseAlertBand(band){
   m=t.match(/^>=([+-]?\d+(?:\.\d+)?)$/); if(m) return {min:Number(m[1]),max:Infinity};
   return null;
 }
+function brcAlertBandContains(band,d){
+  const t=String(band||'').trim();
+  if(!Number.isFinite(Number(d))) return false;
+  const x=Number(d), eps=1e-9;
+  let m=t.match(/^<=([+-]?\d+(?:\.\d+)?)$/);
+  if(m) return x<=Number(m[1])+eps;
+  m=t.match(/^>=([+-]?\d+(?:\.\d+)?)$/);
+  if(m) return x>=Number(m[1])-eps;
+  m=t.match(/^([+-]?\d+(?:\.\d+)?)~([+-]?\d+(?:\.\d+)?)$/);
+  if(!m) return false;
+  const lo=Number(m[1]), hi=Number(m[2]);
+  // 境界値で隣接2帯が同時ヒットしないよう、0から遠い側を開区間にする。
+  // 例: -1.0は「<=-1.0」、+1.0は「>=+1.0」へ一意に所属。
+  if(hi<=0) return x>lo+eps && x<=hi+eps;
+  if(lo>=0) return x>=lo-eps && x<hi-eps;
+  return x>=lo-eps && x<=hi+eps;
+}
 function brcFindExhibitionPlayerAlert(b){
   if(!b?.exhibitionApplied) return null;
   const reg=Number(b?.player?.reg), course=Number(b?.course);
   const d=Number(b?.exhibition?.relative_diff_capped ?? b?.exhibition?.relative_diff);
   if(!Number.isFinite(reg)||!Number.isFinite(course)||!Number.isFinite(d)) return null;
-  const hits=BRC_EXHIBITION_PLAYER_ALERTS.filter(x=>Number(x['登録番号'])===reg && Number(x['コース'])===course).filter(x=>{
-    const r=brcParseAlertBand(x['平均差帯']); return r && d>=r.min-1e-9 && d<=r.max+1e-9;
-  });
+  const hits=BRC_EXHIBITION_PLAYER_ALERTS.filter(x=>Number(x['登録番号'])===reg && Number(x['コース'])===course)
+    .filter(x=>brcAlertBandContains(x['平均差帯'],d));
   const rank={'S':4,'A':3,'B':2,'監視':1,'S候補':4,'A候補':3,'B候補':2};
   return hits.sort((a,z)=>(rank[z['評価']]||0)-(rank[a['評価']]||0) || Number(z.N||0)-Number(a.N||0))[0]||null;
 }
 function brcSignedPt(v){ const n=Number(v); return Number.isFinite(n)?`${n>0?'+':''}${n.toFixed(1)}pt`:'―'; }
+// 選手別BRCタイムXも通常表示と同じ7段階へ統一する。
+// |pt|<1.0: → / 1.0〜5.9: ↗↘ / 6.0〜10.9: ↑↓ / 11.0以上: ↑↑↓↓
+const BRC_PERSONAL_TIMEX_ARROW_THRESHOLD_PT=BRC_TIMEX_ARROW_FLAT_PT;
 function brcMetricArrow(v){
-  const n=Number(v);
-  if(!Number.isFinite(n)) return '→';
-  if(n>=1.0) return '↑';
-  if(n<=-1.0) return '↓';
-  return '→';
+  return brcProbabilityArrow(Number(v),BRC_PERSONAL_TIMEX_ARROW_THRESHOLD_PT);
 }
 function brcMetricClass(v){
   const n=Number(v);
-  if(!Number.isFinite(n)||Math.abs(n)<1.0) return 'flat';
+  if(!Number.isFinite(n)||Math.abs(n)<BRC_TIMEX_ARROW_FLAT_PT) return 'flat';
   return n>0?'up':'down';
 }
 function brcBuildExhibitionAlertButton(b){
@@ -4643,8 +4668,13 @@ function brcShowExhibitionPlayerAlert(raw){
 // 展開シナリオでは2着率・3着率の数値セルを汚さず、選手名横へBRCタイムXをまとめる。
 function brcBuildScenarioPlaceExhibitionArrow(b,kind){
   if(!b?.exhibitionApplied) return '';
-  const delta=kind==='third' ? Number(b.exhibitionThirdDeltaPt) : Number(b.exhibitionSecondDeltaPt);
-  return brcBuildExhibitionProbabilityArrowIcon(delta,1.0);
+  const alert=brcFindExhibitionPlayerAlert(b);
+  const key=kind==='third' ? '本人3着効果pt' : '本人2着効果pt';
+  const delta=alert
+    ? Number(alert[key])
+    : (kind==='third' ? Number(b.exhibitionThirdDeltaPt) : Number(b.exhibitionSecondDeltaPt));
+  const threshold=alert ? BRC_PERSONAL_TIMEX_ARROW_THRESHOLD_PT : 1.0;
+  return brcBuildExhibitionProbabilityArrowIcon(delta,threshold);
 }
 function brcBuildScenarioPlaceRateHtml(rate,b,kind='second'){
   return `<span style="white-space:nowrap;">${r0(rate)}%</span>`;
@@ -4653,7 +4683,7 @@ function brcBuildScenarioExhibitionBadge(b){
   if(!b?.exhibitionApplied) return '';
   const second=brcBuildScenarioPlaceExhibitionArrow(b,'second');
   const third=brcBuildScenarioPlaceExhibitionArrow(b,'third');
-  return `<span class="scenario-exhibition-badge" title="今回展示が2着率・3着率へ与える方向"><span class="scenario-ex-label">タイムX</span><span class="scenario-ex-item">2着 ${second}</span><span class="scenario-ex-item">3着 ${third}</span></span>`;
+  return `<span class="scenario-exhibition-badge" title="今回のBRCタイムXが2着率・3着率へ与える方向"><span class="scenario-ex-label">タイムX</span><span class="scenario-ex-item">2着 ${second}</span><span class="scenario-ex-item">3着 ${third}</span></span>`;
 }
 
 function brcBuildPredictLeadSummaryHtml(boats){
@@ -7097,7 +7127,7 @@ async function runPredict(){
           </div>
           <div class="predict-guide-item">
             <div class="predict-guide-key">BRCタイムX</div>
-            <div class="predict-guide-text">今回のBRCタイムXが着率を上げる・下げる方向を矢印で表示。勝率・3連対率は確率へ補正し、展開シナリオでは2着・3着への影響方向を表示します。選手別に通常傾向と異なる展示特性が検証された条件では「⚠↑ / ⚠↓ / ⚠→」で本人側の最終方向を表示し、タップすると通常傾向と本人傾向の差を確認できます。</div>
+            <div class="predict-guide-text">今回のBRCタイムXが着率を上げる・下げる方向を矢印で表示。勝率・3連対率は確率へ補正し、展開シナリオでは2着・3着への影響方向を表示します。選手別に通常傾向と異なる展示特性が検証された条件では「⚠ 要注意」を表示し、勝率・3連対率・展開シナリオの矢印を本人実測の7段階（↑↑ / ↑ / ↗ / → / ↘ / ↓ / ↓↓）へ統一して切り替えます。矢印の強さは影響ptで、1pt未満は→、1pt以上6pt未満は↗/↘、6pt以上11pt未満は↑/↓、11pt以上は↑↑/↓↓です。タップすると通常傾向と本人傾向の差を確認できます。</div>
           </div>
         </div>
 
