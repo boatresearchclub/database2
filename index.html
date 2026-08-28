@@ -10,6 +10,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Boat Research Club ～データベース～</title>
 <!-- BRC_NIGE_ORDER_PREDICTIVE_MODEL_20260828 -->
+<!-- BRC_NIGE_FULL_V2_SERVER_TIMEX_20260828 -->
+<!-- BRC_PREDICT_4TAB_AI_NIGE_MOVE_20260828 -->
 
 <!-- BRC_NIGE_ORDER_INDEPENDENT_OF_IN_RELIABILITY_20260828 -->
 <!-- BRC_SCENARIO_KIMARITE_TABS_20260828 -->
@@ -783,7 +785,46 @@
     .scenario-course-name{display:none;}
   }
 
-  /* ---- 2026-08-28: ①勝率タップ内 BRCイン逃げ2着・3着相対予測 ---- */
+
+  /* ---- 2026-08-28: 出走表AI 4タブ（出走データ / オッズ / AI予測 / 結果） ---- */
+  .predict-main-tabs{
+    display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:0;
+    border-bottom:1px solid rgba(10,31,51,.10); background:#fff;
+  }
+  .predict-main-tab{
+    position:relative; appearance:none; border:0; background:transparent;
+    padding:13px 5px; color:var(--ink-soft); font:inherit; font-size:13px;
+    font-weight:850; cursor:pointer; white-space:nowrap;
+  }
+  .predict-main-tab.active{color:var(--wave);}
+  .predict-main-tab.active::after{
+    content:""; position:absolute; left:13%; right:13%; bottom:-1px; height:2px;
+    background:var(--wave); border-radius:2px 2px 0 0;
+  }
+  .predict-main-panel{display:none; min-width:0;}
+  .predict-main-panel.active{display:block;}
+  .predict-future-placeholder{
+    padding:32px 14px; text-align:center; color:var(--ink-soft);
+    background:linear-gradient(180deg,rgba(10,31,51,.018),rgba(255,255,255,.65));
+  }
+  .predict-future-placeholder strong{display:block;color:var(--navy);font-size:14px;margin-bottom:5px;}
+  .predict-future-placeholder span{font-size:11.5px;line-height:1.6;}
+  .predict-ai-wrap{padding:14px 14px 18px;}
+  .predict-ai-head{
+    display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;
+    margin:0 1px 8px;
+  }
+  .predict-ai-title{font-size:15px;font-weight:900;color:var(--navy);}
+  .predict-ai-sub{font-size:10.5px;color:var(--ink-soft);}
+  .predict-ai-note{
+    margin:8px 2px 0;font-size:10.5px;line-height:1.6;color:var(--ink-soft);
+  }
+  @media(max-width:420px){
+    .predict-main-tab{padding:12px 2px;font-size:11.5px;letter-spacing:-.02em;}
+    .predict-ai-wrap{padding:10px 8px 14px;}
+  }
+
+  /* ---- 2026-08-28: AI予測タブ BRCイン逃げ2着・3着相対予測 ---- */
   .brc-nige-order-panel{
     margin:12px 0 13px; padding:11px; border:1px solid rgba(0,87,219,.18);
     border-radius:12px; background:linear-gradient(160deg,rgba(0,87,219,.055),rgba(255,255,255,.94));
@@ -2189,12 +2230,25 @@
         </label>
       </div>
 
+      <div id="predictInputs" style="display:none;"></div>
       <div class="entry-card">
-        <div class="entry-panel" id="entryPanel-entryTable" style="display:none;">
-          <div id="predictInputs"></div>
+        <div class="predict-main-tabs" role="tablist" aria-label="出走表AIの表示切り替え">
+          <button type="button" class="predict-main-tab active" data-predict-main-tab="data">出走データ</button>
+          <button type="button" class="predict-main-tab" data-predict-main-tab="odds">オッズ</button>
+          <button type="button" class="predict-main-tab" data-predict-main-tab="ai">AI予測</button>
+          <button type="button" class="predict-main-tab" data-predict-main-tab="result">結果</button>
         </div>
-        <div class="entry-panel active" id="entryPanel-aiPredict">
+        <div class="predict-main-panel active" id="predictMainPanel-data">
           <div id="predictResult" style="padding:18px 22px;"></div>
+        </div>
+        <div class="predict-main-panel" id="predictMainPanel-odds">
+          <div class="predict-future-placeholder"><strong>オッズ</strong><span>リアルタイム3連単オッズをここに表示する予定です。</span></div>
+        </div>
+        <div class="predict-main-panel" id="predictMainPanel-ai">
+          <div id="predictAiResult" class="predict-ai-wrap"></div>
+        </div>
+        <div class="predict-main-panel" id="predictMainPanel-result">
+          <div class="predict-future-placeholder"><strong>結果</strong><span>確定着順・払戻・AI予測との答え合わせをここに表示する予定です。</span></div>
         </div>
       </div>
     </section>
@@ -3816,7 +3870,130 @@ function predictRecentCourseKimariteHtml(reg, course){
   `;
 }
 
-// 出走表AIタブ：予想勝率タップで「そのコースの艇が勝った場合」に他艇がどう着順を残す傾向にあるかを表示
+// 出走表AI：4タブ切り替え
+function setPredictMainTab(key){
+  const valid=['data','odds','ai','result'];
+  const k=valid.includes(key)?key:'data';
+  document.querySelectorAll('.predict-main-tab').forEach(btn=>{
+    const on=btn.dataset.predictMainTab===k;
+    btn.classList.toggle('active',on);
+    btn.setAttribute('aria-selected',on?'true':'false');
+  });
+  valid.forEach(x=>{
+    const panel=document.getElementById(`predictMainPanel-${x}`);
+    if(panel) panel.classList.toggle('active',x===k);
+  });
+  window.__predictMainTabCurrent=k;
+}
+
+function bindPredictMainTabs(){
+  document.querySelectorAll('.predict-main-tab').forEach(btn=>{
+    if(btn.dataset.brcBound==='1') return;
+    btn.dataset.brcBound='1';
+    btn.addEventListener('click',()=>setPredictMainTab(btn.dataset.predictMainTab));
+  });
+  setPredictMainTab(window.__predictMainTabCurrent||'data');
+}
+
+
+function brcNormalizeProbRows(rows){
+  const a=(Array.isArray(rows)?rows:[]).map(x=>({...x,p:Math.max(.002,Number(x.p)||0)}));
+  const z=a.reduce((sum,x)=>sum+x.p,0);
+  if(!(z>0)) return [];
+  return a.map(x=>({...x,p:x.p/z}));
+}
+
+// Worker V2は展示前の条件付き確率を返す。展示取得後だけINDEX側で
+// 2025固定係数 (2着=.50 / 3着=.75) のBRCタイムXを加えて再正規化する。
+function brcFinalizeServerNigePrediction(workerPrediction,boats,exhibitionApplied){
+  const sa=workerPrediction?.scenarioAssist;
+  if(!sa || !String(sa.version||'').startsWith('BRC_NIGE_V2_') || !sa.thirdConditional) return null;
+  const bmap=new Map((boats||[]).map(b=>[Number(b.course),b]));
+  const lambda2=Number.isFinite(Number(sa.timexLambda2))?Number(sa.timexLambda2):0.5;
+  const lambda3=Number.isFinite(Number(sa.timexLambda3))?Number(sa.timexLambda3):0.75;
+  const useTimeX=!!exhibitionApplied;
+
+  let p2=(Array.isArray(sa.second)?sa.second:[]).map(x=>{
+    const boat=Number(x.boat), pre=Math.max(0,Number(x.pct)||0)/100;
+    const d=useTimeX ? (Number(bmap.get(boat)?.exhibitionSecondDeltaPt)||0)/100 : 0;
+    return {boat,p:Math.max(.002,pre+lambda2*d),prePct:pre*100};
+  });
+  p2=brcNormalizeProbRows(p2);
+  if(p2.length!==5) return null;
+
+  const thirdConditional={}, joint=[], thirdMarg={2:0,3:0,4:0,5:0,6:0};
+  for(const s of p2){
+    let c3=(sa.thirdConditional?.[String(s.boat)]||[]).map(x=>{
+      const boat=Number(x.boat), pre=Math.max(0,Number(x.pct)||0)/100;
+      const d=useTimeX ? (Number(bmap.get(boat)?.exhibitionThirdDeltaPt)||0)/100 : 0;
+      return {boat,p:Math.max(.002,pre+lambda3*d),prePct:pre*100};
+    });
+    c3=brcNormalizeProbRows(c3);
+    if(c3.length!==4) return null;
+    thirdConditional[String(s.boat)]=c3;
+    c3.forEach(t=>{
+      const p=s.p*t.p;
+      thirdMarg[t.boat]=(thirdMarg[t.boat]||0)+p;
+      joint.push({combo:`1-${s.boat}-${t.boat}`,second:s.boat,third:t.boat,p});
+    });
+  }
+  const ranked=(rows)=>rows.slice().sort((a,b)=>b.p-a.p||a.boat-b.boat).map((x,i)=>({...x,pct:x.p*100,rank:i+1}));
+  const second=ranked(p2);
+  const third=ranked([2,3,4,5,6].map(boat=>({boat,p:thirdMarg[boat]||0})));
+  joint.sort((a,b)=>b.p-a.p||a.combo.localeCompare(b.combo));
+  return {
+    version:sa.version, second, third, thirdConditional, joint,
+    picks:joint.slice(0,3).map(x=>x.combo), timexApplied:useTimeX,
+    phaseLabel:useTimeX?'BRCタイムX反映済':'展示前予測'
+  };
+}
+
+function brcBuildServerNigePredictionHtml(boats,workerPrediction,exhibitionApplied){
+  const pred=brcFinalizeServerNigePrediction(workerPrediction,boats,exhibitionApplied);
+  if(!pred){
+    // Worker切替前の互換表示。完全版Worker配信後は自動的にV2へ切り替わる。
+    return brcBuildInlineNigeOrderPredictionHtml(1,boats);
+  }
+  const secondMap=new Map(pred.second.map(x=>[Number(x.boat),x]));
+  const thirdMap=new Map(pred.third.map(x=>[Number(x.boat),x]));
+  const candidates=(boats||[]).filter(b=>Number(b.course)>=2&&Number(b.course)<=6).sort((a,b)=>Number(a.course)-Number(b.course));
+  const metric=(x)=>Number.isFinite(Number(x?.pct))
+    ? `<div class="brc-nige-order-metric${Number(x.rank)===1?' is-top':''}"><span class="brc-nige-order-pct">${Number(x.pct).toFixed(1)}%</span><span class="brc-nige-order-place">${Number(x.rank)}位</span></div>`
+    : '<div class="brc-nige-order-metric"><span class="brc-nige-order-pct">―</span></div>';
+  const rows=candidates.map(b=>`<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(Number(b.course))}</div>${metric(secondMap.get(Number(b.course)))}${metric(thirdMap.get(Number(b.course)))}</div>`).join('');
+  const picks=`<div class="brc-nige-order-picks"><div class="brc-nige-order-picks-label">展開上位3連単</div><div class="brc-nige-order-pick-list">${pred.picks.map((x,i)=>`<span class="brc-nige-order-pick">${i+1}位 ${x}</span>`).join('')}</div></div>`;
+  const phaseColor=pred.timexApplied?'#8a5a00':'var(--wave)';
+  return `<div class="brc-nige-order-panel">
+    <div class="brc-nige-order-head"><div><div class="brc-nige-order-title">BRCイン逃げ展開予測</div><div class="brc-nige-order-sub">①が逃げた場合の②〜⑥ 2着・3着条件付き予測</div></div><span class="brc-nige-order-rank" style="color:${phaseColor};">${pred.phaseLabel}</span></div>
+    <div class="brc-nige-order-grid"><div class="brc-nige-order-row head"><div>艇</div><div>2着予測</div><div>3着予測</div></div>${rows}</div>
+    ${picks}
+    <div class="brc-nige-order-note">2023〜2024構築 → 2025検証・係数固定 → 2026完全OOS。選手特性・選手×コース・会場・級別・モーター・STを事前評価し、展示後はBRCタイムXで更新します。</div>
+    <div class="brc-nige-order-note">※①が逃げる確率とは別の条件付き予測です。展示スリット評価は現在この確率へ加えていません。</div>
+  </div>`;
+}
+
+function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhibitionApplied){
+  const box=document.getElementById('predictAiResult');
+  if(!box) return;
+  const venue=document.getElementById('predictVenue')?.value||'';
+  const nigeHtml=brcBuildServerNigePredictionHtml(boats,workerPrediction,exhibitionApplied);
+  const reliability=localInReliability?.rank
+    ? `<span style="display:inline-flex;padding:2px 7px;border-radius:999px;background:rgba(0,87,219,.08);border:1px solid rgba(0,87,219,.16);color:var(--wave);font-size:10px;font-weight:900;">イン信頼度 ${localInReliability.rank}</span>`
+    : '';
+  box.innerHTML=`
+    ${buildCurrentRaceSummaryHtml(venue)}
+    <div class="predict-ai-head">
+      <div><div class="predict-ai-title">AI予測</div><div class="predict-ai-sub">BRCの予測ロジックを出走データとは分離して表示</div></div>
+      ${reliability}
+    </div>
+    ${nigeHtml}
+    ${buildRecommendedBetsHtmlFromServer(workerPrediction, localInReliability, exhibitionApplied)}
+    <div class="predict-ai-note">BRCイン逃げ展開予測は「①が逃げた場合」の条件付き予測です。①が逃げる確率そのものとは分けて扱います。</div>
+  `;
+}
+
+// 旧：勝率タップから展開詳細を開く関数。勝率セルからの呼び出しは廃止。
+// 過去の展開実績は選手名タップ内の「展開」タブから確認できます。
 function togglePredictScenario(course){
   openPredictUnifiedDetail(course, 'scenario');
 }
@@ -3897,7 +4074,7 @@ function brcBuildInlineNigeOrderPredictionHtml(course, boats){
   if(Number(course)!==1) return '';
   const pred=brcComputeNigeOrderPrediction(boats);
   if(!pred){
-    return `<div class="brc-nige-order-panel"><div class="brc-nige-order-head"><div><div class="brc-nige-order-title">①イン逃げ時 BRC相手予測</div><div class="brc-nige-order-sub">今回の②〜⑥を相対評価した2着・3着予測</div></div></div><div class="brc-nige-order-note" style="margin-top:0;">予測データ未取得</div><div class="brc-nige-order-note">※イン逃げ信頼度の有無・ランクに関係なく表示します。</div></div>`;
+    return `<div class="brc-nige-order-panel"><div class="brc-nige-order-head"><div><div class="brc-nige-order-title">BRCイン逃げ展開予測</div><div class="brc-nige-order-sub">①が逃げた場合の②〜⑥ 2着・3着相対予測</div></div></div><div class="brc-nige-order-note" style="margin-top:0;">予測データ未取得</div><div class="brc-nige-order-note">※①が逃げること自体の確率とは別の、逃げ成立後の条件付き予測です。</div></div>`;
   }
   const secondMap=new Map(pred.second.map((x,i)=>[Number(x.boat),{...x,rank:i+1}]));
   const thirdMap=new Map(pred.third.map((x,i)=>[Number(x.boat),{...x,rank:i+1}]));
@@ -3908,8 +4085,8 @@ function brcBuildInlineNigeOrderPredictionHtml(course, boats){
     return `<div class="brc-nige-order-metric${rank===1?' is-top':''}"><span class="brc-nige-order-pct">${pct.toFixed(1)}%</span>${Number.isFinite(rank)?`<span class="brc-nige-order-place">${rank}位</span>`:''}</div>`;
   };
   const rows=candidates.map(b=>{const boat=Number(b.course);return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${metric(secondMap.get(boat))}${metric(thirdMap.get(boat))}</div>`;}).join('');
-  const picksHtml=pred.picks.length?`<div class="brc-nige-order-picks"><div class="brc-nige-order-picks-label">展開上位</div><div class="brc-nige-order-pick-list">${pred.picks.map((x,i)=>`<span class="brc-nige-order-pick">${i+1}位 ${x}</span>`).join('')}</div></div>`:'';
-  return `<div class="brc-nige-order-panel"><div class="brc-nige-order-head"><div><div class="brc-nige-order-title">①イン逃げ時 BRC相手予測</div><div class="brc-nige-order-sub">今回の②〜⑥を相対評価した2着・3着予測</div></div></div><div class="brc-nige-order-grid"><div class="brc-nige-order-row head"><div>艇</div><div>2着予測</div><div>3着予測</div></div>${rows}</div>${picksHtml}<div class="brc-nige-order-note">※①が逃げた場合の条件付き相対確率です。2着・3着はそれぞれ②〜⑥で合計100%。下の展開シナリオは過去実績です。</div></div>`;
+  const picksHtml=pred.picks.length?`<div class="brc-nige-order-picks"><div class="brc-nige-order-picks-label">展開上位3連単</div><div class="brc-nige-order-pick-list">${pred.picks.map((x,i)=>`<span class="brc-nige-order-pick">${i+1}位 ${x}</span>`).join('')}</div></div>`:'';
+  return `<div class="brc-nige-order-panel"><div class="brc-nige-order-head"><div><div class="brc-nige-order-title">BRCイン逃げ展開予測</div><div class="brc-nige-order-sub">①が逃げた場合の②〜⑥ 2着・3着相対予測</div></div></div><div class="brc-nige-order-grid"><div class="brc-nige-order-row head"><div>艇</div><div>2着予測</div><div>3着予測</div></div>${rows}</div>${picksHtml}<div class="brc-nige-order-note">※①が逃げた場合の条件付き相対確率です。2着・3着はそれぞれ②〜⑥で合計100%。</div></div>`;
 }
 
 function setPredictScenarioKimarite(course, kimarite){
@@ -3950,7 +4127,6 @@ function renderInlinePredictScenario(course){
   }).join('');
 
   const winnerBoat=boats.find(b=>Number(b.course)===Number(course));
-  const nigeOrderPredictionHtml=brcBuildInlineNigeOrderPredictionHtml(course,boats);
   box.innerHTML=`
     <div class="motor-detail-head predict-detail-head">
       <div>
@@ -3960,7 +4136,6 @@ function renderInlinePredictScenario(course){
       <button class="motor-detail-close" type="button" onclick="closePredictDetail()" aria-label="閉じる">×</button>
     </div>
     ${winnerBoat?`<div class="motor-detail-topstats predict-detail-scenario-stats"><div class="motor-detail-stat"><b>${winnerBoat.pct}%</b><span>予想勝率</span></div><div class="motor-detail-stat"><b>${winnerBoat.pct3}%</b><span>3連対率</span></div><div class="motor-detail-stat"><b>${course}</b><span>コース</span></div><div class="motor-detail-stat"><b>${others.length}</b><span>相手艇</span></div></div>`:''}
-    ${nigeOrderPredictionHtml}
     <div class="predict-scenario-tabs" role="tablist" aria-label="決まり手別展開シナリオ">${tabHtml}</div>
     <div class="predict-scenario-summary"><span><strong>${selected}</strong> の相手残り傾向</span><span>${available}/${others.length}艇データあり</span></div>
     <div class="scenario-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
@@ -4323,6 +4498,8 @@ let TODAY_LABEL = DEFAULT_TODAY_LABEL;
 let RACE_MOTOR_TODAY = {};
 // 会場→R番号→6艇分のモーター番号。機歴表示に使用する。
 let RACE_MOTOR_NO_TODAY = {};
+// 会場→R番号→6艇分の現在級別（A1/A2/B1/B2）。イン逃げ展開V2の事前能力補正に使用。
+let RACE_CLASS_TODAY = {};
 
 // ---- 当日番組表の端末内保持 ----
 // Safari がページを再読み込み／強制終了しても、同じ日（JST）の番組表は localStorage から自動復元する。
@@ -5353,7 +5530,7 @@ function saveHistoricalRaceCard(sourceName=''){
     if(!/^\d{4}-\d{2}-\d{2}$/.test(raceDate) || raceDate===getJstDateLabel()) return false;
     const payload={
       raceDate, cards:RACE_CARDS_TODAY, info:RACE_INFO_TODAY,
-      motor:RACE_MOTOR_TODAY, motorNo:RACE_MOTOR_NO_TODAY,
+      motor:RACE_MOTOR_TODAY, motorNo:RACE_MOTOR_NO_TODAY, racerClass:RACE_CLASS_TODAY,
       sourceName:sourceName||'', savedAt:Date.now()
     };
     localStorage.setItem(RACE_CARD_HISTORY_STORAGE_KEY, JSON.stringify(payload));
@@ -5384,6 +5561,7 @@ function restoreHistoricalRaceCard(){
     RACE_INFO_TODAY=normalizeRaceInfoDayLabels(payload.info);
     RACE_MOTOR_TODAY=payload.motor||{};
     RACE_MOTOR_NO_TODAY=payload.motorNo||{};
+    RACE_CLASS_TODAY=payload.racerClass||payload.classes||{};
     TODAY_LABEL=payload.raceDate;
     BRC_RACE_CARD_HISTORY_LOCK=true;
     BRC_RACE_CARD_HISTORY_SOURCE=payload.sourceName||'';
@@ -5472,6 +5650,7 @@ function saveRaceCardForToday(sourceName=''){
       info: RACE_INFO_TODAY,
       motor: RACE_MOTOR_TODAY,
       motorNo: RACE_MOTOR_NO_TODAY,
+      racerClass: RACE_CLASS_TODAY,
       sourceName: sourceName || ''
     };
     localStorage.setItem(RACE_CARD_STORAGE_KEY, JSON.stringify(payload));
@@ -5496,6 +5675,7 @@ function restoreRaceCardForToday(){
     RACE_INFO_TODAY = normalizeRaceInfoDayLabels(payload.info);
     RACE_MOTOR_TODAY = payload.motor || {};
     RACE_MOTOR_NO_TODAY = payload.motorNo || {};
+    RACE_CLASS_TODAY = payload.racerClass || payload.classes || {};
     TODAY_LABEL = payload.raceDate;
     return payload;
   }catch(e){
@@ -5546,6 +5726,7 @@ function initPredictPage(){
     RACE_INFO_TODAY = DEFAULT_RACE_INFO_TODAY;
     RACE_MOTOR_TODAY = {};
     RACE_MOTOR_NO_TODAY = {};
+    RACE_CLASS_TODAY = {};
     TODAY_LABEL = DEFAULT_TODAY_LABEL;
     clearStoredRaceCard();
     clearHistoricalRaceCard();
@@ -5640,6 +5821,9 @@ function initPredictPage(){
       if(panel) panel.classList.add('active');
     });
   });
+
+  // 出走表AI 4タブ
+  bindPredictMainTabs();
 
   // 締切スケジュールとレース番号カードは30秒ごとに更新し、時間経過へ自動追従する。
   renderDeadlineSchedule();
@@ -6040,6 +6224,7 @@ function parseOfficialRaceCardText(text){
   const cards = {};
   const motor = {};
   const motorNo = {};
+  const racerClass = {};
   let dateLabel = null;
 
   let i = 0;
@@ -6082,6 +6267,7 @@ function parseOfficialRaceCardText(text){
       const races = {};
       const motorsByRace = {};
       const motorNosByRace = {};
+      const classesByRace = {};
       const raceTitles = {};
       let k = 0;
       while(k < block.length){
@@ -6110,6 +6296,7 @@ function parseOfficialRaceCardText(text){
           // モーター2連対率（艇番と同じ並びで保持。取得できない行は null のまま）
           const motors = [null,null,null,null,null,null];
           const motorNos = [null,null,null,null,null,null];
+          const racerClasses = [null,null,null,null,null,null];
           let cnt = 0;
           while(k2 < block.length && cnt < 6){
             const zbl = zen2han(block[k2]);
@@ -6118,6 +6305,10 @@ function parseOfficialRaceCardText(text){
               const lane = parseInt(boatMatch[1], 10);
               const reg = boatMatch[2];
               if(lane >= 1 && lane <= 6) boats[lane-1] = reg;
+              // 公式番組表の選手行に含まれる現在級別を保持。例: 東京47B1 4.73...
+              // 勝率等の数値列直前にある A1/A2/B1/B2 を取得する。
+              const classMatch = zbl.match(/(A1|A2|B1|B2)(?=\s*\d)/);
+              if(classMatch && lane >= 1 && lane <= 6) racerClasses[lane-1] = classMatch[1];
               // 行末側の「全国勝率 全国2率 当地勝率 当地2率 モーターNO モーター2率 ボートNO ボート2率」
               // という並びから、6番目の数値（モーター2連対率）だけを取り出す
               // ボートNO・モーターNOが3桁になると固定長カラムの空白が消えて数値同士が連結するため、
@@ -6128,7 +6319,7 @@ function parseOfficialRaceCardText(text){
             }
             k2++;
           }
-          if(boats.every(b => b)){ races[raceNo] = boats; motorsByRace[raceNo] = motors; motorNosByRace[raceNo] = motorNos; }
+          if(boats.every(b => b)){ races[raceNo] = boats; motorsByRace[raceNo] = motors; motorNosByRace[raceNo] = motorNos; classesByRace[raceNo] = racerClasses; }
           k = k2;
         } else {
           k++;
@@ -6163,6 +6354,7 @@ function parseOfficialRaceCardText(text){
         cards[venue] = races;
         motor[venue] = motorsByRace;
         motorNo[venue] = motorNosByRace;
+        racerClass[venue] = classesByRace;
         if(year && !dateLabel) dateLabel = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
       }
       i = j + 1;
@@ -6174,7 +6366,7 @@ function parseOfficialRaceCardText(text){
   if(Object.keys(info).length === 0){
     throw new Error('公式番組表フォーマット（STARTB/NNBBGN形式）として認識できませんでした');
   }
-  return { date: dateLabel, info, cards, motor, motorNo };
+  return { date: dateLabel, info, cards, motor, motorNo, racerClass };
 }
 
 // 番組表ファイルの読み込みに成功したら、読み込みブロックを自動で折りたたむ
@@ -6242,6 +6434,7 @@ function setRaceCardWaitingForToday(jstToday){
   RACE_INFO_TODAY = {};
   RACE_MOTOR_TODAY = {};
   RACE_MOTOR_NO_TODAY = {};
+  RACE_CLASS_TODAY = {};
   TODAY_LABEL = jstToday;
   const label = document.getElementById('raceCardDateLabel');
   if(label) label.textContent = `${jstToday}（読込待ち）`;
@@ -6304,6 +6497,7 @@ async function autoLoadHostedRaceCardToday(_opts={}){
     RACE_INFO_TODAY = normalizeRaceInfoDayLabels(data.info);
     RACE_MOTOR_TODAY = data.motor || {};
     RACE_MOTOR_NO_TODAY = data.motorNo || {};
+    RACE_CLASS_TODAY = data.racerClass || data.classes || {};
     TODAY_LABEL = data.date || jstToday;
     clearHistoricalRaceCard();
 
@@ -6351,6 +6545,7 @@ function onRaceCardFileSelected(ev){
     RACE_INFO_TODAY = normalizeRaceInfoDayLabels(data.info);
     RACE_MOTOR_TODAY = data.motor || {};
     RACE_MOTOR_NO_TODAY = data.motorNo || {};
+    RACE_CLASS_TODAY = data.racerClass || data.classes || {};
     TODAY_LABEL = data.date || brcRaceCardDateFromFileName(file.name) || file.name.replace(/\.(json|txt)$/i,'');
     const jstToday=getJstDateLabel();
     const isHistorical=/^\d{4}-\d{2}-\d{2}$/.test(String(TODAY_LABEL||'')) && TODAY_LABEL!==jstToday;
@@ -6485,6 +6680,7 @@ function loadTodaysRace(venue, raceNo){
   // このレースのモーター2連対率（艇番順）を、予想計算で参照できるように保持しておく
   window.__currentRaceMotor = (RACE_MOTOR_TODAY[venue] && RACE_MOTOR_TODAY[venue][String(raceNo)]) || null;
   window.__currentRaceMotorNo = (RACE_MOTOR_NO_TODAY[venue] && RACE_MOTOR_NO_TODAY[venue][String(raceNo)]) || null;
+  window.__currentRaceClass = (RACE_CLASS_TODAY[venue] && RACE_CLASS_TODAY[venue][String(raceNo)]) || null;
   refreshEntryTable();
 
   // レースを切り替えた時は、前レースの風向・風速条件を持ち越さない。
@@ -7381,20 +7577,8 @@ function buildRecommendedBetsHtmlFromServer(workerPrediction, localInReliability
   }
   const picks=Array.isArray(r.picks)?r.picks:[];
   const chips=picks.map(k=>`<span style="display:inline-block;border:1px solid rgba(0,102,255,.25);background:#fff;border-radius:7px;padding:5px 8px;font-weight:800;font-size:14px;">${k}</span>`).join(' ');
-  const sa=workerPrediction?.scenarioAssist;
-  const saHtml=sa ? (()=>{
-    const currentSet=new Set(picks);
-    const p4=Array.isArray(sa.picks4)?sa.picks4:[], p8=Array.isArray(sa.picks8)?sa.picks8:[];
-    const ov4=p4.filter(x=>currentSet.has(x)).length, ov8=p8.filter(x=>currentSet.has(x)).length;
-    const laneRank=arr=>(Array.isArray(arr)?arr:[]).map((x,i)=>`<span style="white-space:nowrap;">${i+1}位 <strong>${x.boat}号艇</strong> ${Number(x.pct).toFixed(1)}% <span style="font-size:10px;color:var(--ink-soft);">(N=${x.n})</span></span>`).join('　');
-    return `<div style="margin-top:11px;padding-top:10px;border-top:1px dashed rgba(0,102,255,.22);">
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><div style="font-size:12px;font-weight:800;color:var(--wave);">イン${uiRank}・1逃げ時 展開シナリオ補助</div><span style="font-size:10.5px;border:1px solid rgba(0,102,255,.2);border-radius:999px;padding:2px 7px;color:var(--ink-soft);">場基準差 ${Number(sa.diff)>=0?'+':''}${Number(sa.diff).toFixed(1)}pt</span></div>
-      <div style="margin-top:7px;padding:7px 9px;background:rgba(10,31,51,.025);border-radius:8px;font-size:11.5px;line-height:1.7;"><div><strong>2着候補</strong>　${laneRank(sa.second)}</div><div><strong>3着候補</strong>　${laneRank(sa.third)}</div></div>
-      <div style="margin-top:7px;font-size:12px;color:var(--ink-soft);">絞り4点：<strong style="color:var(--line-white);">${p4.join(' / ')}</strong> <span style="font-size:10.5px;">（現行と${ov4}/${p4.length}点重複）</span></div>
-      <div style="margin-top:3px;font-size:12px;color:var(--ink-soft);">捕捉8点：<strong style="color:var(--line-white);">${p8.join(' / ')}</strong> <span style="font-size:10.5px;">（現行と${ov8}/${p8.length}点重複）</span></div>
-      <div style="margin-top:5px;font-size:10.5px;color:var(--ink-soft);line-height:1.55;">※補助値の算出はBRC Server内で行います。</div>
-    </div>`;
-  })() : '';
+  // イン逃げ展開予測はAI予測タブへ独立。推奨買い目カード内では重複表示しない。
+  const saHtml='';
   const safe=Number(r.safe), target=Number(r.target120), raw=Number(r.raw), cal=Number(r.cal);
   return `<div id="recommendedBetsCard" style="margin:12px 0 14px;border:1px solid rgba(0,102,255,.22);background:rgba(0,102,255,.035);border-radius:12px;padding:13px 14px;">
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:14px;font-weight:800;color:var(--wave);">BRC推奨買い目</span><span style="font-size:13px;font-weight:800;">${Number(r.pointCount)||picks.length}点</span>${exhibitionNote}</div>
@@ -7414,7 +7598,7 @@ async function runPredict(){
   const raceNoLive = Number(document.getElementById('predictRaceNo')?.value || 0);
   const liveExhibitionPromise = raceNoLive ? brcFetchLiveExhibition(venue, raceNoLive) : Promise.resolve(null);
 
-  // 会員限定Workerへ「会場・グレード・6艇の登録番号」だけを送り、
+  // 会員限定Workerへ会場・グレード・6艇登録番号に加え、イン逃げV2に必要な現在級別・モーター2連率を送り、
   // 1着率・3連対率の正式値を取得する。計算式・学習統計はINDEXに保持しない。
   const apiBoats = [];
   const apiMissing = [];
@@ -7422,7 +7606,9 @@ async function runPredict(){
     const raw = document.getElementById('boat-'+c).value;
     const p = findPlayerByLabel(raw);
     if(!p){ apiMissing.push(c); continue; }
-    apiBoats.push({course:c, reg:String(p.reg), name:p.name});
+    const apiMotor2=(window.__currentRaceMotor && window.__currentRaceMotor[c-1] != null) ? Number(window.__currentRaceMotor[c-1]) : null;
+    const apiClass=(window.__currentRaceClass && window.__currentRaceClass[c-1]) ? String(window.__currentRaceClass[c-1]) : '';
+    apiBoats.push({course:c, reg:String(p.reg), name:p.name, racerClass:apiClass, motor2:Number.isFinite(apiMotor2)?apiMotor2:null});
   }
   const preBox = document.getElementById('predictResult');
   if(apiMissing.length){
@@ -7506,7 +7692,7 @@ async function runPredict(){
       basePctFloat:pctFloat, basePct3Float:pct3Float, basePct2:pct2Server,
       playerSource:'BRC protected server model + original exhibition overlay', venueBaseSource:'BRC protected server model',
       laneN:Number(laneStatAll.n)||0, venueN:venueNServer, venueAvgWin:venueAvgWinNow, pct2:pct2Server,
-      motor2, motorNo,
+      motor2, motorNo, racerClass:(window.__currentRaceClass && window.__currentRaceClass[c-1]) ? String(window.__currentRaceClass[c-1]) : '',
       exhibition: liveExhibitionByBoat.get(c) || null
     });
   }
@@ -7581,7 +7767,7 @@ async function runPredict(){
           return `<tr>
             <td><span class="num-badge" style="width:22px;height:22px;font-size:12.5px;background:${col.bg};color:${col.text};${b.course===1?'border:1.5px solid rgba(10,31,51,.35);box-sizing:border-box;':''}display:inline-flex;align-items:center;justify-content:center;border-radius:50%;">${b.course}</span></td>
             <td class="predict-player-cell"><div class="predict-player-name"><a href="#" style="color:var(--line-white); text-decoration:none; cursor:pointer; font-weight:800;" onclick="event.preventDefault(); togglePredictPlayer(${b.course}, '${b.player.reg}', '${venue}');" title="タップで選手・展開・ST・モーター詳細を表示">${b.player.name}</a></div><div id="predict-exhibition-label-${b.course}" class="predict-exhibition-label">${brcBuildPredictExhibitionLabelHtml(b)}</div></td>
-            <td id="predict-win-cell-${b.course}" class="num" style="font-weight:800; color:var(--line-white); cursor:pointer; text-decoration:none;" onclick="togglePredictScenario(${b.course})" title="タップで詳細の「展開」タブを表示">${brcBuildWinCellInner(b,venue)}</td>
+            <td id="predict-win-cell-${b.course}" class="num" style="font-weight:800; color:var(--line-white);">${brcBuildWinCellInner(b,venue)}</td>
             <td id="predict-top3-cell-${b.course}" class="num" style="font-weight:800; color:var(--line-white);">${brcBuildTop3CellInner(b)}</td>
             <td class="num" title="タップで詳細の「ST」タブを表示" onclick="openSTStabilityDetail('${b.player.reg}',${b.course})"><div class="st-rank-stack"><span class="st-rank-main">${stText}</span>${buildSTStabilitySub(b.player.reg,b.course)}</div></td>
             <td class="num">${(()=>{
@@ -7622,7 +7808,7 @@ async function runPredict(){
           </div>
           <div class="predict-guide-item">
             <div class="predict-guide-key">モーター</div>
-            <div class="predict-guide-text">今節の6艇のモーター2連対率を相対比較し、A〜Eで評価。機力を見る補助材料で、予想勝率・3連対率には直接加算していません。</div>
+            <div class="predict-guide-text">今節の6艇のモーター2連対率を相対比較し、A〜Eで表示。勝率・3連対率の表示モデルとは別に、AI予測タブの「イン逃げ展開予測」では2・3着相対評価の特徴量として使用します。</div>
           </div>
           <div class="predict-guide-item">
             <div class="predict-guide-key">BRCタイムX</div>
@@ -7635,10 +7821,6 @@ async function runPredict(){
           <div class="predict-guide-item">
             <div class="predict-guide-key">名前を押す</div>
             <div class="predict-guide-text">今回コースの決まり手、開催会場での成績、グレード別成績などを表示。1号艇は決まり手ではなく、1コースの敗因・弱点を確認できます。</div>
-          </div>
-          <div class="predict-guide-item">
-            <div class="predict-guide-key">勝率を押す</div>
-            <div class="predict-guide-text">その艇が1着になった時の相手5艇を、全体・差し・まくり・まくり差しのタブで切り替えて比較できます。表示はコース・N・平均着順・2着率・3着率・3着内率・標本信頼度です。①勝率タップ時はBRCイン逃げ相手予測も表示します。</div>
           </div>
           <div class="predict-guide-item">
             <div class="predict-guide-key">ST順位を押す</div>
@@ -7658,16 +7840,17 @@ async function runPredict(){
           </div>
           <div class="predict-guide-item">
             <div class="predict-guide-key">推奨買い目</div>
-            <div class="predict-guide-text">BRCの予測確率と展開分類から、3連単の組み合わせ・点数・想定的中率・参加目安オッズを提示。展開が拮抗する場合は「推奨なし」とします。現在、展示補正は確率には反映しますが推奨買い目には未反映です。</div>
+            <div class="predict-guide-text">AI予測タブで、BRCの予測確率と展開分類から3連単の組み合わせ・点数・想定的中率・参加目安オッズを提示。展開が拮抗する場合は「推奨なし」とします。現在、展示補正は確率には反映しますが推奨買い目には未反映です。</div>
           </div>
         </div>
       </div>
     </details>
     ${buildWindPanelHtml()}
-    ${buildRecommendedBetsHtmlFromServer(workerPrediction, localInReliability, exhibitionApplied)}
     <div id="predictSummaryLead" class="trend-note fold-lead" style="margin-top:12px;">${brcBuildPredictLeadSummaryHtml(boats)}</div>
   `;
 
+  renderPredictAiPanel(boats, workerPrediction, localInReliability, exhibitionApplied);
+  bindPredictMainTabs();
   bindWindPanel(venue);
   brcStartLiveExhibitionPolling(venue, raceNoLive);
   // データ保存値や判定経路に関係なく、画面上のレース種別が準優勝戦なら最終表示を準優日にする。
