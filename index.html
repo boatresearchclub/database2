@@ -7,6 +7,7 @@
 <!-- BRC_PREDICT_UNIFIED_DETAIL_TABS_20260828 -->
 <!-- BRC_PREDICT_AUTO_RUN_WOMEN_TOGGLE_20260828 -->
 
+<!-- BRC_PREDICT_METRIC_ROW_ALIGNMENT_20260828 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Boat Research Club ～データベース～</title>
@@ -1327,7 +1328,7 @@
   /* ---- BRCタイムX：選手別例外「要注意」 ---- */
   #predictResult .predict-exhibition-label{gap:0;}
   #predictResult .predict-exhibition-inline{display:inline-flex;align-items:center;min-width:0;max-width:100%;}
-  #predictResult .predict-exhibition-base{display:inline-flex;align-items:center;gap:1px;color:#1f5fb0;font-size:10.5px;font-weight:850;line-height:1;white-space:nowrap;letter-spacing:-.01em;}
+  #predictResult .predict-exhibition-base{display:inline-flex;align-items:center;gap:1px;color:var(--line-white);font-size:10.5px;font-weight:850;line-height:1;white-space:nowrap;letter-spacing:-.01em;}
   #predictResult .predict-exhibition-base .brc{font-size:.86em;font-weight:950;letter-spacing:0;}
   #predictResult .predict-exhibition-alert{display:inline-flex;align-items:center;justify-content:flex-start;max-width:100%;padding:0;margin:0;border:0;background:none;cursor:pointer;font-size:10.5px;font-weight:900;line-height:1;white-space:nowrap;letter-spacing:-.01em;}
   #predictResult .predict-exhibition-alert.brc-ex-alert-up{color:var(--trend-up);}
@@ -1908,15 +1909,18 @@
 
 
 <style id="brc-st-stability-style">
-.st-rank-stack{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1.05;cursor:pointer;}
-.st-rank-main{font-size:15px !important;font-weight:850;white-space:nowrap;line-height:1.05;}
-.st-stability-sub{font-size:10.5px !important;font-weight:900;white-space:nowrap;color:var(--ink-soft);line-height:1.05;}
-.st-stability-S{color:var(--grade-s)}.st-stability-A{color:var(--grade-a)}.st-stability-B{color:var(--grade-b)}.st-stability-C{color:var(--grade-c)}.st-stability-D{color:var(--grade-d)}.st-stability-E{color:var(--grade-e)}
+.st-rank-stack{display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;cursor:pointer;}
+.st-rank-main{min-height:24px;display:flex;align-items:center;justify-content:center;font-size:15px !important;font-weight:850;white-space:nowrap;line-height:1.05;}
+.st-stability-sub{min-height:22px;margin-top:3px;display:flex;align-items:center;justify-content:center;gap:1px;font-size:10.5px !important;font-weight:900;white-space:nowrap;line-height:1;}
+.st-stability-label{color:var(--line-white);}
+.st-stability-grade{font-weight:950;}
+.st-stability-S .st-stability-grade{color:var(--grade-s)}.st-stability-A .st-stability-grade{color:var(--grade-a)}.st-stability-B .st-stability-grade{color:var(--grade-b)}.st-stability-C .st-stability-grade{color:var(--grade-c)}.st-stability-D .st-stability-grade{color:var(--grade-d)}.st-stability-E .st-stability-grade{color:var(--grade-e)}
+.st-stability-none .st-stability-grade{color:var(--ink-soft)}
 .st-detail-backdrop{position:fixed;inset:0;z-index:10060;background:rgba(4,14,24,.56);display:none;align-items:center;justify-content:center;padding:18px;}
 .st-detail-backdrop.open{display:flex;}
 .st-detail-card{width:min(420px,94vw);max-height:82vh;overflow:auto;background:#fff;border-radius:14px;box-shadow:0 18px 55px rgba(0,0,0,.28);padding:17px;color:var(--line-white);}
 .st-detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}.st-detail-title{font-size:15px;font-weight:900}.st-detail-close{border:0;background:rgba(10,31,51,.07);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:18px}.st-detail-tag{display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;background:rgba(0,87,219,.08);font-size:11px;font-weight:900;margin-bottom:10px}.st-detail-grid{display:grid;grid-template-columns:1fr auto;gap:8px 12px;font-size:12px}.st-detail-grid .k{color:var(--ink-soft)}.st-detail-grid .v{font-weight:800;font-variant-numeric:tabular-nums}.st-detail-note{margin-top:12px;font-size:10.5px;line-height:1.55;color:var(--ink-soft)}
-@media(max-width:640px){.st-rank-main{font-size:14.5px !important}.st-stability-sub{font-size:10.5px !important}.st-rank-stack{gap:2px}}
+@media(max-width:640px){.st-rank-main{font-size:14.5px !important}.st-stability-sub{min-height:19px;font-size:10.5px !important}}
 /* 出走表AI：数値を主役にし、%・位などの単位だけ小さく表示 */
 #predictResult .predict-unit{font-size:.72em !important;font-weight:800;line-height:1;vertical-align:.08em;margin-left:.02em;}
 #predictResult .st-rank-main .predict-unit{font-size:.72em !important;}
@@ -6850,7 +6854,7 @@ function getSTStability(reg,course){
 function buildSTStabilitySub(reg,course){
   const x=getSTStability(reg,course); const g=x.data?.grade || '-';
   const cls='st-stability-'+(g==='-'?'none':g);
-  return `<span class="st-stability-sub ${cls}">安定${g}</span>`;
+  return `<span class="st-stability-sub ${cls}"><span class="st-stability-label">安定</span><span class="st-stability-grade">${g}</span></span>`;
 }
 function escST(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
 function openSTStabilityDetailLegacy(reg,course){
@@ -7913,11 +7917,13 @@ window.__playersRendered = true;
 </script>
 
 <style id="brc-motor-detail-style">
-.motor-cell-btn{appearance:none;-webkit-appearance:none;border:0;background:transparent;padding:2px 3px;margin:0;min-width:44px;cursor:pointer;font:inherit;line-height:1.05;text-align:center;border-radius:8px;}
+.motor-cell-btn{appearance:none;-webkit-appearance:none;border:0;background:transparent;padding:0 3px;margin:0;min-width:44px;cursor:pointer;font:inherit;line-height:1;text-align:center;border-radius:8px;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;vertical-align:middle;}
 .motor-cell-btn:active{background:rgba(10,31,51,.06);}
-.motor-cell-grade{display:block;font-weight:900;font-size:16px;line-height:1.05;}
-.motor-cell-rate,.motor-cell-n{display:block;color:var(--ink-soft);font-weight:650;white-space:nowrap;line-height:1.1;}
-.motor-cell-rate{font-size:10.5px;margin-top:2px;}.motor-cell-n{font-size:9.5px;margin-top:1px;}
+.motor-cell-static{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;vertical-align:middle;}
+.motor-cell-grade{min-height:24px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;line-height:1.05;}
+.motor-cell-rate,.motor-cell-n{display:flex;align-items:center;justify-content:center;color:var(--ink-soft);font-weight:650;white-space:nowrap;line-height:1.1;}
+.motor-cell-rate{min-height:22px;font-size:10.5px;margin-top:3px;}.motor-cell-n{font-size:9.5px;margin-top:1px;}
+@media(max-width:640px){.motor-cell-rate{min-height:19px;}}
 .motor-detail-backdrop{position:fixed;inset:0;background:rgba(5,18,30,.34);z-index:10050;display:none;align-items:flex-end;justify-content:center;padding:16px;box-sizing:border-box;}
 .motor-detail-backdrop.open{display:flex;}
 .motor-detail-sheet{width:min(520px,100%);max-height:min(78vh,720px);overflow:auto;background:#fff;border-radius:20px 20px 14px 14px;box-shadow:0 18px 60px rgba(5,18,30,.28);padding:18px 18px 16px;box-sizing:border-box;}
@@ -7987,7 +7993,7 @@ function buildMotorCellHtml(b,venue){
   const gcol=MOTOR_GRADE_COLOR[b.motorGrade]||'var(--ink-soft)';
   const d=getMotorDetail(venue,b.motorNo,b.motor2);
   const core=`<span class="motor-cell-grade" style="color:${gcol};">${b.motorGrade}</span><span class="motor-cell-rate">(${Math.round(b.motor2)}<span class="predict-unit">%</span>)</span>`;
-  if(!d || b.motorNo==null) return `<span style="display:inline-block;text-align:center;">${core}</span>`;
+  if(!d || b.motorNo==null) return `<span class="motor-cell-static">${core}</span>`;
   return `<button type="button" class="motor-cell-btn" onclick="event.stopPropagation();openMotorDetail(${b.course});" title="${b.motorNo}号機の履歴を表示">${core}</button>`;
 }
 function escMotor(v){return String(v??'').replace(/[&<>\"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[s]));}
