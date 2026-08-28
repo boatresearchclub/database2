@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V1 -->
+<!-- BRC_GRADE_COLOR_UNIFIED_20260828 -->
 <!-- BRC_WOMEN_CALC_BELOW_DEADLINE_20260828 -->
 <!-- BRC_PREDICT_UNIFIED_DETAIL_TABS_20260828 -->
 <!-- BRC_PREDICT_AUTO_RUN_WOMEN_TOGGLE_20260828 -->
@@ -69,6 +70,16 @@
     --lane6:#2f8f5b; --lane6-text:#f4f4f2;
     --wave:#0057db;
     --ink-soft:#3d4a63;
+    /* BRC共通評価色：S→Eは全機能でこの意味に統一 */
+    --grade-s:#7C3AED; --grade-s-rgb:124,58,237;
+    --grade-a:#2563EB; --grade-a-rgb:37,99,235;
+    --grade-b:#0891B2; --grade-b-rgb:8,145,178;
+    --grade-c:#64748B; --grade-c-rgb:100,116,139;
+    --grade-d:#D97706; --grade-d-rgb:217,119,6;
+    --grade-e:#DC2626; --grade-e-rgb:220,38,38;
+    /* 方向変化は評価ランクと分離：上昇=緑 / 下降=赤 / 横ばい=グレー */
+    --trend-up:#2F8F5B; --trend-up-rgb:47,143,91;
+    --trend-down:#D1373F; --trend-down-rgb:209,55,63;
     --radius:10px;
   }
   *{box-sizing:border-box;}
@@ -567,8 +578,8 @@
   }
   .slit-rate-metrics{display:inline-flex;align-items:center;gap:5px;flex-wrap:nowrap;white-space:nowrap;}
   .slit-rate-metric{font-size:11.5px;font-weight:900;letter-spacing:-.01em;white-space:nowrap;}
-  .slit-rate-up{color:#b4232c;}
-  .slit-rate-down{color:#1f5fb0;}
+  .slit-rate-up{color:var(--trend-up);}
+  .slit-rate-down{color:var(--trend-down);}
   .slit-rate-generic{font-size:11.5px;font-weight:850;color:var(--line-white);white-space:nowrap;}
   .slit-rate-note{font-size:10px;font-weight:700;color:var(--ink-soft);white-space:nowrap;}
   @media (max-width:420px){
@@ -869,12 +880,12 @@
     min-width:32px; height:27px; padding:0 8px; border-radius:999px;
     font-size:12px; font-weight:900; line-height:1; box-sizing:border-box;
   }
-  .scenario-grade-S{color:#0057db;background:rgba(0,87,219,.10);border:1px solid rgba(0,87,219,.38);}
-  .scenario-grade-A{color:#0f766e;background:rgba(15,118,110,.09);border:1px solid rgba(15,118,110,.32);}
-  .scenario-grade-B{color:#2563eb;background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.28);}
-  .scenario-grade-C{color:#8a5a00;background:rgba(227,178,60,.13);border:1px solid rgba(196,151,45,.32);}
-  .scenario-grade-D{color:#6b7280;background:rgba(107,114,128,.08);border:1px solid rgba(107,114,128,.24);}
-  .scenario-grade-E{color:#8b5e67;background:rgba(139,94,103,.07);border:1px solid rgba(139,94,103,.22);}
+  .scenario-grade-S{color:var(--grade-s);background:rgba(var(--grade-s-rgb),.09);border:1px solid rgba(var(--grade-s-rgb),.30);}
+  .scenario-grade-A{color:var(--grade-a);background:rgba(var(--grade-a-rgb),.08);border:1px solid rgba(var(--grade-a-rgb),.28);}
+  .scenario-grade-B{color:var(--grade-b);background:rgba(var(--grade-b-rgb),.08);border:1px solid rgba(var(--grade-b-rgb),.28);}
+  .scenario-grade-C{color:var(--grade-c);background:rgba(var(--grade-c-rgb),.08);border:1px solid rgba(var(--grade-c-rgb),.24);}
+  .scenario-grade-D{color:var(--grade-d);background:rgba(var(--grade-d-rgb),.09);border:1px solid rgba(var(--grade-d-rgb),.28);}
+  .scenario-grade-E{color:var(--grade-e);background:rgba(var(--grade-e-rgb),.08);border:1px solid rgba(var(--grade-e-rgb),.26);}
 
   @media (max-width:640px){
     /* 展開シナリオは横スクロールさせず、利用可能幅いっぱいに収める */
@@ -1315,18 +1326,18 @@
   #predictResult .predict-exhibition-base{display:inline-flex;align-items:center;gap:1px;color:#1f5fb0;font-size:10.5px;font-weight:850;line-height:1;white-space:nowrap;letter-spacing:-.01em;}
   #predictResult .predict-exhibition-base .brc{font-size:.86em;font-weight:950;letter-spacing:0;}
   #predictResult .predict-exhibition-alert{display:inline-flex;align-items:center;justify-content:flex-start;max-width:100%;padding:0;margin:0;border:0;background:none;cursor:pointer;font-size:10.5px;font-weight:900;line-height:1;white-space:nowrap;letter-spacing:-.01em;}
-  #predictResult .predict-exhibition-alert.brc-ex-alert-up{color:#b4232c;}
-  #predictResult .predict-exhibition-alert.brc-ex-alert-down{color:#1f5fb0;}
+  #predictResult .predict-exhibition-alert.brc-ex-alert-up{color:var(--trend-up);}
+  #predictResult .predict-exhibition-alert.brc-ex-alert-down{color:var(--trend-down);}
   #predictResult .predict-exhibition-alert.brc-ex-alert-flat{color:var(--ink-soft);}
   #predictResult .predict-exhibition-alert.brc-ex-alert-watch{color:#667085;font-weight:850;}
   .brc-ex-alert-btn{border:1px solid rgba(227,178,60,.55);background:rgba(227,178,60,.12);color:#8a5a00;border-radius:999px;padding:2px 6px;font-size:9px;font-weight:900;line-height:1.15;cursor:pointer;white-space:nowrap;}
-  .brc-ex-alert-btn.brc-ex-alert-up{border-color:rgba(180,35,44,.38);background:rgba(180,35,44,.08);color:#b4232c;}
-  .brc-ex-alert-btn.brc-ex-alert-down{border-color:rgba(31,95,176,.38);background:rgba(31,95,176,.08);color:#1f5fb0;}
+  .brc-ex-alert-btn.brc-ex-alert-up{border-color:rgba(var(--trend-up-rgb),.34);background:rgba(var(--trend-up-rgb),.08);color:var(--trend-up);}
+  .brc-ex-alert-btn.brc-ex-alert-down{border-color:rgba(var(--trend-down-rgb),.34);background:rgba(var(--trend-down-rgb),.08);color:var(--trend-down);}
   .brc-ex-alert-btn.brc-ex-alert-flat{border-color:rgba(61,74,99,.28);background:rgba(61,74,99,.07);color:var(--ink-soft);}
   .brc-ex-alert-btn.brc-ex-alert-watch{border-color:rgba(61,74,99,.20);background:rgba(61,74,99,.035);color:#667085;font-weight:800;}
   .brc-ex-alert-direction{display:inline-flex;align-items:center;gap:5px;margin:0 0 9px;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:900;}
-  .brc-ex-alert-direction.up{background:rgba(47,143,91,.08);color:#2f8f5b;border:1px solid rgba(47,143,91,.28);}
-  .brc-ex-alert-direction.down{background:rgba(209,55,63,.08);color:#d1373f;border:1px solid rgba(209,55,63,.28);}
+  .brc-ex-alert-direction.up{background:rgba(var(--trend-up-rgb),.08);color:var(--trend-up);border:1px solid rgba(var(--trend-up-rgb),.28);}
+  .brc-ex-alert-direction.down{background:rgba(var(--trend-down-rgb),.08);color:var(--trend-down);border:1px solid rgba(var(--trend-down-rgb),.28);}
   .brc-ex-alert-direction.flat{background:rgba(61,74,99,.07);color:var(--ink-soft);border:1px solid rgba(61,74,99,.20);}
   .brc-ex-alert-btn:active{transform:translateY(1px);}
   .brc-ex-alert-pop{position:fixed;inset:0;z-index:10050;background:rgba(4,14,24,.56);display:flex;align-items:center;justify-content:center;padding:18px;}
@@ -1339,8 +1350,8 @@
   .brc-ex-alert-grid .h{font-size:10px;color:var(--ink-soft);font-weight:800;}
   .brc-ex-alert-grid .v{font-variant-numeric:tabular-nums;font-weight:800;}
   .brc-ex-alert-note{margin-top:11px;font-size:10.5px;line-height:1.55;color:var(--ink-soft);}
-  .brc-ex-metric-up{color:#2f8f5b;}
-  .brc-ex-metric-down{color:#d1373f;}
+  .brc-ex-metric-up{color:var(--trend-up);}
+  .brc-ex-metric-down{color:var(--trend-down);}
   .brc-ex-metric-flat{color:var(--ink-soft);}
 
   /* ---- 出走表AI：確率のBRCタイムXを2段目に揃えて表示 ---- */
@@ -1709,21 +1720,21 @@
   }
 
   /* ---- SG特集：モーター第2評価軸 ---- */
-  .sg-live-flag.motor{background:#edf9f2;color:#1f7046;border:1px solid #bfe6cf;}
+  .sg-live-flag.motor{background:rgba(var(--grade-s-rgb),.08);color:var(--grade-s);border:1px solid rgba(var(--grade-s-rgb),.26);}
   .sg-live-flag.motor-top{background:#eef3ff;color:#274f9d;border:1px solid #cbd8f5;}
   .sg-live-flag.combo{background:#fff0f0;color:#a51f2d;border:1px solid #f0b8bd;box-shadow:0 2px 7px rgba(165,31,45,.08);}
   .sg-live-flag.motor-low{background:#fff7e8;color:#8a5a00;border:1px solid #edcf8b;}
 
   .sg-motor-def{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 12px;}
   .sg-motor-def span{display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:850;border:1px solid #dce6f0;background:#f8fafc;color:#466079;}
-  .sg-motor-def .s{background:#edf9f2;border-color:#bfe6cf;color:#1f7046;}
-  .sg-motor-def .a{background:#eef5ff;border-color:#c9dcf4;color:#155ba8;}
+  .sg-motor-def .s{background:rgba(var(--grade-s-rgb),.08);border-color:rgba(var(--grade-s-rgb),.26);color:var(--grade-s);}
+  .sg-motor-def .a{background:rgba(var(--grade-a-rgb),.08);border-color:rgba(var(--grade-a-rgb),.26);color:var(--grade-a);}
   .sg-motor-watch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:10px;}
   .sg-motor-row{display:grid;grid-template-columns:48px 42px 1fr;align-items:center;gap:7px;padding:9px 10px;border:1px solid #e0e8f1;border-radius:10px;background:#fff;}
   .sg-motor-no{font-size:13px;font-weight:950;color:#0a1f33;white-space:nowrap;}
   .sg-motor-grade{display:inline-flex;align-items:center;justify-content:center;min-width:34px;padding:3px 6px;border-radius:999px;font-size:10px;font-weight:950;}
-  .sg-motor-grade.s{background:#e9f8ef;color:#176a3e;border:1px solid #b5dfc6;}
-  .sg-motor-grade.a{background:#edf4ff;color:#155ba8;border:1px solid #c6daf5;}
+  .sg-motor-grade.s{background:rgba(var(--grade-s-rgb),.09);color:var(--grade-s);border:1px solid rgba(var(--grade-s-rgb),.28);}
+  .sg-motor-grade.a{background:rgba(var(--grade-a-rgb),.08);color:var(--grade-a);border:1px solid rgba(var(--grade-a-rgb),.26);}
   .sg-motor-info{min-width:0;font-size:10.5px;color:#607086;line-height:1.45;}
   .sg-motor-info b{color:#173b62;font-size:11px;}
   .sg-motor-user{display:flex;align-items:baseline;gap:5px;margin-bottom:2px;min-width:0;}
@@ -1896,7 +1907,7 @@
 .st-rank-stack{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1.05;cursor:pointer;}
 .st-rank-main{font-size:15px !important;font-weight:850;white-space:nowrap;line-height:1.05;}
 .st-stability-sub{font-size:10.5px !important;font-weight:900;white-space:nowrap;color:var(--ink-soft);line-height:1.05;}
-.st-stability-S{color:#0057db}.st-stability-A{color:#0f766e}.st-stability-B{color:#475569}.st-stability-C{color:#8a5a00}.st-stability-D{color:#b4232c}
+.st-stability-S{color:var(--grade-s)}.st-stability-A{color:var(--grade-a)}.st-stability-B{color:var(--grade-b)}.st-stability-C{color:var(--grade-c)}.st-stability-D{color:var(--grade-d)}.st-stability-E{color:var(--grade-e)}
 .st-detail-backdrop{position:fixed;inset:0;z-index:10060;background:rgba(4,14,24,.56);display:none;align-items:center;justify-content:center;padding:18px;}
 .st-detail-backdrop.open{display:flex;}
 .st-detail-card{width:min(420px,94vw);max-height:82vh;overflow:auto;background:#fff;border-radius:14px;box-shadow:0 18px 55px rgba(0,0,0,.28);padding:17px;color:var(--line-white);}
@@ -3101,7 +3112,7 @@ function predictLane1WeaknessHtml(reg){
   const topC = Number(d.top);
   const topCol = LANE_COLORS[topC];
   const confLabel = d.conf==='N不足' ? 'N不足・参考' : `信頼度 ${d.conf}`;
-  const confColor = d.conf==='A' ? '#0f766e' : d.conf==='B' ? '#2563eb' : d.conf==='C' ? '#b45309' : '#7c8798';
+  const confColor = d.conf==='A' ? 'var(--grade-a)' : d.conf==='B' ? 'var(--grade-b)' : d.conf==='C' ? 'var(--grade-c)' : '#7c8798';
   const lanes = [2,3,4,5,6].map(c=>{
     const v = d.lanes[String(c)] || [0,0,0];
     const col = LANE_COLORS[c];
@@ -3121,7 +3132,7 @@ function predictLane1WeaknessHtml(reg){
       <span style="width:22px; height:22px; border-radius:6px; background:${topCol.bg}; color:${topCol.text}; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:800;">${topC}</span>
       <strong style="font-size:13px;">${topC}コース</strong>
       <span style="font-size:11px; color:var(--ink-soft);">敗戦の${d.topLoss.toFixed(1)}%（${d.topn}回）</span>
-      <span style="margin-left:auto; padding:2px 7px; border-radius:999px; font-size:10px; font-weight:700; color:${confColor}; background:${confColor}14; border:1px solid ${confColor}40;">${confLabel}</span>
+      <span style="margin-left:auto; padding:2px 7px; border-radius:999px; font-size:10px; font-weight:700; color:${confColor}; background:color-mix(in srgb, ${confColor} 8%, transparent); border:1px solid color-mix(in srgb, ${confColor} 25%, transparent);">${confLabel}</span>
     </div>
     <div style="display:flex; gap:5px; flex-wrap:wrap;">${lanes}</div>
   </div>`;
@@ -3139,7 +3150,7 @@ function renderPlayerWeakness(reg){
   }
   const topC=Number(d.top), topCol=LANE_COLORS[topC];
   const confLabel = d.conf==='N不足' ? 'N不足・参考' : `信頼度 ${d.conf}`;
-  const confColor = d.conf==='A' ? '#0f766e' : d.conf==='B' ? '#2563eb' : d.conf==='C' ? '#b45309' : '#7c8798';
+  const confColor = d.conf==='A' ? 'var(--grade-a)' : d.conf==='B' ? 'var(--grade-b)' : d.conf==='C' ? 'var(--grade-c)' : '#7c8798';
   const laneRows = [2,3,4,5,6].map(c=>{
     const v=d.lanes[String(c)] || [0,0,0];
     const col=LANE_COLORS[c];
@@ -3160,7 +3171,7 @@ function renderPlayerWeakness(reg){
       <div style="font-size:12px; color:var(--ink-soft);">最も負けている相手</div>
       <div style="width:32px; height:32px; border-radius:8px; background:${topCol.bg}; color:${topCol.text}; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:800;">${topC}</div>
       <div><strong style="font-size:18px;">${topC}コース</strong><div style="font-size:11px; color:var(--ink-soft);">${d.topn}回 / 1C出走の${d.topAll.toFixed(1)}% / 敗戦の${d.topLoss.toFixed(1)}%</div></div>
-      <span style="margin-left:auto; padding:3px 8px; border-radius:999px; font-size:11px; font-weight:700; color:${confColor}; background:${confColor}14; border:1px solid ${confColor}40;">${confLabel}</span>
+      <span style="margin-left:auto; padding:3px 8px; border-radius:999px; font-size:11px; font-weight:700; color:${confColor}; background:color-mix(in srgb, ${confColor} 8%, transparent); border:1px solid color-mix(in srgb, ${confColor} 25%, transparent);">${confLabel}</span>
     </div>
     <div style="display:grid; grid-template-columns:repeat(3,minmax(90px,1fr)); gap:8px; margin-bottom:12px;">
       <div style="padding:9px 10px; border-radius:8px; background:rgba(10,31,51,.035);"><div style="font-size:18px; font-weight:800;">${d.n}</div><div style="font-size:10.5px; color:var(--ink-soft);">1コースN</div></div>
@@ -4621,7 +4632,7 @@ function brcProbabilityArrow(deltaPt,threshold){
 function brcProbabilityDeltaColor(deltaPt,threshold){
   const d=Number(deltaPt);
   if(!Number.isFinite(d) || Math.abs(d)<BRC_TIMEX_ARROW_FLAT_PT) return 'var(--ink-soft)';
-  return d>0 ? '#2f8f5b' : '#d1373f';
+  return d>0 ? 'var(--trend-up)' : 'var(--trend-down)';
 }
 
 function brcLiveExhibitionEligible(liveRace){
@@ -6804,7 +6815,7 @@ function computeMotorGrades(boats){
   });
   return grades;
 }
-const MOTOR_GRADE_COLOR = { A:'#1f8a4c', B:'#5cae6e', C:'var(--ink-soft)', D:'#e08a3c', E:'#d1373f' };
+const MOTOR_GRADE_COLOR = { A:'var(--grade-a)', B:'var(--grade-b)', C:'var(--grade-c)', D:'var(--grade-d)', E:'var(--grade-e)' };
 
 const GRADE_TO_CATKEY = {
   '一般':'一般', 'SG':'SG', 'G1G2':'G1G2', 'G3':'G3',
@@ -7145,12 +7156,12 @@ function brcIsWomenRace(grade, regs){
 }
 function brcInReliabilityStyle(rank){
   const styles={
-    'S':{color:'#0057db',bg:'rgba(0,87,219,.08)',border:'rgba(0,87,219,.28)'},
-    'A':{color:'#0f766e',bg:'rgba(15,118,110,.07)',border:'rgba(15,118,110,.24)'},
-    'B':{color:'#2563eb',bg:'rgba(37,99,235,.06)',border:'rgba(37,99,235,.22)'},
-    'C':{color:'#8a5a00',bg:'rgba(227,178,60,.09)',border:'rgba(196,151,45,.25)'},
-    'D':{color:'#6b7280',bg:'rgba(107,114,128,.06)',border:'rgba(107,114,128,.20)'},
-    'E':{color:'#8b5e67',bg:'rgba(139,94,103,.055)',border:'rgba(139,94,103,.20)'},
+    'S':{color:'var(--grade-s)',bg:'rgba(var(--grade-s-rgb),.08)',border:'rgba(var(--grade-s-rgb),.28)'},
+    'A':{color:'var(--grade-a)',bg:'rgba(var(--grade-a-rgb),.07)',border:'rgba(var(--grade-a-rgb),.25)'},
+    'B':{color:'var(--grade-b)',bg:'rgba(var(--grade-b-rgb),.07)',border:'rgba(var(--grade-b-rgb),.25)'},
+    'C':{color:'var(--grade-c)',bg:'rgba(var(--grade-c-rgb),.07)',border:'rgba(var(--grade-c-rgb),.22)'},
+    'D':{color:'var(--grade-d)',bg:'rgba(var(--grade-d-rgb),.08)',border:'rgba(var(--grade-d-rgb),.25)'},
+    'E':{color:'var(--grade-e)',bg:'rgba(var(--grade-e-rgb),.07)',border:'rgba(var(--grade-e-rgb),.24)'},
     '強イン否定':{color:'#d1373f',bg:'rgba(209,55,63,.07)',border:'rgba(209,55,63,.25)'}
   };
   return styles[rank] || {color:'var(--ink-soft)',bg:'rgba(10,31,51,.04)',border:'rgba(10,31,51,.15)'};
