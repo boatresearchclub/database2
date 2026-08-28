@@ -5,7 +5,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Boat Research Club ～データベース～</title>
+<!-- BRC_SCENARIO_KIMARITE_TABS_20260828 -->
 <!-- BRC_IN_NIGE_ORDER_SCENARIO_UI_20260828 -->
+<!-- BRC_SCENARIO_TABS_TIMEX_STACK_20260828 -->
 <!-- BRC_TIMEX_ARROW_THRESHOLDS_20260828 -->
 <!-- BRC_TIMEX_VENUE_SHRINK_2024BUILD_2025VAL_20260828 -->
 <!-- BRC_TIMEX_RENAME_20260828 -->
@@ -667,6 +669,92 @@
   }
 
 
+  /* ---- 2026-08-28: 出走予想 展開シナリオを決まり手タブ式へ ---- */
+  .predict-scenario-tabs{
+    display:flex; gap:6px; overflow-x:auto; -webkit-overflow-scrolling:touch;
+    padding:1px 1px 8px; margin:10px 0 4px; scrollbar-width:none;
+  }
+  .predict-scenario-tabs::-webkit-scrollbar{display:none;}
+  .predict-scenario-tab{
+    flex:0 0 auto; appearance:none; border:1px solid rgba(10,31,51,.14); background:#fff;
+    color:var(--ink-soft); border-radius:999px; padding:7px 13px; font-family:inherit;
+    font-size:12px; font-weight:850; line-height:1; cursor:pointer; white-space:nowrap;
+  }
+  .predict-scenario-tab.active{background:var(--wave); border-color:var(--wave); color:#fff;}
+  .predict-scenario-tab:hover{border-color:rgba(0,87,219,.38);}
+  .predict-scenario-summary{
+    display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;
+    margin:2px 0 7px; font-size:11px; color:var(--ink-soft);
+  }
+  .scenario-rate-stack{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    min-height:34px; line-height:1.05; white-space:nowrap;
+  }
+  .scenario-rate-value{
+    display:block; font-weight:800; color:var(--line-white); font-variant-numeric:tabular-nums;
+  }
+  .scenario-rate-timex{
+    display:flex; align-items:center; justify-content:center; min-height:15px; margin-top:2px;
+    color:var(--ink-soft); line-height:1;
+  }
+  .scenario-rate-timex .exhibition-arrow-icon{width:14px;height:14px;}
+  .scenario-rate-timex-empty{
+    display:inline-flex; align-items:center; justify-content:center; height:14px;
+    font-size:10px; font-weight:700; color:rgba(61,74,99,.45);
+  }
+  table.predict-scenario-course-table th, table.predict-scenario-course-table td{text-align:center;}
+  table.predict-scenario-course-table .scenario-course-cell{display:flex;align-items:center;justify-content:center;gap:4px;}
+  table.predict-scenario-course-table .scenario-course-name{font-size:9.5px;color:var(--ink-soft);font-weight:700;max-width:66px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  table.predict-scenario-course-table .scenario-no-data{color:rgba(61,74,99,.55);font-weight:600;}
+  @media(max-width:640px){
+    .predict-scenario-tabs{gap:5px;margin-top:8px;padding-bottom:7px;}
+    .predict-scenario-tab{padding:6px 11px;font-size:11px;}
+    table.predict-scenario-course-table{font-size:10.5px !important;}
+    table.predict-scenario-course-table th,table.predict-scenario-course-table td{padding:6px 1px !important;}
+    .scenario-rate-stack{min-height:31px;}
+    .scenario-rate-value{font-size:10.5px;}
+    .scenario-rate-timex{min-height:13px;margin-top:1px;}
+    .scenario-rate-timex .exhibition-arrow-icon{width:13px;height:13px;}
+    table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(1),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(1){width:18%;}
+    table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(2),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(2){width:9%;}
+    table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(3),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(3){width:15%;}
+    table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(4),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(4){width:13%;}
+    table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(5),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(5){width:13%;}
+    table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(6),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(6){width:16%;}
+    table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(7),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(7){width:16%;}
+    .scenario-course-name{display:none;}
+  }
+
+  /* ---- 2026-08-28: ①勝率タップ内 BRCイン逃げ2着・3着相対予測 ---- */
+  .brc-nige-order-panel{
+    margin:12px 0 13px; padding:11px; border:1px solid rgba(0,87,219,.18);
+    border-radius:12px; background:linear-gradient(160deg,rgba(0,87,219,.055),rgba(255,255,255,.94));
+  }
+  .brc-nige-order-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;}
+  .brc-nige-order-title{font-size:13px;font-weight:900;color:var(--navy);line-height:1.35;}
+  .brc-nige-order-sub{margin-top:2px;font-size:10.5px;color:var(--ink-soft);line-height:1.45;}
+  .brc-nige-order-rank{flex:0 0 auto;padding:3px 7px;border-radius:999px;background:rgba(0,87,219,.09);border:1px solid rgba(0,87,219,.18);color:var(--wave);font-size:10px;font-weight:900;white-space:nowrap;}
+  .brc-nige-order-grid{border:1px solid rgba(10,31,51,.08);border-radius:9px;overflow:hidden;background:#fff;}
+  .brc-nige-order-row{display:grid;grid-template-columns:42px minmax(0,1fr) minmax(0,1fr);align-items:center;min-height:37px;border-top:1px solid rgba(10,31,51,.055);}
+  .brc-nige-order-row:first-child{border-top:0;}
+  .brc-nige-order-row.head{min-height:29px;background:var(--bg3);color:var(--ink-soft);font-size:10px;font-weight:850;text-align:center;}
+  .brc-nige-order-boat{display:flex;align-items:center;justify-content:center;}
+  .brc-nige-order-metric{display:flex;align-items:baseline;justify-content:center;gap:4px;font-variant-numeric:tabular-nums;}
+  .brc-nige-order-pct{font-size:15px;font-weight:900;color:var(--navy);white-space:nowrap;}
+  .brc-nige-order-place{font-size:9px;font-weight:800;color:var(--ink-soft);white-space:nowrap;}
+  .brc-nige-order-metric.is-top .brc-nige-order-pct,.brc-nige-order-metric.is-top .brc-nige-order-place{color:var(--wave);}
+  .brc-nige-order-picks{display:flex;align-items:flex-start;gap:7px;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(0,87,219,.18);}
+  .brc-nige-order-picks-label{flex:0 0 auto;font-size:10.5px;font-weight:900;color:var(--ink-soft);padding-top:3px;}
+  .brc-nige-order-pick-list{display:flex;flex-wrap:wrap;gap:5px;}
+  .brc-nige-order-pick{display:inline-flex;padding:3px 7px;border-radius:7px;border:1px solid rgba(0,87,219,.18);background:#fff;color:var(--navy);font-size:11px;font-weight:900;white-space:nowrap;}
+  .brc-nige-order-note{margin-top:6px;font-size:9.5px;line-height:1.5;color:var(--ink-soft);}
+  @media(max-width:420px){
+    .brc-nige-order-panel{padding:9px 8px;}
+    .brc-nige-order-title{font-size:12px;}
+    .brc-nige-order-row{grid-template-columns:38px minmax(0,1fr) minmax(0,1fr);}
+    .brc-nige-order-pct{font-size:14px;}
+  }
+
   /* ---- 展開シナリオ：標本信頼度S-E＋スマホ幅最適化 ---- */
   .scenario-head-short{display:none;}
   .scenario-grade-badge{
@@ -734,40 +822,6 @@
     table.scenario-table.compact-7 th:first-child,
     table.scenario-table.compact-7 td:first-child{font-size:9.5px !important;}
     .scenario-grade-badge{min-width:26px;height:23px;padding:0 5px;font-size:10.5px;}
-  }
-
-  /* ---- 2026-08-28: ①勝率タップ内 BRCイン逃げ2着・3着相対予測 ---- */
-  .brc-nige-order-panel{
-    margin:12px 0 15px; padding:12px; border:1px solid rgba(0,87,219,.18);
-    border-radius:12px; background:linear-gradient(160deg,rgba(0,87,219,.055),rgba(255,255,255,.92));
-  }
-  .brc-nige-order-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:9px;}
-  .brc-nige-order-title{font-size:13px;font-weight:900;color:var(--navy);line-height:1.35;}
-  .brc-nige-order-sub{margin-top:2px;font-size:10.5px;color:var(--ink-soft);line-height:1.45;}
-  .brc-nige-order-rank{flex:0 0 auto;display:inline-flex;align-items:center;padding:3px 7px;border-radius:999px;background:rgba(0,87,219,.09);border:1px solid rgba(0,87,219,.18);color:var(--wave);font-size:10px;font-weight:900;white-space:nowrap;}
-  .brc-nige-order-grid{border:1px solid rgba(10,31,51,.08);border-radius:10px;overflow:hidden;background:#fff;}
-  .brc-nige-order-row{display:grid;grid-template-columns:42px minmax(0,1fr) minmax(0,1fr);align-items:center;min-height:39px;border-top:1px solid rgba(10,31,51,.055);}
-  .brc-nige-order-row:first-child{border-top:0;}
-  .brc-nige-order-row.head{min-height:31px;background:var(--bg3);color:var(--ink-soft);font-size:10.5px;font-weight:850;text-align:center;}
-  .brc-nige-order-boat{display:flex;align-items:center;justify-content:center;}
-  .brc-nige-order-metric{display:flex;align-items:baseline;justify-content:center;gap:5px;min-width:0;font-variant-numeric:tabular-nums;}
-  .brc-nige-order-pct{font-size:16px;font-weight:900;color:var(--navy);white-space:nowrap;}
-  .brc-nige-order-place{font-size:9.5px;font-weight:800;color:var(--ink-soft);white-space:nowrap;}
-  .brc-nige-order-metric.is-top .brc-nige-order-pct,.brc-nige-order-metric.is-top .brc-nige-order-place{color:var(--wave);}
-  .brc-nige-order-picks{display:flex;align-items:flex-start;gap:7px;margin-top:9px;padding-top:9px;border-top:1px dashed rgba(0,87,219,.18);}
-  .brc-nige-order-picks-label{flex:0 0 auto;font-size:10.5px;font-weight:900;color:var(--ink-soft);padding-top:3px;}
-  .brc-nige-order-pick-list{display:flex;flex-wrap:wrap;gap:5px;}
-  .brc-nige-order-pick{display:inline-flex;align-items:center;padding:3px 7px;border-radius:7px;border:1px solid rgba(0,87,219,.18);background:#fff;color:var(--navy);font-size:11.5px;font-weight:900;white-space:nowrap;}
-  .brc-nige-order-note{margin-top:7px;font-size:9.8px;line-height:1.55;color:var(--ink-soft);}
-  @media(max-width:420px){
-    .brc-nige-order-panel{padding:10px 9px;margin-top:10px;}
-    .brc-nige-order-title{font-size:12px;}
-    .brc-nige-order-sub{font-size:9.8px;}
-    .brc-nige-order-row{grid-template-columns:38px minmax(0,1fr) minmax(0,1fr);min-height:37px;}
-    .brc-nige-order-row.head{font-size:10px;min-height:29px;}
-    .brc-nige-order-pct{font-size:15px;}
-    .brc-nige-order-place{font-size:9px;}
-    .brc-nige-order-pick{font-size:11px;padding:3px 6px;}
   }
 
   /* ---- 2026-08-19: 上部タブ固定・選手検索固定・コース別勝率のスマホ幅最適化 ---- */
@@ -3556,6 +3610,7 @@ function predictRecentCourseKimariteHtml(reg, course){
 
 // 出走表AIタブ：予想勝率タップで「そのコースの艇が勝った場合」に他艇がどう着順を残す傾向にあるかを表示
 function togglePredictScenario(course){
+  window.__predictScenarioKimariteCurrent='全体';
   const bd = document.getElementById('predictDetailBackdrop');
   const body = document.getElementById('predictDetailBody');
   if(!bd || !body) return;
@@ -3566,6 +3621,15 @@ function togglePredictScenario(course){
   document.body.style.overflow='hidden';
 }
 
+function brcAggregatePredictScenarioRows(rows){
+  const src=Array.isArray(rows)?rows:[];
+  const totalN=src.reduce((sum,r)=>sum+(Number(r.n)||0),0);
+  if(totalN<=0) return null;
+  const wavg=(key)=>src.reduce((sum,r)=>sum+(Number(r[key])||0)*(Number(r.n)||0),0)/totalN;
+  const arN=src.reduce((sum,r)=>sum+(r.ar!=null?(Number(r.ar)||0)*(Number(r.n)||0):0),0);
+  return {n:totalN, ar:arN/totalN, t2:wavg('t2'), t3:wavg('t3'), t3p:wavg('t3p')};
+}
+
 function brcBuildInlineNigeOrderPredictionHtml(course, boats){
   if(Number(course)!==1) return '';
   const worker=window.__predictWorkerCurrent;
@@ -3573,133 +3637,87 @@ function brcBuildInlineNigeOrderPredictionHtml(course, boats){
   const second=Array.isArray(sa?.second)?sa.second:[];
   const third=Array.isArray(sa?.third)?sa.third:[];
   if(!second.length || !third.length) return '';
-
   const secondMap=new Map(second.map((x,i)=>[Number(x.boat),{...x,rank:i+1}]));
   const thirdMap=new Map(third.map((x,i)=>[Number(x.boat),{...x,rank:i+1}]));
-  const candidates=(boats||[]).filter(b=>Number(b.course)>=2 && Number(b.course)<=6).sort((a,b)=>Number(a.course)-Number(b.course));
-  if(!candidates.length) return '';
-
+  const candidates=(boats||[]).filter(b=>Number(b.course)>=2&&Number(b.course)<=6).sort((a,b)=>Number(a.course)-Number(b.course));
   const metric=(x)=>{
-    const pct=Number(x?.pct);
+    const pct=Number(x?.pct), rank=Number(x?.rank);
     if(!Number.isFinite(pct)) return '<div class="brc-nige-order-metric"><span class="brc-nige-order-pct">―</span></div>';
-    const rank=Number(x?.rank);
     return `<div class="brc-nige-order-metric${rank===1?' is-top':''}"><span class="brc-nige-order-pct">${pct.toFixed(1)}%</span>${Number.isFinite(rank)?`<span class="brc-nige-order-place">${rank}位</span>`:''}</div>`;
   };
-  const rows=candidates.map(b=>{
-    const boat=Number(b.course);
-    return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${metric(secondMap.get(boat))}${metric(thirdMap.get(boat))}</div>`;
-  }).join('');
-
+  const rows=candidates.map(b=>{const boat=Number(b.course);return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${metric(secondMap.get(boat))}${metric(thirdMap.get(boat))}</div>`;}).join('');
   const picks=(Array.isArray(sa?.picks4)?sa.picks4:[]).slice(0,3);
-  const picksHtml=picks.length ? `<div class="brc-nige-order-picks"><div class="brc-nige-order-picks-label">展開上位</div><div class="brc-nige-order-pick-list">${picks.map((x,i)=>`<span class="brc-nige-order-pick">${i+1}位 ${x}</span>`).join('')}</div></div>` : '';
-  const uiRank=worker?.uiInReliability?.rank || worker?.recommendation?.rank || '';
-  const rankHtml=uiRank ? `<span class="brc-nige-order-rank">イン${uiRank}</span>` : '';
+  const picksHtml=picks.length?`<div class="brc-nige-order-picks"><div class="brc-nige-order-picks-label">展開上位</div><div class="brc-nige-order-pick-list">${picks.map((x,i)=>`<span class="brc-nige-order-pick">${i+1}位 ${x}</span>`).join('')}</div></div>`:'';
+  const uiRank=worker?.uiInReliability?.rank||worker?.recommendation?.rank||'';
+  return `<div class="brc-nige-order-panel"><div class="brc-nige-order-head"><div><div class="brc-nige-order-title">①イン逃げ時 BRC相手予測</div><div class="brc-nige-order-sub">今回の②〜⑥を相対評価した2着・3着予測</div></div>${uiRank?`<span class="brc-nige-order-rank">イン${uiRank}</span>`:''}</div><div class="brc-nige-order-grid"><div class="brc-nige-order-row head"><div>艇</div><div>2着予測</div><div>3着予測</div></div>${rows}</div>${picksHtml}<div class="brc-nige-order-note">※①が逃げた場合の条件付き相対予測です。下の展開シナリオは過去実績です。</div></div>`;
+}
 
-  return `<div class="brc-nige-order-panel">
-    <div class="brc-nige-order-head">
-      <div><div class="brc-nige-order-title">①イン逃げ時 BRC相手予測</div><div class="brc-nige-order-sub">今回の②〜⑥を相対評価した2着・3着予測</div></div>
-      ${rankHtml}
-    </div>
-    <div class="brc-nige-order-grid">
-      <div class="brc-nige-order-row head"><div>艇</div><div>2着予測</div><div>3着予測</div></div>
-      ${rows}
-    </div>
-    ${picksHtml}
-    <div class="brc-nige-order-note">※①が逃げた場合の条件付き相対予測です。下の「展開シナリオ」は過去実績なので、今回予測とは分けて表示しています。</div>
-  </div>`;
+function setPredictScenarioKimarite(course, kimarite){
+  window.__predictScenarioKimariteCurrent=kimarite||'全体';
+  renderInlinePredictScenario(course);
 }
 
 function renderInlinePredictScenario(course){
-  const box = document.getElementById(`predict-sc-box-${course}`);
+  const box=document.getElementById(`predict-sc-box-${course}`);
   if(!box) return;
-  const boats = (window.__predictBoatsCurrent || []).filter(Boolean);
-  const others = boats.filter(b=>b.course!==course).sort((a,b)=>a.course-b.course);
+  const boats=(window.__predictBoatsCurrent||[]).filter(Boolean);
+  const others=boats.filter(b=>Number(b.course)!==Number(course)).sort((a,b)=>a.course-b.course);
   if(!others.length){
-    box.innerHTML = `<div style="font-size:12.5px; color:var(--ink-soft); padding:4px 2px;">他艇のデータがありません。</div>`;
+    box.innerHTML=`<div style="font-size:12.5px;color:var(--ink-soft);padding:4px 2px;">他艇のデータがありません。</div>`;
     return;
   }
 
-  const boatSectionsHtml = others.map(b=>{
-    const reg = b.player.reg;
-    const cc = b.course;
-    const name = b.player.name;
-    const allRows = SCENARIO_DATA[reg] || [];
-    const rows = allRows.filter(r=>r.sc===cc && r.wc===course);
-    if(!rows.length){
-      return `
-        <div style="margin-bottom:14px;">
-          <div class="scenario-player-head">
-            ${scenarioLaneBadge(cc)} <span>${name}（登番${reg}）</span>${brcBuildScenarioExhibitionBadge(b)}
-          </div>
-          <div style="font-size:11.5px; color:var(--ink-soft); padding:2px 2px 8px;">コース${course}勝利時のデータがありません。</div>
-        </div>`;
-    }
+  const tabs=['全体','差し','まくり','まくり差し'];
+  const selected=tabs.includes(window.__predictScenarioKimariteCurrent)?window.__predictScenarioKimariteCurrent:'全体';
+  const tabHtml=tabs.map(k=>`<button type="button" class="predict-scenario-tab${selected===k?' active':''}" onclick="setPredictScenarioKimarite(${Number(course)},'${k}')">${k}</button>`).join('');
 
-    const totalN = rows.reduce((s,r)=>s+r.n, 0);
-    const wavg = key => totalN>0 ? rows.reduce((s,r)=> s + (r[key]||0)*r.n, 0) / totalN : 0;
-    const avgAr = totalN>0 ? rows.reduce((s,r)=> s + (r.ar!=null? r.ar*r.n : 0), 0) / totalN : null;
-    const avgT2 = wavg('t2'), avgT3 = wavg('t3'), avgT3p = wavg('t3p'), avgRel = wavg('rel');
-
-    const detailRows = rows.filter(r=>r.k!=='抜き').slice().sort((a,b2)=>b2.n-a.n).map(r=>`
-      <tr style="border-top:1px solid rgba(10,31,51,.06); text-align:center; color:var(--ink-soft);">
-        <td style="padding:5px 4px;">${r.k}</td>
-        <td style="padding:5px 4px; white-space:nowrap;">${r.n}</td>
-        <td style="padding:5px 4px; white-space:nowrap; font-weight:700; color:var(--line-white);">${r.ar!=null ? r.ar.toFixed(2) : '-'}</td>
-        <td style="padding:5px 4px; white-space:nowrap;">${brcBuildScenarioPlaceRateHtml(r.t2,b,'second')}</td>
-        <td style="padding:5px 4px; white-space:nowrap;">${brcBuildScenarioPlaceRateHtml(r.t3,b,'third')}</td>
-        <td style="padding:5px 4px; white-space:nowrap;">${r0(r.t3p)}%</td>
-        <td style="padding:5px 4px;">${scenarioRelBar(r.n)}</td>
-      </tr>`).join('');
-
-    return `
-      <div style="margin-bottom:16px;">
-        <div class="scenario-player-head">
-          ${scenarioLaneBadge(cc)} <span>${name}（登番${reg}）</span>${brcBuildScenarioExhibitionBadge(b)}
-        </div>
-        <div class="scenario-scroll" style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
-          <table class="scenario-table compact-7" style="border-collapse:collapse; font-size:11.5px;">
-            <thead>
-              <tr style="text-align:center; color:var(--ink-soft);">
-                <th style="padding:5px 3px;">決まり手</th>
-                <th style="padding:5px 3px; white-space:nowrap;"><span class="scenario-head-full">件数</span><span class="scenario-head-short">N</span></th>
-                <th style="padding:5px 3px; white-space:nowrap;"><span class="scenario-head-full">平均着順</span><span class="scenario-head-short">平均</span></th>
-                <th style="padding:5px 3px; white-space:nowrap;"><span class="scenario-head-full">2着率</span><span class="scenario-head-short">2着</span></th>
-                <th style="padding:5px 3px; white-space:nowrap;"><span class="scenario-head-full">3着率</span><span class="scenario-head-short">3着</span></th>
-                <th style="padding:5px 3px; white-space:nowrap;"><span class="scenario-head-full">3着内率</span><span class="scenario-head-short">3連</span></th>
-                <th style="padding:5px 3px; white-space:nowrap;"><span class="scenario-head-full">標本信頼度</span><span class="scenario-head-short">信頼</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr style="border-top:2px solid rgba(10,31,51,.14); background:rgba(0,102,255,.06); text-align:center; font-weight:700;">
-                <td style="padding:6px 4px;">全体</td>
-                <td style="padding:6px 4px; white-space:nowrap;">${totalN}</td>
-                <td style="padding:6px 4px; white-space:nowrap;">${avgAr!=null ? avgAr.toFixed(2) : '-'}</td>
-                <td style="padding:6px 4px; white-space:nowrap;">${brcBuildScenarioPlaceRateHtml(avgT2,b,'second')}</td>
-                <td style="padding:6px 4px; white-space:nowrap;">${brcBuildScenarioPlaceRateHtml(avgT3,b,'third')}</td>
-                <td style="padding:6px 4px; white-space:nowrap;">${r0(avgT3p)}%</td>
-                <td style="padding:6px 4px;">${scenarioRelBar(totalN)}</td>
-              </tr>
-              ${detailRows}
-            </tbody>
-          </table>
-        </div>
-      </div>`;
+  let available=0;
+  const bodyRows=others.map(b=>{
+    const reg=b.player.reg, cc=Number(b.course), name=b.player.name;
+    const allRows=(SCENARIO_DATA[reg]||[]).filter(r=>Number(r.sc)===cc&&Number(r.wc)===Number(course));
+    const targetRows=selected==='全体'?allRows:allRows.filter(r=>r.k===selected);
+    const agg=brcAggregatePredictScenarioRows(targetRows);
+    if(agg) available++;
+    return `<tr style="border-top:1px solid rgba(10,31,51,.06);text-align:center;">
+      <td style="padding:6px 3px;"><div class="scenario-course-cell">${scenarioLaneBadge(cc)}<span class="scenario-course-name">${name}</span></div></td>
+      <td style="padding:6px 3px;white-space:nowrap;">${agg?agg.n:'0'}</td>
+      <td style="padding:6px 3px;white-space:nowrap;font-weight:700;color:var(--line-white);">${agg?agg.ar.toFixed(1):'<span class="scenario-no-data">―</span>'}</td>
+      <td style="padding:6px 3px;white-space:nowrap;">${agg?brcBuildScenarioPlaceRateHtml(agg.t2,b,'second'):'<span class="scenario-no-data">―</span>'}</td>
+      <td style="padding:6px 3px;white-space:nowrap;">${agg?brcBuildScenarioPlaceRateHtml(agg.t3,b,'third'):'<span class="scenario-no-data">―</span>'}</td>
+      <td style="padding:6px 3px;white-space:nowrap;">${agg?`${r0(agg.t3p)}%`:'<span class="scenario-no-data">―</span>'}</td>
+      <td style="padding:6px 3px;">${agg?scenarioRelBar(agg.n):'<span class="scenario-no-data">―</span>'}</td>
+    </tr>`;
   }).join('');
 
-  const winnerBoat = boats.find(b=>Number(b.course)===Number(course));
-  const nigeOrderPredictionHtml = brcBuildInlineNigeOrderPredictionHtml(course, boats);
-  box.innerHTML = `
+  const winnerBoat=boats.find(b=>Number(b.course)===Number(course));
+  const nigeOrderPredictionHtml=brcBuildInlineNigeOrderPredictionHtml(course,boats);
+  box.innerHTML=`
     <div class="motor-detail-head predict-detail-head">
       <div>
-        <div id="predictDetailTitle" class="motor-detail-title" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${scenarioLaneBadge(course)} ${winnerBoat ? winnerBoat.player.name : `コース${course}`}</div>
-        <div class="motor-detail-sub">${winnerBoat ? `予想勝率 ${winnerBoat.pct}% ・ ` : ''}${course}コース勝利時の他艇傾向</div>
+        <div id="predictDetailTitle" class="motor-detail-title" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${scenarioLaneBadge(course)} ${winnerBoat?winnerBoat.player.name:`コース${course}`}</div>
+        <div class="motor-detail-sub">${winnerBoat?`予想勝率 ${winnerBoat.pct}% ・ `:''}${course}コース勝利時の他艇傾向</div>
       </div>
       <button class="motor-detail-close" type="button" onclick="closePredictDetail()" aria-label="閉じる">×</button>
     </div>
-    ${winnerBoat ? `<div class="motor-detail-topstats predict-detail-scenario-stats"><div class="motor-detail-stat"><b>${winnerBoat.pct}%</b><span>予想勝率</span></div><div class="motor-detail-stat"><b>${winnerBoat.pct3}%</b><span>3連対率</span></div><div class="motor-detail-stat"><b>${course}</b><span>コース</span></div><div class="motor-detail-stat"><b>${others.length}</b><span>相手艇</span></div></div>` : ''}
+    ${winnerBoat?`<div class="motor-detail-topstats predict-detail-scenario-stats"><div class="motor-detail-stat"><b>${winnerBoat.pct}%</b><span>予想勝率</span></div><div class="motor-detail-stat"><b>${winnerBoat.pct3}%</b><span>3連対率</span></div><div class="motor-detail-stat"><b>${course}</b><span>コース</span></div><div class="motor-detail-stat"><b>${others.length}</b><span>相手艇</span></div></div>`:''}
     ${nigeOrderPredictionHtml}
-    <div class="predict-detail-note">${Number(course)===1 && nigeOrderPredictionHtml ? '上段は今回レースのBRC相対予測、下段は選手ごとの過去実績です。' : ''}各選手名横の「BRCタイムX」で、今回展示による2着・3着への影響方向を表示しています。標本信頼度はN基準で、的中確率ではありません。</div>
-    ${boatSectionsHtml}
+    <div class="predict-scenario-tabs" role="tablist" aria-label="決まり手別展開シナリオ">${tabHtml}</div>
+    <div class="predict-scenario-summary"><span><strong>${selected}</strong> の相手残り傾向</span><span>${available}/${others.length}艇データあり</span></div>
+    <div class="scenario-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+      <table class="scenario-table predict-scenario-course-table compact-7" style="border-collapse:collapse;font-size:11.5px;">
+        <thead><tr style="text-align:center;color:var(--ink-soft);">
+          <th style="padding:5px 3px;">コース</th>
+          <th style="padding:5px 3px;white-space:nowrap;">N</th>
+          <th style="padding:5px 3px;white-space:nowrap;">平均</th>
+          <th style="padding:5px 3px;white-space:nowrap;">2着</th>
+          <th style="padding:5px 3px;white-space:nowrap;">3着</th>
+          <th style="padding:5px 3px;white-space:nowrap;">3連</th>
+          <th style="padding:5px 3px;white-space:nowrap;">信頼</th>
+        </tr></thead>
+        <tbody>${bodyRows}</tbody>
+      </table>
+    </div>
+    <div class="predict-detail-note" style="margin-top:9px;">「全体」は全決まり手をN加重で集計し、抜き・恵まれもここに含めます。差し・まくり・まくり差しはタブで切り替えます。2着・3着の下段矢印は今回のBRCタイムX影響で、決まり手タブを切り替えても共通です。信頼は標本N基準です。</div>
   `;
 }
 
@@ -4813,7 +4831,9 @@ function brcBuildScenarioPlaceExhibitionArrow(b,kind){
   return brcBuildExhibitionProbabilityArrowIcon(delta,threshold);
 }
 function brcBuildScenarioPlaceRateHtml(rate,b,kind='second'){
-  return `<span style="white-space:nowrap;">${r0(rate)}%</span>`;
+  const arrow=brcBuildScenarioPlaceExhibitionArrow(b,kind);
+  const evalHtml=arrow || '<span class="scenario-rate-timex-empty" aria-label="BRCタイムX未反映">−</span>';
+  return `<span class="scenario-rate-stack"><span class="scenario-rate-value">${r0(rate)}%</span><span class="scenario-rate-timex" title="BRCタイムXによる今回展示の影響方向">${evalHtml}</span></span>`;
 }
 function brcBuildScenarioExhibitionBadge(b){
   if(!b?.exhibitionApplied) return '';
@@ -7275,7 +7295,7 @@ async function runPredict(){
           </div>
           <div class="predict-guide-item">
             <div class="predict-guide-key">勝率を押す</div>
-            <div class="predict-guide-text">その艇が1着になった時、他の5艇が2着・3着に残る傾向を決まり手別・N数付きで確認できます。①の勝率を押した時は、上部に「①イン逃げ時 BRC相手予測」として今回レースの2着・3着相対予測と展開上位も表示します。</div>
+            <div class="predict-guide-text">その艇が1着になった時の相手5艇を、全体・差し・まくり・まくり差しのタブで切り替えて比較できます。表示はコース・N・平均着順・2着率・3着率・3着内率・標本信頼度です。①勝率タップ時はBRCイン逃げ相手予測も表示します。</div>
           </div>
           <div class="predict-guide-item">
             <div class="predict-guide-key">ST順位を押す</div>
