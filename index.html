@@ -789,8 +789,16 @@
   /* ---- 2026-08-28: 出走表AI 4タブ（出走データ / オッズ / AI予測 / 結果） ---- */
   .predict-main-tabs{
     display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:0;
-    border-bottom:1px solid rgba(10,31,51,.10); background:#fff;
+    border-bottom:1px solid rgba(10,31,51,.10); background:rgba(255,255,255,.98);
+    /* BRC_PREDICT_MAIN_TABS_STICKY_20260828: スクロール中もメインタブ直下へ固定 */
+    position:sticky; top:calc(var(--page-tabs-sticky-h) + 1px); z-index:98;
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    box-shadow:0 8px 14px -14px rgba(10,31,51,.55);
+    border-radius:12px 12px 0 0;
   }
+  /* sticky は overflow:hidden の祖先内ではビューポート追従できないため、
+     出走表AIのカードだけ overflow を開放する。 */
+  #page-predict .entry-card{overflow:visible;}
   .predict-main-tab{
     position:relative; appearance:none; border:0; background:transparent;
     padding:13px 5px; color:var(--ink-soft); font:inherit; font-size:13px;
