@@ -3,6 +3,7 @@
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V1 -->
 <!-- BRC_PREDICT_UNIFIED_DETAIL_TABS_20260828 -->
+<!-- BRC_PREDICT_AUTO_RUN_WOMEN_TOGGLE_20260828 -->
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -601,6 +602,27 @@
     .exhibition-race-notice .ern-seq{gap:2px;}
     .exhibition-race-notice .ern-boat{width:17px; height:17px; font-size:10px;}
   }
+  /* ---- 2026-08-28: グレード選択・実行ボタンを廃止。女子戦だけ手動切替可能 ---- */
+  .women-race-control{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    margin:-2px 1px 12px; padding:7px 10px; border-radius:9px;
+    border:1px solid rgba(10,31,51,.09); background:rgba(10,31,51,.025);
+  }
+  .women-race-control-copy{display:flex;align-items:baseline;gap:7px;min-width:0;flex-wrap:wrap;}
+  .women-race-control-title{font-size:11.5px;font-weight:800;color:var(--line-white);white-space:nowrap;}
+  .women-race-control-note{font-size:10px;font-weight:700;color:var(--ink-soft);white-space:nowrap;}
+  .women-race-switch{position:relative;display:inline-flex;width:38px;height:22px;flex:0 0 auto;cursor:pointer;}
+  .women-race-switch input{position:absolute;opacity:0;pointer-events:none;}
+  .women-race-slider{position:absolute;inset:0;border-radius:999px;background:rgba(10,31,51,.16);transition:.16s;}
+  .women-race-slider::after{content:"";position:absolute;width:16px;height:16px;left:3px;top:3px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(10,31,51,.18);transition:.16s;}
+  .women-race-switch input:checked + .women-race-slider{background:#e07a9a;}
+  .women-race-switch input:checked + .women-race-slider::after{transform:translateX(16px);}
+  @media (max-width:420px){
+    .women-race-control{padding:6px 9px;margin-bottom:10px;}
+    .women-race-control-title{font-size:11px;}
+    .women-race-control-note{font-size:9.5px;}
+  }
+
   .race-summary-compact{
     margin:0 0 10px; padding:2px 1px 0; color:var(--line-white);
   }
@@ -2133,17 +2155,22 @@
         <div class="picker-label">レース</div>
         <div class="picker-row race-tab-row" id="raceTabRow"></div>
       </div>
-      <div class="controls" style="margin-bottom:10px; flex-wrap:wrap;">
-        <select id="predictVenue" style="padding:9px 14px; border-radius:8px; border:1px solid rgba(10,31,51,.16); background:rgba(10,31,51,.04); color:var(--line-white); font-size:14.5px; min-width:160px;"></select>
-        <select id="predictGrade" style="padding:9px 14px; border-radius:8px; border:1px solid rgba(10,31,51,.16); background:rgba(10,31,51,.04); color:var(--line-white); font-size:14.5px; min-width:160px;"></select>
-        <select id="predictRaceDay" style="display:none;">
-          <option value="">当日レースから選択…</option>
-        </select>
-        <select id="predictRaceNo" style="display:none;" disabled>
-          <option value="">R番号</option>
-        </select>
-        <button class="tab" id="predictLoad" style="background:rgba(10,31,51,.08); display:none;" disabled>出走表を読込</button>
-        <button class="tab" id="predictRun" style="background:var(--wave); border-color:var(--wave); color:var(--navy-deep); font-weight:700;">AI予想を表示</button>
+      <div class="women-race-control" id="womenRaceControl">
+        <div class="women-race-control-copy">
+          <span class="women-race-control-title">女子戦として計算</span>
+          <span class="women-race-control-note" id="womenRaceControlNote">6艇から自動判定</span>
+        </div>
+        <label class="women-race-switch" aria-label="女子戦として計算">
+          <input type="checkbox" id="womenRaceToggle">
+          <span class="women-race-slider"></span>
+        </label>
+      </div>
+      <div id="predictInternalControls" style="display:none !important;">
+        <select id="predictVenue"></select>
+        <select id="predictGrade"></select>
+        <select id="predictRaceDay"><option value="">当日レースから選択…</option></select>
+        <select id="predictRaceNo" disabled><option value="">R番号</option></select>
+        <button id="predictLoad" type="button" disabled>出走表を読込</button>
       </div>
       <div id="predictRaceMeta" class="trend-note" style="margin-bottom:12px;"></div>
       <div id="deadlineSchedule" class="card-sub" style="margin-bottom:16px;"></div>
@@ -5439,6 +5466,18 @@ function initPredictPage(){
     + `<option value="女子">${GRADE_LABELS['女子']}</option>`;
   gsel.value = '一般';
 
+  const womenToggle = document.getElementById('womenRaceToggle');
+  if(womenToggle){
+    womenToggle.addEventListener('change', ()=>{
+      const baseGrade = String(womenToggle.dataset.baseGrade || gsel.dataset.baseGrade || gsel.value || '一般');
+      gsel.value = womenToggle.checked ? '女子' : baseGrade;
+      const note = document.getElementById('womenRaceControlNote');
+      if(note) note.textContent = womenToggle.checked ? '女子戦補正 ON' : '女子戦補正 OFF';
+      const raceNo = Number(document.getElementById('predictRaceNo')?.value || 0);
+      if(raceNo) runPredict();
+    });
+  }
+
   document.getElementById('raceCardDateLabel').textContent = TODAY_LABEL;
   populateDaySelect();
   renderRaceCardModeUi();
@@ -5527,7 +5566,8 @@ function initPredictPage(){
     inputEl.addEventListener('change', ()=>updateEntryTableRow(c));
   }
 
-  document.getElementById('predictRun').addEventListener('click', ()=>{
+  const predictRunBtn = document.getElementById('predictRun');
+  if(predictRunBtn) predictRunBtn.addEventListener('click', ()=>{
     runPredict();
   });
   const venueSelForEntry = document.getElementById('predictVenue');
@@ -5908,6 +5948,32 @@ function resolveRaceGrade(venue, raceNo){
     if(isAllFemaleRaceRegs(regs)) return 'G1G2';
   }
   return baseGrade;
+}
+
+function syncWomenRaceMode(baseGrade, regs){
+  const gsel = document.getElementById('predictGrade');
+  const toggle = document.getElementById('womenRaceToggle');
+  const note = document.getElementById('womenRaceControlNote');
+  if(!gsel) return baseGrade;
+
+  const grade = String(baseGrade || '一般');
+  gsel.dataset.baseGrade = grade;
+  if(toggle) toggle.dataset.baseGrade = grade;
+
+  // ヴィーナス等、もともと女子専用カテゴリとして判定できる開催はそのカテゴリを優先。
+  // 一般/G1・G2/G3/SG内で6艇全員女子のレースだけ「女子」へ自動切替し、手動で戻すことも可能。
+  const canWomenOverride = ['一般','G1G2','G3','SG'].includes(grade);
+  const autoWomen = canWomenOverride && isAllFemaleRaceRegs(regs);
+  if(toggle){
+    toggle.checked = autoWomen;
+    toggle.disabled = !canWomenOverride;
+  }
+  gsel.value = autoWomen ? '女子' : grade;
+  if(note){
+    if(!canWomenOverride) note.textContent = `${GRADE_LABELS[grade] || grade}を自動適用`;
+    else note.textContent = autoWomen ? '6艇全員女子を自動判定・ON' : '6艇から自動判定・OFF';
+  }
+  return gsel.value;
 }
 
 function parseOfficialRaceCardText(text){
@@ -6352,9 +6418,7 @@ function loadTodaysRace(venue, raceNo){
   // 全9SGは大会名でもSG認識し、チャレンジカップ併催の女子G2だけレース単位で分離する。
   const resolvedGrade = resolveRaceGrade(venue, raceNo);
 
-  if([...gsel.options].some(o=>o.value===resolvedGrade)){
-    gsel.value = resolvedGrade;
-  }
+  syncWomenRaceMode(resolvedGrade, regs);
   regs.forEach((reg, i)=>{
     const c = i + 1;
     const input = document.getElementById('boat-'+c);
@@ -6377,7 +6441,7 @@ function loadTodaysRace(venue, raceNo){
     console.error('予測自動計算エラー:', err);
     const resultBox = document.getElementById('predictResult');
     if(resultBox){
-      resultBox.innerHTML = '<div class="trend-note" style="color:#b42318;">出走表は読み込み済みです。予測計算でエラーが発生しました。もう一度「AI予想を表示」を押してください。</div>';
+      resultBox.innerHTML = '<div class="trend-note" style="color:#b42318;">出走表は読み込み済みです。予測計算でエラーが発生しました。レースを選び直してください。</div>';
     }
   }
   // 旧「会場・R・大会名・日次・読み込み完了」の説明行は表示しない。
