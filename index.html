@@ -1145,14 +1145,32 @@
   .brc-auth-submit:disabled{opacity:.55; cursor:wait;}
   .brc-auth-message{min-height:21px; margin:11px 0 0; text-align:center; font-size:12.5px; color:#b42318;}
   .brc-auth-help{margin-top:14px; font-size:11.5px; color:var(--ink-soft); text-align:center; line-height:1.65;}
-  .brc-salon-guide{
-    margin-top:16px; padding:13px 14px; border-top:1px solid rgba(10,31,51,.10);
-    text-align:center; color:var(--ink-soft); font-size:12px; line-height:1.75;
+
+  /* ---- 新規入会導線：7日間無料体験を最上部で訴求 ---- */
+  .brc-trial-guide{
+    margin-top:16px; padding:15px 14px 13px; border:1px solid rgba(0,87,219,.16);
+    border-radius:12px; background:linear-gradient(160deg,rgba(0,87,219,.07),rgba(255,255,255,.96));
+    text-align:center;
   }
+  .brc-trial-badge{
+    display:inline-flex; align-items:center; justify-content:center; padding:3px 9px; border-radius:999px;
+    background:rgba(0,87,219,.10); color:var(--wave); font-size:10.5px; font-weight:900; letter-spacing:.04em;
+  }
+  .brc-trial-title{margin-top:7px; color:var(--navy); font-size:16px; font-weight:900; line-height:1.35;}
+  .brc-trial-sub{margin-top:4px; color:var(--ink-soft); font-size:11.5px; line-height:1.55;}
+  .brc-trial-note{margin-top:7px; color:var(--ink-soft); font-size:10.5px; line-height:1.55;}
+  .brc-trial-line{margin:11px 0 0 !important; font-size:14px !important;}
 
   /* ---- 非会員向け 本日の無料2R ---- */
   .brc-free-preview{
-    margin-top:16px; padding:14px 0 2px; border-top:1px solid rgba(10,31,51,.10);
+    margin-top:14px; padding:14px 0 2px; border-top:1px solid rgba(10,31,51,.10);
+  }
+  .brc-member-login-separator{
+    display:flex; align-items:center; gap:10px; margin:18px 0 12px; color:var(--ink-soft);
+    font-size:11px; font-weight:800; white-space:nowrap;
+  }
+  .brc-member-login-separator::before,.brc-member-login-separator::after{
+    content:""; height:1px; flex:1 1 auto; background:rgba(10,31,51,.10);
   }
   .brc-free-preview-head{text-align:center; margin-bottom:10px;}
   .brc-free-preview-title{font-size:13px; font-weight:900; color:var(--navy);}
@@ -1189,7 +1207,6 @@
     .brc-free-race{font-size:15px;}
   }
 
-  .brc-salon-guide strong{color:var(--navy); font-weight:900;}
   .brc-line-link{
     display:flex; align-items:center; justify-content:center; gap:6px; width:100%;
     margin:9px 0 8px; padding:10px 12px; border-radius:9px;
@@ -2053,14 +2070,15 @@
       <div class="brc-auth-card">
         <div class="brc-auth-mark">🔒</div>
         <h2 class="brc-auth-title">BRC MEMBERS</h2>
-        <div class="brc-auth-sub" id="brcAuthSub">出走表AIはBRC会員限定です。発行された会員IDとパスワードでログインしてください。</div>
-        <form id="brcLoginForm" autocomplete="on">
-          <label class="brc-auth-field"><span>会員ID</span><input id="brcLoginId" type="text" inputmode="text" autocomplete="username" autocapitalize="characters" spellcheck="false" placeholder="BRC002" required></label>
-          <label class="brc-auth-field"><span>パスワード</span><input id="brcLoginPassword" type="password" autocomplete="current-password" required></label>
-          <button class="brc-auth-submit" id="brcLoginSubmit" type="submit">ログインして開く</button>
-        </form>
-        <div class="brc-auth-message" id="brcAuthMessage" aria-live="polite"></div>
-        <div class="brc-auth-help">YOOR加入確認後に発行された会員IDでログインできます。</div>
+
+        <div class="brc-trial-guide">
+          <div class="brc-trial-badge">新規入会</div>
+          <div class="brc-trial-title">BRCを7日間無料で体験</div>
+          <div class="brc-trial-sub">新規入会の方は、最初の1週間を無料でご利用いただけます。</div>
+          <a class="brc-line-link brc-trial-line" href="https://lin.ee/7N8eGk6" target="_blank" rel="noopener noreferrer">7日間無料で試す</a>
+          <div class="brc-trial-note">公式LINEにキーワード <span class="brc-salon-keyword">【サロン】</span> と返信してください。</div>
+        </div>
+
         <div class="brc-free-preview" id="brcFreePreview">
           <div class="brc-free-preview-head">
             <div class="brc-free-preview-title">本日の無料公開</div>
@@ -2068,8 +2086,17 @@
           </div>
           <div id="brcFreePreviewBody" class="brc-free-preview-list"><div class="brc-free-empty">本日の無料レースを読み込み中...</div></div>
         </div>
+
+        <div class="brc-member-login-separator"><span>会員の方はこちら</span></div>
+        <div class="brc-auth-sub" id="brcAuthSub">発行された会員IDとパスワードでログインしてください。</div>
+        <form id="brcLoginForm" autocomplete="on">
+          <label class="brc-auth-field"><span>会員ID</span><input id="brcLoginId" type="text" inputmode="text" autocomplete="username" autocapitalize="characters" spellcheck="false" placeholder="BRC002" required></label>
+          <label class="brc-auth-field"><span>パスワード</span><input id="brcLoginPassword" type="password" autocomplete="current-password" required></label>
+          <button class="brc-auth-submit" id="brcLoginSubmit" type="submit">ログインして開く</button>
+        </form>
+        <div class="brc-auth-message" id="brcAuthMessage" aria-live="polite"></div>
+        <div class="brc-auth-help">YOOR加入確認後に発行された会員IDでログインできます。</div>
         <div style="text-align:center;"><button type="button" class="brc-logout-btn" id="brcGateLogoutBtn" style="display:none; margin-top:10px; padding:8px 14px;">ログアウトして別IDでログイン</button></div>
-        <div class="brc-salon-guide"><strong>入会希望の方へ</strong><a class="brc-line-link" href="https://lin.ee/7N8eGk6" target="_blank" rel="noopener noreferrer">公式LINEを開く</a>公式LINEにキーワード <span class="brc-salon-keyword">【サロン】</span> と返信してください。<br>入会のご案内を配信します。</div>
       </div>
     </div>
     <div id="brcPredictProtected" style="display:none;">
@@ -2469,7 +2496,7 @@ function brcRenderGate(state='login', user=null){
   if(sub){
     if(state==='inactive') sub.textContent='ログインは確認できましたが、このアカウントには現在BRC会員権限がありません。YOOR会員登録状況をご確認ください。';
     else if(state==='checking') sub.textContent='BRC会員情報を確認しています…';
-    else sub.textContent='出走表AIはBRC会員限定です。発行された会員IDとパスワードでログインしてください。';
+    else sub.textContent='発行された会員IDとパスワードでログインしてください。';
   }
   const gateLogoutBtn=document.getElementById('brcGateLogoutBtn');
   if(state==='inactive'){
