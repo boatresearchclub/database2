@@ -529,6 +529,9 @@
   .slit-eval-label{font-weight:800; color:var(--ink-soft); white-space:nowrap; flex:0 0 auto;}
   .slit-eval-items{display:flex; align-items:flex-start; gap:8px 10px; flex-wrap:wrap; min-width:0;}
   .slit-eval-item{display:inline-flex; align-items:center; gap:6px; min-width:0; flex:0 0 auto; white-space:nowrap;}
+  .slit-tilt-row{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-weight:900;color:#8a5a00;}
+  .slit-tilt-row .slit-eval-boat{width:22px;height:22px;font-size:11px;}
+  .slit-tilt-value{font-variant-numeric:tabular-nums;letter-spacing:-.01em;}
   .slit-eval-pair{display:inline-flex;align-items:center;gap:4px;font-weight:900;color:var(--navy);white-space:nowrap;}
   .slit-eval-copy{display:inline-flex;align-items:center;gap:3px;font-weight:800;color:var(--line-white);white-space:nowrap;}
   .slit-eval-boat{
@@ -4611,6 +4614,19 @@ function brcSlitNumber(v){
   const n=Number(v);
   return Number.isFinite(n) ? n : null;
 }
+function brcSlitHighTiltItems(liveRace){
+  const raceBoats=Array.isArray(liveRace?.boats) ? liveRace.boats : [];
+  return raceBoats.map(x=>({
+    boat:Number(x?.boat_no),
+    tilt:brcSlitNumber(x?.tilt)
+  })).filter(x=>Number.isInteger(x.boat) && x.boat>=1 && x.boat<=6 && x.tilt!==null && x.tilt>=1.0)
+    .sort((a,b)=>a.boat-b.boat);
+}
+function brcBuildSlitHighTiltHtml(liveRace){
+  return brcSlitHighTiltItems(liveRace).map(x=>
+    `<span class="slit-tilt-row" title="${x.boat}号艇 チルト${x.tilt.toFixed(1)}">${brcSlitBoatBadgeHtml(x.boat)}<span class="slit-tilt-value">チルト${x.tilt.toFixed(1)}</span></span>`
+  ).join('');
+}
 function brcSlitCurrentVenue(){
   return String(document.getElementById('predictRaceDay')?.value||document.getElementById('predictVenue')?.value||'').trim();
 }
@@ -4834,13 +4850,16 @@ function brcSlitMetricLabel(key){
 }
 function brcBuildSlitEvaluationHtml(boats,liveRace,inReliability=null){
   const state=brcSlitEvaluationState(boats,liveRace,inReliability);
-  if(state.status==='historical-hidden'){
+  const tiltHtml=brcBuildSlitHighTiltHtml(liveRace);
+
+  // 過去日はSTを使うスリット判定は非表示のまま。高チルト情報だけ保存データから表示可能。
+  if(state.status==='historical-hidden' && !tiltHtml){
     return '<div id="slitEvaluationCard" class="slit-eval-compact" style="display:none;"></div>';
   }
 
-  let body='';
+  let slitHtml='';
   if(state.status==='active'){
-    body=state.rows.map(r=>{
+    slitHtml=state.rows.map(r=>{
       const title=(r.titles||[]).join(' / ');
       if(r.generic){
         return `<span class="slit-rate-row" title="${title}">${brcSlitBoatBadgeHtml(r.boat)}<span class="slit-rate-generic">スリット優位</span></span>`;
@@ -4853,11 +4872,21 @@ function brcBuildSlitEvaluationHtml(boats,liveRace,inReliability=null){
       }).join('');
       return `<span class="slit-rate-row" title="${title}">${brcSlitBoatBadgeHtml(r.boat)}<span class="slit-rate-metrics">${metrics}</span></span>`;
     }).join('');
-  }else{
-    const text=state.status==='excluded' ? '判定対象外' : state.status==='entry-waiting' ? '進入確認待ち' : state.status==='partial' ? '一部データ不足' : state.status==='none' ? '該当なし' : '展示待ち';
-    const title=state.reason ? ` title="${state.reason}"` : '';
-    body=`<span class="slit-eval-muted"${title}>―　${text}</span>`;
   }
+
+  // チルト1.0以上がいる場合は、スリット条件が非該当・待機中でも高チルト表示を優先。
+  if(tiltHtml){
+    const body=`${slitHtml}${tiltHtml}`;
+    return `<div id="slitEvaluationCard" class="slit-eval-compact"><span class="slit-eval-label">展示スリット評価</span><span class="slit-eval-items">${body}</span></div>`;
+  }
+
+  if(slitHtml){
+    return `<div id="slitEvaluationCard" class="slit-eval-compact"><span class="slit-eval-label">展示スリット評価</span><span class="slit-eval-items">${slitHtml}</span></div>`;
+  }
+
+  const text=state.status==='excluded' ? '判定対象外' : state.status==='entry-waiting' ? '進入確認待ち' : state.status==='partial' ? '一部データ不足' : state.status==='none' ? '該当なし' : state.status==='historical-hidden' ? '該当なし' : '展示待ち';
+  const title=state.reason ? ` title="${state.reason}"` : '';
+  const body=`<span class="slit-eval-muted"${title}>―　${text}</span>`;
   return `<div id="slitEvaluationCard" class="slit-eval-compact"><span class="slit-eval-label">展示スリット評価</span><span class="slit-eval-items">${body}</span></div>`;
 }
 
