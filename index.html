@@ -674,6 +674,7 @@
   }
 
 
+  /* BRC_PREDICT_UNIFIED_FIXED_HEIGHT_20260828 */
   /* ---- 2026-08-28: 出走表AI 選手詳細を4タブ統合 ---- */
   .predict-unified-shell{min-width:0;}
   .predict-unified-head{margin-bottom:10px;}
@@ -7575,7 +7576,7 @@ window.__playersRendered = true;
 .motor-final-list{display:grid;gap:6px}.motor-final-row{display:grid;grid-template-columns:72px 38px 1fr auto;gap:6px;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px solid rgba(10,31,51,.055)}.motor-final-row:last-child{border-bottom:0}.motor-final-date,.motor-final-grade{color:var(--ink-soft)}.motor-final-name{font-weight:700;color:var(--navy)}.motor-final-rank{font-weight:900;white-space:nowrap}.motor-final-rank.win{color:#b47a00}.motor-detail-empty{font-size:12px;color:var(--ink-soft);padding:4px 0}.motor-detail-note{font-size:10.5px;color:var(--ink-soft);margin-top:10px;line-height:1.45}
 @media(max-width:640px){.motor-detail-backdrop{padding:0}.motor-detail-sheet{width:100%;max-height:82vh;border-radius:18px 18px 0 0;padding:16px 16px 18px}.motor-detail-topstats{gap:5px}.motor-detail-stat b{font-size:15px}.motor-final-row{grid-template-columns:66px 34px 1fr auto;gap:4px;font-size:11.5px}}
 .predict-detail-backdrop{z-index:10060;}
-.predict-detail-backdrop .motor-detail-sheet{width:min(620px,100%);max-height:min(84vh,760px);}
+.predict-detail-backdrop .motor-detail-sheet{width:min(620px,100%);height:min(84vh,760px);max-height:min(84vh,760px);overflow:auto;}
 .predict-detail-content{min-width:0;}
 .predict-detail-section-title{border-top:1px solid rgba(10,31,51,.10);padding-top:12px;margin-top:14px;font-size:12px;color:var(--ink-soft);font-weight:850;}
 .predict-detail-note{font-size:11.5px;color:var(--ink-soft);line-height:1.55;background:rgba(10,31,51,.035);border:1px solid rgba(10,31,51,.07);border-radius:10px;padding:9px 10px;margin:2px 0 14px;}
@@ -7584,7 +7585,7 @@ window.__playersRendered = true;
 .predict-detail-content .card{box-shadow:none;}
 .predict-detail-content .bar-track{height:6px;background:rgba(10,31,51,.09);border-radius:4px;overflow:hidden;}
 .predict-detail-content .bar-fill{height:100%;border-radius:4px;}
-@media(max-width:640px){.predict-detail-backdrop .motor-detail-sheet{width:100%;max-height:86vh;border-radius:18px 18px 0 0;padding:16px 14px 20px}.predict-detail-topstats,.predict-detail-scenario-stats{grid-template-columns:repeat(4,1fr)}.predict-detail-content .motor-detail-title{font-size:18px}.predict-detail-content .motor-detail-stat{padding:7px 3px}.predict-detail-content .motor-detail-stat b{font-size:14px}.predict-detail-content .motor-detail-stat span{font-size:9.5px}}
+@media(max-width:640px){.predict-detail-backdrop .motor-detail-sheet{width:100%;height:86vh;max-height:86vh;border-radius:18px 18px 0 0;padding:16px 14px 20px;overflow:auto}.predict-detail-topstats,.predict-detail-scenario-stats{grid-template-columns:repeat(4,1fr)}.predict-detail-content .motor-detail-title{font-size:18px}.predict-detail-content .motor-detail-stat{padding:7px 3px}.predict-detail-content .motor-detail-stat b{font-size:14px}.predict-detail-content .motor-detail-stat span{font-size:9.5px}}
 
   /* BRC_IOS_FOCUS_ZOOM_FIX_20260828
      iPhone Safari は font-size が16px未満の input/select にフォーカスすると
