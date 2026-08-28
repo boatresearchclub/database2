@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Boat Research Club ～データベース～</title>
+<!-- BRC_IN_NIGE_ORDER_SCENARIO_UI_20260828 -->
 <!-- BRC_TIMEX_ARROW_THRESHOLDS_20260828 -->
 <!-- BRC_TIMEX_VENUE_SHRINK_2024BUILD_2025VAL_20260828 -->
 <!-- BRC_TIMEX_RENAME_20260828 -->
@@ -733,6 +734,40 @@
     table.scenario-table.compact-7 th:first-child,
     table.scenario-table.compact-7 td:first-child{font-size:9.5px !important;}
     .scenario-grade-badge{min-width:26px;height:23px;padding:0 5px;font-size:10.5px;}
+  }
+
+  /* ---- 2026-08-28: ①勝率タップ内 BRCイン逃げ2着・3着相対予測 ---- */
+  .brc-nige-order-panel{
+    margin:12px 0 15px; padding:12px; border:1px solid rgba(0,87,219,.18);
+    border-radius:12px; background:linear-gradient(160deg,rgba(0,87,219,.055),rgba(255,255,255,.92));
+  }
+  .brc-nige-order-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:9px;}
+  .brc-nige-order-title{font-size:13px;font-weight:900;color:var(--navy);line-height:1.35;}
+  .brc-nige-order-sub{margin-top:2px;font-size:10.5px;color:var(--ink-soft);line-height:1.45;}
+  .brc-nige-order-rank{flex:0 0 auto;display:inline-flex;align-items:center;padding:3px 7px;border-radius:999px;background:rgba(0,87,219,.09);border:1px solid rgba(0,87,219,.18);color:var(--wave);font-size:10px;font-weight:900;white-space:nowrap;}
+  .brc-nige-order-grid{border:1px solid rgba(10,31,51,.08);border-radius:10px;overflow:hidden;background:#fff;}
+  .brc-nige-order-row{display:grid;grid-template-columns:42px minmax(0,1fr) minmax(0,1fr);align-items:center;min-height:39px;border-top:1px solid rgba(10,31,51,.055);}
+  .brc-nige-order-row:first-child{border-top:0;}
+  .brc-nige-order-row.head{min-height:31px;background:var(--bg3);color:var(--ink-soft);font-size:10.5px;font-weight:850;text-align:center;}
+  .brc-nige-order-boat{display:flex;align-items:center;justify-content:center;}
+  .brc-nige-order-metric{display:flex;align-items:baseline;justify-content:center;gap:5px;min-width:0;font-variant-numeric:tabular-nums;}
+  .brc-nige-order-pct{font-size:16px;font-weight:900;color:var(--navy);white-space:nowrap;}
+  .brc-nige-order-place{font-size:9.5px;font-weight:800;color:var(--ink-soft);white-space:nowrap;}
+  .brc-nige-order-metric.is-top .brc-nige-order-pct,.brc-nige-order-metric.is-top .brc-nige-order-place{color:var(--wave);}
+  .brc-nige-order-picks{display:flex;align-items:flex-start;gap:7px;margin-top:9px;padding-top:9px;border-top:1px dashed rgba(0,87,219,.18);}
+  .brc-nige-order-picks-label{flex:0 0 auto;font-size:10.5px;font-weight:900;color:var(--ink-soft);padding-top:3px;}
+  .brc-nige-order-pick-list{display:flex;flex-wrap:wrap;gap:5px;}
+  .brc-nige-order-pick{display:inline-flex;align-items:center;padding:3px 7px;border-radius:7px;border:1px solid rgba(0,87,219,.18);background:#fff;color:var(--navy);font-size:11.5px;font-weight:900;white-space:nowrap;}
+  .brc-nige-order-note{margin-top:7px;font-size:9.8px;line-height:1.55;color:var(--ink-soft);}
+  @media(max-width:420px){
+    .brc-nige-order-panel{padding:10px 9px;margin-top:10px;}
+    .brc-nige-order-title{font-size:12px;}
+    .brc-nige-order-sub{font-size:9.8px;}
+    .brc-nige-order-row{grid-template-columns:38px minmax(0,1fr) minmax(0,1fr);min-height:37px;}
+    .brc-nige-order-row.head{font-size:10px;min-height:29px;}
+    .brc-nige-order-pct{font-size:15px;}
+    .brc-nige-order-place{font-size:9px;}
+    .brc-nige-order-pick{font-size:11px;padding:3px 6px;}
   }
 
   /* ---- 2026-08-19: 上部タブ固定・選手検索固定・コース別勝率のスマホ幅最適化 ---- */
@@ -3531,6 +3566,49 @@ function togglePredictScenario(course){
   document.body.style.overflow='hidden';
 }
 
+function brcBuildInlineNigeOrderPredictionHtml(course, boats){
+  if(Number(course)!==1) return '';
+  const worker=window.__predictWorkerCurrent;
+  const sa=worker?.scenarioAssist;
+  const second=Array.isArray(sa?.second)?sa.second:[];
+  const third=Array.isArray(sa?.third)?sa.third:[];
+  if(!second.length || !third.length) return '';
+
+  const secondMap=new Map(second.map((x,i)=>[Number(x.boat),{...x,rank:i+1}]));
+  const thirdMap=new Map(third.map((x,i)=>[Number(x.boat),{...x,rank:i+1}]));
+  const candidates=(boats||[]).filter(b=>Number(b.course)>=2 && Number(b.course)<=6).sort((a,b)=>Number(a.course)-Number(b.course));
+  if(!candidates.length) return '';
+
+  const metric=(x)=>{
+    const pct=Number(x?.pct);
+    if(!Number.isFinite(pct)) return '<div class="brc-nige-order-metric"><span class="brc-nige-order-pct">―</span></div>';
+    const rank=Number(x?.rank);
+    return `<div class="brc-nige-order-metric${rank===1?' is-top':''}"><span class="brc-nige-order-pct">${pct.toFixed(1)}%</span>${Number.isFinite(rank)?`<span class="brc-nige-order-place">${rank}位</span>`:''}</div>`;
+  };
+  const rows=candidates.map(b=>{
+    const boat=Number(b.course);
+    return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${metric(secondMap.get(boat))}${metric(thirdMap.get(boat))}</div>`;
+  }).join('');
+
+  const picks=(Array.isArray(sa?.picks4)?sa.picks4:[]).slice(0,3);
+  const picksHtml=picks.length ? `<div class="brc-nige-order-picks"><div class="brc-nige-order-picks-label">展開上位</div><div class="brc-nige-order-pick-list">${picks.map((x,i)=>`<span class="brc-nige-order-pick">${i+1}位 ${x}</span>`).join('')}</div></div>` : '';
+  const uiRank=worker?.uiInReliability?.rank || worker?.recommendation?.rank || '';
+  const rankHtml=uiRank ? `<span class="brc-nige-order-rank">イン${uiRank}</span>` : '';
+
+  return `<div class="brc-nige-order-panel">
+    <div class="brc-nige-order-head">
+      <div><div class="brc-nige-order-title">①イン逃げ時 BRC相手予測</div><div class="brc-nige-order-sub">今回の②〜⑥を相対評価した2着・3着予測</div></div>
+      ${rankHtml}
+    </div>
+    <div class="brc-nige-order-grid">
+      <div class="brc-nige-order-row head"><div>艇</div><div>2着予測</div><div>3着予測</div></div>
+      ${rows}
+    </div>
+    ${picksHtml}
+    <div class="brc-nige-order-note">※①が逃げた場合の条件付き相対予測です。下の「展開シナリオ」は過去実績なので、今回予測とは分けて表示しています。</div>
+  </div>`;
+}
+
 function renderInlinePredictScenario(course){
   const box = document.getElementById(`predict-sc-box-${course}`);
   if(!box) return;
@@ -3609,6 +3687,7 @@ function renderInlinePredictScenario(course){
   }).join('');
 
   const winnerBoat = boats.find(b=>Number(b.course)===Number(course));
+  const nigeOrderPredictionHtml = brcBuildInlineNigeOrderPredictionHtml(course, boats);
   box.innerHTML = `
     <div class="motor-detail-head predict-detail-head">
       <div>
@@ -3618,7 +3697,8 @@ function renderInlinePredictScenario(course){
       <button class="motor-detail-close" type="button" onclick="closePredictDetail()" aria-label="閉じる">×</button>
     </div>
     ${winnerBoat ? `<div class="motor-detail-topstats predict-detail-scenario-stats"><div class="motor-detail-stat"><b>${winnerBoat.pct}%</b><span>予想勝率</span></div><div class="motor-detail-stat"><b>${winnerBoat.pct3}%</b><span>3連対率</span></div><div class="motor-detail-stat"><b>${course}</b><span>コース</span></div><div class="motor-detail-stat"><b>${others.length}</b><span>相手艇</span></div></div>` : ''}
-    <div class="predict-detail-note">各選手名横の「BRCタイムX」で、今回展示による2着・3着への影響方向を表示しています。標本信頼度はN基準で、的中確率ではありません。</div>
+    ${nigeOrderPredictionHtml}
+    <div class="predict-detail-note">${Number(course)===1 && nigeOrderPredictionHtml ? '上段は今回レースのBRC相対予測、下段は選手ごとの過去実績です。' : ''}各選手名横の「BRCタイムX」で、今回展示による2着・3着への影響方向を表示しています。標本信頼度はN基準で、的中確率ではありません。</div>
     ${boatSectionsHtml}
   `;
 }
@@ -7195,7 +7275,7 @@ async function runPredict(){
           </div>
           <div class="predict-guide-item">
             <div class="predict-guide-key">勝率を押す</div>
-            <div class="predict-guide-text">その艇が1着になった時、他の5艇が2着・3着に残る傾向を決まり手別・N数付きで確認できます。</div>
+            <div class="predict-guide-text">その艇が1着になった時、他の5艇が2着・3着に残る傾向を決まり手別・N数付きで確認できます。①の勝率を押した時は、上部に「①イン逃げ時 BRC相手予測」として今回レースの2着・3着相対予測と展開上位も表示します。</div>
           </div>
           <div class="predict-guide-item">
             <div class="predict-guide-key">ST順位を押す</div>
