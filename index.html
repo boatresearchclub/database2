@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V1 -->
+<!-- BRC_WOMEN_CALC_BELOW_DEADLINE_20260828 -->
 <!-- BRC_PREDICT_UNIFIED_DETAIL_TABS_20260828 -->
 <!-- BRC_PREDICT_AUTO_RUN_WOMEN_TOGGLE_20260828 -->
 
@@ -1257,7 +1258,15 @@
 
 
   /* ---- BRCタイムX：選手別例外「要注意」 ---- */
-  #predictResult .predict-exhibition-label{gap:5px;}
+  #predictResult .predict-exhibition-label{gap:0;}
+  #predictResult .predict-exhibition-inline{display:inline-flex;align-items:center;min-width:0;max-width:100%;}
+  #predictResult .predict-exhibition-base{display:inline-flex;align-items:center;gap:1px;color:#1f5fb0;font-size:10.5px;font-weight:850;line-height:1;white-space:nowrap;letter-spacing:-.01em;}
+  #predictResult .predict-exhibition-base .brc{font-size:.86em;font-weight:950;letter-spacing:0;}
+  #predictResult .predict-exhibition-alert{display:inline-flex;align-items:center;justify-content:flex-start;max-width:100%;padding:0;margin:0;border:0;background:none;cursor:pointer;font-size:10.5px;font-weight:900;line-height:1;white-space:nowrap;letter-spacing:-.01em;}
+  #predictResult .predict-exhibition-alert.brc-ex-alert-up{color:#b4232c;}
+  #predictResult .predict-exhibition-alert.brc-ex-alert-down{color:#1f5fb0;}
+  #predictResult .predict-exhibition-alert.brc-ex-alert-flat{color:var(--ink-soft);}
+  #predictResult .predict-exhibition-alert.brc-ex-alert-watch{color:#667085;font-weight:850;}
   .brc-ex-alert-btn{border:1px solid rgba(227,178,60,.55);background:rgba(227,178,60,.12);color:#8a5a00;border-radius:999px;padding:2px 6px;font-size:9px;font-weight:900;line-height:1.15;cursor:pointer;white-space:nowrap;}
   .brc-ex-alert-btn.brc-ex-alert-up{border-color:rgba(180,35,44,.38);background:rgba(180,35,44,.08);color:#b4232c;}
   .brc-ex-alert-btn.brc-ex-alert-down{border-color:rgba(31,95,176,.38);background:rgba(31,95,176,.08);color:#1f5fb0;}
@@ -1326,6 +1335,8 @@
       min-height:19px; margin-top:3px; font-size:10.5px !important; line-height:1 !important;
       white-space:nowrap !important; overflow-wrap:normal !important; word-break:keep-all !important;
     }
+    #predictResult .predict-exhibition-base,
+    #predictResult .predict-exhibition-alert{font-size:10px !important;}
     #predictResult .prob-value{
       min-height:24px; font-size:16.5px !important; line-height:1.05 !important; font-weight:850 !important;
     }
@@ -2155,6 +2166,15 @@
         <div class="picker-label">レース</div>
         <div class="picker-row race-tab-row" id="raceTabRow"></div>
       </div>
+      <div id="predictInternalControls" style="display:none !important;">
+        <select id="predictVenue"></select>
+        <select id="predictGrade"></select>
+        <select id="predictRaceDay"><option value="">当日レースから選択…</option></select>
+        <select id="predictRaceNo" disabled><option value="">R番号</option></select>
+        <button id="predictLoad" type="button" disabled>出走表を読込</button>
+      </div>
+      <div id="predictRaceMeta" class="trend-note" style="margin-bottom:12px;"></div>
+      <div id="deadlineSchedule" class="card-sub" style="margin-bottom:16px;"></div>
       <div class="women-race-control" id="womenRaceControl">
         <div class="women-race-control-copy">
           <span class="women-race-control-title">女子戦として計算</span>
@@ -2165,15 +2185,6 @@
           <span class="women-race-slider"></span>
         </label>
       </div>
-      <div id="predictInternalControls" style="display:none !important;">
-        <select id="predictVenue"></select>
-        <select id="predictGrade"></select>
-        <select id="predictRaceDay"><option value="">当日レースから選択…</option></select>
-        <select id="predictRaceNo" disabled><option value="">R番号</option></select>
-        <button id="predictLoad" type="button" disabled>出走表を読込</button>
-      </div>
-      <div id="predictRaceMeta" class="trend-note" style="margin-bottom:12px;"></div>
-      <div id="deadlineSchedule" class="card-sub" style="margin-bottom:16px;"></div>
 
       <div class="entry-card">
         <div class="entry-panel" id="entryPanel-entryTable" style="display:none;">
@@ -5037,14 +5048,29 @@ function brcMetricClass(v){
   if(!Number.isFinite(n)||Math.abs(n)<BRC_TIMEX_ARROW_FLAT_PT) return 'flat';
   return n>0?'up':'down';
 }
+function brcGetExhibitionAlertMeta(a){
+  const isWatch=a?.['採用区分']==='監視';
+  const plan=a?.['INDEX表示案']||'';
+  const cls=isWatch?'brc-ex-alert-watch':(plan==='好展示でも評価注意'?'brc-ex-alert-down':plan==='悪展示でも消し注意'?'brc-ex-alert-up':'brc-ex-alert-flat');
+  const text=isWatch?'タイムX評価 監視':(plan==='悪展示でも消し注意'?'タイムX評価 消し注意':plan==='好展示でも評価注意'?'タイムX評価 要注意':'タイムX評価 注意');
+  const buttonText=isWatch?'△ 監視':'⚠ 要注意';
+  const title=isWatch?'選手×コース×タイム差帯の個人傾向（監視条件）。タップで詳細':'選手×コース×タイム差帯の個人傾向。タップで詳細';
+  return {isWatch,plan,cls,text,buttonText,title};
+}
 function brcBuildExhibitionAlertButton(b){
   const a=brcFindExhibitionPlayerAlert(b); if(!a) return '';
   const payload=encodeURIComponent(JSON.stringify(a));
-  const isWatch=a['採用区分']==='監視';
-  const cls=isWatch?'brc-ex-alert-watch':(a['INDEX表示案']==='好展示でも評価注意'?'brc-ex-alert-down':a['INDEX表示案']==='悪展示でも消し注意'?'brc-ex-alert-up':'brc-ex-alert-flat');
-  const text=isWatch?'△ 監視':'⚠ 要注意';
-  const title=isWatch?'選手×コース×タイム差帯の個人傾向（監視条件）。タップで詳細':'選手×コース×タイム差帯の個人傾向。タップで詳細';
-  return `<button type="button" class="brc-ex-alert-btn ${cls}" onclick="event.stopPropagation();brcShowExhibitionPlayerAlert(decodeURIComponent('${payload}'))" title="${title}">${text}</button>`;
+  const meta=brcGetExhibitionAlertMeta(a);
+  return `<button type="button" class="brc-ex-alert-btn ${meta.cls}" onclick="event.stopPropagation();brcShowExhibitionPlayerAlert(decodeURIComponent('${payload}'))" title="${meta.title}">${meta.buttonText}</button>`;
+}
+function brcBuildPredictExhibitionLabelHtml(b){
+  const a=brcFindExhibitionPlayerAlert(b);
+  if(!a){
+    return `<span class="predict-exhibition-inline"><span class="predict-exhibition-base"><span class="brc">BRC</span><span>タイムX</span></span></span>`;
+  }
+  const payload=encodeURIComponent(JSON.stringify(a));
+  const meta=brcGetExhibitionAlertMeta(a);
+  return `<button type="button" class="predict-exhibition-inline predict-exhibition-alert ${meta.cls}" onclick="event.stopPropagation();brcShowExhibitionPlayerAlert(decodeURIComponent('${payload}'))" title="${meta.title}">${meta.text}</button>`;
 }
 function brcAlertMetricRow(label,a,normalKey,playerKey){
   const normal=Number(a[normalKey]), player=Number(a[playerKey]);
@@ -5141,7 +5167,7 @@ function brcRefreshExhibitionAdjustedDom(liveRace,venue,raceNo){
     const t=document.getElementById(`predict-top3-cell-${b.course}`);
     if(t) t.innerHTML=brcBuildTop3CellInner(b);
     const exLabel=document.getElementById(`predict-exhibition-label-${b.course}`);
-    if(exLabel) exLabel.innerHTML=`タイムX ${brcBuildExhibitionAlertButton(b)}`;
+    if(exLabel) exLabel.innerHTML=brcBuildPredictExhibitionLabelHtml(b);
   }
   const inCard=document.getElementById('inReliabilityCard');
   if(inCard && local){
@@ -7524,7 +7550,7 @@ async function runPredict(){
               : '<span style="color:var(--ink-soft);">―</span>';
           return `<tr>
             <td><span class="num-badge" style="width:22px;height:22px;font-size:12.5px;background:${col.bg};color:${col.text};${b.course===1?'border:1.5px solid rgba(10,31,51,.35);box-sizing:border-box;':''}display:inline-flex;align-items:center;justify-content:center;border-radius:50%;">${b.course}</span></td>
-            <td class="predict-player-cell"><div class="predict-player-name"><a href="#" style="color:var(--line-white); text-decoration:none; cursor:pointer; font-weight:800;" onclick="event.preventDefault(); togglePredictPlayer(${b.course}, '${b.player.reg}', '${venue}');" title="タップで選手・展開・ST・モーター詳細を表示">${b.player.name}</a></div><div id="predict-exhibition-label-${b.course}" class="predict-exhibition-label">タイムX ${brcBuildExhibitionAlertButton(b)}</div></td>
+            <td class="predict-player-cell"><div class="predict-player-name"><a href="#" style="color:var(--line-white); text-decoration:none; cursor:pointer; font-weight:800;" onclick="event.preventDefault(); togglePredictPlayer(${b.course}, '${b.player.reg}', '${venue}');" title="タップで選手・展開・ST・モーター詳細を表示">${b.player.name}</a></div><div id="predict-exhibition-label-${b.course}" class="predict-exhibition-label">${brcBuildPredictExhibitionLabelHtml(b)}</div></td>
             <td id="predict-win-cell-${b.course}" class="num" style="font-weight:800; color:var(--line-white); cursor:pointer; text-decoration:none;" onclick="togglePredictScenario(${b.course})" title="タップで詳細の「展開」タブを表示">${brcBuildWinCellInner(b,venue)}</td>
             <td id="predict-top3-cell-${b.course}" class="num" style="font-weight:800; color:var(--line-white);">${brcBuildTop3CellInner(b)}</td>
             <td class="num" title="タップで詳細の「ST」タブを表示" onclick="openSTStabilityDetail('${b.player.reg}',${b.course})"><div class="st-rank-stack"><span class="st-rank-main">${stText}</span>${buildSTStabilitySub(b.player.reg,b.course)}</div></td>
