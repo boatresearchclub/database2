@@ -11,6 +11,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Boat Research Club ～データベース～</title>
+<!-- BRC_NIGE_PREDICT_INTEGER_DISPLAY_20260829 -->
+
 <!-- BRC_NIGE_ORDER_PREDICTIVE_MODEL_20260828 -->
 <!-- BRC_NIGE_FULL_V2_SERVER_TIMEX_20260828 -->
 <!-- BRC_PREDICT_4TAB_AI_NIGE_MOVE_20260828 -->
@@ -858,10 +860,10 @@
   .brc-nige-order-row:first-child{border-top:0;}
   .brc-nige-order-row.head{min-height:29px;background:var(--bg3);color:var(--ink-soft);font-size:10px;font-weight:850;text-align:center;}
   .brc-nige-order-boat{display:flex;align-items:center;justify-content:center;}
-  .brc-nige-order-metric{display:flex;align-items:baseline;justify-content:center;gap:4px;font-variant-numeric:tabular-nums;}
+  .brc-nige-order-metric{display:flex;align-items:baseline;justify-content:center;gap:5px;font-variant-numeric:tabular-nums;}
   .brc-nige-order-pct{font-size:15px;font-weight:900;color:var(--navy);white-space:nowrap;}
-  .brc-nige-order-place{font-size:9px;font-weight:800;color:var(--ink-soft);white-space:nowrap;}
-  .brc-nige-order-metric.is-top .brc-nige-order-pct,.brc-nige-order-metric.is-top .brc-nige-order-place{color:var(--wave);}
+  .brc-nige-order-base{font-size:8.5px;font-weight:800;color:var(--ink-soft);white-space:nowrap;}
+  .brc-nige-order-head-base{display:block;margin-top:1px;font-size:8px;font-weight:750;color:var(--ink-soft);line-height:1.05;}
   .brc-nige-order-picks{display:flex;align-items:flex-start;gap:7px;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(0,87,219,.18);}
   .brc-nige-order-picks-label{flex:0 0 auto;font-size:10.5px;font-weight:900;color:var(--ink-soft);padding-top:3px;}
   .brc-nige-order-pick-list{display:flex;flex-wrap:wrap;gap:5px;}
@@ -3975,6 +3977,24 @@ function brcFinalizeServerNigePrediction(workerPrediction,boats,exhibitionApplie
   };
 }
 
+function brcGetNigeVenueBaseMap(venue){
+  const m=BRC_NIGE_ORDER_MODEL;
+  const raw={};
+  let total=0;
+  [2,3,4,5,6].forEach(c=>{
+    const base=Number(m?.b2?.[String(c)]);
+    if(!Number.isFinite(base)||base<=0) return;
+    const venueFactor=brcNigeOrderFactor(m?.f2v,`${String(venue||'').trim()}_${c}`);
+    const v=base*venueFactor;
+    raw[c]=v;
+    total+=v;
+  });
+  if(!(total>0)) return {};
+  const out={};
+  Object.entries(raw).forEach(([c,v])=>{out[Number(c)]=Number(v)/total*100;});
+  return out;
+}
+
 function brcBuildServerNigePredictionHtml(boats,workerPrediction,exhibitionApplied){
   const pred=brcFinalizeServerNigePrediction(workerPrediction,boats,exhibitionApplied);
   if(!pred){
@@ -3983,16 +4003,25 @@ function brcBuildServerNigePredictionHtml(boats,workerPrediction,exhibitionAppli
   }
   const secondMap=new Map(pred.second.map(x=>[Number(x.boat),x]));
   const thirdMap=new Map(pred.third.map(x=>[Number(x.boat),x]));
+  const venue=document.getElementById('predictVenue')?.value||'';
+  const venueBaseMap=brcGetNigeVenueBaseMap(venue);
   const candidates=(boats||[]).filter(b=>Number(b.course)>=2&&Number(b.course)<=6).sort((a,b)=>Number(a.course)-Number(b.course));
-  const metric=(x)=>Number.isFinite(Number(x?.pct))
-    ? `<div class="brc-nige-order-metric${Number(x.rank)===1?' is-top':''}"><span class="brc-nige-order-pct">${Number(x.pct).toFixed(1)}%</span><span class="brc-nige-order-place">${Number(x.rank)}位</span></div>`
+  const metric=(x,baseText='')=>Number.isFinite(Number(x?.pct))
+    ? `<div class="brc-nige-order-metric"><span class="brc-nige-order-pct">${Math.round(Number(x.pct))}%</span>${baseText?`<span class="brc-nige-order-base">${baseText}</span>`:''}</div>`
     : '<div class="brc-nige-order-metric"><span class="brc-nige-order-pct">―</span></div>';
-  const rows=candidates.map(b=>`<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(Number(b.course))}</div>${metric(secondMap.get(Number(b.course)))}${metric(thirdMap.get(Number(b.course)))}</div>`).join('');
+  const rows=candidates.map(b=>{
+    const boat=Number(b.course);
+    const basePct=Number(venueBaseMap[boat]);
+    const predPct=Number(secondMap.get(boat)?.pct);
+    const diff=Number.isFinite(basePct)&&Number.isFinite(predPct)?Math.round(predPct-basePct):null;
+    const diffText=diff==null?'':(diff===0?'±0pt':`${diff>0?'+':''}${diff}pt`);
+    return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${metric(secondMap.get(boat),diffText)}${metric(thirdMap.get(boat))}</div>`;
+  }).join('');
   const picks=`<div class="brc-nige-order-picks"><div class="brc-nige-order-picks-label">展開上位3連単</div><div class="brc-nige-order-pick-list">${pred.picks.map((x,i)=>`<span class="brc-nige-order-pick">${i+1}位 ${x}</span>`).join('')}</div></div>`;
   const phaseColor=pred.timexApplied?'#8a5a00':'var(--wave)';
   return `<div class="brc-nige-order-panel">
     <div class="brc-nige-order-head"><div><div class="brc-nige-order-title">BRCイン逃げ展開予測</div><div class="brc-nige-order-sub">①が逃げた場合の②〜⑥ 2着・3着条件付き予測</div></div><span class="brc-nige-order-rank" style="color:${phaseColor};">${pred.phaseLabel}</span></div>
-    <div class="brc-nige-order-grid"><div class="brc-nige-order-row head"><div>艇</div><div>2着予測</div><div>3着予測</div></div>${rows}</div>
+    <div class="brc-nige-order-grid"><div class="brc-nige-order-row head"><div>艇</div><div>2着予測<span class="brc-nige-order-head-base">場基準差</span></div><div>3着予測</div></div>${rows}</div>
     ${picks}
     <div class="brc-nige-order-note">2023〜2024構築 → 2025検証・係数固定 → 2026完全OOS。選手特性・選手×コース・会場・級別・モーター・STを事前評価し、展示後はBRCタイムXで更新します。</div>
     <div class="brc-nige-order-note">※①が逃げる確率とは別の条件付き予測です。展示スリット評価は現在この確率へ加えていません。</div>
@@ -4103,17 +4132,25 @@ function brcBuildInlineNigeOrderPredictionHtml(course, boats){
   if(!pred){
     return `<div class="brc-nige-order-panel"><div class="brc-nige-order-head"><div><div class="brc-nige-order-title">BRCイン逃げ展開予測</div><div class="brc-nige-order-sub">①が逃げた場合の②〜⑥ 2着・3着相対予測</div></div></div><div class="brc-nige-order-note" style="margin-top:0;">予測データ未取得</div><div class="brc-nige-order-note">※①が逃げること自体の確率とは別の、逃げ成立後の条件付き予測です。</div></div>`;
   }
-  const secondMap=new Map(pred.second.map((x,i)=>[Number(x.boat),{...x,rank:i+1}]));
-  const thirdMap=new Map(pred.third.map((x,i)=>[Number(x.boat),{...x,rank:i+1}]));
+  const secondMap=new Map(pred.second.map(x=>[Number(x.boat),x]));
+  const thirdMap=new Map(pred.third.map(x=>[Number(x.boat),x]));
+  const venueBaseMap=brcGetNigeVenueBaseMap(pred.venue);
   const candidates=(boats||[]).filter(b=>Number(b.course)>=2&&Number(b.course)<=6).sort((a,b)=>Number(a.course)-Number(b.course));
-  const metric=(x)=>{
-    const pct=Number(x?.pct), rank=Number(x?.rank);
+  const metric=(x,baseText='')=>{
+    const pct=Number(x?.pct);
     if(!Number.isFinite(pct)) return '<div class="brc-nige-order-metric"><span class="brc-nige-order-pct">―</span></div>';
-    return `<div class="brc-nige-order-metric${rank===1?' is-top':''}"><span class="brc-nige-order-pct">${pct.toFixed(1)}%</span>${Number.isFinite(rank)?`<span class="brc-nige-order-place">${rank}位</span>`:''}</div>`;
+    return `<div class="brc-nige-order-metric"><span class="brc-nige-order-pct">${Math.round(pct)}%</span>${baseText?`<span class="brc-nige-order-base">${baseText}</span>`:''}</div>`;
   };
-  const rows=candidates.map(b=>{const boat=Number(b.course);return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${metric(secondMap.get(boat))}${metric(thirdMap.get(boat))}</div>`;}).join('');
+  const rows=candidates.map(b=>{
+    const boat=Number(b.course);
+    const basePct=Number(venueBaseMap[boat]);
+    const predPct=Number(secondMap.get(boat)?.pct);
+    const diff=Number.isFinite(basePct)&&Number.isFinite(predPct)?Math.round(predPct-basePct):null;
+    const diffText=diff==null?'':(diff===0?'±0pt':`${diff>0?'+':''}${diff}pt`);
+    return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${metric(secondMap.get(boat),diffText)}${metric(thirdMap.get(boat))}</div>`;
+  }).join('');
   const picksHtml=pred.picks.length?`<div class="brc-nige-order-picks"><div class="brc-nige-order-picks-label">展開上位3連単</div><div class="brc-nige-order-pick-list">${pred.picks.map((x,i)=>`<span class="brc-nige-order-pick">${i+1}位 ${x}</span>`).join('')}</div></div>`:'';
-  return `<div class="brc-nige-order-panel"><div class="brc-nige-order-head"><div><div class="brc-nige-order-title">BRCイン逃げ展開予測</div><div class="brc-nige-order-sub">①が逃げた場合の②〜⑥ 2着・3着相対予測</div></div></div><div class="brc-nige-order-grid"><div class="brc-nige-order-row head"><div>艇</div><div>2着予測</div><div>3着予測</div></div>${rows}</div>${picksHtml}<div class="brc-nige-order-note">※①が逃げた場合の条件付き相対確率です。2着・3着はそれぞれ②〜⑥で合計100%。</div></div>`;
+  return `<div class="brc-nige-order-panel"><div class="brc-nige-order-head"><div><div class="brc-nige-order-title">BRCイン逃げ展開予測</div><div class="brc-nige-order-sub">①が逃げた場合の②〜⑥ 2着・3着相対予測</div></div></div><div class="brc-nige-order-grid"><div class="brc-nige-order-row head"><div>艇</div><div>2着予測<span class="brc-nige-order-head-base">場基準差</span></div><div>3着予測</div></div>${rows}</div>${picksHtml}<div class="brc-nige-order-note">※①が逃げた場合の条件付き相対確率です。2着・3着はそれぞれ②〜⑥で合計100%。</div></div>`;
 }
 
 function setPredictScenarioKimarite(course, kimarite){
