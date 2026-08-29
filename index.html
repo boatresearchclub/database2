@@ -13,6 +13,7 @@
 <title>Boat Research Club ～データベース～</title>
 <!-- BRC_NIGE_PREDICT_INTEGER_DISPLAY_20260829 -->
 <!-- BRC_PREDICT_GUIDE_REVIEW_20260829 -->
+<!-- BRC_STICKY_OVERLAP_FIX_20260829 -->
 
 <!-- BRC_NIGE_ORDER_PREDICTIVE_MODEL_20260828 -->
 <!-- BRC_NIGE_FULL_V2_SERVER_TIMEX_20260828 -->
@@ -968,11 +969,13 @@
     box-shadow:none;
   }
 
-  /* 「まもなく締切」はスクロール中もメインタブ直下へ固定 */
+  /* BRC_STICKY_OVERLAP_FIX_20260829
+     「まもなく締切」は通常スクロールに戻し、
+     出走データ / オッズ / AI予測 / 結果 の sticky と競合しないようにする。 */
   #deadlineSchedule{
-    position:sticky;
-    top:calc(var(--page-tabs-sticky-h) + 2px);
-    z-index:95;
+    position:relative;
+    top:auto;
+    z-index:auto;
     margin-left:-22px;
     margin-right:-22px;
     padding:8px 22px 9px;
@@ -1931,6 +1934,57 @@
 #predictResult .st-rank-main .predict-unit{font-size:.72em !important;}
 #predictResult .motor-cell-rate .predict-unit{font-size:.78em !important;}
 </style>
+
+<style id="brc-three-stage-sticky-fix">
+/* BRC_3STAGE_STICKY_FIX_20260829
+   ①上部メインタブ
+   ②まもなく締切
+   ③出走データ/オッズ/AI予測/結果
+   を実測高で縦に積み、重なりを防止する。 */
+:root{
+  --brc-page-tabs-h:58px;
+  --brc-deadline-h:118px;
+}
+
+.page-tabs{
+  position:sticky !important;
+  top:0 !important;
+  z-index:100 !important;
+}
+
+#deadlineSchedule{
+  position:sticky !important;
+  top:var(--brc-page-tabs-h) !important;
+  z-index:99 !important;
+  background:rgba(246,248,251,.98) !important;
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  box-shadow:0 8px 14px -14px rgba(10,31,51,.55);
+}
+
+#page-predict .predict-main-tabs{
+  position:sticky !important;
+  top:calc(var(--brc-page-tabs-h) + var(--brc-deadline-h)) !important;
+  z-index:98 !important;
+  background:rgba(255,255,255,.99) !important;
+}
+
+/* sticky同士の境界を少し明確にして、重なって見える錯覚を防ぐ */
+#deadlineSchedule,
+#page-predict .predict-main-tabs{
+  isolation:isolate;
+}
+
+@media(max-width:640px){
+  #deadlineSchedule{
+    margin-left:-12px;
+    margin-right:-12px;
+    padding-left:12px;
+    padding-right:12px;
+  }
+}
+</style>
+
 </head>
 <body>
 <div class="wrap">
@@ -8096,5 +8150,61 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 </script>
 
 <div id="stStabilityDetailBackdrop" class="st-detail-backdrop" aria-hidden="true" onclick="if(event.target===this)closeSTStabilityDetail()"><div id="stStabilityDetailBody" class="st-detail-card"></div></div>
+
+<script id="brc-three-stage-sticky-script">
+(function(){
+  function setStickyHeights(){
+    var root = document.documentElement;
+    var pageTabs = document.querySelector('.page-tabs');
+    var deadline = document.getElementById('deadlineSchedule');
+
+    if(pageTabs){
+      var ph = Math.ceil(pageTabs.getBoundingClientRect().height);
+      if(ph > 0) root.style.setProperty('--brc-page-tabs-h', ph + 'px');
+    }
+
+    if(deadline){
+      var dh = Math.ceil(deadline.getBoundingClientRect().height);
+      if(dh > 0) root.style.setProperty('--brc-deadline-h', dh + 'px');
+    }
+  }
+
+  function init(){
+    setStickyHeights();
+
+    if('ResizeObserver' in window){
+      var ro = new ResizeObserver(setStickyHeights);
+      var pageTabs = document.querySelector('.page-tabs');
+      var deadline = document.getElementById('deadlineSchedule');
+      if(pageTabs) ro.observe(pageTabs);
+      if(deadline) ro.observe(deadline);
+    }
+
+    window.addEventListener('resize', setStickyHeights, {passive:true});
+    window.addEventListener('orientationchange', function(){
+      setTimeout(setStickyHeights, 120);
+    }, {passive:true});
+
+    /* 締切カードの内容更新後にも高さを取り直す */
+    var deadline = document.getElementById('deadlineSchedule');
+    if(deadline && 'MutationObserver' in window){
+      var mo = new MutationObserver(function(){
+        requestAnimationFrame(setStickyHeights);
+      });
+      mo.observe(deadline, {childList:true, subtree:true, characterData:true});
+    }
+
+    setTimeout(setStickyHeights, 80);
+    setTimeout(setStickyHeights, 300);
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init, {once:true});
+  }else{
+    init();
+  }
+})();
+</script>
+
 </body>
 </html>
