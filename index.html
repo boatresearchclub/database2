@@ -860,10 +860,10 @@
   }
 
   /* ---- BRC_ODDS_MATRIX_POPULARITY_20260830 ---- */
-  .brc-odds-wrap{padding:14px 14px 18px;}
-  .brc-odds-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;}
-  .brc-odds-title{font-size:15px;font-weight:900;color:var(--navy);line-height:1.35;}
-  .brc-odds-meta{margin-top:3px;font-size:10.5px;color:var(--ink-soft);line-height:1.5;}
+  .brc-odds-wrap{padding:10px 10px 14px;}
+  .brc-odds-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;}
+  .brc-odds-title{font-size:14px;font-weight:900;color:var(--navy);line-height:1.25;}
+  .brc-odds-meta{margin-top:2px;font-size:10px;color:var(--ink-soft);line-height:1.4;}
   .brc-odds-refresh{
     flex:0 0 auto;appearance:none;border:0;border-radius:9px;padding:9px 12px;
     background:var(--wave);color:#fff;font:inherit;font-size:12px;font-weight:900;cursor:pointer;
@@ -882,63 +882,64 @@
   }
   .brc-odds-view-tab.active{background:var(--wave);border-color:var(--wave);color:#fff;}
   .brc-odds-matrix-scroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid rgba(10,31,51,.11);border-radius:10px;background:#fff;}
-  .brc-odds-matrix{display:grid;grid-template-columns:repeat(6,minmax(158px,1fr));min-width:960px;}
+  .brc-odds-matrix{display:grid;grid-template-columns:repeat(6,minmax(138px,1fr));min-width:840px;}
   .brc-odds-headcol{min-width:0;border-left:1px solid rgba(10,31,51,.18);}
   .brc-odds-headcol:first-child{border-left:0;}
-  .brc-odds-headcol-title{height:45px;display:flex;align-items:center;gap:8px;padding:0 10px;font-size:12.5px;font-weight:900;white-space:nowrap;overflow:hidden;}
-  .brc-odds-headcol-title .bo{font-size:17px;line-height:1;flex:0 0 auto;}
+  .brc-odds-headcol-title{height:36px;display:flex;align-items:center;gap:6px;padding:0 8px;font-size:11px;font-weight:900;white-space:nowrap;overflow:hidden;}
+  .brc-odds-headcol-title .bo{font-size:14px;line-height:1;flex:0 0 auto;}
   .brc-odds-headcol-title .nm{overflow:hidden;text-overflow:ellipsis;}
-  .brc-odds-lane1{background:#f6f6f6;color:#111;}
-  .brc-odds-lane2{background:#555;color:#fff;}
-  .brc-odds-lane3{background:#f5424a;color:#fff;}
-  .brc-odds-lane4{background:#3d87cf;color:#fff;}
-  .brc-odds-lane5{background:#f2ed51;color:#111;}
-  .brc-odds-lane6{background:#49b94b;color:#fff;}
+  .brc-odds-headcol-title.brc-odds-lane1{border-right:1px solid rgba(10,31,51,.08);border-top:0;}
+  .brc-odds-lane1{background:var(--lane1);color:var(--lane1-text);}
+  .brc-odds-lane2{background:var(--lane2);color:var(--lane2-text);}
+  .brc-odds-lane3{background:var(--lane3);color:var(--lane3-text);}
+  .brc-odds-lane4{background:var(--lane4);color:var(--lane4-text);}
+  .brc-odds-lane5{background:var(--lane5);color:var(--lane5-text);}
+  .brc-odds-lane6{background:var(--lane6);color:var(--lane6-text);}
   table.brc-odds-col-table{width:100%;table-layout:fixed;border-collapse:collapse;font-variant-numeric:tabular-nums;}
-  table.brc-odds-col-table col.c-second{width:25%;} table.brc-odds-col-table col.c-third{width:18%;} table.brc-odds-col-table col.c-odds{width:57%;}
-  table.brc-odds-col-table td{height:29px;padding:2px 5px;border-top:1px solid rgba(10,31,51,.13);text-align:right;white-space:nowrap;font-size:12px;color:#111;background:#fff;}
-  table.brc-odds-col-table td.second{padding:0;text-align:center;font-size:15px;font-weight:900;border-right:1px solid rgba(10,31,51,.16);}
-  table.brc-odds-col-table td.third{padding:0;text-align:center;font-size:12.5px;font-weight:900;border-right:1px solid rgba(10,31,51,.14);}
-  table.brc-odds-col-table td.odds{font-weight:650;font-size:12.5px;}
+  table.brc-odds-col-table col.c-second{width:22%;} table.brc-odds-col-table col.c-third{width:16%;} table.brc-odds-col-table col.c-odds{width:62%;}
+  table.brc-odds-col-table td{height:24px;padding:1px 4px;border-top:1px solid rgba(10,31,51,.11);text-align:right;white-space:nowrap;font-size:11px;color:#111;background:#fff;}
+  table.brc-odds-col-table td.second{padding:0;text-align:center;font-size:13px;font-weight:900;border-right:1px solid rgba(10,31,51,.14);}
+  table.brc-odds-col-table td.third{padding:0;text-align:center;font-size:11px;font-weight:900;border-right:1px solid rgba(10,31,51,.12);}
+  table.brc-odds-col-table td.odds{font-weight:700;font-size:11px;}
   table.brc-odds-col-table td.odds.is-low{color:#d40000;font-weight:900;}
   /* 2着・3着番号欄は、参考オッズ表と同じく「2着艇の枠色」で4行を統一 */
   table.brc-odds-col-table td.second.brc-odds-lane1,
-  table.brc-odds-col-table td.third.brc-odds-lane1{background:#f6f6f6;color:#111;}
+  table.brc-odds-col-table td.third.brc-odds-lane1{background:var(--lane1);color:var(--lane1-text);}
   table.brc-odds-col-table td.second.brc-odds-lane2,
-  table.brc-odds-col-table td.third.brc-odds-lane2{background:#555;color:#fff;}
+  table.brc-odds-col-table td.third.brc-odds-lane2{background:var(--lane2);color:var(--lane2-text);}
   table.brc-odds-col-table td.second.brc-odds-lane3,
-  table.brc-odds-col-table td.third.brc-odds-lane3{background:#f5424a;color:#fff;}
+  table.brc-odds-col-table td.third.brc-odds-lane3{background:var(--lane3);color:var(--lane3-text);}
   table.brc-odds-col-table td.second.brc-odds-lane4,
-  table.brc-odds-col-table td.third.brc-odds-lane4{background:#3d87cf;color:#fff;}
+  table.brc-odds-col-table td.third.brc-odds-lane4{background:var(--lane4);color:var(--lane4-text);}
   table.brc-odds-col-table td.second.brc-odds-lane5,
-  table.brc-odds-col-table td.third.brc-odds-lane5{background:#f2ed51;color:#111;}
+  table.brc-odds-col-table td.third.brc-odds-lane5{background:var(--lane5);color:var(--lane5-text);}
   table.brc-odds-col-table td.second.brc-odds-lane6,
-  table.brc-odds-col-table td.third.brc-odds-lane6{background:#49b94b;color:#fff;}
+  table.brc-odds-col-table td.third.brc-odds-lane6{background:var(--lane6);color:var(--lane6-text);}
 
-  .brc-odds-pop-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+  .brc-odds-pop-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
   .brc-odds-pop-box{border:1px solid rgba(10,31,51,.10);border-radius:10px;overflow:hidden;background:#fff;}
   table.brc-odds-pop-table{width:100%;border-collapse:collapse;table-layout:fixed;font-variant-numeric:tabular-nums;}
-  table.brc-odds-pop-table th{padding:7px 6px;background:var(--bg3);font-size:10.5px;color:var(--ink-soft);cursor:default;text-align:center;}
-  table.brc-odds-pop-table td{padding:7px 6px;border-top:1px solid rgba(10,31,51,.07);font-size:12px;text-align:center;white-space:nowrap;}
+  table.brc-odds-pop-table th{padding:6px 5px;background:var(--bg3);font-size:10px;color:var(--ink-soft);cursor:default;text-align:center;}
+  table.brc-odds-pop-table td{padding:6px 5px;border-top:1px solid rgba(10,31,51,.07);font-size:11px;text-align:center;white-space:nowrap;}
   .brc-odds-pop-rank{width:44px;font-weight:900;color:var(--ink-soft);}
   .brc-odds-pop-combo{font-weight:900;}
-  .brc-odds-pop-value{text-align:right!important;font-size:13px!important;font-weight:900;color:var(--navy);}
+  .brc-odds-pop-value{text-align:right!important;font-size:12px!important;font-weight:900;color:var(--navy);}
   .brc-odds-combo-chip{display:inline-flex;align-items:center;gap:3px;}
-  .brc-odds-combo-boat{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:5px;font-size:11px;font-weight:950;border:1px solid rgba(10,31,51,.12);}
+  .brc-odds-combo-boat{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:5px;font-size:10px;font-weight:950;border:1px solid rgba(10,31,51,.12);}
   .brc-odds-combo-sep{font-size:10px;color:var(--ink-soft);font-weight:800;}
-  .brc-odds-foot{margin:8px 2px 0;font-size:9.5px;line-height:1.55;color:var(--ink-soft);}
-  .brc-odds-empty{padding:32px 12px;text-align:center;color:var(--ink-soft);font-size:12px;line-height:1.7;}
+  .brc-odds-foot{margin:6px 2px 0;font-size:9px;line-height:1.45;color:var(--ink-soft);}
+  .brc-odds-empty{padding:22px 10px;text-align:center;color:var(--ink-soft);font-size:11px;line-height:1.6;}
   @media(max-width:700px){
     .brc-odds-pop-grid{grid-template-columns:1fr;}
   }
   @media(max-width:420px){
-    .brc-odds-wrap{padding:10px 8px 14px;}
-    .brc-odds-refresh{padding:8px 9px;font-size:11px;}
-    .brc-odds-view-tab{padding:6px 11px;font-size:10.5px;}
-    .brc-odds-matrix{grid-template-columns:repeat(6,154px);min-width:924px;}
-    .brc-odds-headcol-title{height:42px;padding:0 8px;font-size:11.5px;}
-    .brc-odds-headcol-title .bo{font-size:16px;}
-    table.brc-odds-col-table td{height:28px;}
+    .brc-odds-wrap{padding:8px 6px 12px;}
+    .brc-odds-refresh{padding:7px 8px;font-size:10px;}
+    .brc-odds-view-tab{padding:5px 10px;font-size:10px;}
+    .brc-odds-matrix{grid-template-columns:repeat(6,136px);min-width:816px;}
+    .brc-odds-headcol-title{height:34px;padding:0 6px;font-size:10.5px;}
+    .brc-odds-headcol-title .bo{font-size:13px;}
+    table.brc-odds-col-table td{height:23px;}
   }
 
   /* ---- 2026-08-28: AI予測タブ BRCイン逃げ2着・3着相対予測 ---- */
