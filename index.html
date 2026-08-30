@@ -891,6 +891,20 @@
   table.brc-odds-col-table td.third{padding:0;text-align:center;font-size:12.5px;font-weight:900;border-right:1px solid rgba(10,31,51,.14);}
   table.brc-odds-col-table td.odds{font-weight:650;font-size:12.5px;}
   table.brc-odds-col-table td.odds.is-low{color:#d40000;font-weight:900;}
+  /* 2着・3着番号欄は、参考オッズ表と同じく「2着艇の枠色」で4行を統一 */
+  table.brc-odds-col-table td.second.brc-odds-lane1,
+  table.brc-odds-col-table td.third.brc-odds-lane1{background:#f6f6f6;color:#111;}
+  table.brc-odds-col-table td.second.brc-odds-lane2,
+  table.brc-odds-col-table td.third.brc-odds-lane2{background:#555;color:#fff;}
+  table.brc-odds-col-table td.second.brc-odds-lane3,
+  table.brc-odds-col-table td.third.brc-odds-lane3{background:#f5424a;color:#fff;}
+  table.brc-odds-col-table td.second.brc-odds-lane4,
+  table.brc-odds-col-table td.third.brc-odds-lane4{background:#3d87cf;color:#fff;}
+  table.brc-odds-col-table td.second.brc-odds-lane5,
+  table.brc-odds-col-table td.third.brc-odds-lane5{background:#f2ed51;color:#111;}
+  table.brc-odds-col-table td.second.brc-odds-lane6,
+  table.brc-odds-col-table td.third.brc-odds-lane6{background:#49b94b;color:#fff;}
+
   .brc-odds-pop-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
   .brc-odds-pop-box{border:1px solid rgba(10,31,51,.10);border-radius:10px;overflow:hidden;background:#fff;}
   table.brc-odds-pop-table{width:100%;border-collapse:collapse;table-layout:fixed;font-variant-numeric:tabular-nums;}
@@ -4134,7 +4148,7 @@ function brcOddsBuildMatrix(odds,sel){
       thirds.forEach((third,idx)=>{
         const comb=`${head}-${second}-${third}`;
         const v=brcOddsValue(odds,comb);
-        rows.push(`<tr>${idx===0?`<td rowspan="4" class="second brc-odds-lane${second}">${second}</td>`:''}<td class="third brc-odds-lane${third}">${third}</td><td class="odds${v!==null&&v<10?' is-low':''}" title="${comb}">${v===null?'―':v.toFixed(1)}</td></tr>`);
+        rows.push(`<tr>${idx===0?`<td rowspan="4" class="second brc-odds-lane${second}">${second}</td>`:''}<td class="third brc-odds-lane${second}">${third}</td><td class="odds${v!==null&&v<10?' is-low':''}" title="${comb}">${v===null?'―':v.toFixed(1)}</td></tr>`);
       });
     });
     return `<div class="brc-odds-headcol">
