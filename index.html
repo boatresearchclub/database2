@@ -4130,6 +4130,8 @@ const BRC_ODDS_CACHE_SEC = 60;
 let __brcOddsView = 'matrix';
 let __brcOddsLocal = Object.create(null);
 let __brcOddsCooldownTimer = null;
+let __brcOddsFinalLoading = Object.create(null);
+let __brcOddsFinalRetryAfter = Object.create(null);
 
 function brcOddsSelection(){
   const venue = document.getElementById('predictRaceDay')?.value || document.getElementById('predictVenue')?.value || '';
@@ -4248,6 +4250,45 @@ function brcOddsStartCooldown(seconds){
   __brcOddsCooldownTimer=setInterval(tick,1000);
 }
 
+async function brcEnsureFinalOdds(sel){
+  if(!sel?.key || !BRC_LIVE_EXHIBITION_API_URL) return;
+  if(!brcOddsDeadlinePassed(sel)) return;
+  const existing=__brcOddsLocal[sel.key];
+  if(existing?.final) return;
+  if(__brcOddsFinalLoading[sel.key]) return;
+  if(Number(__brcOddsFinalRetryAfter[sel.key]||0)>Date.now()) return;
+
+  __brcOddsFinalLoading[sel.key]=true;
+  brcRenderOddsPanel('締切後の最終オッズを確認しています。');
+  const qs=new URLSearchParams({date:sel.date,venue_code:sel.code,race_no:String(sel.raceNo),final:'1',_:String(Date.now())});
+  try{
+    const res=await fetch(`${BRC_LIVE_EXHIBITION_API_URL}/live-odds?${qs.toString()}`,{method:'GET',cache:'no-store',headers:{'Accept':'application/json'}});
+    let obj=null; try{obj=await res.json();}catch(_e){}
+    if(!res.ok || !obj || obj.ok!==true || !obj.odds) throw new Error(obj?.error||`HTTP ${res.status}`);
+    if(String(obj.date)!==String(sel.date)||String(obj.venue_code).padStart(2,'0')!==String(sel.code).padStart(2,'0')||Number(obj.race_no)!==Number(sel.raceNo)) throw new Error('race_mismatch');
+    __brcOddsLocal[sel.key]={
+      odds:obj.odds,
+      captured_at_jst:obj.captured_at_jst||'',
+      cache_hit:!!obj.cache_hit,
+      stale:!!obj.stale,
+      final:!!obj.final,
+      cooldownUntil:Date.now()+Math.max(1,Number(obj.refresh_after_sec)||BRC_ODDS_CACHE_SEC)*1000
+    };
+    if(!obj.final){
+      __brcOddsFinalRetryAfter[sel.key]=Date.now()+60000;
+      brcRenderOddsPanel('最終オッズの確定取得に失敗したため、直前の保存値を表示しています。',true);
+    }else{
+      brcRenderOddsPanel('締切後の最終オッズを表示しています。');
+    }
+  }catch(err){
+    console.warn('BRC final odds fetch failed:',err);
+    __brcOddsFinalRetryAfter[sel.key]=Date.now()+60000;
+    brcRenderOddsPanel('最終オッズを取得できませんでした。直前の保存値があれば表示します。',true);
+  }finally{
+    __brcOddsFinalLoading[sel.key]=false;
+  }
+}
+
 function brcRenderOddsPanel(message='',isError=false){
   const meta=document.getElementById('brcOddsMeta');
   const status=document.getElementById('brcOddsStatus');
@@ -4267,8 +4308,10 @@ function brcRenderOddsPanel(message='',isError=false){
   const historical=String(sel.date)!==String(today);
   const passed=brcOddsDeadlinePassed(sel);
   const rec=__brcOddsLocal[sel.key]||null;
-  meta.textContent=`${sel.venue} ${sel.raceNo}R` + (rec?.captured_at_jst ? `　最終取得 ${brcOddsFmtTime(rec.captured_at_jst)}` : '');
+  meta.textContent=`${sel.venue} ${sel.raceNo}R` + (rec?.captured_at_jst ? (rec?.final ? `　最終オッズ ${brcOddsFmtTime(rec.captured_at_jst)}` : `　最終取得 ${brcOddsFmtTime(rec.captured_at_jst)}`) : '');
   if(message) status.textContent=message;
+  else if(passed && rec?.final) status.textContent='締切後の最終オッズです。以後このレースでは取得元へ再アクセスしません。';
+  else if(passed && __brcOddsFinalLoading[sel.key]) status.textContent='締切後の最終オッズを確認しています。';
   else if(rec) status.textContent=rec.cache_hit ? '60秒キャッシュを使用しました。取得先への再アクセスはありません。' : '取得先から最新オッズを取得しました。次の取得は60秒後から可能です。';
   else status.textContent='「オッズ更新」を押すと最新値を確認します。60秒以内の保存値があれば取得先へ再アクセスしません。';
   body.innerHTML=rec?.odds ? brcOddsBuildView(rec.odds,sel) : '<div class="brc-odds-empty">まだオッズを取得していません。</div>';
@@ -4276,11 +4319,14 @@ function brcRenderOddsPanel(message='',isError=false){
   const cooling=!!rec && Number(rec.cooldownUntil)>Date.now();
   btn.disabled=historical||passed||cooling;
   if(historical) btn.textContent='当日のみ更新';
-  else if(passed) btn.textContent='締切済み';
+  else if(passed && rec?.final) btn.textContent='最終オッズ';
+  else if(passed) btn.textContent='最終確認中';
   else if(cooling) btn.textContent=`更新 ${Math.max(1,Math.ceil((rec.cooldownUntil-Date.now())/1000))}秒`;
   else btn.textContent='オッズ更新';
-  if(historical && !message) status.textContent='過去レースでは取得先へアクセスしません。保存済みの当日取得値がある場合のみ表示対象です。';
-  if(passed && !message) status.textContent='締切済みのため、新しいオッズ取得は停止しています。';
+  if(historical && !message) status.textContent=rec?.final ? '保存済みの最終オッズを表示しています。' : '過去レースでは取得先へアクセスしません。保存済みの当日取得値がある場合のみ表示対象です。';
+  if(passed && !historical && !rec?.final && !__brcOddsFinalLoading[sel.key] && Number(__brcOddsFinalRetryAfter[sel.key]||0)<=Date.now()){
+    setTimeout(()=>brcEnsureFinalOdds(sel),0);
+  }
 }
 
 async function brcRefreshOddsManual(){
@@ -4303,6 +4349,7 @@ async function brcRefreshOddsManual(){
       captured_at_jst:obj.captured_at_jst||'',
       cache_hit:!!obj.cache_hit,
       stale:!!obj.stale,
+      final:!!obj.final,
       cooldownUntil:Date.now()+wait*1000
     };
     const msg=obj.stale ? '取得元へ接続できなかったため、直前の保存値を表示しています。' : (obj.cache_hit ? '60秒キャッシュを使用しました。取得先への再アクセスはありません。' : '取得先から最新オッズを取得しました。次の取得は60秒後から可能です。');
@@ -6304,6 +6351,9 @@ function initPredictPage(){
       renderDeadlineSchedule();
       refreshRaceDeadlineGray();
       if(window.__todayPicksRendered) renderTodayPicks();
+      try{
+        if(document.getElementById('predictMainPanel-odds')?.classList.contains('active')) brcRenderOddsPanel();
+      }catch(_e){}
     }, 30000);
   }
 
