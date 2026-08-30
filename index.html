@@ -1459,6 +1459,17 @@
   #brcPredictProtected.brc-free-preview-mode #predictInputs,
   #brcPredictProtected.brc-free-preview-mode #predictRun{display:none !important;}
   #brcPredictProtected.brc-free-preview-mode .brc-member-badge{background:rgba(0,87,219,.09);color:var(--wave);}
+  /* BRC_ADMIN_SOCIAL_SAFE_20260830 */
+  .brc-admin-social{display:none;margin:8px 0 10px;padding:10px 10px 9px;border:1px solid rgba(0,87,219,.18);border-radius:12px;background:rgba(0,87,219,.035);}
+  .brc-admin-social.is-visible{display:block;}
+  .brc-admin-social-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;}
+  .brc-admin-social-title{font-size:12px;font-weight:900;color:var(--line-white);letter-spacing:.01em;}
+  .brc-admin-social-tag{font-size:10px;font-weight:900;color:var(--wave);background:rgba(0,87,219,.08);padding:3px 6px;border-radius:999px;}
+  .brc-admin-social-actions{display:flex;gap:7px;flex-wrap:wrap;}
+  .brc-admin-social-btn{appearance:none;border:0;border-radius:9px;padding:8px 11px;font-size:12px;font-weight:900;cursor:pointer;background:var(--wave);color:#fff;}
+  .brc-admin-social-btn.secondary{background:#eef3f8;color:#17324d;}
+  #brcAdminSocialText{width:100%;min-height:150px;margin-top:8px;border:1px solid rgba(10,31,51,.14);border-radius:9px;padding:9px 10px;box-sizing:border-box;font:inherit;font-size:13px;line-height:1.65;resize:vertical;background:#fff;color:#17324d;}
+  #brcAdminSocialStatus{min-height:16px;margin-top:5px;font-size:11px;color:var(--ink-soft);}
   @media(max-width:390px){
     .brc-free-preview-list{grid-template-columns:1fr;}
     .brc-free-race{font-size:15px;}
@@ -2422,6 +2433,15 @@
     </div>
     <div id="brcPredictProtected" style="display:none;">
       <div class="brc-member-bar"><span id="brcMemberBadge" class="brc-member-badge">BRC MEMBER</span><button type="button" class="brc-logout-btn" id="brcLogoutBtn">ログアウト</button></div>
+      <div id="brcAdminSocial" class="brc-admin-social" aria-hidden="true">
+        <div class="brc-admin-social-head"><div class="brc-admin-social-title">SNS投稿アシスタント</div><span class="brc-admin-social-tag">管理者</span></div>
+        <div class="brc-admin-social-actions">
+          <button type="button" id="brcAdminSocialGenerate" class="brc-admin-social-btn">Threads投稿文を作成</button>
+          <button type="button" id="brcAdminSocialCopy" class="brc-admin-social-btn secondary">コピー</button>
+        </div>
+        <textarea id="brcAdminSocialText" placeholder="出走表AIを表示したあとに「Threads投稿文を作成」を押してください。"></textarea>
+        <div id="brcAdminSocialStatus"></div>
+      </div>
       <div id="brcFreePreviewBanner" class="brc-free-result-banner"></div>
     <section class="card">
       <h2>出走表AI</h2>
@@ -2820,6 +2840,146 @@ function brcDisplayMemberId(user){
   return '';
 }
 
+// BRC_ADMIN_SOCIAL_SAFE_20260830
+// 認証本体には介入せず、ログイン済みuser.emailだけで管理者UIを出し分ける。
+const BRC_ADMIN_EMAIL = 'sk48159212@gmail.com';
+let BRC_ADMIN_ACTIVE = false;
+
+function brcAdminNormalizeEmail(value){
+  return String(value||'').trim().toLowerCase();
+}
+function brcIsAdminUser(user){
+  return brcAdminNormalizeEmail(user && user.email) === BRC_ADMIN_EMAIL;
+}
+function brcSetAdminSocialUi(user=null){
+  const box=document.getElementById('brcAdminSocial');
+  if(!box) return;
+  BRC_ADMIN_ACTIVE=!!(user && brcIsAdminUser(user) && BRC_MEMBER_ACTIVE);
+  box.classList.toggle('is-visible',BRC_ADMIN_ACTIVE);
+  box.setAttribute('aria-hidden',BRC_ADMIN_ACTIVE?'false':'true');
+  if(!BRC_ADMIN_ACTIVE){
+    const status=document.getElementById('brcAdminSocialStatus');
+    if(status) status.textContent='';
+  }
+}
+function brcAdminBoatMark(course){
+  return ['','①','②','③','④','⑤','⑥'][Number(course)] || `${course}号艇`;
+}
+function brcAdminSurname(name){
+  const raw=String(name||'').trim();
+  if(!raw) return '';
+  const parts=raw.split(/[\s　]+/).filter(Boolean);
+  return parts[0] || raw;
+}
+function brcAdminPlayerLabel(boat){
+  return `${brcAdminBoatMark(boat?.course)}${brcAdminSurname(boat?.player?.name)}選手`;
+}
+function brcAdminArrow(delta, threshold){
+  const d=Number(delta);
+  if(!Number.isFinite(d)) return '→';
+  if(d>=threshold) return '↗';
+  if(d<=-threshold) return '↘';
+  return '→';
+}
+function brcAdminCurrentRaceTitle(){
+  try{
+    const venue=String(document.getElementById('predictRaceDay')?.value||document.getElementById('predictVenue')?.value||'').trim();
+    const raceNo=Number(document.getElementById('predictRaceNo')?.value||0);
+    const info=(typeof getCurrentPredictDayInfo==='function') ? getCurrentPredictDayInfo() : null;
+    const title=(info && info.raceTitles && raceNo) ? String(info.raceTitles[raceNo]||'').trim() : '';
+    return `${venue}${raceNo?raceNo+'R':''}${title?' '+title:''}`.trim();
+  }catch(_){ return ''; }
+}
+function brcAdminIsWomenRaceSafe(){
+  try{
+    const grade=window.__predictGradeCurrent||'';
+    const regs=Array.isArray(window.__predictApiBoatsCurrent)?window.__predictApiBoatsCurrent.map(x=>x.reg):[];
+    return typeof brcIsWomenRace==='function' ? !!brcIsWomenRace(grade,regs) : false;
+  }catch(_){ return false; }
+}
+function brcAdminHighTilts(){
+  const boats=Array.isArray(window.__currentLiveExhibition?.boats)?window.__currentLiveExhibition.boats:[];
+  return boats.map(x=>({boat:Number(x?.boat_no),tilt:Number(x?.tilt)})).filter(x=>Number.isInteger(x.boat)&&Number.isFinite(x.tilt)&&x.tilt>=1.0).sort((a,b)=>b.tilt-a.tilt);
+}
+function brcBuildAdminThreadsPost(){
+  const boats=Array.isArray(window.__predictBoatsCurrent)?window.__predictBoatsCurrent.slice().sort((a,b)=>a.course-b.course):[];
+  if(boats.length!==6) return {ok:false,text:'',status:'先に出走表AIの「計算」を実行してください。'};
+  const rel=window.__currentLocalInReliability||null;
+  const title=brcAdminCurrentRaceTitle()||'このレース';
+  const p1=boats.find(b=>Number(b.course)===1);
+  const sortedWin=boats.slice().sort((a,b)=>Number(b.pctFloat||0)-Number(a.pctFloat||0));
+  const women=brcAdminIsWomenRaceSafe();
+  const highTilts=brcAdminHighTilts();
+  const lines=[];
+  lines.push(`${title}、気になるレースです。`);
+  if(women) lines.push('BRCでは女子戦は女子戦のデータを使って分析しています。');
+
+  const relLabel=String(rel?.label||rel?.rank||rel?.grade||'').trim();
+  const p1Win=Math.round(Number(p1?.pctFloat||p1?.pct||0));
+  const venueDiff=Number(rel?.venueBaseDiff);
+  let first=`${brcAdminPlayerLabel(p1)}は${relLabel?`イン逃げ信頼度${relLabel}、`:''}1着率${p1Win}%`;
+  if(Number.isFinite(venueDiff)) first+=`、場基準比${venueDiff>=0?'+':''}${Math.round(venueDiff)}pt`;
+  first+='。';
+  lines.push(first);
+
+  const up=[], down=[];
+  for(const b of boats){
+    const w=brcAdminArrow(b.exhibitionWinDeltaPt,0.75);
+    const t=brcAdminArrow(b.exhibitionTop3DeltaPt,2.0);
+    if(w==='↗'||t==='↗') up.push(`${brcAdminPlayerLabel(b)}は${w==='↗'?'1着率↗':''}${w==='↗'&&t==='↗'?'・':''}${t==='↗'?'3連対率↗':''}`);
+    if(w==='↘'||t==='↘') down.push(`${brcAdminPlayerLabel(b)}は${w==='↘'?'1着率↘':''}${w==='↘'&&t==='↘'?'・':''}${t==='↘'?'3連対率↘':''}`);
+  }
+  if(up.length) lines.push(`展示後のBRCタイムXでは、${up.slice(0,3).join('、')}。`);
+  if(down.length) lines.push(`一方、${down.slice(0,3).join('、')}と評価を落としています。`);
+
+  if(highTilts.length){
+    const t=highTilts[0];
+    const b=boats.find(x=>Number(x.course)===t.boat);
+    lines.push(`${b?brcAdminPlayerLabel(b):brcAdminBoatMark(t.boat)}がチルト${t.tilt.toFixed(1)}。不確定要素が強くなるので、数字が良くても無理に入りたくない条件です。`);
+    lines.push('「買えそう」だけでなく、余計な不確定要素がないかも見て判断したいです。');
+  }else{
+    const top=sortedWin[0];
+    if(top && Number(top.course)!==1 && Number(top.pctFloat||0)>Number(p1?.pctFloat||0)){
+      lines.push(`1着率トップは${brcAdminPlayerLabel(top)}の${Math.round(Number(top.pctFloat||0))}%です。インをそのまま信頼するか、展示後の変化まで見て判断したいです。`);
+    }else{
+      lines.push('展示前の数字だけで決めず、展示後にどう評価が動いたかまで見て判断したいレースです。');
+    }
+  }
+  lines.push('BRCでは「何を買うか」だけでなく、「どのレースに入るか」も大切にしています。');
+  return {ok:true,text:lines.join('\n\n'),status:'投稿文を作成しました。必要ならそのまま編集できます。'};
+}
+function brcBindAdminSocial(){
+  const gen=document.getElementById('brcAdminSocialGenerate');
+  const copy=document.getElementById('brcAdminSocialCopy');
+  const ta=document.getElementById('brcAdminSocialText');
+  const status=document.getElementById('brcAdminSocialStatus');
+  if(gen && !gen.dataset.bound){
+    gen.dataset.bound='1';
+    gen.addEventListener('click',()=>{
+      if(!BRC_ADMIN_ACTIVE) return;
+      const out=brcBuildAdminThreadsPost();
+      if(ta) ta.value=out.text||'';
+      if(status) status.textContent=out.status||'';
+    });
+  }
+  if(copy && !copy.dataset.bound){
+    copy.dataset.bound='1';
+    copy.addEventListener('click',async()=>{
+      if(!BRC_ADMIN_ACTIVE) return;
+      const text=String(ta?.value||'');
+      if(!text){ if(status) status.textContent='先に投稿文を作成してください。'; return; }
+      try{
+        await navigator.clipboard.writeText(text);
+        if(status) status.textContent='コピーしました。';
+      }catch(_){
+        if(ta){ ta.focus(); ta.select(); }
+        let ok=false; try{ ok=document.execCommand('copy'); }catch(_e){}
+        if(status) status.textContent=ok?'コピーしました。':'文章を選択したので、端末のコピー操作を使ってください。';
+      }
+    });
+  }
+}
+
 function brcSetAuthMessage(message='', tone='error'){
   const el=document.getElementById('brcAuthMessage');
   if(!el) return;
@@ -2828,6 +2988,7 @@ function brcSetAuthMessage(message='', tone='error'){
 }
 function brcRenderGate(state='login', user=null){
   BRC_MEMBER_ACTIVE = false;
+  try{ brcSetAdminSocialUi(null); }catch(_e){}
   BRC_FREE_PREVIEW_ACTIVE = null;
   BRC_MEMBER_CHECKED_AT = 0;
   const gate=document.getElementById('brcPredictGate');
@@ -2872,10 +3033,12 @@ function brcRenderMember(user){
   const memberId=brcDisplayMemberId(user);
   if(badge) badge.textContent = memberId ? `BRC MEMBER · ${memberId}` : 'BRC MEMBER';
   brcSetAuthMessage('');
+  try{ brcSetAdminSocialUi(user); }catch(_e){}
 }
 
 function brcRenderFreePreviewMode(item){
   BRC_MEMBER_ACTIVE=false;
+  try{ brcSetAdminSocialUi(null); }catch(_e){}
   BRC_FREE_PREVIEW_ACTIVE=item||null;
   const gate=document.getElementById('brcPredictGate');
   const protectedBox=document.getElementById('brcPredictProtected');
@@ -2975,6 +3138,7 @@ async function brcLogout(){
   const pw=document.getElementById('brcLoginPassword'); if(pw) pw.value='';
 }
 async function brcInitAuthUi(){
+  try{ brcBindAdminSocial(); }catch(_e){}
   const form=document.getElementById('brcLoginForm');
   if(form && !form.dataset.bound){
     form.dataset.bound='1';
