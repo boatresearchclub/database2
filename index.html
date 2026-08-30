@@ -11,6 +11,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Boat Research Club ～データベース～</title>
+<!-- BRC_AI_3MODE_READY_20260830 -->
 <!-- BRC_ODDS_MANUAL_CACHE_TEST_20260830 -->
 <!-- BRC_TELEBOAT_BRIDGE_V2_SNS_DATA_ONLY_20260830 -->
 <!-- BRC_TELEBOAT_RACE_DEEPLINK_V3_20260830 -->
@@ -2218,6 +2219,49 @@
     padding-left:12px;
     padding-right:12px;
   }
+}
+</style>
+
+
+<style id="brc-ai3mode-style">
+/* ---- BRC_AI_3MODE_READY_20260830 ---- */
+.brc-ai3-card{
+  margin:12px 0 14px;border:1px solid rgba(0,87,219,.18);border-radius:13px;
+  background:linear-gradient(160deg,rgba(0,87,219,.045),rgba(255,255,255,.97));overflow:hidden;
+}
+.brc-ai3-head{padding:12px 12px 8px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.brc-ai3-title{font-size:14px;font-weight:950;color:var(--navy);}
+.brc-ai3-badge{display:inline-flex;align-items:center;padding:3px 7px;border-radius:999px;background:rgba(0,87,219,.08);color:var(--wave);font-size:9.5px;font-weight:900;white-space:nowrap;}
+.brc-ai3-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:0 10px 10px;}
+.brc-ai3-tab{appearance:none;border:1px solid rgba(10,31,51,.13);border-radius:9px;background:#fff;color:var(--ink-soft);padding:8px 4px;font:inherit;font-size:11.5px;font-weight:900;cursor:pointer;white-space:nowrap;}
+.brc-ai3-tab.active{background:var(--wave);border-color:var(--wave);color:#fff;box-shadow:0 2px 7px rgba(0,87,219,.14);}
+.brc-ai3-tab:disabled{opacity:.42;cursor:not-allowed;}
+.brc-ai3-body{border-top:1px solid rgba(10,31,51,.07);padding:12px;}
+.brc-ai3-panel{display:none;}
+.brc-ai3-panel.active{display:block;}
+.brc-ai3-head-candidate{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.brc-ai3-head-label{font-size:10.5px;font-weight:850;color:var(--ink-soft);}
+.brc-ai3-head-boat{font-size:22px;font-weight:950;color:var(--navy);line-height:1;}
+.brc-ai3-head-meta{display:flex;gap:6px;flex-wrap:wrap;}
+.brc-ai3-head-meta span{display:inline-flex;padding:3px 6px;border-radius:999px;border:1px solid rgba(10,31,51,.10);background:#fff;color:var(--ink-soft);font-size:9.5px;font-weight:850;white-space:nowrap;}
+.brc-ai3-section-label{margin:0 0 6px;font-size:10.5px;font-weight:900;color:var(--ink-soft);}
+.brc-ai3-picks{display:flex;flex-wrap:wrap;gap:6px;}
+.brc-ai3-pick{display:inline-flex;align-items:center;gap:4px;border:1px solid rgba(0,87,219,.20);background:#fff;border-radius:8px;padding:5px 8px;color:var(--navy);font-size:13px;font-weight:950;white-space:nowrap;}
+.brc-ai3-pick small{font-size:8.5px;color:var(--ink-soft);font-weight:800;}
+.brc-ai3-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:10px;}
+.brc-ai3-kpi{min-width:0;padding:7px 6px;border:1px solid rgba(10,31,51,.08);border-radius:9px;background:rgba(255,255,255,.75);text-align:center;}
+.brc-ai3-kpi .k{font-size:8.5px;font-weight:800;color:var(--ink-soft);white-space:nowrap;}
+.brc-ai3-kpi .v{margin-top:2px;font-size:13px;font-weight:950;color:var(--navy);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.brc-ai3-kpi .v.accent{color:var(--wave);}
+.brc-ai3-reason{margin-top:9px;font-size:10.5px;line-height:1.55;color:var(--ink-soft);}
+.brc-ai3-skip{padding:10px;border:1px solid rgba(227,178,60,.28);border-radius:9px;background:rgba(227,178,60,.065);}
+.brc-ai3-skip strong{font-size:13px;color:#8a5a00;}
+.brc-ai3-skip div{margin-top:3px;font-size:10.5px;line-height:1.55;color:var(--ink-soft);}
+.brc-ai3-missing{padding:12px 8px;text-align:center;color:var(--ink-soft);font-size:10.5px;}
+@media(max-width:420px){
+  .brc-ai3-head{padding:10px 9px 7px;}.brc-ai3-tabs{padding:0 8px 8px;gap:4px;}.brc-ai3-tab{font-size:11px;padding:8px 2px;}
+  .brc-ai3-body{padding:10px 8px;}.brc-ai3-head-boat{font-size:20px;}.brc-ai3-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .brc-ai3-pick{font-size:12px;padding:5px 7px;}
 }
 </style>
 
@@ -9047,7 +9091,136 @@ function buildCurrentRaceSummaryHtml(venue){
 // BRC推奨買い目・展開分類・安全側確率・逃げ時補助はBRC Serverで計算
 // INDEXは返却結果を描画するだけで、計算式・閾値・較正表を保持しない。
 // ============================================================
-function buildRecommendedBetsHtmlFromServer(workerPrediction, localInReliability=null, exhibitionApplied=false){
+function brcAi3FirstObject(...xs){
+  for(const x of xs){ if(x && typeof x==='object' && !Array.isArray(x)) return x; }
+  return null;
+}
+function brcGetAiModePayload(workerPrediction){
+  const root=brcAi3FirstObject(
+    workerPrediction?.recommendationModes,
+    workerPrediction?.recommendation3Mode,
+    workerPrediction?.recommendations3,
+    workerPrediction?.aiModes,
+    workerPrediction?.recommendation?.modes
+  );
+  const direct=(workerPrediction?.stableRecommendation || workerPrediction?.hitRecommendation || workerPrediction?.returnRecommendation)
+    ? {stable:workerPrediction?.stableRecommendation,hit:workerPrediction?.hitRecommendation,return:workerPrediction?.returnRecommendation}
+    : null;
+  const src=root||direct;
+  if(!src) return null;
+  const take=(...keys)=>{ for(const k of keys){ const v=src?.[k]; if(v && typeof v==='object') return v; } return null; };
+  const stable=take('stable','stability','safe','stableMode','安定型');
+  const hit=take('hit','accuracy','hitRate','hitMode','的中型');
+  const ret=take('return','roi','recovery','returnMode','回収型');
+  if(!stable && !hit && !ret) return null;
+  return {stable,hit,return:ret,raw:src};
+}
+function brcAi3Num(obj,keys){
+  for(const k of keys){ const v=Number(obj?.[k]); if(Number.isFinite(v)) return v; }
+  return null;
+}
+function brcAi3Pct(v,digits=1){
+  const n=Number(v); if(!Number.isFinite(n)) return '―';
+  const p=Math.abs(n)<=1.000001?n*100:n;
+  return `${p.toFixed(digits)}%`;
+}
+function brcAi3RatePct(v,digits=0){
+  const n=Number(v); if(!Number.isFinite(n)) return '―';
+  const p=Math.abs(n)<=3?n*100:n;
+  return `${p.toFixed(digits)}%`;
+}
+function brcAi3BoatNo(v){
+  if(v && typeof v==='object') v=v.boat??v.course??v.no??v.headBoat??v.value;
+  const n=Number(v); if(Number.isFinite(n)&&n>=1&&n<=6) return Math.trunc(n);
+  const s=String(v??'');
+  const circ={'①':1,'②':2,'③':3,'④':4,'⑤':5,'⑥':6};
+  for(const [c,no] of Object.entries(circ)){ if(s.includes(c)) return no; }
+  const m=s.match(/[1-6]/); return m?Number(m[0]):null;
+}
+function brcAi3ComboText(x){
+  if(typeof x==='string' || typeof x==='number') return String(x);
+  return String(x?.combo??x?.bet??x?.ticket??x?.selection??x?.key??'').trim();
+}
+function brcAi3PickExtra(x){
+  if(!x || typeof x!=='object') return '';
+  const ev=brcAi3Num(x,['ev','EV','expectedValue']);
+  const odds=brcAi3Num(x,['odds','price']);
+  const bits=[];
+  if(Number.isFinite(odds)) bits.push(`${odds.toFixed(1)}倍`);
+  if(Number.isFinite(ev)) bits.push(`EV ${brcAi3RatePct(ev,0)}`);
+  return bits.join(' / ');
+}
+function brcAi3ModeLabel(key){ return key==='stable'?'安定型':key==='hit'?'的中型':'回収型'; }
+function brcAi3ModePanelHtml(mode,key){
+  if(!mode) return `<div class="brc-ai3-missing">${brcAi3ModeLabel(key)}はサーバー応答待ちです。</div>`;
+  const rawPicks=Array.isArray(mode.picks)?mode.picks:(Array.isArray(mode.bets)?mode.bets:(Array.isArray(mode.selections)?mode.selections:[]));
+  const picks=rawPicks.map(x=>({raw:x,combo:brcAi3ComboText(x)})).filter(x=>x.combo).slice(0,10);
+  const recommended=mode.recommended!==false && mode.skip!==true && mode.pass!==true && picks.length>0;
+  const reason=String(mode.reason||mode.note||mode.message||'').trim();
+  if(!recommended){
+    return `<div class="brc-ai3-skip"><strong>見送り</strong><div>${reason||'現在の確率とオッズでは、十分な期待値余白を確認できません。'}</div></div>`;
+  }
+  const head=brcAi3BoatNo(mode.headBoat??mode.head??mode.firstBoat??mode.firstCandidate??mode.headCandidate);
+  const headEv=brcAi3Num(mode,['headEV','headEv','firstEV','firstEv','headExpectedReturn']);
+  const margin=brcAi3Num(mode,['probabilityMargin','headProbabilityMargin','probMargin','margin']);
+  const hit=brcAi3Num(mode,['hitProbability','setHitProbability','totalHitProbability','safe','cal','probability']);
+  const comp=brcAi3Num(mode,['compositeOdds','setCompositeOdds','composite','targetOdds','target120']);
+  const exp=brcAi3Num(mode,['expectedReturn','expectedReturnRate','returnRate','setEV','ev','EV']);
+  const pointCount=Number(mode.pointCount)||picks.length;
+  const chips=picks.map((p,i)=>{
+    const extra=brcAi3PickExtra(p.raw);
+    return `<span class="brc-ai3-pick">${p.combo}${extra?`<small>${extra}</small>`:''}</span>`;
+  }).join('');
+  const headMeta=[];
+  if(Number.isFinite(headEv)) headMeta.push(`<span>頭EV ${brcAi3RatePct(headEv,0)}</span>`);
+  if(Number.isFinite(margin)) headMeta.push(`<span>確率余白 ${brcAi3Pct(margin,1)}</span>`);
+  const kpis=[];
+  kpis.push(`<div class="brc-ai3-kpi"><div class="k">点数</div><div class="v">${pointCount}点</div></div>`);
+  if(Number.isFinite(hit)) kpis.push(`<div class="brc-ai3-kpi"><div class="k">想定的中率</div><div class="v accent">${brcAi3Pct(hit,1)}</div></div>`);
+  if(Number.isFinite(comp)) kpis.push(`<div class="brc-ai3-kpi"><div class="k">合成オッズ</div><div class="v">${comp.toFixed(2)}倍</div></div>`);
+  if(Number.isFinite(exp)) kpis.push(`<div class="brc-ai3-kpi"><div class="k">期待回収率</div><div class="v">${brcAi3RatePct(exp,0)}</div></div>`);
+  return `
+    <div class="brc-ai3-head-candidate">
+      <span class="brc-ai3-head-label">期待値ある1着候補</span>
+      <span class="brc-ai3-head-boat">${head?`${head}号艇`:'―'}</span>
+      ${headMeta.length?`<span class="brc-ai3-head-meta">${headMeta.join('')}</span>`:''}
+    </div>
+    <div class="brc-ai3-section-label">期待値ある参考買い目</div>
+    <div class="brc-ai3-picks">${chips}</div>
+    <div class="brc-ai3-kpis">${kpis.join('')}</div>
+    ${reason?`<div class="brc-ai3-reason">${reason}</div>`:''}`;
+}
+function brcBuildAi3ModeRecommendationHtml(workerPrediction){
+  const modes=brcGetAiModePayload(workerPrediction);
+  if(!modes) return '';
+  const order=['stable','hit','return'];
+  const first=order.find(k=>!!modes[k])||'stable';
+  const explicitExhibition=!!(modes.raw?.exhibitionApplied || modes.raw?.usesExhibition || workerPrediction?.recommendationModesExhibitionApplied);
+  return `<div id="recommendedBetsCard" class="brc-ai3-card" data-brc-ai3-root>
+    <div class="brc-ai3-head"><div class="brc-ai3-title">BRC参考買い目</div><span class="brc-ai3-badge">最大10点・可変</span>${explicitExhibition?'<span class="brc-ai3-badge">展示反映済み</span>':''}</div>
+    <div class="brc-ai3-tabs">
+      ${order.map(k=>`<button type="button" class="brc-ai3-tab ${k===first?'active':''}" data-brc-ai-mode-tab="${k}" ${modes[k]?'':'disabled'}>${brcAi3ModeLabel(k)}</button>`).join('')}
+    </div>
+    <div class="brc-ai3-body">
+      ${order.map(k=>`<div class="brc-ai3-panel ${k===first?'active':''}" data-brc-ai-mode-panel="${k}">${brcAi3ModePanelHtml(modes[k],k)}</div>`).join('')}
+    </div>
+  </div>`;
+}
+function brcSetAi3Mode(root,key){
+  if(!root) return;
+  root.querySelectorAll('[data-brc-ai-mode-tab]').forEach(btn=>btn.classList.toggle('active',btn.dataset.brcAiModeTab===key));
+  root.querySelectorAll('[data-brc-ai-mode-panel]').forEach(p=>p.classList.toggle('active',p.dataset.brcAiModePanel===key));
+}
+if(!window.__brcAi3ModeBound){
+  window.__brcAi3ModeBound=true;
+  document.addEventListener('click',e=>{
+    const btn=e.target?.closest?.('[data-brc-ai-mode-tab]');
+    if(!btn || btn.disabled) return;
+    const root=btn.closest('[data-brc-ai3-root]');
+    if(root) brcSetAi3Mode(root,btn.dataset.brcAiModeTab);
+  });
+}
+function brcBuildLegacyRecommendedBetsHtml(workerPrediction, localInReliability=null, exhibitionApplied=false){
   const r=workerPrediction?.recommendation;
   const uiRank=localInReliability?.rank || r?.rank || '―';
   if(!r) return '';
@@ -9057,16 +9230,65 @@ function buildRecommendedBetsHtmlFromServer(workerPrediction, localInReliability
   }
   const picks=Array.isArray(r.picks)?r.picks:[];
   const chips=picks.map(k=>`<span style="display:inline-block;border:1px solid rgba(0,102,255,.25);background:#fff;border-radius:7px;padding:5px 8px;font-weight:800;font-size:14px;">${k}</span>`).join(' ');
-  // イン逃げ展開予測はAI予測タブへ独立。推奨買い目カード内では重複表示しない。
-  const saHtml='';
   const safe=Number(r.safe), target=Number(r.target120), raw=Number(r.raw), cal=Number(r.cal);
   return `<div id="recommendedBetsCard" style="margin:12px 0 14px;border:1px solid rgba(0,102,255,.22);background:rgba(0,102,255,.035);border-radius:12px;padding:13px 14px;">
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:14px;font-weight:800;color:var(--wave);">BRC推奨買い目</span><span style="font-size:13px;font-weight:800;">${Number(r.pointCount)||picks.length}点</span>${exhibitionNote}</div>
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;">${chips}</div>
     <div style="display:flex;flex-wrap:wrap;gap:7px 18px;margin-top:11px;font-size:13px;"><span>想定的中率 <strong style="color:var(--wave);">${Number.isFinite(safe)?(safe*100).toFixed(1):'―'}%</strong></span><span>参加目安 合成オッズ <strong>${Number.isFinite(target)?target.toFixed(2):'―'}倍以上</strong></span></div>
     <details style="margin-top:8px;"><summary style="cursor:pointer;color:var(--ink-soft);font-size:11.5px;">詳細を見る</summary><div style="font-size:11.5px;color:var(--ink-soft);line-height:1.6;margin-top:5px;">タイプ：${r.typeLabel||r.type||'―'} ／ イン信頼度：${uiRank} ／ 攻め艇：${r.attackBoat||'―'}号艇（${r.attackStyle||'―'}）<br>校正前セット確率 ${Number.isFinite(raw)?(raw*100).toFixed(1):'―'}% → Validation校正 ${Number.isFinite(cal)?(cal*100).toFixed(1):'―'}% → 安全補正 ${Number.isFinite(safe)?(safe*100).toFixed(1):'―'}%</div></details>
-    ${saHtml}
   </div>`;
+}
+function brcBuildAi3ModePreviewHtml(){
+  const previewMode=(key,head,picks,points)=>{
+    const chips=picks.map(x=>`<span class="brc-ai3-pick">${x}<small>サンプル</small></span>`).join('');
+    const note=key==='stable'
+      ? '予測誤差への強さを優先する予定です。期待値に余白がある買い目を中心に選びます。'
+      : key==='hit'
+        ? '期待値を満たす候補の中から、想定的中率を優先する予定です。'
+        : '期待値・期待回収率を優先し、少点数も含めて狙う予定です。';
+    return `<div class="brc-ai3-head-candidate">
+      <span class="brc-ai3-head-label">期待値ある1着候補</span>
+      <span class="brc-ai3-head-boat">${head}<small style="font-size:9px;color:var(--ink-soft);margin-left:4px;">例</small></span>
+    </div>
+    <div class="brc-ai3-section-label">期待値ある参考買い目</div>
+    <div class="brc-ai3-picks">${chips}</div>
+    <div class="brc-ai3-kpis">
+      <div class="brc-ai3-kpi"><div class="k">点数</div><div class="v">${points}点</div></div>
+      <div class="brc-ai3-kpi"><div class="k">想定的中率</div><div class="v accent">導入後</div></div>
+      <div class="brc-ai3-kpi"><div class="k">合成オッズ</div><div class="v">導入後</div></div>
+      <div class="brc-ai3-kpi"><div class="k">期待回収率</div><div class="v">導入後</div></div>
+    </div>
+    <div class="brc-ai3-reason">${note}</div>`;
+  };
+  const modes={
+    stable:previewMode('stable','③',['3-1-2','3-4-1','3-1-4','3-4-2','3-2-1'],5),
+    hit:previewMode('hit','①',['1-2-3','1-3-2','1-2-4','1-3-4','1-4-2','1-2-5','1-5-2'],7),
+    return:previewMode('return','④',['4-5-1','4-1-5','4-5-2'],3)
+  };
+  return `<div class="brc-ai3-card" data-brc-ai3-root data-brc-ai3-preview="1">
+    <div class="brc-ai3-head">
+      <div class="brc-ai3-title">BRC参考買い目</div>
+      <span class="brc-ai3-badge">今後導入予定</span>
+      <span class="brc-ai3-badge">表示イメージ</span>
+    </div>
+    <div style="margin:-3px 12px 9px;padding:7px 9px;border-radius:8px;background:rgba(227,178,60,.08);border:1px solid rgba(227,178,60,.24);font-size:9.5px;font-weight:800;color:#8a5a00;line-height:1.45;">サンプル表示です。現在のレースを実際に予測した買い目ではありません。</div>
+    <div class="brc-ai3-tabs">
+      <button type="button" class="brc-ai3-tab active" data-brc-ai-mode-tab="stable">安定型</button>
+      <button type="button" class="brc-ai3-tab" data-brc-ai-mode-tab="hit">的中型</button>
+      <button type="button" class="brc-ai3-tab" data-brc-ai-mode-tab="return">回収型</button>
+    </div>
+    <div class="brc-ai3-body">
+      <div class="brc-ai3-panel active" data-brc-ai-mode-panel="stable">${modes.stable}</div>
+      <div class="brc-ai3-panel" data-brc-ai-mode-panel="hit">${modes.hit}</div>
+      <div class="brc-ai3-panel" data-brc-ai-mode-panel="return">${modes.return}</div>
+    </div>
+  </div>`;
+}
+function buildRecommendedBetsHtmlFromServer(workerPrediction, localInReliability=null, exhibitionApplied=false){
+  const ai3=brcBuildAi3ModeRecommendationHtml(workerPrediction);
+  if(ai3) return ai3;
+  const legacy=brcBuildLegacyRecommendedBetsHtml(workerPrediction,localInReliability,exhibitionApplied);
+  return brcBuildAi3ModePreviewHtml() + legacy;
 }
 
 // ===== BRC protected server =====
@@ -9111,7 +9333,7 @@ async function runPredict(){
     }else{
       apiResult = await brcPredictApi({venue, grade, boats:apiBoats});
     }
-    if(!apiResult || apiResult.prediction_api !== true || !Array.isArray(apiResult.wins) || !Array.isArray(apiResult.top3s) || !Array.isArray(apiResult.baselines) || !Array.isArray(apiResult.seconds) || !apiResult.inReliability || !apiResult.recommendation){
+    if(!apiResult || apiResult.prediction_api !== true || !Array.isArray(apiResult.wins) || !Array.isArray(apiResult.top3s) || !Array.isArray(apiResult.baselines) || !Array.isArray(apiResult.seconds) || !apiResult.inReliability || (!apiResult.recommendation && !brcGetAiModePayload(apiResult))){
       throw new Error('prediction_api_not_ready');
     }
     workerPrediction = apiResult;
