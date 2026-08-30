@@ -882,7 +882,7 @@
   }
   .brc-odds-view-tab.active{background:var(--wave);border-color:var(--wave);color:#fff;}
   .brc-odds-matrix-scroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid rgba(10,31,51,.11);border-radius:10px;background:#fff;}
-  .brc-odds-matrix{display:grid;grid-template-columns:repeat(6,minmax(126px,1fr));min-width:756px;}
+  .brc-odds-matrix{display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));min-width:720px;}
   .brc-odds-headcol{min-width:0;border-left:1px solid rgba(10,31,51,.18);}
   .brc-odds-headcol:first-child{border-left:0;}
   .brc-odds-headcol-title{height:34px;display:flex;align-items:center;gap:5px;padding:0 6px;font-size:10.5px;font-weight:900;white-space:nowrap;overflow:hidden;}
@@ -896,11 +896,11 @@
   .brc-odds-lane5{background:var(--lane5);color:var(--lane5-text);}
   .brc-odds-lane6{background:var(--lane6);color:var(--lane6-text);}
   table.brc-odds-col-table{width:100%;table-layout:fixed;border-collapse:collapse;font-variant-numeric:tabular-nums;}
-  table.brc-odds-col-table col.c-second{width:21%;} table.brc-odds-col-table col.c-third{width:15%;} table.brc-odds-col-table col.c-odds{width:64%;}
-  table.brc-odds-col-table td{height:23px;padding:1px 3px;border-top:1px solid rgba(10,31,51,.11);text-align:right;white-space:nowrap;font-size:10.5px;color:#111;background:#fff;}
+  table.brc-odds-col-table col.c-second{width:20%;} table.brc-odds-col-table col.c-third{width:14%;} table.brc-odds-col-table col.c-odds{width:66%;}
+  table.brc-odds-col-table td{height:23px;padding:1px 2px;border-top:1px solid rgba(10,31,51,.11);text-align:right;white-space:nowrap;font-size:10.3px;color:#111;background:#fff;}
   table.brc-odds-col-table td.second{padding:0;text-align:center;font-size:12.5px;font-weight:900;border-right:1px solid rgba(10,31,51,.14);}
   table.brc-odds-col-table td.third{padding:0;text-align:center;font-size:10.5px;font-weight:900;border-right:1px solid rgba(10,31,51,.12);}
-  table.brc-odds-col-table td.odds{font-weight:700;font-size:10.5px;letter-spacing:-0.1px;}
+  table.brc-odds-col-table td.odds{font-weight:700;font-size:10.2px;letter-spacing:-0.15px;}
   table.brc-odds-col-table td.odds.is-low{color:#d40000;font-weight:900;}
   /* 2着・3着番号欄は、参考オッズ表と同じく「2着艇の枠色」で4行を統一 */
   table.brc-odds-col-table td.second.brc-odds-lane1,
@@ -920,10 +920,10 @@
   .brc-odds-pop-box{border:1px solid rgba(10,31,51,.10);border-radius:10px;overflow:hidden;background:#fff;}
   table.brc-odds-pop-table{width:100%;border-collapse:collapse;table-layout:fixed;font-variant-numeric:tabular-nums;}
   table.brc-odds-pop-table th{padding:6px 5px;background:var(--bg3);font-size:10px;color:var(--ink-soft);cursor:default;text-align:center;}
-  table.brc-odds-pop-table td{padding:6px 5px;border-top:1px solid rgba(10,31,51,.07);font-size:11px;text-align:center;white-space:nowrap;}
-  .brc-odds-pop-rank{width:44px;font-weight:900;color:var(--ink-soft);}
+  table.brc-odds-pop-table td{padding:6px 4px;border-top:1px solid rgba(10,31,51,.07);font-size:11px;text-align:center;white-space:nowrap;}
+  .brc-odds-pop-rank{width:40px;font-weight:900;color:var(--ink-soft);}
   .brc-odds-pop-combo{font-weight:900;}
-  .brc-odds-pop-value{text-align:right!important;font-size:12px!important;font-weight:900;color:var(--navy);}
+  .brc-odds-pop-value{text-align:right!important;font-size:11.5px!important;font-weight:900;color:var(--navy);}
   .brc-odds-combo-chip{display:inline-flex;align-items:center;gap:3px;}
   .brc-odds-combo-boat{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:5px;font-size:10px;font-weight:950;border:1px solid rgba(10,31,51,.12);}
   .brc-odds-combo-sep{font-size:10px;color:var(--ink-soft);font-weight:800;}
@@ -936,7 +936,7 @@
     .brc-odds-wrap{padding:8px 6px 12px;}
     .brc-odds-refresh{padding:7px 8px;font-size:10px;}
     .brc-odds-view-tab{padding:5px 10px;font-size:10px;}
-    .brc-odds-matrix{grid-template-columns:repeat(6,124px);min-width:744px;}
+    .brc-odds-matrix{grid-template-columns:repeat(6,118px);min-width:708px;}
     .brc-odds-headcol-title{height:32px;padding:0 5px;font-size:10px;}
     .brc-odds-headcol-title .bo{font-size:12px;}
     table.brc-odds-col-table td{height:22px;}
@@ -4211,7 +4211,7 @@ function brcOddsBuildPopular(odds){
   const items=Object.entries(odds||{}).map(([comb,val])=>({comb,v:Number(val)}))
     .filter(x=>/^([1-6])-([1-6])-([1-6])$/.test(x.comb) && Number.isFinite(x.v) && x.v>0)
     .sort((a,b)=>a.v-b.v).slice(0,30);
-  const table=(list,start)=>`<div class="brc-odds-pop-box"><table class="brc-odds-pop-table"><thead><tr><th style="width:48px">人気</th><th>買い目</th><th style="width:82px">オッズ</th></tr></thead><tbody>${list.map((x,i)=>{
+  const table=(list,start)=>`<div class="brc-odds-pop-box"><table class="brc-odds-pop-table"><thead><tr><th style="width:44px">人気</th><th>買い目</th><th style="width:72px">オッズ</th></tr></thead><tbody>${list.map((x,i)=>{
     const b=x.comb.split('-').map(Number);
     const combo=`<span class="brc-odds-combo-chip">${brcOddsLaneHtml(b[0])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(b[1])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(b[2])}</span>`;
     return `<tr><td class="brc-odds-pop-rank">${start+i}位</td><td class="brc-odds-pop-combo">${combo}</td><td class="brc-odds-pop-value">${x.v.toFixed(1)}</td></tr>`;
