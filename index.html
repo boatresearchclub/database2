@@ -2617,7 +2617,8 @@ const BRC_LIVE_EXHIBITION_API_URL = 'https://brc-live-exhibition.sk48159212.work
 
 const BRC_SESSION_STORAGE_KEY = 'brc_supabase_session_v1';
 const BRC_MEMBER_EMAIL_DOMAIN = 'members.example.com'; // 会員IDをSupabase Auth用の内部メールへ変換（外部送信には使用しない）
-const BRC_ADMIN_MEMBER_IDS = new Set(['BRC001']); // 管理者会員ID。必要ならここだけ変更
+const BRC_ADMIN_MEMBER_IDS = new Set([]); // 内部会員IDで管理者指定する場合に使用
+const BRC_ADMIN_EMAILS = new Set(['sk48159212@gmail.com']); // 管理者メールアドレス
 let BRC_ADMIN_ACTIVE = false;
 let BRC_CURRENT_USER = null;
 let BRC_MEMBER_ACTIVE = false;
@@ -2850,9 +2851,10 @@ function brcDisplayMemberId(user){
 
 function brcIsAdminUser(user){
   const memberId=brcDisplayMemberId(user);
+  const email=String(user && user.email || '').trim().toLowerCase();
   const app=user && user.app_metadata ? user.app_metadata : {};
   const meta=user && user.user_metadata ? user.user_metadata : {};
-  return BRC_ADMIN_MEMBER_IDS.has(memberId) || app.brc_admin===true || meta.brc_admin===true || app.role==='admin' || meta.role==='admin';
+  return BRC_ADMIN_EMAILS.has(email) || BRC_ADMIN_MEMBER_IDS.has(memberId) || app.brc_admin===true || meta.brc_admin===true || app.role==='admin' || meta.role==='admin';
 }
 function brcSetAdminUi(user=null){
   BRC_CURRENT_USER=user||null;
