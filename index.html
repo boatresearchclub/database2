@@ -929,6 +929,34 @@
   .brc-odds-combo-sep{font-size:10px;color:var(--ink-soft);font-weight:800;}
   .brc-odds-foot{margin:6px 2px 0;font-size:9px;line-height:1.45;color:var(--ink-soft);}
   .brc-odds-empty{padding:22px 10px;text-align:center;color:var(--ink-soft);font-size:11px;line-height:1.6;}
+  .brc-odds-builder{display:grid;gap:10px;}
+  .brc-odds-builder-box{border:1px solid rgba(10,31,51,.10);border-radius:12px;background:#fff;overflow:hidden;}
+  .brc-odds-builder-head{display:grid;grid-template-columns:40px minmax(96px,1fr) repeat(3,52px);align-items:center;background:#f7f9fc;border-bottom:1px solid rgba(10,31,51,.08);}
+  .brc-odds-builder-head div{padding:8px 4px;font-size:10.5px;font-weight:900;color:var(--ink-soft);text-align:center;}
+  .brc-odds-builder-head div:nth-child(2){text-align:left;padding-left:8px;}
+  .brc-odds-builder-row{display:grid;grid-template-columns:40px minmax(96px,1fr) repeat(3,52px);align-items:center;border-top:1px solid rgba(10,31,51,.07);}
+  .brc-odds-builder-row:first-of-type{border-top:0;}
+  .brc-odds-builder-lane{display:flex;align-items:center;justify-content:center;height:100%;min-height:42px;font-size:20px;font-weight:950;border-right:1px solid rgba(10,31,51,.07);}
+  .brc-odds-builder-name{padding:4px 8px;font-size:11px;font-weight:800;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .brc-odds-builder-name small{display:block;margin-top:1px;font-size:9px;color:var(--ink-soft);font-weight:700;}
+  .brc-odds-builder-cell{display:flex;align-items:center;justify-content:center;padding:3px;}
+  .brc-odds-builder-btn,.brc-odds-builder-all{appearance:none;border:1px solid rgba(10,31,51,.16);background:#fff;color:var(--navy);border-radius:8px;min-width:38px;height:34px;padding:0 6px;font:inherit;font-size:17px;font-weight:950;cursor:pointer;}
+  .brc-odds-builder-btn.active,.brc-odds-builder-all.active{background:var(--wave);border-color:var(--wave);color:#fff;}
+  .brc-odds-builder-all{font-size:15px;font-weight:900;min-width:40px;height:32px;}
+  .brc-odds-builder-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}
+  .brc-odds-builder-kpi{border:1px solid rgba(10,31,51,.09);border-radius:10px;background:#fff;padding:8px 9px;}
+  .brc-odds-builder-kpi .k{font-size:9.5px;color:var(--ink-soft);font-weight:800;}
+  .brc-odds-builder-kpi .v{margin-top:2px;font-size:16px;color:var(--navy);font-weight:950;line-height:1.15;}
+  .brc-odds-builder-kpi .v.small{font-size:13px;}
+  .brc-odds-builder-note{padding:8px 10px;border-radius:10px;background:rgba(10,31,51,.025);border:1px solid rgba(10,31,51,.08);font-size:10px;line-height:1.55;color:var(--ink-soft);}
+  .brc-odds-builder-list{border:1px solid rgba(10,31,51,.10);border-radius:12px;background:#fff;overflow:hidden;}
+  table.brc-odds-builder-table{width:100%;border-collapse:collapse;table-layout:fixed;font-variant-numeric:tabular-nums;}
+  table.brc-odds-builder-table th{padding:6px 5px;background:var(--bg3);font-size:10px;color:var(--ink-soft);text-align:center;}
+  table.brc-odds-builder-table td{padding:6px 5px;border-top:1px solid rgba(10,31,51,.07);font-size:11px;text-align:center;white-space:nowrap;}
+  .brc-odds-builder-table td.idx{width:40px;color:var(--ink-soft);font-weight:900;}
+  .brc-odds-builder-table td.combo{font-weight:900;}
+  .brc-odds-builder-table td.val{text-align:right;font-weight:900;color:var(--navy);}
+
   @media(max-width:700px){
     .brc-odds-pop-grid{grid-template-columns:1fr;}
   }
@@ -939,6 +967,15 @@
     .brc-odds-matrix{grid-template-columns:repeat(6,118px);min-width:708px;}
     .brc-odds-headcol-title{height:32px;padding:0 5px;font-size:10px;}
     .brc-odds-headcol-title .bo{font-size:12px;}
+    .brc-odds-builder-head,.brc-odds-builder-row{grid-template-columns:34px minmax(84px,1fr) repeat(3,46px);}
+    .brc-odds-builder-lane{min-height:38px;font-size:18px;}
+    .brc-odds-builder-name{padding:3px 6px;font-size:10.5px;}
+    .brc-odds-builder-btn,.brc-odds-builder-all{min-width:34px;height:30px;font-size:15px;border-radius:7px;}
+    .brc-odds-builder-all{font-size:13px;}
+    .brc-odds-builder-summary{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .brc-odds-builder-kpi .v{font-size:15px;}
+    table.brc-odds-builder-table th{font-size:9.5px;padding:6px 4px;}
+    table.brc-odds-builder-table td{font-size:10.5px;padding:6px 4px;}
     table.brc-odds-col-table td{height:22px;}
   }
 
@@ -4128,6 +4165,7 @@ function bindPredictMainTabs(){
 // 「オッズ更新」を押した時だけLive Workerへ問い合わせ、Worker側で60秒共有キャッシュを判定する。
 const BRC_ODDS_CACHE_SEC = 60;
 let __brcOddsView = 'matrix';
+let __brcOddsBuilderState = Object.create(null);
 let __brcOddsLocal = Object.create(null);
 let __brcOddsCooldownTimer = null;
 let __brcOddsFinalLoading = Object.create(null);
@@ -4184,6 +4222,7 @@ function brcOddsViewTabs(){
   return `<div class="brc-odds-view-tabs" role="tablist" aria-label="オッズ表示切り替え">
     <button type="button" class="brc-odds-view-tab${__brcOddsView==='matrix'?' active':''}" data-odds-view="matrix">3連単一覧</button>
     <button type="button" class="brc-odds-view-tab${__brcOddsView==='popular'?' active':''}" data-odds-view="popular">人気順TOP30</button>
+    <button type="button" class="brc-odds-view-tab${__brcOddsView==='builder'?' active':''}" data-odds-view="builder">買い目作成</button>
   </div>`;
 }
 
@@ -4230,8 +4269,110 @@ function brcOddsBuildPopular(odds){
     <div class="brc-odds-foot">現在取得している3連単120通りをオッズの低い順に並べたTOP30です。</div>`;
 }
 
+
+function brcOddsBuilderDefault(){
+  return {first:[],second:[],third:[]};
+}
+
+function brcOddsBuilderGetState(key){
+  if(!key) return brcOddsBuilderDefault();
+  if(!__brcOddsBuilderState[key]) __brcOddsBuilderState[key]=brcOddsBuilderDefault();
+  const s=__brcOddsBuilderState[key];
+  return {
+    first:Array.isArray(s.first)?s.first.slice():[],
+    second:Array.isArray(s.second)?s.second.slice():[],
+    third:Array.isArray(s.third)?s.third.slice():[]
+  };
+}
+
+function brcOddsBuilderSetState(key,state){
+  if(!key) return;
+  const norm=arr=>Array.from(new Set((Array.isArray(arr)?arr:[]).map(Number).filter(n=>n>=1&&n<=6))).sort((a,b)=>a-b);
+  __brcOddsBuilderState[key]={first:norm(state?.first),second:norm(state?.second),third:norm(state?.third)};
+}
+
+function brcOddsBuilderToggle(key,pos,boat){
+  const st=brcOddsBuilderGetState(key);
+  const arr=(Array.isArray(st[pos])?st[pos]:[]).slice();
+  const n=Number(boat);
+  const idx=arr.indexOf(n);
+  if(idx>=0) arr.splice(idx,1); else arr.push(n);
+  st[pos]=arr.sort((a,b)=>a-b);
+  brcOddsBuilderSetState(key,st);
+}
+
+function brcOddsBuilderToggleAll(key,pos){
+  const st=brcOddsBuilderGetState(key);
+  const arr=Array.isArray(st[pos])?st[pos]:[];
+  st[pos]=(arr.length===6)?[]:[1,2,3,4,5,6];
+  brcOddsBuilderSetState(key,st);
+}
+
+function brcOddsBuilderRows(odds,key){
+  const st=brcOddsBuilderGetState(key);
+  const rows=[];
+  st.first.forEach(a=>{
+    st.second.forEach(b=>{
+      st.third.forEach(c=>{
+        if(a===b || a===c || b===c) return;
+        const comb=`${a}-${b}-${c}`;
+        const v=brcOddsValue(odds,comb);
+        if(v!==null) rows.push({comb,odds:v,b:[a,b,c]});
+      });
+    });
+  });
+  return rows.sort((x,y)=>x.odds-y.odds || x.comb.localeCompare(y.comb,'ja'));
+}
+
+function brcOddsBuilderComposite(rows){
+  const sum=rows.reduce((acc,row)=>acc + (row.odds>0 ? 1/row.odds : 0), 0);
+  return sum>0 ? 1/sum : null;
+}
+
+function brcOddsBuildBuilder(odds,sel){
+  const key=sel?.key || '';
+  const names=brcOddsBoatNames(sel);
+  const st=brcOddsBuilderGetState(key);
+  const allOn=pos=>Array.isArray(st[pos]) && st[pos].length===6;
+  const rowsHtml=[1,2,3,4,5,6].map(boat=>{
+    const lane=`brc-odds-lane${boat}`;
+    const name=brcOddsEscape(names[boat-1]||`${boat}号艇`);
+    const btn=(pos,label)=>`<div class="brc-odds-builder-cell"><button type="button" class="brc-odds-builder-btn${st[pos].includes(boat)?' active':''}" data-bet-builder-pos="${pos}" data-bet-builder-boat="${boat}" aria-pressed="${st[pos].includes(boat)?'true':'false'}">${label}</button></div>`;
+    return `<div class="brc-odds-builder-row"><div class="brc-odds-builder-lane ${lane}">${boat}</div><div class="brc-odds-builder-name">${name}</div>${btn('first',boat)}${btn('second',boat)}${btn('third',boat)}</div>`;
+  }).join('');
+  const allBtn=pos=>`<div class="brc-odds-builder-cell"><button type="button" class="brc-odds-builder-all${allOn(pos)?' active':''}" data-bet-builder-all="${pos}" aria-pressed="${allOn(pos)?'true':'false'}">全</button></div>`;
+  const rows=brcOddsBuilderRows(odds,key);
+  const comp=brcOddsBuilderComposite(rows);
+  const minv=rows.length?rows[0].odds:null;
+  const maxv=rows.length?rows[rows.length-1].odds:null;
+  const list=rows.length ? rows.map((row,i)=>{
+    const combo=`<span class="brc-odds-combo-chip">${brcOddsLaneHtml(row.b[0])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(row.b[1])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(row.b[2])}</span>`;
+    return `<tr><td class="idx">${i+1}</td><td class="combo">${combo}</td><td class="val">${row.odds.toFixed(1)}</td></tr>`;
+  }).join('') : '<tr><td colspan="3" style="padding:18px 10px;color:var(--ink-soft);font-size:11px;line-height:1.6;">1着・2着・3着を選ぶと買い目一覧と合成オッズを表示します。<br>同じ艇の重複は自動で除外します。</td></tr>';
+
+  return `${brcOddsViewTabs()}<div class="brc-odds-builder">
+    <div class="brc-odds-builder-box">
+      <div class="brc-odds-builder-head"><div>枠</div><div>選手名</div><div>1着</div><div>2着</div><div>3着</div></div>
+      ${rowsHtml}
+      <div class="brc-odds-builder-row"><div class="brc-odds-builder-lane" style="background:#f7f9fc;color:var(--ink-soft);font-size:12px;">全</div><div class="brc-odds-builder-name"><small>列ごとに一括選択 / 解除</small></div>${allBtn('first')}${allBtn('second')}${allBtn('third')}</div>
+    </div>
+    <div class="brc-odds-builder-summary">
+      <div class="brc-odds-builder-kpi"><div class="k">買い目点数</div><div class="v">${rows.length}点</div></div>
+      <div class="brc-odds-builder-kpi"><div class="k">合成オッズ</div><div class="v">${comp?comp.toFixed(2)+'倍':'―'}</div></div>
+      <div class="brc-odds-builder-kpi"><div class="k">最低オッズ</div><div class="v small">${minv?minv.toFixed(1)+'倍':'―'}</div></div>
+      <div class="brc-odds-builder-kpi"><div class="k">最高オッズ</div><div class="v small">${maxv?maxv.toFixed(1)+'倍':'―'}</div></div>
+    </div>
+    <div class="brc-odds-builder-note">3連単フォーメーションの手動作成です。均等買いを前提に、合成オッズ = 1 ÷ Σ(1 / 各オッズ) で計算します。締切後は保存済みの最終オッズでも確認できます。</div>
+    <div class="brc-odds-builder-list">
+      <table class="brc-odds-builder-table"><thead><tr><th style="width:44px">#</th><th>買い目</th><th style="width:76px">オッズ</th></tr></thead><tbody>${list}</tbody></table>
+    </div>
+  </div>`;
+}
+
 function brcOddsBuildView(odds,sel){
-  return __brcOddsView==='popular' ? brcOddsBuildPopular(odds) : brcOddsBuildMatrix(odds,sel);
+  if(__brcOddsView==='popular') return brcOddsBuildPopular(odds);
+  if(__brcOddsView==='builder') return brcOddsBuildBuilder(odds,sel);
+  return brcOddsBuildMatrix(odds,sel);
 }
 
 function brcOddsStartCooldown(seconds){
@@ -4322,7 +4463,7 @@ function brcRenderOddsPanel(message='',isError=false){
   else if(rec) status.textContent=rec.cache_hit ? '60秒キャッシュを使用しました。取得先への再アクセスはありません。' : '取得先から最新オッズを取得しました。次の取得は60秒後から可能です。';
   else status.textContent='「オッズ更新」を押すと最新値を確認します。60秒以内の保存値があれば取得先へ再アクセスしません。';
   body.innerHTML=rec?.odds ? brcOddsBuildView(rec.odds,sel) : '<div class="brc-odds-empty">まだオッズを取得していません。</div>';
-  body.querySelectorAll('[data-odds-view]').forEach(el=>el.addEventListener('click',()=>{__brcOddsView=el.dataset.oddsView==='popular'?'popular':'matrix';brcRenderOddsPanel();}));
+  body.querySelectorAll('[data-odds-view]').forEach(el=>el.addEventListener('click',()=>{const v=String(el.dataset.oddsView||'');__brcOddsView=(v==='popular'||v==='builder')?v:'matrix';brcRenderOddsPanel();}));
   const cooling=!!rec && Number(rec.cooldownUntil)>Date.now();
   btn.disabled=historical||passed||cooling;
   if(historical) btn.textContent='当日のみ更新';
@@ -4373,7 +4514,28 @@ function brcBindOddsManual(){
   window.__brcOddsManualBound=true;
   document.addEventListener('click',e=>{
     const btn=e.target?.closest?.('#brcOddsRefreshBtn');
-    if(btn){e.preventDefault();brcRefreshOddsManual();}
+    if(btn){e.preventDefault();brcRefreshOddsManual();return;}
+    const pick=e.target?.closest?.('[data-bet-builder-pos]');
+    if(pick){
+      e.preventDefault();
+      const sel=brcOddsSelection();
+      if(sel?.key){
+        brcOddsBuilderToggle(sel.key, String(pick.dataset.betBuilderPos||''), Number(pick.dataset.betBuilderBoat||0));
+        __brcOddsView='builder';
+        brcRenderOddsPanel();
+      }
+      return;
+    }
+    const all=e.target?.closest?.('[data-bet-builder-all]');
+    if(all){
+      e.preventDefault();
+      const sel=brcOddsSelection();
+      if(sel?.key){
+        brcOddsBuilderToggleAll(sel.key, String(all.dataset.betBuilderAll||''));
+        __brcOddsView='builder';
+        brcRenderOddsPanel();
+      }
+    }
   });
   document.addEventListener('change',e=>{
     if(e.target?.id==='predictRaceDay'||e.target?.id==='predictRaceNo'||e.target?.id==='predictVenue') brcRenderOddsPanel();
