@@ -849,7 +849,7 @@
     .predict-ai-wrap{padding:10px 8px 14px;}
   }
 
-  /* ---- BRC_ODDS_MANUAL_CACHE_TEST_20260830 ---- */
+  /* ---- BRC_ODDS_MATRIX_POPULARITY_20260830 ---- */
   .brc-odds-wrap{padding:14px 14px 18px;}
   .brc-odds-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;}
   .brc-odds-title{font-size:15px;font-weight:900;color:var(--navy);line-height:1.35;}
@@ -865,27 +865,56 @@
   }
   .brc-odds-status strong{color:var(--navy);}
   .brc-odds-status.error{border-color:rgba(209,55,63,.22);background:rgba(209,55,63,.055);color:#a52c35;}
-  .brc-odds-head-tabs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;margin-bottom:9px;}
-  .brc-odds-head-tab{
-    appearance:none;border:1px solid rgba(10,31,51,.14);background:#fff;color:var(--navy);
-    border-radius:8px;padding:7px 2px;font:inherit;font-size:11.5px;font-weight:900;cursor:pointer;
+  .brc-odds-view-tabs{display:flex;gap:6px;margin:0 0 10px;}
+  .brc-odds-view-tab{
+    appearance:none;border:1px solid rgba(10,31,51,.14);background:#fff;color:var(--ink-soft);
+    border-radius:999px;padding:7px 13px;font:inherit;font-size:11.5px;font-weight:900;cursor:pointer;
   }
-  .brc-odds-head-tab.active{background:var(--wave);border-color:var(--wave);color:#fff;}
-  .brc-odds-table-box{width:100%;overflow:hidden;border:1px solid rgba(10,31,51,.08);border-radius:10px;background:#fff;}
-  table.brc-odds-table{width:100%;table-layout:fixed;border-collapse:collapse;font-variant-numeric:tabular-nums;}
-  table.brc-odds-table th,table.brc-odds-table td{text-align:center;white-space:nowrap;padding:8px 3px;}
-  table.brc-odds-table th{background:var(--bg3);font-size:10.5px;color:var(--ink-soft);cursor:default;}
-  table.brc-odds-table td{font-size:13px;font-weight:800;color:var(--navy);}
-  table.brc-odds-table td.is-na{color:rgba(61,74,99,.35);font-weight:600;}
-  table.brc-odds-table td.is-low{color:#b4232c;}
+  .brc-odds-view-tab.active{background:var(--wave);border-color:var(--wave);color:#fff;}
+  .brc-odds-matrix-scroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid rgba(10,31,51,.11);border-radius:10px;background:#fff;}
+  .brc-odds-matrix{display:grid;grid-template-columns:repeat(6,minmax(158px,1fr));min-width:960px;}
+  .brc-odds-headcol{min-width:0;border-left:1px solid rgba(10,31,51,.18);}
+  .brc-odds-headcol:first-child{border-left:0;}
+  .brc-odds-headcol-title{height:45px;display:flex;align-items:center;gap:8px;padding:0 10px;font-size:12.5px;font-weight:900;white-space:nowrap;overflow:hidden;}
+  .brc-odds-headcol-title .bo{font-size:17px;line-height:1;flex:0 0 auto;}
+  .brc-odds-headcol-title .nm{overflow:hidden;text-overflow:ellipsis;}
+  .brc-odds-lane1{background:#f6f6f6;color:#111;}
+  .brc-odds-lane2{background:#555;color:#fff;}
+  .brc-odds-lane3{background:#f5424a;color:#fff;}
+  .brc-odds-lane4{background:#3d87cf;color:#fff;}
+  .brc-odds-lane5{background:#f2ed51;color:#111;}
+  .brc-odds-lane6{background:#49b94b;color:#fff;}
+  table.brc-odds-col-table{width:100%;table-layout:fixed;border-collapse:collapse;font-variant-numeric:tabular-nums;}
+  table.brc-odds-col-table col.c-second{width:25%;} table.brc-odds-col-table col.c-third{width:18%;} table.brc-odds-col-table col.c-odds{width:57%;}
+  table.brc-odds-col-table td{height:29px;padding:2px 5px;border-top:1px solid rgba(10,31,51,.13);text-align:right;white-space:nowrap;font-size:12px;color:#111;background:#fff;}
+  table.brc-odds-col-table td.second{padding:0;text-align:center;font-size:15px;font-weight:900;border-right:1px solid rgba(10,31,51,.16);}
+  table.brc-odds-col-table td.third{padding:0;text-align:center;font-size:12.5px;font-weight:900;border-right:1px solid rgba(10,31,51,.14);}
+  table.brc-odds-col-table td.odds{font-weight:650;font-size:12.5px;}
+  table.brc-odds-col-table td.odds.is-low{color:#d40000;font-weight:900;}
+  .brc-odds-pop-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+  .brc-odds-pop-box{border:1px solid rgba(10,31,51,.10);border-radius:10px;overflow:hidden;background:#fff;}
+  table.brc-odds-pop-table{width:100%;border-collapse:collapse;table-layout:fixed;font-variant-numeric:tabular-nums;}
+  table.brc-odds-pop-table th{padding:7px 6px;background:var(--bg3);font-size:10.5px;color:var(--ink-soft);cursor:default;text-align:center;}
+  table.brc-odds-pop-table td{padding:7px 6px;border-top:1px solid rgba(10,31,51,.07);font-size:12px;text-align:center;white-space:nowrap;}
+  .brc-odds-pop-rank{width:44px;font-weight:900;color:var(--ink-soft);}
+  .brc-odds-pop-combo{font-weight:900;}
+  .brc-odds-pop-value{text-align:right!important;font-size:13px!important;font-weight:900;color:var(--navy);}
+  .brc-odds-combo-chip{display:inline-flex;align-items:center;gap:3px;}
+  .brc-odds-combo-boat{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:5px;font-size:11px;font-weight:950;border:1px solid rgba(10,31,51,.12);}
+  .brc-odds-combo-sep{font-size:10px;color:var(--ink-soft);font-weight:800;}
   .brc-odds-foot{margin:8px 2px 0;font-size:9.5px;line-height:1.55;color:var(--ink-soft);}
   .brc-odds-empty{padding:32px 12px;text-align:center;color:var(--ink-soft);font-size:12px;line-height:1.7;}
+  @media(max-width:700px){
+    .brc-odds-pop-grid{grid-template-columns:1fr;}
+  }
   @media(max-width:420px){
     .brc-odds-wrap{padding:10px 8px 14px;}
     .brc-odds-refresh{padding:8px 9px;font-size:11px;}
-    .brc-odds-head-tab{padding:7px 1px;font-size:10.5px;}
-    table.brc-odds-table th{font-size:9.5px;padding:7px 1px;}
-    table.brc-odds-table td{font-size:11.5px;padding:8px 1px;letter-spacing:-.02em;}
+    .brc-odds-view-tab{padding:6px 11px;font-size:10.5px;}
+    .brc-odds-matrix{grid-template-columns:repeat(6,154px);min-width:924px;}
+    .brc-odds-headcol-title{height:42px;padding:0 8px;font-size:11.5px;}
+    .brc-odds-headcol-title .bo{font-size:16px;}
+    table.brc-odds-col-table td{height:28px;}
   }
 
   /* ---- 2026-08-28: AI予測タブ BRCイン逃げ2着・3着相対予測 ---- */
@@ -4033,11 +4062,11 @@ function bindPredictMainTabs(){
 }
 
 
-// ===== BRC_ODDS_MANUAL_CACHE_TEST_20260830 =====
+// ===== BRC_ODDS_MATRIX_POPULARITY_20260830 =====
 // オッズタブを開いただけでは外部取得しない。
 // 「オッズ更新」を押した時だけLive Workerへ問い合わせ、Worker側で60秒共有キャッシュを判定する。
 const BRC_ODDS_CACHE_SEC = 60;
-let __brcOddsHead = 1;
+let __brcOddsView = 'matrix';
 let __brcOddsLocal = Object.create(null);
 let __brcOddsCooldownTimer = null;
 
@@ -4073,23 +4102,66 @@ function brcOddsValue(odds,comb){
   return Number.isFinite(v) && v>0 ? v : null;
 }
 
-function brcOddsBuildTable(odds,head){
-  const h=Number(head)||1;
-  const others=[1,2,3,4,5,6].filter(n=>n!==h);
-  const th=others.map(n=>`<th>${n}</th>`).join('');
-  const rows=others.map(second=>{
-    const cells=others.map(third=>{
-      if(third===second) return '<td class="is-na">―</td>';
-      const comb=`${h}-${second}-${third}`;
-      const v=brcOddsValue(odds,comb);
-      const cls=v!==null && v<10 ? ' class="is-low"' : '';
-      return `<td${cls} title="${comb}">${v===null?'―':v.toFixed(1)}</td>`;
-    }).join('');
-    return `<tr><th>${second}</th>${cells}</tr>`;
+function brcOddsBoatNames(sel){
+  const regs=RACE_CARDS_TODAY?.[sel?.venue]?.[String(sel?.raceNo)] || [];
+  return [1,2,3,4,5,6].map((boat,i)=>{
+    const reg=regs[i];
+    const p=reg ? PLAYERS?.[reg] : null;
+    if(p?.name) return p.name;
+    const raw=document.getElementById(`boat-${boat}`)?.value || '';
+    return String(raw).replace(/（[^）]*）/g,'').trim() || `${boat}号艇`;
+  });
+}
+
+function brcOddsLaneHtml(n){
+  return `<span class="brc-odds-combo-boat brc-odds-lane${n}">${n}</span>`;
+}
+
+function brcOddsViewTabs(){
+  return `<div class="brc-odds-view-tabs" role="tablist" aria-label="オッズ表示切り替え">
+    <button type="button" class="brc-odds-view-tab${__brcOddsView==='matrix'?' active':''}" data-odds-view="matrix">3連単一覧</button>
+    <button type="button" class="brc-odds-view-tab${__brcOddsView==='popular'?' active':''}" data-odds-view="popular">人気順TOP30</button>
+  </div>`;
+}
+
+function brcOddsBuildMatrix(odds,sel){
+  const names=brcOddsBoatNames(sel);
+  const cols=[1,2,3,4,5,6].map(head=>{
+    const seconds=[1,2,3,4,5,6].filter(n=>n!==head);
+    const rows=[];
+    seconds.forEach(second=>{
+      const thirds=[1,2,3,4,5,6].filter(n=>n!==head && n!==second);
+      thirds.forEach((third,idx)=>{
+        const comb=`${head}-${second}-${third}`;
+        const v=brcOddsValue(odds,comb);
+        rows.push(`<tr>${idx===0?`<td rowspan="4" class="second brc-odds-lane${second}">${second}</td>`:''}<td class="third brc-odds-lane${third}">${third}</td><td class="odds${v!==null&&v<10?' is-low':''}" title="${comb}">${v===null?'―':v.toFixed(1)}</td></tr>`);
+      });
+    });
+    return `<div class="brc-odds-headcol">
+      <div class="brc-odds-headcol-title brc-odds-lane${head}"><span class="bo">${head}</span><span class="nm">${brcOddsEscape(names[head-1])}</span></div>
+      <table class="brc-odds-col-table"><colgroup><col class="c-second"><col class="c-third"><col class="c-odds"></colgroup><tbody>${rows.join('')}</tbody></table>
+    </div>`;
   }).join('');
-  return `<div class="brc-odds-head-tabs">${[1,2,3,4,5,6].map(n=>`<button type="button" class="brc-odds-head-tab${n===h?' active':''}" data-odds-head="${n}">${n}頭</button>`).join('')}</div>
-    <div class="brc-odds-table-box"><table class="brc-odds-table"><thead><tr><th>2着＼3着</th>${th}</tr></thead><tbody>${rows}</tbody></table></div>
-    <div class="brc-odds-foot">数字は3連単オッズ（倍）。1着艇を上のタブで切り替えます。赤字は10倍未満。</div>`;
+  return `${brcOddsViewTabs()}<div class="brc-odds-matrix-scroll"><div class="brc-odds-matrix">${cols}</div></div>
+    <div class="brc-odds-foot">左の大きい数字が2着、隣の数字が3着、右が3連単オッズ（倍）。スマホは横へスワイプできます。赤字は10倍未満。</div>`;
+}
+
+function brcOddsBuildPopular(odds){
+  const items=Object.entries(odds||{}).map(([comb,val])=>({comb,v:Number(val)}))
+    .filter(x=>/^([1-6])-([1-6])-([1-6])$/.test(x.comb) && Number.isFinite(x.v) && x.v>0)
+    .sort((a,b)=>a.v-b.v).slice(0,30);
+  const table=(list,start)=>`<div class="brc-odds-pop-box"><table class="brc-odds-pop-table"><thead><tr><th style="width:48px">人気</th><th>買い目</th><th style="width:82px">オッズ</th></tr></thead><tbody>${list.map((x,i)=>{
+    const b=x.comb.split('-').map(Number);
+    const combo=`<span class="brc-odds-combo-chip">${brcOddsLaneHtml(b[0])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(b[1])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(b[2])}</span>`;
+    return `<tr><td class="brc-odds-pop-rank">${start+i}位</td><td class="brc-odds-pop-combo">${combo}</td><td class="brc-odds-pop-value">${x.v.toFixed(1)}</td></tr>`;
+  }).join('')}</tbody></table></div>`;
+  const left=items.slice(0,15), right=items.slice(15,30);
+  return `${brcOddsViewTabs()}<div class="brc-odds-pop-grid">${table(left,1)}${right.length?table(right,16):''}</div>
+    <div class="brc-odds-foot">現在取得している3連単120通りをオッズの低い順に並べたTOP30です。</div>`;
+}
+
+function brcOddsBuildView(odds,sel){
+  return __brcOddsView==='popular' ? brcOddsBuildPopular(odds) : brcOddsBuildMatrix(odds,sel);
 }
 
 function brcOddsStartCooldown(seconds){
@@ -4138,8 +4210,8 @@ function brcRenderOddsPanel(message='',isError=false){
   if(message) status.textContent=message;
   else if(rec) status.textContent=rec.cache_hit ? '60秒キャッシュを使用しました。取得先への再アクセスはありません。' : '取得先から最新オッズを取得しました。次の取得は60秒後から可能です。';
   else status.textContent='「オッズ更新」を押すと最新値を確認します。60秒以内の保存値があれば取得先へ再アクセスしません。';
-  body.innerHTML=rec?.odds ? brcOddsBuildTable(rec.odds,__brcOddsHead) : '<div class="brc-odds-empty">まだオッズを取得していません。</div>';
-  body.querySelectorAll('[data-odds-head]').forEach(el=>el.addEventListener('click',()=>{__brcOddsHead=Number(el.dataset.oddsHead)||1;brcRenderOddsPanel();}));
+  body.innerHTML=rec?.odds ? brcOddsBuildView(rec.odds,sel) : '<div class="brc-odds-empty">まだオッズを取得していません。</div>';
+  body.querySelectorAll('[data-odds-view]').forEach(el=>el.addEventListener('click',()=>{__brcOddsView=el.dataset.oddsView==='popular'?'popular':'matrix';brcRenderOddsPanel();}));
   const cooling=!!rec && Number(rec.cooldownUntil)>Date.now();
   btn.disabled=historical||passed||cooling;
   if(historical) btn.textContent='当日のみ更新';
