@@ -979,6 +979,26 @@
   .brc-odds-saved-btn{appearance:none;border:1px solid rgba(10,31,51,.14);border-radius:8px;background:#fff;color:var(--navy);padding:7px 10px;font:inherit;font-size:10.5px;font-weight:900;cursor:pointer;}
   .brc-odds-saved-btn.load{border-color:rgba(0,87,219,.28);color:var(--wave);background:rgba(0,87,219,.035);}
   .brc-odds-saved-btn.delete{margin-left:auto;color:#b4232c;border-color:rgba(209,55,63,.24);background:rgba(209,55,63,.03);}
+  /* 保存リスト v2：保存セットを増やさず、買い目を1つの共通プールへ追加 */
+  .brc-odds-pool{display:grid;gap:8px;margin-top:2px;}
+  .brc-odds-pool-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .brc-odds-pool-title{font-size:13px;font-weight:950;color:var(--navy);}
+  .brc-odds-pool-count{font-size:10px;color:var(--ink-soft);font-weight:850;white-space:nowrap;}
+  .brc-odds-pool-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid rgba(10,31,51,.10);border-radius:11px;background:#fff;overflow:hidden;}
+  .brc-odds-pool-metric{padding:8px 5px;text-align:center;border-left:1px solid rgba(10,31,51,.06);}
+  .brc-odds-pool-metric:first-child{border-left:0;}
+  .brc-odds-pool-metric .k{font-size:8.5px;color:var(--ink-soft);font-weight:800;}
+  .brc-odds-pool-metric .v{margin-top:2px;font-size:13px;color:var(--navy);font-weight:950;white-space:nowrap;}
+  .brc-odds-pool-list{border:1px solid rgba(10,31,51,.10);border-radius:11px;background:#fff;overflow:hidden;}
+  table.brc-odds-pool-table{width:100%;border-collapse:collapse;table-layout:fixed;font-variant-numeric:tabular-nums;}
+  table.brc-odds-pool-table th{padding:6px 5px;background:var(--bg3);font-size:9.5px;color:var(--ink-soft);text-align:center;cursor:default;}
+  table.brc-odds-pool-table td{padding:6px 5px;border-top:1px solid rgba(10,31,51,.07);font-size:10.5px;text-align:center;white-space:nowrap;}
+  .brc-odds-pool-table td.combo{font-weight:900;}
+  .brc-odds-pool-table td.val{text-align:right;font-weight:900;color:var(--navy);}
+  .brc-odds-pool-remove{appearance:none;border:1px solid rgba(209,55,63,.20);background:rgba(209,55,63,.035);color:#b4232c;border-radius:7px;padding:4px 7px;font:inherit;font-size:9.5px;font-weight:900;cursor:pointer;}
+  .brc-odds-pool-clear{appearance:none;border:1px solid rgba(209,55,63,.20);background:#fff;color:#b4232c;border-radius:8px;padding:6px 9px;font:inherit;font-size:9.5px;font-weight:900;cursor:pointer;}
+  .brc-odds-pool-empty{padding:14px 10px;border:1px dashed rgba(10,31,51,.16);border-radius:10px;background:rgba(10,31,51,.018);text-align:center;color:var(--ink-soft);font-size:10.5px;line-height:1.6;}
+
 
 
   @media(max-width:700px){
@@ -1005,6 +1025,11 @@
     .brc-odds-saved-metric:nth-child(3){border-left:0;border-top:1px solid rgba(10,31,51,.06);}
     .brc-odds-saved-metric:nth-child(4){border-top:1px solid rgba(10,31,51,.06);}
     .brc-odds-saved-metric .v{font-size:12px;}
+    .brc-odds-pool-summary{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .brc-odds-pool-metric:nth-child(3){border-left:0;border-top:1px solid rgba(10,31,51,.06);}
+    .brc-odds-pool-metric:nth-child(4){border-top:1px solid rgba(10,31,51,.06);}
+    .brc-odds-pool-metric .v{font-size:12px;}
+
 
     table.brc-odds-col-table td{height:22px;}
   }
@@ -4197,113 +4222,8 @@ const BRC_ODDS_CACHE_SEC = 60;
 let __brcOddsView = 'matrix';
 let __brcOddsBuilderState = Object.create(null);
 
-const BRC_ODDS_SAVED_STORAGE_KEY = 'brc_odds_saved_bets_v1';
+const BRC_ODDS_SAVED_STORAGE_KEY = 'brc_odds_saved_combo_pool_v2';
 let __brcOddsSavedCache = null;
-
-let __brcOddsLocal = Object.create(null);
-let __brcOddsCooldownTimer = null;
-let __brcOddsFinalLoading = Object.create(null);
-let __brcOddsFinalRetryAfter = Object.create(null);
-
-function brcOddsSelection(){
-  const venue = document.getElementById('predictRaceDay')?.value || document.getElementById('predictVenue')?.value || '';
-  const raceNo = Number(document.getElementById('predictRaceNo')?.value || 0);
-  const code = brcVenueCodeFromName(venue);
-  const date = TODAY_LABEL || getJstDateLabel();
-  const key = (venue && raceNo && code) ? `${date}:${code}:${String(raceNo).padStart(2,'0')}` : '';
-  return {venue,raceNo,code,date,key};
-}
-
-function brcOddsDeadlinePassed(sel){
-  if(!sel?.venue || !sel?.raceNo) return false;
-  const info = RACE_INFO_TODAY?.[sel.venue] || {};
-  const hhmm = info?.deadlines?.[String(sel.raceNo)] || '';
-  if(!hhmm) return false;
-  try{return isRaceDeadlinePassed(hhmm);}catch(_e){return false;}
-}
-
-function brcOddsFmtTime(v){
-  const s=String(v||'');
-  const m=s.match(/(\d{2}:\d{2}:\d{2})/);
-  return m ? m[1] : s;
-}
-
-function brcOddsEscape(v){
-  return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-}
-
-function brcOddsValue(odds,comb){
-  const v=Number(odds?.[comb]);
-  return Number.isFinite(v) && v>0 ? v : null;
-}
-
-function brcOddsBoatNames(sel){
-  const regs=RACE_CARDS_TODAY?.[sel?.venue]?.[String(sel?.raceNo)] || [];
-  return [1,2,3,4,5,6].map((boat,i)=>{
-    const reg=regs[i];
-    const p=reg ? PLAYERS?.[reg] : null;
-    if(p?.name) return p.name;
-    const raw=document.getElementById(`boat-${boat}`)?.value || '';
-    return String(raw).replace(/（[^）]*）/g,'').trim() || `${boat}号艇`;
-  });
-}
-
-function brcOddsLaneHtml(n){
-  return `<span class="brc-odds-combo-boat brc-odds-lane${n}">${n}</span>`;
-}
-
-function brcOddsViewTabs(){
-  return `<div class="brc-odds-view-tabs" role="tablist" aria-label="オッズ表示切り替え">
-    <button type="button" class="brc-odds-view-tab${__brcOddsView==='matrix'?' active':''}" data-odds-view="matrix">3連単一覧</button>
-    <button type="button" class="brc-odds-view-tab${__brcOddsView==='popular'?' active':''}" data-odds-view="popular">人気順TOP30</button>
-    <button type="button" class="brc-odds-view-tab${__brcOddsView==='builder'?' active':''}" data-odds-view="builder">買い目作成</button>
-  </div>`;
-}
-
-function brcOddsBuildMatrix(odds,sel){
-  const names=brcOddsBoatNames(sel);
-  const cols=[1,2,3,4,5,6].map(head=>{
-    const seconds=[1,2,3,4,5,6].filter(n=>n!==head);
-    const rows=[];
-    seconds.forEach(second=>{
-      const thirds=[1,2,3,4,5,6].filter(n=>n!==head && n!==second);
-      thirds.forEach((third,idx)=>{
-        const comb=`${head}-${second}-${third}`;
-        const v=brcOddsValue(odds,comb);
-        rows.push(`<tr>${idx===0?`<td rowspan="4" class="second brc-odds-lane${second}">${second}</td>`:''}<td class="third brc-odds-lane${second}">${third}</td><td class="odds${v!==null&&v<10?' is-low':''}" title="${comb}">${v===null?'―':v.toFixed(1)}</td></tr>`);
-      });
-    });
-    return `<div class="brc-odds-headcol">
-      <div class="brc-odds-headcol-title brc-odds-lane${head}"><span class="bo">${head}</span><span class="nm">${brcOddsEscape(names[head-1])}</span></div>
-      <table class="brc-odds-col-table"><colgroup><col class="c-second"><col class="c-third"><col class="c-odds"></colgroup><tbody>${rows.join('')}</tbody></table>
-    </div>`;
-  }).join('');
-  return `${brcOddsViewTabs()}<div class="brc-odds-matrix-scroll"><div class="brc-odds-matrix">${cols}</div></div>
-    <div class="brc-odds-foot">左の大きい数字が2着、隣の数字が3着、右が3連単オッズ（倍）。スマホは横へスワイプできます。赤字は10倍未満。</div>`;
-}
-
-function brcOddsBuildPopular(odds){
-  const items=Object.entries(odds||{}).map(([comb,val])=>({comb,v:Number(val)}))
-    .filter(x=>/^([1-6])-([1-6])-([1-6])$/.test(x.comb) && Number.isFinite(x.v) && x.v>0)
-    .sort((a,b)=>a.v-b.v).slice(0,30);
-
-  const rows=items.map((x,i)=>{
-    const b=x.comb.split('-').map(Number);
-    const combo=`<span class="brc-odds-combo-chip">${brcOddsLaneHtml(b[0])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(b[1])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(b[2])}</span>`;
-    return `<tr><td class="brc-odds-pop-rank">${i+1}位</td><td class="brc-odds-pop-combo">${combo}</td><td class="brc-odds-pop-value">${x.v.toFixed(1)}</td></tr>`;
-  }).join('');
-
-  return `${brcOddsViewTabs()}
-    <div class="brc-odds-pop-box">
-      <table class="brc-odds-pop-table">
-        <thead><tr><th style="width:44px">人気</th><th>買い目</th><th style="width:72px">オッズ</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
-    <div class="brc-odds-foot">現在取得している3連単120通りをオッズの低い順に並べたTOP30です。</div>`;
-}
-
-
 
 function brcOddsSavedRead(){
   if(__brcOddsSavedCache) return __brcOddsSavedCache;
@@ -4326,51 +4246,37 @@ function brcOddsSavedForRace(key){
   if(!key) return [];
   const all=brcOddsSavedRead();
   const arr=Array.isArray(all[key])?all[key]:[];
-  return arr.filter(x=>x && x.id && x.state).slice(0,20);
-}
-
-function brcOddsStateSignature(state){
-  const norm=arr=>Array.from(new Set((Array.isArray(arr)?arr:[]).map(Number).filter(n=>n>=1&&n<=6))).sort((a,b)=>a-b).join(',');
-  return `${norm(state?.first)}|${norm(state?.second)}|${norm(state?.third)}`;
+  return Array.from(new Set(arr.map(String).filter(x=>/^[1-6]-[1-6]-[1-6]$/.test(x))));
 }
 
 function brcOddsSaveCurrentBuilder(sel,odds){
   const key=sel?.key||'';
-  if(!key) return false;
-  const state=brcOddsBuilderGetState(key);
-  const rows=brcOddsBuilderRowsFromState(odds,state);
-  if(!rows.length) return false;
+  if(!key) return {added:0,total:0};
+  const rows=brcOddsBuilderRowsFromState(odds,brcOddsBuilderGetState(key));
+  if(!rows.length) return {added:0,total:brcOddsSavedForRace(key).length};
   const all=brcOddsSavedRead();
-  const list=Array.isArray(all[key])?all[key].slice():[];
-  const sig=brcOddsStateSignature(state);
-  const now=Date.now();
-  const existing=list.findIndex(x=>brcOddsStateSignature(x?.state)===sig);
-  const item={
-    id:existing>=0?String(list[existing].id):`${now}-${Math.random().toString(36).slice(2,7)}`,
-    state:{first:state.first.slice(),second:state.second.slice(),third:state.third.slice()},
-    savedAt:now
-  };
-  if(existing>=0) list.splice(existing,1);
-  list.unshift(item);
-  all[key]=list.slice(0,20);
+  const before=brcOddsSavedForRace(key);
+  const set=new Set(before);
+  rows.forEach(row=>set.add(row.comb));
+  const after=Array.from(set);
+  all[key]=after;
   brcOddsSavedWrite(all);
-  return true;
+  return {added:after.length-before.length,total:after.length};
 }
 
-function brcOddsDeleteSaved(key,id){
-  if(!key||!id) return;
+function brcOddsRemoveSavedCombo(key,comb){
+  if(!key||!comb) return;
   const all=brcOddsSavedRead();
-  const list=Array.isArray(all[key])?all[key]:[];
-  all[key]=list.filter(x=>String(x?.id)!==String(id));
-  if(!all[key].length) delete all[key];
+  const next=brcOddsSavedForRace(key).filter(x=>x!==String(comb));
+  if(next.length) all[key]=next; else delete all[key];
   brcOddsSavedWrite(all);
 }
 
-function brcOddsLoadSaved(key,id){
-  const item=brcOddsSavedForRace(key).find(x=>String(x.id)===String(id));
-  if(!item) return false;
-  brcOddsBuilderSetState(key,item.state);
-  return true;
+function brcOddsClearSavedCombos(key){
+  if(!key) return;
+  const all=brcOddsSavedRead();
+  delete all[key];
+  brcOddsSavedWrite(all);
 }
 
 function brcOddsBuilderRowsFromState(odds,state){
@@ -4390,48 +4296,38 @@ function brcOddsBuilderRowsFromState(odds,state){
   return rows.sort((x,y)=>x.odds-y.odds || x.comb.localeCompare(y.comb,'ja'));
 }
 
-function brcOddsSavedFormatTime(ts){
-  const d=new Date(Number(ts)||Date.now());
-  if(!Number.isFinite(d.getTime())) return '';
-  const z=n=>String(n).padStart(2,'0');
-  return `${z(d.getHours())}:${z(d.getMinutes())}`;
-}
-
-function brcOddsSavedFormLabel(state){
-  const f=arr=>(Array.isArray(arr)&&arr.length)?arr.join(','):'―';
-  return `1着 ${f(state?.first)}　2着 ${f(state?.second)}　3着 ${f(state?.third)}`;
-}
-
-function brcOddsSavedCombosPreview(rows){
-  if(!rows.length) return '買い目なし';
-  const shown=rows.slice(0,8).map(x=>x.comb).join(' / ');
-  return rows.length>8 ? `${shown} / … 他${rows.length-8}点` : shown;
+function brcOddsSavedRows(odds,key){
+  return brcOddsSavedForRace(key).map(comb=>{
+    const b=comb.split('-').map(Number);
+    const v=brcOddsValue(odds,comb);
+    return {comb,odds:v,b};
+  }).filter(x=>x.odds!==null).sort((x,y)=>x.odds-y.odds || x.comb.localeCompare(y.comb,'ja'));
 }
 
 function brcOddsBuildSavedList(odds,sel){
   const key=sel?.key||'';
-  const saved=brcOddsSavedForRace(key);
-  if(!saved.length){
-    return `<div class="brc-odds-builder-saved"><div class="brc-odds-builder-saved-head"><div class="brc-odds-builder-saved-title">保存リスト</div><div class="brc-odds-builder-saved-count">0件</div></div><div class="brc-odds-saved-empty">作成した買い目を保存すると、ここで点数・合成オッズをいつでも確認できます。</div></div>`;
+  const combos=brcOddsSavedForRace(key);
+  if(!combos.length){
+    return `<div class="brc-odds-pool"><div class="brc-odds-pool-head"><div class="brc-odds-pool-title">保存買い目</div><div class="brc-odds-pool-count">0点</div></div><div class="brc-odds-pool-empty">フォーメーションで作った買い目を追加すると、ここに1つの保存リストとして蓄積します。重複買い目は自動で除外します。</div></div>`;
   }
-  const cards=saved.map((item,i)=>{
-    const rows=brcOddsBuilderRowsFromState(odds,item.state);
-    const comp=brcOddsBuilderComposite(rows);
-    const minv=rows.length?rows[0].odds:null;
-    const maxv=rows.length?rows[rows.length-1].odds:null;
-    return `<div class="brc-odds-saved-card">
-      <div class="brc-odds-saved-top"><div><div class="brc-odds-saved-name">保存${saved.length-i}</div><div class="brc-odds-saved-form">${brcOddsEscape(brcOddsSavedFormLabel(item.state))}</div></div><div class="brc-odds-saved-time">${brcOddsSavedFormatTime(item.savedAt)}</div></div>
-      <div class="brc-odds-saved-metrics">
-        <div class="brc-odds-saved-metric"><div class="k">点数</div><div class="v">${rows.length}点</div></div>
-        <div class="brc-odds-saved-metric"><div class="k">合成オッズ</div><div class="v">${comp?comp.toFixed(2)+'倍':'―'}</div></div>
-        <div class="brc-odds-saved-metric"><div class="k">最低</div><div class="v">${minv?minv.toFixed(1)+'倍':'―'}</div></div>
-        <div class="brc-odds-saved-metric"><div class="k">最高</div><div class="v">${maxv?maxv.toFixed(1)+'倍':'―'}</div></div>
-      </div>
-      <div class="brc-odds-saved-combos">${brcOddsEscape(brcOddsSavedCombosPreview(rows))}</div>
-      <div class="brc-odds-saved-actions"><button type="button" class="brc-odds-saved-btn load" data-bet-saved-load="${brcOddsEscape(item.id)}">呼び出す</button><button type="button" class="brc-odds-saved-btn delete" data-bet-saved-delete="${brcOddsEscape(item.id)}">削除</button></div>
-    </div>`;
+  const rows=brcOddsSavedRows(odds,key);
+  const comp=brcOddsBuilderComposite(rows);
+  const minv=rows.length?rows[0].odds:null;
+  const maxv=rows.length?rows[rows.length-1].odds:null;
+  const body=rows.map((row,i)=>{
+    const combo=`<span class="brc-odds-combo-chip">${brcOddsLaneHtml(row.b[0])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(row.b[1])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(row.b[2])}</span>`;
+    return `<tr><td style="width:34px;color:var(--ink-soft);font-weight:900;">${i+1}</td><td class="combo">${combo}</td><td class="val">${row.odds.toFixed(1)}</td><td style="width:52px"><button type="button" class="brc-odds-pool-remove" data-bet-saved-combo-remove="${row.comb}">削除</button></td></tr>`;
   }).join('');
-  return `<div class="brc-odds-builder-saved"><div class="brc-odds-builder-saved-head"><div class="brc-odds-builder-saved-title">保存リスト</div><div class="brc-odds-builder-saved-count">${saved.length}件</div></div>${cards}</div>`;
+  return `<div class="brc-odds-pool">
+    <div class="brc-odds-pool-head"><div class="brc-odds-pool-title">保存買い目</div><div style="display:flex;align-items:center;gap:7px;"><div class="brc-odds-pool-count">${rows.length}点</div><button type="button" class="brc-odds-pool-clear" data-bet-saved-clear="1">全削除</button></div></div>
+    <div class="brc-odds-pool-summary">
+      <div class="brc-odds-pool-metric"><div class="k">合計点数</div><div class="v">${rows.length}点</div></div>
+      <div class="brc-odds-pool-metric"><div class="k">合成オッズ</div><div class="v">${comp?comp.toFixed(2)+'倍':'―'}</div></div>
+      <div class="brc-odds-pool-metric"><div class="k">最低オッズ</div><div class="v">${minv?minv.toFixed(1)+'倍':'―'}</div></div>
+      <div class="brc-odds-pool-metric"><div class="k">最高オッズ</div><div class="v">${maxv?maxv.toFixed(1)+'倍':'―'}</div></div>
+    </div>
+    <div class="brc-odds-pool-list"><table class="brc-odds-pool-table"><thead><tr><th style="width:34px">#</th><th>買い目</th><th style="width:70px">オッズ</th><th style="width:52px"></th></tr></thead><tbody>${body}</tbody></table></div>
+  </div>`;
 }
 
 function brcOddsBuilderDefault(){
@@ -4514,7 +4410,7 @@ function brcOddsBuildBuilder(odds,sel){
       <div class="brc-odds-builder-kpi"><div class="k">最低オッズ</div><div class="v small">${minv?minv.toFixed(1)+'倍':'―'}</div></div>
       <div class="brc-odds-builder-kpi"><div class="k">最高オッズ</div><div class="v small">${maxv?maxv.toFixed(1)+'倍':'―'}</div></div>
     </div>
-    <div class="brc-odds-builder-actions"><div class="brc-odds-builder-note" style="flex:1;">3連単フォーメーションの手動作成です。均等買いを前提に、合成オッズ = 1 ÷ Σ(1 / 各オッズ) で計算します。締切後は保存済みの最終オッズでも確認できます。</div><button type="button" class="brc-odds-builder-save" data-bet-builder-save="1"${rows.length?'':' disabled'}>買い目を保存</button></div>
+    <div class="brc-odds-builder-actions"><div class="brc-odds-builder-note" style="flex:1;">3連単フォーメーションの手動作成です。均等買いを前提に、合成オッズ = 1 ÷ Σ(1 / 各オッズ) で計算します。締切後は保存済みの最終オッズでも確認できます。</div><button type="button" class="brc-odds-builder-save" data-bet-builder-save="1"${rows.length?'':' disabled'}>選択買い目を追加</button></div>
     ${brcOddsBuildSavedList(odds,sel)}
     <div class="brc-odds-builder-list">
       <table class="brc-odds-builder-table"><thead><tr><th style="width:44px">#</th><th>買い目</th><th style="width:76px">オッズ</th></tr></thead><tbody>${list}</tbody></table>
@@ -4702,22 +4598,23 @@ function brcBindOddsManual(){
       }
       return;
     }
-    const load=e.target?.closest?.('[data-bet-saved-load]');
-    if(load){
+    const remove=e.target?.closest?.('[data-bet-saved-combo-remove]');
+    if(remove){
       e.preventDefault();
       const sel=brcOddsSelection();
-      if(sel?.key && brcOddsLoadSaved(sel.key,String(load.dataset.betSavedLoad||''))){
+      if(sel?.key){
+        brcOddsRemoveSavedCombo(sel.key,String(remove.dataset.betSavedComboRemove||''));
         __brcOddsView='builder';
         brcRenderOddsPanel();
       }
       return;
     }
-    const del=e.target?.closest?.('[data-bet-saved-delete]');
-    if(del){
+    const clear=e.target?.closest?.('[data-bet-saved-clear]');
+    if(clear){
       e.preventDefault();
       const sel=brcOddsSelection();
       if(sel?.key){
-        brcOddsDeleteSaved(sel.key,String(del.dataset.betSavedDelete||''));
+        brcOddsClearSavedCombos(sel.key);
         __brcOddsView='builder';
         brcRenderOddsPanel();
       }
