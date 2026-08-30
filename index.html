@@ -4221,6 +4221,10 @@ function bindPredictMainTabs(){
 const BRC_ODDS_CACHE_SEC = 60;
 let __brcOddsView = 'matrix';
 let __brcOddsBuilderState = Object.create(null);
+let __brcOddsLocal = Object.create(null);
+let __brcOddsCooldownTimer = null;
+let __brcOddsFinalLoading = Object.create(null);
+let __brcOddsFinalRetryAfter = Object.create(null);
 
 const BRC_ODDS_SAVED_STORAGE_KEY = 'brc_odds_saved_combo_pool_v2';
 let __brcOddsSavedCache = null;
