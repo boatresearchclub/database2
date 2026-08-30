@@ -6685,7 +6685,11 @@ function initPredictPage(){
 
   // BRC_AUTO_RACECARD_CALL_V3
   // 当日TXTを初期表示直後に確認。さらに日付跨ぎ・アプリ復帰も監視する。
-  brcStartRaceCardDayWatcher();
+  // BRC_LOGIN_FIX_20260830
+  // 一部の読み込み順で day watcher がまだ未定義でも、ログイン成功後の初期化を止めない。
+  if(typeof brcStartRaceCardDayWatcher === 'function'){
+    try{ brcStartRaceCardDayWatcher(); }catch(_e){ console.warn('race card day watcher init skipped', _e); }
+  }
   if(!brcIsHistoricalRaceCardMode()){
     setTimeout(()=>{ autoLoadHostedRaceCardToday({reason:'init'}); }, 0);
   }
