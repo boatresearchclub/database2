@@ -13,6 +13,7 @@
 <title>Boat Research Club ～データベース～</title>
 <!-- BRC_ODDS_MANUAL_CACHE_TEST_20260830 -->
 <!-- BRC_TELEBOAT_BRIDGE_V2_SNS_DATA_ONLY_20260830 -->
+<!-- BRC_TELEBOAT_RACE_DEEPLINK_V3_20260830 -->
 <!-- BRC_NIGE_PREDICT_INTEGER_DISPLAY_20260829 -->
 <!-- BRC_PREDICT_GUIDE_REVIEW_20260829 -->
 <!-- BRC_STICKY_OVERLAP_FIX_20260829 -->
@@ -4830,6 +4831,7 @@ function brcOddsPoolRows(odds,key){
 
 // ---- BRC_TELEBOAT_BRIDGE_V2_20260830 ----
 const BRC_SIMPLE_TELEBOAT_URL = 'https://bu.tbbr.jp/';
+const BRC_SIMPLE_TELEBOAT_BET_URL = 'https://bu.tbbr.jp/bet';
 const BRC_TELEBOAT_AMOUNT_STORAGE_KEY = 'brc_teleboat_amount_v1';
 const BRC_TELEBOAT_PENDING_STORAGE_KEY = 'brc_teleboat_pending_v2';
 const BRC_TELEBOAT_BET_AMOUNT_STORAGE_KEY = 'brc_teleboat_bet_amount_v2';
@@ -4898,6 +4900,21 @@ function brcTeleboatAmountInput(key,comb){
   return `<input class="brc-teleboat-bet-amount" data-teleboat-bet-amount="${brcOddsEscape(comb)}" inputmode="numeric" pattern="[0-9]*" min="100" step="100" value="${n}" aria-label="${brcOddsEscape(comb)}の購入金額">`;
 }
 
+
+function brcTeleboatBuildRaceUrl(sel){
+  const code=String(sel?.code||'').replace(/\D/g,'').padStart(2,'0');
+  const raceNo=String(Number(sel?.raceNo||0)).padStart(2,'0');
+  if(!/^\d{2}$/.test(code) || !/^\d{2}$/.test(raceNo) || Number(raceNo)<1 || Number(raceNo)>12){
+    return BRC_SIMPLE_TELEBOAT_URL;
+  }
+  const qs=new URLSearchParams({
+    hatsubaiKbn:'0',
+    jyoCode:code,
+    raceNo:raceNo
+  });
+  return `${BRC_SIMPLE_TELEBOAT_BET_URL}?${qs.toString()}`;
+}
+
 function brcTeleboatBuildPayload(sel,odds){
   const key=sel?.key||'';
   const amount=brcTeleboatGetAmount(key);
@@ -4912,6 +4929,7 @@ function brcTeleboatBuildPayload(sel,odds){
     venue_code:String(sel?.code||''),
     race_no:Number(sel?.raceNo||0),
     bet_type:'3連単',
+    target_url:brcTeleboatBuildRaceUrl(sel),
     amount_per_bet:amount,
     total_amount:totalAmount,
     bets
@@ -4961,7 +4979,7 @@ function brcTeleboatBuildBridge(odds,sel){
       <button type="button" class="brc-teleboat-btn" data-teleboat-copy="1">買い目をコピー</button>
       <button type="button" class="brc-teleboat-btn primary" data-teleboat-open="1">投票サイトへ</button>
     </div>
-    <div class="brc-teleboat-note">各買い目の金額を100円単位で設定できます。一括金額を変更すると全点へ反映します。加入者番号・暗証番号・認証情報はBRCに保存しません。現段階では投票サイトへの自動入力・購入確定は行いません。</div>
+    <div class="brc-teleboat-note">各買い目の金額を100円単位で設定できます。一括金額を変更すると全点へ反映します。加入者番号・暗証番号・認証情報はBRCに保存しません。「投票サイトへ」は選択中の会場・レース番号を付けたシンプル投票URLを開きます。現段階では買い目の自動入力・購入確定は行いません。</div>
     <div class="brc-teleboat-status" data-teleboat-status="1">${brcOddsEscape(__brcTeleboatStatus)}</div>
   </div>`;
 }
@@ -4976,8 +4994,9 @@ async function brcTeleboatPrepare(action){
   const copied=await brcTeleboatCopyText(brcTeleboatPayloadText(payload));
   __brcTeleboatStatus=copied?'投票用買い目を準備してコピーしました。':'投票用買い目を準備しました。';
   if(action==='open'){
-    const w=window.open(BRC_SIMPLE_TELEBOAT_URL,'_blank','noopener,noreferrer');
-    if(!w) location.href=BRC_SIMPLE_TELEBOAT_URL;
+    const targetUrl=brcTeleboatBuildRaceUrl(sel);
+    const w=window.open(targetUrl,'_blank','noopener,noreferrer');
+    if(!w) location.href=targetUrl;
   }
   brcRenderOddsPanel();
 }
