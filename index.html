@@ -2143,6 +2143,25 @@
 }
 </style>
 
+
+<style id="brc-admin-social-style">
+/* BRC_ADMIN_SOCIAL_POST_20260830 */
+.brc-admin-social{display:none;margin:0 0 12px;padding:11px 12px;border:1px solid rgba(0,87,219,.18);border-radius:12px;background:linear-gradient(160deg,rgba(0,87,219,.055),rgba(255,255,255,.96));}
+.brc-admin-social.is-visible{display:block;}
+.brc-admin-social-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.brc-admin-social-title{font-size:12.5px;font-weight:900;color:var(--navy);}
+.brc-admin-social-note{font-size:10px;color:var(--ink-soft);}
+.brc-admin-social-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;}
+.brc-admin-social-btn{appearance:none;border:0;border-radius:9px;background:var(--wave);color:#fff;padding:9px 12px;font:inherit;font-size:12px;font-weight:900;cursor:pointer;}
+.brc-admin-social-btn.secondary{background:#fff;color:var(--wave);border:1px solid rgba(0,87,219,.28);}
+.brc-admin-social-btn:disabled{opacity:.45;cursor:not-allowed;}
+.brc-admin-social-output{display:none;margin-top:10px;}.brc-admin-social-output.is-open{display:block;}
+.brc-admin-social-text{width:100%;min-height:250px;resize:vertical;border:1px solid rgba(10,31,51,.14);border-radius:10px;background:#fff;color:var(--navy);padding:11px 12px;font:inherit;font-size:14px;line-height:1.75;outline:none;}
+.brc-admin-social-text:focus{border-color:rgba(0,87,219,.55);box-shadow:0 0 0 3px rgba(0,87,219,.07);}
+.brc-admin-social-status{min-height:18px;margin-top:6px;font-size:10.5px;color:var(--ink-soft);}
+@media(max-width:420px){.brc-admin-social{padding:9px}.brc-admin-social-actions{display:grid;grid-template-columns:1fr 1fr;width:100%}.brc-admin-social-btn{width:100%;padding:10px 8px;font-size:11.5px}.brc-admin-social-text{min-height:280px;font-size:13.5px}}
+</style>
+
 </head>
 <body>
 <div class="wrap">
@@ -2422,6 +2441,11 @@
     </div>
     <div id="brcPredictProtected" style="display:none;">
       <div class="brc-member-bar"><span id="brcMemberBadge" class="brc-member-badge">BRC MEMBER</span><button type="button" class="brc-logout-btn" id="brcLogoutBtn">ログアウト</button></div>
+      <div id="brcAdminSocial" class="brc-admin-social" aria-label="管理者用SNS投稿文作成">
+        <div class="brc-admin-social-head"><div><div class="brc-admin-social-title">管理者用 SNS投稿アシスタント</div><div class="brc-admin-social-note">現在表示中のレースからThreads投稿文を自動作成します。</div></div></div>
+        <div class="brc-admin-social-actions"><button type="button" class="brc-admin-social-btn" id="brcAdminSocialGenerate">Threads投稿文を作成</button><button type="button" class="brc-admin-social-btn secondary" id="brcAdminSocialCopy" disabled>コピー</button></div>
+        <div class="brc-admin-social-output" id="brcAdminSocialOutput"><textarea class="brc-admin-social-text" id="brcAdminSocialText" aria-label="Threads投稿文"></textarea><div class="brc-admin-social-status" id="brcAdminSocialStatus" aria-live="polite"></div></div>
+      </div>
       <div id="brcFreePreviewBanner" class="brc-free-result-banner"></div>
     <section class="card">
       <h2>出走表AI</h2>
@@ -2593,6 +2617,9 @@ const BRC_LIVE_EXHIBITION_API_URL = 'https://brc-live-exhibition.sk48159212.work
 
 const BRC_SESSION_STORAGE_KEY = 'brc_supabase_session_v1';
 const BRC_MEMBER_EMAIL_DOMAIN = 'members.example.com'; // 会員IDをSupabase Auth用の内部メールへ変換（外部送信には使用しない）
+const BRC_ADMIN_MEMBER_IDS = new Set(['BRC001']); // 管理者会員ID。必要ならここだけ変更
+let BRC_ADMIN_ACTIVE = false;
+let BRC_CURRENT_USER = null;
 let BRC_MEMBER_ACTIVE = false;
 let BRC_MEMBER_CHECKED_AT = 0;
 const BRC_MEMBERSHIP_RECHECK_MS = 60 * 1000; // 会員停止を最長約1分で反映
@@ -2820,6 +2847,71 @@ function brcDisplayMemberId(user){
   return '';
 }
 
+
+function brcIsAdminUser(user){
+  const memberId=brcDisplayMemberId(user);
+  const app=user && user.app_metadata ? user.app_metadata : {};
+  const meta=user && user.user_metadata ? user.user_metadata : {};
+  return BRC_ADMIN_MEMBER_IDS.has(memberId) || app.brc_admin===true || meta.brc_admin===true || app.role==='admin' || meta.role==='admin';
+}
+function brcSetAdminUi(user=null){
+  BRC_CURRENT_USER=user||null;
+  BRC_ADMIN_ACTIVE=!!(BRC_MEMBER_ACTIVE && brcIsAdminUser(user));
+  const box=document.getElementById('brcAdminSocial'); if(box) box.classList.toggle('is-visible',BRC_ADMIN_ACTIVE);
+  if(!BRC_ADMIN_ACTIVE){
+    const out=document.getElementById('brcAdminSocialOutput'); if(out) out.classList.remove('is-open');
+    const txt=document.getElementById('brcAdminSocialText'); if(txt) txt.value='';
+    const copy=document.getElementById('brcAdminSocialCopy'); if(copy) copy.disabled=true;
+  }
+}
+function brcSocialArrowForBoat(b,kind){
+  if(!b || !b.exhibitionApplied) return '−';
+  const alert=brcFindExhibitionPlayerAlert(b);
+  const delta=alert ? Number(alert[kind==='top3'?'本人3連対効果pt':'本人1着効果pt']) : Number(kind==='top3'?b.exhibitionTop3DeltaPt:b.exhibitionWinDeltaPt);
+  const threshold=alert ? BRC_PERSONAL_TIMEX_ARROW_THRESHOLD_PT : (kind==='top3'?2.0:0.75);
+  return brcProbabilityArrow(delta,threshold);
+}
+function brcBuildThreadsPost(){
+  if(!BRC_ADMIN_ACTIVE) throw new Error('admin_only');
+  const snap=window.__brcSocialSnapshot;
+  if(!snap || !Array.isArray(snap.boats) || snap.boats.length!==6) throw new Error('race_not_ready');
+  const boats=snap.boats.slice().sort((a,b)=>Number(a.course)-Number(b.course));
+  const b1=boats[0], ir=snap.inReliability||{}, rank=String(ir.rank||'').trim(), diff=Number(ir.venueBaseDiff);
+  const player=b=>`${Number(b.course)}号艇${String(b.player?.name||'').replace(/[　\s]+/g,'').trim()}選手`;
+  const lines=[`${snap.venue}${snap.raceNo}R${snap.raceTitle?` ${snap.raceTitle}`:''}。`, ''];
+  if(rank){
+    lines.push(`${player(b1)}はイン逃げ信頼度${rank}、1着率${Math.round(Number(b1.pctFloat)||Number(b1.pct)||0)}%です。`);
+    if(Number.isFinite(diff)) lines.push(`場基準比は${diff>=0?'+':''}${Math.round(diff)}ptです。`);
+  }else lines.push(`${player(b1)}の1着率は${Math.round(Number(b1.pctFloat)||Number(b1.pct)||0)}%です。`);
+
+  const tiltText=String(snap.slitText||'').replace(/\s+/g,' ');
+  const tiltMatch=tiltText.match(/([1-6])[^0-9]{0,10}チルト([+-]?\d+(?:\.\d+)?)/);
+  if(tiltMatch && Math.abs(Number(tiltMatch[2]))>=1){
+    const tb=boats.find(x=>Number(x.course)===Number(tiltMatch[1]));
+    lines.push('',`${tb?player(tb):tiltMatch[1]+'号艇'}がチルト${tiltMatch[2]}です。`,`チルトを大きく上げている選手がいるレースは、普段とは違う展開になる可能性があり不確定要素が強くなります。`,`数字が良くても、こういうレースは無理に入りたくないです。`);
+  }else{
+    const changes=boats.map(b=>({b,w:brcSocialArrowForBoat(b,'win'),t:brcSocialArrowForBoat(b,'top3')}));
+    const notable=changes.filter(x=>(x.w!=='−'||x.t!=='−') && !(x.w==='→'&&x.t==='→'));
+    if(notable.length){
+      lines.push('','展示後のBRCタイムXでは、');
+      notable.slice(0,4).forEach(x=>lines.push(`${player(x.b)}は1着率${x.w}・3連対率${x.t}です。`));
+    }
+    const slit=String(snap.slitText||'').replace(/展示スリット評価/g,'').replace(/\s+/g,' ').trim();
+    if(slit && !/該当なし|展示待ち/.test(slit)) lines.push('',`展示スリット評価では${slit}。`);
+    if(snap.women) lines.push('','BRCでは女子戦を一般戦と同じ基準で見るのではなく、女子戦のデータを使って分析しています。');
+    const alt=boats.slice(1).sort((a,b)=>Number(b.pctFloat||b.pct)-Number(a.pctFloat||a.pct))[0];
+    if(rank==='強イン否定'||rank==='E'||rank==='D') lines.push('',`${player(b1)}のインをどこまで疑えるのか、${alt?player(alt)+'の評価も含めて':''}展示後の変化まで見て判断したいレースです。`);
+    else if(rank==='S'||rank==='A') lines.push('',`${player(b1)}を中心に見ながら、相手評価の変化にも注目したいレースです。`);
+    else lines.push('',`インを決め打ちせず、展示後にどこが上がったかまで見て判断したいレースです。`);
+  }
+  return lines.join('\n').replace(/\n{3,}/g,'\n\n').trim();
+}
+function brcBindAdminSocial(){
+  const gen=document.getElementById('brcAdminSocialGenerate'), copy=document.getElementById('brcAdminSocialCopy'), text=document.getElementById('brcAdminSocialText'), out=document.getElementById('brcAdminSocialOutput'), status=document.getElementById('brcAdminSocialStatus');
+  if(gen && !gen.dataset.bound){gen.dataset.bound='1';gen.addEventListener('click',()=>{if(status)status.textContent='';try{const post=brcBuildThreadsPost();if(text)text.value=post;if(out)out.classList.add('is-open');if(copy)copy.disabled=!post;if(status)status.textContent='投稿前に内容を確認して、そのまま編集できます。';}catch(err){if(out)out.classList.add('is-open');if(status)status.textContent=err?.message==='race_not_ready'?'先にレースを選択して出走データを表示してください。':'管理者アカウントのみ利用できます。';}});}
+  if(copy && !copy.dataset.bound){copy.dataset.bound='1';copy.addEventListener('click',async()=>{const v=String(text?.value||'');if(!v)return;try{if(navigator.clipboard&&window.isSecureContext)await navigator.clipboard.writeText(v);else{text.focus();text.select();document.execCommand('copy');}if(status)status.textContent='コピーしました。Threadsに貼り付けできます。';}catch(_){if(status)status.textContent='コピーできませんでした。本文を長押ししてコピーしてください。';}});}
+}
+
 function brcSetAuthMessage(message='', tone='error'){
   const el=document.getElementById('brcAuthMessage');
   if(!el) return;
@@ -2828,6 +2920,7 @@ function brcSetAuthMessage(message='', tone='error'){
 }
 function brcRenderGate(state='login', user=null){
   BRC_MEMBER_ACTIVE = false;
+  brcSetAdminUi(null);
   BRC_FREE_PREVIEW_ACTIVE = null;
   BRC_MEMBER_CHECKED_AT = 0;
   const gate=document.getElementById('brcPredictGate');
@@ -2860,6 +2953,7 @@ function brcRenderMember(user){
   BRC_FREE_PREVIEW_ACTIVE = null;
   BRC_MEMBER_ACTIVE = true;
   BRC_MEMBER_CHECKED_AT = Date.now();
+  brcSetAdminUi(user);
   const gate=document.getElementById('brcPredictGate');
   const protectedBox=document.getElementById('brcPredictProtected');
   const badge=document.getElementById('brcMemberBadge');
@@ -2876,6 +2970,7 @@ function brcRenderMember(user){
 
 function brcRenderFreePreviewMode(item){
   BRC_MEMBER_ACTIVE=false;
+  brcSetAdminUi(null);
   BRC_FREE_PREVIEW_ACTIVE=item||null;
   const gate=document.getElementById('brcPredictGate');
   const protectedBox=document.getElementById('brcPredictProtected');
@@ -2958,6 +3053,7 @@ async function brcLogout(){
   const pw=document.getElementById('brcLoginPassword'); if(pw) pw.value='';
 }
 async function brcInitAuthUi(){
+  brcBindAdminSocial();
   const form=document.getElementById('brcLoginForm');
   if(form && !form.dataset.bound){
     form.dataset.bound='1';
@@ -8680,6 +8776,19 @@ async function runPredict(){
     ${buildWindPanelHtml()}
     <div id="predictSummaryLead" class="trend-note fold-lead" style="margin-top:12px;">${brcBuildPredictLeadSummaryHtml(boats)}</div>
   `;
+
+
+  window.__brcSocialSnapshot={
+    venue:String(venue||''),
+    raceNo:Number(raceNoLive||0),
+    raceTitle:String((RACE_INFO_TODAY[venue]?.raceTitles||{})[String(raceNoLive)]||''),
+    grade:String(grade||''),
+    women:brcIsWomenRace(grade, apiBoats.map(b=>b.reg)),
+    inReliability:localInReliability ? Object.assign({},localInReliability) : null,
+    boats:boats.map(b=>Object.assign({},b,{player:Object.assign({},b.player)})),
+    slitText:String(document.getElementById('slitEvaluationCard')?.textContent||'').trim(),
+    exhibitionApplied:!!exhibitionApplied
+  };
 
   renderPredictAiPanel(boats, workerPrediction, localInReliability, exhibitionApplied);
   bindPredictMainTabs();
