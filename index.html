@@ -6430,6 +6430,32 @@ function populateDaySelect(){
 // その旨を案内するだけで、機能自体は静かにスキップする。
 const DEADLINE_SOON_WINDOW_MIN = 15;
 
+// 「まもなく締切」カードからレースを開いた時だけ、
+// 出走データの見出しが固定UIの直下に来る位置まで自動スクロールする。
+function scrollDeadlineRaceToPredictData(){
+  try{
+    if(typeof setPredictMainTab === 'function') setPredictMainTab('data');
+  }catch(e){}
+
+  // レース切替・予測再描画・締切一覧再描画が終わってから位置を計算する。
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    const target = document.getElementById('predictResult');
+    if(!target) return;
+
+    const pageTabs = document.querySelector('.page-tabs');
+    const deadline = document.getElementById('deadlineSchedule');
+    const mainTabs = document.querySelector('#page-predict .predict-main-tabs');
+
+    const pageH = pageTabs ? Math.ceil(pageTabs.getBoundingClientRect().height) : 0;
+    const deadlineH = deadline ? Math.ceil(deadline.getBoundingClientRect().height) : 0;
+    const mainH = mainTabs ? Math.ceil(mainTabs.getBoundingClientRect().height) : 0;
+    const offset = pageH + deadlineH + mainH + 8;
+    const y = window.scrollY + target.getBoundingClientRect().top - offset;
+
+    window.scrollTo({top:Math.max(0, y), behavior:'smooth'});
+  }));
+}
+
 function renderDeadlineSchedule(){
   const box = document.getElementById('deadlineSchedule');
   if(!box) return;
@@ -6477,7 +6503,7 @@ function renderDeadlineSchedule(){
       <div class="deadline-scroll-row">${entries.map(e=>makePill(e)).join('')}</div>
     `;
     box.querySelectorAll('.deadline-row').forEach(row=>{
-      row.addEventListener('click', ()=>{ loadTodaysRace(row.dataset.venue, row.dataset.raceno); });
+      row.addEventListener('click', ()=>{ loadTodaysRace(row.dataset.venue, row.dataset.raceno); scrollDeadlineRaceToPredictData(); });
     });
     return;
   }
@@ -6507,6 +6533,7 @@ function renderDeadlineSchedule(){
   box.querySelectorAll('.deadline-row').forEach(row=>{
     row.addEventListener('click', ()=>{
       loadTodaysRace(row.dataset.venue, row.dataset.raceno);
+      scrollDeadlineRaceToPredictData();
     });
   });
 }
