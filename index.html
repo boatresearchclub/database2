@@ -977,6 +977,50 @@
   .brc-odds-pool-remove{appearance:none;border:1px solid rgba(209,55,63,.20);background:rgba(209,55,63,.035);color:#b4232c;border-radius:7px;padding:4px 7px;font:inherit;font-size:9.5px;font-weight:900;cursor:pointer;}
   .brc-odds-pool-empty{padding:14px 10px;border:1px dashed rgba(10,31,51,.16);border-radius:10px;background:rgba(10,31,51,.018);text-align:center;color:var(--ink-soft);font-size:10.5px;line-height:1.6;}
 
+  /* ---- BRC_TELEBOAT_BRIDGE_V1_20260830 ---- */
+  .brc-teleboat-bridge{
+    display:grid;gap:9px;margin-top:2px;padding:11px;
+    border:1px solid rgba(0,87,219,.16);border-radius:11px;
+    background:linear-gradient(160deg,rgba(0,87,219,.045),rgba(255,255,255,.96));
+  }
+  .brc-teleboat-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .brc-teleboat-title{font-size:12.5px;font-weight:950;color:var(--navy);}
+  .brc-teleboat-badge{
+    display:inline-flex;align-items:center;justify-content:center;padding:3px 7px;border-radius:999px;
+    background:rgba(0,87,219,.09);color:var(--wave);font-size:9px;font-weight:900;white-space:nowrap;
+  }
+  .brc-teleboat-controls{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+  .brc-teleboat-field{
+    min-width:0;display:flex;align-items:center;justify-content:space-between;gap:6px;
+    padding:8px 9px;border:1px solid rgba(10,31,51,.08);border-radius:9px;background:#fff;
+  }
+  .brc-teleboat-field .k{font-size:9.5px;color:var(--ink-soft);font-weight:800;white-space:nowrap;}
+  .brc-teleboat-field .v{font-size:12px;color:var(--navy);font-weight:950;white-space:nowrap;}
+  .brc-teleboat-amount{
+    width:76px;max-width:100%;padding:5px 6px;border:1px solid rgba(10,31,51,.14);border-radius:7px;
+    background:#fff;color:var(--navy);font:inherit;font-size:12px;font-weight:900;text-align:right;
+    font-variant-numeric:tabular-nums;outline:none;
+  }
+  .brc-teleboat-amount:focus{border-color:rgba(0,87,219,.45);box-shadow:0 0 0 2px rgba(0,87,219,.06);}
+  .brc-teleboat-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+  .brc-teleboat-btn{
+    appearance:none;border:1px solid rgba(0,87,219,.22);border-radius:9px;padding:9px 8px;
+    background:#fff;color:var(--wave);font:inherit;font-size:11px;font-weight:900;cursor:pointer;
+  }
+  .brc-teleboat-btn.primary{border-color:var(--wave);background:var(--wave);color:#fff;}
+  .brc-teleboat-note{font-size:9.5px;line-height:1.55;color:var(--ink-soft);}
+  .brc-teleboat-status{min-height:14px;font-size:9.5px;line-height:1.45;color:#217247;font-weight:800;}
+  @media(max-width:420px){
+    .brc-teleboat-bridge{padding:9px 8px;gap:8px;}
+    .brc-teleboat-controls{grid-template-columns:1fr 1fr;gap:5px;}
+    .brc-teleboat-field{padding:7px 6px;gap:4px;}
+    .brc-teleboat-field .k{font-size:8.5px;}
+    .brc-teleboat-field .v{font-size:11px;}
+    .brc-teleboat-amount{width:62px;padding:4px 5px;font-size:11px;}
+    .brc-teleboat-btn{padding:8px 5px;font-size:10.5px;}
+    .brc-teleboat-note,.brc-teleboat-status{font-size:9px;}
+  }
+
 
   @media(max-width:700px){
     .brc-odds-pop-grid{grid-template-columns:1fr;}
@@ -2854,6 +2898,7 @@ function brcDisplayMemberId(user){
 // BRC_ADMIN_SOCIAL_SAFE_20260830
 // 認証本体には介入せず、ログイン済みuser.emailだけで管理者UIを出し分ける。
 const BRC_ADMIN_EMAIL = 'sk48159212@gmail.com';
+const BRC_SOCIAL_AI_URL = 'https://brc-social.sk48159212.workers.dev';
 let BRC_ADMIN_ACTIVE = false;
 
 function brcAdminNormalizeEmail(value){
@@ -2912,6 +2957,63 @@ function brcAdminHighTilts(){
   const boats=Array.isArray(window.__currentLiveExhibition?.boats)?window.__currentLiveExhibition.boats:[];
   return boats.map(x=>({boat:Number(x?.boat_no),tilt:Number(x?.tilt)})).filter(x=>Number.isInteger(x.boat)&&Number.isFinite(x.tilt)&&x.tilt>=1.0).sort((a,b)=>b.tilt-a.tilt);
 }
+
+function brcAdminSocialPayload(){
+  const boats=Array.isArray(window.__predictBoatsCurrent)?window.__predictBoatsCurrent.slice().sort((a,b)=>Number(a.course)-Number(b.course)):[];
+  if(boats.length!==6) throw new Error('先に出走表AIの「計算」を実行してください。');
+  const rel=window.__currentLocalInReliability||null;
+  const slitText=String(document.getElementById('slitEvaluationCard')?.innerText||'').trim();
+  return {
+    race:{
+      title:brcAdminCurrentRaceTitle()||'このレース',
+      women:brcAdminIsWomenRaceSafe(),
+      grade:String(window.__predictGradeCurrent||''),
+      inReliability:String(rel?.label||rel?.rank||rel?.grade||''),
+      venueBaseDiff:Number.isFinite(Number(rel?.venueBaseDiff))?Number(rel.venueBaseDiff):null,
+      slitEvaluation:slitText,
+      highTilts:brcAdminHighTilts()
+    },
+    boats:boats.map(b=>({
+      course:Number(b.course),
+      label:brcAdminPlayerLabel(b),
+      name:String(b?.player?.name||''),
+      winPct:Number.isFinite(Number(b?.pctFloat))?Number(b.pctFloat):Number(b?.pct||0),
+      top3Pct:Number.isFinite(Number(b?.top3PctFloat))?Number(b.top3PctFloat):Number(b?.top3Pct||b?.top3||0),
+      stRank:Number.isFinite(Number(b?.stRank))?Number(b.stRank):null,
+      stStability:String(b?.stStabilityGrade||b?.stStableGrade||''),
+      motorGrade:String(b?.motorGrade||''),
+      motorPct:Number.isFinite(Number(b?.motor2renPct))?Number(b.motor2renPct):Number.isFinite(Number(b?.motorPct))?Number(b.motorPct):null,
+      timeXWinDeltaPt:Number.isFinite(Number(b?.exhibitionWinDeltaPt))?Number(b.exhibitionWinDeltaPt):null,
+      timeXTop3DeltaPt:Number.isFinite(Number(b?.exhibitionTop3DeltaPt))?Number(b.exhibitionTop3DeltaPt):null,
+      timeXWinArrow:brcAdminArrow(b?.exhibitionWinDeltaPt,0.75),
+      timeXTop3Arrow:brcAdminArrow(b?.exhibitionTop3DeltaPt,2.0),
+      exhibitionApplied:!!b?.exhibitionApplied
+    }))
+  };
+}
+async function brcBuildAdminThreadsPostAI(){
+  const session=await brcEnsureFreshSession();
+  if(!session?.access_token) throw new Error('ログインセッションがありません。');
+  const payload=brcAdminSocialPayload();
+  const res=await fetch(BRC_SOCIAL_AI_URL+'/admin/social-post',{
+    method:'POST',
+    headers:{
+      'Authorization':'Bearer '+session.access_token,
+      'Content-Type':'application/json',
+      'Accept':'application/json'
+    },
+    body:JSON.stringify(payload)
+  });
+  let data=null; try{data=await res.json();}catch(_){data=null;}
+  if(!res.ok){
+    const err=new Error((data&&(data.message||data.error||data.reason))||`SNS AI HTTP ${res.status}`);
+    err.status=res.status; throw err;
+  }
+  const text=String(data?.text||'').trim();
+  if(!text) throw new Error('AIから投稿文が返りませんでした。');
+  return {ok:true,text,status:'AIがレースごとの分析ポイントを選んで投稿文を作成しました。'};
+}
+
 function brcBuildAdminThreadsPost(){
   const boats=Array.isArray(window.__predictBoatsCurrent)?window.__predictBoatsCurrent.slice().sort((a,b)=>a.course-b.course):[];
   if(boats.length!==6) return {ok:false,text:'',status:'先に出走表AIの「計算」を実行してください。'};
@@ -3059,11 +3161,20 @@ function brcBindAdminSocial(){
   }
   if(gen && !gen.dataset.bound){
     gen.dataset.bound='1';
-    gen.addEventListener('click',()=>{
+    gen.addEventListener('click',async()=>{
       if(!BRC_ADMIN_ACTIVE) return;
-      const out=brcBuildAdminThreadsPost();
-      if(ta) ta.value=out.text||'';
-      if(status) status.textContent=out.status||'';
+      const old=gen.textContent; gen.disabled=true; gen.textContent='AI分析中…';
+      if(status) status.textContent='AIがこのレースで投稿する価値のあるポイントを分析しています。';
+      try{
+        const out=await brcBuildAdminThreadsPostAI();
+        if(ta) ta.value=out.text||'';
+        if(status) status.textContent=out.status||'';
+      }catch(err){
+        // AI Workerが未設定・一時障害でも従来のローカル生成は使えるようにする。
+        const fallback=brcBuildAdminThreadsPost();
+        if(ta) ta.value=fallback.text||'';
+        if(status) status.textContent=`AI生成に接続できないため従来方式で作成しました（${err?.message||err}）。`;
+      }finally{ gen.disabled=false; gen.textContent=old; }
     });
   }
   if(copy && !copy.dataset.bound){
@@ -4706,6 +4817,120 @@ function brcOddsPoolRows(odds,key){
   }).filter(Boolean).sort((a,b)=>a.odds-b.odds || a.comb.localeCompare(b.comb,'ja'));
 }
 
+
+// ---- BRC_TELEBOAT_BRIDGE_V1_20260830 ----
+const BRC_SIMPLE_TELEBOAT_URL = 'https://bu.tbbr.jp/';
+const BRC_TELEBOAT_AMOUNT_STORAGE_KEY = 'brc_teleboat_amount_v1';
+const BRC_TELEBOAT_PENDING_STORAGE_KEY = 'brc_teleboat_pending_v1';
+let __brcTeleboatStatus = '';
+
+function brcTeleboatReadAmountMap(){
+  try{
+    const x=JSON.parse(localStorage.getItem(BRC_TELEBOAT_AMOUNT_STORAGE_KEY)||'{}');
+    return (x && typeof x==='object' && !Array.isArray(x))?x:{};
+  }catch(_e){return {};}
+}
+
+function brcTeleboatGetAmount(key){
+  const map=brcTeleboatReadAmountMap();
+  const n=Number(map?.[key]);
+  return Number.isFinite(n) && n>=100 ? Math.floor(n/100)*100 : 100;
+}
+
+function brcTeleboatSetAmount(key,value){
+  if(!key) return 100;
+  let n=Number(String(value??'').replace(/[^0-9]/g,''));
+  if(!Number.isFinite(n) || n<100) n=100;
+  n=Math.floor(n/100)*100;
+  const map=brcTeleboatReadAmountMap();
+  map[key]=n;
+  try{localStorage.setItem(BRC_TELEBOAT_AMOUNT_STORAGE_KEY,JSON.stringify(map));}catch(_e){}
+  return n;
+}
+
+function brcTeleboatBuildPayload(sel,odds){
+  const key=sel?.key||'';
+  const amount=brcTeleboatGetAmount(key);
+  const rows=brcOddsPoolRows(odds,key);
+  const bets=rows.map(row=>({comb:row.comb,amount,odds:Number(row.odds)}));
+  return {
+    version:'BRC_TELEBOAT_BRIDGE_V1',
+    created_at:new Date().toISOString(),
+    date:String(sel?.date||''),
+    venue:String(sel?.venue||''),
+    venue_code:String(sel?.code||''),
+    race_no:Number(sel?.raceNo||0),
+    bet_type:'3連単',
+    amount_per_bet:amount,
+    total_amount:amount*bets.length,
+    bets
+  };
+}
+
+function brcTeleboatPayloadText(payload){
+  const p=payload||{};
+  const lines=[
+    `BRC投票準備 ${p.date||''} ${p.venue||''} ${p.race_no||''}R`,
+    `${p.bet_type||'3連単'} / ${Array.isArray(p.bets)?p.bets.length:0}点 / 1点${Number(p.amount_per_bet||0).toLocaleString('ja-JP')}円`,
+    ''
+  ];
+  (Array.isArray(p.bets)?p.bets:[]).forEach(b=>lines.push(`${b.comb}  ${Number(b.amount||0).toLocaleString('ja-JP')}円`));
+  lines.push('',`合計 ${Number(p.total_amount||0).toLocaleString('ja-JP')}円`);
+  return lines.join('\n');
+}
+
+async function brcTeleboatCopyText(text){
+  const t=String(text||'');
+  try{
+    if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(t);return true;}
+  }catch(_e){}
+  try{
+    const ta=document.createElement('textarea');
+    ta.value=t;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.opacity='0';ta.style.pointerEvents='none';
+    document.body.appendChild(ta);ta.select();const ok=document.execCommand('copy');ta.remove();return !!ok;
+  }catch(_e){return false;}
+}
+
+function brcTeleboatSavePending(payload){
+  try{localStorage.setItem(BRC_TELEBOAT_PENDING_STORAGE_KEY,JSON.stringify(payload));}catch(_e){}
+}
+
+function brcTeleboatBuildBridge(odds,sel){
+  const rows=brcOddsPoolRows(odds,sel?.key||'');
+  if(!rows.length) return '';
+  const amount=brcTeleboatGetAmount(sel?.key||'');
+  const total=amount*rows.length;
+  return `<div class="brc-teleboat-bridge">
+    <div class="brc-teleboat-head"><div class="brc-teleboat-title">ネット投票連携</div><div class="brc-teleboat-badge">試験版</div></div>
+    <div class="brc-teleboat-controls">
+      <label class="brc-teleboat-field"><span class="k">1点あたり</span><span class="v"><input class="brc-teleboat-amount" data-teleboat-amount="1" inputmode="numeric" pattern="[0-9]*" min="100" step="100" value="${amount}"> 円</span></label>
+      <div class="brc-teleboat-field"><span class="k">購入予定額</span><span class="v" data-teleboat-total="1">${total.toLocaleString('ja-JP')}円</span></div>
+    </div>
+    <div class="brc-teleboat-actions">
+      <button type="button" class="brc-teleboat-btn" data-teleboat-copy="1">買い目をコピー</button>
+      <button type="button" class="brc-teleboat-btn primary" data-teleboat-open="1">投票サイトへ</button>
+    </div>
+    <div class="brc-teleboat-note">保存買い目を投票待機データとしてBRC内に保持します。加入者番号・暗証番号・認証情報はBRCに保存しません。現段階では投票サイトへの自動入力・購入確定は行いません。</div>
+    <div class="brc-teleboat-status" data-teleboat-status="1">${brcOddsEscape(__brcTeleboatStatus)}</div>
+  </div>`;
+}
+
+async function brcTeleboatPrepare(action){
+  const sel=brcOddsSelection();
+  const rec=sel?.key?__brcOddsLocal[sel.key]:null;
+  if(!sel?.key || !rec?.odds) return;
+  const payload=brcTeleboatBuildPayload(sel,rec.odds);
+  if(!payload.bets.length){__brcTeleboatStatus='保存買い目がありません。';brcRenderOddsPanel();return;}
+  brcTeleboatSavePending(payload);
+  const copied=await brcTeleboatCopyText(brcTeleboatPayloadText(payload));
+  __brcTeleboatStatus=copied?'投票用買い目を準備してコピーしました。':'投票用買い目を準備しました。';
+  if(action==='open'){
+    const w=window.open(BRC_SIMPLE_TELEBOAT_URL,'_blank','noopener,noreferrer');
+    if(!w) location.href=BRC_SIMPLE_TELEBOAT_URL;
+  }
+  brcRenderOddsPanel();
+}
+
 function brcOddsBuildPool(odds,sel){
   const key=sel?.key||'';
   const rows=brcOddsPoolRows(odds,key);
@@ -4728,6 +4953,7 @@ function brcOddsBuildPool(odds,sel){
       <div class="brc-odds-pool-metric"><div class="k">最高オッズ</div><div class="v">${maxv?maxv.toFixed(1)+'倍':'―'}</div></div>
     </div>
     <div class="brc-odds-pool-list"><table class="brc-odds-pool-table"><thead><tr><th style="width:38px">#</th><th>買い目</th><th style="width:70px">オッズ</th><th style="width:54px"></th></tr></thead><tbody>${body}</tbody></table></div>
+    ${brcTeleboatBuildBridge(odds,sel)}
   </div>`;
 }
 
@@ -4960,9 +5186,30 @@ function brcBindOddsManual(){
       e.preventDefault();
       const sel=brcOddsSelection();
       if(sel?.key){brcOddsPoolClear(sel.key);__brcOddsView='builder';brcRenderOddsPanel();}
+      return;
+    }
+    const teleCopy=e.target?.closest?.('[data-teleboat-copy]');
+    if(teleCopy){e.preventDefault();brcTeleboatPrepare('copy');return;}
+    const teleOpen=e.target?.closest?.('[data-teleboat-open]');
+    if(teleOpen){e.preventDefault();brcTeleboatPrepare('open');return;}
+  });
+  document.addEventListener('input',e=>{
+    if(e.target?.matches?.('[data-teleboat-amount]')){
+      const sel=brcOddsSelection();
+      if(!sel?.key) return;
+      const raw=String(e.target.value||'').replace(/[^0-9]/g,'');
+      const n=Math.max(0,Number(raw)||0);
+      const count=brcOddsPoolGet(sel.key).length;
+      const out=e.target.closest('.brc-teleboat-bridge')?.querySelector('[data-teleboat-total]');
+      if(out) out.textContent=`${(n*count).toLocaleString('ja-JP')}円`;
     }
   });
   document.addEventListener('change',e=>{
+    if(e.target?.matches?.('[data-teleboat-amount]')){
+      const sel=brcOddsSelection();
+      if(sel?.key){brcTeleboatSetAmount(sel.key,e.target.value);__brcOddsView='builder';brcRenderOddsPanel();}
+      return;
+    }
     if(e.target?.id==='predictRaceDay'||e.target?.id==='predictRaceNo'||e.target?.id==='predictVenue') brcRenderOddsPanel();
   });
   brcRenderOddsPanel();
