@@ -828,6 +828,16 @@
   }
   .predict-main-panel{display:none; min-width:0;}
   .predict-main-panel.active{display:block;}
+  /* 4タブ切替時に短いパネルでも同じ基準位置までスクロールできるよう高さを確保 */
+  #predictMainPanel-odds,
+  #predictMainPanel-result{
+    min-height:calc(100svh - 110px);
+  }
+  @supports not (height:100svh){
+    #predictMainPanel-odds,
+    #predictMainPanel-result{min-height:calc(100vh - 110px);}
+  }
+
   .predict-future-placeholder{
     padding:32px 14px; text-align:center; color:var(--ink-soft);
     background:linear-gradient(180deg,rgba(10,31,51,.018),rgba(255,255,255,.65));
@@ -4056,6 +4066,9 @@ function scrollPredictMainTabsToFixedPosition(behavior='smooth'){
   const mainTabs = document.querySelector('#page-predict .predict-main-tabs');
   if(!mainTabs) return;
 
+  const entryCard = mainTabs.closest('.entry-card');
+  if(!entryCard) return;
+
   const move = (mode='auto') => {
     const pageTabs = document.querySelector('.page-tabs');
     const deadline = document.getElementById('deadlineSchedule');
@@ -4063,17 +4076,17 @@ function scrollPredictMainTabsToFixedPosition(behavior='smooth'){
     const pageH = pageTabs ? Math.ceil(pageTabs.getBoundingClientRect().height) : 0;
     const deadlineH = deadline ? Math.ceil(deadline.getBoundingClientRect().height) : 0;
 
-    // 4タブの上端を「上部メインタブ + まもなく締切」の直下へ合わせる
+    // sticky状態のmainTabs自身ではなく、親カードの本来の文書位置を基準にする。
+    const cardDocTop = window.scrollY + entryCard.getBoundingClientRect().top;
     const desiredTop = pageH + deadlineH;
-    const currentTop = mainTabs.getBoundingClientRect().top;
-    const y = window.scrollY + currentTop - desiredTop;
+    const y = cardDocTop - desiredTop;
 
     window.scrollTo({top:Math.max(0, y), behavior:mode});
   };
 
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     move(behavior);
-    // iOS Safari/PWAのsticky再計算・パネル再描画後にも実測で補正
+    // iOS Safari/PWAのパネル切替・sticky再計算後に実測補正
     setTimeout(()=>move('auto'), 180);
     setTimeout(()=>move('auto'), 480);
   }));
