@@ -2433,15 +2433,6 @@
     </div>
     <div id="brcPredictProtected" style="display:none;">
       <div class="brc-member-bar"><span id="brcMemberBadge" class="brc-member-badge">BRC MEMBER</span><button type="button" class="brc-logout-btn" id="brcLogoutBtn">ログアウト</button></div>
-      <div id="brcAdminSocial" class="brc-admin-social" aria-hidden="true">
-        <div class="brc-admin-social-head"><div class="brc-admin-social-title">SNS投稿アシスタント</div><span class="brc-admin-social-tag">管理者</span></div>
-        <div class="brc-admin-social-actions">
-          <button type="button" id="brcAdminSocialGenerate" class="brc-admin-social-btn">Threads投稿文を作成</button>
-          <button type="button" id="brcAdminSocialCopy" class="brc-admin-social-btn secondary">コピー</button>
-        </div>
-        <textarea id="brcAdminSocialText" placeholder="出走表AIを表示したあとに「Threads投稿文を作成」を押してください。"></textarea>
-        <div id="brcAdminSocialStatus"></div>
-      </div>
       <div id="brcFreePreviewBanner" class="brc-free-result-banner"></div>
     <section class="card">
       <h2>出走表AI</h2>
@@ -2524,6 +2515,15 @@
         <div class="predict-main-panel" id="predictMainPanel-result">
           <div class="predict-future-placeholder"><strong>結果</strong><span>確定着順・払戻・AI予測との答え合わせをここに表示する予定です。</span></div>
         </div>
+      </div>
+      <div id="brcAdminSocial" class="brc-admin-social" aria-hidden="true">
+        <div class="brc-admin-social-head"><div class="brc-admin-social-title">SNS投稿アシスタント</div><span class="brc-admin-social-tag">管理者</span></div>
+        <div class="brc-admin-social-actions">
+          <button type="button" id="brcAdminSocialGenerate" class="brc-admin-social-btn">Threads投稿文を作成</button>
+          <button type="button" id="brcAdminSocialCopy" class="brc-admin-social-btn secondary">コピー</button>
+        </div>
+        <textarea id="brcAdminSocialText" placeholder="出走表AIを表示したあとに「Threads投稿文を作成」を押してください。"></textarea>
+        <div id="brcAdminSocialStatus"></div>
       </div>
     </section>
     </div><!-- /brcPredictProtected -->
