@@ -4049,6 +4049,36 @@ function predictRecentCourseKimariteHtml(reg, course){
   `;
 }
 
+// 出走表AI：4タブを押した時の基準スクロール位置
+// 「上部メインタブ → まもなく締切 → 出走データ/オッズ/AI予測/結果」
+// が常に同じ高さで並ぶよう、4タブ自身の位置を基準に合わせる。
+function scrollPredictMainTabsToFixedPosition(behavior='smooth'){
+  const mainTabs = document.querySelector('#page-predict .predict-main-tabs');
+  if(!mainTabs) return;
+
+  const move = (mode='auto') => {
+    const pageTabs = document.querySelector('.page-tabs');
+    const deadline = document.getElementById('deadlineSchedule');
+
+    const pageH = pageTabs ? Math.ceil(pageTabs.getBoundingClientRect().height) : 0;
+    const deadlineH = deadline ? Math.ceil(deadline.getBoundingClientRect().height) : 0;
+
+    // 4タブの上端を「上部メインタブ + まもなく締切」の直下へ合わせる
+    const desiredTop = pageH + deadlineH;
+    const currentTop = mainTabs.getBoundingClientRect().top;
+    const y = window.scrollY + currentTop - desiredTop;
+
+    window.scrollTo({top:Math.max(0, y), behavior:mode});
+  };
+
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    move(behavior);
+    // iOS Safari/PWAのsticky再計算・パネル再描画後にも実測で補正
+    setTimeout(()=>move('auto'), 180);
+    setTimeout(()=>move('auto'), 480);
+  }));
+}
+
 // 出走表AI：4タブ切り替え
 function setPredictMainTab(key){
   const valid=['data','odds','ai','result'];
@@ -4070,7 +4100,10 @@ function bindPredictMainTabs(){
   document.querySelectorAll('.predict-main-tab').forEach(btn=>{
     if(btn.dataset.brcBound==='1') return;
     btn.dataset.brcBound='1';
-    btn.addEventListener('click',()=>setPredictMainTab(btn.dataset.predictMainTab));
+    btn.addEventListener('click',()=>{
+      setPredictMainTab(btn.dataset.predictMainTab);
+      scrollPredictMainTabsToFixedPosition('smooth');
+    });
   });
   setPredictMainTab(window.__predictMainTabCurrent||'data');
 }
@@ -6437,22 +6470,18 @@ function scrollDeadlineRaceToPredictData(){
     if(typeof setPredictMainTab === 'function') setPredictMainTab('data');
   }catch(e){}
 
-  // レース切替・予測再描画・締切一覧再描画が終わってから位置を計算する。
+  // 締切カード経由でも、4タブを押した時と同じ高さへ統一する。
+  // レース切替後の再描画を待って複数回補正する。
+  const align = (behavior='auto') => {
+    if(typeof scrollPredictMainTabsToFixedPosition === 'function'){
+      scrollPredictMainTabsToFixedPosition(behavior);
+    }
+  };
+
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    const target = document.getElementById('predictResult');
-    if(!target) return;
-
-    const pageTabs = document.querySelector('.page-tabs');
-    const deadline = document.getElementById('deadlineSchedule');
-    const mainTabs = document.querySelector('#page-predict .predict-main-tabs');
-
-    const pageH = pageTabs ? Math.ceil(pageTabs.getBoundingClientRect().height) : 0;
-    const deadlineH = deadline ? Math.ceil(deadline.getBoundingClientRect().height) : 0;
-    const mainH = mainTabs ? Math.ceil(mainTabs.getBoundingClientRect().height) : 0;
-    const offset = pageH + deadlineH + mainH + 8;
-    const y = window.scrollY + target.getBoundingClientRect().top - offset;
-
-    window.scrollTo({top:Math.max(0, y), behavior:'smooth'});
+    align('smooth');
+    setTimeout(()=>align('auto'), 300);
+    setTimeout(()=>align('auto'), 750);
   }));
 }
 
