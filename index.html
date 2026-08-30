@@ -6,6 +6,7 @@
 <!-- BRC_WOMEN_CALC_BELOW_DEADLINE_20260828 -->
 <!-- BRC_PREDICT_UNIFIED_DETAIL_TABS_20260828 -->
 <!-- BRC_PREDICT_AUTO_RUN_WOMEN_TOGGLE_20260828 -->
+<!-- BRC_UI_CLEANUP_20260831 -->
 
 <!-- BRC_PREDICT_METRIC_ROW_ALIGNMENT_20260828 -->
 <meta charset="UTF-8">
@@ -637,10 +638,11 @@
   }
   /* ---- 2026-08-28: グレード選択・実行ボタンを廃止。女子戦だけ手動切替可能 ---- */
   .women-race-control{
-    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    display:none; align-items:center; justify-content:space-between; gap:12px;
     margin:-2px 1px 12px; padding:7px 10px; border-radius:9px;
     border:1px solid rgba(10,31,51,.09); background:rgba(10,31,51,.025);
   }
+  .women-race-control.needs-manual{display:flex;}
   .women-race-control-copy{display:flex;align-items:baseline;gap:7px;min-width:0;flex-wrap:wrap;}
   .women-race-control-title{font-size:11.5px;font-weight:800;color:var(--line-white);white-space:nowrap;}
   .women-race-control-note{font-size:10px;font-weight:700;color:var(--ink-soft);white-space:nowrap;}
@@ -4407,13 +4409,10 @@ function openPredictUnifiedDetail(course, initialTab='player'){
   const reg=String(b.player?.reg||'');
   const name=b.player?.name||PLAYERS[reg]?.name||reg||`コース${course}`;
   const venue=document.getElementById('predictVenue')?.value||'';
-  const motorGrade=b.motorGrade||'―';
-  const stCourse=ST_COURSE[reg]&&ST_COURSE[reg][String(course)];
-  const stLabel=stCourse?`${Number(stCourse.avg).toFixed(1)}位`:(b.player?.avg_st_rank!=null?`${Number(b.player.avg_st_rank).toFixed(1)}位`:'―');
   body.innerHTML=`<div class="predict-unified-shell">
     <div class="motor-detail-head predict-unified-head">
       <div><div id="predictDetailTitle" class="motor-detail-title" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${scenarioLaneBadge(course)} ${name}</div>
-      <div class="motor-detail-sub">登番 ${reg||'―'}${venue?` ・ ${venue} ${course}コース`:` ・ ${course}コース`} ・ ST ${stLabel} ・ モーター ${motorGrade}</div></div>
+      <div class="motor-detail-sub">${venue?`${venue} ${course}コース`:`${course}コース`}</div></div>
       <button class="motor-detail-close" type="button" onclick="closePredictDetail()" aria-label="閉じる">×</button>
     </div>
     <div class="predict-unified-tabs" role="tablist" aria-label="選手詳細の切り替え">
@@ -5545,6 +5544,9 @@ function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhib
     ${buildRecommendedBetsHtmlFromServer(workerPrediction, localInReliability, exhibitionApplied)}
     <div class="predict-ai-note">BRCイン逃げ展開予測は「①が逃げた場合」の条件付き予測です。①が逃げる確率そのものとは分けて扱います。</div>
   `;
+  // 念のためAI予測エリア内の買い目カードは常に1枚に制限する。
+  const recommendationCards=box.querySelectorAll('[data-brc-ai3-root], #recommendedBetsCard');
+  recommendationCards.forEach((card,index)=>{ if(index>0) card.remove(); });
 }
 
 // 旧：勝率タップから展開詳細を開く関数。勝率セルからの呼び出しは廃止。
@@ -5699,7 +5701,6 @@ function renderInlinePredictScenario(course){
       </div>
       <button class="motor-detail-close" type="button" onclick="closePredictDetail()" aria-label="閉じる">×</button>
     </div>
-    ${winnerBoat?`<div class="motor-detail-topstats predict-detail-scenario-stats"><div class="motor-detail-stat"><b>${winnerBoat.pct}%</b><span>予想勝率</span></div><div class="motor-detail-stat"><b>${winnerBoat.pct3}%</b><span>3連対率</span></div><div class="motor-detail-stat"><b>${course}</b><span>コース</span></div><div class="motor-detail-stat"><b>${others.length}</b><span>相手艇</span></div></div>`:''}
     <div class="predict-scenario-tabs" role="tablist" aria-label="決まり手別展開シナリオ">${tabHtml}</div>
     <div class="predict-scenario-summary"><span><strong>${selected}</strong> の相手残り傾向</span><span>${available}/${others.length}艇データあり</span></div>
     <div class="scenario-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
@@ -7788,16 +7789,19 @@ function syncWomenRaceMode(baseGrade, regs){
   const gsel = document.getElementById('predictGrade');
   const toggle = document.getElementById('womenRaceToggle');
   const note = document.getElementById('womenRaceControlNote');
+  const control = document.getElementById('womenRaceControl');
   if(!gsel) return baseGrade;
 
   const grade = String(baseGrade || '一般');
   gsel.dataset.baseGrade = grade;
   if(toggle) toggle.dataset.baseGrade = grade;
 
-  // ヴィーナス等、もともと女子専用カテゴリとして判定できる開催はそのカテゴリを優先。
-  // 一般/G1・G2/G3/SG内で6艇全員女子のレースだけ「女子」へ自動切替し、手動で戻すことも可能。
+  // 通常は6艇から自動判定してUIを出さない。
+  // 6艇の登録番号が欠けて自動判定できない場合だけ、手動切替を表示する。
   const canWomenOverride = ['一般','G1G2','G3','SG'].includes(grade);
-  const autoWomen = canWomenOverride && isAllFemaleRaceRegs(regs);
+  const regsReady = Array.isArray(regs) && regs.length === 6 && regs.every(reg => String(reg || '').trim());
+  const autoWomen = canWomenOverride && regsReady && isAllFemaleRaceRegs(regs);
+  if(control) control.classList.toggle('needs-manual', canWomenOverride && !regsReady);
   if(toggle){
     toggle.checked = autoWomen;
     toggle.disabled = !canWomenOverride;
@@ -7805,6 +7809,7 @@ function syncWomenRaceMode(baseGrade, regs){
   gsel.value = autoWomen ? '女子' : grade;
   if(note){
     if(!canWomenOverride) note.textContent = `${GRADE_LABELS[grade] || grade}を自動適用`;
+    else if(!regsReady) note.textContent = '自動判定できません・手動切替';
     else note.textContent = autoWomen ? '6艇全員女子を自動判定・ON' : '6艇から自動判定・OFF';
   }
   return gsel.value;
@@ -9325,8 +9330,9 @@ function brcBuildAi3ModePreviewHtml(){
 function buildRecommendedBetsHtmlFromServer(workerPrediction, localInReliability=null, exhibitionApplied=false){
   const ai3=brcBuildAi3ModeRecommendationHtml(workerPrediction);
   if(ai3) return ai3;
-  const legacy=brcBuildLegacyRecommendedBetsHtml(workerPrediction,localInReliability,exhibitionApplied);
-  return brcBuildAi3ModePreviewHtml() + legacy;
+  // AI3未配信中は表示イメージを1枚だけ出す。
+  // 旧推奨買い目を連結すると同じAI予測エリアに買い目カードが複数並ぶため併記しない。
+  return brcBuildAi3ModePreviewHtml();
 }
 
 // ===== BRC protected server =====
