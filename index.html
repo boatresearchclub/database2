@@ -1468,6 +1468,10 @@
   .brc-admin-social-actions{display:flex;gap:7px;flex-wrap:wrap;}
   .brc-admin-social-btn{appearance:none;border:0;border-radius:9px;padding:8px 11px;font-size:12px;font-weight:900;cursor:pointer;background:var(--wave);color:#fff;}
   .brc-admin-social-btn.secondary{background:#eef3f8;color:#17324d;}
+  .brc-admin-social-preview{display:none;margin-top:9px;padding:8px;border:1px solid rgba(10,31,51,.10);border-radius:10px;background:#fff;}
+  .brc-admin-social-preview.is-visible{display:block;}
+  .brc-admin-social-preview img{display:block;width:100%;height:auto;border-radius:7px;background:#fff;}
+  .brc-admin-social-image-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;}
   #brcAdminSocialText{width:100%;min-height:150px;margin-top:8px;border:1px solid rgba(10,31,51,.14);border-radius:9px;padding:9px 10px;box-sizing:border-box;font:inherit;font-size:13px;line-height:1.65;resize:vertical;background:#fff;color:#17324d;}
   #brcAdminSocialStatus{min-height:16px;margin-top:5px;font-size:11px;color:var(--ink-soft);}
   @media(max-width:390px){
@@ -2519,10 +2523,17 @@
       <div id="brcAdminSocial" class="brc-admin-social" aria-hidden="true">
         <div class="brc-admin-social-head"><div class="brc-admin-social-title">SNS投稿アシスタント</div><span class="brc-admin-social-tag">管理者</span></div>
         <div class="brc-admin-social-actions">
+          <button type="button" id="brcAdminSocialImage" class="brc-admin-social-btn">SNS画像を作成</button>
           <button type="button" id="brcAdminSocialGenerate" class="brc-admin-social-btn">Threads投稿文を作成</button>
           <button type="button" id="brcAdminSocialCopy" class="brc-admin-social-btn secondary">コピー</button>
         </div>
         <textarea id="brcAdminSocialText" placeholder="出走表AIを表示したあとに「Threads投稿文を作成」を押してください。"></textarea>
+        <div id="brcAdminSocialPreview" class="brc-admin-social-preview">
+          <img id="brcAdminSocialPreviewImg" alt="SNS投稿用 出走表AI画像">
+          <div class="brc-admin-social-image-actions">
+            <button type="button" id="brcAdminSocialImageShare" class="brc-admin-social-btn secondary">画像を共有 / 保存</button>
+          </div>
+        </div>
         <div id="brcAdminSocialStatus"></div>
       </div>
     </section>
@@ -2948,11 +2959,104 @@ function brcBuildAdminThreadsPost(){
   lines.push('BRCでは「何を買うか」だけでなく、「どのレースに入るか」も大切にしています。');
   return {ok:true,text:lines.join('\n\n'),status:'投稿文を作成しました。必要ならそのまま編集できます。'};
 }
+let __brcAdminSocialImageBlob=null;
+let __brcAdminSocialImageUrl='';
+function brcLoadHtml2Canvas(){
+  if(typeof window.html2canvas==='function') return Promise.resolve(window.html2canvas);
+  if(window.__brcHtml2CanvasLoading) return window.__brcHtml2CanvasLoading;
+  window.__brcHtml2CanvasLoading=new Promise((resolve,reject)=>{
+    const script=document.createElement('script');
+    script.src='https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+    script.async=true;
+    script.onload=()=>typeof window.html2canvas==='function'?resolve(window.html2canvas):reject(new Error('画像化ライブラリを読み込めませんでした。'));
+    script.onerror=()=>reject(new Error('画像化ライブラリの通信に失敗しました。'));
+    document.head.appendChild(script);
+  }).catch(err=>{ window.__brcHtml2CanvasLoading=null; throw err; });
+  return window.__brcHtml2CanvasLoading;
+}
+function brcAdminSocialImageFileName(){
+  const venue=String(document.getElementById('predictRaceDay')?.value||document.getElementById('predictVenue')?.value||'BRC').trim();
+  const raceNo=String(document.getElementById('predictRaceNo')?.value||'').trim();
+  const day=String(window.TODAY_LABEL||'').replace(/[^0-9]/g,'');
+  return `BRC_${day?day+'_':''}${venue}${raceNo?raceNo+'R':''}.png`.replace(/[\\/:*?"<>|\s]+/g,'_');
+}
+async function brcCreateAdminSocialImage(){
+  const box=document.getElementById('predictResult');
+  const table=document.getElementById('predictTableWrap');
+  if(!box || !table || !box.querySelector('.predict-table')) throw new Error('先に出走表AIの「計算」を実行してください。');
+  const html2canvas=await brcLoadHtml2Canvas();
+  const boxRect=box.getBoundingClientRect();
+  const tableRect=table.getBoundingClientRect();
+  const cropHeight=Math.max(1,Math.ceil(tableRect.bottom-boxRect.top+4));
+  const fullCanvas=await html2canvas(box,{
+    backgroundColor:'#ffffff',
+    scale:Math.min(3,Math.max(2,window.devicePixelRatio||1)),
+    useCORS:true,
+    logging:false,
+    scrollX:0,
+    scrollY:-window.scrollY,
+    windowWidth:Math.max(document.documentElement.clientWidth,box.scrollWidth),
+    width:box.scrollWidth,
+    height:cropHeight
+  });
+  const canvas=document.createElement('canvas');
+  canvas.width=fullCanvas.width;
+  canvas.height=Math.min(fullCanvas.height,Math.round(cropHeight*(fullCanvas.width/Math.max(1,box.scrollWidth))));
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(fullCanvas,0,0,canvas.width,canvas.height,0,0,canvas.width,canvas.height);
+  const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('PNG画像を作成できませんでした。')),'image/png',1));
+  if(__brcAdminSocialImageUrl) URL.revokeObjectURL(__brcAdminSocialImageUrl);
+  __brcAdminSocialImageBlob=blob;
+  __brcAdminSocialImageUrl=URL.createObjectURL(blob);
+  const preview=document.getElementById('brcAdminSocialPreview');
+  const img=document.getElementById('brcAdminSocialPreviewImg');
+  if(img) img.src=__brcAdminSocialImageUrl;
+  if(preview) preview.classList.add('is-visible');
+  return {blob,url:__brcAdminSocialImageUrl,fileName:brcAdminSocialImageFileName()};
+}
+async function brcShareOrSaveAdminSocialImage(){
+  if(!__brcAdminSocialImageBlob || !__brcAdminSocialImageUrl) throw new Error('先にSNS画像を作成してください。');
+  const fileName=brcAdminSocialImageFileName();
+  const file=new File([__brcAdminSocialImageBlob],fileName,{type:'image/png'});
+  if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
+    await navigator.share({files:[file],title:'BRC 出走表AI'});
+    return '共有画面を開きました。';
+  }
+  const a=document.createElement('a');
+  a.href=__brcAdminSocialImageUrl;
+  a.download=fileName;
+  a.target='_blank';
+  document.body.appendChild(a); a.click(); a.remove();
+  return 'PNG画像を開きました。';
+}
+
 function brcBindAdminSocial(){
+  const imageBtn=document.getElementById('brcAdminSocialImage');
+  const shareBtn=document.getElementById('brcAdminSocialImageShare');
   const gen=document.getElementById('brcAdminSocialGenerate');
   const copy=document.getElementById('brcAdminSocialCopy');
   const ta=document.getElementById('brcAdminSocialText');
   const status=document.getElementById('brcAdminSocialStatus');
+  if(imageBtn && !imageBtn.dataset.bound){
+    imageBtn.dataset.bound='1';
+    imageBtn.addEventListener('click',async()=>{
+      if(!BRC_ADMIN_ACTIVE) return;
+      const old=imageBtn.textContent; imageBtn.disabled=true; imageBtn.textContent='画像作成中…';
+      if(status) status.textContent='出走表AIの表示部分をPNG画像にしています。';
+      try{ await brcCreateAdminSocialImage(); if(status) status.textContent='SNS画像を作成しました。下にプレビューを表示しています。'; }
+      catch(err){ if(status) status.textContent=`画像作成エラー: ${err?.message||err}`; }
+      finally{ imageBtn.disabled=false; imageBtn.textContent=old; }
+    });
+  }
+  if(shareBtn && !shareBtn.dataset.bound){
+    shareBtn.dataset.bound='1';
+    shareBtn.addEventListener('click',async()=>{
+      if(!BRC_ADMIN_ACTIVE) return;
+      try{ const msg=await brcShareOrSaveAdminSocialImage(); if(status) status.textContent=msg; }
+      catch(err){ if(err?.name!=='AbortError' && status) status.textContent=`画像保存エラー: ${err?.message||err}`; }
+    });
+  }
   if(gen && !gen.dataset.bound){
     gen.dataset.bound='1';
     gen.addEventListener('click',()=>{
