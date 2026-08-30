@@ -1400,6 +1400,13 @@
   .today-picks-table-wrap{width:100%; overflow-x:hidden; border:1px solid rgba(10,31,51,.08); border-radius:10px; background:var(--panel);}
   table.today-picks-table{width:100%; table-layout:fixed; border-collapse:collapse;}
   table.today-picks-table th{background:var(--bg3); cursor:default; color:var(--ink-soft); font-size:12px; padding:9px 8px;}
+  table.today-picks-table th.today-sortable{cursor:pointer;user-select:none;transition:.15s;}
+  table.today-picks-table th.today-sortable:hover{color:var(--navy);background:#e8f1ff;}
+  .today-sort-head{display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;}
+  table.today-picks-table th:first-child .today-sort-head{justify-content:flex-start;}
+  .today-sort-icon{display:inline-flex;align-items:center;justify-content:center;min-width:11px;font-size:9px;line-height:1;color:rgba(61,74,99,.45);}
+  table.today-picks-table th.today-sortable.is-active{color:var(--wave);}
+  table.today-picks-table th.today-sortable.is-active .today-sort-icon{color:var(--wave);font-weight:900;}
   table.today-picks-table th:nth-child(1){width:31%;}
   table.today-picks-table th:nth-child(2){width:23%;}
   table.today-picks-table th:nth-child(3){width:28%;}
@@ -8751,6 +8758,51 @@ function buildInReliabilityCardHtmlFromServer(info){
 // ============================================================
 let TODAY_PICKS_MODE = 'iron';
 let TODAY_PICKS_CACHE = null;
+// 本日厳選の表示順。初期表示は従来どおり締切が早い順。
+let TODAY_PICKS_SORT = {key:'deadline', dir:'asc'};
+
+function sortTodayPickRows(rows){
+  const out=[...(rows||[])];
+  const key=TODAY_PICKS_SORT?.key||'deadline';
+  const dir=TODAY_PICKS_SORT?.dir==='desc'?-1:1;
+  out.sort((a,b)=>{
+    let cmp=0;
+    if(key==='venue'){
+      const va=VENUE_ORDER.indexOf(a.venue), vb=VENUE_ORDER.indexOf(b.venue);
+      const ai=va<0?999:va, bi=vb<0?999:vb;
+      cmp=ai-bi;
+      if(!cmp) cmp=Number(a.raceNo||0)-Number(b.raceNo||0);
+    }else if(key==='inPct'){
+      cmp=Number(a.inPct||0)-Number(b.inPct||0);
+    }else{
+      cmp=todayDeadlineMinutes(a.deadline)-todayDeadlineMinutes(b.deadline);
+    }
+    if(!cmp && key!=='deadline') cmp=todayDeadlineMinutes(a.deadline)-todayDeadlineMinutes(b.deadline);
+    if(!cmp && key!=='venue'){
+      const va=VENUE_ORDER.indexOf(a.venue), vb=VENUE_ORDER.indexOf(b.venue);
+      cmp=(va<0?999:va)-(vb<0?999:vb);
+    }
+    if(!cmp) cmp=Number(a.raceNo||0)-Number(b.raceNo||0);
+    return cmp*dir;
+  });
+  return out;
+}
+
+function todaySortIcon(key){
+  if(TODAY_PICKS_SORT.key!==key) return '↕';
+  return TODAY_PICKS_SORT.dir==='asc'?'▲':'▼';
+}
+
+function setTodayPicksSort(key){
+  if(!['venue','deadline','inPct'].includes(key)) return;
+  if(TODAY_PICKS_SORT.key===key){
+    TODAY_PICKS_SORT.dir=TODAY_PICKS_SORT.dir==='asc'?'desc':'asc';
+  }else{
+    TODAY_PICKS_SORT.key=key;
+    TODAY_PICKS_SORT.dir=(key==='inPct')?'desc':'asc';
+  }
+  renderTodayPicks();
+}
 
 function resolvedTodayGrade(venue, raceNo){
   return resolveRaceGrade(venue, raceNo);
@@ -9001,7 +9053,7 @@ async function renderTodayPicks(force=false){
     : 'イン否定 = イン場基準差 -10pt未満';
   renderTodayPicksStats();
 
-  const rows=cache[TODAY_PICKS_MODE]||[];
+  const rows=sortTodayPickRows(cache[TODAY_PICKS_MODE]||[]);
   if(!rows.length){
     body.innerHTML=`<div class="today-empty">${TODAY_PICKS_MODE==='iron'?'イン信頼度S':'イン場基準差 -10pt未満'}の該当レースはありません。</div>`;
     if(cache.skipped) body.innerHTML+=`<div class="today-picks-note">選手データ不足などで判定できなかったレース: ${cache.skipped}件</div>`;
@@ -9009,7 +9061,12 @@ async function renderTodayPicks(force=false){
   }
 
   body.innerHTML=`<div class="today-picks-table-wrap"><table class="today-picks-table">
-    <thead><tr><th>会場</th><th class="num">締め切り</th><th class="num">イン逃げ率</th><th class="num">モーター</th></tr></thead>
+    <thead><tr>
+      <th class="today-sortable${TODAY_PICKS_SORT.key==='venue'?' is-active':''}" data-today-sort="venue" aria-sort="${TODAY_PICKS_SORT.key==='venue'?(TODAY_PICKS_SORT.dir==='asc'?'ascending':'descending'):'none'}"><span class="today-sort-head">会場 <span class="today-sort-icon">${todaySortIcon('venue')}</span></span></th>
+      <th class="num today-sortable${TODAY_PICKS_SORT.key==='deadline'?' is-active':''}" data-today-sort="deadline" aria-sort="${TODAY_PICKS_SORT.key==='deadline'?(TODAY_PICKS_SORT.dir==='asc'?'ascending':'descending'):'none'}"><span class="today-sort-head">締切 <span class="today-sort-icon">${todaySortIcon('deadline')}</span></span></th>
+      <th class="num today-sortable${TODAY_PICKS_SORT.key==='inPct'?' is-active':''}" data-today-sort="inPct" aria-sort="${TODAY_PICKS_SORT.key==='inPct'?(TODAY_PICKS_SORT.dir==='asc'?'ascending':'descending'):'none'}"><span class="today-sort-head">イン逃げ率 <span class="today-sort-icon">${todaySortIcon('inPct')}</span></span></th>
+      <th class="num">モーター</th>
+    </tr></thead>
     <tbody>${rows.map(r=>{
       const passed=isRaceDeadlinePassed(r.deadline);
       return `<tr class="today-pick-row${passed?' deadline-passed':''}" data-venue="${r.venue}" data-race="${r.raceNo}" tabindex="0" role="button" aria-label="${r.venue}${r.raceNo}Rを出走表AIで開く">
@@ -9021,6 +9078,14 @@ async function renderTodayPicks(force=false){
     }).join('')}</tbody></table></div>
     <div class="today-picks-note">行をタップすると、そのレースを「出走表AI」で開きます。モーターは1号艇の当該レース内相対評価です。${cache.skipped?` 判定不可 ${cache.skipped}件。`:''}</div>`;
 
+  body.querySelectorAll('[data-today-sort]').forEach(th=>{
+    th.addEventListener('click',()=>setTodayPicksSort(th.dataset.todaySort));
+    th.tabIndex=0;
+    th.setAttribute('role','button');
+    th.addEventListener('keydown',e=>{
+      if(e.key==='Enter'||e.key===' '){ e.preventDefault(); setTodayPicksSort(th.dataset.todaySort); }
+    });
+  });
   body.querySelectorAll('.today-pick-row').forEach(tr=>{
     const open=()=>openTodayPickRace(tr.dataset.venue,tr.dataset.race);
     tr.addEventListener('click',open);
