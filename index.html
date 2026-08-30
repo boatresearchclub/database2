@@ -916,7 +916,7 @@
   table.brc-odds-col-table td.second.brc-odds-lane6,
   table.brc-odds-col-table td.third.brc-odds-lane6{background:var(--lane6);color:var(--lane6-text);}
 
-  .brc-odds-pop-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+  .brc-odds-pop-grid{display:block;}
   .brc-odds-pop-box{border:1px solid rgba(10,31,51,.10);border-radius:10px;overflow:hidden;background:#fff;}
   table.brc-odds-pop-table{width:100%;border-collapse:collapse;table-layout:fixed;font-variant-numeric:tabular-nums;}
   table.brc-odds-pop-table th{padding:6px 5px;background:var(--bg3);font-size:10px;color:var(--ink-soft);cursor:default;text-align:center;}
@@ -4213,13 +4213,20 @@ function brcOddsBuildPopular(odds){
   const items=Object.entries(odds||{}).map(([comb,val])=>({comb,v:Number(val)}))
     .filter(x=>/^([1-6])-([1-6])-([1-6])$/.test(x.comb) && Number.isFinite(x.v) && x.v>0)
     .sort((a,b)=>a.v-b.v).slice(0,30);
-  const table=(list,start)=>`<div class="brc-odds-pop-box"><table class="brc-odds-pop-table"><thead><tr><th style="width:44px">人気</th><th>買い目</th><th style="width:72px">オッズ</th></tr></thead><tbody>${list.map((x,i)=>{
+
+  const rows=items.map((x,i)=>{
     const b=x.comb.split('-').map(Number);
     const combo=`<span class="brc-odds-combo-chip">${brcOddsLaneHtml(b[0])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(b[1])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(b[2])}</span>`;
-    return `<tr><td class="brc-odds-pop-rank">${start+i}位</td><td class="brc-odds-pop-combo">${combo}</td><td class="brc-odds-pop-value">${x.v.toFixed(1)}</td></tr>`;
-  }).join('')}</tbody></table></div>`;
-  const left=items.slice(0,15), right=items.slice(15,30);
-  return `${brcOddsViewTabs()}<div class="brc-odds-pop-grid">${table(left,1)}${right.length?table(right,16):''}</div>
+    return `<tr><td class="brc-odds-pop-rank">${i+1}位</td><td class="brc-odds-pop-combo">${combo}</td><td class="brc-odds-pop-value">${x.v.toFixed(1)}</td></tr>`;
+  }).join('');
+
+  return `${brcOddsViewTabs()}
+    <div class="brc-odds-pop-box">
+      <table class="brc-odds-pop-table">
+        <thead><tr><th style="width:44px">人気</th><th>買い目</th><th style="width:72px">オッズ</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
     <div class="brc-odds-foot">現在取得している3連単120通りをオッズの低い順に並べたTOP30です。</div>`;
 }
 
