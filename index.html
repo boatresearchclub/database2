@@ -2938,7 +2938,24 @@ async function brcLogin(identifier,password){
     console.warn('BRC login failed:',err);
     brcClearSession();
     brcRenderGate('login');
-    const msg = (err && err.status===400) ? '会員IDまたはパスワードが違います。' : 'ログインできませんでした。もう一度お試しください。';
+
+    // BRC_LOGIN_DIAGNOSTIC_20260830
+    // 認証原因の切り分け用。パスワードやAPIキーは画面へ表示しない。
+    const status = Number(err && err.status || 0);
+    const detailRaw = String((err && err.message) || '').trim();
+    const detail = detailRaw ? detailRaw.slice(0,180) : '';
+    let msg = '';
+    if(status===400){
+      msg = `診断: HTTP 400 / ${detail || '認証情報が拒否されました'}`;
+    }else if(status===401){
+      msg = `診断: HTTP 401 / ${detail || '認証に失敗しました'}`;
+    }else if(status===403){
+      msg = `診断: HTTP 403 / ${detail || 'アクセスが拒否されました'}`;
+    }else if(status){
+      msg = `診断: HTTP ${status} / ${detail || '認証APIエラー'}`;
+    }else{
+      msg = `診断: NETWORK / ${detail || '認証サーバーへ接続できませんでした'}`;
+    }
     brcSetAuthMessage(msg);
     return false;
   }finally{
