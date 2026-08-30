@@ -14,6 +14,8 @@
 <!-- BRC_ODDS_MANUAL_CACHE_TEST_20260830 -->
 <!-- BRC_TELEBOAT_BRIDGE_V2_SNS_DATA_ONLY_20260830 -->
 <!-- BRC_TELEBOAT_RACE_DEEPLINK_V3_20260830 -->
+<!-- BRC_MOBILE_TELEBOAT_HANDOFF_V4_20260830 -->
+<!-- BRC_MOBILE_TELEBOAT_V5_20260830 -->
 <!-- BRC_NIGE_PREDICT_INTEGER_DISPLAY_20260829 -->
 <!-- BRC_PREDICT_GUIDE_REVIEW_20260829 -->
 <!-- BRC_STICKY_OVERLAP_FIX_20260829 -->
@@ -1017,6 +1019,7 @@
     background:#fff;color:var(--wave);font:inherit;font-size:11px;font-weight:900;cursor:pointer;
   }
   .brc-teleboat-btn.primary{border-color:var(--wave);background:var(--wave);color:#fff;}
+  .brc-teleboat-mobile-copy{grid-column:1/-1;}
   .brc-teleboat-note{font-size:9.5px;line-height:1.55;color:var(--ink-soft);}
   .brc-teleboat-status{min-height:14px;font-size:9.5px;line-height:1.45;color:#217247;font-weight:800;}
   @media(max-width:420px){
@@ -4832,6 +4835,7 @@ function brcOddsPoolRows(odds,key){
 // ---- BRC_TELEBOAT_BRIDGE_V2_20260830 ----
 const BRC_SIMPLE_TELEBOAT_URL = 'https://bu.tbbr.jp/';
 const BRC_SIMPLE_TELEBOAT_BET_URL = 'https://bu.tbbr.jp/bet';
+const BRC_MOBILE_TELEBOAT_TOP_URL = 'https://spweb.brtb.jp/';
 const BRC_TELEBOAT_AMOUNT_STORAGE_KEY = 'brc_teleboat_amount_v1';
 const BRC_TELEBOAT_PENDING_STORAGE_KEY = 'brc_teleboat_pending_v2';
 const BRC_TELEBOAT_BET_AMOUNT_STORAGE_KEY = 'brc_teleboat_bet_amount_v2';
@@ -4929,11 +4933,46 @@ function brcTeleboatBuildPayload(sel,odds){
     venue_code:String(sel?.code||''),
     race_no:Number(sel?.raceNo||0),
     bet_type:'3連単',
-    target_url:brcTeleboatBuildRaceUrl(sel),
+    target_url:BRC_MOBILE_TELEBOAT_TOP_URL,
     amount_per_bet:amount,
     total_amount:totalAmount,
     bets
   };
+}
+
+
+function brcTeleboatMobilePayload(sel,odds){
+  const payload=brcTeleboatBuildPayload(sel,odds);
+  return JSON.stringify({
+    brc:'BRC_MOBILE_BET_V1',
+    date:payload.date||'',
+    venue:payload.venue||'',
+    race:Number(payload.race_no||0),
+    type:'3連単',
+    bets:(Array.isArray(payload.bets)?payload.bets:[]).map(b=>[b.comb,Number(b.amount||0)])
+  });
+}
+
+async function brcTeleboatCopyMobilePayload(){
+  const sel=brcOddsSelection();
+  const rec=sel?.key?__brcOddsLocal[sel.key]:null;
+  if(!sel?.key || !rec?.odds){
+    __brcTeleboatStatus='オッズ・保存買い目を確認してください。';
+    brcRenderOddsPanel();
+    return;
+  }
+  const payload=brcTeleboatBuildPayload(sel,rec.odds);
+  if(!payload.bets.length){
+    __brcTeleboatStatus='保存買い目がありません。';
+    brcRenderOddsPanel();
+    return;
+  }
+  brcTeleboatSavePending(payload);
+  const ok=await brcTeleboatCopyText(brcTeleboatMobilePayload(sel,rec.odds));
+  __brcTeleboatStatus=ok
+    ? `スマホ投票用データをコピーしました（${payload.bets.length}点）。`
+    : 'コピーできませんでした。';
+  brcRenderOddsPanel();
 }
 
 function brcTeleboatPayloadText(payload){
@@ -4976,10 +5015,11 @@ function brcTeleboatBuildBridge(odds,sel){
       <div class="brc-teleboat-field"><span class="k">購入予定額</span><span class="v" data-teleboat-total="1">${total.toLocaleString('ja-JP')}円</span></div>
     </div>
     <div class="brc-teleboat-actions">
+      <button type="button" class="brc-teleboat-btn primary brc-teleboat-mobile-copy" data-teleboat-mobile-copy="1">① スマホ投票データをコピー</button>
       <button type="button" class="brc-teleboat-btn" data-teleboat-copy="1">買い目をコピー</button>
-      <button type="button" class="brc-teleboat-btn primary" data-teleboat-open="1">投票サイトへ</button>
+      <button type="button" class="brc-teleboat-btn" data-teleboat-open="1">② テレボートを開く</button>
     </div>
-    <div class="brc-teleboat-note">各買い目の金額を100円単位で設定できます。一括金額を変更すると全点へ反映します。加入者番号・暗証番号・認証情報はBRCに保存しません。「投票サイトへ」は選択中の会場・レース番号を付けたシンプル投票URLを開きます。現段階では買い目の自動入力・購入確定は行いません。</div>
+    <div class="brc-teleboat-note">各買い目の金額を100円単位で設定できます。一括金額を変更すると全点へ反映します。加入者番号・暗証番号・認証情報はBRCに保存しません。①投票データをコピー → ②テレボートを開く → ③対象会場・Rの3連単投票画面でブックマーク「BRC投票セット」を実行します。ベットリスト追加まで自動、最終の投票確定は手動です。</div>
     <div class="brc-teleboat-status" data-teleboat-status="1">${brcOddsEscape(__brcTeleboatStatus)}</div>
   </div>`;
 }
@@ -4994,7 +5034,7 @@ async function brcTeleboatPrepare(action){
   const copied=await brcTeleboatCopyText(brcTeleboatPayloadText(payload));
   __brcTeleboatStatus=copied?'投票用買い目を準備してコピーしました。':'投票用買い目を準備しました。';
   if(action==='open'){
-    const targetUrl=brcTeleboatBuildRaceUrl(sel);
+    const targetUrl=BRC_MOBILE_TELEBOAT_TOP_URL;
     const w=window.open(targetUrl,'_blank','noopener,noreferrer');
     if(!w) location.href=targetUrl;
   }
@@ -5258,6 +5298,8 @@ function brcBindOddsManual(){
       if(sel?.key){brcOddsPoolClear(sel.key);__brcOddsView='builder';brcRenderOddsPanel();}
       return;
     }
+    const teleMobileCopy=e.target?.closest?.('[data-teleboat-mobile-copy]');
+    if(teleMobileCopy){e.preventDefault();brcTeleboatCopyMobilePayload();return;}
     const teleCopy=e.target?.closest?.('[data-teleboat-copy]');
     if(teleCopy){e.preventDefault();brcTeleboatPrepare('copy');return;}
     const teleOpen=e.target?.closest?.('[data-teleboat-open]');
