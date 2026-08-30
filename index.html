@@ -2258,6 +2258,27 @@
 .brc-ai3-skip strong{font-size:13px;color:#8a5a00;}
 .brc-ai3-skip div{margin-top:3px;font-size:10.5px;line-height:1.55;color:var(--ink-soft);}
 .brc-ai3-missing{padding:12px 8px;text-align:center;color:var(--ink-soft);font-size:10.5px;}
+.brc-ai3-mode-design{margin:0 0 10px;padding:9px 10px;border:1px solid rgba(10,31,51,.08);border-radius:10px;background:#fff;}
+.brc-ai3-mode-design-top{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:4px;}
+.brc-ai3-mode-design-name{font-size:12.5px;font-weight:950;color:var(--navy);}
+.brc-ai3-mode-design-key{display:inline-flex;padding:2px 6px;border-radius:999px;background:rgba(0,87,219,.08);color:var(--wave);font-size:9px;font-weight:900;white-space:nowrap;}
+.brc-ai3-mode-design-copy{font-size:10.5px;line-height:1.55;color:var(--ink-soft);}
+.brc-ai3-kpi-caption{margin:10px 0 5px;font-size:9.5px;font-weight:900;color:var(--ink-soft);letter-spacing:.03em;}
+.brc-ai3-oos{margin-top:10px;padding:9px 10px;border-radius:10px;border:1px solid rgba(10,31,51,.08);background:rgba(10,31,51,.022);}
+.brc-ai3-oos-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;}
+.brc-ai3-oos-title{font-size:10px;font-weight:950;color:var(--navy);}
+.brc-ai3-oos-status{display:inline-flex;padding:2px 6px;border-radius:999px;background:rgba(227,178,60,.10);color:#8a5a00;font-size:8.5px;font-weight:900;white-space:nowrap;}
+.brc-ai3-oos-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;}
+.brc-ai3-oos-metric{text-align:center;padding:6px 4px;border-radius:8px;background:#fff;border:1px solid rgba(10,31,51,.06);}
+.brc-ai3-oos-metric .k{font-size:8px;font-weight:800;color:var(--ink-soft);}
+.brc-ai3-oos-metric .v{margin-top:1px;font-size:11.5px;font-weight:950;color:var(--navy);font-variant-numeric:tabular-nums;}
+.brc-ai3-mode-details{margin-top:8px;border-top:1px dashed rgba(10,31,51,.10);padding-top:7px;}
+.brc-ai3-mode-details summary{cursor:pointer;color:var(--wave);font-size:9.5px;font-weight:900;list-style:none;}
+.brc-ai3-mode-details summary::-webkit-details-marker{display:none;}
+.brc-ai3-mode-details summary::before{content:'設計を見る ＋';}
+.brc-ai3-mode-details[open] summary::before{content:'設計を閉じる −';}
+.brc-ai3-mode-details-body{margin-top:6px;font-size:9.5px;line-height:1.6;color:var(--ink-soft);}
+.brc-ai3-sample-flag{font-size:8px;font-weight:900;color:#8a5a00;margin-left:3px;vertical-align:1px;}
 @media(max-width:420px){
   .brc-ai3-head{padding:10px 9px 7px;}.brc-ai3-tabs{padding:0 8px 8px;gap:4px;}.brc-ai3-tab{font-size:11px;padding:8px 2px;}
   .brc-ai3-body{padding:10px 8px;}.brc-ai3-head-boat{font-size:20px;}.brc-ai3-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}
@@ -9151,6 +9172,23 @@ function brcAi3PickExtra(x){
   return bits.join(' / ');
 }
 function brcAi3ModeLabel(key){ return key==='stable'?'安定型':key==='hit'?'的中型':'回収型'; }
+function brcAi3ModeDesign(key){
+  if(key==='stable') return {key:'期待値 × 確率余白',copy:'予測が少しズレても期待値が残りやすい買い目を優先。的中率と回収率のバランスを取りながら、予測誤差への耐性を重視します。',detail:'期待値条件を満たす候補の中で、ブレークイーブン確率との差（確率余白）を重視してセットを構成します。最大10点の可変点数で、余白が不足する場合は見送ります。'};
+  if(key==='hit') return {key:'的中率を最大化',copy:'期待値を確保できる範囲で、参考買い目セット全体の想定的中率を最も高くする構成を優先します。',detail:'EV基準を下回る買い目は除外したうえで、1点ずつ追加したときのセット的中率を比較します。点数を増やして期待値が崩れる手前で止めます。'};
+  return {key:'期待回収率を最大化',copy:'的中率を一定範囲まで許容し、BRC予測確率と実オッズの価格差が大きい買い目を優先します。',detail:'個別EVとセットEVを重視し、少点数も選択肢にします。極端な低確率・高配当だけを拾わないよう最低予測確率や標本数などの安全条件を設けます。'};
+}
+function brcAi3ModeDesignHtml(key){
+  const d=brcAi3ModeDesign(key);
+  return `<div class="brc-ai3-mode-design"><div class="brc-ai3-mode-design-top"><span class="brc-ai3-mode-design-name">${brcAi3ModeLabel(key)}</span><span class="brc-ai3-mode-design-key">${d.key}</span></div><div class="brc-ai3-mode-design-copy">${d.copy}</div><details class="brc-ai3-mode-details"><summary></summary><div class="brc-ai3-mode-details-body">${d.detail}</div></details></div>`;
+}
+function brcAi3OosHtml(mode){
+  const o=mode?.oos2026 || mode?.oos || mode?.validationOos || null;
+  const hit=brcAi3Num(o||{},['hitRate','hit','hitProbability']);
+  const roi=brcAi3Num(o||{},['roi','returnRate','recoveryRate']);
+  const n=brcAi3Num(o||{},['n','N','count']);
+  const ready=Number.isFinite(hit)||Number.isFinite(roi)||Number.isFinite(n);
+  return `<div class="brc-ai3-oos"><div class="brc-ai3-oos-head"><span class="brc-ai3-oos-title">2026 完全OOS 実績</span><span class="brc-ai3-oos-status">${ready?'実測':'検証中'}</span></div><div class="brc-ai3-oos-grid"><div class="brc-ai3-oos-metric"><div class="k">的中率</div><div class="v">${Number.isFinite(hit)?brcAi3Pct(hit,1):'--%'}</div></div><div class="brc-ai3-oos-metric"><div class="k">回収率</div><div class="v">${Number.isFinite(roi)?brcAi3RatePct(roi,0):'--%'}</div></div><div class="brc-ai3-oos-metric"><div class="k">対象</div><div class="v">${Number.isFinite(n)?`N=${Math.round(n)}`:'N=--'}</div></div></div></div>`;
+}
 function brcAi3ModePanelHtml(mode,key){
   if(!mode) return `<div class="brc-ai3-missing">${brcAi3ModeLabel(key)}はサーバー応答待ちです。</div>`;
   const rawPicks=Array.isArray(mode.picks)?mode.picks:(Array.isArray(mode.bets)?mode.bets:(Array.isArray(mode.selections)?mode.selections:[]));
@@ -9180,6 +9218,7 @@ function brcAi3ModePanelHtml(mode,key){
   if(Number.isFinite(comp)) kpis.push(`<div class="brc-ai3-kpi"><div class="k">合成オッズ</div><div class="v">${comp.toFixed(2)}倍</div></div>`);
   if(Number.isFinite(exp)) kpis.push(`<div class="brc-ai3-kpi"><div class="k">期待回収率</div><div class="v">${brcAi3RatePct(exp,0)}</div></div>`);
   return `
+    ${brcAi3ModeDesignHtml(key)}
     <div class="brc-ai3-head-candidate">
       <span class="brc-ai3-head-label">期待値ある1着候補</span>
       <span class="brc-ai3-head-boat">${head?`${head}号艇`:'―'}</span>
@@ -9187,7 +9226,9 @@ function brcAi3ModePanelHtml(mode,key){
     </div>
     <div class="brc-ai3-section-label">期待値ある参考買い目</div>
     <div class="brc-ai3-picks">${chips}</div>
+    <div class="brc-ai3-kpi-caption">今回の予測</div>
     <div class="brc-ai3-kpis">${kpis.join('')}</div>
+    ${brcAi3OosHtml(mode)}
     ${reason?`<div class="brc-ai3-reason">${reason}</div>`:''}`;
 }
 function brcBuildAi3ModeRecommendationHtml(workerPrediction){
@@ -9239,31 +9280,28 @@ function brcBuildLegacyRecommendedBetsHtml(workerPrediction, localInReliability=
   </div>`;
 }
 function brcBuildAi3ModePreviewHtml(){
-  const previewMode=(key,head,picks,points)=>{
-    const chips=picks.map(x=>`<span class="brc-ai3-pick">${x}<small>サンプル</small></span>`).join('');
-    const note=key==='stable'
-      ? '予測誤差への強さを優先する予定です。期待値に余白がある買い目を中心に選びます。'
-      : key==='hit'
-        ? '期待値を満たす候補の中から、想定的中率を優先する予定です。'
-        : '期待値・期待回収率を優先し、少点数も含めて狙う予定です。';
-    return `<div class="brc-ai3-head-candidate">
+  const previewMode=(key,head,picks,points,hit,comp,roi)=>{
+    const chips=picks.map(x=>`<span class="brc-ai3-pick">${x}<small>例</small></span>`).join('');
+    return `${brcAi3ModeDesignHtml(key)}
+    <div class="brc-ai3-head-candidate">
       <span class="brc-ai3-head-label">期待値ある1着候補</span>
-      <span class="brc-ai3-head-boat">${head}<small style="font-size:9px;color:var(--ink-soft);margin-left:4px;">例</small></span>
+      <span class="brc-ai3-head-boat">${head}<span class="brc-ai3-sample-flag">例</span></span>
     </div>
     <div class="brc-ai3-section-label">期待値ある参考買い目</div>
     <div class="brc-ai3-picks">${chips}</div>
+    <div class="brc-ai3-kpi-caption">今回の予測 <span class="brc-ai3-sample-flag">サンプル値</span></div>
     <div class="brc-ai3-kpis">
       <div class="brc-ai3-kpi"><div class="k">点数</div><div class="v">${points}点</div></div>
-      <div class="brc-ai3-kpi"><div class="k">想定的中率</div><div class="v accent">導入後</div></div>
-      <div class="brc-ai3-kpi"><div class="k">合成オッズ</div><div class="v">導入後</div></div>
-      <div class="brc-ai3-kpi"><div class="k">期待回収率</div><div class="v">導入後</div></div>
+      <div class="brc-ai3-kpi"><div class="k">想定的中率</div><div class="v accent">${hit}</div></div>
+      <div class="brc-ai3-kpi"><div class="k">合成オッズ</div><div class="v">${comp}</div></div>
+      <div class="brc-ai3-kpi"><div class="k">期待回収率</div><div class="v">${roi}</div></div>
     </div>
-    <div class="brc-ai3-reason">${note}</div>`;
+    <div class="brc-ai3-oos"><div class="brc-ai3-oos-head"><span class="brc-ai3-oos-title">2026 完全OOS 実績</span><span class="brc-ai3-oos-status">検証中</span></div><div class="brc-ai3-oos-grid"><div class="brc-ai3-oos-metric"><div class="k">実測的中率</div><div class="v">--%</div></div><div class="brc-ai3-oos-metric"><div class="k">実測回収率</div><div class="v">--%</div></div><div class="brc-ai3-oos-metric"><div class="k">対象</div><div class="v">N=--</div></div></div></div>`;
   };
   const modes={
-    stable:previewMode('stable','③',['3-1-2','3-4-1','3-1-4','3-4-2','3-2-1'],5),
-    hit:previewMode('hit','①',['1-2-3','1-3-2','1-2-4','1-3-4','1-4-2','1-2-5','1-5-2'],7),
-    return:previewMode('return','④',['4-5-1','4-1-5','4-5-2'],3)
+    stable:previewMode('stable','③',['3-1-2','3-4-1','3-1-4','3-4-2','3-2-1'],5,'38.4%','2.94倍','113%'),
+    hit:previewMode('hit','①',['1-2-3','1-3-2','1-2-4','1-3-4','1-4-2','1-2-5','1-5-2'],7,'51.2%','2.04倍','104%'),
+    return:previewMode('return','④',['4-5-1','4-1-5','4-5-2'],3,'22.8%','5.79倍','132%')
   };
   return `<div class="brc-ai3-card" data-brc-ai3-root data-brc-ai3-preview="1">
     <div class="brc-ai3-head">
@@ -9271,7 +9309,7 @@ function brcBuildAi3ModePreviewHtml(){
       <span class="brc-ai3-badge">今後導入予定</span>
       <span class="brc-ai3-badge">表示イメージ</span>
     </div>
-    <div style="margin:-3px 12px 9px;padding:7px 9px;border-radius:8px;background:rgba(227,178,60,.08);border:1px solid rgba(227,178,60,.24);font-size:9.5px;font-weight:800;color:#8a5a00;line-height:1.45;">サンプル表示です。現在のレースを実際に予測した買い目ではありません。</div>
+    <div style="margin:-3px 12px 9px;padding:7px 9px;border-radius:8px;background:rgba(227,178,60,.08);border:1px solid rgba(227,178,60,.24);font-size:9.5px;font-weight:800;color:#8a5a00;line-height:1.45;">サンプル表示です。買い目・想定的中率・期待回収率は現在のレースを実際に予測した値ではありません。</div>
     <div class="brc-ai3-tabs">
       <button type="button" class="brc-ai3-tab active" data-brc-ai-mode-tab="stable">安定型</button>
       <button type="button" class="brc-ai3-tab" data-brc-ai-mode-tab="hit">的中型</button>
