@@ -19,6 +19,7 @@
 <!-- BRC_MOBILE_TELEBOAT_SAFE_V6_20260830 -->
 <!-- BRC_MOBILE_TELEBOAT_LIGHT_V7_20260830 -->
 <!-- BRC_MOBILE_TELEBOAT_STABLE_V8_20260830 -->
+<!-- BRC_MOBILE_TELEBOAT_STABLE_QUEUE_V9_20260830 -->
 <!-- BRC_NIGE_PREDICT_INTEGER_DISPLAY_20260829 -->
 <!-- BRC_PREDICT_GUIDE_REVIEW_20260829 -->
 <!-- BRC_STICKY_OVERLAP_FIX_20260829 -->
@@ -4946,11 +4947,9 @@ function brcTeleboatBuildPayload(sel,odds){
 
 function brcTeleboatMobilePayload(sel,odds){
   const payload=brcTeleboatBuildPayload(sel,odds);
-  const head=`${String(payload.venue||'')}@${Number(payload.race_no||0)}`;
-  const bets=(Array.isArray(payload.bets)?payload.bets:[])
+  return (Array.isArray(payload.bets)?payload.bets:[])
     .map(b=>`${String(b.comb||'')}:${Number(b.amount||0)}`)
     .join(',');
-  return `${head}|${bets}`;
 }
 
 async function brcTeleboatCopyMobilePayload(){
@@ -4970,7 +4969,7 @@ async function brcTeleboatCopyMobilePayload(){
   brcTeleboatSavePending(payload);
   const ok=await brcTeleboatCopyText(brcTeleboatMobilePayload(sel,rec.odds));
   __brcTeleboatStatus=ok
-    ? `投票データをコピーしました（${payload.bets.length}点）。`
+    ? `買い目をコピーしました（${payload.bets.length}点）。`
     : 'コピーできませんでした。';
   brcRenderOddsPanel();
 }
@@ -5015,11 +5014,11 @@ function brcTeleboatBuildBridge(odds,sel){
       <div class="brc-teleboat-field"><span class="k">購入予定額</span><span class="v" data-teleboat-total="1">${total.toLocaleString('ja-JP')}円</span></div>
     </div>
     <div class="brc-teleboat-actions">
-      <button type="button" class="brc-teleboat-btn primary brc-teleboat-mobile-copy" data-teleboat-mobile-copy="1">① 投票データをコピー</button>
+      <button type="button" class="brc-teleboat-btn primary brc-teleboat-mobile-copy" data-teleboat-mobile-copy="1">① 買い目をコピー</button>
       <button type="button" class="brc-teleboat-btn" data-teleboat-copy="1">買い目をコピー</button>
       <button type="button" class="brc-teleboat-btn" data-teleboat-open="1">② テレボートを開く</button>
     </div>
-    <div class="brc-teleboat-note">各買い目の金額を100円単位で設定できます。一括金額を変更すると全点へ反映します。加入者番号・暗証番号・認証情報はBRCに保存しません。①投票データをコピー → ②テレボートを開く → ③対象会場・Rの3連単投票画面でブックマーク「BRC投票セット」を実行します。買い目・金額はBRCが自動入力し、公式の「ベットリストに追加して入力を続ける」は本人がタップします。次の買い目はブックマークを再実行すると自動入力されます。最終投票も手動です。</div>
+    <div class="brc-teleboat-note">各買い目の金額を100円単位で設定できます。一括金額を変更すると全点へ反映します。加入者番号・暗証番号・認証情報はBRCに保存しません。①買い目をコピー → ②テレボートを開く → ③対象会場・Rの3連単投票画面で「BRC投票セット」を実行します。最初に1回だけ貼り付けると、以後はブックマーク再実行で次の買い目・金額を自動入力します。公式のベットリスト追加と最終投票は本人がタップします。</div>
     <div class="brc-teleboat-status" data-teleboat-status="1">${brcOddsEscape(__brcTeleboatStatus)}</div>
   </div>`;
 }
