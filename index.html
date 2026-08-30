@@ -11,6 +11,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Boat Research Club ～データベース～</title>
+<!-- BRC_ODDS_MANUAL_CACHE_TEST_20260830 -->
 <!-- BRC_NIGE_PREDICT_INTEGER_DISPLAY_20260829 -->
 <!-- BRC_PREDICT_GUIDE_REVIEW_20260829 -->
 <!-- BRC_STICKY_OVERLAP_FIX_20260829 -->
@@ -846,6 +847,45 @@
   @media(max-width:420px){
     .predict-main-tab{padding:12px 2px;font-size:11.5px;letter-spacing:-.02em;}
     .predict-ai-wrap{padding:10px 8px 14px;}
+  }
+
+  /* ---- BRC_ODDS_MANUAL_CACHE_TEST_20260830 ---- */
+  .brc-odds-wrap{padding:14px 14px 18px;}
+  .brc-odds-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;}
+  .brc-odds-title{font-size:15px;font-weight:900;color:var(--navy);line-height:1.35;}
+  .brc-odds-meta{margin-top:3px;font-size:10.5px;color:var(--ink-soft);line-height:1.5;}
+  .brc-odds-refresh{
+    flex:0 0 auto;appearance:none;border:0;border-radius:9px;padding:9px 12px;
+    background:var(--wave);color:#fff;font:inherit;font-size:12px;font-weight:900;cursor:pointer;
+  }
+  .brc-odds-refresh:disabled{background:#aab4c2;cursor:not-allowed;opacity:.82;}
+  .brc-odds-status{
+    margin:0 0 10px;padding:8px 10px;border-radius:9px;border:1px solid rgba(10,31,51,.09);
+    background:rgba(10,31,51,.025);font-size:10.5px;line-height:1.55;color:var(--ink-soft);
+  }
+  .brc-odds-status strong{color:var(--navy);}
+  .brc-odds-status.error{border-color:rgba(209,55,63,.22);background:rgba(209,55,63,.055);color:#a52c35;}
+  .brc-odds-head-tabs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;margin-bottom:9px;}
+  .brc-odds-head-tab{
+    appearance:none;border:1px solid rgba(10,31,51,.14);background:#fff;color:var(--navy);
+    border-radius:8px;padding:7px 2px;font:inherit;font-size:11.5px;font-weight:900;cursor:pointer;
+  }
+  .brc-odds-head-tab.active{background:var(--wave);border-color:var(--wave);color:#fff;}
+  .brc-odds-table-box{width:100%;overflow:hidden;border:1px solid rgba(10,31,51,.08);border-radius:10px;background:#fff;}
+  table.brc-odds-table{width:100%;table-layout:fixed;border-collapse:collapse;font-variant-numeric:tabular-nums;}
+  table.brc-odds-table th,table.brc-odds-table td{text-align:center;white-space:nowrap;padding:8px 3px;}
+  table.brc-odds-table th{background:var(--bg3);font-size:10.5px;color:var(--ink-soft);cursor:default;}
+  table.brc-odds-table td{font-size:13px;font-weight:800;color:var(--navy);}
+  table.brc-odds-table td.is-na{color:rgba(61,74,99,.35);font-weight:600;}
+  table.brc-odds-table td.is-low{color:#b4232c;}
+  .brc-odds-foot{margin:8px 2px 0;font-size:9.5px;line-height:1.55;color:var(--ink-soft);}
+  .brc-odds-empty{padding:32px 12px;text-align:center;color:var(--ink-soft);font-size:12px;line-height:1.7;}
+  @media(max-width:420px){
+    .brc-odds-wrap{padding:10px 8px 14px;}
+    .brc-odds-refresh{padding:8px 9px;font-size:11px;}
+    .brc-odds-head-tab{padding:7px 1px;font-size:10.5px;}
+    table.brc-odds-table th{font-size:9.5px;padding:7px 1px;}
+    table.brc-odds-table td{font-size:11.5px;padding:8px 1px;letter-spacing:-.02em;}
   }
 
   /* ---- 2026-08-28: AI予測タブ BRCイン逃げ2着・3着相対予測 ---- */
@@ -2328,7 +2368,17 @@
           <div id="predictResult" style="padding:18px 22px;"></div>
         </div>
         <div class="predict-main-panel" id="predictMainPanel-odds">
-          <div class="predict-future-placeholder"><strong>オッズ</strong><span>リアルタイム3連単オッズをここに表示する予定です。</span></div>
+          <div class="brc-odds-wrap" id="brcOddsPanel">
+            <div class="brc-odds-head">
+              <div>
+                <div class="brc-odds-title">3連単オッズ</div>
+                <div class="brc-odds-meta" id="brcOddsMeta">レースを選択して「オッズ更新」を押してください。</div>
+              </div>
+              <button type="button" class="brc-odds-refresh" id="brcOddsRefreshBtn">オッズ更新</button>
+            </div>
+            <div class="brc-odds-status" id="brcOddsStatus">自動更新は行いません。同一レースは60秒以内ならBRC側の保存値を表示します。</div>
+            <div id="brcOddsBody"><div class="brc-odds-empty">更新ボタンを押すまで取得先へアクセスしません。</div></div>
+          </div>
         </div>
         <div class="predict-main-panel" id="predictMainPanel-ai">
           <div id="predictAiResult" class="predict-ai-wrap"></div>
@@ -3970,6 +4020,7 @@ function setPredictMainTab(key){
     if(panel) panel.classList.toggle('active',x===k);
   });
   window.__predictMainTabCurrent=k;
+  if(k==='odds' && typeof brcRenderOddsPanel==='function') setTimeout(()=>brcRenderOddsPanel(),0);
 }
 
 function bindPredictMainTabs(){
@@ -3980,6 +4031,170 @@ function bindPredictMainTabs(){
   });
   setPredictMainTab(window.__predictMainTabCurrent||'data');
 }
+
+
+// ===== BRC_ODDS_MANUAL_CACHE_TEST_20260830 =====
+// オッズタブを開いただけでは外部取得しない。
+// 「オッズ更新」を押した時だけLive Workerへ問い合わせ、Worker側で60秒共有キャッシュを判定する。
+const BRC_ODDS_CACHE_SEC = 60;
+let __brcOddsHead = 1;
+let __brcOddsLocal = Object.create(null);
+let __brcOddsCooldownTimer = null;
+
+function brcOddsSelection(){
+  const venue = document.getElementById('predictRaceDay')?.value || document.getElementById('predictVenue')?.value || '';
+  const raceNo = Number(document.getElementById('predictRaceNo')?.value || 0);
+  const code = brcVenueCodeFromName(venue);
+  const date = TODAY_LABEL || getJstDateLabel();
+  const key = (venue && raceNo && code) ? `${date}:${code}:${String(raceNo).padStart(2,'0')}` : '';
+  return {venue,raceNo,code,date,key};
+}
+
+function brcOddsDeadlinePassed(sel){
+  if(!sel?.venue || !sel?.raceNo) return false;
+  const info = RACE_INFO_TODAY?.[sel.venue] || {};
+  const hhmm = info?.deadlines?.[String(sel.raceNo)] || '';
+  if(!hhmm) return false;
+  try{return isRaceDeadlinePassed(hhmm);}catch(_e){return false;}
+}
+
+function brcOddsFmtTime(v){
+  const s=String(v||'');
+  const m=s.match(/(\d{2}:\d{2}:\d{2})/);
+  return m ? m[1] : s;
+}
+
+function brcOddsEscape(v){
+  return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+function brcOddsValue(odds,comb){
+  const v=Number(odds?.[comb]);
+  return Number.isFinite(v) && v>0 ? v : null;
+}
+
+function brcOddsBuildTable(odds,head){
+  const h=Number(head)||1;
+  const others=[1,2,3,4,5,6].filter(n=>n!==h);
+  const th=others.map(n=>`<th>${n}</th>`).join('');
+  const rows=others.map(second=>{
+    const cells=others.map(third=>{
+      if(third===second) return '<td class="is-na">―</td>';
+      const comb=`${h}-${second}-${third}`;
+      const v=brcOddsValue(odds,comb);
+      const cls=v!==null && v<10 ? ' class="is-low"' : '';
+      return `<td${cls} title="${comb}">${v===null?'―':v.toFixed(1)}</td>`;
+    }).join('');
+    return `<tr><th>${second}</th>${cells}</tr>`;
+  }).join('');
+  return `<div class="brc-odds-head-tabs">${[1,2,3,4,5,6].map(n=>`<button type="button" class="brc-odds-head-tab${n===h?' active':''}" data-odds-head="${n}">${n}頭</button>`).join('')}</div>
+    <div class="brc-odds-table-box"><table class="brc-odds-table"><thead><tr><th>2着＼3着</th>${th}</tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="brc-odds-foot">数字は3連単オッズ（倍）。1着艇を上のタブで切り替えます。赤字は10倍未満。</div>`;
+}
+
+function brcOddsStartCooldown(seconds){
+  if(__brcOddsCooldownTimer){clearInterval(__brcOddsCooldownTimer);__brcOddsCooldownTimer=null;}
+  const btn=document.getElementById('brcOddsRefreshBtn');
+  if(!btn) return;
+  let remain=Math.max(0,Math.ceil(Number(seconds)||0));
+  if(remain<=0){brcRenderOddsPanel();return;}
+  const tick=()=>{
+    const sel=brcOddsSelection();
+    const rec=sel.key?__brcOddsLocal[sel.key]:null;
+    const passed=brcOddsDeadlinePassed(sel);
+    if(!rec || rec.cooldownUntil<=Date.now() || passed){
+      if(__brcOddsCooldownTimer){clearInterval(__brcOddsCooldownTimer);__brcOddsCooldownTimer=null;}
+      brcRenderOddsPanel();
+      return;
+    }
+    remain=Math.max(0,Math.ceil((rec.cooldownUntil-Date.now())/1000));
+    btn.disabled=true;
+    btn.textContent=`更新 ${remain}秒`;
+  };
+  tick();
+  __brcOddsCooldownTimer=setInterval(tick,1000);
+}
+
+function brcRenderOddsPanel(message='',isError=false){
+  const meta=document.getElementById('brcOddsMeta');
+  const status=document.getElementById('brcOddsStatus');
+  const body=document.getElementById('brcOddsBody');
+  const btn=document.getElementById('brcOddsRefreshBtn');
+  if(!meta||!status||!body||!btn) return;
+  const sel=brcOddsSelection();
+  status.classList.toggle('error',!!isError);
+  if(!sel.key){
+    meta.textContent='レースを選択して「オッズ更新」を押してください。';
+    status.textContent=message || '自動更新は行いません。同一レースは60秒以内ならBRC側の保存値を表示します。';
+    body.innerHTML='<div class="brc-odds-empty">更新ボタンを押すまで取得先へアクセスしません。</div>';
+    btn.disabled=true; btn.textContent='オッズ更新';
+    return;
+  }
+  const today=getJstDateLabel();
+  const historical=String(sel.date)!==String(today);
+  const passed=brcOddsDeadlinePassed(sel);
+  const rec=__brcOddsLocal[sel.key]||null;
+  meta.textContent=`${sel.venue} ${sel.raceNo}R` + (rec?.captured_at_jst ? `　最終取得 ${brcOddsFmtTime(rec.captured_at_jst)}` : '');
+  if(message) status.textContent=message;
+  else if(rec) status.textContent=rec.cache_hit ? '60秒キャッシュを使用しました。取得先への再アクセスはありません。' : '取得先から最新オッズを取得しました。次の取得は60秒後から可能です。';
+  else status.textContent='「オッズ更新」を押すと最新値を確認します。60秒以内の保存値があれば取得先へ再アクセスしません。';
+  body.innerHTML=rec?.odds ? brcOddsBuildTable(rec.odds,__brcOddsHead) : '<div class="brc-odds-empty">まだオッズを取得していません。</div>';
+  body.querySelectorAll('[data-odds-head]').forEach(el=>el.addEventListener('click',()=>{__brcOddsHead=Number(el.dataset.oddsHead)||1;brcRenderOddsPanel();}));
+  const cooling=!!rec && Number(rec.cooldownUntil)>Date.now();
+  btn.disabled=historical||passed||cooling;
+  if(historical) btn.textContent='当日のみ更新';
+  else if(passed) btn.textContent='締切済み';
+  else if(cooling) btn.textContent=`更新 ${Math.max(1,Math.ceil((rec.cooldownUntil-Date.now())/1000))}秒`;
+  else btn.textContent='オッズ更新';
+  if(historical && !message) status.textContent='過去レースでは取得先へアクセスしません。保存済みの当日取得値がある場合のみ表示対象です。';
+  if(passed && !message) status.textContent='締切済みのため、新しいオッズ取得は停止しています。';
+}
+
+async function brcRefreshOddsManual(){
+  const btn=document.getElementById('brcOddsRefreshBtn');
+  const sel=brcOddsSelection();
+  if(!sel.key||!btn||!BRC_LIVE_EXHIBITION_API_URL) return;
+  if(String(sel.date)!==String(getJstDateLabel())){brcRenderOddsPanel('過去レースではオッズ更新を行いません。',true);return;}
+  if(brcOddsDeadlinePassed(sel)){brcRenderOddsPanel('締切済みのため、新しいオッズ取得は行いません。',true);return;}
+  btn.disabled=true; btn.textContent='取得中…';
+  brcRenderOddsPanel('オッズを確認しています。60秒以内の保存値があれば取得先へはアクセスしません。');
+  const qs=new URLSearchParams({date:sel.date,venue_code:sel.code,race_no:String(sel.raceNo),_:String(Date.now())});
+  try{
+    const res=await fetch(`${BRC_LIVE_EXHIBITION_API_URL}/live-odds?${qs.toString()}`,{method:'GET',cache:'no-store',headers:{'Accept':'application/json'}});
+    let obj=null; try{obj=await res.json();}catch(_e){}
+    if(!res.ok || !obj || obj.ok!==true || !obj.odds) throw new Error(obj?.error||`HTTP ${res.status}`);
+    if(String(obj.date)!==String(sel.date)||String(obj.venue_code).padStart(2,'0')!==String(sel.code).padStart(2,'0')||Number(obj.race_no)!==Number(sel.raceNo)) throw new Error('race_mismatch');
+    const wait=Math.max(1,Number(obj.refresh_after_sec)||BRC_ODDS_CACHE_SEC);
+    __brcOddsLocal[sel.key]={
+      odds:obj.odds,
+      captured_at_jst:obj.captured_at_jst||'',
+      cache_hit:!!obj.cache_hit,
+      stale:!!obj.stale,
+      cooldownUntil:Date.now()+wait*1000
+    };
+    const msg=obj.stale ? '取得元へ接続できなかったため、直前の保存値を表示しています。' : (obj.cache_hit ? '60秒キャッシュを使用しました。取得先への再アクセスはありません。' : '取得先から最新オッズを取得しました。次の取得は60秒後から可能です。');
+    brcRenderOddsPanel(msg,!!obj.stale);
+    brcOddsStartCooldown(wait);
+  }catch(err){
+    console.warn('BRC odds fetch failed:',err);
+    brcRenderOddsPanel(`オッズを取得できませんでした：${brcOddsEscape(err?.message||err)}`,true);
+  }
+}
+
+function brcBindOddsManual(){
+  if(window.__brcOddsManualBound) return;
+  window.__brcOddsManualBound=true;
+  document.addEventListener('click',e=>{
+    const btn=e.target?.closest?.('#brcOddsRefreshBtn');
+    if(btn){e.preventDefault();brcRefreshOddsManual();}
+  });
+  document.addEventListener('change',e=>{
+    if(e.target?.id==='predictRaceDay'||e.target?.id==='predictRaceNo'||e.target?.id==='predictVenue') brcRenderOddsPanel();
+  });
+  brcRenderOddsPanel();
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',brcBindOddsManual,{once:true});
+else brcBindOddsManual();
 
 
 function brcNormalizeProbRows(rows){
