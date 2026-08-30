@@ -12,6 +12,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Boat Research Club ～データベース～</title>
 <!-- BRC_ODDS_MANUAL_CACHE_TEST_20260830 -->
+<!-- BRC_TELEBOAT_BRIDGE_V2_SNS_DATA_ONLY_20260830 -->
 <!-- BRC_NIGE_PREDICT_INTEGER_DISPLAY_20260829 -->
 <!-- BRC_PREDICT_GUIDE_REVIEW_20260829 -->
 <!-- BRC_STICKY_OVERLAP_FIX_20260829 -->
@@ -1002,6 +1003,13 @@
     font-variant-numeric:tabular-nums;outline:none;
   }
   .brc-teleboat-amount:focus{border-color:rgba(0,87,219,.45);box-shadow:0 0 0 2px rgba(0,87,219,.06);}
+  .brc-odds-pool-table td.amount{padding-left:2px;padding-right:2px;}
+  .brc-teleboat-bet-amount{
+    width:72px;max-width:100%;padding:5px 5px;border:1px solid rgba(10,31,51,.13);border-radius:7px;
+    background:#fff;color:var(--navy);font:inherit;font-size:10.5px;font-weight:900;text-align:right;
+    font-variant-numeric:tabular-nums;outline:none;
+  }
+  .brc-teleboat-bet-amount:focus{border-color:rgba(0,87,219,.45);box-shadow:0 0 0 2px rgba(0,87,219,.06);}
   .brc-teleboat-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
   .brc-teleboat-btn{
     appearance:none;border:1px solid rgba(0,87,219,.22);border-radius:9px;padding:9px 8px;
@@ -1017,6 +1025,7 @@
     .brc-teleboat-field .k{font-size:8.5px;}
     .brc-teleboat-field .v{font-size:11px;}
     .brc-teleboat-amount{width:62px;padding:4px 5px;font-size:11px;}
+    .brc-teleboat-bet-amount{width:62px;padding:4px 3px;font-size:10px;}
     .brc-teleboat-btn{padding:8px 5px;font-size:10.5px;}
     .brc-teleboat-note,.brc-teleboat-status{font-size:9px;}
   }
@@ -2543,6 +2552,22 @@
         </div>
         <div class="predict-main-panel active" id="predictMainPanel-data">
           <div id="predictResult" style="padding:18px 22px;"></div>
+          <div id="brcAdminSocial" class="brc-admin-social" aria-hidden="true">
+        <div class="brc-admin-social-head"><div class="brc-admin-social-title">SNS投稿アシスタント</div><span class="brc-admin-social-tag">管理者</span></div>
+        <div class="brc-admin-social-actions">
+          <button type="button" id="brcAdminSocialImage" class="brc-admin-social-btn">SNS画像を作成</button>
+          <button type="button" id="brcAdminSocialGenerate" class="brc-admin-social-btn">Threads投稿文を作成</button>
+          <button type="button" id="brcAdminSocialCopy" class="brc-admin-social-btn secondary">コピー</button>
+        </div>
+        <textarea id="brcAdminSocialText" placeholder="出走表AIを表示したあとに「Threads投稿文を作成」を押してください。"></textarea>
+        <div id="brcAdminSocialPreview" class="brc-admin-social-preview">
+          <img id="brcAdminSocialPreviewImg" alt="SNS投稿用 出走表AI画像">
+          <div class="brc-admin-social-image-actions">
+            <button type="button" id="brcAdminSocialImageShare" class="brc-admin-social-btn secondary">画像を共有 / 保存</button>
+          </div>
+        </div>
+        <div id="brcAdminSocialStatus"></div>
+      </div>
         </div>
         <div class="predict-main-panel" id="predictMainPanel-odds">
           <div class="brc-odds-wrap" id="brcOddsPanel">
@@ -2564,22 +2589,7 @@
           <div class="predict-future-placeholder"><strong>結果</strong><span>確定着順・払戻・AI予測との答え合わせをここに表示する予定です。</span></div>
         </div>
       </div>
-      <div id="brcAdminSocial" class="brc-admin-social" aria-hidden="true">
-        <div class="brc-admin-social-head"><div class="brc-admin-social-title">SNS投稿アシスタント</div><span class="brc-admin-social-tag">管理者</span></div>
-        <div class="brc-admin-social-actions">
-          <button type="button" id="brcAdminSocialImage" class="brc-admin-social-btn">SNS画像を作成</button>
-          <button type="button" id="brcAdminSocialGenerate" class="brc-admin-social-btn">Threads投稿文を作成</button>
-          <button type="button" id="brcAdminSocialCopy" class="brc-admin-social-btn secondary">コピー</button>
-        </div>
-        <textarea id="brcAdminSocialText" placeholder="出走表AIを表示したあとに「Threads投稿文を作成」を押してください。"></textarea>
-        <div id="brcAdminSocialPreview" class="brc-admin-social-preview">
-          <img id="brcAdminSocialPreviewImg" alt="SNS投稿用 出走表AI画像">
-          <div class="brc-admin-social-image-actions">
-            <button type="button" id="brcAdminSocialImageShare" class="brc-admin-social-btn secondary">画像を共有 / 保存</button>
-          </div>
-        </div>
-        <div id="brcAdminSocialStatus"></div>
-      </div>
+      
     </section>
     </div><!-- /brcPredictProtected -->
   </div><!-- /page-predict -->
@@ -4818,10 +4828,11 @@ function brcOddsPoolRows(odds,key){
 }
 
 
-// ---- BRC_TELEBOAT_BRIDGE_V1_20260830 ----
+// ---- BRC_TELEBOAT_BRIDGE_V2_20260830 ----
 const BRC_SIMPLE_TELEBOAT_URL = 'https://bu.tbbr.jp/';
 const BRC_TELEBOAT_AMOUNT_STORAGE_KEY = 'brc_teleboat_amount_v1';
-const BRC_TELEBOAT_PENDING_STORAGE_KEY = 'brc_teleboat_pending_v1';
+const BRC_TELEBOAT_PENDING_STORAGE_KEY = 'brc_teleboat_pending_v2';
+const BRC_TELEBOAT_BET_AMOUNT_STORAGE_KEY = 'brc_teleboat_bet_amount_v2';
 let __brcTeleboatStatus = '';
 
 function brcTeleboatReadAmountMap(){
@@ -4848,13 +4859,53 @@ function brcTeleboatSetAmount(key,value){
   return n;
 }
 
+function brcTeleboatReadBetAmountMap(){
+  try{
+    const x=JSON.parse(localStorage.getItem(BRC_TELEBOAT_BET_AMOUNT_STORAGE_KEY)||'{}');
+    return (x && typeof x==='object' && !Array.isArray(x))?x:{};
+  }catch(_e){return {};}
+}
+function brcTeleboatNormalizeAmount(value,fallback=100){
+  let n=Number(String(value??'').replace(/[^0-9]/g,''));
+  if(!Number.isFinite(n) || n<100) n=Number(fallback)||100;
+  return Math.max(100,Math.floor(n/100)*100);
+}
+function brcTeleboatGetBetAmount(key,comb){
+  const all=brcTeleboatReadBetAmountMap();
+  const n=Number(all?.[key]?.[comb]);
+  if(Number.isFinite(n) && n>=100) return Math.floor(n/100)*100;
+  return brcTeleboatGetAmount(key);
+}
+function brcTeleboatSetBetAmount(key,comb,value){
+  if(!key || !comb) return 100;
+  const n=brcTeleboatNormalizeAmount(value,brcTeleboatGetAmount(key));
+  const all=brcTeleboatReadBetAmountMap();
+  if(!all[key] || typeof all[key]!=='object' || Array.isArray(all[key])) all[key]={};
+  all[key][comb]=n;
+  try{localStorage.setItem(BRC_TELEBOAT_BET_AMOUNT_STORAGE_KEY,JSON.stringify(all));}catch(_e){}
+  return n;
+}
+function brcTeleboatApplyAmountToRace(key,rows,value){
+  const n=brcTeleboatSetAmount(key,value);
+  (Array.isArray(rows)?rows:[]).forEach(row=>brcTeleboatSetBetAmount(key,row.comb,n));
+  return n;
+}
+function brcTeleboatTotalForRows(key,rows){
+  return (Array.isArray(rows)?rows:[]).reduce((sum,row)=>sum+brcTeleboatGetBetAmount(key,row.comb),0);
+}
+function brcTeleboatAmountInput(key,comb){
+  const n=brcTeleboatGetBetAmount(key,comb);
+  return `<input class="brc-teleboat-bet-amount" data-teleboat-bet-amount="${brcOddsEscape(comb)}" inputmode="numeric" pattern="[0-9]*" min="100" step="100" value="${n}" aria-label="${brcOddsEscape(comb)}の購入金額">`;
+}
+
 function brcTeleboatBuildPayload(sel,odds){
   const key=sel?.key||'';
   const amount=brcTeleboatGetAmount(key);
   const rows=brcOddsPoolRows(odds,key);
-  const bets=rows.map(row=>({comb:row.comb,amount,odds:Number(row.odds)}));
+  const bets=rows.map(row=>({comb:row.comb,amount:brcTeleboatGetBetAmount(key,row.comb),odds:Number(row.odds)}));
+  const totalAmount=bets.reduce((sum,b)=>sum+Number(b.amount||0),0);
   return {
-    version:'BRC_TELEBOAT_BRIDGE_V1',
+    version:'BRC_TELEBOAT_BRIDGE_V2',
     created_at:new Date().toISOString(),
     date:String(sel?.date||''),
     venue:String(sel?.venue||''),
@@ -4862,7 +4913,7 @@ function brcTeleboatBuildPayload(sel,odds){
     race_no:Number(sel?.raceNo||0),
     bet_type:'3連単',
     amount_per_bet:amount,
-    total_amount:amount*bets.length,
+    total_amount:totalAmount,
     bets
   };
 }
@@ -4871,7 +4922,7 @@ function brcTeleboatPayloadText(payload){
   const p=payload||{};
   const lines=[
     `BRC投票準備 ${p.date||''} ${p.venue||''} ${p.race_no||''}R`,
-    `${p.bet_type||'3連単'} / ${Array.isArray(p.bets)?p.bets.length:0}点 / 1点${Number(p.amount_per_bet||0).toLocaleString('ja-JP')}円`,
+    `${p.bet_type||'3連単'} / ${Array.isArray(p.bets)?p.bets.length:0}点`,
     ''
   ];
   (Array.isArray(p.bets)?p.bets:[]).forEach(b=>lines.push(`${b.comb}  ${Number(b.amount||0).toLocaleString('ja-JP')}円`));
@@ -4899,18 +4950,18 @@ function brcTeleboatBuildBridge(odds,sel){
   const rows=brcOddsPoolRows(odds,sel?.key||'');
   if(!rows.length) return '';
   const amount=brcTeleboatGetAmount(sel?.key||'');
-  const total=amount*rows.length;
+  const total=brcTeleboatTotalForRows(sel?.key||'',rows);
   return `<div class="brc-teleboat-bridge">
     <div class="brc-teleboat-head"><div class="brc-teleboat-title">ネット投票連携</div><div class="brc-teleboat-badge">試験版</div></div>
     <div class="brc-teleboat-controls">
-      <label class="brc-teleboat-field"><span class="k">1点あたり</span><span class="v"><input class="brc-teleboat-amount" data-teleboat-amount="1" inputmode="numeric" pattern="[0-9]*" min="100" step="100" value="${amount}"> 円</span></label>
+      <label class="brc-teleboat-field"><span class="k">一括金額</span><span class="v"><input class="brc-teleboat-amount" data-teleboat-amount="1" inputmode="numeric" pattern="[0-9]*" min="100" step="100" value="${amount}"> 円</span></label>
       <div class="brc-teleboat-field"><span class="k">購入予定額</span><span class="v" data-teleboat-total="1">${total.toLocaleString('ja-JP')}円</span></div>
     </div>
     <div class="brc-teleboat-actions">
       <button type="button" class="brc-teleboat-btn" data-teleboat-copy="1">買い目をコピー</button>
       <button type="button" class="brc-teleboat-btn primary" data-teleboat-open="1">投票サイトへ</button>
     </div>
-    <div class="brc-teleboat-note">保存買い目を投票待機データとしてBRC内に保持します。加入者番号・暗証番号・認証情報はBRCに保存しません。現段階では投票サイトへの自動入力・購入確定は行いません。</div>
+    <div class="brc-teleboat-note">各買い目の金額を100円単位で設定できます。一括金額を変更すると全点へ反映します。加入者番号・暗証番号・認証情報はBRCに保存しません。現段階では投票サイトへの自動入力・購入確定は行いません。</div>
     <div class="brc-teleboat-status" data-teleboat-status="1">${brcOddsEscape(__brcTeleboatStatus)}</div>
   </div>`;
 }
@@ -4942,7 +4993,7 @@ function brcOddsBuildPool(odds,sel){
   }
   const body=rows.map((row,i)=>{
     const combo=`<span class="brc-odds-combo-chip">${brcOddsLaneHtml(row.b[0])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(row.b[1])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(row.b[2])}</span>`;
-    return `<tr><td style="width:38px;color:var(--ink-soft);font-weight:900;">${i+1}</td><td class="combo">${combo}</td><td class="val">${row.odds.toFixed(1)}</td><td style="width:54px"><button type="button" class="brc-odds-pool-remove" data-odds-pool-remove="${row.comb}">削除</button></td></tr>`;
+    return `<tr><td style="width:32px;color:var(--ink-soft);font-weight:900;">${i+1}</td><td class="combo">${combo}</td><td class="val">${row.odds.toFixed(1)}</td><td class="amount">${brcTeleboatAmountInput(key,row.comb)}</td><td style="width:48px"><button type="button" class="brc-odds-pool-remove" data-odds-pool-remove="${row.comb}">削除</button></td></tr>`;
   }).join('');
   return `<div class="brc-odds-pool">
     <div class="brc-odds-pool-head"><div class="brc-odds-pool-title">保存買い目</div><button type="button" class="brc-odds-pool-clear" data-odds-pool-clear="1">全削除</button></div>
@@ -4952,7 +5003,7 @@ function brcOddsBuildPool(odds,sel){
       <div class="brc-odds-pool-metric"><div class="k">最低オッズ</div><div class="v">${minv?minv.toFixed(1)+'倍':'―'}</div></div>
       <div class="brc-odds-pool-metric"><div class="k">最高オッズ</div><div class="v">${maxv?maxv.toFixed(1)+'倍':'―'}</div></div>
     </div>
-    <div class="brc-odds-pool-list"><table class="brc-odds-pool-table"><thead><tr><th style="width:38px">#</th><th>買い目</th><th style="width:70px">オッズ</th><th style="width:54px"></th></tr></thead><tbody>${body}</tbody></table></div>
+    <div class="brc-odds-pool-list"><table class="brc-odds-pool-table"><thead><tr><th style="width:32px">#</th><th>買い目</th><th style="width:62px">オッズ</th><th style="width:86px">金額</th><th style="width:48px"></th></tr></thead><tbody>${body}</tbody></table></div>
     ${brcTeleboatBuildBridge(odds,sel)}
   </div>`;
 }
@@ -5199,15 +5250,43 @@ function brcBindOddsManual(){
       if(!sel?.key) return;
       const raw=String(e.target.value||'').replace(/[^0-9]/g,'');
       const n=Math.max(0,Number(raw)||0);
+      const root=document.getElementById('brcOddsBody');
+      root?.querySelectorAll?.('[data-teleboat-bet-amount]').forEach(inp=>{inp.value=String(n);});
       const count=brcOddsPoolGet(sel.key).length;
-      const out=e.target.closest('.brc-teleboat-bridge')?.querySelector('[data-teleboat-total]');
+      const out=root?.querySelector?.('[data-teleboat-total]');
       if(out) out.textContent=`${(n*count).toLocaleString('ja-JP')}円`;
+      return;
+    }
+    if(e.target?.matches?.('[data-teleboat-bet-amount]')){
+      const root=document.getElementById('brcOddsBody');
+      const total=Array.from(root?.querySelectorAll?.('[data-teleboat-bet-amount]')||[]).reduce((sum,inp)=>{
+        const n=Number(String(inp.value||'').replace(/[^0-9]/g,''));
+        return sum+(Number.isFinite(n)?n:0);
+      },0);
+      const out=root?.querySelector?.('[data-teleboat-total]');
+      if(out) out.textContent=`${total.toLocaleString('ja-JP')}円`;
     }
   });
   document.addEventListener('change',e=>{
     if(e.target?.matches?.('[data-teleboat-amount]')){
       const sel=brcOddsSelection();
-      if(sel?.key){brcTeleboatSetAmount(sel.key,e.target.value);__brcOddsView='builder';brcRenderOddsPanel();}
+      const rec=sel?.key?__brcOddsLocal[sel.key]:null;
+      if(sel?.key && rec?.odds){
+        const rows=brcOddsPoolRows(rec.odds,sel.key);
+        brcTeleboatApplyAmountToRace(sel.key,rows,e.target.value);
+        __brcOddsView='builder';
+        brcRenderOddsPanel();
+      }
+      return;
+    }
+    if(e.target?.matches?.('[data-teleboat-bet-amount]')){
+      const sel=brcOddsSelection();
+      const comb=String(e.target.dataset.teleboatBetAmount||'');
+      if(sel?.key && comb){
+        brcTeleboatSetBetAmount(sel.key,comb,e.target.value);
+        __brcOddsView='builder';
+        brcRenderOddsPanel();
+      }
       return;
     }
     if(e.target?.id==='predictRaceDay'||e.target?.id==='predictRaceNo'||e.target?.id==='predictVenue') brcRenderOddsPanel();
