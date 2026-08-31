@@ -2346,7 +2346,7 @@
   </header>
 
   <div class="page-tabs" role="tablist" aria-label="メインメニュー">
-    <button class="page-tab active" data-page="predict" id="brcPredictTab">🔒 出走表AI</button>
+    <button class="page-tab active" data-page="predict" id="brcPredictTab">出走表AI</button>
     <button class="page-tab" data-page="today">本日厳選</button>
     <button class="page-tab sg-special-tab" data-page="special">特集</button>
     <button class="page-tab" data-page="database">データベース</button>
@@ -2590,12 +2590,6 @@
             <div class="brc-free-preview-sub">本日厳選から「イン鉄板」「イン否定」を各1Rだけ無料公開</div>
           </div>
           <div id="brcFreePreviewBody" class="brc-free-preview-list"><div class="brc-free-empty">本日の無料レースを読み込み中...</div></div>
-        </div>
-
-        <div class="brc-post-race-entry" id="brcPostRaceEntry">
-          <div class="brc-post-race-entry-title">締切後レースは無料公開</div>
-          <div class="brc-post-race-entry-sub">非会員でも会場・Rを選択できます。締切時刻を過ぎたレースは、そのままBRCデータを確認できます。</div>
-          <div id="brcPostRaceList" class="brc-post-race-list"><div class="brc-post-race-empty">終了レースを確認中...</div></div>
         </div>
 
         <div class="brc-trial-guide">
@@ -3377,7 +3371,7 @@ function brcRenderGate(state='login', user=null){
   const badge=document.getElementById('brcMemberBadge'); if(badge) badge.textContent='BRC MEMBER';
   const logout=document.getElementById('brcLogoutBtn'); if(logout) logout.textContent='ログアウト';
   const freeBanner=document.getElementById('brcFreePreviewBanner'); if(freeBanner) freeBanner.textContent='';
-  if(tab) tab.textContent='🔒 出走表AI';
+  if(tab) tab.textContent='出走表AI';
   if(form) form.style.display = state==='login' ? '' : 'none';
   if(sub){
     if(state==='inactive') sub.textContent='ログインは確認できましたが、このアカウントには現在BRC会員権限がありません。YOOR会員登録状況をご確認ください。';
@@ -4980,7 +4974,8 @@ function brcOddsBuilderRows(odds,key){
       });
     });
   });
-  return rows.sort((x,y)=>x.odds-y.odds || x.comb.localeCompare(y.comb,'ja'));
+  // 選択中の買い目は 1着→2着→3着 の数字が若い順で固定表示。
+  return rows.sort((x,y)=>(x.b[0]-y.b[0]) || (x.b[1]-y.b[1]) || (x.b[2]-y.b[2]));
 }
 
 function brcOddsBuilderComposite(rows){
@@ -5311,8 +5306,9 @@ function brcOddsBuildBuilder(odds,sel){
   const allBtn=pos=>`<div class="brc-odds-builder-cell"><button type="button" class="brc-odds-builder-all${allOn(pos)?' active':''}" data-bet-builder-all="${pos}" aria-pressed="${allOn(pos)?'true':'false'}">全</button></div>`;
   const rows=brcOddsBuilderRows(odds,key);
   const comp=brcOddsBuilderComposite(rows);
-  const minv=rows.length?rows[0].odds:null;
-  const maxv=rows.length?rows[rows.length-1].odds:null;
+  const builderOddsVals=rows.map(row=>Number(row.odds)).filter(v=>Number.isFinite(v)&&v>0);
+  const minv=builderOddsVals.length?Math.min(...builderOddsVals):null;
+  const maxv=builderOddsVals.length?Math.max(...builderOddsVals):null;
   const list=rows.length ? rows.map((row,i)=>{
     const combo=`<span class="brc-odds-combo-chip">${brcOddsLaneHtml(row.b[0])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(row.b[1])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(row.b[2])}</span>`;
     return `<tr><td class="idx">${i+1}</td><td class="combo">${combo}</td><td class="val">${row.odds.toFixed(1)}</td></tr>`;
