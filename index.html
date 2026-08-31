@@ -1533,7 +1533,7 @@
   #brcPredictProtected.brc-free-preview-mode #predictInputs,
   #brcPredictProtected.brc-free-preview-mode #predictRun{display:none !important;}
   #brcPredictProtected.brc-free-preview-mode .brc-member-badge{background:rgba(0,87,219,.09);color:var(--wave);}
-  /* BRC_POST_RACE_PUBLIC_20260831: 締切20分後は非会員にも終了レースを公開 */
+  /* BRC_POST_RACE_PUBLIC_20260831: 締切後すぐ非会員にも終了レースを公開 */
   #brcPredictProtected.brc-post-race-mode .brc-free-result-banner{display:block;}
   #brcPredictProtected.brc-post-race-mode #raceCardFoldWrap,
   #brcPredictProtected.brc-post-race-mode #predictInputs,
@@ -2564,7 +2564,7 @@
 
         <div class="brc-post-race-entry" id="brcPostRaceEntry">
           <div class="brc-post-race-entry-title">終了レースは無料公開</div>
-          <div class="brc-post-race-entry-sub">締切20分後から、そのレースで締切前に表示されていたBRCデータを確認できます。</div>
+          <div class="brc-post-race-entry-sub">締切時刻を過ぎると、そのレースで締切前に表示されていたBRCデータを確認できます。</div>
           <div id="brcPostRaceList" class="brc-post-race-list"><div class="brc-post-race-empty">終了レースを確認中...</div></div>
         </div>
 
@@ -2789,7 +2789,7 @@ let BRC_FREE_PREVIEW_DATA = null;
 let BRC_FREE_PREVIEW_ACTIVE = null;
 let BRC_FREE_PREVIEW_LOADING = false;
 let BRC_POST_RACE_ACTIVE = null;
-const BRC_POST_RACE_UNLOCK_MIN = 20;
+const BRC_POST_RACE_UNLOCK_MIN = 0;
 
 function brcGetStoredSession(){
   try{
@@ -9542,7 +9542,7 @@ async function runPredict(){
         brcRenderPostRaceMode({venue,raceNo:raceNoLive,deadline,id:currentId});
       }else{
         brcRenderGate('login');
-        brcSetAuthMessage('締切前のレースはBRC MEMBERS限定です。終了レースは締切20分後から無料公開します。');
+        brcSetAuthMessage('締切前のレースはBRC MEMBERS限定です。終了レースは締切後すぐ無料公開します。');
         return;
       }
     }else{
