@@ -2108,6 +2108,50 @@
     .racecard-history-return{font-size:11px;padding:5px 9px;}
   }
 
+
+  /* ---- 出走表 表示日付 / 過去7日セレクタ ---- */
+  .racecard-date-toolbar{
+    position:relative; display:flex; align-items:center; justify-content:space-between; gap:10px;
+    margin:0 0 12px; padding:10px 12px; border:1px solid rgba(10,31,51,.10); border-radius:12px;
+    background:linear-gradient(180deg,#fff 0%,rgba(10,31,51,.018) 100%);
+  }
+  .racecard-date-current{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap;}
+  .racecard-date-caption{font-size:10.5px;font-weight:800;color:var(--ink-soft);white-space:nowrap;}
+  .racecard-date-value{font-size:15px;font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .racecard-date-state{
+    display:inline-flex;align-items:center;justify-content:center;border-radius:999px;padding:3px 7px;
+    font-size:9.5px;font-weight:900;line-height:1.2;background:rgba(0,87,219,.08);color:var(--wave);white-space:nowrap;
+  }
+  .racecard-date-state.historical{background:rgba(227,178,60,.16);color:#805700;}
+  .racecard-date-picker-btn{
+    appearance:none;border:1px solid rgba(0,87,219,.20);background:#fff;color:var(--wave);border-radius:999px;
+    padding:7px 11px;font:inherit;font-size:11.5px;font-weight:900;cursor:pointer;white-space:nowrap;
+  }
+  .racecard-date-picker-btn:hover{border-color:rgba(0,87,219,.45);background:rgba(0,87,219,.035);}
+  .racecard-date-picker-btn[aria-expanded="true"]{background:var(--wave);border-color:var(--wave);color:#fff;}
+  .racecard-date-menu{
+    position:absolute;z-index:60;top:calc(100% + 6px);right:0;width:min(290px,calc(100vw - 32px));padding:7px;
+    border:1px solid rgba(10,31,51,.12);border-radius:12px;background:#fff;box-shadow:0 12px 32px rgba(10,31,51,.16);
+  }
+  .racecard-date-menu[hidden]{display:none!important;}
+  .racecard-date-option{
+    width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;appearance:none;
+    border:0;background:transparent;border-radius:8px;padding:9px 10px;font:inherit;cursor:pointer;text-align:left;color:var(--navy);
+  }
+  .racecard-date-option:hover{background:rgba(0,87,219,.045);}
+  .racecard-date-option.active{background:rgba(0,87,219,.08);color:var(--wave);font-weight:900;}
+  .racecard-date-option-label{font-size:12.5px;font-weight:800;font-variant-numeric:tabular-nums;}
+  .racecard-date-option-sub{font-size:10px;color:var(--ink-soft);font-weight:800;white-space:nowrap;}
+  .racecard-date-option.active .racecard-date-option-sub{color:var(--wave);}
+  @media(max-width:420px){
+    .racecard-date-toolbar{padding:9px 10px;gap:7px;}
+    .racecard-date-current{gap:5px;}
+    .racecard-date-caption{font-size:10px;flex-basis:100%;}
+    .racecard-date-value{font-size:14px;}
+    .racecard-date-picker-btn{font-size:11px;padding:6px 9px;}
+    .racecard-date-menu{left:0;right:auto;width:100%;}
+  }
+
 </style>
 
 <style id="brc-predict-guide-style">
@@ -2625,7 +2669,7 @@
       <div class="note-fold" style="margin-bottom:6px;" id="raceCardFoldWrap">
         <button type="button" class="note-fold-toggle" id="raceCardFoldToggle" onclick="var b=this.nextElementSibling; var s=(b.style.display!=='none'); b.style.display=s?'none':'flex'; this.textContent=s?'番組表の読み込み ▸':'番組表の読み込み ▾';">番組表の読み込み ▾</button>
         <div class="card-sub fold-body" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-          <span>当日番組表: <strong id="raceCardDateLabel">-</strong></span>
+          <span>表示中の番組表: <strong id="raceCardDateLabel">-</strong></span>
           <label class="tab" style="background:rgba(10,31,51,.08); cursor:pointer; margin:0;">
             番組表ファイルを差し替え（公式TXT/JSON対応）
             <input type="file" id="raceCardFileInput" accept="application/json,.json,.txt,text/plain" style="display:none;">
@@ -2637,11 +2681,20 @@
           </span>
         </div>
       </div>
+      <div class="racecard-date-toolbar" id="raceCardDateToolbar">
+        <div class="racecard-date-current">
+          <span class="racecard-date-caption">表示中</span>
+          <strong class="racecard-date-value" id="raceCardDisplayDate">-</strong>
+          <span class="racecard-date-state" id="raceCardDisplayState">今日</span>
+        </div>
+        <button type="button" class="racecard-date-picker-btn" id="raceCardDatePickerButton" aria-expanded="false" aria-controls="raceCardDateMenu">日付変更 ▾</button>
+        <div class="racecard-date-menu" id="raceCardDateMenu" hidden></div>
+      </div>
       <div id="raceCardHistoryBanner" class="racecard-history-banner" role="status" aria-live="polite">
         <div class="racecard-history-main">
-          <span class="racecard-history-title">🔒 過去検証中</span>
+          <span class="racecard-history-title">過去データ表示中</span>
           <span class="racecard-history-date" id="raceCardHistoryDate">-</span>
-          <span class="racecard-history-note">当日番組表への自動切替は停止中。表示中の日付・会場・Rに一致する保存済み展示だけを照合します。</span>
+          <span class="racecard-history-note">表示中の日付・会場・Rに一致する保存済みデータだけを表示します。</span>
         </div>
         <button type="button" class="racecard-history-return" id="raceCardReturnToday">本日に戻る</button>
       </div>
@@ -7121,8 +7174,6 @@ function brcUpdateLiveExhibitionDom(liveRace,venue,raceNo){
     if(wrap.firstElementChild) card.replaceWith(wrap.firstElementChild);
   }
   brcRefreshExhibitionAdjustedDom(liveRace,venue,raceNo);
-  // 展示live payload更新時に、同梱された公式の風向・風速も参考表へ自動反映する。
-  brcSyncWindPanelFromLiveRace(liveRace,venue);
 }
 
 function brcLiveExhibitionMinutesToDeadline(venue,raceNo){
@@ -7289,14 +7340,156 @@ function restoreHistoricalRaceCard(){
   }
 }
 
+function brcRaceCardDateAtOffset(daysAgo=0){
+  const base=getJstDateLabel().split('-').map(Number);
+  if(base.length!==3 || base.some(v=>!Number.isFinite(v))) return getJstDateLabel();
+  const dt=new Date(Date.UTC(base[0],base[1]-1,base[2]-Number(daysAgo||0)));
+  const y=dt.getUTCFullYear(), m=String(dt.getUTCMonth()+1).padStart(2,'0'), d=String(dt.getUTCDate()).padStart(2,'0');
+  return `${y}-${m}-${d}`;
+}
+
+function brcFormatRaceCardDate(dateStr,compact=false){
+  const m=String(dateStr||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!m) return dateStr||'-';
+  const dt=new Date(Date.UTC(Number(m[1]),Number(m[2])-1,Number(m[3])));
+  const wd=['日','月','火','水','木','金','土'][dt.getUTCDay()];
+  return compact ? `${Number(m[2])}/${Number(m[3])}（${wd}）` : `${m[1]}/${m[2]}/${m[3]}（${wd}）`;
+}
+
+function brcRaceCardDaysAgo(dateStr){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(dateStr||''))) return NaN;
+  const today=brcRaceCardDateAtOffset(0);
+  const a=Date.parse(`${today}T00:00:00+09:00`), b=Date.parse(`${dateStr}T00:00:00+09:00`);
+  return Math.round((a-b)/86400000);
+}
+
+function brcIsSelectableRaceCardDate(dateStr){
+  const days=brcRaceCardDaysAgo(dateStr);
+  return Number.isFinite(days) && days>=0 && days<=7;
+}
+
+function renderRaceCardDatePicker(){
+  const current=document.getElementById('raceCardDisplayDate');
+  const state=document.getElementById('raceCardDisplayState');
+  const menu=document.getElementById('raceCardDateMenu');
+  const historical=brcIsHistoricalRaceCardMode();
+  if(current) current.textContent=brcFormatRaceCardDate(TODAY_LABEL||getJstDateLabel());
+  if(state){
+    state.textContent=historical?'過去データ':'今日';
+    state.classList.toggle('historical',historical);
+  }
+  if(menu){
+    const shown=String(TODAY_LABEL||'');
+    menu.innerHTML=Array.from({length:8},(_,i)=>{
+      const date=brcRaceCardDateAtOffset(i);
+      const active=date===shown?' active':'';
+      const sub=i===0?'今日':(i===1?'昨日':`${i}日前`);
+      return `<button type="button" class="racecard-date-option${active}" data-racecard-date="${date}"><span class="racecard-date-option-label">${brcFormatRaceCardDate(date,true)}</span><span class="racecard-date-option-sub">${sub}${active?' ・ 表示中':''}</span></button>`;
+    }).join('');
+    menu.querySelectorAll('[data-racecard-date]').forEach(btn=>{
+      btn.addEventListener('click',()=>brcLoadHostedRaceCardDate(btn.dataset.racecardDate));
+    });
+  }
+}
+
+function brcCloseRaceCardDateMenu(){
+  const menu=document.getElementById('raceCardDateMenu');
+  const btn=document.getElementById('raceCardDatePickerButton');
+  if(menu) menu.hidden=true;
+  if(btn) btn.setAttribute('aria-expanded','false');
+}
+
+function brcInitRaceCardDatePicker(){
+  const btn=document.getElementById('raceCardDatePickerButton');
+  const menu=document.getElementById('raceCardDateMenu');
+  if(!btn||!menu) return;
+  if(btn.dataset.bound!=='1'){
+    btn.dataset.bound='1';
+    btn.addEventListener('click',(ev)=>{
+      ev.stopPropagation();
+      const open=menu.hidden;
+      menu.hidden=!open;
+      btn.setAttribute('aria-expanded',open?'true':'false');
+    });
+  }
+  if(!window.__brcRaceCardDateOutsideBound){
+    window.__brcRaceCardDateOutsideBound=true;
+    document.addEventListener('click',(ev)=>{
+      const bar=document.getElementById('raceCardDateToolbar');
+      if(bar && !bar.contains(ev.target)) brcCloseRaceCardDateMenu();
+    });
+  }
+  renderRaceCardDatePicker();
+}
+
+async function brcLoadHostedRaceCardDate(dateStr){
+  const target=String(dateStr||'');
+  const today=getJstDateLabel();
+  const statusBox=document.getElementById('raceCardFileStatus');
+  brcCloseRaceCardDateMenu();
+  if(!brcIsSelectableRaceCardDate(target)){
+    if(statusBox){statusBox.textContent='選択できるのは本日から7日前までです。';statusBox.style.color='#b42318';}
+    return false;
+  }
+  if(target===today) return brcReturnRaceCardToToday();
+
+  brcStopLiveExhibitionPolling();
+  if(window.__brcRaceCardRetryTimer){clearTimeout(window.__brcRaceCardRetryTimer);window.__brcRaceCardRetryTimer=null;}
+  if(statusBox){statusBox.textContent=`${brcFormatRaceCardDate(target)} の番組表を読み込み中…`;statusBox.style.color='';}
+
+  const yymmdd=target.replace(/-/g,'').slice(2);
+  const sourceName=`B${yymmdd}.TXT`;
+  const stamp=Date.now();
+  const urls=[`racecards/history/${sourceName}?v=${stamp}`,`racecards/${sourceName}?v=${stamp}`];
+  let data=null, lastError=null;
+  for(const url of urls){
+    try{
+      const res=await fetch(url,{cache:'no-store'});
+      if(!res.ok){lastError=new Error(`HTTP ${res.status}`);continue;}
+      const buf=await res.arrayBuffer();
+      let txt;
+      try{txt=new TextDecoder('shift_jis').decode(buf);}catch(_e){txt=new TextDecoder('utf-8').decode(buf);}
+      const parsed=parseOfficialRaceCardText(txt);
+      if(parsed.date && parsed.date!==target){lastError=new Error(`日付不一致: ${parsed.date}`);continue;}
+      data=parsed;break;
+    }catch(e){lastError=e;}
+  }
+  if(!data){
+    if(statusBox){statusBox.textContent=`${brcFormatRaceCardDate(target)} の過去番組表がまだ配信されていません。`;statusBox.style.color='#b42318';}
+    renderRaceCardDatePicker();
+    console.warn('過去番組表の自動読込に失敗しました',target,lastError);
+    return false;
+  }
+
+  RACE_CARDS_TODAY=data.cards;
+  RACE_INFO_TODAY=normalizeRaceInfoDayLabels(data.info);
+  RACE_MOTOR_TODAY=data.motor||{};
+  RACE_MOTOR_NO_TODAY=data.motorNo||{};
+  RACE_CLASS_TODAY=data.racerClass||data.classes||{};
+  TODAY_LABEL=data.date||target;
+  BRC_RACE_CARD_HISTORY_LOCK=true;
+  BRC_RACE_CARD_HISTORY_SOURCE=`auto:${sourceName}`;
+  saveHistoricalRaceCard(BRC_RACE_CARD_HISTORY_SOURCE);
+
+  renderRaceCardModeUi();
+  populateDaySelect();
+  try{brcRenderPostRaceCards();}catch(_e){}
+  collapseRaceCardFold();
+  invalidateTodayPicks(true);
+  if(document.getElementById('page-special')) renderSpecialLivePanel();
+  if(statusBox){statusBox.textContent=`過去番組表を表示中: ${sourceName}（${Object.keys(RACE_INFO_TODAY).length}会場）`;statusBox.style.color='';}
+  return true;
+}
+
 function renderRaceCardModeUi(){
   const banner=document.getElementById('raceCardHistoryBanner');
   const dateEl=document.getElementById('raceCardHistoryDate');
   const label=document.getElementById('raceCardDateLabel');
   const historical=brcIsHistoricalRaceCardMode();
   if(label) label.textContent=TODAY_LABEL||'-';
-  if(dateEl) dateEl.textContent=historical ? TODAY_LABEL : '-';
+  if(dateEl) dateEl.textContent=historical ? brcFormatRaceCardDate(TODAY_LABEL) : '-';
   if(banner) banner.classList.toggle('active',historical);
+  renderRaceCardDatePicker();
 }
 
 async function brcReturnRaceCardToToday(){
@@ -7433,6 +7626,7 @@ function initPredictPage(){
   document.getElementById('raceCardDateLabel').textContent = TODAY_LABEL;
   populateDaySelect();
   renderRaceCardModeUi();
+  brcInitRaceCardDatePicker();
   const returnTodayBtn=document.getElementById('raceCardReturnToday');
   if(returnTodayBtn) returnTodayBtn.addEventListener('click', brcReturnRaceCardToToday);
 
@@ -8143,25 +8337,71 @@ function collapseRaceCardFold(){
 // GitHub上の当日公式TXTを自動読み込みする。
 // 前日ファイルが一時的に残っていてもエラー扱いにせず、本日分が反映されるまで自動再試行する。
 function scheduleHostedRaceCardRetry(delayMs=60000){
+  if(brcIsHistoricalRaceCardMode()) return;
   if(window.__brcRaceCardRetryTimer) clearTimeout(window.__brcRaceCardRetryTimer);
-  window.__brcRaceCardRetryTimer = setTimeout(()=>{ autoLoadHostedRaceCardToday(); }, delayMs);
+  window.__brcRaceCardRetryTimer = setTimeout(()=>{ autoLoadHostedRaceCardToday({reason:'retry'}); }, delayMs);
+}
+
+// BRC_RACECARD_DAY_ROLLOVER_FIX_20260826
+// 前日の番組表を正常読込したあと日付をまたぐと、従来は再試行タイマーが消えているため
+// 翌日の today.TXT を取りに行く契機がなかった。JST日付の変化とアプリ復帰を監視して即再取得する。
+function brcRaceCardNeedsTodayRefresh(){
+  if(brcIsHistoricalRaceCardMode()) return false;
+  const jstToday = getJstDateLabel();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(jstToday)) return false;
+  if(TODAY_LABEL !== jstToday) return true;
+  if(!RACE_INFO_TODAY || Object.keys(RACE_INFO_TODAY).length === 0) return true;
+  return false;
+}
+
+function brcRefreshRaceCardForCurrentDay(reason='watch'){
+  if(brcIsHistoricalRaceCardMode()) return false;
+  if(!brcRaceCardNeedsTodayRefresh()) return false;
+  // 同じ瞬間に focus / pageshow / visibilitychange が重なっても多重fetchしない。
+  if(window.__brcRaceCardRefreshInFlight) return false;
+  window.__brcRaceCardRefreshInFlight = true;
+  Promise.resolve(autoLoadHostedRaceCardToday({reason}))
+    .finally(()=>{ window.__brcRaceCardRefreshInFlight = false; });
+  return true;
+}
+
+function brcStartRaceCardDayWatcher(){
+  if(window.__brcRaceCardDayWatcher) return;
+  // iPhoneのバックグラウンド中はsetIntervalが止まることがあるため、これは補助監視。
+  // 復帰時は下のvisibilitychange/pageshow/focusで即時確認する。
+  window.__brcRaceCardDayWatcher = setInterval(()=>{
+    if(document.visibilityState === 'visible') brcRefreshRaceCardForCurrentDay('interval');
+  }, 30000);
+
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState === 'visible') brcRefreshRaceCardForCurrentDay('visibilitychange');
+  });
+  window.addEventListener('pageshow', ()=>brcRefreshRaceCardForCurrentDay('pageshow'));
+  window.addEventListener('focus', ()=>brcRefreshRaceCardForCurrentDay('focus'));
 }
 
 function setRaceCardWaitingForToday(jstToday){
+  if(brcIsHistoricalRaceCardMode()) return;
   if(TODAY_LABEL === jstToday) return;
   clearStoredRaceCard();
   RACE_CARDS_TODAY = {};
   RACE_INFO_TODAY = {};
   RACE_MOTOR_TODAY = {};
   RACE_MOTOR_NO_TODAY = {};
+  RACE_CLASS_TODAY = {};
   TODAY_LABEL = jstToday;
   const label = document.getElementById('raceCardDateLabel');
   if(label) label.textContent = `${jstToday}（読込待ち）`;
   try{ populateDaySelect(); }catch(_e){}
+  try{ brcRenderPostRaceCards(); }catch(_e){}
   try{ invalidateTodayPicks(true); }catch(_e){}
+  BRC_FREE_PREVIEW_DATA=null;
+  const freeBody=document.getElementById('brcFreePreviewBody');
+  if(freeBody) freeBody.innerHTML='<div class="brc-free-empty">本日の無料レースを更新中...</div>';
 }
 
-async function autoLoadHostedRaceCardToday(){
+async function autoLoadHostedRaceCardToday(_opts={}){
+  if(brcIsHistoricalRaceCardMode()) return false;
   const statusBox = document.getElementById('raceCardFileStatus');
   const jstToday = getJstDateLabel();
   if(!/^\d{4}-\d{2}-\d{2}$/.test(jstToday)) return false;
@@ -8212,14 +8452,19 @@ async function autoLoadHostedRaceCardToday(){
     RACE_INFO_TODAY = normalizeRaceInfoDayLabels(data.info);
     RACE_MOTOR_TODAY = data.motor || {};
     RACE_MOTOR_NO_TODAY = data.motorNo || {};
+    RACE_CLASS_TODAY = data.racerClass || data.classes || {};
     TODAY_LABEL = data.date || jstToday;
+    clearHistoricalRaceCard();
 
     const label = document.getElementById('raceCardDateLabel');
     if(label) label.textContent = TODAY_LABEL;
+    renderRaceCardModeUi();
     saveRaceCardForToday(`auto:${sourceName}`);
     populateDaySelect();
+    try{ brcRenderPostRaceCards(); }catch(_e){}
     collapseRaceCardFold();
     invalidateTodayPicks(true);
+    if(_opts.reason!=='free-preview'){ BRC_FREE_PREVIEW_DATA=null; setTimeout(()=>brcLoadFreePreview(true),0); }
 
     if(window.__brcRaceCardRetryTimer){
       clearTimeout(window.__brcRaceCardRetryTimer);
@@ -8594,10 +8839,7 @@ function buildWindPanelHtml(){
     .concat(Array.from({length:16},(_,i)=>`<option value="${i}"${String(sel.speed)===String(i)?' selected':''}>風速: ${i}m</option>`)).join('');
   return `
     <div id="windPanel" style="margin:14px 0 12px; padding:12px 14px; background:rgba(10,31,51,.025); border:1px solid rgba(10,31,51,.08); border-radius:10px;">
-      <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px;">
-        <div style="font-size:13px;font-weight:800;">🌬️ 風向・風速別 1着率</div>
-        <span id="windAutoStatus" style="font-size:10.5px;color:var(--ink-soft);font-weight:700;">展示後に自動反映</span>
-      </div>
+      <div style="font-size:13px;font-weight:800;margin-bottom:8px;">🌬️ 風向・風速別 1着率</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
         <select id="predictWindDir" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(10,31,51,.16); background:rgba(10,31,51,.04); color:var(--line-white); font-size:14px; min-width:120px;">${dirOpts}</select>
         <select id="predictWindSpeed" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(10,31,51,.16); background:rgba(10,31,51,.04); color:var(--line-white); font-size:14px; min-width:120px;">${speedOpts}</select>
@@ -8606,60 +8848,15 @@ function buildWindPanelHtml(){
       <div id="windRefBox" class="card-sub" style="margin:10px 0 0; padding:12px 14px; background:rgba(10,31,51,.03); border:1px solid rgba(10,31,51,.08); border-radius:8px; display:none;"></div>
     </div>`;
 }
-function brcNormalizeLiveWind(liveRace){
-  const w=liveRace?.weather;
-  if(!w || typeof w!=='object') return null;
-  const speedRaw=Number(w.wind_speed_m);
-  if(!Number.isFinite(speedRaw)) return null;
-  const speed=Math.max(0,Math.round(speedRaw));
-  if(speed>15) return null;
-  const dirs=['北','北東','東','南東','南','南西','西','北西'];
-  let dir=String(w.wind_direction||'').replace(/[\s　]+/g,'').trim();
-  if(speed===0) dir='無風';
-  if(speed>0 && !dirs.includes(dir)) return null;
-  return {
-    dir,
-    speed,
-    observedAt:String(w.observed_at||''),
-    windQuality:String(w.wind_quality||''),
-    waveCm:Number.isFinite(Number(w.wave_cm)) ? Number(w.wave_cm) : null
-  };
-}
-function brcSetWindAutoStatus(text,color='var(--ink-soft)'){
-  const el=document.getElementById('windAutoStatus');
-  if(!el) return;
-  el.textContent=text;
-  el.style.color=color;
-}
-function brcSyncWindPanelFromLiveRace(liveRace,venue){
-  const x=brcNormalizeLiveWind(liveRace);
-  const dirSel=document.getElementById('predictWindDir');
-  const speedSel=document.getElementById('predictWindSpeed');
-  if(!x || !dirSel || !speedSel) return false;
-
-  // 0mは風向選択を空欄のまま「無風」として扱う。
-  dirSel.value=x.speed===0 ? '' : x.dir;
-  speedSel.value=String(x.speed);
-  window.__windSelection={dir:dirSel.value,speed:String(x.speed)};
-  renderWindRef(venue,x.dir,x.speed);
-
-  const obs=/^\d{4}$/.test(x.observedAt)
-    ? `${x.observedAt.slice(0,2)}:${x.observedAt.slice(2)}`
-    : '';
-  const quality=x.windQuality && x.windQuality!=='無風' ? `・${x.windQuality}` : '';
-  brcSetWindAutoStatus(`自動 ${x.dir}${x.speed}m${quality}${obs?` ${obs}`:''}`,'#2f8f5b');
-  return true;
-}
 function bindWindPanel(venue){
   const dirSel = document.getElementById('predictWindDir');
   const speedSel = document.getElementById('predictWindSpeed');
   const box = document.getElementById('windRefBox');
   if(!dirSel || !speedSel || !box) return;
-  const refresh = (manual=false)=>{
+  const refresh = ()=>{
     const dir = dirSel.value;
     const speed = speedSel.value;
     window.__windSelection = {dir, speed};
-    if(manual) brcSetWindAutoStatus('手動表示','var(--ink-soft)');
     if(speed === ''){
       box.style.display = 'none';
       box.innerHTML = '';
@@ -8673,13 +8870,9 @@ function bindWindPanel(venue){
     }
     renderWindRef(venue, speed === '0' ? '無風' : dir, Number(speed));
   };
-  dirSel.addEventListener('change', ()=>refresh(true));
-  speedSel.addEventListener('change', ()=>refresh(true));
-
-  // 展示データと同じlive payloadに公式水面気象が入っていれば初回描画から自動反映。
-  if(!brcSyncWindPanelFromLiveRace(window.__currentLiveExhibition,venue)){
-    refresh(false);
-  }
+  dirSel.addEventListener('change', refresh);
+  speedSel.addEventListener('change', refresh);
+  refresh();
 }
 
 // 会場・風向・風速から、コース1〜6の「生実測1着率・場平均差・N」参考テーブルを組み立てる。
