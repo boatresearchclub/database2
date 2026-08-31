@@ -3470,14 +3470,29 @@ async function brcEnsurePredictAccess({silent=false, force=false}={}){
   try{
     if(!silent) brcRenderGate('checking');
     const session = await brcEnsureFreshSession();
-    if(!session){ brcRenderPublicBrowser(); return false; }
+    // 未ログイン時はログインTOPを維持する。
+    // 締切済みレースの公開画面へは、ユーザーが明示的に選んだ時だけ移動する。
+    if(!session){
+      brcRenderGate('login');
+      setTimeout(()=>brcLoadFreePreview(false),0);
+      return false;
+    }
     const result = await brcCheckMembership(session);
     if(result.ok){ brcRenderMember(result.user); return true; }
-    brcRenderPublicBrowser('締切済みは無料・締切前は会員限定'); return false;
+    if(result.reason==='session'){
+      brcClearSession();
+      brcRenderGate('login');
+      setTimeout(()=>brcLoadFreePreview(false),0);
+      return false;
+    }
+    brcRenderGate('inactive',result.user);
+    return false;
   }catch(err){
     console.warn('BRC membership check failed:', err);
     if(err && (err.status===401 || err.status===403)) brcClearSession();
-    brcRenderPublicBrowser('会員情報を確認できませんでした。締切済みレースは閲覧できます。');
+    brcRenderGate('login');
+    setTimeout(()=>brcLoadFreePreview(false),0);
+    if(!silent) brcSetAuthMessage('会員情報を確認できませんでした。時間をおいてもう一度お試しください。');
     return false;
   }finally{ BRC_AUTH_BUSY = false; }
 }
@@ -3528,7 +3543,8 @@ async function brcLogout(){
     }
   }catch(_){ /* ローカル側は必ずログアウト */ }
   brcClearSession();
-  brcRenderPublicBrowser();
+  brcRenderGate('login');
+  setTimeout(()=>brcLoadFreePreview(false),0);
   const pw=document.getElementById('brcLoginPassword'); if(pw) pw.value='';
 }
 async function brcInitAuthUi(){
@@ -7023,13 +7039,6 @@ function brcBuildScenarioExhibitionBadge(b){
   return `<span class="scenario-exhibition-badge" title="今回のBRCタイムXが2着率・3着率へ与える方向"><span class="scenario-ex-label">タイムX</span><span class="scenario-ex-item">2着 ${second}</span><span class="scenario-ex-item">3着 ${third}</span></span>`;
 }
 
-function brcBuildPredictLeadSummaryHtml(boats){
-  if(!Array.isArray(boats)||boats.length!==6) return '';
-  const sorted=[...boats].sort((a,b)=>b.pctFloat-a.pctFloat);
-  const sorted3=[...boats].sort((a,b)=>b.pct3Float-a.pct3Float);
-  return `本命候補: <strong>${sorted[0].player.name}</strong>（コース${sorted[0].course}・予想勝率${sorted[0].pct}%）／ 3連対率トップ: <strong>${sorted3[0].player.name}</strong>（コース${sorted3[0].course}・予想3連対率${sorted3[0].pct3}%）`;
-}
-
 function buildLiveExhibitionStatusHtml(liveRace, venue='', raceNo=0){
   if(!raceNo) return '';
   const code=brcVenueCodeFromName(venue);
@@ -7098,8 +7107,6 @@ function brcRefreshExhibitionAdjustedDom(liveRace,venue,raceNo){
     const wrap=document.createElement('div'); wrap.innerHTML=buildRecommendedBetsHtmlFromServer(worker,local,applied).trim();
     if(wrap.firstElementChild) rec.replaceWith(wrap.firstElementChild);
   }
-  const summary=document.getElementById('predictSummaryLead');
-  if(summary) summary.innerHTML=brcBuildPredictLeadSummaryHtml(boats);
 }
 
 function brcUpdateLiveExhibitionDom(liveRace,venue,raceNo){
@@ -9842,7 +9849,6 @@ async function runPredict(){
       </div>
     </details>
     ${buildWindPanelHtml()}
-    <div id="predictSummaryLead" class="trend-note fold-lead" style="margin-top:12px;">${brcBuildPredictLeadSummaryHtml(boats)}</div>
   `;
 
   renderPredictAiPanel(boats, workerPrediction, localInReliability, exhibitionApplied);
