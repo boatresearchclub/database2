@@ -816,9 +816,9 @@
   }
 
 
-  /* ---- 2026-08-28: 出走表AI 4タブ（出走データ / オッズ / AI予測 / 結果） ---- */
+  /* ---- 出走表AI 3タブ（出走データ / オッズ / AI予測） ---- */
   .predict-main-tabs{
-    display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:0;
+    display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:0;
     border-bottom:1px solid rgba(10,31,51,.10); background:rgba(255,255,255,.98);
     /* BRC_PREDICT_MAIN_TABS_STICKY_20260828: スクロール中もメインタブ直下へ固定 */
     position:sticky; top:calc(var(--page-tabs-sticky-h) + 1px); z-index:98;
@@ -841,22 +841,9 @@
   }
   .predict-main-panel{display:none; min-width:0;}
   .predict-main-panel.active{display:block;}
-  /* 4タブ切替時に短いパネルでも同じ基準位置までスクロールできるよう高さを確保 */
-  #predictMainPanel-odds,
-  #predictMainPanel-result{
-    min-height:calc(100svh - 110px);
-  }
-  @supports not (height:100svh){
-    #predictMainPanel-odds,
-    #predictMainPanel-result{min-height:calc(100vh - 110px);}
-  }
-
-  .predict-future-placeholder{
-    padding:32px 14px; text-align:center; color:var(--ink-soft);
-    background:linear-gradient(180deg,rgba(10,31,51,.018),rgba(255,255,255,.65));
-  }
-  .predict-future-placeholder strong{display:block;color:var(--navy);font-size:14px;margin-bottom:5px;}
-  .predict-future-placeholder span{font-size:11.5px;line-height:1.6;}
+  /* 短いオッズパネルでもタブ位置を保つ */
+  #predictMainPanel-odds{min-height:calc(100svh - 110px);}
+  @supports not (height:100svh){#predictMainPanel-odds{min-height:calc(100vh - 110px);}}
   .predict-ai-wrap{padding:14px 14px 18px;}
   .predict-ai-head{
     display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;
@@ -886,6 +873,7 @@
     margin:0 0 10px;padding:8px 10px;border-radius:9px;border:1px solid rgba(10,31,51,.09);
     background:rgba(10,31,51,.025);font-size:10.5px;line-height:1.55;color:var(--ink-soft);
   }
+  .brc-odds-status:empty{display:none;}
   .brc-odds-status strong{color:var(--navy);}
   .brc-odds-status.error{border-color:rgba(209,55,63,.22);background:rgba(209,55,63,.055);color:#a52c35;}
   .brc-odds-view-tabs{display:flex;gap:6px;margin:0 0 10px;}
@@ -975,7 +963,12 @@
   .brc-odds-pool{display:grid;gap:8px;margin-top:2px;}
   .brc-odds-pool-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}
   .brc-odds-pool-title{font-size:13px;font-weight:950;color:var(--navy);}
+  .brc-odds-pool-head-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;min-width:0;}
+  .brc-odds-pool-sort{display:inline-flex;align-items:center;padding:2px;border:1px solid rgba(10,31,51,.10);border-radius:8px;background:#f7f9fc;}
+  .brc-odds-pool-sort-btn{appearance:none;border:0;background:transparent;color:var(--ink-soft);border-radius:6px;padding:5px 7px;font:inherit;font-size:9px;font-weight:900;cursor:pointer;white-space:nowrap;}
+  .brc-odds-pool-sort-btn.active{background:#fff;color:var(--wave);box-shadow:0 1px 3px rgba(10,31,51,.10);}
   .brc-odds-pool-clear{appearance:none;border:1px solid rgba(209,55,63,.20);background:#fff;color:#b4232c;border-radius:8px;padding:6px 9px;font:inherit;font-size:9.5px;font-weight:900;cursor:pointer;}
+  .brc-odds-pool-actions-end{justify-content:flex-end;}
   .brc-odds-pool-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid rgba(10,31,51,.10);border-radius:11px;background:#fff;overflow:hidden;}
   .brc-odds-pool-metric{padding:8px 5px;text-align:center;border-left:1px solid rgba(10,31,51,.06);}
   .brc-odds-pool-metric:first-child{border-left:0;}
@@ -1090,8 +1083,8 @@
   .brc-nige-order-metric{display:flex;align-items:baseline;justify-content:center;gap:5px;font-variant-numeric:tabular-nums;}
   .brc-nige-order-pct{font-size:15px;font-weight:900;color:var(--navy);white-space:nowrap;}
   .brc-nige-order-base{font-size:8.5px;font-weight:800;color:var(--navy);white-space:nowrap;}
-  .brc-nige-order-base.is-strong-plus{color:#2563EB;}
-  .brc-nige-order-base.is-strong-minus{color:#DC2626;}
+  .brc-nige-order-base.is-strong-plus{color:var(--trend-up);}
+  .brc-nige-order-base.is-strong-minus{color:var(--trend-down);}
   .brc-nige-order-head-base{display:block;margin-top:1px;font-size:8px;font-weight:750;color:var(--ink-soft);line-height:1.05;}
   .brc-nige-order-picks{display:flex;align-items:flex-start;gap:7px;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(0,87,219,.18);}
   .brc-nige-order-picks-label{flex:0 0 auto;font-size:10.5px;font-weight:900;color:var(--ink-soft);padding-top:3px;}
@@ -1643,13 +1636,34 @@
   .brc-ex-alert-title{font-size:15px;font-weight:900;}
   .brc-ex-alert-close{border:0;background:rgba(10,31,51,.07);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:18px;}
   .brc-ex-alert-tag{display:inline-block;margin:0 0 9px;padding:4px 8px;border-radius:999px;background:rgba(227,178,60,.12);color:#8a5a00;font-size:11px;font-weight:900;}
-  .brc-ex-alert-grid{display:grid;grid-template-columns:1fr auto auto;gap:7px 10px;align-items:center;font-size:12px;}
-  .brc-ex-alert-grid .h{font-size:10px;color:var(--ink-soft);font-weight:800;}
-  .brc-ex-alert-grid .v{font-variant-numeric:tabular-nums;font-weight:800;}
-  .brc-ex-alert-note{margin-top:11px;font-size:10.5px;line-height:1.55;color:var(--ink-soft);}
+  .brc-ex-alert-forecast{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:2px 0 10px;}
+  .brc-ex-alert-forecast-item{border:1px solid var(--border);border-radius:11px;padding:9px 10px;background:#fbfcfe;text-align:center;}
+  .brc-ex-alert-forecast-item .k{font-size:10px;color:var(--ink-soft);font-weight:800;margin-bottom:2px;}
+  .brc-ex-alert-forecast-item .v{font-size:22px;line-height:1.1;font-weight:950;font-variant-numeric:tabular-nums;}
+  .brc-ex-alert-forecast-label{font-size:11px;font-weight:900;margin:1px 0 7px;}
+  .brc-ex-alert-decision{border-radius:11px;padding:10px 11px;margin:0 0 10px;font-size:11px;line-height:1.45;font-weight:750;}
+  .brc-ex-alert-decision.down{background:rgba(var(--trend-down-rgb),.07);border:1px solid rgba(var(--trend-down-rgb),.22);color:var(--trend-down);}
+  .brc-ex-alert-decision.up{background:rgba(var(--trend-up-rgb),.07);border:1px solid rgba(var(--trend-up-rgb),.22);color:var(--trend-up);}
+  .brc-ex-alert-decision.flat{background:rgba(61,74,99,.055);border:1px solid rgba(61,74,99,.16);color:var(--line-white);}
+  .brc-ex-alert-decision strong{display:block;font-size:13px;margin-bottom:2px;}
+  .brc-ex-alert-ratebox{border:1px solid var(--border);border-radius:11px;overflow:hidden;margin-top:7px;}
+  .brc-ex-alert-ratehead,.brc-ex-alert-raterow{display:grid;grid-template-columns:1fr 72px 72px 64px;align-items:center;column-gap:4px;padding:7px 9px;}
+  .brc-ex-alert-ratehead{background:#f4f7fb;font-size:9.5px;color:var(--ink-soft);font-weight:850;}
+  .brc-ex-alert-raterow{font-size:11.5px;border-top:1px solid var(--border);}
+  .brc-ex-alert-raterow:first-of-type{border-top:0;}
+  .brc-ex-alert-raterow .label{font-weight:850;}
+  .brc-ex-alert-raterow .num{text-align:right;font-weight:850;font-variant-numeric:tabular-nums;}
+  .brc-ex-alert-raterow .diff{text-align:right;font-weight:900;font-variant-numeric:tabular-nums;}
+  .brc-ex-alert-breakdown{margin-top:8px;padding:7px 9px;border-radius:9px;background:#f7f9fc;font-size:10.5px;color:var(--ink-soft);line-height:1.45;}
+  .brc-ex-alert-note{margin-top:9px;font-size:10px;line-height:1.5;color:var(--ink-soft);}
   .brc-ex-metric-up{color:var(--trend-up);}
   .brc-ex-metric-down{color:var(--trend-down);}
   .brc-ex-metric-flat{color:var(--ink-soft);}
+  @media(max-width:420px){
+    .brc-ex-alert-card{padding:14px;}
+    .brc-ex-alert-ratehead,.brc-ex-alert-raterow{grid-template-columns:1fr 64px 64px 58px;padding-left:8px;padding-right:8px;}
+    .brc-ex-alert-forecast-item .v{font-size:20px;}
+  }
 
   /* ---- 出走表AI：確率のBRCタイムXを2段目に揃えて表示 ---- */
   #predictResult .predict-player-cell,
@@ -2108,50 +2122,6 @@
     .racecard-history-return{font-size:11px;padding:5px 9px;}
   }
 
-
-  /* ---- 出走表 表示日付 / 過去7日セレクタ ---- */
-  .racecard-date-toolbar{
-    position:relative; display:flex; align-items:center; justify-content:space-between; gap:10px;
-    margin:0 0 12px; padding:10px 12px; border:1px solid rgba(10,31,51,.10); border-radius:12px;
-    background:linear-gradient(180deg,#fff 0%,rgba(10,31,51,.018) 100%);
-  }
-  .racecard-date-current{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap;}
-  .racecard-date-caption{font-size:10.5px;font-weight:800;color:var(--ink-soft);white-space:nowrap;}
-  .racecard-date-value{font-size:15px;font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums;white-space:nowrap;}
-  .racecard-date-state{
-    display:inline-flex;align-items:center;justify-content:center;border-radius:999px;padding:3px 7px;
-    font-size:9.5px;font-weight:900;line-height:1.2;background:rgba(0,87,219,.08);color:var(--wave);white-space:nowrap;
-  }
-  .racecard-date-state.historical{background:rgba(227,178,60,.16);color:#805700;}
-  .racecard-date-picker-btn{
-    appearance:none;border:1px solid rgba(0,87,219,.20);background:#fff;color:var(--wave);border-radius:999px;
-    padding:7px 11px;font:inherit;font-size:11.5px;font-weight:900;cursor:pointer;white-space:nowrap;
-  }
-  .racecard-date-picker-btn:hover{border-color:rgba(0,87,219,.45);background:rgba(0,87,219,.035);}
-  .racecard-date-picker-btn[aria-expanded="true"]{background:var(--wave);border-color:var(--wave);color:#fff;}
-  .racecard-date-menu{
-    position:absolute;z-index:60;top:calc(100% + 6px);right:0;width:min(290px,calc(100vw - 32px));padding:7px;
-    border:1px solid rgba(10,31,51,.12);border-radius:12px;background:#fff;box-shadow:0 12px 32px rgba(10,31,51,.16);
-  }
-  .racecard-date-menu[hidden]{display:none!important;}
-  .racecard-date-option{
-    width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;appearance:none;
-    border:0;background:transparent;border-radius:8px;padding:9px 10px;font:inherit;cursor:pointer;text-align:left;color:var(--navy);
-  }
-  .racecard-date-option:hover{background:rgba(0,87,219,.045);}
-  .racecard-date-option.active{background:rgba(0,87,219,.08);color:var(--wave);font-weight:900;}
-  .racecard-date-option-label{font-size:12.5px;font-weight:800;font-variant-numeric:tabular-nums;}
-  .racecard-date-option-sub{font-size:10px;color:var(--ink-soft);font-weight:800;white-space:nowrap;}
-  .racecard-date-option.active .racecard-date-option-sub{color:var(--wave);}
-  @media(max-width:420px){
-    .racecard-date-toolbar{padding:9px 10px;gap:7px;}
-    .racecard-date-current{gap:5px;}
-    .racecard-date-caption{font-size:10px;flex-basis:100%;}
-    .racecard-date-value{font-size:14px;}
-    .racecard-date-picker-btn{font-size:11px;padding:6px 9px;}
-    .racecard-date-menu{left:0;right:auto;width:100%;}
-  }
-
 </style>
 
 <style id="brc-predict-guide-style">
@@ -2385,7 +2355,7 @@
   </header>
 
   <div class="page-tabs" role="tablist" aria-label="メインメニュー">
-    <button class="page-tab active" data-page="predict" id="brcPredictTab">🔒 出走表AI</button>
+    <button class="page-tab active" data-page="predict" id="brcPredictTab">出走表AI</button>
     <button class="page-tab" data-page="today">本日厳選</button>
     <button class="page-tab sg-special-tab" data-page="special">特集</button>
     <button class="page-tab" data-page="database">データベース</button>
@@ -2556,7 +2526,6 @@
         <input id="playerSearch" type="text" placeholder="選手名または登録番号で検索..."
                style="flex:1; min-width:200px; padding:9px 14px; border-radius:999px; border:1px solid rgba(10,31,51,.16); background:rgba(10,31,51,.04); color:var(--line-white); font-size:14.5px;">
       </div>
-      <div class="player-list-hint">選手名を押すと詳細データが表示されます。</div>
       <div id="playersTableWrap">
       <table>
         <thead>
@@ -2631,22 +2600,14 @@
           <div id="brcFreePreviewBody" class="brc-free-preview-list"><div class="brc-free-empty">本日の無料レースを読み込み中...</div></div>
         </div>
 
-        <div class="brc-post-race-entry" id="brcPostRaceEntry">
-          <div class="brc-post-race-entry-title">締切後レースは無料公開</div>
-          <div class="brc-post-race-entry-sub">非会員でも会場・Rを選択できます。締切時刻を過ぎたレースは、そのままBRCデータを確認できます。</div>
-          <div id="brcPostRaceList" class="brc-post-race-list"><div class="brc-post-race-empty">終了レースを確認中...</div></div>
-        </div>
-
         <div class="brc-trial-guide">
           <div class="brc-trial-badge">公式LINE</div>
           <div class="brc-trial-title">BRCを7日間無料で体験</div>
-          <div class="brc-trial-sub">新規入会の方は、最初の1週間を無料でご利用いただけます。</div>
           <a class="brc-line-link brc-trial-line" href="https://lin.ee/7N8eGk6" target="_blank" rel="noopener noreferrer">公式LINEを開く</a>
           <div class="brc-trial-note">キーワード <span class="brc-salon-keyword">【サロン】</span> と返信してください。</div>
         </div>
 
         <div class="brc-member-login-head">
-          <div class="brc-auth-mark">🔒</div>
           <h2 class="brc-auth-title">BRC MEMBERS</h2>
         </div>
         <div class="brc-auth-sub" id="brcAuthSub">発行された会員IDとパスワードでログインしてください。</div>
@@ -2656,9 +2617,8 @@
           <button class="brc-auth-submit" id="brcLoginSubmit" type="submit">ログインして開く</button>
         </form>
         <div class="brc-auth-message" id="brcAuthMessage" aria-live="polite"></div>
-        <div class="brc-auth-help">YOOR加入確認後に発行された会員IDでログインできます。</div>
         <div style="text-align:center;"><button type="button" class="brc-logout-btn" id="brcGateLogoutBtn" style="display:none; margin-top:10px; padding:8px 14px;">ログアウトして別IDでログイン</button></div>
-        <div style="text-align:center;"><button type="button" class="brc-logout-btn" id="brcPublicBrowseBtn" style="margin-top:10px; padding:8px 14px;">終了レースを見る</button></div>
+        <div style="text-align:center;"><button type="button" class="brc-logout-btn" id="brcPublicBrowseBtn" style="margin-top:10px; padding:8px 14px;">締切済みレースを見る</button></div>
       </div>
     </div>
     <div id="brcPredictProtected" style="display:none;">
@@ -2666,10 +2626,10 @@
       <div id="brcFreePreviewBanner" class="brc-free-result-banner"></div>
     <section class="card">
       <h2>出走表AI</h2>
-      <div class="note-fold" style="margin-bottom:6px;" id="raceCardFoldWrap">
+      <div class="note-fold" style="display:none; margin-bottom:6px;" id="raceCardFoldWrap">
         <button type="button" class="note-fold-toggle" id="raceCardFoldToggle" onclick="var b=this.nextElementSibling; var s=(b.style.display!=='none'); b.style.display=s?'none':'flex'; this.textContent=s?'番組表の読み込み ▸':'番組表の読み込み ▾';">番組表の読み込み ▾</button>
         <div class="card-sub fold-body" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-          <span>表示中の番組表: <strong id="raceCardDateLabel">-</strong></span>
+          <span>当日番組表: <strong id="raceCardDateLabel">-</strong></span>
           <label class="tab" style="background:rgba(10,31,51,.08); cursor:pointer; margin:0;">
             番組表ファイルを差し替え（公式TXT/JSON対応）
             <input type="file" id="raceCardFileInput" accept="application/json,.json,.txt,text/plain" style="display:none;">
@@ -2681,20 +2641,11 @@
           </span>
         </div>
       </div>
-      <div class="racecard-date-toolbar" id="raceCardDateToolbar">
-        <div class="racecard-date-current">
-          <span class="racecard-date-caption">表示中</span>
-          <strong class="racecard-date-value" id="raceCardDisplayDate">-</strong>
-          <span class="racecard-date-state" id="raceCardDisplayState">今日</span>
-        </div>
-        <button type="button" class="racecard-date-picker-btn" id="raceCardDatePickerButton" aria-expanded="false" aria-controls="raceCardDateMenu">日付変更 ▾</button>
-        <div class="racecard-date-menu" id="raceCardDateMenu" hidden></div>
-      </div>
       <div id="raceCardHistoryBanner" class="racecard-history-banner" role="status" aria-live="polite">
         <div class="racecard-history-main">
-          <span class="racecard-history-title">過去データ表示中</span>
+          <span class="racecard-history-title">🔒 過去検証中</span>
           <span class="racecard-history-date" id="raceCardHistoryDate">-</span>
-          <span class="racecard-history-note">表示中の日付・会場・Rに一致する保存済みデータだけを表示します。</span>
+          <span class="racecard-history-note">当日番組表への自動切替は停止中。表示中の日付・会場・Rに一致する保存済み展示だけを照合します。</span>
         </div>
         <button type="button" class="racecard-history-return" id="raceCardReturnToday">本日に戻る</button>
       </div>
@@ -2730,7 +2681,6 @@
           <button type="button" class="predict-main-tab active" data-predict-main-tab="data">出走データ</button>
           <button type="button" class="predict-main-tab" data-predict-main-tab="odds">オッズ</button>
           <button type="button" class="predict-main-tab" data-predict-main-tab="ai">AI予測</button>
-          <button type="button" class="predict-main-tab" data-predict-main-tab="result">結果</button>
         </div>
         <div class="predict-main-panel active" id="predictMainPanel-data">
           <div id="predictResult" style="padding:18px 22px;"></div>
@@ -2756,19 +2706,16 @@
             <div class="brc-odds-head">
               <div>
                 <div class="brc-odds-title">3連単オッズ</div>
-                <div class="brc-odds-meta" id="brcOddsMeta">レースを選択して「オッズ更新」を押してください。</div>
+                <div class="brc-odds-meta" id="brcOddsMeta">レースを選択してください。</div>
               </div>
               <button type="button" class="brc-odds-refresh" id="brcOddsRefreshBtn">オッズ更新</button>
             </div>
-            <div class="brc-odds-status" id="brcOddsStatus">自動更新は行いません。同一レースは60秒以内ならBRC側の保存値を表示します。</div>
-            <div id="brcOddsBody"><div class="brc-odds-empty">更新ボタンを押すまで取得先へアクセスしません。</div></div>
+            <div class="brc-odds-status" id="brcOddsStatus"></div>
+            <div id="brcOddsBody"><div class="brc-odds-empty">レースを選択してください。</div></div>
           </div>
         </div>
         <div class="predict-main-panel" id="predictMainPanel-ai">
           <div id="predictAiResult" class="predict-ai-wrap"></div>
-        </div>
-        <div class="predict-main-panel" id="predictMainPanel-result">
-          <div class="predict-future-placeholder"><strong>結果</strong><span>確定着順・払戻・AI予測との答え合わせをここに表示する予定です。</span></div>
         </div>
       </div>
       
@@ -2781,9 +2728,8 @@
       <div class="today-picks-head">
         <div>
           <h2>本日厳選</h2>
-          <div class="card-sub" style="margin:3px 0 0;">番組表を読み込むと、イン信頼度から該当レースを自動抽出します。</div>
         </div>
-        <div class="today-picks-date">番組表: <strong id="todayPicksDate">-</strong></div>
+        <div class="today-picks-date"><strong id="todayPicksDate">-</strong></div>
       </div>
       <div class="today-picks-tabs" role="tablist" aria-label="本日厳選の切り替え">
         <button type="button" class="today-picks-tab active" data-today-mode="iron">イン鉄板 <span id="todayCountIron" class="today-picks-count">0</span></button>
@@ -3117,14 +3063,17 @@ function brcIsAdminUser(user){
 }
 function brcSetAdminSocialUi(user=null){
   const box=document.getElementById('brcAdminSocial');
-  if(!box) return;
   BRC_ADMIN_ACTIVE=!!(user && brcIsAdminUser(user) && BRC_MEMBER_ACTIVE);
-  box.classList.toggle('is-visible',BRC_ADMIN_ACTIVE);
-  box.setAttribute('aria-hidden',BRC_ADMIN_ACTIVE?'false':'true');
-  if(!BRC_ADMIN_ACTIVE){
-    const status=document.getElementById('brcAdminSocialStatus');
-    if(status) status.textContent='';
+  if(box){
+    box.classList.toggle('is-visible',BRC_ADMIN_ACTIVE);
+    box.setAttribute('aria-hidden',BRC_ADMIN_ACTIVE?'false':'true');
+    if(!BRC_ADMIN_ACTIVE){
+      const status=document.getElementById('brcAdminSocialStatus');
+      if(status) status.textContent='';
+    }
   }
+  const raceCardTools=document.getElementById('raceCardFoldWrap');
+  if(raceCardTools) raceCardTools.style.display=BRC_ADMIN_ACTIVE?'':'none';
 }
 function brcAdminBoatMark(course){
   return ['','①','②','③','④','⑤','⑥'][Number(course)] || `${course}号艇`;
@@ -3425,7 +3374,7 @@ function brcRenderGate(state='login', user=null){
   const badge=document.getElementById('brcMemberBadge'); if(badge) badge.textContent='BRC MEMBER';
   const logout=document.getElementById('brcLogoutBtn'); if(logout) logout.textContent='ログアウト';
   const freeBanner=document.getElementById('brcFreePreviewBanner'); if(freeBanner) freeBanner.textContent='';
-  if(tab) tab.textContent='🔒 出走表AI';
+  if(tab) tab.textContent='出走表AI';
   if(form) form.style.display = state==='login' ? '' : 'none';
   if(sub){
     if(state==='inactive') sub.textContent='ログインは確認できましたが、このアカウントには現在BRC会員権限がありません。YOOR会員登録状況をご確認ください。';
@@ -3455,8 +3404,7 @@ function brcRenderMember(user){
   const logout=document.getElementById('brcLogoutBtn'); if(logout) logout.textContent='ログアウト';
   const freeBanner=document.getElementById('brcFreePreviewBanner'); if(freeBanner) freeBanner.textContent='';
   if(tab) tab.textContent='出走表AI';
-  const memberId=brcDisplayMemberId(user);
-  if(badge) badge.textContent = memberId ? `BRC MEMBER · ${memberId}` : 'BRC MEMBER';
+  if(badge) badge.textContent='BRC MEMBER';
   brcSetAuthMessage('');
   try{ brcSetAdminSocialUi(user); }catch(_e){}
 }
@@ -3475,8 +3423,8 @@ function brcRenderFreePreviewMode(item){
   if(protectedBox){protectedBox.style.display=''; protectedBox.classList.remove('brc-post-race-mode','brc-public-browser-mode'); protectedBox.classList.add('brc-free-preview-mode');}
   if(badge) badge.textContent=`FREE PREVIEW · ${item?.kind==='reject'?'イン否定':'イン鉄板'}`;
   if(logout) logout.textContent='会員ログインへ';
-  if(tab) tab.textContent='無料公開レース';
-  if(banner) banner.textContent=`本日の無料公開 ${item?.venue||''}${item?.raceNo||''}R。この1レースのみ非会員でも出走表AIを閲覧できます。`;
+  if(tab) tab.textContent='出走表AI';
+  if(banner) banner.textContent=`${item?.venue||''}${item?.raceNo||''}R｜本日の無料公開`;
 }
 
 function brcRenderPostRaceMode(item){
@@ -3492,10 +3440,10 @@ function brcRenderPostRaceMode(item){
   const banner=document.getElementById('brcFreePreviewBanner');
   if(gate) gate.style.display='none';
   if(protectedBox){protectedBox.style.display='';protectedBox.classList.remove('brc-free-preview-mode');protectedBox.classList.add('brc-post-race-mode','brc-public-browser-mode');}
-  if(badge) badge.textContent='終了レース · FREE';
+  if(badge) badge.textContent='FREE';
   if(logout) logout.textContent='会員ログインへ';
   if(tab) tab.textContent='出走表AI';
-  if(banner) banner.textContent=`${item?.venue||''}${item?.raceNo||''}Rは終了レースのため無料公開中です。このデータは締切前に表示されていた内容です。`;
+  if(banner) banner.textContent=`${item?.venue||''}${item?.raceNo||''}R｜締切前データを無料公開中`;
 }
 
 function brcRenderPublicBrowser(message=''){
@@ -3516,10 +3464,10 @@ function brcRenderPublicBrowser(message=''){
     protectedBox.classList.remove('brc-free-preview-mode');
     protectedBox.classList.add('brc-post-race-mode','brc-public-browser-mode');
   }
-  if(badge) badge.textContent='終了後無料公開';
+  if(badge) badge.textContent='FREE';
   if(logout) logout.textContent='会員ログイン';
   if(tab) tab.textContent='出走表AI';
-  if(banner) banner.textContent=message || '締切済みレースは非会員でも無料で閲覧できます。締切前のレースはBRC MEMBERS限定です。';
+  if(banner) banner.textContent=message || '締切済みは無料・締切前は会員限定';
 }
 function brcShowMemberLoginGate(){
   brcRenderGate('login');
@@ -3543,14 +3491,29 @@ async function brcEnsurePredictAccess({silent=false, force=false}={}){
   try{
     if(!silent) brcRenderGate('checking');
     const session = await brcEnsureFreshSession();
-    if(!session){ brcRenderPublicBrowser(); return false; }
+    // 未ログイン時はログインTOPを維持する。
+    // 締切済みレースの公開画面へは、ユーザーが明示的に選んだ時だけ移動する。
+    if(!session){
+      brcRenderGate('login');
+      setTimeout(()=>brcLoadFreePreview(false),0);
+      return false;
+    }
     const result = await brcCheckMembership(session);
     if(result.ok){ brcRenderMember(result.user); return true; }
-    brcRenderPublicBrowser('締切済みレースは無料で閲覧できます。締切前の全レース閲覧にはBRC MEMBERSが必要です。'); return false;
+    if(result.reason==='session'){
+      brcClearSession();
+      brcRenderGate('login');
+      setTimeout(()=>brcLoadFreePreview(false),0);
+      return false;
+    }
+    brcRenderGate('inactive',result.user);
+    return false;
   }catch(err){
     console.warn('BRC membership check failed:', err);
     if(err && (err.status===401 || err.status===403)) brcClearSession();
-    brcRenderPublicBrowser('締切済みレースは無料で閲覧できます。会員情報の確認に失敗したため、締切前レースはロックしています。');
+    brcRenderGate('login');
+    setTimeout(()=>brcLoadFreePreview(false),0);
+    if(!silent) brcSetAuthMessage('会員情報を確認できませんでした。時間をおいてもう一度お試しください。');
     return false;
   }finally{ BRC_AUTH_BUSY = false; }
 }
@@ -3582,23 +3545,10 @@ async function brcLogin(identifier,password){
     brcClearSession();
     brcRenderGate('login');
 
-    // BRC_LOGIN_DIAGNOSTIC_20260830
-    // 認証原因の切り分け用。パスワードやAPIキーは画面へ表示しない。
     const status = Number(err && err.status || 0);
-    const detailRaw = String((err && err.message) || '').trim();
-    const detail = detailRaw ? detailRaw.slice(0,180) : '';
-    let msg = '';
-    if(status===400){
-      msg = `診断: HTTP 400 / ${detail || '認証情報が拒否されました'}`;
-    }else if(status===401){
-      msg = `診断: HTTP 401 / ${detail || '認証に失敗しました'}`;
-    }else if(status===403){
-      msg = `診断: HTTP 403 / ${detail || 'アクセスが拒否されました'}`;
-    }else if(status){
-      msg = `診断: HTTP ${status} / ${detail || '認証APIエラー'}`;
-    }else{
-      msg = `診断: NETWORK / ${detail || '認証サーバーへ接続できませんでした'}`;
-    }
+    let msg = 'ログインできませんでした。時間をおいてもう一度お試しください。';
+    if(status===400 || status===401) msg='会員IDまたはパスワードを確認してください。';
+    else if(status===403) msg='このアカウントでは現在利用できません。';
     brcSetAuthMessage(msg);
     return false;
   }finally{
@@ -3614,7 +3564,8 @@ async function brcLogout(){
     }
   }catch(_){ /* ローカル側は必ずログアウト */ }
   brcClearSession();
-  brcRenderPublicBrowser();
+  brcRenderGate('login');
+  setTimeout(()=>brcLoadFreePreview(false),0);
   const pw=document.getElementById('brcLoginPassword'); if(pw) pw.value='';
 }
 async function brcInitAuthUi(){
@@ -4666,7 +4617,7 @@ function renderPredictUnifiedST(reg,course,target){
       <div class="k">本人基準±0.05内</div><div class="v">${pct(d?.hit05)}</div>
       <div class="k">ST .25以上</div><div class="v">${pct(d?.late25)}</div>
     </div>
-    <div class="st-detail-note">安定度は平均STの速さとは分離して評価。スローは全体直近80走50%＋スロー直近80走50%、ダッシュは全体直近30走25%＋ダッシュ直近80走75%。区分別N&lt;50はランクを出しません。表示専用で、勝率・3連対率・イン信頼度には再加点していません。</div>`;
+    <div class="st-detail-note">平均STの速さとは別に安定性を評価。N&lt;50はランク表示なし。予測値へ再加点していません。</div>`;
 }
 
 function renderPredictUnifiedMotor(course,target){
@@ -4828,7 +4779,7 @@ function scrollPredictMainTabsToFixedPosition(behavior='smooth'){
 
 // 出走表AI：4タブ切り替え
 function setPredictMainTab(key){
-  const valid=['data','odds','ai','result'];
+  const valid=['data','odds','ai'];
   const k=valid.includes(key)?key:'data';
   document.querySelectorAll('.predict-main-tab').forEach(btn=>{
     const on=btn.dataset.predictMainTab===k;
@@ -4886,7 +4837,7 @@ function brcOddsDeadlinePassed(sel){
 
 function brcOddsFmtTime(v){
   const s=String(v||'');
-  const m=s.match(/(\d{2}:\d{2}:\d{2})/);
+  const m=s.match(/(\d{2}:\d{2})(?::\d{2})?/);
   return m ? m[1] : s;
 }
 
@@ -4952,7 +4903,7 @@ function brcOddsBuildMatrix(odds,sel){
     </div>`;
   }).join('');
   return `${brcOddsViewTabs()}<div class="brc-odds-matrix-scroll"><div class="brc-odds-matrix">${cols}</div></div>
-    <div class="brc-odds-foot">左の大きい数字が2着、隣の数字が3着、右が3連単オッズ（倍）。スマホは横へスワイプできます。赤字は10倍未満。</div>`;
+    <div class="brc-odds-foot">2着 → 3着 → オッズ。横スワイプで表示。赤字は10倍未満。</div>`;
 }
 
 function brcOddsBuildPopular(odds){
@@ -4973,7 +4924,7 @@ function brcOddsBuildPopular(odds){
         <tbody>${rows}</tbody>
       </table>
     </div>
-    <div class="brc-odds-foot">現在取得している3連単120通りをオッズの低い順に並べたTOP30です。</div>`;
+    `;
 }
 
 
@@ -5028,7 +4979,8 @@ function brcOddsBuilderRows(odds,key){
       });
     });
   });
-  return rows.sort((x,y)=>x.odds-y.odds || x.comb.localeCompare(y.comb,'ja'));
+  // 選択中の買い目は 1着→2着→3着 の数字が若い順で固定表示。
+  return rows.sort((x,y)=>(x.b[0]-y.b[0]) || (x.b[1]-y.b[1]) || (x.b[2]-y.b[2]));
 }
 
 function brcOddsBuilderComposite(rows){
@@ -5039,6 +4991,7 @@ function brcOddsBuilderComposite(rows){
 
 const BRC_ODDS_POOL_STORAGE_KEY = 'brc_odds_combo_pool_v3';
 let __brcOddsPoolCache = null;
+let __brcOddsPoolSort = 'comb';
 
 function brcOddsPoolReadAll(){
   if(__brcOddsPoolCache && typeof __brcOddsPoolCache==='object') return __brcOddsPoolCache;
@@ -5094,11 +5047,19 @@ function brcOddsPoolClear(key){
   brcOddsPoolWriteAll(all);
 }
 
+function brcOddsPoolCompareComb(a,b){
+  const x=Array.isArray(a?.b)?a.b:String(a?.comb||'').split('-').map(Number);
+  const y=Array.isArray(b?.b)?b.b:String(b?.comb||'').split('-').map(Number);
+  return (Number(x[0])-Number(y[0])) || (Number(x[1])-Number(y[1])) || (Number(x[2])-Number(y[2]));
+}
+
 function brcOddsPoolRows(odds,key){
-  return brcOddsPoolGet(key).map(comb=>{
+  const rows=brcOddsPoolGet(key).map(comb=>{
     const v=brcOddsValue(odds,comb);
     return v===null?null:{comb,odds:v,b:comb.split('-').map(Number)};
-  }).filter(Boolean).sort((a,b)=>a.odds-b.odds || a.comb.localeCompare(b.comb,'ja'));
+  }).filter(Boolean);
+  if(__brcOddsPoolSort==='odds') return rows.sort((a,b)=>a.odds-b.odds || brcOddsPoolCompareComb(a,b));
+  return rows.sort(brcOddsPoolCompareComb);
 }
 
 
@@ -5283,7 +5244,7 @@ function brcTeleboatBuildBridge(odds,sel){
       <button type="button" class="brc-teleboat-btn primary brc-teleboat-mobile-copy" data-teleboat-mobile-copy="1">① 投票用買い目をコピー</button>
       <button type="button" class="brc-teleboat-btn" data-teleboat-open="1">② テレボートを開く</button>
     </div>
-    <div class="brc-teleboat-note">各買い目の金額を100円単位で設定できます。一括金額を変更すると全点へ反映します。加入者番号・暗証番号・認証情報はBRCに保存しません。①「投票用買い目をコピー」→ ②テレボートを開く → ③対象会場・Rの3連単投票画面で「BRC投票セット」を実行します。最初に1回だけ貼り付けると、以後はブックマーク再実行で次の買い目・金額を自動入力します。公式のベットリスト追加と最終投票は本人がタップします。</div>
+    <div class="brc-teleboat-note">認証情報はBRCに保存しません。</div>
     <div class="brc-teleboat-status" data-teleboat-status="1">${brcOddsEscape(__brcTeleboatStatus)}</div>
   </div>`;
 }
@@ -5309,17 +5270,22 @@ function brcOddsBuildPool(odds,sel){
   const key=sel?.key||'';
   const rows=brcOddsPoolRows(odds,key);
   const comp=brcOddsBuilderComposite(rows);
-  const minv=rows.length?rows[0].odds:null;
-  const maxv=rows.length?rows[rows.length-1].odds:null;
+  const oddsVals=rows.map(row=>Number(row.odds)).filter(v=>Number.isFinite(v)&&v>0);
+  const minv=oddsVals.length?Math.min(...oddsVals):null;
+  const maxv=oddsVals.length?Math.max(...oddsVals):null;
+  const sortControls=`<div class="brc-odds-pool-sort" role="group" aria-label="保存買い目の表示順">
+    <button type="button" class="brc-odds-pool-sort-btn${__brcOddsPoolSort==='comb'?' active':''}" data-odds-pool-sort="comb">買い目順</button>
+    <button type="button" class="brc-odds-pool-sort-btn${__brcOddsPoolSort==='odds'?' active':''}" data-odds-pool-sort="odds">オッズ順</button>
+  </div>`;
   if(!rows.length){
-    return `<div class="brc-odds-pool"><div class="brc-odds-pool-head"><div class="brc-odds-pool-title">保存買い目</div></div><div class="brc-odds-pool-empty">フォーメーションで作った買い目を追加すると、ここに1つのリストとして保存されます。</div></div>`;
+    return `<div class="brc-odds-pool"><div class="brc-odds-pool-head"><div class="brc-odds-pool-title">保存買い目</div></div><div class="brc-odds-pool-empty">保存買い目はありません。</div></div>`;
   }
   const body=rows.map((row,i)=>{
     const combo=`<span class="brc-odds-combo-chip">${brcOddsLaneHtml(row.b[0])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(row.b[1])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(row.b[2])}</span>`;
     return `<tr><td style="width:32px;color:var(--ink-soft);font-weight:900;">${i+1}</td><td class="combo">${combo}</td><td class="val">${row.odds.toFixed(1)}</td><td class="amount">${brcTeleboatAmountInput(key,row.comb)}</td><td style="width:48px"><button type="button" class="brc-odds-pool-remove" data-odds-pool-remove="${row.comb}">削除</button></td></tr>`;
   }).join('');
   return `<div class="brc-odds-pool">
-    <div class="brc-odds-pool-head"><div class="brc-odds-pool-title">保存買い目</div><button type="button" class="brc-odds-pool-clear" data-odds-pool-clear="1">全削除</button></div>
+    <div class="brc-odds-pool-head"><div class="brc-odds-pool-title">保存買い目</div><div class="brc-odds-pool-head-actions">${sortControls}<button type="button" class="brc-odds-pool-clear" data-odds-pool-clear="1">全削除</button></div></div>
     <div class="brc-odds-pool-summary">
       <div class="brc-odds-pool-metric"><div class="k">合計点数</div><div class="v">${rows.length}点</div></div>
       <div class="brc-odds-pool-metric"><div class="k">合成オッズ</div><div class="v">${comp?comp.toFixed(2)+'倍':'―'}</div></div>
@@ -5345,18 +5311,19 @@ function brcOddsBuildBuilder(odds,sel){
   const allBtn=pos=>`<div class="brc-odds-builder-cell"><button type="button" class="brc-odds-builder-all${allOn(pos)?' active':''}" data-bet-builder-all="${pos}" aria-pressed="${allOn(pos)?'true':'false'}">全</button></div>`;
   const rows=brcOddsBuilderRows(odds,key);
   const comp=brcOddsBuilderComposite(rows);
-  const minv=rows.length?rows[0].odds:null;
-  const maxv=rows.length?rows[rows.length-1].odds:null;
+  const builderOddsVals=rows.map(row=>Number(row.odds)).filter(v=>Number.isFinite(v)&&v>0);
+  const minv=builderOddsVals.length?Math.min(...builderOddsVals):null;
+  const maxv=builderOddsVals.length?Math.max(...builderOddsVals):null;
   const list=rows.length ? rows.map((row,i)=>{
     const combo=`<span class="brc-odds-combo-chip">${brcOddsLaneHtml(row.b[0])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(row.b[1])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(row.b[2])}</span>`;
     return `<tr><td class="idx">${i+1}</td><td class="combo">${combo}</td><td class="val">${row.odds.toFixed(1)}</td></tr>`;
-  }).join('') : '<tr><td colspan="3" style="padding:18px 10px;color:var(--ink-soft);font-size:11px;line-height:1.6;">1着・2着・3着を選ぶと買い目一覧と合成オッズを表示します。<br>同じ艇の重複は自動で除外します。</td></tr>';
+  }).join('') : '<tr><td colspan="3" style="padding:18px 10px;color:var(--ink-soft);font-size:11px;line-height:1.6;">1着・2着・3着を選択してください。</td></tr>';
 
   return `${brcOddsViewTabs()}<div class="brc-odds-builder">
     <div class="brc-odds-builder-box">
       <div class="brc-odds-builder-head"><div>枠</div><div>選手名</div><div>1着</div><div>2着</div><div>3着</div></div>
       ${rowsHtml}
-      <div class="brc-odds-builder-row"><div class="brc-odds-builder-lane" style="background:#f7f9fc;color:var(--ink-soft);font-size:12px;">全</div><div class="brc-odds-builder-name"><small>列ごとに一括選択 / 解除</small></div>${allBtn('first')}${allBtn('second')}${allBtn('third')}</div>
+      <div class="brc-odds-builder-row"><div class="brc-odds-builder-lane" style="background:#f7f9fc;color:var(--ink-soft);font-size:12px;">全</div><div class="brc-odds-builder-name"><small>一括選択</small></div>${allBtn('first')}${allBtn('second')}${allBtn('third')}</div>
     </div>
     <div class="brc-odds-builder-summary">
       <div class="brc-odds-builder-kpi"><div class="k">買い目点数</div><div class="v">${rows.length}点</div></div>
@@ -5364,7 +5331,7 @@ function brcOddsBuildBuilder(odds,sel){
       <div class="brc-odds-builder-kpi"><div class="k">最低オッズ</div><div class="v small">${minv?minv.toFixed(1)+'倍':'―'}</div></div>
       <div class="brc-odds-builder-kpi"><div class="k">最高オッズ</div><div class="v small">${maxv?maxv.toFixed(1)+'倍':'―'}</div></div>
     </div>
-    <div class="brc-odds-pool-actions"><div class="brc-odds-builder-note" style="flex:1;">3連単フォーメーションの手動作成です。均等買いを前提に合成オッズを計算します。</div><button type="button" class="brc-odds-pool-add" data-odds-pool-add="1" ${rows.length?'':'disabled'}>選択買い目を追加</button></div>
+    <div class="brc-odds-pool-actions brc-odds-pool-actions-end"><button type="button" class="brc-odds-pool-add" data-odds-pool-add="1" ${rows.length?'':'disabled'}>選択買い目を追加</button></div>
     <div class="brc-odds-builder-list">
       <table class="brc-odds-builder-table"><thead><tr><th style="width:44px">#</th><th>買い目</th><th style="width:76px">オッズ</th></tr></thead><tbody>${list}</tbody></table>
     </div>
@@ -5410,7 +5377,7 @@ async function brcEnsureFinalOdds(sel){
   if(Number(__brcOddsFinalRetryAfter[sel.key]||0)>Date.now()) return;
 
   __brcOddsFinalLoading[sel.key]=true;
-  brcRenderOddsPanel('締切後の最終オッズを確認しています。');
+  brcRenderOddsPanel('最終オッズ確認中');
   const qs=new URLSearchParams({date:sel.date,venue_code:sel.code,race_no:String(sel.raceNo),final:'1',_:String(Date.now())});
   try{
     const res=await fetch(`${BRC_LIVE_EXHIBITION_API_URL}/live-odds?${qs.toString()}`,{method:'GET',cache:'no-store',headers:{'Accept':'application/json'}});
@@ -5427,15 +5394,15 @@ async function brcEnsureFinalOdds(sel){
     };
     if(!obj.final){
       __brcOddsFinalRetryAfter[sel.key]=Date.now()+15000;
-      brcRenderOddsPanel('最終オッズを反映待ちです。自動で再確認します。');
+      brcRenderOddsPanel('最終オッズ反映待ち');
       setTimeout(()=>brcEnsureFinalOdds(sel),15500);
     }else{
-      brcRenderOddsPanel('締切後の最終オッズを表示しています。');
+      brcRenderOddsPanel('最終オッズ');
     }
   }catch(err){
     console.warn('BRC final odds fetch failed:',err);
     __brcOddsFinalRetryAfter[sel.key]=Date.now()+15000;
-    brcRenderOddsPanel('最終オッズを反映待ちです。自動で再確認します。');
+    brcRenderOddsPanel('最終オッズ反映待ち');
     setTimeout(()=>brcEnsureFinalOdds(sel),15500);
   }finally{
     __brcOddsFinalLoading[sel.key]=false;
@@ -5451,9 +5418,9 @@ function brcRenderOddsPanel(message='',isError=false){
   const sel=brcOddsSelection();
   status.classList.toggle('error',!!isError);
   if(!sel.key){
-    meta.textContent='レースを選択して「オッズ更新」を押してください。';
-    status.textContent=message || '自動更新は行いません。同一レースは60秒以内ならBRC側の保存値を表示します。';
-    body.innerHTML='<div class="brc-odds-empty">更新ボタンを押すまで取得先へアクセスしません。</div>';
+    meta.textContent='レースを選択してください。';
+    status.textContent=message || '';
+    body.innerHTML='<div class="brc-odds-empty">レースを選択してください。</div>';
     btn.disabled=true; btn.textContent='オッズ更新';
     return;
   }
@@ -5463,10 +5430,10 @@ function brcRenderOddsPanel(message='',isError=false){
   const rec=__brcOddsLocal[sel.key]||null;
   meta.textContent=`${sel.venue} ${sel.raceNo}R` + (rec?.captured_at_jst ? (rec?.final ? `${brcOddsIsPrecloseSnapshot(sel,rec.captured_at_jst)?'　締切直前オッズ ':'　最終オッズ '}${brcOddsFmtTime(rec.captured_at_jst)}` : `　最終取得 ${brcOddsFmtTime(rec.captured_at_jst)}`) : '');
   if(message) status.textContent=message;
-  else if(passed && rec?.final) status.textContent='締切後の最終オッズです。以後このレースでは取得元へ再アクセスしません。';
-  else if(passed && __brcOddsFinalLoading[sel.key]) status.textContent='締切後の最終オッズを確認しています。';
-  else if(rec) status.textContent=rec.cache_hit ? '60秒キャッシュを使用しました。取得先への再アクセスはありません。' : '取得先から最新オッズを取得しました。次の取得は60秒後から可能です。';
-  else status.textContent='「オッズ更新」を押すと最新値を確認します。60秒以内の保存値があれば取得先へ再アクセスしません。';
+  else if(passed && rec?.final) status.textContent='最終オッズ';
+  else if(passed && __brcOddsFinalLoading[sel.key]) status.textContent='最終オッズ確認中';
+  else if(rec) status.textContent=rec.stale ? '保存値を表示' : '最新オッズ';
+  else status.textContent='「オッズ更新」で取得';
   body.innerHTML=rec?.odds ? brcOddsBuildView(rec.odds,sel) : (passed ? '<div class="brc-odds-empty">最終オッズを反映待ちです。</div>' : '<div class="brc-odds-empty">まだオッズを取得していません。</div>');
   body.querySelectorAll('[data-odds-view]').forEach(el=>el.addEventListener('click',()=>{const v=String(el.dataset.oddsView||'');__brcOddsView=(v==='popular'||v==='builder')?v:'matrix';brcRenderOddsPanel();}));
   const cooling=!!rec && Number(rec.cooldownUntil)>Date.now();
@@ -5476,7 +5443,7 @@ function brcRenderOddsPanel(message='',isError=false){
   else if(passed) btn.textContent='最終確認中';
   else if(cooling) btn.textContent=`更新 ${Math.max(1,Math.ceil((rec.cooldownUntil-Date.now())/1000))}秒`;
   else btn.textContent='オッズ更新';
-  if(historical && !message) status.textContent=rec?.final ? '保存済みの最終オッズを表示しています。' : '過去レースでは取得先へアクセスしません。保存済みの当日取得値がある場合のみ表示対象です。';
+  if(historical && !message) status.textContent=rec?.final ? '保存済み最終オッズ' : '保存済みオッズのみ表示';
   if(passed && !historical && !rec?.final && !__brcOddsFinalLoading[sel.key] && Number(__brcOddsFinalRetryAfter[sel.key]||0)<=Date.now()){
     setTimeout(()=>brcEnsureFinalOdds(sel),0);
   }
@@ -5489,7 +5456,7 @@ async function brcRefreshOddsManual(){
   if(String(sel.date)!==String(getJstDateLabel())){brcRenderOddsPanel('過去レースではオッズ更新を行いません。',true);return;}
   if(brcOddsDeadlinePassed(sel)){brcRenderOddsPanel('締切済みのため、新しいオッズ取得は行いません。',true);return;}
   btn.disabled=true; btn.textContent='取得中…';
-  brcRenderOddsPanel('オッズを確認しています。60秒以内の保存値があれば取得先へはアクセスしません。');
+  brcRenderOddsPanel('オッズ取得中');
   const qs=new URLSearchParams({date:sel.date,venue_code:sel.code,race_no:String(sel.raceNo),_:String(Date.now())});
   try{
     const res=await fetch(`${BRC_LIVE_EXHIBITION_API_URL}/live-odds?${qs.toString()}`,{method:'GET',cache:'no-store',headers:{'Accept':'application/json'}});
@@ -5505,7 +5472,7 @@ async function brcRefreshOddsManual(){
       final:!!obj.final,
       cooldownUntil:Date.now()+wait*1000
     };
-    const msg=obj.stale ? '取得元へ接続できなかったため、直前の保存値を表示しています。' : (obj.cache_hit ? '60秒キャッシュを使用しました。取得先への再アクセスはありません。' : '取得先から最新オッズを取得しました。次の取得は60秒後から可能です。');
+    const msg=obj.stale ? '保存値を表示' : '更新しました';
     brcRenderOddsPanel(msg,!!obj.stale);
     brcOddsStartCooldown(wait);
   }catch(err){
@@ -5555,6 +5522,14 @@ function brcBindOddsManual(){
       e.preventDefault();
       const sel=brcOddsSelection();
       if(sel?.key){brcOddsPoolRemove(sel.key,String(remove.dataset.oddsPoolRemove||''));__brcOddsView='builder';brcRenderOddsPanel();}
+      return;
+    }
+    const sort=e.target?.closest?.('[data-odds-pool-sort]');
+    if(sort){
+      e.preventDefault();
+      __brcOddsPoolSort=String(sort.dataset.oddsPoolSort||'')==='odds'?'odds':'comb';
+      __brcOddsView='builder';
+      brcRenderOddsPanel();
       return;
     }
     const clear=e.target?.closest?.('[data-odds-pool-clear]');
@@ -5714,17 +5689,15 @@ function brcBuildServerNigePredictionHtml(boats,workerPrediction,exhibitionAppli
     const predPct=Number(secondMap.get(boat)?.pct);
     const diff=Number.isFinite(basePct)&&Number.isFinite(predPct)?Math.round(predPct-basePct):null;
     const diffText=diff==null?'':(diff===0?'±0pt':`${diff>0?'+':''}${diff}pt`);
-    const diffClass=diff!=null&&diff>=10?'is-strong-plus':(diff!=null&&diff<=-10?'is-strong-minus':'');
+    const diffClass=diff!=null&&diff>0?'is-strong-plus':(diff!=null&&diff<0?'is-strong-minus':'');
     return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${metric(secondMap.get(boat),diffText,diffClass)}${metric(thirdMap.get(boat))}</div>`;
   }).join('');
-  const picks=`<div class="brc-nige-order-picks"><div class="brc-nige-order-picks-label">展開上位3連単</div><div class="brc-nige-order-pick-list">${pred.picks.map((x,i)=>`<span class="brc-nige-order-pick">${i+1}位 ${x}</span>`).join('')}</div></div>`;
+  const picks=`<div class="brc-nige-order-picks"><div class="brc-nige-order-picks-label">3連単上位</div><div class="brc-nige-order-pick-list">${pred.picks.map((x,i)=>`<span class="brc-nige-order-pick">${i+1}位 ${x}</span>`).join('')}</div></div>`;
   const phaseColor=pred.timexApplied?'#8a5a00':'var(--wave)';
   return `<div class="brc-nige-order-panel">
-    <div class="brc-nige-order-head"><div><div class="brc-nige-order-title">BRCイン逃げ展開予測</div><div class="brc-nige-order-sub">①が逃げた場合の②〜⑥ 2着・3着条件付き予測</div></div><span class="brc-nige-order-rank" style="color:${phaseColor};">${pred.phaseLabel}</span></div>
-    <div class="brc-nige-order-grid"><div class="brc-nige-order-row head"><div>艇</div><div>2着予測<span class="brc-nige-order-head-base">場基準差</span></div><div>3着予測</div></div>${rows}</div>
+    <div class="brc-nige-order-head"><div><div class="brc-nige-order-title">2着・3着予測</div><div class="brc-nige-order-sub">1号艇が逃げた場合</div></div><span class="brc-nige-order-rank" style="color:${phaseColor};">${pred.phaseLabel}</span></div>
+    <div class="brc-nige-order-grid"><div class="brc-nige-order-row head"><div>艇</div><div>2着率<span class="brc-nige-order-head-base">場基準比</span></div><div>3着率</div></div>${rows}</div>
     ${picks}
-    <div class="brc-nige-order-note">2023〜2024構築 → 2025検証・係数固定 → 2026完全OOS。選手特性・選手×コース・会場・級別・モーター・STを事前評価し、展示後はBRCタイムXで更新します。</div>
-    <div class="brc-nige-order-note">※①が逃げる確率とは別の条件付き予測です。展示スリット評価は現在この確率へ加えていません。</div>
   </div>`;
 }
 
@@ -5739,12 +5712,11 @@ function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhib
   box.innerHTML=`
     ${buildCurrentRaceSummaryHtml(venue)}
     <div class="predict-ai-head">
-      <div><div class="predict-ai-title">AI予測</div><div class="predict-ai-sub">BRCの予測ロジックを出走データとは分離して表示</div></div>
+      <div><div class="predict-ai-title">イン逃げ時予測</div></div>
       ${reliability}
     </div>
     ${nigeHtml}
     ${buildRecommendedBetsHtmlFromServer(workerPrediction, localInReliability, exhibitionApplied)}
-    <div class="predict-ai-note">BRCイン逃げ展開予測は「①が逃げた場合」の条件付き予測です。①が逃げる確率そのものとは分けて扱います。</div>
   `;
   // 念のためAI予測エリア内の買い目カードは常に1枚に制限する。
   const recommendationCards=box.querySelectorAll('[data-brc-ai3-root], #recommendedBetsCard');
@@ -5833,7 +5805,7 @@ function brcBuildInlineNigeOrderPredictionHtml(course, boats){
   if(Number(course)!==1) return '';
   const pred=brcComputeNigeOrderPrediction(boats);
   if(!pred){
-    return `<div class="brc-nige-order-panel"><div class="brc-nige-order-head"><div><div class="brc-nige-order-title">BRCイン逃げ展開予測</div><div class="brc-nige-order-sub">①が逃げた場合の②〜⑥ 2着・3着相対予測</div></div></div><div class="brc-nige-order-note" style="margin-top:0;">予測データ未取得</div><div class="brc-nige-order-note">※①が逃げること自体の確率とは別の、逃げ成立後の条件付き予測です。</div></div>`;
+    return `<div class="brc-nige-order-panel"><div class="brc-nige-order-head"><div><div class="brc-nige-order-title">2着・3着予測</div><div class="brc-nige-order-sub">1号艇が逃げた場合</div></div></div><div class="brc-nige-order-note" style="margin-top:0;">予測データ未取得</div></div>`;
   }
   const secondMap=new Map(pred.second.map(x=>[Number(x.boat),x]));
   const thirdMap=new Map(pred.third.map(x=>[Number(x.boat),x]));
@@ -5850,11 +5822,11 @@ function brcBuildInlineNigeOrderPredictionHtml(course, boats){
     const predPct=Number(secondMap.get(boat)?.pct);
     const diff=Number.isFinite(basePct)&&Number.isFinite(predPct)?Math.round(predPct-basePct):null;
     const diffText=diff==null?'':(diff===0?'±0pt':`${diff>0?'+':''}${diff}pt`);
-    const diffClass=diff!=null&&diff>=10?'is-strong-plus':(diff!=null&&diff<=-10?'is-strong-minus':'');
+    const diffClass=diff!=null&&diff>0?'is-strong-plus':(diff!=null&&diff<0?'is-strong-minus':'');
     return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${metric(secondMap.get(boat),diffText,diffClass)}${metric(thirdMap.get(boat))}</div>`;
   }).join('');
-  const picksHtml=pred.picks.length?`<div class="brc-nige-order-picks"><div class="brc-nige-order-picks-label">展開上位3連単</div><div class="brc-nige-order-pick-list">${pred.picks.map((x,i)=>`<span class="brc-nige-order-pick">${i+1}位 ${x}</span>`).join('')}</div></div>`:'';
-  return `<div class="brc-nige-order-panel"><div class="brc-nige-order-head"><div><div class="brc-nige-order-title">BRCイン逃げ展開予測</div><div class="brc-nige-order-sub">①が逃げた場合の②〜⑥ 2着・3着相対予測</div></div></div><div class="brc-nige-order-grid"><div class="brc-nige-order-row head"><div>艇</div><div>2着予測<span class="brc-nige-order-head-base">場基準差</span></div><div>3着予測</div></div>${rows}</div>${picksHtml}<div class="brc-nige-order-note">※①が逃げた場合の条件付き相対確率です。2着・3着はそれぞれ②〜⑥で合計100%。</div></div>`;
+  const picksHtml=pred.picks.length?`<div class="brc-nige-order-picks"><div class="brc-nige-order-picks-label">3連単上位</div><div class="brc-nige-order-pick-list">${pred.picks.map((x,i)=>`<span class="brc-nige-order-pick">${i+1}位 ${x}</span>`).join('')}</div></div>`:'';
+  return `<div class="brc-nige-order-panel"><div class="brc-nige-order-head"><div><div class="brc-nige-order-title">2着・3着予測</div><div class="brc-nige-order-sub">1号艇が逃げた場合</div></div></div><div class="brc-nige-order-grid"><div class="brc-nige-order-row head"><div>艇</div><div>2着率<span class="brc-nige-order-head-base">場基準比</span></div><div>3着率</div></div>${rows}</div>${picksHtml}</div>`;
 }
 
 function setPredictScenarioKimarite(course, kimarite){
@@ -5919,7 +5891,7 @@ function renderInlinePredictScenario(course){
         <tbody>${bodyRows}</tbody>
       </table>
     </div>
-    <div class="predict-detail-note" style="margin-top:9px;">「全体」は全決まり手をN加重で集計し、抜き・恵まれもここに含めます。差し・まくり・まくり差しはタブで切り替えます。2着・3着の下段矢印は今回のBRCタイムX影響で、決まり手タブを切り替えても共通です。信頼は標本N基準です。</div>
+    <div class="predict-detail-note" style="margin-top:9px;">「全体」は全決まり手を集計。矢印は今回のBRCタイムX影響、信頼は標本Nの目安です。</div>
   `;
 }
 
@@ -7031,9 +7003,12 @@ function brcGetExhibitionAlertMeta(a){
   const title=isWatch?'選手×コース×タイム差帯の個人傾向（監視条件）。タップで詳細':'選手×コース×タイム差帯の個人傾向。タップで詳細';
   return {isWatch,plan,cls,text,buttonText,title};
 }
+function brcAlertPayload(a,b){
+  return {...a,__currentWinPct:Number(b?.pct),__currentTop3Pct:Number(b?.pct3)};
+}
 function brcBuildExhibitionAlertButton(b){
   const a=brcFindExhibitionPlayerAlert(b); if(!a) return '';
-  const payload=encodeURIComponent(JSON.stringify(a));
+  const payload=encodeURIComponent(JSON.stringify(brcAlertPayload(a,b)));
   const meta=brcGetExhibitionAlertMeta(a);
   return `<button type="button" class="brc-ex-alert-btn ${meta.cls}" onclick="event.stopPropagation();brcShowExhibitionPlayerAlert(decodeURIComponent('${payload}'))" title="${meta.title}">${meta.buttonText}</button>`;
 }
@@ -7042,26 +7017,37 @@ function brcBuildPredictExhibitionLabelHtml(b){
   if(!a){
     return `<span class="predict-exhibition-inline"><span class="predict-exhibition-base"><span class="brc">BRC</span><span>タイムX</span></span></span>`;
   }
-  const payload=encodeURIComponent(JSON.stringify(a));
+  const payload=encodeURIComponent(JSON.stringify(brcAlertPayload(a,b)));
   const meta=brcGetExhibitionAlertMeta(a);
   return `<button type="button" class="predict-exhibition-inline predict-exhibition-alert ${meta.cls}" onclick="event.stopPropagation();brcShowExhibitionPlayerAlert(decodeURIComponent('${payload}'))" title="${meta.title}">${meta.text}</button>`;
 }
-function brcAlertMetricRow(label,a,normalKey,playerKey){
-  const normal=Number(a[normalKey]), player=Number(a[playerKey]);
-  const cls=brcMetricClass(player), arrow=brcMetricArrow(player);
-  return `<span>${label}</span><span class="v">${brcSignedPt(normal)}</span><span class="v brc-ex-metric-${cls}">${arrow} ${brcSignedPt(player)}</span>`;
+function brcAlertPct(v){
+  const n=Number(v); return Number.isFinite(n)?`${n.toFixed(1)}%`:'―';
+}
+function brcAlertRateRow(label,a,normalKey,playerKey,diffKey){
+  const normal=Number(a[normalKey]), player=Number(a[playerKey]), diff=Number(a[diffKey]);
+  const cls=brcMetricClass(diff);
+  return `<div class="brc-ex-alert-raterow"><span class="label">${label}</span><span class="num">${brcAlertPct(normal)}</span><span class="num">${brcAlertPct(player)}</span><span class="diff brc-ex-metric-${cls}">${brcSignedPt(diff)}</span></div>`;
+}
+function brcAlertDecision(a){
+  const plan=String(a?.['INDEX表示案']||'');
+  const isWatch=a?.['採用区分']==='監視';
+  if(isWatch) return {cls:'flat',title:'参考扱い',body:'個人差は見えていますが、まだ強く評価を変える条件ではありません。'};
+  if(plan==='好展示でも評価注意') return {cls:'down',title:'好展示でも過信しない',body:'タイムXが良くても、通常の上振れをそのまま当てはめず、本人実績を優先して評価します。'};
+  if(plan==='悪展示でも消し注意') return {cls:'up',title:'悪展示でも消し切らない',body:'タイムXが悪くても、通常の下振れだけで機械的に評価を落とさず、本人実績を確認します。'};
+  return {cls:'flat',title:'個人傾向を確認',body:'同じタイムX帯でも、本人だけ違う出方をする条件です。'};
 }
 function brcShowExhibitionPlayerAlert(raw){
   let a; try{a=JSON.parse(raw)}catch(e){return}
   document.getElementById('brcExAlertPop')?.remove();
   const pop=document.createElement('div'); pop.id='brcExAlertPop'; pop.className='brc-ex-alert-pop';
   pop.onclick=e=>{if(e.target===pop)pop.remove();};
-  const grade=a['採用区分']==='監視'?'OOS監視':`2026 OOS確認済（学習評価${a['評価']||''}）`;
-  const icon=a['採用区分']==='監視'?'△':'⚠';
-  const note=a['採用区分']==='監視'
-    ? '2024〜2025で個人特性を抽出し、2026完全OOSでも逆行指標が1つ以上再現した監視条件です。半数以上再現には届いていないため、確率は変更せずBRCタイムXの矢印だけ本人実測へ切り替えています。'
-    : '2024〜2025で個人特性を抽出し、2026完全OOSで学習時の逆行指標の半数以上が再現した本採用条件です。要注意該当時はBRCタイムXの矢印だけ全期間の本人実測へ切り替え、予測確率そのものへの追加補正は行っていません。';
-  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']}　BRCタイムX・個人傾向</div><div style="font-size:10.5px;color:var(--ink-soft);margin-top:3px;">${a['コース']}コース ／ タイムX差 ${a['平均差帯']}秒 ／ N=${a.N}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-ex-alert-tag">${icon} ${a['INDEX表示案']} ／ ${grade}</div><div style="font-size:10.5px;color:var(--ink-soft);margin:0 0 3px;">個人特性：${a['個人特性']||'個人特性型'}${Number.isFinite(Number(a['方向率']))?` ／ 方向率 ${Number(a['方向率']).toFixed(1)}%`:''}</div><div style="font-size:10px;color:var(--ink-soft);margin:0 0 5px;line-height:1.45;">発見ルート：${a['特性根拠']||'―'}</div><div style="font-size:11px;font-weight:850;margin:0 0 4px;color:var(--line-white);">学習時逆行：${a['逆行指標']}</div><div style="font-size:10.5px;font-weight:800;margin:0 0 9px;color:var(--ink-soft);">2026 OOS再現：${a['OOS再現指標']||'―'} ／ OOS N=${a['OOS_N']}</div><div class="brc-ex-alert-grid"><span></span><span class="h">通常傾向</span><span class="h">本人傾向</span>${brcAlertMetricRow('1着率',a,'通常1着効果pt','本人1着効果pt')}${brcAlertMetricRow('2着率',a,'通常2着効果pt','本人2着効果pt')}${brcAlertMetricRow('3着率',a,'通常3着効果pt','本人3着効果pt')}${brcAlertMetricRow('2連対率',a,'通常2連対効果pt','本人2連対効果pt')}${brcAlertMetricRow('3連対率',a,'通常3連対効果pt','本人3連対効果pt')}</div><div class="brc-ex-alert-note">${note}<br>選手本人の実測着率：1着 ${Number(a['本人1着率']).toFixed(1)}% / 2着 ${Number(a['本人2着率']).toFixed(1)}% / 3着 ${Number(a['本人3着率']).toFixed(1)}% / 2連対 ${Number(a['本人2連対率']).toFixed(1)}% / 3連対 ${Number(a['本人3連対率']).toFixed(1)}%</div></div>`;
+  const decision=brcAlertDecision(a);
+  const currentWin=Number(a.__currentWinPct), currentTop3=Number(a.__currentTop3Pct);
+  const currentHtml=(Number.isFinite(currentWin)||Number.isFinite(currentTop3))
+    ? `<div class="brc-ex-alert-forecast-label">今回のAI予測</div><div class="brc-ex-alert-forecast"><div class="brc-ex-alert-forecast-item"><div class="k">1着率</div><div class="v">${Number.isFinite(currentWin)?Math.round(currentWin)+'%':'―'}</div></div><div class="brc-ex-alert-forecast-item"><div class="k">3連対率</div><div class="v">${Number.isFinite(currentTop3)?Math.round(currentTop3)+'%':'―'}</div></div></div>`
+    : '';
+  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']}　BRCタイムX・個人傾向</div><div style="font-size:10.5px;color:var(--ink-soft);margin-top:3px;">${a['コース']}コース ／ タイムX差 ${a['平均差帯']}秒 ／ 過去N=${a.N}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div>${currentHtml}<div class="brc-ex-alert-decision ${decision.cls}"><strong>判断：${decision.title}</strong>${decision.body}</div><div class="brc-ex-alert-forecast-label">この条件での実績</div><div class="brc-ex-alert-ratebox"><div class="brc-ex-alert-ratehead"><span></span><span style="text-align:right;">通常</span><span style="text-align:right;">本人</span><span style="text-align:right;">差</span></div>${brcAlertRateRow('1着率',a,'通常1着率','本人1着率','1着通常比pt')}${brcAlertRateRow('2連対率',a,'通常2連対率','本人2連対率','2連対通常比pt')}${brcAlertRateRow('3連対率',a,'通常3連対率','本人3連対率','3連対通常比pt')}</div><div class="brc-ex-alert-breakdown">着別内訳：1着 ${brcAlertPct(a['本人1着率'])} ／ 2着 ${brcAlertPct(a['本人2着率'])} ／ 3着 ${brcAlertPct(a['本人3着率'])}</div><div class="brc-ex-alert-note">上段の「今回のAI予測」が、このレースで使う予測確率です。下段は同じコース・タイムX帯での本人実績で、予測を判断するときの補足材料です。</div></div>`;
   document.body.appendChild(pop);
 }
 
@@ -7086,13 +7072,6 @@ function brcBuildScenarioExhibitionBadge(b){
   const second=brcBuildScenarioPlaceExhibitionArrow(b,'second');
   const third=brcBuildScenarioPlaceExhibitionArrow(b,'third');
   return `<span class="scenario-exhibition-badge" title="今回のBRCタイムXが2着率・3着率へ与える方向"><span class="scenario-ex-label">タイムX</span><span class="scenario-ex-item">2着 ${second}</span><span class="scenario-ex-item">3着 ${third}</span></span>`;
-}
-
-function brcBuildPredictLeadSummaryHtml(boats){
-  if(!Array.isArray(boats)||boats.length!==6) return '';
-  const sorted=[...boats].sort((a,b)=>b.pctFloat-a.pctFloat);
-  const sorted3=[...boats].sort((a,b)=>b.pct3Float-a.pct3Float);
-  return `本命候補: <strong>${sorted[0].player.name}</strong>（コース${sorted[0].course}・予想勝率${sorted[0].pct}%）／ 3連対率トップ: <strong>${sorted3[0].player.name}</strong>（コース${sorted3[0].course}・予想3連対率${sorted3[0].pct3}%）`;
 }
 
 function buildLiveExhibitionStatusHtml(liveRace, venue='', raceNo=0){
@@ -7163,8 +7142,6 @@ function brcRefreshExhibitionAdjustedDom(liveRace,venue,raceNo){
     const wrap=document.createElement('div'); wrap.innerHTML=buildRecommendedBetsHtmlFromServer(worker,local,applied).trim();
     if(wrap.firstElementChild) rec.replaceWith(wrap.firstElementChild);
   }
-  const summary=document.getElementById('predictSummaryLead');
-  if(summary) summary.innerHTML=brcBuildPredictLeadSummaryHtml(boats);
 }
 
 function brcUpdateLiveExhibitionDom(liveRace,venue,raceNo){
@@ -7340,156 +7317,14 @@ function restoreHistoricalRaceCard(){
   }
 }
 
-function brcRaceCardDateAtOffset(daysAgo=0){
-  const base=getJstDateLabel().split('-').map(Number);
-  if(base.length!==3 || base.some(v=>!Number.isFinite(v))) return getJstDateLabel();
-  const dt=new Date(Date.UTC(base[0],base[1]-1,base[2]-Number(daysAgo||0)));
-  const y=dt.getUTCFullYear(), m=String(dt.getUTCMonth()+1).padStart(2,'0'), d=String(dt.getUTCDate()).padStart(2,'0');
-  return `${y}-${m}-${d}`;
-}
-
-function brcFormatRaceCardDate(dateStr,compact=false){
-  const m=String(dateStr||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if(!m) return dateStr||'-';
-  const dt=new Date(Date.UTC(Number(m[1]),Number(m[2])-1,Number(m[3])));
-  const wd=['日','月','火','水','木','金','土'][dt.getUTCDay()];
-  return compact ? `${Number(m[2])}/${Number(m[3])}（${wd}）` : `${m[1]}/${m[2]}/${m[3]}（${wd}）`;
-}
-
-function brcRaceCardDaysAgo(dateStr){
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(dateStr||''))) return NaN;
-  const today=brcRaceCardDateAtOffset(0);
-  const a=Date.parse(`${today}T00:00:00+09:00`), b=Date.parse(`${dateStr}T00:00:00+09:00`);
-  return Math.round((a-b)/86400000);
-}
-
-function brcIsSelectableRaceCardDate(dateStr){
-  const days=brcRaceCardDaysAgo(dateStr);
-  return Number.isFinite(days) && days>=0 && days<=7;
-}
-
-function renderRaceCardDatePicker(){
-  const current=document.getElementById('raceCardDisplayDate');
-  const state=document.getElementById('raceCardDisplayState');
-  const menu=document.getElementById('raceCardDateMenu');
-  const historical=brcIsHistoricalRaceCardMode();
-  if(current) current.textContent=brcFormatRaceCardDate(TODAY_LABEL||getJstDateLabel());
-  if(state){
-    state.textContent=historical?'過去データ':'今日';
-    state.classList.toggle('historical',historical);
-  }
-  if(menu){
-    const shown=String(TODAY_LABEL||'');
-    menu.innerHTML=Array.from({length:8},(_,i)=>{
-      const date=brcRaceCardDateAtOffset(i);
-      const active=date===shown?' active':'';
-      const sub=i===0?'今日':(i===1?'昨日':`${i}日前`);
-      return `<button type="button" class="racecard-date-option${active}" data-racecard-date="${date}"><span class="racecard-date-option-label">${brcFormatRaceCardDate(date,true)}</span><span class="racecard-date-option-sub">${sub}${active?' ・ 表示中':''}</span></button>`;
-    }).join('');
-    menu.querySelectorAll('[data-racecard-date]').forEach(btn=>{
-      btn.addEventListener('click',()=>brcLoadHostedRaceCardDate(btn.dataset.racecardDate));
-    });
-  }
-}
-
-function brcCloseRaceCardDateMenu(){
-  const menu=document.getElementById('raceCardDateMenu');
-  const btn=document.getElementById('raceCardDatePickerButton');
-  if(menu) menu.hidden=true;
-  if(btn) btn.setAttribute('aria-expanded','false');
-}
-
-function brcInitRaceCardDatePicker(){
-  const btn=document.getElementById('raceCardDatePickerButton');
-  const menu=document.getElementById('raceCardDateMenu');
-  if(!btn||!menu) return;
-  if(btn.dataset.bound!=='1'){
-    btn.dataset.bound='1';
-    btn.addEventListener('click',(ev)=>{
-      ev.stopPropagation();
-      const open=menu.hidden;
-      menu.hidden=!open;
-      btn.setAttribute('aria-expanded',open?'true':'false');
-    });
-  }
-  if(!window.__brcRaceCardDateOutsideBound){
-    window.__brcRaceCardDateOutsideBound=true;
-    document.addEventListener('click',(ev)=>{
-      const bar=document.getElementById('raceCardDateToolbar');
-      if(bar && !bar.contains(ev.target)) brcCloseRaceCardDateMenu();
-    });
-  }
-  renderRaceCardDatePicker();
-}
-
-async function brcLoadHostedRaceCardDate(dateStr){
-  const target=String(dateStr||'');
-  const today=getJstDateLabel();
-  const statusBox=document.getElementById('raceCardFileStatus');
-  brcCloseRaceCardDateMenu();
-  if(!brcIsSelectableRaceCardDate(target)){
-    if(statusBox){statusBox.textContent='選択できるのは本日から7日前までです。';statusBox.style.color='#b42318';}
-    return false;
-  }
-  if(target===today) return brcReturnRaceCardToToday();
-
-  brcStopLiveExhibitionPolling();
-  if(window.__brcRaceCardRetryTimer){clearTimeout(window.__brcRaceCardRetryTimer);window.__brcRaceCardRetryTimer=null;}
-  if(statusBox){statusBox.textContent=`${brcFormatRaceCardDate(target)} の番組表を読み込み中…`;statusBox.style.color='';}
-
-  const yymmdd=target.replace(/-/g,'').slice(2);
-  const sourceName=`B${yymmdd}.TXT`;
-  const stamp=Date.now();
-  const urls=[`racecards/history/${sourceName}?v=${stamp}`,`racecards/${sourceName}?v=${stamp}`];
-  let data=null, lastError=null;
-  for(const url of urls){
-    try{
-      const res=await fetch(url,{cache:'no-store'});
-      if(!res.ok){lastError=new Error(`HTTP ${res.status}`);continue;}
-      const buf=await res.arrayBuffer();
-      let txt;
-      try{txt=new TextDecoder('shift_jis').decode(buf);}catch(_e){txt=new TextDecoder('utf-8').decode(buf);}
-      const parsed=parseOfficialRaceCardText(txt);
-      if(parsed.date && parsed.date!==target){lastError=new Error(`日付不一致: ${parsed.date}`);continue;}
-      data=parsed;break;
-    }catch(e){lastError=e;}
-  }
-  if(!data){
-    if(statusBox){statusBox.textContent=`${brcFormatRaceCardDate(target)} の過去番組表がまだ配信されていません。`;statusBox.style.color='#b42318';}
-    renderRaceCardDatePicker();
-    console.warn('過去番組表の自動読込に失敗しました',target,lastError);
-    return false;
-  }
-
-  RACE_CARDS_TODAY=data.cards;
-  RACE_INFO_TODAY=normalizeRaceInfoDayLabels(data.info);
-  RACE_MOTOR_TODAY=data.motor||{};
-  RACE_MOTOR_NO_TODAY=data.motorNo||{};
-  RACE_CLASS_TODAY=data.racerClass||data.classes||{};
-  TODAY_LABEL=data.date||target;
-  BRC_RACE_CARD_HISTORY_LOCK=true;
-  BRC_RACE_CARD_HISTORY_SOURCE=`auto:${sourceName}`;
-  saveHistoricalRaceCard(BRC_RACE_CARD_HISTORY_SOURCE);
-
-  renderRaceCardModeUi();
-  populateDaySelect();
-  try{brcRenderPostRaceCards();}catch(_e){}
-  collapseRaceCardFold();
-  invalidateTodayPicks(true);
-  if(document.getElementById('page-special')) renderSpecialLivePanel();
-  if(statusBox){statusBox.textContent=`過去番組表を表示中: ${sourceName}（${Object.keys(RACE_INFO_TODAY).length}会場）`;statusBox.style.color='';}
-  return true;
-}
-
 function renderRaceCardModeUi(){
   const banner=document.getElementById('raceCardHistoryBanner');
   const dateEl=document.getElementById('raceCardHistoryDate');
   const label=document.getElementById('raceCardDateLabel');
   const historical=brcIsHistoricalRaceCardMode();
   if(label) label.textContent=TODAY_LABEL||'-';
-  if(dateEl) dateEl.textContent=historical ? brcFormatRaceCardDate(TODAY_LABEL) : '-';
+  if(dateEl) dateEl.textContent=historical ? TODAY_LABEL : '-';
   if(banner) banner.classList.toggle('active',historical);
-  renderRaceCardDatePicker();
 }
 
 async function brcReturnRaceCardToToday(){
@@ -7626,7 +7461,6 @@ function initPredictPage(){
   document.getElementById('raceCardDateLabel').textContent = TODAY_LABEL;
   populateDaySelect();
   renderRaceCardModeUi();
-  brcInitRaceCardDatePicker();
   const returnTodayBtn=document.getElementById('raceCardReturnToday');
   if(returnTodayBtn) returnTodayBtn.addEventListener('click', brcReturnRaceCardToToday);
 
@@ -8804,7 +8638,7 @@ function openSTStabilityDetailLegacy(reg,course){
       <div class="k">本人基準±0.05内</div><div class="v">${pct(d?.hit05)}</div>
       <div class="k">ST .25以上</div><div class="v">${pct(d?.late25)}</div>
     </div>
-    <div class="st-detail-note">安定度は平均STの速さとは分離して評価。スローは全体直近80走50%＋スロー直近80走50%、ダッシュは全体直近30走25%＋ダッシュ直近80走75%。区分別N&lt;50はランクを出しません。表示専用で、勝率・3連対率・イン信頼度には再加点していません。</div>`;
+    <div class="st-detail-note">平均STの速さとは別に安定性を評価。N&lt;50はランク表示なし。予測値へ再加点していません。</div>`;
   const bd=document.getElementById('stStabilityDetailBackdrop'); bd.classList.add('open'); bd.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden';
 }
 function openSTStabilityDetail(reg,course){ openPredictUnifiedDetail(course, 'st'); }
@@ -9691,7 +9525,7 @@ function brcAi3ModeDesign(key){
 }
 function brcAi3ModeDesignHtml(key){
   const d=brcAi3ModeDesign(key);
-  return `<div class="brc-ai3-mode-design"><div class="brc-ai3-mode-design-top"><span class="brc-ai3-mode-design-name">${brcAi3ModeLabel(key)}</span><span class="brc-ai3-mode-design-key">${d.key}</span></div><div class="brc-ai3-mode-design-copy">${d.copy}</div><details class="brc-ai3-mode-details"><summary></summary><div class="brc-ai3-mode-details-body">${d.detail}</div></details></div>`;
+  return `<div class="brc-ai3-mode-design"><div class="brc-ai3-mode-design-top"><span class="brc-ai3-mode-design-name">${brcAi3ModeLabel(key)}</span><span class="brc-ai3-mode-design-key">${d.key}</span></div></div>`;
 }
 function brcAi3OosHtml(mode){
   const o=mode?.oos2026 || mode?.oos || mode?.validationOos || null;
@@ -9699,10 +9533,11 @@ function brcAi3OosHtml(mode){
   const roi=brcAi3Num(o||{},['roi','returnRate','recoveryRate']);
   const n=brcAi3Num(o||{},['n','N','count']);
   const ready=Number.isFinite(hit)||Number.isFinite(roi)||Number.isFinite(n);
-  return `<div class="brc-ai3-oos"><div class="brc-ai3-oos-head"><span class="brc-ai3-oos-title">2026 完全OOS 実績</span><span class="brc-ai3-oos-status">${ready?'実測':'検証中'}</span></div><div class="brc-ai3-oos-grid"><div class="brc-ai3-oos-metric"><div class="k">的中率</div><div class="v">${Number.isFinite(hit)?brcAi3Pct(hit,1):'--%'}</div></div><div class="brc-ai3-oos-metric"><div class="k">回収率</div><div class="v">${Number.isFinite(roi)?brcAi3RatePct(roi,0):'--%'}</div></div><div class="brc-ai3-oos-metric"><div class="k">対象</div><div class="v">${Number.isFinite(n)?`N=${Math.round(n)}`:'N=--'}</div></div></div></div>`;
+  if(!ready) return '';
+  return `<div class="brc-ai3-oos"><div class="brc-ai3-oos-head"><span class="brc-ai3-oos-title">2026 完全OOS 実績</span><span class="brc-ai3-oos-status">実測</span></div><div class="brc-ai3-oos-grid"><div class="brc-ai3-oos-metric"><div class="k">的中率</div><div class="v">${Number.isFinite(hit)?brcAi3Pct(hit,1):'--%'}</div></div><div class="brc-ai3-oos-metric"><div class="k">回収率</div><div class="v">${Number.isFinite(roi)?brcAi3RatePct(roi,0):'--%'}</div></div><div class="brc-ai3-oos-metric"><div class="k">対象</div><div class="v">${Number.isFinite(n)?`N=${Math.round(n)}`:'N=--'}</div></div></div></div>`;
 }
 function brcAi3ModePanelHtml(mode,key){
-  if(!mode) return `<div class="brc-ai3-missing">${brcAi3ModeLabel(key)}はサーバー応答待ちです。</div>`;
+  if(!mode) return `<div class="brc-ai3-missing">データ取得中です。</div>`;
   const rawPicks=Array.isArray(mode.picks)?mode.picks:(Array.isArray(mode.bets)?mode.bets:(Array.isArray(mode.selections)?mode.selections:[]));
   const picks=rawPicks.map(x=>({raw:x,combo:brcAi3ComboText(x)})).filter(x=>x.combo).slice(0,10);
   const recommended=mode.recommended!==false && mode.skip!==true && mode.pass!==true && picks.length>0;
@@ -9791,55 +9626,12 @@ function brcBuildLegacyRecommendedBetsHtml(workerPrediction, localInReliability=
     <details style="margin-top:8px;"><summary style="cursor:pointer;color:var(--ink-soft);font-size:11.5px;">詳細を見る</summary><div style="font-size:11.5px;color:var(--ink-soft);line-height:1.6;margin-top:5px;">タイプ：${r.typeLabel||r.type||'―'} ／ イン信頼度：${uiRank} ／ 攻め艇：${r.attackBoat||'―'}号艇（${r.attackStyle||'―'}）<br>校正前セット確率 ${Number.isFinite(raw)?(raw*100).toFixed(1):'―'}% → Validation校正 ${Number.isFinite(cal)?(cal*100).toFixed(1):'―'}% → 安全補正 ${Number.isFinite(safe)?(safe*100).toFixed(1):'―'}%</div></details>
   </div>`;
 }
-function brcBuildAi3ModePreviewHtml(){
-  const previewMode=(key,head,picks,points,hit,comp,roi)=>{
-    const chips=picks.map(x=>`<span class="brc-ai3-pick">${x}<small>例</small></span>`).join('');
-    return `${brcAi3ModeDesignHtml(key)}
-    <div class="brc-ai3-head-candidate">
-      <span class="brc-ai3-head-label">期待値ある1着候補</span>
-      <span class="brc-ai3-head-boat">${head}<span class="brc-ai3-sample-flag">例</span></span>
-    </div>
-    <div class="brc-ai3-section-label">期待値ある参考買い目</div>
-    <div class="brc-ai3-picks">${chips}</div>
-    <div class="brc-ai3-kpi-caption">今回の予測 <span class="brc-ai3-sample-flag">サンプル値</span></div>
-    <div class="brc-ai3-kpis">
-      <div class="brc-ai3-kpi"><div class="k">点数</div><div class="v">${points}点</div></div>
-      <div class="brc-ai3-kpi"><div class="k">想定的中率</div><div class="v accent">${hit}</div></div>
-      <div class="brc-ai3-kpi"><div class="k">合成オッズ</div><div class="v">${comp}</div></div>
-      <div class="brc-ai3-kpi"><div class="k">期待回収率</div><div class="v">${roi}</div></div>
-    </div>
-    <div class="brc-ai3-oos"><div class="brc-ai3-oos-head"><span class="brc-ai3-oos-title">2026 完全OOS 実績</span><span class="brc-ai3-oos-status">検証中</span></div><div class="brc-ai3-oos-grid"><div class="brc-ai3-oos-metric"><div class="k">実測的中率</div><div class="v">--%</div></div><div class="brc-ai3-oos-metric"><div class="k">実測回収率</div><div class="v">--%</div></div><div class="brc-ai3-oos-metric"><div class="k">対象</div><div class="v">N=--</div></div></div></div>`;
-  };
-  const modes={
-    stable:previewMode('stable','③',['3-1-2','3-4-1','3-1-4','3-4-2','3-2-1'],5,'38.4%','2.94倍','113%'),
-    hit:previewMode('hit','①',['1-2-3','1-3-2','1-2-4','1-3-4','1-4-2','1-2-5','1-5-2'],7,'51.2%','2.04倍','104%'),
-    return:previewMode('return','④',['4-5-1','4-1-5','4-5-2'],3,'22.8%','5.79倍','132%')
-  };
-  return `<div class="brc-ai3-card" data-brc-ai3-root data-brc-ai3-preview="1">
-    <div class="brc-ai3-head">
-      <div class="brc-ai3-title">BRC参考買い目</div>
-      <span class="brc-ai3-badge">今後導入予定</span>
-      <span class="brc-ai3-badge">表示イメージ</span>
-    </div>
-    <div style="margin:-3px 12px 9px;padding:7px 9px;border-radius:8px;background:rgba(227,178,60,.08);border:1px solid rgba(227,178,60,.24);font-size:9.5px;font-weight:800;color:#8a5a00;line-height:1.45;">サンプル表示です。買い目・想定的中率・期待回収率は現在のレースを実際に予測した値ではありません。</div>
-    <div class="brc-ai3-tabs">
-      <button type="button" class="brc-ai3-tab active" data-brc-ai-mode-tab="stable">安定型</button>
-      <button type="button" class="brc-ai3-tab" data-brc-ai-mode-tab="hit">的中型</button>
-      <button type="button" class="brc-ai3-tab" data-brc-ai-mode-tab="return">回収型</button>
-    </div>
-    <div class="brc-ai3-body">
-      <div class="brc-ai3-panel active" data-brc-ai-mode-panel="stable">${modes.stable}</div>
-      <div class="brc-ai3-panel" data-brc-ai-mode-panel="hit">${modes.hit}</div>
-      <div class="brc-ai3-panel" data-brc-ai-mode-panel="return">${modes.return}</div>
-    </div>
-  </div>`;
-}
+function brcBuildAi3ModePreviewHtml(){ return ''; }
 function buildRecommendedBetsHtmlFromServer(workerPrediction, localInReliability=null, exhibitionApplied=false){
   const ai3=brcBuildAi3ModeRecommendationHtml(workerPrediction);
   if(ai3) return ai3;
-  // AI3未配信中は表示イメージを1枚だけ出す。
-  // 旧推奨買い目を連結すると同じAI予測エリアに買い目カードが複数並ぶため併記しない。
-  return brcBuildAi3ModePreviewHtml();
+  // 実データ未配信中はサンプル値をユーザーへ見せない。
+  return '';
 }
 
 // ===== BRC protected server =====
@@ -9885,8 +9677,8 @@ async function runPredict(){
         apiResult=await brcPostRacePreviewApi({date:TODAY_LABEL,venue,raceNo:raceNoLive,grade,boats:apiBoats});
         brcRenderPostRaceMode({venue,raceNo:raceNoLive,deadline,id:currentId});
       }else{
-        brcRenderPublicBrowser(`🔒 ${venue}${raceNoLive}Rは締切前のためBRC MEMBERS限定です。締切後すぐ無料公開されます。`);
-        preBox.innerHTML = `<div style="padding:16px 12px;text-align:center;border:1px solid rgba(10,31,51,.12);border-radius:10px;background:#f7f8fa;color:var(--navy);font-size:13px;font-weight:800;">🔒 ${venue}${raceNoLive}Rは締切前のため会員限定です。<br><span style="font-size:11px;font-weight:600;color:var(--ink-soft);">締切時刻を過ぎると非会員にも自動で無料公開されます。</span></div>`;
+        brcRenderPublicBrowser(`${venue}${raceNoLive}Rは締切前のため会員限定です。締切後に無料公開されます。`);
+        preBox.innerHTML = `<div style="padding:16px 12px;text-align:center;border:1px solid rgba(10,31,51,.12);border-radius:10px;background:#f7f8fa;color:var(--navy);font-size:13px;font-weight:800;">${venue}${raceNoLive}Rは締切前のため会員限定です。<br><span style="font-size:11px;font-weight:600;color:var(--ink-soft);">締切後に無料公開されます。</span></div>`;
         return;
       }
     }else{
@@ -9914,7 +9706,7 @@ async function runPredict(){
       return;
     }
     if(!BRC_MEMBER_ACTIVE && (err?.status===404 || err?.status===405 || err?.status===501)){
-      preBox.innerHTML = '<div style="color:#e5484d; font-size:14.5px;">終了レース公開APIがまだ有効になっていません。</div>';
+      preBox.innerHTML = '<div style="color:#e5484d; font-size:14.5px;">このレースを表示できませんでした。少し時間をおいてもう一度お試しください。</div>';
       return;
     }
     preBox.innerHTML = '<div style="color:#e5484d; font-size:14.5px;">予想APIに接続できませんでした。少し時間をおいてもう一度お試しください。</div>';
@@ -10059,27 +9851,27 @@ async function runPredict(){
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">イン逃げ信頼度</div>
-            <div class="predict-guide-text">1号艇の最終予想勝率をS〜E・強イン否定で段階評価します。1号艇を頭で信頼するか、イン崩れを警戒するかの目安です。「場基準比」は、その会場の1コース基準に対して今回の1号艇が何pt高い・低いかを示します。</div>
+            <div class="predict-guide-text">1号艇をどれだけ信頼できるかをS〜E・強イン否定で表示します。「場基準比」は、その会場の1コース基準との差です。</div>
           </div>
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">勝率</div>
-            <div class="predict-guide-text">その艇が1着になるBRC予測確率です。選手・コース・会場などの事前データをもとに算出し、展示取得後はBRCタイムXの補正も反映します。</div>
+            <div class="predict-guide-text">その艇が1着になるBRC予測確率です。展示取得後はBRCタイムXも反映します。</div>
           </div>
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">3連対率</div>
-            <div class="predict-guide-text">その艇が1〜3着に入るBRC予測確率です。頭候補だけでなく、2着・3着で残す艇を判断する時に使います。展示取得後はBRCタイムXの補正も反映します。</div>
+            <div class="predict-guide-text">その艇が1〜3着に入るBRC予測確率です。2着・3着で残す艇の判断にも使えます。</div>
           </div>
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">ST順位</div>
-            <div class="predict-guide-text">1段目は直近1年・今回コースの平均ST順位で、数字が小さいほどスタートで前に出る傾向です。2段目の「安定S〜D」はスタートの速さではなく再現性の評価です。1〜3コースはスロー、4〜6コースはダッシュで判定し、区分別Nが50未満は「安定－」になります。</div>
+            <div class="predict-guide-text">1段目は今回コースの平均ST順位で、数字が小さいほどスタートで前に出る傾向です。2段目の「安定S〜D」はSTの再現性を示します。</div>
           </div>
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">モーター</div>
-            <div class="predict-guide-text">今節の6艇のモーター2連対率を相対比較したA〜E評価です。Aほど今回の6艇内では高評価、Eほど低評価です。絶対的なモーター性能ランクではなく「このレースの6艇比較」として見ます。</div>
+            <div class="predict-guide-text">今節の6艇でモーターを相対比較したA〜E評価です。Aほど高評価、Eほど低評価です。</div>
           </div>
         </div>
 
@@ -10088,12 +9880,12 @@ async function runPredict(){
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">BRCタイムX</div>
-            <div class="predict-guide-text">今回の展示タイム差が各着率を上げる・下げる方向を矢印で表示します。矢印は「予測確率そのもの」ではなく、検証された着率への影響方向と強さです。→はほぼ横ばい、↗/↘、↑/↓、↑↑/↓↓の順に影響が大きくなります。「要注意」が出た選手は、通常傾向ではなく検証済みの本人傾向を優先表示します。</div>
+            <div class="predict-guide-text">展示タイム差が着率へ与える影響を矢印で表示します。→は横ばい、矢印が強いほど影響が大きくなります。「要注意」は本人特有の傾向が確認された選手です。</div>
           </div>
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">展示スリット評価</div>
-            <div class="predict-guide-text">隣接艇を対象に、外艇の展示タイムが0.10秒以上優位で、さらに今回コースの平均ST順位も内艇より0.50位以上良い場合に判定します。ST順位は双方N=5以上が条件です。検証対象条件では1着・2着・3連対の方向を表示しますが、BRCタイムXとの二重加点を避けるため予測確率へは再加点していません。</div>
+            <div class="predict-guide-text">展示タイムとST順位から、隣接艇に対する攻めの優位性を評価します。該当時は着率への影響方向を表示します。</div>
           </div>
         </div>
 
@@ -10102,22 +9894,22 @@ async function runPredict(){
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">選手</div>
-            <div class="predict-guide-text">今回コースでのその選手自身の特徴を確認します。1コースは「敗因・弱点」、2〜6コースは直近1年の「差し・まくり・まくり差し」の決まり手傾向を表示。今回会場でのコース別成績、グレード別成績も確認できます。</div>
+            <div class="predict-guide-text">今回コースでの選手自身の特徴を確認できます。1コースは敗因・弱点、2〜6コースは決まり手傾向や会場・グレード別成績を表示します。</div>
           </div>
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">展開</div>
-            <div class="predict-guide-text">その選手が今回コースから1着になった時に、他艇が2着・3着・3連対へ残る過去傾向を確認します。「全体・差し・まくり・まくり差し」で切り替え可能です。Nと「信頼」は標本量の目安で、2着・3着の下段矢印は今回のBRCタイムX影響です。</div>
+            <div class="predict-guide-text">その選手が1着になった時、他艇が2着・3着に残る傾向を確認できます。決まり手別にも切り替えられます。</div>
           </div>
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">ST</div>
-            <div class="predict-guide-text">今回コースの平均ST順位と、今回の進入区分に合わせたST安定度を確認します。区分別N、平均ST、STのブレ、本人基準±0.05以内の割合、ST .25以上の割合を表示します。安定度は表示専用で、勝率・3連対率・イン信頼度には再加点していません。</div>
+            <div class="predict-guide-text">今回コースの平均ST順位とST安定度を確認できます。平均STやブレなど、スタートの速さと再現性を詳しく見られます。</div>
           </div>
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">モーター</div>
-            <div class="predict-guide-text">今回モーターの相対評価・2連対率に加え、使用開始以降のN、優出・優勝、前回使用者と着順、優勝戦出場歴を確認します。表のA〜E評価だけでは分からない機歴を掘り下げるためのタブです。</div>
+            <div class="predict-guide-text">モーター評価・2連対率に加え、前回使用者や優出・優勝などの機歴を確認できます。</div>
           </div>
         </div>
 
@@ -10125,25 +9917,24 @@ async function runPredict(){
           <div class="predict-guide-group-title">AI予測・参考</div>
 
           <div class="predict-guide-item">
-            <div class="predict-guide-key">イン逃げ展開予測</div>
-            <div class="predict-guide-text">AI予測タブに表示する「①が逃げた場合」の条件付き予測です。②〜⑥の2着・3着確率をそれぞれ合計100%で比較します。1号艇が逃げる確率そのものとは別の予測として見ます。</div>
+            <div class="predict-guide-key">イン逃げ時予測</div>
+            <div class="predict-guide-text">1号艇が逃げた場合の、②〜⑥の2着・3着率を表示します。</div>
           </div>
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">推奨買い目</div>
-            <div class="predict-guide-text">AI予測タブで、BRCの予測確率と展開分類から3連単の組み合わせ・点数・想定的中率・参加目安の合成オッズを表示します。条件が弱い、または展開が拮抗する場合は「推奨なし」とします。展示取得後は確率に展示補正を反映しますが、現在の推奨買い目自体は展示未反映です。</div>
+            <div class="predict-guide-text">BRC予測から3連単の組み合わせ・点数・想定的中率・参加目安の合成オッズを表示します。条件が弱い場合は「推奨なし」とします。展示後は確率へ反映し、買い目は展示前の構成です。</div>
           </div>
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">風向・風速別1着率</div>
-            <div class="predict-guide-text">会場×風向×風速ごとのコース別1着率、場平均との差、N数を確認する参考データです。予想勝率・3連対率には加算していません。</div>
+            <div class="predict-guide-text">会場・風向・風速ごとのコース別1着率と場平均との差を確認できる参考データです。</div>
           </div>
         </div>
 
       </div>
     </details>
     ${buildWindPanelHtml()}
-    <div id="predictSummaryLead" class="trend-note fold-lead" style="margin-top:12px;">${brcBuildPredictLeadSummaryHtml(boats)}</div>
   `;
 
   renderPredictAiPanel(boats, workerPrediction, localInReliability, exhibitionApplied);
