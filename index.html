@@ -2098,76 +2098,59 @@
     .sg-motor-policy{grid-template-columns:1fr;}
   }
 
-  /* ---- 過去番組表検証モード ---- */
-  .racecard-history-banner{
-    display:none; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
-    margin:0 0 12px; padding:10px 12px; border-radius:10px;
-    border:1px solid rgba(138,90,0,.24); background:rgba(227,178,60,.10); color:#6f4b00;
-  }
-  .racecard-history-banner.active{display:flex;}
-  .racecard-history-main{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0;}
-  .racecard-history-title{font-size:12.5px;font-weight:900;white-space:nowrap;}
-  .racecard-history-date{font-size:12px;font-weight:800;white-space:nowrap;}
-  .racecard-history-note{font-size:10.5px;color:#78633a;line-height:1.45;}
-  .racecard-history-return{
-    appearance:none; border:1px solid rgba(10,31,51,.18); background:#fff; color:var(--navy);
-    border-radius:999px; padding:6px 11px; font:inherit; font-size:11.5px; font-weight:900; cursor:pointer; white-space:nowrap;
-  }
-  .racecard-history-return:hover{border-color:rgba(0,87,219,.4);color:var(--wave);}
-  @media(max-width:420px){
-    .racecard-history-banner{padding:9px 10px;gap:7px;}
-    .racecard-history-main{gap:5px;}
-    .racecard-history-title,.racecard-history-date{font-size:11.5px;}
-    .racecard-history-note{flex-basis:100%;font-size:10px;}
-    .racecard-history-return{font-size:11px;padding:5px 9px;}
-  }
-
   /* ---- 出走表 表示日付 / 過去7日セレクタ ---- */
   .racecard-date-toolbar{
-    position:relative; display:flex; align-items:center; justify-content:space-between; gap:10px;
-    margin:0 0 12px; padding:10px 12px; border:1px solid rgba(10,31,51,.10); border-radius:12px;
+    position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px 10px;
+    margin:0 0 12px;padding:11px 12px;border:1px solid rgba(10,31,51,.10);border-radius:12px;
     background:linear-gradient(180deg,#fff 0%,rgba(10,31,51,.018) 100%);
   }
-  .racecard-date-current{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap;}
-  .racecard-date-caption{font-size:10.5px;font-weight:800;color:var(--ink-soft);white-space:nowrap;}
-  .racecard-date-value{font-size:15px;font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .racecard-date-current{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:8px;row-gap:5px;min-width:0;}
+  .racecard-date-caption{grid-column:1/-1;font-size:10.5px;font-weight:800;color:var(--ink-soft);white-space:nowrap;}
+  .racecard-date-value{grid-column:1/-1;font-size:17px;font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1.2;}
   .racecard-date-state{
-    display:inline-flex;align-items:center;justify-content:center;border-radius:999px;padding:3px 7px;
+    grid-column:1;display:inline-flex;align-items:center;justify-content:center;width:max-content;border-radius:999px;padding:3px 8px;
     font-size:9.5px;font-weight:900;line-height:1.2;background:rgba(0,87,219,.08);color:var(--wave);white-space:nowrap;
   }
   .racecard-date-state.historical{background:rgba(227,178,60,.16);color:#805700;}
+  .racecard-date-return{
+    grid-column:2;appearance:none;border:0;background:transparent;color:var(--wave);padding:2px 0;font:inherit;
+    font-size:10px;font-weight:900;cursor:pointer;white-space:nowrap;text-decoration:underline;text-underline-offset:2px;
+  }
+  .racecard-date-return[hidden]{display:none!important;}
   .racecard-date-picker-btn{
     appearance:none;border:1px solid rgba(0,87,219,.20);background:#fff;color:var(--wave);border-radius:999px;
     padding:7px 11px;font:inherit;font-size:11.5px;font-weight:900;cursor:pointer;white-space:nowrap;
-    touch-action:manipulation;-webkit-tap-highlight-color:transparent;position:relative;z-index:2;
+    touch-action:manipulation;-webkit-tap-highlight-color:transparent;position:relative;z-index:2;align-self:center;
   }
   .racecard-date-picker-btn:hover{border-color:rgba(0,87,219,.45);background:rgba(0,87,219,.035);}
   .racecard-date-picker-btn[aria-expanded="true"]{background:var(--wave);border-color:var(--wave);color:#fff;}
   .racecard-date-menu{
     position:absolute;z-index:1000;top:calc(100% + 6px);right:0;width:min(290px,calc(100vw - 32px));padding:7px;
-    border:1px solid rgba(10,31,51,.12);border-radius:12px;background:#fff;box-shadow:0 12px 32px rgba(10,31,51,.16);
-    pointer-events:auto;
+    border:1px solid rgba(10,31,51,.12);border-radius:12px;background:#fff;box-shadow:0 12px 32px rgba(10,31,51,.16);pointer-events:auto;
   }
   .racecard-date-menu[hidden]{display:none!important;}
   .racecard-date-option{
-    width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;appearance:none;
-    border:0;background:transparent;border-radius:8px;padding:11px 10px;font:inherit;cursor:pointer;text-align:left;color:var(--navy);
+    width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;appearance:none;border:0;background:transparent;
+    border-radius:8px;padding:11px 10px;font:inherit;cursor:pointer;text-align:left;color:var(--navy);
     touch-action:manipulation;-webkit-tap-highlight-color:transparent;pointer-events:auto;position:relative;z-index:1;
   }
   .racecard-date-option.loading{opacity:.55;pointer-events:none;}
-  .racecard-date-feedback{flex-basis:100%;font-size:10.5px;font-weight:800;color:var(--ink-soft);min-height:1.3em;margin-top:1px;}
+  .racecard-date-feedback{grid-column:1/-1;font-size:10.5px;font-weight:800;color:var(--ink-soft);min-height:0;margin-top:0;}
+  .racecard-date-feedback:empty{display:none;}
   .racecard-date-feedback.error{color:#b42318;}
-  .racecard-date-feedback.ok{color:#087443;}
+  .racecard-date-feedback.ok{display:none;}
   .racecard-date-option:hover{background:rgba(0,87,219,.045);}
   .racecard-date-option.active{background:rgba(0,87,219,.08);color:var(--wave);font-weight:900;}
   .racecard-date-option-label{font-size:12.5px;font-weight:800;font-variant-numeric:tabular-nums;}
   .racecard-date-option-sub{font-size:10px;color:var(--ink-soft);font-weight:800;white-space:nowrap;}
   .racecard-date-option.active .racecard-date-option-sub{color:var(--wave);}
   @media(max-width:420px){
-    .racecard-date-toolbar{padding:9px 10px;gap:7px;}
-    .racecard-date-current{gap:5px;}
-    .racecard-date-caption{font-size:10px;flex-basis:100%;}
-    .racecard-date-value{font-size:14px;}
+    .racecard-date-toolbar{grid-template-columns:minmax(0,1fr) auto;padding:9px 10px;gap:7px 8px;}
+    .racecard-date-current{column-gap:6px;row-gap:4px;}
+    .racecard-date-caption{font-size:10px;}
+    .racecard-date-value{font-size:15px;}
+    .racecard-date-state{font-size:9px;padding:3px 7px;}
+    .racecard-date-return{font-size:9.5px;}
     .racecard-date-picker-btn{font-size:11px;padding:6px 9px;}
     .racecard-date-menu{left:0;right:auto;width:100%;}
   }
@@ -2696,18 +2679,11 @@
           <span class="racecard-date-caption">表示中</span>
           <strong class="racecard-date-value" id="raceCardDisplayDate">-</strong>
           <span class="racecard-date-state" id="raceCardDisplayState">今日</span>
+          <button type="button" class="racecard-date-return" id="raceCardReturnToday" hidden>本日に戻る</button>
         </div>
         <button type="button" class="racecard-date-picker-btn" id="raceCardDatePickerButton" aria-expanded="false" aria-controls="raceCardDateMenu">日付変更 ▾</button>
         <div class="racecard-date-menu" id="raceCardDateMenu" hidden></div>
         <div class="racecard-date-feedback" id="raceCardDateFeedback" aria-live="polite"></div>
-      </div>
-      <div id="raceCardHistoryBanner" class="racecard-history-banner" role="status" aria-live="polite">
-        <div class="racecard-history-main">
-          <span class="racecard-history-title">過去データ表示中</span>
-          <span class="racecard-history-date" id="raceCardHistoryDate">-</span>
-          <span class="racecard-history-note">表示中の日付・会場・Rに一致する保存済みデータだけを表示します。</span>
-        </div>
-        <button type="button" class="racecard-history-return" id="raceCardReturnToday">本日に戻る</button>
       </div>
       <div class="venue-race-picker">
         <div class="picker-label">会場</div>
@@ -7407,13 +7383,15 @@ function renderRaceCardDatePicker(){
     state.textContent=historical?'過去データ':'今日';
     state.classList.toggle('historical',historical);
   }
+  const returnBtn=document.getElementById('raceCardReturnToday');
+  if(returnBtn) returnBtn.hidden=!historical;
   if(menu){
     const shown=String(TODAY_LABEL||'');
     menu.innerHTML=Array.from({length:8},(_,i)=>{
       const date=brcRaceCardDateAtOffset(i);
       const active=date===shown?' active':'';
       const sub=i===0?'今日':(i===1?'昨日':`${i}日前`);
-      return `<button type="button" class="racecard-date-option${active}" data-racecard-date="${date}" onclick="return brcSelectRaceCardDate(event,'${date}')"><span class="racecard-date-option-label">${brcFormatRaceCardDate(date,true)}</span><span class="racecard-date-option-sub">${sub}${active?' ・ 表示中':''}</span></button>`;
+      return `<button type="button" class="racecard-date-option${active}" data-racecard-date="${date}" onclick="return brcSelectRaceCardDate(event,'${date}')"><span class="racecard-date-option-label">${brcFormatRaceCardDate(date,true)}</span><span class="racecard-date-option-sub">${sub}</span></button>`;
     }).join('');
   }
 }
@@ -7544,18 +7522,16 @@ async function brcLoadHostedRaceCardDate(dateStr){
   invalidateTodayPicks(true);
   if(document.getElementById('page-special')) renderSpecialLivePanel();
   if(statusBox){statusBox.textContent=`過去番組表を表示中: ${sourceName}（${Object.keys(RACE_INFO_TODAY).length}会場）`;statusBox.style.color='';}
-  brcSetRaceCardDateFeedback(`${brcFormatRaceCardDate(TODAY_LABEL)} を表示中`,'ok');
+  brcSetRaceCardDateFeedback('');
   return true;
 }
 
 function renderRaceCardModeUi(){
-  const banner=document.getElementById('raceCardHistoryBanner');
-  const dateEl=document.getElementById('raceCardHistoryDate');
   const label=document.getElementById('raceCardDateLabel');
+  const returnBtn=document.getElementById('raceCardReturnToday');
   const historical=brcIsHistoricalRaceCardMode();
   if(label) label.textContent=TODAY_LABEL||'-';
-  if(dateEl) dateEl.textContent=historical ? brcFormatRaceCardDate(TODAY_LABEL) : '-';
-  if(banner) banner.classList.toggle('active',historical);
+  if(returnBtn) returnBtn.hidden=!historical;
   renderRaceCardDatePicker();
 }
 
