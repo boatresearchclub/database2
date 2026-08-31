@@ -1528,7 +1528,6 @@
     font-size:11.5px; font-weight:800; line-height:1.5;
   }
   #brcPredictProtected.brc-free-preview-mode .brc-free-result-banner{display:block;}
-  #brcPredictProtected.brc-free-preview-mode .venue-race-picker,
   #brcPredictProtected.brc-free-preview-mode #raceCardFoldWrap,
   #brcPredictProtected.brc-free-preview-mode #predictInputs,
   #brcPredictProtected.brc-free-preview-mode #predictRun{display:none !important;}
@@ -1539,6 +1538,32 @@
   #brcPredictProtected.brc-post-race-mode #predictInputs,
   #brcPredictProtected.brc-post-race-mode #predictRun{display:none !important;}
   #brcPredictProtected.brc-post-race-mode .brc-member-badge{background:rgba(47,143,91,.10);color:#217247;}
+  /* 非会員も会場・レース選択画面を閲覧。締切済みだけ終了後無料公開。 */
+  #brcPredictProtected.brc-public-browser-mode .brc-free-result-banner{display:block;}
+  #brcPredictProtected.brc-public-browser-mode .race-pill:not(.deadline-passed){
+    opacity:.58; background:#f5f6f8; border-color:#d7dbe1; color:#7a838e;
+  }
+  #brcPredictProtected.brc-public-browser-mode .race-pill:not(.deadline-passed)::after{
+    content:'会員限定'; font-size:8px; font-weight:800; color:#8b939d; margin-top:2px; white-space:nowrap;
+  }
+  #brcPredictProtected.brc-public-browser-mode .race-pill.deadline-passed{
+    opacity:1; background:rgba(47,143,91,.09); border-color:rgba(47,143,91,.32); color:#217247;
+  }
+  #brcPredictProtected.brc-public-browser-mode .race-pill.deadline-passed .rp-time{color:#43835d;}
+  #brcPredictProtected.brc-public-browser-mode .race-pill.deadline-passed::after{
+    content:'無料公開'; font-size:8px; font-weight:900; color:#217247; margin-top:2px; white-space:nowrap;
+  }
+  #brcPredictProtected.brc-public-browser-mode .race-pill.deadline-passed.active{
+    background:#217247; border-color:#217247; color:#fff; box-shadow:none;
+  }
+  #brcPredictProtected.brc-public-browser-mode .race-pill.deadline-passed.active .rp-time,
+  #brcPredictProtected.brc-public-browser-mode .race-pill.deadline-passed.active::after{color:rgba(255,255,255,.88);}
+  #brcPredictProtected.brc-public-browser-mode .race-pill.free-preview-race:not(.deadline-passed){
+    opacity:1; background:rgba(0,87,219,.07); border-color:rgba(0,87,219,.30); color:var(--wave);
+  }
+  #brcPredictProtected.brc-public-browser-mode .race-pill.free-preview-race:not(.deadline-passed)::after{
+    content:'無料公開'; color:var(--wave);
+  }
   .brc-post-race-entry{margin:12px 0 0;padding:11px;border:1px solid rgba(47,143,91,.18);border-radius:10px;background:rgba(47,143,91,.045);}
   .brc-post-race-entry-title{font-size:12px;font-weight:900;color:#217247;text-align:center;}
   .brc-post-race-entry-sub{margin-top:3px;font-size:10.5px;line-height:1.5;color:var(--ink-soft);text-align:center;}
@@ -2563,8 +2588,8 @@
         </div>
 
         <div class="brc-post-race-entry" id="brcPostRaceEntry">
-          <div class="brc-post-race-entry-title">終了レースは無料公開</div>
-          <div class="brc-post-race-entry-sub">締切時刻を過ぎると、そのレースで締切前に表示されていたBRCデータを確認できます。</div>
+          <div class="brc-post-race-entry-title">締切後レースは無料公開</div>
+          <div class="brc-post-race-entry-sub">非会員でも会場・Rを選択できます。締切時刻を過ぎたレースは、そのままBRCデータを確認できます。</div>
           <div id="brcPostRaceList" class="brc-post-race-list"><div class="brc-post-race-empty">終了レースを確認中...</div></div>
         </div>
 
@@ -2589,6 +2614,7 @@
         <div class="brc-auth-message" id="brcAuthMessage" aria-live="polite"></div>
         <div class="brc-auth-help">YOOR加入確認後に発行された会員IDでログインできます。</div>
         <div style="text-align:center;"><button type="button" class="brc-logout-btn" id="brcGateLogoutBtn" style="display:none; margin-top:10px; padding:8px 14px;">ログアウトして別IDでログイン</button></div>
+        <div style="text-align:center;"><button type="button" class="brc-logout-btn" id="brcPublicBrowseBtn" style="margin-top:10px; padding:8px 14px;">終了レースを見る</button></div>
       </div>
     </div>
     <div id="brcPredictProtected" style="display:none;">
@@ -3342,7 +3368,7 @@ function brcRenderGate(state='login', user=null){
   const sub=document.getElementById('brcAuthSub');
   const tab=document.getElementById('brcPredictTab');
   if(gate) gate.style.display='flex';
-  if(protectedBox){ protectedBox.style.display='none'; protectedBox.classList.remove('brc-free-preview-mode','brc-post-race-mode'); }
+  if(protectedBox){ protectedBox.style.display='none'; protectedBox.classList.remove('brc-free-preview-mode','brc-post-race-mode','brc-public-browser-mode'); }
   const badge=document.getElementById('brcMemberBadge'); if(badge) badge.textContent='BRC MEMBER';
   const logout=document.getElementById('brcLogoutBtn'); if(logout) logout.textContent='ログアウト';
   const freeBanner=document.getElementById('brcFreePreviewBanner'); if(freeBanner) freeBanner.textContent='';
@@ -3372,7 +3398,7 @@ function brcRenderMember(user){
   const badge=document.getElementById('brcMemberBadge');
   const tab=document.getElementById('brcPredictTab');
   if(gate) gate.style.display='none';
-  if(protectedBox){ protectedBox.style.display=''; protectedBox.classList.remove('brc-free-preview-mode','brc-post-race-mode'); }
+  if(protectedBox){ protectedBox.style.display=''; protectedBox.classList.remove('brc-free-preview-mode','brc-post-race-mode','brc-public-browser-mode'); }
   const logout=document.getElementById('brcLogoutBtn'); if(logout) logout.textContent='ログアウト';
   const freeBanner=document.getElementById('brcFreePreviewBanner'); if(freeBanner) freeBanner.textContent='';
   if(tab) tab.textContent='出走表AI';
@@ -3393,7 +3419,7 @@ function brcRenderFreePreviewMode(item){
   const tab=document.getElementById('brcPredictTab');
   const banner=document.getElementById('brcFreePreviewBanner');
   if(gate) gate.style.display='none';
-  if(protectedBox){protectedBox.style.display=''; protectedBox.classList.remove('brc-post-race-mode'); protectedBox.classList.add('brc-free-preview-mode');}
+  if(protectedBox){protectedBox.style.display=''; protectedBox.classList.remove('brc-post-race-mode','brc-public-browser-mode'); protectedBox.classList.add('brc-free-preview-mode');}
   if(badge) badge.textContent=`FREE PREVIEW · ${item?.kind==='reject'?'イン否定':'イン鉄板'}`;
   if(logout) logout.textContent='会員ログインへ';
   if(tab) tab.textContent='無料公開レース';
@@ -3412,11 +3438,48 @@ function brcRenderPostRaceMode(item){
   const tab=document.getElementById('brcPredictTab');
   const banner=document.getElementById('brcFreePreviewBanner');
   if(gate) gate.style.display='none';
-  if(protectedBox){protectedBox.style.display='';protectedBox.classList.remove('brc-free-preview-mode');protectedBox.classList.add('brc-post-race-mode');}
+  if(protectedBox){protectedBox.style.display='';protectedBox.classList.remove('brc-free-preview-mode');protectedBox.classList.add('brc-post-race-mode','brc-public-browser-mode');}
   if(badge) badge.textContent='終了レース · FREE';
   if(logout) logout.textContent='会員ログインへ';
   if(tab) tab.textContent='出走表AI';
   if(banner) banner.textContent=`${item?.venue||''}${item?.raceNo||''}Rは終了レースのため無料公開中です。このデータは締切前に表示されていた内容です。`;
+}
+
+function brcRenderPublicBrowser(message=''){
+  BRC_MEMBER_ACTIVE=false;
+  BRC_MEMBER_CHECKED_AT=0;
+  BRC_FREE_PREVIEW_ACTIVE=null;
+  BRC_POST_RACE_ACTIVE=null;
+  try{ brcSetAdminSocialUi(null); }catch(_e){}
+  const gate=document.getElementById('brcPredictGate');
+  const protectedBox=document.getElementById('brcPredictProtected');
+  const badge=document.getElementById('brcMemberBadge');
+  const logout=document.getElementById('brcLogoutBtn');
+  const tab=document.getElementById('brcPredictTab');
+  const banner=document.getElementById('brcFreePreviewBanner');
+  if(gate) gate.style.display='none';
+  if(protectedBox){
+    protectedBox.style.display='';
+    protectedBox.classList.remove('brc-free-preview-mode');
+    protectedBox.classList.add('brc-post-race-mode','brc-public-browser-mode');
+  }
+  if(badge) badge.textContent='終了後無料公開';
+  if(logout) logout.textContent='会員ログイン';
+  if(tab) tab.textContent='出走表AI';
+  if(banner) banner.textContent=message || '締切済みレースは非会員でも無料で閲覧できます。締切前のレースはBRC MEMBERS限定です。';
+}
+function brcShowMemberLoginGate(){
+  brcRenderGate('login');
+  const gate=document.getElementById('brcPredictGate');
+  if(gate) gate.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function brcFindFreePreviewRace(venue,raceNo){
+  const id=`${venue}:${Number(raceNo)}`;
+  for(const key of ['iron','reject']){
+    const item=BRC_FREE_PREVIEW_DATA?.[key];
+    if(item && item.id===id && item.prediction) return item;
+  }
+  return null;
 }
 
 async function brcEnsurePredictAccess({silent=false, force=false}={}){
@@ -3427,15 +3490,14 @@ async function brcEnsurePredictAccess({silent=false, force=false}={}){
   try{
     if(!silent) brcRenderGate('checking');
     const session = await brcEnsureFreshSession();
-    if(!session){ brcRenderGate('login'); return false; }
+    if(!session){ brcRenderPublicBrowser(); return false; }
     const result = await brcCheckMembership(session);
     if(result.ok){ brcRenderMember(result.user); return true; }
-    brcRenderGate('inactive', result.user); return false;
+    brcRenderPublicBrowser('締切済みレースは無料で閲覧できます。締切前の全レース閲覧にはBRC MEMBERSが必要です。'); return false;
   }catch(err){
     console.warn('BRC membership check failed:', err);
     if(err && (err.status===401 || err.status===403)) brcClearSession();
-    brcRenderGate('login');
-    if(!silent) brcSetAuthMessage('会員情報を確認できませんでした。通信状態を確認してもう一度お試しください。');
+    brcRenderPublicBrowser('締切済みレースは無料で閲覧できます。会員情報の確認に失敗したため、締切前レースはロックしています。');
     return false;
   }finally{ BRC_AUTH_BUSY = false; }
 }
@@ -3499,7 +3561,7 @@ async function brcLogout(){
     }
   }catch(_){ /* ローカル側は必ずログアウト */ }
   brcClearSession();
-  brcRenderGate('login');
+  brcRenderPublicBrowser();
   const pw=document.getElementById('brcLoginPassword'); if(pw) pw.value='';
 }
 async function brcInitAuthUi(){
@@ -3516,14 +3578,25 @@ async function brcInitAuthUi(){
     });
   }
   const logout=document.getElementById('brcLogoutBtn');
-  if(logout && !logout.dataset.bound){logout.dataset.bound='1'; logout.addEventListener('click',brcLogout);}
+  if(logout && !logout.dataset.bound){
+    logout.dataset.bound='1';
+    logout.addEventListener('click',()=>{ if(BRC_MEMBER_ACTIVE) brcLogout(); else brcShowMemberLoginGate(); });
+  }
   const gateLogout=document.getElementById('brcGateLogoutBtn');
   if(gateLogout && !gateLogout.dataset.bound){gateLogout.dataset.bound='1'; gateLogout.addEventListener('click',brcLogout);}
+  const publicBrowse=document.getElementById('brcPublicBrowseBtn');
+  if(publicBrowse && !publicBrowse.dataset.bound){
+    publicBrowse.dataset.bound='1';
+    publicBrowse.addEventListener('click',()=>{
+      brcRenderPublicBrowser();
+      if(!window.__predictRendered){ initPredictPage(); window.__predictRendered=true; }
+    });
+  }
   // 保存済みセッションが有効なら、ページ表示時点で会員状態を復元。
   // 出走表AIを初期タブにしたため、ログイン済みなら中身もそのまま初期化する。
   const allowed = await brcEnsurePredictAccess({silent:true});
   const activeMain = document.querySelector('.page-tabs > .page-tab.active')?.dataset.page;
-  if(allowed && activeMain === 'predict' && !window.__predictRendered){
+  if(activeMain === 'predict' && !window.__predictRendered){
     initPredictPage();
     window.__predictRendered = true;
   }
@@ -3598,8 +3671,8 @@ document.querySelectorAll('.page-tabs > .page-tab').forEach(btn=>{
     });
     if(target==='database'){ showDatabasePage(currentDatabasePage); }
     if(target==='predict'){
-      const allowed = await brcEnsurePredictAccess({force:true});
-      if(allowed && !window.__predictRendered){ initPredictPage(); window.__predictRendered = true; }
+      await brcEnsurePredictAccess({force:true});
+      if(!window.__predictRendered){ initPredictPage(); window.__predictRendered = true; }
     }
     if(target==='today'){ initTodayPicksPage(); }
     if(target==='special'){ initSpecialPage(); }
@@ -7466,6 +7539,9 @@ function initPredictPage(){
       }catch(_e){}
     }, 30000);
   }
+  if(!window.__publicRaceUnlockTimer){
+    window.__publicRaceUnlockTimer = setInterval(()=>{ try{ refreshRaceDeadlineGray(); }catch(_e){} }, 2000);
+  }
 
   // BRC_AUTO_RACECARD_CALL_V3
   // 当日TXTを初期表示直後に確認。さらに日付跨ぎ・アプリ復帰も監視する。
@@ -7499,9 +7575,12 @@ function refreshRaceDeadlineGray(){
   const deadlines = (info && info.deadlines) || {};
   raceTabRow.querySelectorAll('.race-pill').forEach(btn=>{
     const passed = isRaceDeadlinePassed(deadlines[String(btn.dataset.raceno)]);
+    const isFree = !!brcFindFreePreviewRace(daySel.value, Number(btn.dataset.raceno));
     btn.classList.toggle('deadline-passed', passed);
-    if(passed) btn.setAttribute('aria-label', `${btn.dataset.raceno}R 締切済み`);
-    else btn.removeAttribute('aria-label');
+    btn.classList.toggle('free-preview-race', isFree);
+    if(passed) btn.setAttribute('aria-label', `${btn.dataset.raceno}R 締切済み・無料公開`);
+    else if(isFree) btn.setAttribute('aria-label', `${btn.dataset.raceno}R 本日の無料公開`);
+    else btn.setAttribute('aria-label', `${btn.dataset.raceno}R 締切前・会員限定`);
   });
 }
 
@@ -7579,9 +7658,13 @@ function populateDaySelect(){
       const active = newRaceNoSel.value === o.value ? ' active' : '';
       const info = RACE_INFO_TODAY[newDaySel.value];
       const deadline = info && info.deadlines && info.deadlines[String(o.value)];
-      const passed = isRaceDeadlinePassed(deadline) ? ' deadline-passed' : '';
-      const aria = passed ? ` aria-label="${o.value}R 締切済み"` : '';
-      return `<button type="button" class="race-pill${active}${passed}" data-raceno="${o.value}"${aria}>${main}${sub ? `<span class="rp-time">${sub}</span>` : ''}</button>`;
+      const passedBool = isRaceDeadlinePassed(deadline);
+      const passed = passedBool ? ' deadline-passed' : '';
+      const isFree = !!brcFindFreePreviewRace(newDaySel.value, Number(o.value));
+      const freeClass = isFree ? ' free-preview-race' : '';
+      const ariaText = passedBool ? `${o.value}R 締切済み・無料公開` : (isFree ? `${o.value}R 本日の無料公開` : `${o.value}R 締切前・会員限定`);
+      const aria = ` aria-label="${ariaText}"`;
+      return `<button type="button" class="race-pill${active}${passed}${freeClass}" data-raceno="${o.value}"${aria}>${main}${sub ? `<span class="rp-time">${sub}</span>` : ''}</button>`;
     }).join('');
     raceTabRow.querySelectorAll('.race-pill').forEach(btn=>{
       btn.addEventListener('click', ()=>{
@@ -8942,6 +9025,7 @@ async function brcLoadFreePreview(force=false){
     if(!data || data.free_preview!==true) throw new Error('free_preview_not_ready');
     BRC_FREE_PREVIEW_DATA=data;
     brcRenderFreePreviewCards();
+    try{ refreshRaceDeadlineGray(); }catch(_e){}
   }catch(err){
     console.warn('BRC free preview failed:',err);
     if(body) body.innerHTML='<div class="brc-free-empty">無料公開レースを準備中です。少し時間をおいて再度開いてください。</div>';
@@ -9213,11 +9297,9 @@ async function openTodayPickRace(venue,raceNo){
     const el=document.getElementById('page-'+id);
     if(el) el.style.display=(id==='predict')?'':'none';
   });
-  const allowed = await brcEnsurePredictAccess({force:true});
-  if(allowed){
-    if(!window.__predictRendered){ initPredictPage(); window.__predictRendered=true; }
-    loadTodaysRace(venue,String(raceNo));
-  }
+  await brcEnsurePredictAccess({force:true});
+  if(!window.__predictRendered){ initPredictPage(); window.__predictRendered=true; }
+  loadTodaysRace(venue,String(raceNo));
   const page=document.getElementById('page-predict');
   if(page) page.scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -9530,10 +9612,12 @@ async function runPredict(){
   let workerPrediction = null;
   try{
     let apiResult=null;
-    const freeItem=BRC_FREE_PREVIEW_ACTIVE;
     const currentId=`${venue}:${raceNoLive}`;
+    const freeItem=BRC_FREE_PREVIEW_ACTIVE || brcFindFreePreviewRace(venue,raceNoLive);
     const sameFreeBoats=!!(freeItem && Array.isArray(freeItem.prediction?.wins) && apiBoats.every(b=>freeItem.prediction.wins.some(w=>Number(w.course)===Number(b.course)&&String(w.reg)===String(b.reg))));
     if(!BRC_MEMBER_ACTIVE && freeItem && freeItem.id===currentId && sameFreeBoats){
+      BRC_FREE_PREVIEW_ACTIVE=freeItem;
+      brcRenderFreePreviewMode(freeItem);
       apiResult=freeItem.prediction;
     }else if(!BRC_MEMBER_ACTIVE){
       const deadline=RACE_INFO_TODAY?.[venue]?.deadlines?.[String(raceNoLive)]||'';
@@ -9541,8 +9625,8 @@ async function runPredict(){
         apiResult=await brcPostRacePreviewApi({date:TODAY_LABEL,venue,raceNo:raceNoLive,grade,boats:apiBoats});
         brcRenderPostRaceMode({venue,raceNo:raceNoLive,deadline,id:currentId});
       }else{
-        brcRenderGate('login');
-        brcSetAuthMessage('締切前のレースはBRC MEMBERS限定です。終了レースは締切後すぐ無料公開します。');
+        brcRenderPublicBrowser(`🔒 ${venue}${raceNoLive}Rは締切前のためBRC MEMBERS限定です。締切後すぐ無料公開されます。`);
+        preBox.innerHTML = `<div style="padding:16px 12px;text-align:center;border:1px solid rgba(10,31,51,.12);border-radius:10px;background:#f7f8fa;color:var(--navy);font-size:13px;font-weight:800;">🔒 ${venue}${raceNoLive}Rは締切前のため会員限定です。<br><span style="font-size:11px;font-weight:600;color:var(--ink-soft);">締切時刻を過ぎると非会員にも自動で無料公開されます。</span></div>`;
         return;
       }
     }else{
@@ -9561,6 +9645,10 @@ async function runPredict(){
       return;
     }
     if(err && err.status === 403){
+      if(!BRC_MEMBER_ACTIVE){
+        brcRenderPublicBrowser('このレースはまだ終了後無料公開の判定前です。締切時刻を過ぎてからもう一度選択してください。');
+        return;
+      }
       brcRenderGate('inactive');
       brcSetAuthMessage('現在このアカウントでは出走表AIを利用できません。');
       return;
