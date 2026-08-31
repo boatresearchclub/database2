@@ -975,7 +975,12 @@
   .brc-odds-pool{display:grid;gap:8px;margin-top:2px;}
   .brc-odds-pool-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}
   .brc-odds-pool-title{font-size:13px;font-weight:950;color:var(--navy);}
+  .brc-odds-pool-head-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;min-width:0;}
+  .brc-odds-pool-sort{display:inline-flex;align-items:center;padding:2px;border:1px solid rgba(10,31,51,.10);border-radius:8px;background:#f7f9fc;}
+  .brc-odds-pool-sort-btn{appearance:none;border:0;background:transparent;color:var(--ink-soft);border-radius:6px;padding:5px 7px;font:inherit;font-size:9px;font-weight:900;cursor:pointer;white-space:nowrap;}
+  .brc-odds-pool-sort-btn.active{background:#fff;color:var(--wave);box-shadow:0 1px 3px rgba(10,31,51,.10);}
   .brc-odds-pool-clear{appearance:none;border:1px solid rgba(209,55,63,.20);background:#fff;color:#b4232c;border-radius:8px;padding:6px 9px;font:inherit;font-size:9.5px;font-weight:900;cursor:pointer;}
+  .brc-odds-pool-actions-end{justify-content:flex-end;}
   .brc-odds-pool-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid rgba(10,31,51,.10);border-radius:11px;background:#fff;overflow:hidden;}
   .brc-odds-pool-metric{padding:8px 5px;text-align:center;border-left:1px solid rgba(10,31,51,.06);}
   .brc-odds-pool-metric:first-child{border-left:0;}
@@ -4833,7 +4838,7 @@ function brcOddsDeadlinePassed(sel){
 
 function brcOddsFmtTime(v){
   const s=String(v||'');
-  const m=s.match(/(\d{2}:\d{2}:\d{2})/);
+  const m=s.match(/(\d{2}:\d{2})(?::\d{2})?/);
   return m ? m[1] : s;
 }
 
@@ -4899,7 +4904,7 @@ function brcOddsBuildMatrix(odds,sel){
     </div>`;
   }).join('');
   return `${brcOddsViewTabs()}<div class="brc-odds-matrix-scroll"><div class="brc-odds-matrix">${cols}</div></div>
-    <div class="brc-odds-foot">左の大きい数字が2着、隣の数字が3着、右が3連単オッズ（倍）。スマホは横へスワイプできます。赤字は10倍未満。</div>`;
+    <div class="brc-odds-foot">2着 → 3着 → オッズ。横スワイプで表示。赤字は10倍未満。</div>`;
 }
 
 function brcOddsBuildPopular(odds){
@@ -4920,7 +4925,7 @@ function brcOddsBuildPopular(odds){
         <tbody>${rows}</tbody>
       </table>
     </div>
-    <div class="brc-odds-foot">現在取得している3連単120通りをオッズの低い順に並べたTOP30です。</div>`;
+    `;
 }
 
 
@@ -4986,6 +4991,7 @@ function brcOddsBuilderComposite(rows){
 
 const BRC_ODDS_POOL_STORAGE_KEY = 'brc_odds_combo_pool_v3';
 let __brcOddsPoolCache = null;
+let __brcOddsPoolSort = 'comb';
 
 function brcOddsPoolReadAll(){
   if(__brcOddsPoolCache && typeof __brcOddsPoolCache==='object') return __brcOddsPoolCache;
@@ -5041,11 +5047,19 @@ function brcOddsPoolClear(key){
   brcOddsPoolWriteAll(all);
 }
 
+function brcOddsPoolCompareComb(a,b){
+  const x=Array.isArray(a?.b)?a.b:String(a?.comb||'').split('-').map(Number);
+  const y=Array.isArray(b?.b)?b.b:String(b?.comb||'').split('-').map(Number);
+  return (Number(x[0])-Number(y[0])) || (Number(x[1])-Number(y[1])) || (Number(x[2])-Number(y[2]));
+}
+
 function brcOddsPoolRows(odds,key){
-  return brcOddsPoolGet(key).map(comb=>{
+  const rows=brcOddsPoolGet(key).map(comb=>{
     const v=brcOddsValue(odds,comb);
     return v===null?null:{comb,odds:v,b:comb.split('-').map(Number)};
-  }).filter(Boolean).sort((a,b)=>a.odds-b.odds || a.comb.localeCompare(b.comb,'ja'));
+  }).filter(Boolean);
+  if(__brcOddsPoolSort==='odds') return rows.sort((a,b)=>a.odds-b.odds || brcOddsPoolCompareComb(a,b));
+  return rows.sort(brcOddsPoolCompareComb);
 }
 
 
@@ -5230,7 +5244,7 @@ function brcTeleboatBuildBridge(odds,sel){
       <button type="button" class="brc-teleboat-btn primary brc-teleboat-mobile-copy" data-teleboat-mobile-copy="1">① 投票用買い目をコピー</button>
       <button type="button" class="brc-teleboat-btn" data-teleboat-open="1">② テレボートを開く</button>
     </div>
-    <div class="brc-teleboat-note">各買い目の金額を100円単位で設定できます。一括金額を変更すると全点へ反映します。加入者番号・暗証番号・認証情報はBRCに保存しません。①「投票用買い目をコピー」→ ②テレボートを開く → ③対象会場・Rの3連単投票画面で「BRC投票セット」を実行します。最初に1回だけ貼り付けると、以後はブックマーク再実行で次の買い目・金額を自動入力します。公式のベットリスト追加と最終投票は本人がタップします。</div>
+    <div class="brc-teleboat-note">コピー → テレボート → BRC投票セット。認証情報はBRCに保存しません。</div>
     <div class="brc-teleboat-status" data-teleboat-status="1">${brcOddsEscape(__brcTeleboatStatus)}</div>
   </div>`;
 }
@@ -5256,17 +5270,22 @@ function brcOddsBuildPool(odds,sel){
   const key=sel?.key||'';
   const rows=brcOddsPoolRows(odds,key);
   const comp=brcOddsBuilderComposite(rows);
-  const minv=rows.length?rows[0].odds:null;
-  const maxv=rows.length?rows[rows.length-1].odds:null;
+  const oddsVals=rows.map(row=>Number(row.odds)).filter(v=>Number.isFinite(v)&&v>0);
+  const minv=oddsVals.length?Math.min(...oddsVals):null;
+  const maxv=oddsVals.length?Math.max(...oddsVals):null;
+  const sortControls=`<div class="brc-odds-pool-sort" role="group" aria-label="保存買い目の表示順">
+    <button type="button" class="brc-odds-pool-sort-btn${__brcOddsPoolSort==='comb'?' active':''}" data-odds-pool-sort="comb">買い目順</button>
+    <button type="button" class="brc-odds-pool-sort-btn${__brcOddsPoolSort==='odds'?' active':''}" data-odds-pool-sort="odds">オッズ順</button>
+  </div>`;
   if(!rows.length){
-    return `<div class="brc-odds-pool"><div class="brc-odds-pool-head"><div class="brc-odds-pool-title">保存買い目</div></div><div class="brc-odds-pool-empty">フォーメーションで作った買い目を追加すると、ここに1つのリストとして保存されます。</div></div>`;
+    return `<div class="brc-odds-pool"><div class="brc-odds-pool-head"><div class="brc-odds-pool-title">保存買い目</div></div><div class="brc-odds-pool-empty">保存買い目はありません。</div></div>`;
   }
   const body=rows.map((row,i)=>{
     const combo=`<span class="brc-odds-combo-chip">${brcOddsLaneHtml(row.b[0])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(row.b[1])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(row.b[2])}</span>`;
     return `<tr><td style="width:32px;color:var(--ink-soft);font-weight:900;">${i+1}</td><td class="combo">${combo}</td><td class="val">${row.odds.toFixed(1)}</td><td class="amount">${brcTeleboatAmountInput(key,row.comb)}</td><td style="width:48px"><button type="button" class="brc-odds-pool-remove" data-odds-pool-remove="${row.comb}">削除</button></td></tr>`;
   }).join('');
   return `<div class="brc-odds-pool">
-    <div class="brc-odds-pool-head"><div class="brc-odds-pool-title">保存買い目</div><button type="button" class="brc-odds-pool-clear" data-odds-pool-clear="1">全削除</button></div>
+    <div class="brc-odds-pool-head"><div class="brc-odds-pool-title">保存買い目</div><div class="brc-odds-pool-head-actions">${sortControls}<button type="button" class="brc-odds-pool-clear" data-odds-pool-clear="1">全削除</button></div></div>
     <div class="brc-odds-pool-summary">
       <div class="brc-odds-pool-metric"><div class="k">合計点数</div><div class="v">${rows.length}点</div></div>
       <div class="brc-odds-pool-metric"><div class="k">合成オッズ</div><div class="v">${comp?comp.toFixed(2)+'倍':'―'}</div></div>
@@ -5297,13 +5316,13 @@ function brcOddsBuildBuilder(odds,sel){
   const list=rows.length ? rows.map((row,i)=>{
     const combo=`<span class="brc-odds-combo-chip">${brcOddsLaneHtml(row.b[0])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(row.b[1])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(row.b[2])}</span>`;
     return `<tr><td class="idx">${i+1}</td><td class="combo">${combo}</td><td class="val">${row.odds.toFixed(1)}</td></tr>`;
-  }).join('') : '<tr><td colspan="3" style="padding:18px 10px;color:var(--ink-soft);font-size:11px;line-height:1.6;">1着・2着・3着を選ぶと買い目一覧と合成オッズを表示します。<br>同じ艇の重複は自動で除外します。</td></tr>';
+  }).join('') : '<tr><td colspan="3" style="padding:18px 10px;color:var(--ink-soft);font-size:11px;line-height:1.6;">1着・2着・3着を選択してください。</td></tr>';
 
   return `${brcOddsViewTabs()}<div class="brc-odds-builder">
     <div class="brc-odds-builder-box">
       <div class="brc-odds-builder-head"><div>枠</div><div>選手名</div><div>1着</div><div>2着</div><div>3着</div></div>
       ${rowsHtml}
-      <div class="brc-odds-builder-row"><div class="brc-odds-builder-lane" style="background:#f7f9fc;color:var(--ink-soft);font-size:12px;">全</div><div class="brc-odds-builder-name"><small>列ごとに一括選択 / 解除</small></div>${allBtn('first')}${allBtn('second')}${allBtn('third')}</div>
+      <div class="brc-odds-builder-row"><div class="brc-odds-builder-lane" style="background:#f7f9fc;color:var(--ink-soft);font-size:12px;">全</div><div class="brc-odds-builder-name"><small>一括選択</small></div>${allBtn('first')}${allBtn('second')}${allBtn('third')}</div>
     </div>
     <div class="brc-odds-builder-summary">
       <div class="brc-odds-builder-kpi"><div class="k">買い目点数</div><div class="v">${rows.length}点</div></div>
@@ -5311,7 +5330,7 @@ function brcOddsBuildBuilder(odds,sel){
       <div class="brc-odds-builder-kpi"><div class="k">最低オッズ</div><div class="v small">${minv?minv.toFixed(1)+'倍':'―'}</div></div>
       <div class="brc-odds-builder-kpi"><div class="k">最高オッズ</div><div class="v small">${maxv?maxv.toFixed(1)+'倍':'―'}</div></div>
     </div>
-    <div class="brc-odds-pool-actions"><div class="brc-odds-builder-note" style="flex:1;">3連単フォーメーションの手動作成です。均等買いを前提に合成オッズを計算します。</div><button type="button" class="brc-odds-pool-add" data-odds-pool-add="1" ${rows.length?'':'disabled'}>選択買い目を追加</button></div>
+    <div class="brc-odds-pool-actions brc-odds-pool-actions-end"><button type="button" class="brc-odds-pool-add" data-odds-pool-add="1" ${rows.length?'':'disabled'}>選択買い目を追加</button></div>
     <div class="brc-odds-builder-list">
       <table class="brc-odds-builder-table"><thead><tr><th style="width:44px">#</th><th>買い目</th><th style="width:76px">オッズ</th></tr></thead><tbody>${list}</tbody></table>
     </div>
@@ -5357,7 +5376,7 @@ async function brcEnsureFinalOdds(sel){
   if(Number(__brcOddsFinalRetryAfter[sel.key]||0)>Date.now()) return;
 
   __brcOddsFinalLoading[sel.key]=true;
-  brcRenderOddsPanel('締切後の最終オッズを確認しています。');
+  brcRenderOddsPanel('最終オッズ確認中');
   const qs=new URLSearchParams({date:sel.date,venue_code:sel.code,race_no:String(sel.raceNo),final:'1',_:String(Date.now())});
   try{
     const res=await fetch(`${BRC_LIVE_EXHIBITION_API_URL}/live-odds?${qs.toString()}`,{method:'GET',cache:'no-store',headers:{'Accept':'application/json'}});
@@ -5374,15 +5393,15 @@ async function brcEnsureFinalOdds(sel){
     };
     if(!obj.final){
       __brcOddsFinalRetryAfter[sel.key]=Date.now()+15000;
-      brcRenderOddsPanel('最終オッズを反映待ちです。自動で再確認します。');
+      brcRenderOddsPanel('最終オッズ反映待ち');
       setTimeout(()=>brcEnsureFinalOdds(sel),15500);
     }else{
-      brcRenderOddsPanel('締切後の最終オッズを表示しています。');
+      brcRenderOddsPanel('最終オッズ');
     }
   }catch(err){
     console.warn('BRC final odds fetch failed:',err);
     __brcOddsFinalRetryAfter[sel.key]=Date.now()+15000;
-    brcRenderOddsPanel('最終オッズを反映待ちです。自動で再確認します。');
+    brcRenderOddsPanel('最終オッズ反映待ち');
     setTimeout(()=>brcEnsureFinalOdds(sel),15500);
   }finally{
     __brcOddsFinalLoading[sel.key]=false;
@@ -5398,9 +5417,9 @@ function brcRenderOddsPanel(message='',isError=false){
   const sel=brcOddsSelection();
   status.classList.toggle('error',!!isError);
   if(!sel.key){
-    meta.textContent='レースを選択して「オッズ更新」を押してください。';
-    status.textContent=message || '自動更新は行いません。同一レースは60秒以内ならBRC側の保存値を表示します。';
-    body.innerHTML='<div class="brc-odds-empty">更新ボタンを押すまで取得先へアクセスしません。</div>';
+    meta.textContent='レースを選択してください。';
+    status.textContent=message || '';
+    body.innerHTML='<div class="brc-odds-empty">レースを選択してください。</div>';
     btn.disabled=true; btn.textContent='オッズ更新';
     return;
   }
@@ -5410,10 +5429,10 @@ function brcRenderOddsPanel(message='',isError=false){
   const rec=__brcOddsLocal[sel.key]||null;
   meta.textContent=`${sel.venue} ${sel.raceNo}R` + (rec?.captured_at_jst ? (rec?.final ? `${brcOddsIsPrecloseSnapshot(sel,rec.captured_at_jst)?'　締切直前オッズ ':'　最終オッズ '}${brcOddsFmtTime(rec.captured_at_jst)}` : `　最終取得 ${brcOddsFmtTime(rec.captured_at_jst)}`) : '');
   if(message) status.textContent=message;
-  else if(passed && rec?.final) status.textContent='締切後の最終オッズです。以後このレースでは取得元へ再アクセスしません。';
-  else if(passed && __brcOddsFinalLoading[sel.key]) status.textContent='締切後の最終オッズを確認しています。';
-  else if(rec) status.textContent=rec.cache_hit ? '60秒キャッシュを使用しました。取得先への再アクセスはありません。' : '取得先から最新オッズを取得しました。次の取得は60秒後から可能です。';
-  else status.textContent='「オッズ更新」を押すと最新値を確認します。60秒以内の保存値があれば取得先へ再アクセスしません。';
+  else if(passed && rec?.final) status.textContent='最終オッズ';
+  else if(passed && __brcOddsFinalLoading[sel.key]) status.textContent='最終オッズ確認中';
+  else if(rec) status.textContent=rec.stale ? '保存値を表示' : '最新オッズ';
+  else status.textContent='「オッズ更新」で取得';
   body.innerHTML=rec?.odds ? brcOddsBuildView(rec.odds,sel) : (passed ? '<div class="brc-odds-empty">最終オッズを反映待ちです。</div>' : '<div class="brc-odds-empty">まだオッズを取得していません。</div>');
   body.querySelectorAll('[data-odds-view]').forEach(el=>el.addEventListener('click',()=>{const v=String(el.dataset.oddsView||'');__brcOddsView=(v==='popular'||v==='builder')?v:'matrix';brcRenderOddsPanel();}));
   const cooling=!!rec && Number(rec.cooldownUntil)>Date.now();
@@ -5423,7 +5442,7 @@ function brcRenderOddsPanel(message='',isError=false){
   else if(passed) btn.textContent='最終確認中';
   else if(cooling) btn.textContent=`更新 ${Math.max(1,Math.ceil((rec.cooldownUntil-Date.now())/1000))}秒`;
   else btn.textContent='オッズ更新';
-  if(historical && !message) status.textContent=rec?.final ? '保存済みの最終オッズを表示しています。' : '過去レースでは取得先へアクセスしません。保存済みの当日取得値がある場合のみ表示対象です。';
+  if(historical && !message) status.textContent=rec?.final ? '保存済み最終オッズ' : '保存済みオッズのみ表示';
   if(passed && !historical && !rec?.final && !__brcOddsFinalLoading[sel.key] && Number(__brcOddsFinalRetryAfter[sel.key]||0)<=Date.now()){
     setTimeout(()=>brcEnsureFinalOdds(sel),0);
   }
@@ -5436,7 +5455,7 @@ async function brcRefreshOddsManual(){
   if(String(sel.date)!==String(getJstDateLabel())){brcRenderOddsPanel('過去レースではオッズ更新を行いません。',true);return;}
   if(brcOddsDeadlinePassed(sel)){brcRenderOddsPanel('締切済みのため、新しいオッズ取得は行いません。',true);return;}
   btn.disabled=true; btn.textContent='取得中…';
-  brcRenderOddsPanel('オッズを確認しています。60秒以内の保存値があれば取得先へはアクセスしません。');
+  brcRenderOddsPanel('オッズ取得中');
   const qs=new URLSearchParams({date:sel.date,venue_code:sel.code,race_no:String(sel.raceNo),_:String(Date.now())});
   try{
     const res=await fetch(`${BRC_LIVE_EXHIBITION_API_URL}/live-odds?${qs.toString()}`,{method:'GET',cache:'no-store',headers:{'Accept':'application/json'}});
@@ -5452,7 +5471,7 @@ async function brcRefreshOddsManual(){
       final:!!obj.final,
       cooldownUntil:Date.now()+wait*1000
     };
-    const msg=obj.stale ? '取得元へ接続できなかったため、直前の保存値を表示しています。' : (obj.cache_hit ? '60秒キャッシュを使用しました。取得先への再アクセスはありません。' : '取得先から最新オッズを取得しました。次の取得は60秒後から可能です。');
+    const msg=obj.stale ? '保存値を表示' : '更新しました';
     brcRenderOddsPanel(msg,!!obj.stale);
     brcOddsStartCooldown(wait);
   }catch(err){
@@ -5502,6 +5521,14 @@ function brcBindOddsManual(){
       e.preventDefault();
       const sel=brcOddsSelection();
       if(sel?.key){brcOddsPoolRemove(sel.key,String(remove.dataset.oddsPoolRemove||''));__brcOddsView='builder';brcRenderOddsPanel();}
+      return;
+    }
+    const sort=e.target?.closest?.('[data-odds-pool-sort]');
+    if(sort){
+      e.preventDefault();
+      __brcOddsPoolSort=String(sort.dataset.oddsPoolSort||'')==='odds'?'odds':'comb';
+      __brcOddsView='builder';
+      brcRenderOddsPanel();
       return;
     }
     const clear=e.target?.closest?.('[data-odds-pool-clear]');
