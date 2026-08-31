@@ -2122,6 +2122,56 @@
     .racecard-history-return{font-size:11px;padding:5px 9px;}
   }
 
+  /* ---- 出走表 表示日付 / 過去7日セレクタ ---- */
+  .racecard-date-toolbar{
+    position:relative; display:flex; align-items:center; justify-content:space-between; gap:10px;
+    margin:0 0 12px; padding:10px 12px; border:1px solid rgba(10,31,51,.10); border-radius:12px;
+    background:linear-gradient(180deg,#fff 0%,rgba(10,31,51,.018) 100%);
+  }
+  .racecard-date-current{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap;}
+  .racecard-date-caption{font-size:10.5px;font-weight:800;color:var(--ink-soft);white-space:nowrap;}
+  .racecard-date-value{font-size:15px;font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .racecard-date-state{
+    display:inline-flex;align-items:center;justify-content:center;border-radius:999px;padding:3px 7px;
+    font-size:9.5px;font-weight:900;line-height:1.2;background:rgba(0,87,219,.08);color:var(--wave);white-space:nowrap;
+  }
+  .racecard-date-state.historical{background:rgba(227,178,60,.16);color:#805700;}
+  .racecard-date-picker-btn{
+    appearance:none;border:1px solid rgba(0,87,219,.20);background:#fff;color:var(--wave);border-radius:999px;
+    padding:7px 11px;font:inherit;font-size:11.5px;font-weight:900;cursor:pointer;white-space:nowrap;
+    touch-action:manipulation;-webkit-tap-highlight-color:transparent;position:relative;z-index:2;
+  }
+  .racecard-date-picker-btn:hover{border-color:rgba(0,87,219,.45);background:rgba(0,87,219,.035);}
+  .racecard-date-picker-btn[aria-expanded="true"]{background:var(--wave);border-color:var(--wave);color:#fff;}
+  .racecard-date-menu{
+    position:absolute;z-index:1000;top:calc(100% + 6px);right:0;width:min(290px,calc(100vw - 32px));padding:7px;
+    border:1px solid rgba(10,31,51,.12);border-radius:12px;background:#fff;box-shadow:0 12px 32px rgba(10,31,51,.16);
+    pointer-events:auto;
+  }
+  .racecard-date-menu[hidden]{display:none!important;}
+  .racecard-date-option{
+    width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;appearance:none;
+    border:0;background:transparent;border-radius:8px;padding:11px 10px;font:inherit;cursor:pointer;text-align:left;color:var(--navy);
+    touch-action:manipulation;-webkit-tap-highlight-color:transparent;pointer-events:auto;position:relative;z-index:1;
+  }
+  .racecard-date-option.loading{opacity:.55;pointer-events:none;}
+  .racecard-date-feedback{flex-basis:100%;font-size:10.5px;font-weight:800;color:var(--ink-soft);min-height:1.3em;margin-top:1px;}
+  .racecard-date-feedback.error{color:#b42318;}
+  .racecard-date-feedback.ok{color:#087443;}
+  .racecard-date-option:hover{background:rgba(0,87,219,.045);}
+  .racecard-date-option.active{background:rgba(0,87,219,.08);color:var(--wave);font-weight:900;}
+  .racecard-date-option-label{font-size:12.5px;font-weight:800;font-variant-numeric:tabular-nums;}
+  .racecard-date-option-sub{font-size:10px;color:var(--ink-soft);font-weight:800;white-space:nowrap;}
+  .racecard-date-option.active .racecard-date-option-sub{color:var(--wave);}
+  @media(max-width:420px){
+    .racecard-date-toolbar{padding:9px 10px;gap:7px;}
+    .racecard-date-current{gap:5px;}
+    .racecard-date-caption{font-size:10px;flex-basis:100%;}
+    .racecard-date-value{font-size:14px;}
+    .racecard-date-picker-btn{font-size:11px;padding:6px 9px;}
+    .racecard-date-menu{left:0;right:auto;width:100%;}
+  }
+
 </style>
 
 <style id="brc-predict-guide-style">
@@ -2629,7 +2679,7 @@
       <div class="note-fold" style="display:none; margin-bottom:6px;" id="raceCardFoldWrap">
         <button type="button" class="note-fold-toggle" id="raceCardFoldToggle" onclick="var b=this.nextElementSibling; var s=(b.style.display!=='none'); b.style.display=s?'none':'flex'; this.textContent=s?'番組表の読み込み ▸':'番組表の読み込み ▾';">番組表の読み込み ▾</button>
         <div class="card-sub fold-body" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-          <span>当日番組表: <strong id="raceCardDateLabel">-</strong></span>
+          <span>表示中の番組表: <strong id="raceCardDateLabel">-</strong></span>
           <label class="tab" style="background:rgba(10,31,51,.08); cursor:pointer; margin:0;">
             番組表ファイルを差し替え（公式TXT/JSON対応）
             <input type="file" id="raceCardFileInput" accept="application/json,.json,.txt,text/plain" style="display:none;">
@@ -2641,11 +2691,21 @@
           </span>
         </div>
       </div>
+      <div class="racecard-date-toolbar" id="raceCardDateToolbar">
+        <div class="racecard-date-current">
+          <span class="racecard-date-caption">表示中</span>
+          <strong class="racecard-date-value" id="raceCardDisplayDate">-</strong>
+          <span class="racecard-date-state" id="raceCardDisplayState">今日</span>
+        </div>
+        <button type="button" class="racecard-date-picker-btn" id="raceCardDatePickerButton" aria-expanded="false" aria-controls="raceCardDateMenu">日付変更 ▾</button>
+        <div class="racecard-date-menu" id="raceCardDateMenu" hidden></div>
+        <div class="racecard-date-feedback" id="raceCardDateFeedback" aria-live="polite"></div>
+      </div>
       <div id="raceCardHistoryBanner" class="racecard-history-banner" role="status" aria-live="polite">
         <div class="racecard-history-main">
-          <span class="racecard-history-title">🔒 過去検証中</span>
+          <span class="racecard-history-title">過去データ表示中</span>
           <span class="racecard-history-date" id="raceCardHistoryDate">-</span>
-          <span class="racecard-history-note">当日番組表への自動切替は停止中。表示中の日付・会場・Rに一致する保存済み展示だけを照合します。</span>
+          <span class="racecard-history-note">表示中の日付・会場・Rに一致する保存済みデータだけを表示します。</span>
         </div>
         <button type="button" class="racecard-history-return" id="raceCardReturnToday">本日に戻る</button>
       </div>
@@ -6651,12 +6711,8 @@ function brcSlitMergeMetric(target,key,arrow){
   if(brcSlitArrowStrength(arrow)>brcSlitArrowStrength(prev)) target[key]=arrow;
 }
 function brcSlitEvaluationState(boats,liveRace,inReliability=null){
-  // 表示日が本日(JST)以外なら未来ST混入を避けるため表示しない。履歴ロックの有無に依存させない。
-  const shownDate=String(TODAY_LABEL||'');
-  if(/^\d{4}-\d{2}-\d{2}$/.test(shownDate) && shownDate!==getJstDateLabel()){
-    return {status:'historical-hidden',items:[],rows:[]};
-  }
-
+  // 過去日も保存済み展示だけを使用して判定する。
+  // ST順位は2026-07-31までの固定OOS参照値なので、2026年8月以降の日付では未来情報を含まない。
   const raceBoats=Array.isArray(liveRace?.boats) ? liveRace.boats : [];
   if(!liveRace || raceBoats.length!==6) return {status:'waiting',items:[],rows:[]};
 
@@ -6768,11 +6824,7 @@ function brcBuildSlitEvaluationHtml(boats,liveRace,inReliability=null){
   const state=brcSlitEvaluationState(boats,liveRace,inReliability);
   const tiltHtml=brcBuildSlitHighTiltHtml(liveRace);
 
-  // 過去日はSTを使うスリット判定は非表示のまま。高チルト情報だけ保存データから表示可能。
-  if(state.status==='historical-hidden' && !tiltHtml){
-    return '<div id="slitEvaluationCard" class="slit-eval-compact" style="display:none;"></div>';
-  }
-
+  // 過去日も保存済み展示 + 固定OOS ST順位で同じスリット判定を再現する。
   let slitHtml='';
   if(state.status==='active'){
     slitHtml=state.rows.map(r=>{
@@ -6800,7 +6852,7 @@ function brcBuildSlitEvaluationHtml(boats,liveRace,inReliability=null){
     return `<div id="slitEvaluationCard" class="slit-eval-compact"><span class="slit-eval-label">展示スリット評価</span><span class="slit-eval-items">${slitHtml}</span></div>`;
   }
 
-  const text=state.status==='excluded' ? '判定対象外' : state.status==='entry-waiting' ? '進入確認待ち' : state.status==='partial' ? '一部データ不足' : state.status==='none' ? '該当なし' : state.status==='historical-hidden' ? '該当なし' : '展示待ち';
+  const text=state.status==='excluded' ? '判定対象外' : state.status==='entry-waiting' ? '進入確認待ち' : state.status==='partial' ? '一部データ不足' : state.status==='none' ? '該当なし' : '展示待ち';
   const title=state.reason ? ` title="${state.reason}"` : '';
   const body=`<span class="slit-eval-muted"${title}>―　${text}</span>`;
   return `<div id="slitEvaluationCard" class="slit-eval-compact"><span class="slit-eval-label">展示スリット評価</span><span class="slit-eval-items">${body}</span></div>`;
@@ -7317,14 +7369,194 @@ function restoreHistoricalRaceCard(){
   }
 }
 
+function brcRaceCardDateAtOffset(daysAgo=0){
+  const base=getJstDateLabel().split('-').map(Number);
+  if(base.length!==3 || base.some(v=>!Number.isFinite(v))) return getJstDateLabel();
+  const dt=new Date(Date.UTC(base[0],base[1]-1,base[2]-Number(daysAgo||0)));
+  const y=dt.getUTCFullYear(), m=String(dt.getUTCMonth()+1).padStart(2,'0'), d=String(dt.getUTCDate()).padStart(2,'0');
+  return `${y}-${m}-${d}`;
+}
+
+function brcFormatRaceCardDate(dateStr,compact=false){
+  const m=String(dateStr||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!m) return dateStr||'-';
+  const dt=new Date(Date.UTC(Number(m[1]),Number(m[2])-1,Number(m[3])));
+  const wd=['日','月','火','水','木','金','土'][dt.getUTCDay()];
+  return compact ? `${Number(m[2])}/${Number(m[3])}（${wd}）` : `${m[1]}/${m[2]}/${m[3]}（${wd}）`;
+}
+
+function brcRaceCardDaysAgo(dateStr){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(dateStr||''))) return NaN;
+  const today=brcRaceCardDateAtOffset(0);
+  const a=Date.parse(`${today}T00:00:00+09:00`), b=Date.parse(`${dateStr}T00:00:00+09:00`);
+  return Math.round((a-b)/86400000);
+}
+
+function brcIsSelectableRaceCardDate(dateStr){
+  const days=brcRaceCardDaysAgo(dateStr);
+  return Number.isFinite(days) && days>=0 && days<=7;
+}
+
+function renderRaceCardDatePicker(){
+  const current=document.getElementById('raceCardDisplayDate');
+  const state=document.getElementById('raceCardDisplayState');
+  const menu=document.getElementById('raceCardDateMenu');
+  const historical=brcIsHistoricalRaceCardMode();
+  if(current) current.textContent=brcFormatRaceCardDate(TODAY_LABEL||getJstDateLabel());
+  if(state){
+    state.textContent=historical?'過去データ':'今日';
+    state.classList.toggle('historical',historical);
+  }
+  if(menu){
+    const shown=String(TODAY_LABEL||'');
+    menu.innerHTML=Array.from({length:8},(_,i)=>{
+      const date=brcRaceCardDateAtOffset(i);
+      const active=date===shown?' active':'';
+      const sub=i===0?'今日':(i===1?'昨日':`${i}日前`);
+      return `<button type="button" class="racecard-date-option${active}" data-racecard-date="${date}" onclick="return brcSelectRaceCardDate(event,'${date}')"><span class="racecard-date-option-label">${brcFormatRaceCardDate(date,true)}</span><span class="racecard-date-option-sub">${sub}${active?' ・ 表示中':''}</span></button>`;
+    }).join('');
+  }
+}
+
+function brcSetRaceCardDateFeedback(message='',type=''){
+  const el=document.getElementById('raceCardDateFeedback');
+  if(!el) return;
+  el.textContent=message||'';
+  el.classList.toggle('error',type==='error');
+  el.classList.toggle('ok',type==='ok');
+}
+
+function brcSelectRaceCardDate(ev,dateStr){
+  try{ if(ev){ev.preventDefault();ev.stopPropagation();} }catch(_e){}
+  const target=String(dateStr||'');
+  const now=Date.now();
+  if(window.__brcRaceCardLastSelect && window.__brcRaceCardLastSelect.target===target && now-window.__brcRaceCardLastSelect.at<500) return false;
+  window.__brcRaceCardLastSelect={target,at:now};
+  const option=ev?.currentTarget || document.querySelector(`[data-racecard-date="${target}"]`);
+  if(option) option.classList.add('loading');
+  brcSetRaceCardDateFeedback(`${brcFormatRaceCardDate(target)} を読み込み中…`);
+  Promise.resolve(brcLoadHostedRaceCardDate(target)).finally(()=>{
+    if(option) option.classList.remove('loading');
+  });
+  return false;
+}
+
+function brcCloseRaceCardDateMenu(){
+  const menu=document.getElementById('raceCardDateMenu');
+  const btn=document.getElementById('raceCardDatePickerButton');
+  if(menu) menu.hidden=true;
+  if(btn) btn.setAttribute('aria-expanded','false');
+}
+
+function brcInitRaceCardDatePicker(){
+  const btn=document.getElementById('raceCardDatePickerButton');
+  const menu=document.getElementById('raceCardDateMenu');
+  if(!btn||!menu) return;
+  if(btn.dataset.bound!=='1'){
+    btn.dataset.bound='1';
+    btn.addEventListener('click',(ev)=>{
+      ev.stopPropagation();
+      const open=menu.hidden;
+      menu.hidden=!open;
+      btn.setAttribute('aria-expanded',open?'true':'false');
+    });
+  }
+  if(!window.__brcRaceCardDateOutsideBound){
+    window.__brcRaceCardDateOutsideBound=true;
+    document.addEventListener('click',(ev)=>{
+      const bar=document.getElementById('raceCardDateToolbar');
+      if(bar && !bar.contains(ev.target)) brcCloseRaceCardDateMenu();
+    });
+  }
+  if(menu.dataset.delegated!=='1'){
+    menu.dataset.delegated='1';
+    menu.addEventListener('pointerup',(ev)=>{
+      const option=ev.target?.closest?.('[data-racecard-date]');
+      if(!option) return;
+      if(ev.pointerType==='touch') brcSelectRaceCardDate(ev,option.dataset.racecardDate);
+    });
+  }
+  renderRaceCardDatePicker();
+}
+
+async function brcLoadHostedRaceCardDate(dateStr){
+  const target=String(dateStr||'');
+  const today=getJstDateLabel();
+  const statusBox=document.getElementById('raceCardFileStatus');
+  brcCloseRaceCardDateMenu();
+  if(!brcIsSelectableRaceCardDate(target)){
+    const msg='選択できるのは本日から7日前までです。';
+    if(statusBox){statusBox.textContent=msg;statusBox.style.color='#b42318';}
+    brcSetRaceCardDateFeedback(msg,'error');
+    return false;
+  }
+  if(target===today){
+    brcSetRaceCardDateFeedback('本日の番組表へ戻します。');
+    return brcReturnRaceCardToToday();
+  }
+
+  brcStopLiveExhibitionPolling();
+  if(window.__brcRaceCardRetryTimer){clearTimeout(window.__brcRaceCardRetryTimer);window.__brcRaceCardRetryTimer=null;}
+  const loadingMsg=`${brcFormatRaceCardDate(target)} の番組表を読み込み中…`;
+  if(statusBox){statusBox.textContent=loadingMsg;statusBox.style.color='';}
+  brcSetRaceCardDateFeedback(loadingMsg);
+
+  const yymmdd=target.replace(/-/g,'').slice(2);
+  const sourceName=`B${yymmdd}.TXT`;
+  const stamp=Date.now();
+  const urls=[`/racecards/history/${sourceName}?v=${stamp}`,`racecards/history/${sourceName}?v=${stamp}`,`/racecards/${sourceName}?v=${stamp}`];
+  let data=null, lastError=null;
+  for(const url of urls){
+    try{
+      const res=await fetch(url,{cache:'no-store'});
+      if(!res.ok){lastError=new Error(`HTTP ${res.status}`);continue;}
+      const buf=await res.arrayBuffer();
+      let txt;
+      try{txt=new TextDecoder('shift_jis').decode(buf);}catch(_e){txt=new TextDecoder('utf-8').decode(buf);}
+      const parsed=parseOfficialRaceCardText(txt);
+      if(parsed.date && parsed.date!==target){lastError=new Error(`日付不一致: ${parsed.date}`);continue;}
+      data=parsed;break;
+    }catch(e){lastError=e;}
+  }
+  if(!data){
+    const msg=`${brcFormatRaceCardDate(target)} の過去データを取得できません。公開先の racecards/history を確認してください。`;
+    if(statusBox){statusBox.textContent=msg;statusBox.style.color='#b42318';}
+    brcSetRaceCardDateFeedback(msg,'error');
+    renderRaceCardDatePicker();
+    console.warn('過去番組表の自動読込に失敗しました',target,lastError);
+    return false;
+  }
+
+  RACE_CARDS_TODAY=data.cards;
+  RACE_INFO_TODAY=normalizeRaceInfoDayLabels(data.info);
+  RACE_MOTOR_TODAY=data.motor||{};
+  RACE_MOTOR_NO_TODAY=data.motorNo||{};
+  RACE_CLASS_TODAY=data.racerClass||data.classes||{};
+  TODAY_LABEL=data.date||target;
+  BRC_RACE_CARD_HISTORY_LOCK=true;
+  BRC_RACE_CARD_HISTORY_SOURCE=`auto:${sourceName}`;
+  saveHistoricalRaceCard(BRC_RACE_CARD_HISTORY_SOURCE);
+
+  renderRaceCardModeUi();
+  populateDaySelect();
+  try{brcRenderPostRaceCards();}catch(_e){}
+  collapseRaceCardFold();
+  invalidateTodayPicks(true);
+  if(document.getElementById('page-special')) renderSpecialLivePanel();
+  if(statusBox){statusBox.textContent=`過去番組表を表示中: ${sourceName}（${Object.keys(RACE_INFO_TODAY).length}会場）`;statusBox.style.color='';}
+  brcSetRaceCardDateFeedback(`${brcFormatRaceCardDate(TODAY_LABEL)} を表示中`,'ok');
+  return true;
+}
+
 function renderRaceCardModeUi(){
   const banner=document.getElementById('raceCardHistoryBanner');
   const dateEl=document.getElementById('raceCardHistoryDate');
   const label=document.getElementById('raceCardDateLabel');
   const historical=brcIsHistoricalRaceCardMode();
   if(label) label.textContent=TODAY_LABEL||'-';
-  if(dateEl) dateEl.textContent=historical ? TODAY_LABEL : '-';
+  if(dateEl) dateEl.textContent=historical ? brcFormatRaceCardDate(TODAY_LABEL) : '-';
   if(banner) banner.classList.toggle('active',historical);
+  renderRaceCardDatePicker();
 }
 
 async function brcReturnRaceCardToToday(){
@@ -7333,6 +7565,7 @@ async function brcReturnRaceCardToToday(){
   if(window.__brcRaceCardRetryTimer){ clearTimeout(window.__brcRaceCardRetryTimer); window.__brcRaceCardRetryTimer=null; }
   const statusBox=document.getElementById('raceCardFileStatus');
   if(statusBox){ statusBox.textContent='本日の番組表へ戻しています…'; statusBox.style.color=''; }
+  brcSetRaceCardDateFeedback('本日の番組表へ戻しています…');
   renderRaceCardModeUi();
   await autoLoadHostedRaceCardToday({reason:'return-today'});
 }
@@ -7461,6 +7694,7 @@ function initPredictPage(){
   document.getElementById('raceCardDateLabel').textContent = TODAY_LABEL;
   populateDaySelect();
   renderRaceCardModeUi();
+  brcInitRaceCardDatePicker();
   const returnTodayBtn=document.getElementById('raceCardReturnToday');
   if(returnTodayBtn) returnTodayBtn.addEventListener('click', brcReturnRaceCardToToday);
 
