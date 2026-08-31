@@ -4704,7 +4704,7 @@ function brcOddsDeadlinePassed(sel){
 
 function brcOddsFmtTime(v){
   const s=String(v||'');
-  const m=s.match(/(\d{2}:\d{2}:\d{2})/);
+  const m=s.match(/(\d{2}:\d{2})(?::\d{2})?/);
   return m ? m[1] : s;
 }
 
