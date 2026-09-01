@@ -7235,6 +7235,8 @@ function brcUpdateLiveExhibitionDom(liveRace,venue,raceNo){
     if(wrap.firstElementChild) card.replaceWith(wrap.firstElementChild);
   }
   brcRefreshExhibitionAdjustedDom(liveRace,venue,raceNo);
+  // 展示live payload更新時に、同梱された公式の風向・風速も参考表へ自動反映する。
+  brcSyncWindPanelFromLiveRace(liveRace,venue);
 }
 
 function brcLiveExhibitionMinutesToDeadline(venue,raceNo){
@@ -8939,7 +8941,10 @@ function buildWindPanelHtml(){
     .concat(Array.from({length:16},(_,i)=>`<option value="${i}"${String(sel.speed)===String(i)?' selected':''}>風速: ${i}m</option>`)).join('');
   return `
     <div id="windPanel" style="margin:14px 0 12px; padding:12px 14px; background:rgba(10,31,51,.025); border:1px solid rgba(10,31,51,.08); border-radius:10px;">
-      <div style="font-size:13px;font-weight:800;margin-bottom:8px;">🌬️ 風向・風速別 1着率</div>
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px;">
+        <div style="font-size:13px;font-weight:800;">🌬️ 風向・風速別 1着率</div>
+        <span id="windAutoStatus" style="font-size:10.5px;color:var(--ink-soft);font-weight:700;">展示後に自動反映</span>
+      </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
         <select id="predictWindDir" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(10,31,51,.16); background:rgba(10,31,51,.04); color:var(--line-white); font-size:14px; min-width:120px;">${dirOpts}</select>
         <select id="predictWindSpeed" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(10,31,51,.16); background:rgba(10,31,51,.04); color:var(--line-white); font-size:14px; min-width:120px;">${speedOpts}</select>
@@ -8948,15 +8953,60 @@ function buildWindPanelHtml(){
       <div id="windRefBox" class="card-sub" style="margin:10px 0 0; padding:12px 14px; background:rgba(10,31,51,.03); border:1px solid rgba(10,31,51,.08); border-radius:8px; display:none;"></div>
     </div>`;
 }
+function brcNormalizeLiveWind(liveRace){
+  const w=liveRace?.weather;
+  if(!w || typeof w!=='object') return null;
+  const speedRaw=Number(w.wind_speed_m);
+  if(!Number.isFinite(speedRaw)) return null;
+  const speed=Math.max(0,Math.round(speedRaw));
+  if(speed>15) return null;
+  const dirs=['北','北東','東','南東','南','南西','西','北西'];
+  let dir=String(w.wind_direction||'').replace(/[\s　]+/g,'').trim();
+  if(speed===0) dir='無風';
+  if(speed>0 && !dirs.includes(dir)) return null;
+  return {
+    dir,
+    speed,
+    observedAt:String(w.observed_at||''),
+    windQuality:String(w.wind_quality||''),
+    waveCm:Number.isFinite(Number(w.wave_cm)) ? Number(w.wave_cm) : null
+  };
+}
+function brcSetWindAutoStatus(text,color='var(--ink-soft)'){
+  const el=document.getElementById('windAutoStatus');
+  if(!el) return;
+  el.textContent=text;
+  el.style.color=color;
+}
+function brcSyncWindPanelFromLiveRace(liveRace,venue){
+  const x=brcNormalizeLiveWind(liveRace);
+  const dirSel=document.getElementById('predictWindDir');
+  const speedSel=document.getElementById('predictWindSpeed');
+  if(!x || !dirSel || !speedSel) return false;
+
+  // 0mは風向選択を空欄のまま「無風」として扱う。
+  dirSel.value=x.speed===0 ? '' : x.dir;
+  speedSel.value=String(x.speed);
+  window.__windSelection={dir:dirSel.value,speed:String(x.speed)};
+  renderWindRef(venue,x.dir,x.speed);
+
+  const obs=/^\d{4}$/.test(x.observedAt)
+    ? `${x.observedAt.slice(0,2)}:${x.observedAt.slice(2)}`
+    : '';
+  const quality=x.windQuality && x.windQuality!=='無風' ? `・${x.windQuality}` : '';
+  brcSetWindAutoStatus(`自動 ${x.dir}${x.speed}m${quality}${obs?` ${obs}`:''}`,'#2f8f5b');
+  return true;
+}
 function bindWindPanel(venue){
   const dirSel = document.getElementById('predictWindDir');
   const speedSel = document.getElementById('predictWindSpeed');
   const box = document.getElementById('windRefBox');
   if(!dirSel || !speedSel || !box) return;
-  const refresh = ()=>{
+  const refresh = (manual=false)=>{
     const dir = dirSel.value;
     const speed = speedSel.value;
     window.__windSelection = {dir, speed};
+    if(manual) brcSetWindAutoStatus('手動表示','var(--ink-soft)');
     if(speed === ''){
       box.style.display = 'none';
       box.innerHTML = '';
@@ -8970,9 +9020,13 @@ function bindWindPanel(venue){
     }
     renderWindRef(venue, speed === '0' ? '無風' : dir, Number(speed));
   };
-  dirSel.addEventListener('change', refresh);
-  speedSel.addEventListener('change', refresh);
-  refresh();
+  dirSel.addEventListener('change', ()=>refresh(true));
+  speedSel.addEventListener('change', ()=>refresh(true));
+
+  // 展示データと同じlive payloadに公式水面気象が入っていれば初回描画から自動反映。
+  if(!brcSyncWindPanelFromLiveRace(window.__currentLiveExhibition,venue)){
+    refresh(false);
+  }
 }
 
 // 会場・風向・風速から、コース1〜6の「生実測1着率・場平均差・N」参考テーブルを組み立てる。
