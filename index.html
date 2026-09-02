@@ -3312,6 +3312,23 @@ async function brcCreateAdminSocialImage(){
     scale:Math.min(3,Math.max(2,window.devicePixelRatio||1)),
     useCORS:true,
     logging:false,
+    // SNS画像ではSVG回転がhtml2canvas上で崩れることがあるため、
+    // クローン内だけ実文字の矢印へ置換する。画面本体の判定・表示には影響しない。
+    onclone:(clonedDoc)=>{
+      const root=clonedDoc.getElementById('predictResult');
+      if(!root) return;
+      root.querySelectorAll('svg.exhibition-arrow-icon').forEach(svg=>{
+        const holder=svg.closest('[aria-label]') || svg.parentElement;
+        const raw=String(holder?.getAttribute?.('aria-label')||holder?.getAttribute?.('title')||'');
+        const m=raw.match(/(↑↑|↓↓|↗|↘|↑|↓|→)/);
+        if(!m) return;
+        const glyph=clonedDoc.createElement('span');
+        glyph.textContent=m[1];
+        glyph.setAttribute('aria-hidden','true');
+        glyph.style.cssText='display:inline-flex;align-items:center;justify-content:center;width:1.1em;height:1.1em;font-size:17px;font-weight:950;line-height:1;color:currentColor;font-family:Arial,\"Noto Sans Symbols 2\",\"Segoe UI Symbol\",sans-serif;';
+        svg.replaceWith(glyph);
+      });
+    },
     scrollX:0,
     scrollY:-window.scrollY,
     windowWidth:Math.max(document.documentElement.clientWidth,box.scrollWidth),
@@ -9023,14 +9040,11 @@ function brcWindTrendSummary(combo){
   if(notable.length===1) return `参考傾向：${fmt(notable[0])} が場平均との差として目立ちます。`;
   return `参考傾向：${fmt(notable[0])}、${fmt(notable[1])} が場平均との差として目立ちます。`;
 }
-function buildWindPanelHtml(venue=''){
+function buildWindPanelHtml(){
   const sel = window.__windSelection || {dir:'', speed:''};
   const dirs = ['北','北東','東','南東','南','南西','西','北西'];
   const dirOpts = [`<option value="">風向: 選択</option>`]
-    .concat(dirs.map(d=>{
-      const quality = BRC_WIND_RELATIVE_MAP?.[venue]?.[d] || '風向参考';
-      return `<option value="${d}"${sel.dir===d?' selected':''}>風向: ${quality}（${d}）</option>`;
-    })).join('');
+    .concat(dirs.map(d=>`<option value="${d}"${sel.dir===d?' selected':''}>風向: ${d}</option>`)).join('');
   const speedOpts = [`<option value="">風速: 選択</option>`]
     .concat(Array.from({length:16},(_,i)=>`<option value="${i}"${String(sel.speed)===String(i)?' selected':''}>風速: ${i}m</option>`)).join('');
   return `
@@ -10369,7 +10383,7 @@ async function runPredict(){
 
       </div>
     </details>
-    ${buildWindPanelHtml(venue)}
+    ${buildWindPanelHtml()}
   `;
 
   renderPredictAiPanel(boats, workerPrediction, localInReliability, exhibitionApplied);
