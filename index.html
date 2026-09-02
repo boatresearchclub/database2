@@ -1842,6 +1842,18 @@
   #windRefBox table.wind-ref-table th:nth-child(3){ width:22%; }
   #windRefBox table.wind-ref-table th:nth-child(4){ width:23%; }
   #windRefBox table.wind-ref-table th:nth-child(5){ width:20%; }
+  #windRefBox .wind-current-summary{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;margin-bottom:9px;}
+  #windRefBox .wind-current-main{display:flex;gap:7px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--ink-soft);}
+  #windRefBox .wind-current-main strong{font-size:16px;color:var(--line-white);letter-spacing:.01em;}
+  #windRefBox .wind-current-sub{font-size:10.5px;color:var(--ink-soft);line-height:1.45;text-align:right;}
+  #windRefBox .wind-relative-badge{display:inline-flex;align-items:center;justify-content:center;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:900;line-height:1;border:1px solid rgba(10,31,51,.10);background:rgba(10,31,51,.05);}
+  #windRefBox .wind-relative-badge.tail{color:#1769aa;background:rgba(23,105,170,.08);border-color:rgba(23,105,170,.18);}
+  #windRefBox .wind-relative-badge.head{color:#6f42c1;background:rgba(111,66,193,.08);border-color:rgba(111,66,193,.18);}
+  #windRefBox .wind-relative-badge.left,
+  #windRefBox .wind-relative-badge.right{color:#8a5a00;background:rgba(176,122,0,.09);border-color:rgba(176,122,0,.18);}
+  #windRefBox .wind-tendency-box{padding:9px 10px;border-radius:8px;background:rgba(0,102,255,.035);border:1px solid rgba(0,102,255,.10);}
+  #windRefBox .wind-tendency-title{font-size:12.5px;font-weight:800;line-height:1.55;color:var(--line-white);}
+  #windRefBox .wind-tendency-meta{font-size:10.5px;color:var(--ink-soft);margin-top:3px;}
   @media (max-width:640px){
     #windRefBox{ padding:10px 6px !important; }
     #windRefBox table.wind-ref-table{ font-size:12px !important; }
@@ -1849,6 +1861,10 @@
     #windRefBox table.wind-ref-table td{ padding:5px 2px !important; letter-spacing:-.02em; }
     #windRefBox .wind-title{ font-size:13px !important; line-height:1.5; }
     #windRefBox .wind-note{ font-size:10.5px !important; }
+    #windRefBox .wind-current-summary{display:block;}
+    #windRefBox .wind-current-sub{text-align:left;margin-top:4px;}
+    #windRefBox .wind-current-main strong{font-size:15px;}
+    #windRefBox .wind-tendency-title{font-size:12px;}
   }
   @media (max-width:390px){
     #windRefBox table.wind-ref-table{ font-size:11px !important; }
@@ -8932,6 +8948,71 @@ function prepareRelativeSTDisplayMeta(boats){
 }
 
 window.__windSelection = window.__windSelection || {dir:'', speed:''};
+
+// スタートラインから1Mへ向かう艇を基準にした風向区分。
+// 表示専用で、1着率・2着率・3着率やその他のBRC予測値には加算しない。
+const BRC_WIND_RELATIVE_MAP = {
+  '桐生': {'北西':'追い風','北':'追い風','北東':'追い風','南東':'向かい風','南':'向かい風','南西':'向かい風','東':'左横風','西':'右横風'},
+  '戸田': {'南西':'追い風','西':'追い風','北西':'追い風','北東':'向かい風','東':'向かい風','南東':'向かい風','北':'左横風','南':'右横風'},
+  '江戸川': {'南東':'追い風','南':'追い風','南西':'追い風','北西':'向かい風','北':'向かい風','北東':'向かい風','西':'左横風','東':'右横風'},
+  '平和島': {'南東':'追い風','南':'追い風','南西':'追い風','北西':'向かい風','北':'向かい風','北東':'向かい風','西':'左横風','東':'右横風'},
+  '多摩川': {'北東':'追い風','東':'追い風','南東':'追い風','南西':'向かい風','西':'向かい風','北西':'向かい風','南':'左横風','北':'右横風'},
+  '浜名湖': {'北西':'追い風','北':'追い風','北東':'追い風','南東':'向かい風','南':'向かい風','南西':'向かい風','東':'左横風','西':'右横風'},
+  '蒲郡': {'北':'追い風','北東':'追い風','東':'追い風','南':'向かい風','南西':'向かい風','西':'向かい風','南東':'左横風','北西':'右横風'},
+  '常滑': {'北東':'追い風','東':'追い風','南東':'追い風','南西':'向かい風','西':'向かい風','北西':'向かい風','南':'左横風','北':'右横風'},
+  '津': {'北東':'追い風','東':'追い風','南東':'追い風','南西':'向かい風','西':'向かい風','北西':'向かい風','南':'左横風','北':'右横風'},
+  '三国': {'北西':'追い風','北':'追い風','北東':'追い風','南東':'向かい風','南':'向かい風','南西':'向かい風','東':'左横風','西':'右横風'},
+  'びわこ': {'北西':'追い風','北':'追い風','北東':'追い風','南東':'向かい風','南':'向かい風','南西':'向かい風','東':'左横風','西':'右横風'},
+  '住之江': {'北西':'追い風','北':'追い風','北東':'追い風','南東':'向かい風','南':'向かい風','南西':'向かい風','東':'左横風','西':'右横風'},
+  '尼崎': {'北東':'追い風','東':'追い風','南東':'追い風','南西':'向かい風','西':'向かい風','北西':'向かい風','南':'左横風','北':'右横風'},
+  '鳴門': {'西':'追い風','北西':'追い風','北':'追い風','東':'向かい風','南東':'向かい風','南':'向かい風','北東':'左横風','南西':'右横風'},
+  '丸亀': {'南東':'追い風','南':'追い風','北西':'向かい風','北':'向かい風','南西':'左横風','西':'左横風','北東':'右横風','東':'右横風'},
+  '児島': {'北西':'追い風','北':'追い風','北東':'追い風','南東':'向かい風','南':'向かい風','南西':'向かい風','東':'左横風','西':'右横風'},
+  '宮島': {'北東':'追い風','東':'追い風','南西':'向かい風','西':'向かい風','南東':'左横風','南':'左横風','北西':'右横風','北':'右横風'},
+  '徳山': {'東':'追い風','南東':'追い風','南':'追い風','西':'向かい風','北西':'向かい風','北':'向かい風','南西':'左横風','北東':'右横風'},
+  '下関': {'北':'追い風','北東':'追い風','東':'追い風','南':'向かい風','南西':'向かい風','西':'向かい風','南東':'左横風','北西':'右横風'},
+  '若松': {'北東':'追い風','東':'追い風','南東':'追い風','南西':'向かい風','西':'向かい風','北西':'向かい風','南':'左横風','北':'右横風'},
+  '芦屋': {'南西':'追い風','西':'追い風','北西':'追い風','北東':'向かい風','東':'向かい風','南東':'向かい風','北':'左横風','南':'右横風'},
+  '福岡': {'南西':'追い風','西':'追い風','北西':'追い風','北東':'向かい風','東':'向かい風','南東':'向かい風','北':'左横風','南':'右横風'},
+  '唐津': {'北':'追い風','北東':'追い風','東':'追い風','南':'向かい風','南西':'向かい風','西':'向かい風','南東':'左横風','北西':'右横風'},
+  '大村': {'南西':'追い風','西':'追い風','北東':'向かい風','東':'向かい風','北西':'左横風','北':'左横風','南東':'右横風','南':'右横風'}
+};
+function brcWindRelativeLabel(venue,dir,speed){
+  if(Number(speed)===0 || dir==='無風') return '無風';
+  return BRC_WIND_RELATIVE_MAP?.[venue]?.[dir] || '風向参考';
+}
+function brcWindRelativeBadgeHtml(label){
+  const cls=label==='追い風'?'tail':label==='向かい風'?'head':label==='左横風'?'left':label==='右横風'?'right':'calm';
+  return `<span class="wind-relative-badge ${cls}">${label}</span>`;
+}
+function brcWindComboN(combo){
+  const ns=Object.values(combo||{}).map(x=>Number(x?.n)).filter(Number.isFinite);
+  if(!ns.length) return null;
+  return Math.min(...ns);
+}
+function brcWindDataVolumeLabel(n){
+  const x=Number(n);
+  if(!Number.isFinite(x)) return 'データ量 ―';
+  if(x>=100) return `データ量 多め（N=${x}）`;
+  if(x>=50) return `データ量 中（N=${x}）`;
+  if(x>=20) return `データ量 少なめ（N=${x}）`;
+  return `データ量 注意（N=${x}）`;
+}
+function brcWindTrendSummary(combo){
+  const rows=[1,2,3,4,5,6].map(c=>{
+    const x=combo?.[String(c)];
+    return x && Number.isFinite(Number(x.dev)) ? {course:c,dev:Number(x.dev),n:Number(x.n)} : null;
+  }).filter(Boolean);
+  if(!rows.length) return '参考傾向：比較できる実測データがありません。';
+  const minN=brcWindComboN(combo);
+  if(Number.isFinite(minN) && minN<20) return '参考傾向：Nが少ないため、方向性は参考程度に確認。';
+  const ranked=[...rows].sort((a,b)=>Math.abs(b.dev)-Math.abs(a.dev));
+  const notable=ranked.filter(x=>Math.abs(x.dev)>=3).slice(0,2);
+  if(!notable.length) return '参考傾向：場平均から大きく目立つ枠差はありません。';
+  const fmt=x=>`${x.course}号艇 ${x.dev>0?'+':''}${Math.round(x.dev)}pt`;
+  if(notable.length===1) return `参考傾向：${fmt(notable[0])} が場平均との差として目立ちます。`;
+  return `参考傾向：${fmt(notable[0])}、${fmt(notable[1])} が場平均との差として目立ちます。`;
+}
 function buildWindPanelHtml(){
   const sel = window.__windSelection || {dir:'', speed:''};
   const dirs = ['北','北東','東','南東','南','南西','西','北西'];
@@ -8942,7 +9023,7 @@ function buildWindPanelHtml(){
   return `
     <div id="windPanel" style="margin:14px 0 12px; padding:12px 14px; background:rgba(10,31,51,.025); border:1px solid rgba(10,31,51,.08); border-radius:10px;">
       <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px;">
-        <div style="font-size:13px;font-weight:800;">🌬️ 風向・風速別 1着率</div>
+        <div style="font-size:13px;font-weight:800;">🌬️ 風向・風速 参考データ</div>
         <span id="windAutoStatus" style="font-size:10.5px;color:var(--ink-soft);font-weight:700;">展示後に自動反映</span>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
@@ -8994,7 +9075,8 @@ function brcSyncWindPanelFromLiveRace(liveRace,venue){
     ? `${x.observedAt.slice(0,2)}:${x.observedAt.slice(2)}`
     : '';
   const quality=x.windQuality && x.windQuality!=='無風' ? `・${x.windQuality}` : '';
-  brcSetWindAutoStatus(`自動 ${x.dir}${x.speed}m${quality}${obs?` ${obs}`:''}`,'#2f8f5b');
+  const relative=brcWindRelativeLabel(venue,x.dir,x.speed);
+  brcSetWindAutoStatus(`自動 ${x.dir}${x.speed}m・${relative}${quality}${obs?` ${obs}`:''}`,'#2f8f5b');
   return true;
 }
 function bindWindPanel(venue){
@@ -9037,14 +9119,20 @@ function renderWindRef(venue, dir, speed){
 
   const speedKey = String(Math.max(0, Math.round(Number(speed) || 0)));
   const effectiveDir = speedKey === '0' ? '無風' : dir;
+  const relative = brcWindRelativeLabel(venue,effectiveDir,Number(speedKey));
+  const relativeBadge = brcWindRelativeBadgeHtml(relative);
   const combo = WIND_COMBO_REF?.[venue]?.[effectiveDir]?.[speedKey];
 
   if(!combo){
     box.style.display = '';
     box.innerHTML = `
-      <div style="font-size:14px; color:var(--ink-soft);">
-        🌬️ <strong>${venue}・${effectiveDir}${speedKey}m</strong>：組み合わせデータなし
-        <span style="font-size:11.5px;">（予想1着率・3連対率には反映していません）</span>
+      <div class="wind-current-summary">
+        <div class="wind-current-main"><span>現在の風</span><strong>${effectiveDir} ${speedKey}m</strong>${relativeBadge}</div>
+        <div class="wind-current-sub">スタートから1Mへ向かう艇を基準に判定</div>
+      </div>
+      <div style="font-size:13px; color:var(--ink-soft);line-height:1.6;">
+        この風向・風速の組み合わせ実測データはありません。風区分のみ参考にしてください。<br>
+        <span style="font-size:11.5px;">※ 予想1着率・2着率・3着率には反映していません。</span>
       </div>`;
     return;
   }
@@ -9073,18 +9161,28 @@ function renderWindRef(venue, dir, speed){
     </tr>`;
   }).filter(Boolean).join('');
 
+  const comboN=brcWindComboN(combo);
+  const trend=brcWindTrendSummary(combo);
   box.style.display = '';
   box.innerHTML = `
-    <div class="wind-title" style="font-size:14px; color:var(--ink-soft); margin-bottom:8px;">
-      🌬️ <strong>${venue}・${effectiveDir}${speedKey}m</strong> の組み合わせ別1着率
-      <span class="wind-note" style="font-size:11.5px;">（2023/1/1〜2026/7/31 約3.5年・生実測 / N併記 / 予想確率には未加算）</span>
+    <div class="wind-current-summary">
+      <div class="wind-current-main"><span>現在の風</span><strong>${effectiveDir} ${speedKey}m</strong>${relativeBadge}</div>
+      <div class="wind-current-sub">スタートから1Mへ向かう艇を基準に判定</div>
+    </div>
+    <div class="wind-tendency-box">
+      <div class="wind-tendency-title">${trend}</div>
+      <div class="wind-tendency-meta">${brcWindDataVolumeLabel(comboN)}・同条件の生実測</div>
+    </div>
+    <div class="wind-title" style="font-size:13px; color:var(--ink-soft); margin:9px 0 7px;">
+      <strong>${venue}・${effectiveDir}${speedKey}m</strong> の枠別1着実測
+      <span class="wind-note" style="font-size:11.5px;">（場平均との比較）</span>
     </div>
     <div class="wind-table-wrap">
       <table class="wind-ref-table">
         <thead><tr>
           <th>枠</th>
           <th class="num">場平均</th>
-          <th class="num">${effectiveDir}${speedKey}m</th>
+          <th class="num">同条件</th>
           <th class="num">平均との差</th>
           <th class="num">N</th>
         </tr></thead>
@@ -9092,7 +9190,8 @@ function renderWindRef(venue, dir, speed){
       </table>
     </div>
     <div style="margin-top:7px;font-size:11.5px;color:var(--ink-soft);line-height:1.6;">
-      ※ Nが少ない条件も値を隠さず生実測を表示します。N数を確認して信頼度を判断してください。
+      ※ 2023/1/1〜2026/7/31の生実測。風が差の原因と断定する値ではありません。N数と合わせて参考にしてください。<br>
+      ※ 表示専用で、BRCの1着率・2着率・3着率やその他の予測値には加算していません。
     </div>`;
 }
 
@@ -10247,8 +10346,8 @@ async function runPredict(){
           </div>
 
           <div class="predict-guide-item">
-            <div class="predict-guide-key">風向・風速別1着率</div>
-            <div class="predict-guide-text">会場・風向・風速ごとのコース別1着率と場平均との差を確認できる参考データです。</div>
+            <div class="predict-guide-key">風向・風速 参考</div>
+            <div class="predict-guide-text">展示後の公式風向・風速を自動表示し、会場ごとに追い風・向かい風・左横風・右横風へ判定します。同条件の枠別1着実測と場平均との差も参考表示します。BRC予測の着率には反映しません。</div>
           </div>
         </div>
 
