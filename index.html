@@ -794,6 +794,20 @@
     display:inline-flex; align-items:center; justify-content:center; height:14px;
     font-size:10px; font-weight:700; color:rgba(61,74,99,.45);
   }
+  .scenario-top3-stack{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    min-height:34px; line-height:1.05; white-space:nowrap;
+  }
+  .scenario-top3-value{
+    display:block; font-weight:800; color:var(--line-white); font-variant-numeric:tabular-nums;
+  }
+  .scenario-personal-trend{
+    appearance:none; border:0; background:transparent; padding:0; margin-top:2px; min-height:15px;
+    display:inline-flex; align-items:center; justify-content:center; gap:2px;
+    font:inherit; font-size:8.5px; font-weight:900; line-height:1; cursor:pointer; white-space:nowrap;
+  }
+  .scenario-personal-trend .arrow{font-size:11px;font-weight:950;line-height:1;}
+  .scenario-personal-trend-spacer{display:block;min-height:15px;margin-top:2px;font-size:1px;visibility:hidden;}
   table.predict-scenario-course-table th, table.predict-scenario-course-table td{text-align:center;}
   table.predict-scenario-course-table .scenario-course-cell{display:flex;align-items:center;justify-content:center;gap:4px;}
   table.predict-scenario-course-table .scenario-course-name{font-size:9.5px;color:var(--ink-soft);font-weight:700;max-width:66px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -807,6 +821,11 @@
     .scenario-rate-value{font-size:10.5px;}
     .scenario-rate-timex{min-height:13px;margin-top:1px;}
     .scenario-rate-timex .exhibition-arrow-icon{width:13px;height:13px;}
+    .scenario-top3-stack{min-height:31px;}
+    .scenario-top3-value{font-size:10.5px;}
+    .scenario-personal-trend{min-height:13px;margin-top:1px;font-size:7.8px;gap:1px;}
+    .scenario-personal-trend .arrow{font-size:10px;}
+    .scenario-personal-trend-spacer{min-height:13px;margin-top:1px;}
     table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(1),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(1){width:18%;}
     table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(2),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(2){width:9%;}
     table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(3),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(3){width:15%;}
@@ -3314,68 +3333,6 @@ async function brcCreateAdminSocialImage(){
     scale:Math.min(3,Math.max(2,window.devicePixelRatio||1)),
     useCORS:true,
     logging:false,
-    // BRC_SOCIAL_ARROW_SAME_DESIGN_20260902
-    // SNS画像ではCSS transformで回転したSVGがhtml2canvas上で崩れる場合がある。
-    // クローン内だけ、回転を使わず「線の座標そのもの」を各方向へ描き直す。
-    // 出走データと同じ線タイプを保ちつつ、画像化時の消失・向き崩れを防ぐ。
-    // 判定値・画面本体の表示には一切影響しない。
-    onclone:(clonedDoc)=>{
-      const root=clonedDoc.getElementById('predictResult');
-      if(!root) return;
-      const NS='http://www.w3.org/2000/svg';
-      const arrowPoints={
-        '→':{line:[4,12,18,12],head:'12,6 18,12 12,18'},
-        '↑':{line:[12,20,12,6],head:'6,12 12,6 18,12'},
-        '↓':{line:[12,4,12,18],head:'6,12 12,18 18,12'},
-        '↗':{line:[5,19,19,5],head:'11,5 19,5 19,13'},
-        '↘':{line:[5,5,19,19],head:'19,11 19,19 11,19'}
-      };
-      root.querySelectorAll('svg.exhibition-arrow-icon').forEach(oldSvg=>{
-        const holder=oldSvg.closest('[aria-label]') || oldSvg.parentElement;
-        const raw=String(holder?.getAttribute?.('aria-label')||holder?.getAttribute?.('title')||'');
-        const m=raw.match(/(↗|↘|↑|↓|→)/);
-        if(!m) return;
-        const spec=arrowPoints[m[1]];
-        if(!spec) return;
-        let color='rgb(61, 74, 99)';
-        try{
-          color=clonedDoc.defaultView?.getComputedStyle(holder||oldSvg)?.color||color;
-        }catch(_){ }
-        const newSvg=clonedDoc.createElementNS(NS,'svg');
-        newSvg.setAttribute('viewBox','0 0 24 24');
-        newSvg.setAttribute('aria-hidden','true');
-        newSvg.setAttribute('focusable','false');
-        newSvg.setAttribute('class','exhibition-arrow-icon brc-sns-baked-arrow');
-        const rect=oldSvg.getBoundingClientRect();
-        const size=Math.max(14,Math.round(Math.max(rect.width||0,rect.height||0,16)));
-        newSvg.setAttribute('width',String(size));
-        newSvg.setAttribute('height',String(size));
-        newSvg.style.cssText=`display:block;width:${size}px;height:${size}px;overflow:visible;transform:none;`;
-
-        const line=clonedDoc.createElementNS(NS,'line');
-        line.setAttribute('x1',String(spec.line[0]));
-        line.setAttribute('y1',String(spec.line[1]));
-        line.setAttribute('x2',String(spec.line[2]));
-        line.setAttribute('y2',String(spec.line[3]));
-        line.setAttribute('fill','none');
-        line.setAttribute('stroke',color);
-        line.setAttribute('stroke-width','2.3');
-        line.setAttribute('stroke-linecap','round');
-        line.setAttribute('stroke-linejoin','round');
-
-        const head=clonedDoc.createElementNS(NS,'polyline');
-        head.setAttribute('points',spec.head);
-        head.setAttribute('fill','none');
-        head.setAttribute('stroke',color);
-        head.setAttribute('stroke-width','2.3');
-        head.setAttribute('stroke-linecap','round');
-        head.setAttribute('stroke-linejoin','round');
-
-        newSvg.appendChild(line);
-        newSvg.appendChild(head);
-        oldSvg.replaceWith(newSvg);
-      });
-    },
     scrollX:0,
     scrollY:-window.scrollY,
     windowWidth:Math.max(document.documentElement.clientWidth,box.scrollWidth),
@@ -5985,7 +5942,7 @@ function renderInlinePredictScenario(course){
       <td style="padding:6px 3px;white-space:nowrap;font-weight:700;color:var(--line-white);">${agg?agg.ar.toFixed(1):'<span class="scenario-no-data">―</span>'}</td>
       <td style="padding:6px 3px;white-space:nowrap;">${agg?brcBuildScenarioPlaceRateHtml(agg.t2,b,'second'):'<span class="scenario-no-data">―</span>'}</td>
       <td style="padding:6px 3px;white-space:nowrap;">${agg?brcBuildScenarioPlaceRateHtml(agg.t3,b,'third'):'<span class="scenario-no-data">―</span>'}</td>
-      <td style="padding:6px 3px;white-space:nowrap;">${agg?`${r0(agg.t3p)}%`:'<span class="scenario-no-data">―</span>'}</td>
+      <td style="padding:6px 3px;white-space:nowrap;">${agg?brcBuildScenarioTop3RateHtml(agg.t3p,b):'<span class="scenario-no-data">―</span>'}</td>
       <td style="padding:6px 3px;">${agg?scenarioRelBar(agg.n):'<span class="scenario-no-data">―</span>'}</td>
     </tr>`;
   }).join('');
@@ -6015,7 +5972,7 @@ function renderInlinePredictScenario(course){
         <tbody>${bodyRows}</tbody>
       </table>
     </div>
-    <div class="predict-detail-note" style="margin-top:9px;">「全体」は全決まり手を集計。矢印は今回のBRCタイムX影響、信頼は標本Nの目安です。</div>
+    <div class="predict-detail-note" style="margin-top:9px;">「全体」は全決まり手を集計。2着・3着の矢印は今回の通常BRCタイムXによる影響方向です。3連欄の「本人」は個人傾向（通常効果との差）で、確率へ直接加減していません。信頼は標本Nの目安です。</div>
   `;
 }
 
@@ -7025,6 +6982,22 @@ function brcBuildExhibitionProbabilitySubHtml(b,kind){
   const sign=d>0?'+':'';
   return `<div class="live-exhibition-slot" data-live-exhibition-course="${Number(b.course)||0}" style="font-size:10px;font-weight:650;color:${eligible?'var(--ink-soft)':'#8a5a00'};margin-top:2px;">タイムX差 ${sign}${d.toFixed(2)}秒${eligible?'':' 対象外'}</div>`;
 }
+function brcBakedArrowSvgGeometry(label){
+  const map={
+    '↑':{line:'12,20 12,5',head:'7,10 12,5 17,10'},
+    '↗':{line:'6.34,17.66 16.95,7.05',head:'9.88,7.05 16.95,7.05 16.95,14.12'},
+    '↘':{line:'6.34,6.34 16.95,16.95',head:'16.95,9.88 16.95,16.95 9.88,16.95'},
+    '↓':{line:'12,4 12,19',head:'17,14 12,19 7,14'}
+  };
+  return map[label]||null;
+}
+function brcBuildBakedArrowSvg(label){
+  const g=brcBakedArrowSvgGeometry(label);
+  if(!g) return '';
+  const p=g.line.split(' ');
+  const a=p[0].split(','), b=p[1].split(',');
+  return `<svg class="exhibition-arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"></line><polyline points="${g.head}"></polyline></svg>`;
+}
 function brcBuildExhibitionProbabilityArrowIcon(deltaPt,threshold){
   if(!Number.isFinite(Number(deltaPt))) return '';
   const label=brcProbabilityArrow(deltaPt,threshold);
@@ -7032,13 +7005,7 @@ function brcBuildExhibitionProbabilityArrowIcon(deltaPt,threshold){
   if(label==='↑↑' || label==='↓↓'){
     return `<span aria-label="BRCタイムX ${label}" title="BRCタイムX ${label}" style="display:inline-flex;align-items:center;justify-content:center;color:${color};font-size:15px;font-weight:950;letter-spacing:-.12em;line-height:1;white-space:nowrap;flex:0 0 auto;padding-right:1px;">${label}</span>`;
   }
-  const rotation = label==='↑' ? -90 : label==='↗' ? -45 : label==='↘' ? 45 : label==='↓' ? 90 : 0;
-  return `<span aria-label="BRCタイムX ${label}" title="BRCタイムX ${label}" style="display:inline-flex;align-items:center;justify-content:center;color:${color};line-height:1;flex:0 0 auto;">
-    <svg class="exhibition-arrow-icon" viewBox="0 0 24 24" aria-hidden="true" style="transform:rotate(${rotation}deg);">
-      <line x1="4" y1="12" x2="19" y2="12"></line>
-      <polyline points="14,7 19,12 14,17"></polyline>
-    </svg>
-  </span>`;
+  return `<span aria-label="BRCタイムX ${label}" title="BRCタイムX ${label}" style="display:inline-flex;align-items:center;justify-content:center;color:${color};line-height:1;flex:0 0 auto;">${brcBuildBakedArrowSvg(label)}</span>`;
 }
 function brcBuildProbabilityCell(value,arrowHtml){
   const evalHtml=arrowHtml || '<span class="prob-eval-hyphen" aria-label="展示未反映">−</span>';
@@ -7144,13 +7111,7 @@ function brcBuildPersonalTrendArrowIcon(deltaPt){
   if(label==='↑↑'||label==='↓↓'){
     return `<span aria-label="個人傾向 ${label}" title="個人傾向：通常より ${brcSignedPt(deltaPt)}" style="display:inline-flex;align-items:center;justify-content:center;color:${color};font-size:15px;font-weight:950;letter-spacing:-.12em;line-height:1;white-space:nowrap;flex:0 0 auto;padding-right:1px;">${label}</span>`;
   }
-  const rotation=label==='↑'?-90:label==='↗'?-45:label==='↘'?45:label==='↓'?90:0;
-  return `<span aria-label="個人傾向 ${label}" title="個人傾向：通常より ${brcSignedPt(deltaPt)}" style="display:inline-flex;align-items:center;justify-content:center;color:${color};line-height:1;flex:0 0 auto;">
-    <svg class="exhibition-arrow-icon" viewBox="0 0 24 24" aria-hidden="true" style="transform:rotate(${rotation}deg);">
-      <line x1="4" y1="12" x2="19" y2="12"></line>
-      <polyline points="14,7 19,12 14,17"></polyline>
-    </svg>
-  </span>`;
+  return `<span aria-label="個人傾向 ${label}" title="個人傾向：通常より ${brcSignedPt(deltaPt)}" style="display:inline-flex;align-items:center;justify-content:center;color:${color};line-height:1;flex:0 0 auto;">${brcBuildBakedArrowSvg(label)}</span>`;
 }
 function brcPersonalConfidence(n){
   const x=Number(n);
@@ -7229,7 +7190,23 @@ function brcBuildScenarioPlaceExhibitionArrow(b,kind){
 function brcBuildScenarioPlaceRateHtml(rate,b,kind='second'){
   const arrow=brcBuildScenarioPlaceExhibitionArrow(b,kind);
   const evalHtml=arrow || '<span class="scenario-rate-timex-empty" aria-label="BRCタイムX未反映">−</span>';
-  return `<span class="scenario-rate-stack"><span class="scenario-rate-value">${r0(rate)}%</span><span class="scenario-rate-timex" title="BRCタイムXによる今回展示の影響方向">${evalHtml}</span></span>`;
+  return `<span class="scenario-rate-stack"><span class="scenario-rate-value">${r0(rate)}%</span><span class="scenario-rate-timex" title="通常BRCタイムXによる今回展示の影響方向（個人傾向は別表示）">${evalHtml}</span></span>`;
+}
+// BRC_SCENARIO_PERSONAL_TREND_CLARITY_20260902: 2着・3着は通常タイムX矢印を維持し、3連欄に本人傾向を別表示。
+function brcBuildScenarioPersonalTop3TrendHtml(b){
+  const a=brcFindExhibitionPlayerAlert(b);
+  if(!a || a?.['採用区分']==='監視') return '';
+  const diff=brcPersonalEffectDiff(a,'top3');
+  if(!Number.isFinite(diff) || Math.abs(diff)<BRC_PERSONAL_TIMEX_ARROW_FLAT_PT) return '';
+  const cls=brcMetricClass(diff);
+  const arrow=brcPersonalTrendArrow(diff);
+  const payload=encodeURIComponent(JSON.stringify(brcAlertPayload(a,b)));
+  return `<button type="button" class="scenario-personal-trend brc-ex-metric-${cls}" onclick="event.stopPropagation();brcShowExhibitionPlayerAlert(decodeURIComponent('${payload}'))" title="本人の3連対傾向：通常より ${brcSignedPt(diff)}。正式確率への直接加減ではありません"><span>本人</span><span class="arrow">${arrow}</span></button>`;
+}
+function brcBuildScenarioTop3RateHtml(rate,b){
+  const personal=brcBuildScenarioPersonalTop3TrendHtml(b);
+  const secondLine=personal || '<span class="scenario-personal-trend-spacer" aria-hidden="true">&nbsp;</span>';
+  return `<span class="scenario-top3-stack"><span class="scenario-top3-value">${r0(rate)}%</span>${secondLine}</span>`;
 }
 function brcBuildScenarioExhibitionBadge(b){
   if(!b?.exhibitionApplied) return '';
