@@ -11,6 +11,7 @@
 <!-- BRC_SOCIAL_ARROW_SAME_DESIGN_20260902 -->
 
 <!-- BRC_PREDICT_METRIC_ROW_ALIGNMENT_20260828 -->
+<!-- BRC_SNS_ARROW_BAKED_COORDS_20260902 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Boat Research Club ～データベース～</title>
@@ -3315,31 +3316,64 @@ async function brcCreateAdminSocialImage(){
     logging:false,
     // BRC_SOCIAL_ARROW_SAME_DESIGN_20260902
     // SNS画像ではCSS transformで回転したSVGがhtml2canvas上で崩れる場合がある。
-    // クローン内だけ、出走データと同じ線形SVGを回転済みSVG画像へ置換する。
+    // クローン内だけ、回転を使わず「線の座標そのもの」を各方向へ描き直す。
+    // 出走データと同じ線タイプを保ちつつ、画像化時の消失・向き崩れを防ぐ。
     // 判定値・画面本体の表示には一切影響しない。
     onclone:(clonedDoc)=>{
       const root=clonedDoc.getElementById('predictResult');
       if(!root) return;
-      root.querySelectorAll('svg.exhibition-arrow-icon').forEach(svg=>{
-        const holder=svg.closest('[aria-label]') || svg.parentElement;
+      const NS='http://www.w3.org/2000/svg';
+      const arrowPoints={
+        '→':{line:[4,12,18,12],head:'12,6 18,12 12,18'},
+        '↑':{line:[12,20,12,6],head:'6,12 12,6 18,12'},
+        '↓':{line:[12,4,12,18],head:'6,12 12,18 18,12'},
+        '↗':{line:[5,19,19,5],head:'11,5 19,5 19,13'},
+        '↘':{line:[5,5,19,19],head:'19,11 19,19 11,19'}
+      };
+      root.querySelectorAll('svg.exhibition-arrow-icon').forEach(oldSvg=>{
+        const holder=oldSvg.closest('[aria-label]') || oldSvg.parentElement;
         const raw=String(holder?.getAttribute?.('aria-label')||holder?.getAttribute?.('title')||'');
-        const m=raw.match(/(↑↑|↓↓|↗|↘|↑|↓|→)/);
+        const m=raw.match(/(↗|↘|↑|↓|→)/);
         if(!m) return;
-        const label=m[1];
-        const rotation=label==='↑'?-90:label==='↗'?-45:label==='↘'?45:label==='↓'?90:0;
+        const spec=arrowPoints[m[1]];
+        if(!spec) return;
         let color='rgb(61, 74, 99)';
         try{
-          color=clonedDoc.defaultView?.getComputedStyle(holder||svg)?.color||color;
+          color=clonedDoc.defaultView?.getComputedStyle(holder||oldSvg)?.color||color;
         }catch(_){ }
-        const svgMarkup=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><g transform="rotate(${rotation} 12 12)"><line x1="4" y1="12" x2="18" y2="12" fill="none" stroke="${color}" stroke-width="2.3" stroke-linecap="round"/><polyline points="12,6 18,12 12,18" fill="none" stroke="${color}" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></g></svg>`;
-        const img=clonedDoc.createElement('img');
-        img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgMarkup);
-        img.alt='';
-        img.setAttribute('aria-hidden','true');
-        const rect=svg.getBoundingClientRect();
+        const newSvg=clonedDoc.createElementNS(NS,'svg');
+        newSvg.setAttribute('viewBox','0 0 24 24');
+        newSvg.setAttribute('aria-hidden','true');
+        newSvg.setAttribute('focusable','false');
+        newSvg.setAttribute('class','exhibition-arrow-icon brc-sns-baked-arrow');
+        const rect=oldSvg.getBoundingClientRect();
         const size=Math.max(14,Math.round(Math.max(rect.width||0,rect.height||0,16)));
-        img.style.cssText=`display:block;width:${size}px;height:${size}px;object-fit:contain;`;
-        svg.replaceWith(img);
+        newSvg.setAttribute('width',String(size));
+        newSvg.setAttribute('height',String(size));
+        newSvg.style.cssText=`display:block;width:${size}px;height:${size}px;overflow:visible;transform:none;`;
+
+        const line=clonedDoc.createElementNS(NS,'line');
+        line.setAttribute('x1',String(spec.line[0]));
+        line.setAttribute('y1',String(spec.line[1]));
+        line.setAttribute('x2',String(spec.line[2]));
+        line.setAttribute('y2',String(spec.line[3]));
+        line.setAttribute('fill','none');
+        line.setAttribute('stroke',color);
+        line.setAttribute('stroke-width','2.3');
+        line.setAttribute('stroke-linecap','round');
+        line.setAttribute('stroke-linejoin','round');
+
+        const head=clonedDoc.createElementNS(NS,'polyline');
+        head.setAttribute('points',spec.head);
+        head.setAttribute('fill','none');
+        head.setAttribute('stroke',color);
+        head.setAttribute('stroke-width','2.3');
+        head.setAttribute('stroke-linecap','round');
+        head.setAttribute('stroke-linejoin','round');
+
+        newSvg.appendChild(line);
+        newSvg.appendChild(head);
+        oldSvg.replaceWith(newSvg);
       });
     },
     scrollX:0,
