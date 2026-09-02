@@ -9,6 +9,7 @@
 <!-- BRC_UI_CLEANUP_20260831 -->
 <!-- BRC_POST_RACE_PUBLIC_20260831 -->
 <!-- BRC_SOCIAL_ARROW_SAME_DESIGN_20260902 -->
+<!-- BRC_RESEARCH_ADMIN_TAB_VISIBLE_V2_20260902 -->
 <!-- BRC_ADMIN_RESEARCH_LAB_DRAFT_20260902 -->
 
 <!-- BRC_PREDICT_METRIC_ROW_ALIGNMENT_20260828 -->
@@ -3236,7 +3237,7 @@ function brcSetAdminResearchUi(active){
   const tab=document.getElementById('brcResearchTab');
   const page=document.getElementById('page-research');
   if(tab){
-    tab.style.display=isActive?'':'none';
+    tab.style.display=isActive?'inline-flex':'none';
     tab.setAttribute('aria-hidden',isActive?'false':'true');
   }
   if(page) page.setAttribute('aria-hidden',(isActive && page.style.display!=='none')?'false':'true');
