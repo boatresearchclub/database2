@@ -792,6 +792,20 @@
     display:inline-flex; align-items:center; justify-content:center; height:14px;
     font-size:10px; font-weight:700; color:rgba(61,74,99,.45);
   }
+  .scenario-top3-stack{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    min-height:34px; line-height:1.05; white-space:nowrap;
+  }
+  .scenario-top3-value{
+    display:block; font-weight:800; color:var(--line-white); font-variant-numeric:tabular-nums;
+  }
+  .scenario-personal-trend{
+    appearance:none; border:0; background:transparent; padding:0; margin-top:2px; min-height:15px;
+    display:inline-flex; align-items:center; justify-content:center; gap:2px;
+    font:inherit; font-size:8.5px; font-weight:900; line-height:1; cursor:pointer; white-space:nowrap;
+  }
+  .scenario-personal-trend .arrow{font-size:11px;font-weight:950;line-height:1;}
+  .scenario-personal-trend-spacer{display:block;min-height:15px;margin-top:2px;font-size:1px;visibility:hidden;}
   table.predict-scenario-course-table th, table.predict-scenario-course-table td{text-align:center;}
   table.predict-scenario-course-table .scenario-course-cell{display:flex;align-items:center;justify-content:center;gap:4px;}
   table.predict-scenario-course-table .scenario-course-name{font-size:9.5px;color:var(--ink-soft);font-weight:700;max-width:66px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -805,6 +819,11 @@
     .scenario-rate-value{font-size:10.5px;}
     .scenario-rate-timex{min-height:13px;margin-top:1px;}
     .scenario-rate-timex .exhibition-arrow-icon{width:13px;height:13px;}
+    .scenario-top3-stack{min-height:31px;}
+    .scenario-top3-value{font-size:10.5px;}
+    .scenario-personal-trend{min-height:13px;margin-top:1px;font-size:7.8px;gap:1px;}
+    .scenario-personal-trend .arrow{font-size:10px;}
+    .scenario-personal-trend-spacer{min-height:13px;margin-top:1px;}
     table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(1),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(1){width:18%;}
     table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(2),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(2){width:9%;}
     table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(3),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(3){width:15%;}
@@ -3312,23 +3331,6 @@ async function brcCreateAdminSocialImage(){
     scale:Math.min(3,Math.max(2,window.devicePixelRatio||1)),
     useCORS:true,
     logging:false,
-    // SNS画像ではSVG回転がhtml2canvas上で崩れることがあるため、
-    // クローン内だけ実文字の矢印へ置換する。画面本体の判定・表示には影響しない。
-    onclone:(clonedDoc)=>{
-      const root=clonedDoc.getElementById('predictResult');
-      if(!root) return;
-      root.querySelectorAll('svg.exhibition-arrow-icon').forEach(svg=>{
-        const holder=svg.closest('[aria-label]') || svg.parentElement;
-        const raw=String(holder?.getAttribute?.('aria-label')||holder?.getAttribute?.('title')||'');
-        const m=raw.match(/(↑↑|↓↓|↗|↘|↑|↓|→)/);
-        if(!m) return;
-        const glyph=clonedDoc.createElement('span');
-        glyph.textContent=m[1];
-        glyph.setAttribute('aria-hidden','true');
-        glyph.style.cssText='display:inline-flex;align-items:center;justify-content:center;width:1.1em;height:1.1em;font-size:17px;font-weight:950;line-height:1;color:currentColor;font-family:Arial,\"Noto Sans Symbols 2\",\"Segoe UI Symbol\",sans-serif;';
-        svg.replaceWith(glyph);
-      });
-    },
     scrollX:0,
     scrollY:-window.scrollY,
     windowWidth:Math.max(document.documentElement.clientWidth,box.scrollWidth),
@@ -5938,7 +5940,7 @@ function renderInlinePredictScenario(course){
       <td style="padding:6px 3px;white-space:nowrap;font-weight:700;color:var(--line-white);">${agg?agg.ar.toFixed(1):'<span class="scenario-no-data">―</span>'}</td>
       <td style="padding:6px 3px;white-space:nowrap;">${agg?brcBuildScenarioPlaceRateHtml(agg.t2,b,'second'):'<span class="scenario-no-data">―</span>'}</td>
       <td style="padding:6px 3px;white-space:nowrap;">${agg?brcBuildScenarioPlaceRateHtml(agg.t3,b,'third'):'<span class="scenario-no-data">―</span>'}</td>
-      <td style="padding:6px 3px;white-space:nowrap;">${agg?`${r0(agg.t3p)}%`:'<span class="scenario-no-data">―</span>'}</td>
+      <td style="padding:6px 3px;white-space:nowrap;">${agg?brcBuildScenarioTop3RateHtml(agg.t3p,b):'<span class="scenario-no-data">―</span>'}</td>
       <td style="padding:6px 3px;">${agg?scenarioRelBar(agg.n):'<span class="scenario-no-data">―</span>'}</td>
     </tr>`;
   }).join('');
@@ -5968,7 +5970,7 @@ function renderInlinePredictScenario(course){
         <tbody>${bodyRows}</tbody>
       </table>
     </div>
-    <div class="predict-detail-note" style="margin-top:9px;">「全体」は全決まり手を集計。矢印は今回のBRCタイムX影響、信頼は標本Nの目安です。</div>
+    <div class="predict-detail-note" style="margin-top:9px;">「全体」は全決まり手を集計。2着・3着の矢印は今回の通常BRCタイムXによる影響方向です。3連欄の「本人」は個人傾向（通常効果との差）で、確率へ直接加減していません。信頼は標本Nの目安です。</div>
   `;
 }
 
@@ -7182,7 +7184,23 @@ function brcBuildScenarioPlaceExhibitionArrow(b,kind){
 function brcBuildScenarioPlaceRateHtml(rate,b,kind='second'){
   const arrow=brcBuildScenarioPlaceExhibitionArrow(b,kind);
   const evalHtml=arrow || '<span class="scenario-rate-timex-empty" aria-label="BRCタイムX未反映">−</span>';
-  return `<span class="scenario-rate-stack"><span class="scenario-rate-value">${r0(rate)}%</span><span class="scenario-rate-timex" title="BRCタイムXによる今回展示の影響方向">${evalHtml}</span></span>`;
+  return `<span class="scenario-rate-stack"><span class="scenario-rate-value">${r0(rate)}%</span><span class="scenario-rate-timex" title="通常BRCタイムXによる今回展示の影響方向（個人傾向は別表示）">${evalHtml}</span></span>`;
+}
+// BRC_SCENARIO_PERSONAL_TREND_CLARITY_20260902: 2着・3着は通常タイムX矢印を維持し、3連欄に本人傾向を別表示。
+function brcBuildScenarioPersonalTop3TrendHtml(b){
+  const a=brcFindExhibitionPlayerAlert(b);
+  if(!a || a?.['採用区分']==='監視') return '';
+  const diff=brcPersonalEffectDiff(a,'top3');
+  if(!Number.isFinite(diff) || Math.abs(diff)<BRC_PERSONAL_TIMEX_ARROW_FLAT_PT) return '';
+  const cls=brcMetricClass(diff);
+  const arrow=brcPersonalTrendArrow(diff);
+  const payload=encodeURIComponent(JSON.stringify(brcAlertPayload(a,b)));
+  return `<button type="button" class="scenario-personal-trend brc-ex-metric-${cls}" onclick="event.stopPropagation();brcShowExhibitionPlayerAlert(decodeURIComponent('${payload}'))" title="本人の3連対傾向：通常より ${brcSignedPt(diff)}。正式確率への直接加減ではありません"><span>本人</span><span class="arrow">${arrow}</span></button>`;
+}
+function brcBuildScenarioTop3RateHtml(rate,b){
+  const personal=brcBuildScenarioPersonalTop3TrendHtml(b);
+  const secondLine=personal || '<span class="scenario-personal-trend-spacer" aria-hidden="true">&nbsp;</span>';
+  return `<span class="scenario-top3-stack"><span class="scenario-top3-value">${r0(rate)}%</span>${secondLine}</span>`;
 }
 function brcBuildScenarioExhibitionBadge(b){
   if(!b?.exhibitionApplied) return '';
