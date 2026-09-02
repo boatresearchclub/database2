@@ -1672,21 +1672,50 @@
     .brc-research-admin-btn{width:100%;padding:0 5px;}
   }
 
-  /* BRC_ADMIN_SOCIAL_SAFE_20260830 */
-  .brc-admin-social{display:none;margin:8px 0 10px;padding:10px 10px 9px;border:1px solid rgba(0,87,219,.18);border-radius:12px;background:rgba(0,87,219,.035);}
+  /* BRC_ADMIN_SOCIAL_V2_20260903 */
+  .brc-admin-social{display:none;margin:10px 0 12px;padding:12px;border:1px solid rgba(0,87,219,.18);border-radius:13px;background:linear-gradient(160deg,rgba(0,87,219,.05),rgba(255,255,255,.96));}
   .brc-admin-social.is-visible{display:block;}
-  .brc-admin-social-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;}
-  .brc-admin-social-title{font-size:12px;font-weight:900;color:var(--line-white);letter-spacing:.01em;}
-  .brc-admin-social-tag{font-size:10px;font-weight:900;color:var(--wave);background:rgba(0,87,219,.08);padding:3px 6px;border-radius:999px;}
+  .brc-admin-social-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px;}
+  .brc-admin-social-title{font-size:13px;font-weight:950;color:var(--navy);letter-spacing:.01em;}
+  .brc-admin-social-sub{margin-top:2px;font-size:10px;line-height:1.45;color:var(--ink-soft);}
+  .brc-admin-social-tag{font-size:10px;font-weight:900;color:var(--wave);background:rgba(0,87,219,.08);padding:3px 7px;border-radius:999px;white-space:nowrap;}
+  .brc-admin-social-v2-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:8px;}
+  .brc-admin-social-field{min-width:0;}
+  .brc-admin-social-field.full{grid-column:1/-1;}
+  .brc-admin-social-label{display:block;margin:0 0 4px;font-size:10px;font-weight:900;color:var(--ink-soft);}
+  .brc-admin-social-select,.brc-admin-social-input,.brc-admin-social-note-input{width:100%;box-sizing:border-box;border:1px solid rgba(10,31,51,.14);border-radius:9px;background:#fff;color:#17324d;font:inherit;font-size:12px;outline:none;}
+  .brc-admin-social-select,.brc-admin-social-input{height:38px;padding:0 9px;}
+  .brc-admin-social-note-input{min-height:76px;padding:9px 10px;line-height:1.55;resize:vertical;}
+  .brc-admin-social-select:focus,.brc-admin-social-input:focus,.brc-admin-social-note-input:focus{border-color:rgba(0,87,219,.48);box-shadow:0 0 0 3px rgba(0,87,219,.06);}
+  .brc-admin-social-segment{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;padding:3px;border:1px solid rgba(10,31,51,.10);border-radius:10px;background:rgba(10,31,51,.025);}
+  .brc-admin-social-segment button{appearance:none;border:0;border-radius:7px;background:transparent;color:var(--ink-soft);height:32px;padding:0 7px;font:inherit;font-size:11px;font-weight:900;cursor:pointer;}
+  .brc-admin-social-segment button.active{background:#fff;color:var(--wave);box-shadow:0 1px 4px rgba(10,31,51,.09);}
+  .brc-admin-social-result-fields{display:none;grid-template-columns:1fr 1fr;gap:8px;grid-column:1/-1;}
+  .brc-admin-social-result-fields.is-visible{display:grid;}
+  .brc-admin-social-theme{display:flex;align-items:center;gap:7px;min-height:31px;margin:1px 0 9px;padding:6px 9px;border:1px solid rgba(10,31,51,.08);border-radius:9px;background:rgba(10,31,51,.022);font-size:10.5px;color:var(--ink-soft);}
+  .brc-admin-social-theme strong{color:var(--navy);font-size:11px;}
   .brc-admin-social-actions{display:flex;gap:7px;flex-wrap:wrap;}
-  .brc-admin-social-btn{appearance:none;border:0;border-radius:9px;padding:8px 11px;font-size:12px;font-weight:900;cursor:pointer;background:var(--wave);color:#fff;}
+  .brc-admin-social-btn{appearance:none;border:0;border-radius:9px;padding:9px 11px;font-size:12px;font-weight:900;cursor:pointer;background:var(--wave);color:#fff;}
   .brc-admin-social-btn.secondary{background:#eef3f8;color:#17324d;}
+  .brc-admin-social-btn:disabled{opacity:.5;cursor:wait;}
   .brc-admin-social-preview{display:none;margin-top:9px;padding:8px;border:1px solid rgba(10,31,51,.10);border-radius:10px;background:#fff;}
   .brc-admin-social-preview.is-visible{display:block;}
   .brc-admin-social-preview img{display:block;width:100%;height:auto;border-radius:7px;background:#fff;}
   .brc-admin-social-image-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;}
-  #brcAdminSocialText{width:100%;min-height:150px;margin-top:8px;border:1px solid rgba(10,31,51,.14);border-radius:9px;padding:9px 10px;box-sizing:border-box;font:inherit;font-size:13px;line-height:1.65;resize:vertical;background:#fff;color:#17324d;}
-  #brcAdminSocialStatus{min-height:16px;margin-top:5px;font-size:11px;color:var(--ink-soft);}
+  .brc-admin-social-output-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:9px;}
+  .brc-admin-social-counter{font-size:10px;font-weight:850;color:var(--ink-soft);font-variant-numeric:tabular-nums;}
+  .brc-admin-social-counter.over{color:#b42318;}
+  #brcAdminSocialText{width:100%;min-height:190px;margin-top:5px;border:1px solid rgba(10,31,51,.14);border-radius:9px;padding:10px 11px;box-sizing:border-box;font:inherit;font-size:13px;line-height:1.7;resize:vertical;background:#fff;color:#17324d;}
+  #brcAdminSocialStatus{min-height:17px;margin-top:5px;font-size:10.5px;line-height:1.45;color:var(--ink-soft);}
+  @media(max-width:520px){
+    .brc-admin-social{padding:10px 9px;}
+    .brc-admin-social-v2-grid{grid-template-columns:1fr;gap:7px;}
+    .brc-admin-social-field.full,.brc-admin-social-result-fields{grid-column:auto;}
+    .brc-admin-social-result-fields.is-visible{grid-template-columns:1fr 1fr;grid-column:1;}
+    .brc-admin-social-actions{display:grid;grid-template-columns:1fr 1fr;}
+    .brc-admin-social-btn{width:100%;padding:10px 7px;font-size:11.5px;}
+    #brcAdminSocialText{min-height:220px;font-size:13px;}
+  }
   @media(max-width:390px){
     .brc-free-preview-list{grid-template-columns:1fr;}
     .brc-free-race{font-size:15px;}
@@ -2896,21 +2925,58 @@
         <div class="predict-main-panel active" id="predictMainPanel-data">
           <div id="predictResult" style="padding:18px 22px;"></div>
           <div id="brcAdminSocial" class="brc-admin-social" aria-hidden="true">
-        <div class="brc-admin-social-head"><div class="brc-admin-social-title">SNS投稿アシスタント</div><span class="brc-admin-social-tag">管理者</span></div>
-        <div class="brc-admin-social-actions">
-          <button type="button" id="brcAdminSocialImage" class="brc-admin-social-btn">SNS画像を作成</button>
-          <button type="button" id="brcAdminSocialGenerate" class="brc-admin-social-btn">Threads投稿文を作成</button>
-          <button type="button" id="brcAdminSocialCopy" class="brc-admin-social-btn secondary">コピー</button>
-        </div>
-        <textarea id="brcAdminSocialText" placeholder="出走表AIを表示したあとに「Threads投稿文を作成」を押してください。"></textarea>
-        <div id="brcAdminSocialPreview" class="brc-admin-social-preview">
-          <img id="brcAdminSocialPreviewImg" alt="SNS投稿用 出走表AI画像">
-          <div class="brc-admin-social-image-actions">
-            <button type="button" id="brcAdminSocialImageShare" class="brc-admin-social-btn secondary">画像を共有 / 保存</button>
+            <div class="brc-admin-social-head">
+              <div><div class="brc-admin-social-title">SNS投稿アシスタント V2</div><div class="brc-admin-social-sub">データだけでなく「このレースのどこが面白いか」を選んで文章化します。</div></div>
+              <span class="brc-admin-social-tag">管理者</span>
+            </div>
+            <div class="brc-admin-social-v2-grid">
+              <div class="brc-admin-social-field">
+                <span class="brc-admin-social-label">投稿先</span>
+                <div class="brc-admin-social-segment" id="brcAdminSocialPlatform">
+                  <button type="button" class="active" data-value="threads">Threads</button>
+                  <button type="button" data-value="x">X（140字）</button>
+                </div>
+              </div>
+              <div class="brc-admin-social-field">
+                <span class="brc-admin-social-label">状況</span>
+                <div class="brc-admin-social-segment" id="brcAdminSocialPhase">
+                  <button type="button" class="active" data-value="pre">レース前</button>
+                  <button type="button" data-value="result">結果後</button>
+                </div>
+              </div>
+              <div class="brc-admin-social-field full">
+                <label class="brc-admin-social-label" for="brcAdminSocialPurpose">投稿の目的</label>
+                <select id="brcAdminSocialPurpose" class="brc-admin-social-select">
+                  <option value="auto">自動（おすすめ）</option>
+                  <option value="analysis">分析・見解</option>
+                  <option value="pick">本日厳選</option>
+                  <option value="hit">的中・答え合わせ</option>
+                  <option value="app">BRCアプリへ自然に誘導</option>
+                </select>
+              </div>
+              <div id="brcAdminSocialResultFields" class="brc-admin-social-result-fields">
+                <div class="brc-admin-social-field"><label class="brc-admin-social-label" for="brcAdminSocialResult">結果（例 3-4-6）</label><input id="brcAdminSocialResult" class="brc-admin-social-input" inputmode="numeric" placeholder="3-4-6"></div>
+                <div class="brc-admin-social-field"><label class="brc-admin-social-label" for="brcAdminSocialPayout">配当（例 91.7倍）</label><input id="brcAdminSocialPayout" class="brc-admin-social-input" placeholder="91.7倍"></div>
+              </div>
+              <div class="brc-admin-social-field full">
+                <label class="brc-admin-social-label" for="brcAdminSocialNote">キタデの一言（任意）</label>
+                <textarea id="brcAdminSocialNote" class="brc-admin-social-note-input" placeholder="例：拮抗してる／本日厳選のイン鉄板／チルト上げてるから入りたくない／世間は展示悪いと見そうだけどBRCでは良い"></textarea>
+              </div>
+            </div>
+            <div id="brcAdminSocialTheme" class="brc-admin-social-theme"><span>自動判定：</span><strong>レースを表示すると投稿テーマを判定します</strong></div>
+            <div class="brc-admin-social-actions">
+              <button type="button" id="brcAdminSocialImage" class="brc-admin-social-btn secondary">SNS画像を作成</button>
+              <button type="button" id="brcAdminSocialGenerate" class="brc-admin-social-btn">投稿文を作成</button>
+              <button type="button" id="brcAdminSocialCopy" class="brc-admin-social-btn secondary">コピー</button>
+            </div>
+            <div class="brc-admin-social-output-head"><span class="brc-admin-social-label" style="margin:0;">生成結果</span><span id="brcAdminSocialCounter" class="brc-admin-social-counter">0文字</span></div>
+            <textarea id="brcAdminSocialText" placeholder="投稿文を作成すると、ここに表示されます。"></textarea>
+            <div id="brcAdminSocialPreview" class="brc-admin-social-preview">
+              <img id="brcAdminSocialPreviewImg" alt="SNS投稿用 出走表AI画像">
+              <div class="brc-admin-social-image-actions"><button type="button" id="brcAdminSocialImageShare" class="brc-admin-social-btn secondary">画像を共有 / 保存</button></div>
+            </div>
+            <div id="brcAdminSocialStatus"></div>
           </div>
-        </div>
-        <div id="brcAdminSocialStatus"></div>
-      </div>
         </div>
         <div class="predict-main-panel" id="predictMainPanel-odds">
           <div class="brc-odds-wrap" id="brcOddsPanel">
@@ -3426,109 +3492,218 @@ function brcAdminHighTilts(){
   return boats.map(x=>({boat:Number(x?.boat_no),tilt:Number(x?.tilt)})).filter(x=>Number.isInteger(x.boat)&&Number.isFinite(x.tilt)&&x.tilt>=1.0).sort((a,b)=>b.tilt-a.tilt);
 }
 
+function brcAdminSocialChoice(rootId, fallback){
+  const root=document.getElementById(rootId);
+  return String(root?.querySelector('button.active')?.dataset?.value||fallback);
+}
+function brcAdminSocialOptions(){
+  const platform=brcAdminSocialChoice('brcAdminSocialPlatform','threads');
+  const phase=brcAdminSocialChoice('brcAdminSocialPhase','pre');
+  const purpose=String(document.getElementById('brcAdminSocialPurpose')?.value||'auto');
+  return {
+    version:'v2', platform, phase, purpose,
+    userNote:String(document.getElementById('brcAdminSocialNote')?.value||'').trim(),
+    result:String(document.getElementById('brcAdminSocialResult')?.value||'').trim(),
+    payout:String(document.getElementById('brcAdminSocialPayout')?.value||'').trim(),
+    maxChars:platform==='x'?140:null
+  };
+}
+function brcAdminPersonalAlertForBoat(b){
+  try{
+    const a=typeof brcFindExhibitionPlayerAlert==='function'?brcFindExhibitionPlayerAlert(b):null;
+    if(!a) return null;
+    const winDiff=typeof brcPersonalEffectDiff==='function'?brcPersonalEffectDiff(a,'win'):NaN;
+    const top3Diff=typeof brcPersonalEffectDiff==='function'?brcPersonalEffectDiff(a,'top3'):NaN;
+    return {
+      label:String(a?.['INDEX表示案']||''), evaluation:String(a?.['評価']||''), adoption:String(a?.['採用区分']||''),
+      n:Number(a?.N||0), band:String(a?.['平均差帯']||''), trait:String(a?.['個人特性']||''), basis:String(a?.['特性根拠']||''),
+      normalWinPct:Number(a?.['通常1着率']), playerWinPct:Number(a?.['本人1着率']),
+      normalTop3Pct:Number(a?.['通常3連対率']), playerTop3Pct:Number(a?.['本人3連対率']),
+      winEffectDiffPt:Number.isFinite(winDiff)?winDiff:null, top3EffectDiffPt:Number.isFinite(top3Diff)?top3Diff:null,
+      winPersonalArrow:Number.isFinite(winDiff)&&typeof brcPersonalTrendArrow==='function'?brcPersonalTrendArrow(winDiff):'',
+      top3PersonalArrow:Number.isFinite(top3Diff)&&typeof brcPersonalTrendArrow==='function'?brcPersonalTrendArrow(top3Diff):''
+    };
+  }catch(_){ return null; }
+}
+function brcAdminSocialRaceSignals(boats, rel){
+  const sorted=boats.slice().sort((a,b)=>Number(b.pctFloat||b.pct||0)-Number(a.pctFloat||a.pct||0));
+  const p1=boats.find(b=>Number(b.course)===1);
+  const rank=String(rel?.label||rel?.rank||rel?.grade||'');
+  const diff=Number(rel?.venueBaseDiff);
+  const p1win=Number(p1?.pctFloat||p1?.pct||0);
+  const personal=boats.map(b=>({boat:b,a:brcAdminPersonalAlertForBoat(b)})).filter(x=>x.a);
+  const strongestPersonal=personal.sort((x,y)=>Math.max(Math.abs(y.a.winEffectDiffPt||0),Math.abs(y.a.top3EffectDiffPt||0))-Math.max(Math.abs(x.a.winEffectDiffPt||0),Math.abs(x.a.top3EffectDiffPt||0)))[0]||null;
+  const up=boats.filter(b=>Number(b.exhibitionWinDeltaPt)>=0.75 || Number(b.exhibitionTop3DeltaPt)>=2);
+  const down=boats.filter(b=>Number(b.exhibitionWinDeltaPt)<=-0.75 || Number(b.exhibitionTop3DeltaPt)<=-2);
+  const highTilts=brcAdminHighTilts();
+  const entryNotice=String(document.getElementById('exhibitionRaceNotice')?.innerText||'').trim();
+  const top3=sorted.slice(0,3).map(b=>Number(b.pctFloat||b.pct||0));
+  const competitive=top3.length>=3 && (top3[0]-top3[2] <= 18 || (p1win<58 && Number(sorted[1]?.pctFloat||sorted[1]?.pct||0)>=18));
+  let theme='展示後の変化';
+  let reason='BRCタイムXの上げ下げを中心に見ます。';
+  if(highTilts.length){theme='見送り・不確定要素';reason='高チルトがあり、数字だけでは決めにくいレースです。';}
+  else if(/進入変更/.test(entryNotice)){theme='進入変更';reason='想定進入が変わっているため、前提条件を優先して見ます。';}
+  else if(strongestPersonal && Math.max(Math.abs(strongestPersonal.a.winEffectDiffPt||0),Math.abs(strongestPersonal.a.top3EffectDiffPt||0))>=10){theme='BRCタイムX 個人傾向';reason=`${brcAdminPlayerLabel(strongestPersonal.boat)}に通常評価との大きなズレがあります。`;}
+  else if(rank==='強イン否定' || rank==='E' || (Number.isFinite(diff)&&diff<=-10)){theme='イン否定';reason='1号艇を疑える条件がはっきり出ています。';}
+  else if((rank==='S'||rank==='A') && (p1win>=64 || (Number.isFinite(diff)&&diff>=10))){theme='イン信頼';reason='1号艇に複数の強い材料が揃っています。';}
+  else if(competitive){theme='拮抗';reason='1着率が割れていて、頭候補を1艇に決めにくいレースです。';}
+  else if(up.length && down.length){theme='展示で評価差';reason='展示後に上げたい艇・下げたい艇が分かれています。';}
+  return {theme,reason,competitive,rank,p1Win:p1win,venueBaseDiff:Number.isFinite(diff)?diff:null,entryNotice,highTilts,upCourses:up.map(b=>b.course),downCourses:down.map(b=>b.course),strongestPersonal:strongestPersonal?{course:strongestPersonal.boat.course,label:brcAdminPlayerLabel(strongestPersonal.boat),...strongestPersonal.a}:null};
+}
 function brcAdminSocialPayload(){
   const boats=Array.isArray(window.__predictBoatsCurrent)?window.__predictBoatsCurrent.slice().sort((a,b)=>Number(a.course)-Number(b.course)):[];
   if(boats.length!==6) throw new Error('先に出走表AIの「計算」を実行してください。');
   const rel=window.__currentLocalInReliability||null;
   const slitText=String(document.getElementById('slitEvaluationCard')?.innerText||'').trim();
+  const options=brcAdminSocialOptions();
+  const signals=brcAdminSocialRaceSignals(boats,rel);
+  // キタデの一言がある場合は、自動判定より本人の視点を優先する。
+  const note=options.userNote;
+  if(note){
+    if(/拮抗|割れ|混戦/.test(note)){ signals.theme='拮抗'; signals.reason='キタデの一言を優先：勝率が割れている点を主役にします。'; }
+    else if(/イン鉄板|鉄板|イン信頼/.test(note)){ signals.theme='イン信頼'; signals.reason='キタデの一言を優先：イン信頼を主役にします。'; }
+    else if(/イン否定|インを疑|逃げを疑/.test(note)){ signals.theme='イン否定'; signals.reason='キタデの一言を優先：イン否定を主役にします。'; }
+    else if(/チルト|入りたくない|見送|不確定/.test(note)){ signals.theme='見送り・不確定要素'; signals.reason='キタデの一言を優先：見送る理由を主役にします。'; }
+    else if(/進入|前付|枠なり/.test(note)){ signals.theme='進入変更'; signals.reason='キタデの一言を優先：進入条件を主役にします。'; }
+    else if(/展示.*悪|展示.*良|世間|タイムX|個人傾向/.test(note)){ signals.theme='BRCタイムX 個人傾向'; signals.reason='キタデの一言を優先：一般的な展示評価とのズレを主役にします。'; }
+  }
   return {
+    social:options,
+    instruction:'キタデ本人の視点を最優先し、数字の羅列ではなくこのレースで最も面白い分析ポイント1〜2個に絞ってSNS文を作成する。選手名には必ず「選手」、基本です・ます調、ハッシュタグなし。Threadsは人間味のある自然な解説、Xは140字以内。',
+    writerGuide:{
+      author:'キタデ', tone:'人間味のあるデータ好きの個人運営者。基本はです・ます調。少し会話っぽく、断定しすぎない。',
+      must:['選手名は必ず「①○○選手」の形式','ハッシュタグは付けない','数字を全部並べず、そのレースで一番面白いズレを1〜2個に絞る','BRCを毎回褒めない','買い目はユーザーが明示しない限り書かない','レース前は結果を断定しない'],
+      threads:'説明量は中程度。冒頭から毎回同じ型にせず、気になる理由から入ってよい。「個人的には」「こういうレースは」など自然な一言は可。',
+      x:'140字以内。数字・主役・一言の3要素を優先し、説明を詰め込みすぎない。',
+      app:'アプリ誘導を選んだ場合だけ露骨な宣伝は避け、「この上げ下げはBRCアプリで確認できます」程度に自然に締める。',
+      userNote:'「キタデの一言」があれば最優先の視点として文章に反映する。'
+    },
+    signals,
     race:{
-      title:brcAdminCurrentRaceTitle()||'このレース',
-      women:brcAdminIsWomenRaceSafe(),
-      grade:String(window.__predictGradeCurrent||''),
-      inReliability:String(rel?.label||rel?.rank||rel?.grade||''),
-      venueBaseDiff:Number.isFinite(Number(rel?.venueBaseDiff))?Number(rel.venueBaseDiff):null,
-      slitEvaluation:slitText,
-      highTilts:brcAdminHighTilts()
+      title:brcAdminCurrentRaceTitle()||'このレース', women:brcAdminIsWomenRaceSafe(), grade:String(window.__predictGradeCurrent||''),
+      inReliability:String(rel?.label||rel?.rank||rel?.grade||''), venueBaseDiff:Number.isFinite(Number(rel?.venueBaseDiff))?Number(rel.venueBaseDiff):null,
+      slitEvaluation:slitText, highTilts:brcAdminHighTilts(), entryNotice:String(document.getElementById('exhibitionRaceNotice')?.innerText||'').trim(),
+      exhibitionAvailable:boats.some(b=>!!b?.exhibitionApplied)
     },
     boats:boats.map(b=>({
-      course:Number(b.course),
-      label:brcAdminPlayerLabel(b),
-      name:String(b?.player?.name||''),
+      course:Number(b.course), label:brcAdminPlayerLabel(b), name:String(b?.player?.name||''),
       winPct:Number.isFinite(Number(b?.pctFloat))?Number(b.pctFloat):Number(b?.pct||0),
-      top3Pct:Number.isFinite(Number(b?.top3PctFloat))?Number(b.top3PctFloat):Number(b?.top3Pct||b?.top3||0),
-      stRank:Number.isFinite(Number(b?.stRank))?Number(b.stRank):null,
-      stStability:String(b?.stStabilityGrade||b?.stStableGrade||''),
-      motorGrade:String(b?.motorGrade||''),
-      motorPct:Number.isFinite(Number(b?.motor2renPct))?Number(b.motor2renPct):Number.isFinite(Number(b?.motorPct))?Number(b.motorPct):null,
+      top3Pct:Number.isFinite(Number(b?.top3PctFloat))?Number(b.top3PctFloat):Number(b?.pct3||b?.top3Pct||b?.top3||0),
+      stRank:Number.isFinite(Number(b?.stRank))?Number(b.stRank):null, stStability:String(b?.stStabilityGrade||b?.stStableGrade||''),
+      motorGrade:String(b?.motorGrade||''), motorPct:Number.isFinite(Number(b?.motor2renPct))?Number(b.motor2renPct):Number.isFinite(Number(b?.motorPct))?Number(b.motorPct):null,
       timeXWinDeltaPt:Number.isFinite(Number(b?.exhibitionWinDeltaPt))?Number(b.exhibitionWinDeltaPt):null,
       timeXTop3DeltaPt:Number.isFinite(Number(b?.exhibitionTop3DeltaPt))?Number(b.exhibitionTop3DeltaPt):null,
-      timeXWinArrow:brcAdminArrow(b?.exhibitionWinDeltaPt,0.75),
-      timeXTop3Arrow:brcAdminArrow(b?.exhibitionTop3DeltaPt,2.0),
-      exhibitionApplied:!!b?.exhibitionApplied
+      timeXWinArrow:brcAdminArrow(b?.exhibitionWinDeltaPt,0.75), timeXTop3Arrow:brcAdminArrow(b?.exhibitionTop3DeltaPt,2.0),
+      exhibitionApplied:!!b?.exhibitionApplied, personalTimeX:brcAdminPersonalAlertForBoat(b)
     }))
   };
 }
-async function brcBuildAdminThreadsPostAI(){
+async function brcBuildAdminSocialPostAI(){
   const session=await brcEnsureFreshSession();
   if(!session?.access_token) throw new Error('ログインセッションがありません。');
   const payload=brcAdminSocialPayload();
-  const res=await fetch(BRC_SOCIAL_AI_URL+'/admin/social-post',{
-    method:'POST',
-    headers:{
-      'Authorization':'Bearer '+session.access_token,
-      'Content-Type':'application/json',
-      'Accept':'application/json'
-    },
-    body:JSON.stringify(payload)
-  });
+  const res=await fetch(BRC_SOCIAL_AI_URL+'/admin/social-post',{method:'POST',headers:{'Authorization':'Bearer '+session.access_token,'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(payload)});
   let data=null; try{data=await res.json();}catch(_){data=null;}
-  if(!res.ok){
-    const err=new Error((data&&(data.message||data.error||data.reason))||`SNS AI HTTP ${res.status}`);
-    err.status=res.status; throw err;
-  }
-  const text=String(data?.text||'').trim();
+  if(!res.ok){const err=new Error((data&&(data.message||data.error||data.reason))||`SNS AI HTTP ${res.status}`);err.status=res.status;throw err;}
+  let text=String(data?.text||'').trim();
   if(!text) throw new Error('AIから投稿文が返りませんでした。');
-  return {ok:true,text,status:'AIがレースごとの分析ポイントを選んで投稿文を作成しました。'};
+  if(payload.social.platform==='x') text=brcAdminClampXText(text,140);
+  return {ok:true,text,status:`AI生成：${payload.signals.theme}を主役にしました。`,theme:payload.signals.theme};
 }
-
-function brcBuildAdminThreadsPost(){
-  const boats=Array.isArray(window.__predictBoatsCurrent)?window.__predictBoatsCurrent.slice().sort((a,b)=>a.course-b.course):[];
-  if(boats.length!==6) return {ok:false,text:'',status:'先に出走表AIの「計算」を実行してください。'};
-  const rel=window.__currentLocalInReliability||null;
-  const title=brcAdminCurrentRaceTitle()||'このレース';
-  const p1=boats.find(b=>Number(b.course)===1);
-  const sortedWin=boats.slice().sort((a,b)=>Number(b.pctFloat||0)-Number(a.pctFloat||0));
-  const women=brcAdminIsWomenRaceSafe();
-  const highTilts=brcAdminHighTilts();
+function brcAdminClampXText(text,max=140){
+  let t=String(text||'').replace(/#[^\s#]+/g,'').replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
+  if(Array.from(t).length<=max) return t;
+  const paras=t.split(/\n+/).map(x=>x.trim()).filter(Boolean); let out='';
+  for(const p of paras){const next=out?(out+'\n'+p):p;if(Array.from(next).length>max) break;out=next;}
+  if(!out) out=Array.from(t).slice(0,max-1).join('')+'…';
+  return out;
+}
+function brcAdminFormatPt(v){const n=Number(v);return Number.isFinite(n)?`${n>0?'+':''}${n.toFixed(1)}pt`:'';}
+function brcBuildAdminSocialPost(){
+  const payload=brcAdminSocialPayload(), o=payload.social, r=payload.race, boats=payload.boats, sig=payload.signals;
+  const p1=boats[0], top=boats.slice().sort((a,b)=>b.winPct-a.winPct)[0];
+  const byCourse=c=>boats.find(b=>b.course===Number(c));
   const lines=[];
-  lines.push(`${title}、気になるレースです。`);
-  if(women) lines.push('BRCでは女子戦は女子戦のデータを使って分析しています。');
-
-  const relLabel=String(rel?.label||rel?.rank||rel?.grade||'').trim();
-  const p1Win=Math.round(Number(p1?.pctFloat||p1?.pct||0));
-  const venueDiff=Number(rel?.venueBaseDiff);
-  let first=`${brcAdminPlayerLabel(p1)}は${relLabel?`イン逃げ信頼度${relLabel}、`:''}1着率${p1Win}%`;
-  if(Number.isFinite(venueDiff)) first+=`、場基準比${venueDiff>=0?'+':''}${Math.round(venueDiff)}pt`;
-  first+='。';
-  lines.push(first);
-
-  const up=[], down=[];
-  for(const b of boats){
-    const w=brcAdminArrow(b.exhibitionWinDeltaPt,0.75);
-    const t=brcAdminArrow(b.exhibitionTop3DeltaPt,2.0);
-    if(w==='↗'||t==='↗') up.push(`${brcAdminPlayerLabel(b)}は${w==='↗'?'1着率↗':''}${w==='↗'&&t==='↗'?'・':''}${t==='↗'?'3連対率↗':''}`);
-    if(w==='↘'||t==='↘') down.push(`${brcAdminPlayerLabel(b)}は${w==='↘'?'1着率↘':''}${w==='↘'&&t==='↘'?'・':''}${t==='↘'?'3連対率↘':''}`);
-  }
-  if(up.length) lines.push(`展示後のBRCタイムXでは、${up.slice(0,3).join('、')}。`);
-  if(down.length) lines.push(`一方、${down.slice(0,3).join('、')}と評価を落としています。`);
-
-  if(highTilts.length){
-    const t=highTilts[0];
-    const b=boats.find(x=>Number(x.course)===t.boat);
-    lines.push(`${b?brcAdminPlayerLabel(b):brcAdminBoatMark(t.boat)}がチルト${t.tilt.toFixed(1)}。不確定要素が強くなるので、数字が良くても無理に入りたくない条件です。`);
-    lines.push('「買えそう」だけでなく、余計な不確定要素がないかも見て判断したいです。');
+  const note=o.userNote;
+  if(o.phase==='result' && (o.result||o.payout)){
+    lines.push(`${r.title}${o.result?' '+o.result:''}${o.payout?' '+o.payout:''} 🎯`.trim());
+    if(note) lines.push(note.replace(/[。！!]+$/,'')+'。');
   }else{
-    const top=sortedWin[0];
-    if(top && Number(top.course)!==1 && Number(top.pctFloat||0)>Number(p1?.pctFloat||0)){
-      lines.push(`1着率トップは${brcAdminPlayerLabel(top)}の${Math.round(Number(top.pctFloat||0))}%です。インをそのまま信頼するか、展示後の変化まで見て判断したいです。`);
-    }else{
-      lines.push('展示前の数字だけで決めず、展示後にどう評価が動いたかまで見て判断したいレースです。');
-    }
+    if(note) lines.push(`${r.title}。\n\n${note.replace(/[。！!]+$/,'')}。`);
+    else if(sig.theme==='イン否定') lines.push(`${r.title}。\n\nここはインを疑って見たいレースです。`);
+    else if(sig.theme==='イン信頼') lines.push(`${r.title}。\n\n今日はここ、かなりイン寄りに見ています。`);
+    else if(sig.theme==='拮抗') lines.push(`${r.title}。\n\nこれ、かなり拮抗しています。`);
+    else if(sig.theme==='見送り・不確定要素') lines.push(`${r.title}。\n\n数字は見たいんですが、私は入りづらいレースです。`);
+    else lines.push(`${r.title}。\n\n展示後の数字を見ると、ちょっと面白いです。`);
   }
-  lines.push('BRCでは「何を買うか」だけでなく、「どのレースに入るか」も大切にしています。');
-  return {ok:true,text:lines.join('\n\n'),status:'投稿文を作成しました。必要ならそのまま編集できます。'};
+  if(sig.theme==='BRCタイムX 個人傾向' && sig.strongestPersonal){
+    const a=sig.strongestPersonal;
+    lines.push(`${a.label}にBRCタイムXの個人傾向が出ています。\n1着傾向 ${brcAdminFormatPt(a.winEffectDiffPt)} ${a.winPersonalArrow||''}\n3連対傾向 ${brcAdminFormatPt(a.top3EffectDiffPt)} ${a.top3PersonalArrow||''}`.trim());
+    lines.push('展示タイムを「速い・遅い」だけで見るのではなく、その選手にとってそのタイムがどうなのかまで見たいところです。');
+  }else if(sig.theme==='イン否定'){
+    lines.push(`${p1.label}はイン逃げ信頼度${r.inReliability||'低め'}、1着率${Math.round(p1.winPct)}％${r.venueBaseDiff!=null?`、場基準比${r.venueBaseDiff>=0?'+':''}${Math.round(r.venueBaseDiff)}pt`:''}。`);
+    if(top.course!==1) lines.push(`一方、1着率トップは${top.label}の${Math.round(top.winPct)}％。\n「①が飛ぶか」だけでなく、崩れた時に誰が頭まで来るかを見たいです。`);
+  }else if(sig.theme==='イン信頼'){
+    lines.push(`${p1.label}はイン逃げ信頼度${r.inReliability||''}、1着率${Math.round(p1.winPct)}％${r.venueBaseDiff!=null?`、場基準比${r.venueBaseDiff>=0?'+':''}${Math.round(r.venueBaseDiff)}pt`:''}。`);
+    const alts=boats.slice(1).sort((a,b)=>b.top3Pct-a.top3Pct).slice(0,2);
+    if(alts.length) lines.push(`頭は①を中心に見つつ、相手では${alts.map(x=>`${x.label}（3連対率${Math.round(x.top3Pct)}％）`).join('、')}が気になります。`);
+  }else if(sig.theme==='拮抗'){
+    const w=boats.slice().sort((a,b)=>b.winPct-a.winPct).slice(0,4);
+    lines.push(w.map(x=>`${x.label} ${Math.round(x.winPct)}％`).join('\n'));
+    lines.push('1艇だけ抜けている形ではありません。こういうレースは、展示後にどこが上がってどこが下がったかを重く見たいです。');
+  }else if(sig.theme==='見送り・不確定要素'){
+    const t=r.highTilts?.[0], b=t?byCourse(t.boat):null;
+    if(t) lines.push(`${b?.label||brcAdminBoatMark(t.boat)}がチルト${Number(t.tilt).toFixed(1)}。\n普段と違う展開になりやすく、不確定要素が一つ増えています。`);
+    lines.push('「狙えそうだから買う」ではなく、条件が崩れたら見送る。どのレースに入るかも大切にしています。');
+  }else if(sig.theme==='進入変更'){
+    lines.push(r.entryNotice||'展示で進入変更があります。');
+    lines.push('事前に狙っていても、想定していた進入が変われば話は別。私はいったん前提から見直します。');
+  }else{
+    const ups=boats.filter(b=>b.timeXWinArrow==='↗'||b.timeXTop3Arrow==='↗').slice(0,3);
+    const downs=boats.filter(b=>b.timeXWinArrow==='↘'||b.timeXTop3Arrow==='↘').slice(0,2);
+    if(ups.length) lines.push(`BRCタイムXでは、${ups.map(x=>`${x.label}が${x.timeXWinArrow==='↗'?'1着率↗':''}${x.timeXWinArrow==='↗'&&x.timeXTop3Arrow==='↗'?'・':''}${x.timeXTop3Arrow==='↗'?'3連対率↗':''}`).join('、')}。`);
+    if(downs.length) lines.push(`逆に${downs.map(x=>`${x.label}は${x.timeXWinArrow==='↘'?'1着率↘':''}${x.timeXWinArrow==='↘'&&x.timeXTop3Arrow==='↘'?'・':''}${x.timeXTop3Arrow==='↘'?'3連対率↘':''}`).join('、')}です。`);
+    lines.push('事前の数字だけで決めず、展示で評価がどう動いたかまで見て組み立てたいです。');
+  }
+  if(o.phase==='result'){
+    if(o.result) lines.push(`結果は ${o.result}${o.payout?`、${o.payout}`:''}。`);
+    lines.push('結果だけではなく、レース前に何が出ていたかを答え合わせしていきます。');
+  }
+  if(o.purpose==='pick') lines.push(sig.theme==='イン否定'?'本日の厳選では、こういう条件をイン否定レースとして拾っています。':'本日の厳選では、こういう条件を狙いレースとして拾っています。');
+  if(o.purpose==='app') lines.push('この辺の細かい上げ下げは、BRCアプリの出走データで確認できます。');
+  let text=lines.join('\n\n').replace(/\n{3,}/g,'\n\n').trim();
+  if(o.platform==='x') text=brcAdminBuildXFallback(payload);
+  return {ok:true,text,status:`V2生成：${sig.theme}を主役にしました。`,theme:sig.theme};
 }
+function brcAdminBuildXFallback(payload){
+  const {social:o,race:r,boats,signals:sig}=payload, p1=boats[0], top=boats.slice().sort((a,b)=>b.winPct-a.winPct)[0];
+  const head=o.phase==='result'&&o.result?`${r.title}🎯\n${o.result}${o.payout?' '+o.payout:''}`:`${r.title}`;
+  let body='';
+  if(o.userNote) body=o.userNote.replace(/[。！!]+$/,'')+'。';
+  if(sig.theme==='BRCタイムX 個人傾向'&&sig.strongestPersonal){const a=sig.strongestPersonal;body+=(body?'\n':'')+`${a.label}はBRCタイムX個人傾向で1着${a.winPersonalArrow||''}・3連対${a.top3PersonalArrow||''}。一般的な展示評価とのズレに注目。`;}
+  else if(sig.theme==='イン否定') body+=(body?'\n':'')+`①は1着率${Math.round(p1.winPct)}％${r.venueBaseDiff!=null?`・場基準比${r.venueBaseDiff>=0?'+':''}${Math.round(r.venueBaseDiff)}pt`:''}。${top.course!==1?`頭評価は${top.label}が${Math.round(top.winPct)}％。`:''}`;
+  else if(sig.theme==='イン信頼') body+=(body?'\n':'')+`①はイン信頼度${r.inReliability}・1着率${Math.round(p1.winPct)}％${r.venueBaseDiff!=null?`・場基準比${r.venueBaseDiff>=0?'+':''}${Math.round(r.venueBaseDiff)}pt`:''}。`;
+  else if(sig.theme==='見送り・不確定要素') body+=(body?'\n':'')+'高チルトで不確定要素あり。数字が良くても私は見送り寄りです。';
+  else body+=(body?'\n':'')+'展示後のBRCタイムXで評価差が出ています。表面の展示順位だけでなく「誰がそのタイムを出したか」を見ます。';
+  if(o.purpose==='app') body+=' 詳細はBRCアプリで。';
+  return brcAdminClampXText(`${head}\n\n${body}`,140);
+}
+function brcAdminSocialUpdateTheme(){
+  const el=document.getElementById('brcAdminSocialTheme'); if(!el) return;
+  try{const p=brcAdminSocialPayload();el.innerHTML=`<span>自動判定：</span><strong>${p.signals.theme}</strong><span>${p.signals.reason}</span>`;}catch(_){el.innerHTML='<span>自動判定：</span><strong>レースを表示すると投稿テーマを判定します</strong>';}
+}
+function brcAdminSocialUpdateUi(){
+  const o=brcAdminSocialOptions();
+  document.getElementById('brcAdminSocialResultFields')?.classList.toggle('is-visible',o.phase==='result');
+  const gen=document.getElementById('brcAdminSocialGenerate'); if(gen) gen.textContent=o.platform==='x'?'X投稿文を作成':'Threads投稿文を作成';
+  brcAdminSocialUpdateCounter();brcAdminSocialUpdateTheme();
+}
+function brcAdminSocialUpdateCounter(){
+  const ta=document.getElementById('brcAdminSocialText'), c=document.getElementById('brcAdminSocialCounter'); if(!c) return;
+  const n=Array.from(String(ta?.value||'')).length, isX=brcAdminSocialChoice('brcAdminSocialPlatform','threads')==='x';
+  c.textContent=isX?`${n}/140文字`:`${n}文字`;c.classList.toggle('over',isX&&n>140);
+}
+
 let __brcAdminSocialImageBlob=null;
 let __brcAdminSocialImageUrl='';
 function brcLoadHtml2Canvas(){
@@ -3602,65 +3777,17 @@ async function brcShareOrSaveAdminSocialImage(){
 }
 
 function brcBindAdminSocial(){
-  const imageBtn=document.getElementById('brcAdminSocialImage');
-  const shareBtn=document.getElementById('brcAdminSocialImageShare');
-  const gen=document.getElementById('brcAdminSocialGenerate');
-  const copy=document.getElementById('brcAdminSocialCopy');
-  const ta=document.getElementById('brcAdminSocialText');
-  const status=document.getElementById('brcAdminSocialStatus');
-  if(imageBtn && !imageBtn.dataset.bound){
-    imageBtn.dataset.bound='1';
-    imageBtn.addEventListener('click',async()=>{
-      if(!BRC_ADMIN_ACTIVE) return;
-      const old=imageBtn.textContent; imageBtn.disabled=true; imageBtn.textContent='画像作成中…';
-      if(status) status.textContent='出走表AIの表示部分をPNG画像にしています。';
-      try{ await brcCreateAdminSocialImage(); if(status) status.textContent='SNS画像を作成しました。下にプレビューを表示しています。'; }
-      catch(err){ if(status) status.textContent=`画像作成エラー: ${err?.message||err}`; }
-      finally{ imageBtn.disabled=false; imageBtn.textContent=old; }
-    });
-  }
-  if(shareBtn && !shareBtn.dataset.bound){
-    shareBtn.dataset.bound='1';
-    shareBtn.addEventListener('click',async()=>{
-      if(!BRC_ADMIN_ACTIVE) return;
-      try{ const msg=await brcShareOrSaveAdminSocialImage(); if(status) status.textContent=msg; }
-      catch(err){ if(err?.name!=='AbortError' && status) status.textContent=`画像保存エラー: ${err?.message||err}`; }
-    });
-  }
-  if(gen && !gen.dataset.bound){
-    gen.dataset.bound='1';
-    gen.addEventListener('click',async()=>{
-      if(!BRC_ADMIN_ACTIVE) return;
-      const old=gen.textContent; gen.disabled=true; gen.textContent='AI分析中…';
-      if(status) status.textContent='AIがこのレースで投稿する価値のあるポイントを分析しています。';
-      try{
-        const out=await brcBuildAdminThreadsPostAI();
-        if(ta) ta.value=out.text||'';
-        if(status) status.textContent=out.status||'';
-      }catch(err){
-        // AI Workerが未設定・一時障害でも従来のローカル生成は使えるようにする。
-        const fallback=brcBuildAdminThreadsPost();
-        if(ta) ta.value=fallback.text||'';
-        if(status) status.textContent=`AI生成に接続できないため従来方式で作成しました（${err?.message||err}）。`;
-      }finally{ gen.disabled=false; gen.textContent=old; }
-    });
-  }
-  if(copy && !copy.dataset.bound){
-    copy.dataset.bound='1';
-    copy.addEventListener('click',async()=>{
-      if(!BRC_ADMIN_ACTIVE) return;
-      const text=String(ta?.value||'');
-      if(!text){ if(status) status.textContent='先に投稿文を作成してください。'; return; }
-      try{
-        await navigator.clipboard.writeText(text);
-        if(status) status.textContent='コピーしました。';
-      }catch(_){
-        if(ta){ ta.focus(); ta.select(); }
-        let ok=false; try{ ok=document.execCommand('copy'); }catch(_e){}
-        if(status) status.textContent=ok?'コピーしました。':'文章を選択したので、端末のコピー操作を使ってください。';
-      }
-    });
-  }
+  const imageBtn=document.getElementById('brcAdminSocialImage'), shareBtn=document.getElementById('brcAdminSocialImageShare'), gen=document.getElementById('brcAdminSocialGenerate'), copy=document.getElementById('brcAdminSocialCopy'), ta=document.getElementById('brcAdminSocialText'), status=document.getElementById('brcAdminSocialStatus');
+  ['brcAdminSocialPlatform','brcAdminSocialPhase'].forEach(id=>{
+    const root=document.getElementById(id); if(root && !root.dataset.bound){root.dataset.bound='1';root.addEventListener('click',e=>{const b=e.target.closest('button[data-value]');if(!b)return;root.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));brcAdminSocialUpdateUi();});}
+  });
+  ['brcAdminSocialPurpose','brcAdminSocialNote','brcAdminSocialResult','brcAdminSocialPayout'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.dataset.bound){el.dataset.bound='1';el.addEventListener('input',()=>brcAdminSocialUpdateTheme());el.addEventListener('change',()=>{if(id==='brcAdminSocialPurpose'&&el.value==='hit'){const root=document.getElementById('brcAdminSocialPhase');root?.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.value==='result'));}brcAdminSocialUpdateUi();});}});
+  if(ta && !ta.dataset.counterBound){ta.dataset.counterBound='1';ta.addEventListener('input',brcAdminSocialUpdateCounter);}
+  if(imageBtn && !imageBtn.dataset.bound){imageBtn.dataset.bound='1';imageBtn.addEventListener('click',async()=>{if(!BRC_ADMIN_ACTIVE)return;const old=imageBtn.textContent;imageBtn.disabled=true;imageBtn.textContent='画像作成中…';if(status)status.textContent='出走表AIの表示部分をPNG画像にしています。';try{await brcCreateAdminSocialImage();if(status)status.textContent='SNS画像を作成しました。下にプレビューを表示しています。';}catch(err){if(status)status.textContent=`画像作成エラー: ${err?.message||err}`;}finally{imageBtn.disabled=false;imageBtn.textContent=old;}});}
+  if(shareBtn && !shareBtn.dataset.bound){shareBtn.dataset.bound='1';shareBtn.addEventListener('click',async()=>{if(!BRC_ADMIN_ACTIVE)return;try{const msg=await brcShareOrSaveAdminSocialImage();if(status)status.textContent=msg;}catch(err){if(err?.name!=='AbortError'&&status)status.textContent=`画像保存エラー: ${err?.message||err}`;}});}
+  if(gen && !gen.dataset.bound){gen.dataset.bound='1';gen.addEventListener('click',async()=>{if(!BRC_ADMIN_ACTIVE)return;const old=gen.textContent;gen.disabled=true;gen.textContent='AI分析中…';if(status)status.textContent='AIが「このレースで一番伝える価値のあるポイント」を選んでいます。';try{const out=await brcBuildAdminSocialPostAI();if(ta)ta.value=out.text||'';if(status)status.textContent=out.status||'';}catch(err){const fallback=brcBuildAdminSocialPost();if(ta)ta.value=fallback.text||'';if(status)status.textContent=`AI接続に失敗したためV2ローカル分析で作成しました（${err?.message||err}）。`;}finally{gen.disabled=false;brcAdminSocialUpdateUi();brcAdminSocialUpdateCounter();}});}
+  if(copy && !copy.dataset.bound){copy.dataset.bound='1';copy.addEventListener('click',async()=>{if(!BRC_ADMIN_ACTIVE)return;const text=String(ta?.value||'');if(!text){if(status)status.textContent='先に投稿文を作成してください。';return;}try{await navigator.clipboard.writeText(text);if(status)status.textContent='コピーしました。';}catch(_){if(ta){ta.focus();ta.select();}let ok=false;try{ok=document.execCommand('copy');}catch(_e){}if(status)status.textContent=ok?'コピーしました。':'文章を選択したので、端末のコピー操作を使ってください。';}});}
+  brcAdminSocialUpdateUi();
 }
 
 // ---- BRC研究室（管理者限定・仮実装 V2） ----
