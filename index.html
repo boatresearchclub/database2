@@ -14,6 +14,7 @@
 
 <!-- BRC_PREDICT_METRIC_ROW_ALIGNMENT_20260828 -->
 <!-- BRC_SNS_ARROW_BAKED_COORDS_20260902 -->
+<!-- BRC_RESEARCH_LAB_V2_TABS_ADMIN_CRUD_ORDER_20260902 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Boat Research Club ～データベース～</title>
@@ -1586,7 +1587,7 @@
   .brc-post-race-list{display:flex;gap:6px;overflow-x:auto;padding:8px 1px 2px;-webkit-overflow-scrolling:touch;}
   .brc-post-race-btn{flex:0 0 auto;appearance:none;border:1px solid rgba(47,143,91,.22);border-radius:8px;background:#fff;color:var(--navy);padding:7px 9px;font:inherit;font-size:10.5px;font-weight:900;cursor:pointer;white-space:nowrap;}
   .brc-post-race-empty{padding:8px 4px 3px;text-align:center;font-size:10.5px;color:var(--ink-soft);}
-  /* BRC_ADMIN_RESEARCH_LAB_DRAFT_20260902 */
+  /* BRC_ADMIN_RESEARCH_LAB_V2_20260902 */
   .brc-admin-research-tab{display:none;}
   .brc-research-card{overflow:hidden;}
   .brc-research-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;}
@@ -1594,15 +1595,12 @@
   .brc-research-title{font-size:20px;font-weight:900;color:var(--navy);margin:0;}
   .brc-research-sub{font-size:12.5px;color:var(--ink-soft);margin-top:5px;line-height:1.6;}
   .brc-research-admin-tag{flex:0 0 auto;font-size:10px;font-weight:900;color:var(--wave);background:rgba(0,87,219,.08);padding:4px 8px;border-radius:999px;}
-  .brc-research-form{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1.2fr) minmax(150px,.7fr) auto;gap:8px;align-items:end;padding:12px;border:1px solid rgba(10,31,51,.09);border-radius:12px;background:rgba(10,31,51,.025);}
-  .brc-research-field{display:flex;flex-direction:column;gap:5px;min-width:0;}
-  .brc-research-field label{font-size:10.5px;font-weight:850;color:var(--ink-soft);}
-  .brc-research-input,.brc-research-select{width:100%;min-width:0;height:40px;border:1px solid rgba(10,31,51,.14);border-radius:9px;background:#fff;color:var(--navy);font:inherit;font-size:13px;padding:8px 10px;outline:none;}
-  .brc-research-input:focus,.brc-research-select:focus{border-color:rgba(0,87,219,.45);box-shadow:0 0 0 3px rgba(0,87,219,.07);}
-  .brc-research-add{height:40px;appearance:none;border:0;border-radius:9px;background:var(--wave);color:#fff;padding:0 15px;font:inherit;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap;}
-  .brc-research-add:disabled{opacity:.45;cursor:not-allowed;}
-  .brc-research-status{min-height:18px;margin:7px 2px 0;font-size:11px;color:var(--ink-soft);}
-  .brc-research-list-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:17px 0 8px;}
+
+  /* 閲覧エリア：カテゴリタブ → 記事一覧 */
+  .brc-research-view-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:4px 0 12px;padding:4px;border:1px solid rgba(10,31,51,.10);border-radius:12px;background:rgba(10,31,51,.035);}
+  .brc-research-view-tab{appearance:none;border:0;border-radius:9px;background:transparent;color:var(--ink-soft);font:inherit;font-size:13px;font-weight:900;padding:10px 8px;cursor:pointer;}
+  .brc-research-view-tab.active{background:#fff;color:var(--wave);box-shadow:0 1px 5px rgba(10,31,51,.09);}
+  .brc-research-list-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:10px 0 8px;}
   .brc-research-list-title{font-size:13px;font-weight:900;color:var(--navy);}
   .brc-research-count{font-size:10.5px;font-weight:800;color:var(--ink-soft);}
   .brc-research-list{display:grid;gap:8px;}
@@ -1615,17 +1613,52 @@
   .brc-research-item-url{margin-top:2px;font-size:10.5px;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .brc-research-open{flex:0 0 auto;text-decoration:none;border:1px solid rgba(0,87,219,.22);border-radius:8px;padding:7px 9px;color:var(--wave);font-size:10.5px;font-weight:900;background:rgba(0,87,219,.035);}
   .brc-research-empty{padding:28px 12px;text-align:center;border:1px dashed rgba(10,31,51,.16);border-radius:11px;color:var(--ink-soft);font-size:12px;background:rgba(10,31,51,.012);}
+
+  /* 管理エリア：将来はこのブロックだけ管理者限定にできるよう閲覧エリアと分離 */
+  .brc-research-admin-panel{margin-top:22px;padding-top:18px;border-top:1px solid rgba(10,31,51,.10);}
+  .brc-research-admin-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;}
+  .brc-research-admin-title{font-size:14px;font-weight:900;color:var(--navy);}
+  .brc-research-admin-sub{margin-top:2px;font-size:10.5px;line-height:1.5;color:var(--ink-soft);}
+  .brc-research-form{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1.2fr) minmax(140px,.65fr) auto;gap:8px;align-items:end;padding:12px;border:1px solid rgba(10,31,51,.09);border-radius:12px;background:rgba(10,31,51,.025);}
+  .brc-research-field{display:flex;flex-direction:column;gap:5px;min-width:0;}
+  .brc-research-field label{font-size:10.5px;font-weight:850;color:var(--ink-soft);}
+  .brc-research-input,.brc-research-select{width:100%;min-width:0;height:40px;border:1px solid rgba(10,31,51,.14);border-radius:9px;background:#fff;color:var(--navy);font:inherit;font-size:13px;padding:8px 10px;outline:none;}
+  .brc-research-input:focus,.brc-research-select:focus{border-color:rgba(0,87,219,.45);box-shadow:0 0 0 3px rgba(0,87,219,.07);}
+  .brc-research-form-actions{display:flex;gap:6px;align-items:center;}
+  .brc-research-add,.brc-research-cancel{height:40px;appearance:none;border:0;border-radius:9px;padding:0 13px;font:inherit;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap;}
+  .brc-research-add{background:var(--wave);color:#fff;}
+  .brc-research-cancel{display:none;background:#e9eef5;color:#30465c;}
+  .brc-research-cancel.is-visible{display:inline-flex;align-items:center;justify-content:center;}
+  .brc-research-add:disabled{opacity:.45;cursor:not-allowed;}
+  .brc-research-status{min-height:18px;margin:7px 2px 0;font-size:11px;color:var(--ink-soft);}
+  .brc-research-admin-list-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0 7px;}
+  .brc-research-admin-list-title{font-size:12px;font-weight:900;color:var(--navy);}
+  .brc-research-admin-list{display:grid;gap:7px;}
+  .brc-research-admin-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid rgba(10,31,51,.09);border-radius:10px;background:#fff;}
+  .brc-research-admin-item-main{flex:1;min-width:0;}
+  .brc-research-admin-item-title{font-size:11.5px;font-weight:900;color:var(--navy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .brc-research-admin-item-meta{margin-top:2px;font-size:9.5px;color:var(--ink-soft);}
+  .brc-research-admin-actions{display:flex;gap:5px;flex:0 0 auto;}
+  .brc-research-admin-btn{appearance:none;border:1px solid rgba(10,31,51,.13);border-radius:7px;background:#f7f9fc;color:#30465c;min-width:34px;height:32px;padding:0 8px;font:inherit;font-size:10.5px;font-weight:900;cursor:pointer;}
+  .brc-research-admin-btn.edit{color:var(--wave);border-color:rgba(0,87,219,.22);background:rgba(0,87,219,.035);}
+  .brc-research-admin-btn.delete{color:#b42318;border-color:rgba(180,35,24,.20);background:rgba(180,35,24,.035);}
+  .brc-research-admin-btn:disabled{opacity:.3;cursor:not-allowed;}
   .brc-research-note{margin-top:10px;font-size:10.5px;color:var(--ink-soft);line-height:1.55;}
   @media(max-width:820px){
     .brc-research-form{grid-template-columns:1fr 1fr;}
-    .brc-research-add{width:100%;}
+    .brc-research-form-actions{width:100%;}
+    .brc-research-add{flex:1;}
   }
   @media(max-width:520px){
     .brc-research-head{gap:8px;}
     .brc-research-title{font-size:18px;}
+    .brc-research-view-tab{font-size:12px;padding:9px 5px;}
     .brc-research-form{grid-template-columns:1fr;padding:10px;}
     .brc-research-item{align-items:flex-start;}
     .brc-research-open{margin-top:1px;}
+    .brc-research-admin-item{align-items:flex-start;flex-direction:column;}
+    .brc-research-admin-actions{width:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));}
+    .brc-research-admin-btn{width:100%;padding:0 5px;}
   }
 
   /* BRC_ADMIN_SOCIAL_SAFE_20260830 */
@@ -2870,39 +2903,59 @@
         <div>
           <div class="brc-research-kicker">BRC RESEARCH LAB</div>
           <h2 class="brc-research-title">BRC研究室</h2>
-          <div class="brc-research-sub">noteで公開した調査・検証、回収率アップ、独自データ解説、舟券戦略、コラムを管理するための仮画面です。</div>
+          <div class="brc-research-sub">BRCで調査・検証した内容やコラムを、カテゴリ別にまとめて閲覧する研究アーカイブです。</div>
         </div>
         <span class="brc-research-admin-tag">管理者限定</span>
       </div>
 
-      <div class="brc-research-form" id="brcResearchForm">
-        <div class="brc-research-field">
-          <label for="brcResearchUrl">note URL</label>
-          <input id="brcResearchUrl" class="brc-research-input" type="url" inputmode="url" autocomplete="url" placeholder="https://note.com/...">
-        </div>
-        <div class="brc-research-field">
-          <label for="brcResearchTitle">タイトル</label>
-          <input id="brcResearchTitle" class="brc-research-input" type="text" maxlength="120" placeholder="記事タイトル">
-        </div>
-        <div class="brc-research-field">
-          <label for="brcResearchCategory">カテゴリ</label>
-          <select id="brcResearchCategory" class="brc-research-select">
-            <option value="調査・検証">調査・検証</option>
-            <option value="回収率アップ">回収率アップ</option>
-            <option value="データ解説">データ解説</option>
-            <option value="コラム">コラム</option>
-          </select>
-        </div>
-        <button type="button" id="brcResearchAddBtn" class="brc-research-add">記事を追加</button>
+      <div class="brc-research-view-tabs" role="tablist" aria-label="BRC研究室の記事カテゴリ">
+        <button type="button" class="brc-research-view-tab active" data-research-tab="調査・検証" aria-selected="true">調査・検証</button>
+        <button type="button" class="brc-research-view-tab" data-research-tab="コラム" aria-selected="false">コラム</button>
       </div>
-      <div id="brcResearchStatus" class="brc-research-status" aria-live="polite"></div>
 
       <div class="brc-research-list-head">
-        <div class="brc-research-list-title">記事一覧</div>
+        <div id="brcResearchListTitle" class="brc-research-list-title">調査・検証の記事</div>
         <div id="brcResearchCount" class="brc-research-count">0件</div>
       </div>
       <div id="brcResearchList" class="brc-research-list"></div>
-      <div class="brc-research-note">仮実装では記事情報をこの端末のブラウザ内にだけ保存します。本番公開・会員への配信は行いません。データ構造には将来のタイトル・サムネイル・概要の自動取得用項目を先に用意しています。</div>
+
+      <div id="brcResearchAdminPanel" class="brc-research-admin-panel">
+        <div class="brc-research-admin-head">
+          <div>
+            <div id="brcResearchAdminTitle" class="brc-research-admin-title">記事を登録</div>
+            <div class="brc-research-admin-sub">登録・編集・削除・並び替えはここで管理します。将来はこの管理エリアだけ管理者限定表示にできます。</div>
+          </div>
+        </div>
+
+        <div class="brc-research-form" id="brcResearchForm">
+          <div class="brc-research-field">
+            <label for="brcResearchUrl">note URL</label>
+            <input id="brcResearchUrl" class="brc-research-input" type="url" inputmode="url" autocomplete="url" placeholder="https://note.com/...">
+          </div>
+          <div class="brc-research-field">
+            <label for="brcResearchTitle">タイトル</label>
+            <input id="brcResearchTitle" class="brc-research-input" type="text" maxlength="120" placeholder="記事タイトル">
+          </div>
+          <div class="brc-research-field">
+            <label for="brcResearchCategory">カテゴリ</label>
+            <select id="brcResearchCategory" class="brc-research-select">
+              <option value="調査・検証">調査・検証</option>
+              <option value="コラム">コラム</option>
+            </select>
+          </div>
+          <div class="brc-research-form-actions">
+            <button type="button" id="brcResearchAddBtn" class="brc-research-add">記事を登録</button>
+            <button type="button" id="brcResearchCancelBtn" class="brc-research-cancel">キャンセル</button>
+          </div>
+        </div>
+        <div id="brcResearchStatus" class="brc-research-status" aria-live="polite"></div>
+
+        <div class="brc-research-admin-list-head">
+          <div class="brc-research-admin-list-title">記事の管理・並び替え</div>
+        </div>
+        <div id="brcResearchAdminList" class="brc-research-admin-list"></div>
+        <div class="brc-research-note">仮実装では記事情報と並び順をこの端末のブラウザ内にだけ保存します。本番公開・会員への配信は行いません。データ構造には将来のnote URLからタイトル・サムネイル・概要を自動取得するための項目を残しています。</div>
+      </div>
     </section>
   </div><!-- /page-research -->
 
@@ -3566,9 +3619,11 @@ function brcBindAdminSocial(){
   }
 }
 
-// ---- BRC研究室（管理者限定・仮実装） ----
+// ---- BRC研究室（管理者限定・仮実装 V2） ----
 const BRC_RESEARCH_STORAGE_KEY='brc_research_articles_draft_v1';
-const BRC_RESEARCH_CATEGORIES=['調査・検証','回収率アップ','データ解説','コラム'];
+const BRC_RESEARCH_CATEGORIES=['調査・検証','コラム'];
+let BRC_RESEARCH_ACTIVE_TAB='調査・検証';
+let BRC_RESEARCH_EDIT_ID='';
 let BRC_RESEARCH_BOUND=false;
 
 function brcResearchEscape(value){
@@ -3581,13 +3636,18 @@ function brcResearchSafeUrl(value){
     return u.href;
   }catch(_){ return ''; }
 }
+function brcResearchNormalizeCategory(value){
+  // 旧仮実装の「回収率アップ」「データ解説」は調査・検証へまとめて互換維持。
+  return String(value||'')==='コラム' ? 'コラム' : '調査・検証';
+}
 function brcResearchNormalizeArticle(raw={}){
   const now=new Date().toISOString();
   return {
     id:String(raw.id||('research_'+Date.now()+'_'+Math.random().toString(36).slice(2,8))),
     url:brcResearchSafeUrl(raw.url),
     title:String(raw.title||'').trim(),
-    category:BRC_RESEARCH_CATEGORIES.includes(raw.category)?raw.category:'調査・検証',
+    category:brcResearchNormalizeCategory(raw.category),
+    order:Number.isFinite(Number(raw.order))?Number(raw.order):null,
     // 将来、note URLから自動取得した値を保存するための予約フィールド
     thumbnail:String(raw.thumbnail||''),
     summary:String(raw.summary||''),
@@ -3599,11 +3659,20 @@ function brcResearchNormalizeArticle(raw={}){
 function brcResearchLoadArticles(){
   try{
     const raw=JSON.parse(localStorage.getItem(BRC_RESEARCH_STORAGE_KEY)||'[]');
-    return Array.isArray(raw)?raw.map(brcResearchNormalizeArticle).filter(x=>x.url&&x.title):[];
+    const items=Array.isArray(raw)?raw.map(brcResearchNormalizeArticle).filter(x=>x.url&&x.title):[];
+    items.sort((a,b)=>{
+      const ao=Number.isFinite(a.order)?a.order:null, bo=Number.isFinite(b.order)?b.order:null;
+      if(ao!==null && bo!==null && ao!==bo) return ao-bo;
+      if(ao!==null && bo===null) return -1;
+      if(ao===null && bo!==null) return 1;
+      return String(b.createdAt).localeCompare(String(a.createdAt));
+    });
+    return items.map((item,index)=>({...item,order:index}));
   }catch(_){ return []; }
 }
 function brcResearchSaveArticles(items){
-  localStorage.setItem(BRC_RESEARCH_STORAGE_KEY,JSON.stringify(items));
+  const normalized=(Array.isArray(items)?items:[]).map((item,index)=>({...brcResearchNormalizeArticle(item),order:index}));
+  localStorage.setItem(BRC_RESEARCH_STORAGE_KEY,JSON.stringify(normalized));
 }
 function brcResearchSetStatus(message='',tone='info'){
   const el=document.getElementById('brcResearchStatus');
@@ -3611,58 +3680,188 @@ function brcResearchSetStatus(message='',tone='info'){
   el.textContent=message;
   el.style.color=tone==='ok'?'#217247':(tone==='error'?'#b42318':'var(--ink-soft)');
 }
+function brcResearchRenderTabs(){
+  document.querySelectorAll('.brc-research-view-tab').forEach(btn=>{
+    const active=btn.dataset.researchTab===BRC_RESEARCH_ACTIVE_TAB;
+    btn.classList.toggle('active',active);
+    btn.setAttribute('aria-selected',active?'true':'false');
+  });
+  const title=document.getElementById('brcResearchListTitle');
+  if(title) title.textContent=`${BRC_RESEARCH_ACTIVE_TAB}の記事`;
+}
+function brcRenderResearchAdminList(items=null){
+  const list=document.getElementById('brcResearchAdminList');
+  if(!list) return;
+  if(!BRC_ADMIN_ACTIVE){ list.innerHTML=''; return; }
+  const all=Array.isArray(items)?items:brcResearchLoadArticles();
+  if(!all.length){
+    list.innerHTML='<div class="brc-research-empty">登録済みの記事はありません。</div>';
+    return;
+  }
+  list.innerHTML=all.map((item,index)=>`<div class="brc-research-admin-item" data-research-id="${brcResearchEscape(item.id)}">
+    <div class="brc-research-admin-item-main">
+      <div class="brc-research-admin-item-title">${brcResearchEscape(item.title)}</div>
+      <div class="brc-research-admin-item-meta">${brcResearchEscape(item.category)} ・ ${index+1}番目</div>
+    </div>
+    <div class="brc-research-admin-actions">
+      <button type="button" class="brc-research-admin-btn" data-action="up" aria-label="上へ移動" ${index===0?'disabled':''}>↑</button>
+      <button type="button" class="brc-research-admin-btn" data-action="down" aria-label="下へ移動" ${index===all.length-1?'disabled':''}>↓</button>
+      <button type="button" class="brc-research-admin-btn edit" data-action="edit">編集</button>
+      <button type="button" class="brc-research-admin-btn delete" data-action="delete">削除</button>
+    </div>
+  </div>`).join('');
+}
 function brcRenderResearchArticles(){
   const list=document.getElementById('brcResearchList');
   const count=document.getElementById('brcResearchCount');
   if(!list) return;
   if(!BRC_ADMIN_ACTIVE){ list.innerHTML=''; if(count) count.textContent='0件'; return; }
-  const items=brcResearchLoadArticles().sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));
+  brcResearchRenderTabs();
+  const all=brcResearchLoadArticles();
+  const items=all.filter(x=>x.category===BRC_RESEARCH_ACTIVE_TAB);
   if(count) count.textContent=`${items.length}件`;
   if(!items.length){
-    list.innerHTML='<div class="brc-research-empty">まだ記事は登録されていません。<br>上のフォームからnote記事を仮登録できます。</div>';
-    return;
+    list.innerHTML=`<div class="brc-research-empty">${brcResearchEscape(BRC_RESEARCH_ACTIVE_TAB)}の記事はまだ登録されていません。</div>`;
+  }else{
+    list.innerHTML=items.map(item=>{
+      const href=brcResearchSafeUrl(item.url);
+      return `<div class="brc-research-item">
+        <div class="brc-research-item-main">
+          <div class="brc-research-item-meta"><span class="brc-research-category">${brcResearchEscape(item.category)}</span><span class="brc-research-draft">仮保存</span></div>
+          <div class="brc-research-item-title">${brcResearchEscape(item.title)}</div>
+          <div class="brc-research-item-url">${brcResearchEscape(item.url)}</div>
+        </div>
+        ${href?`<a class="brc-research-open" href="${brcResearchEscape(href)}" target="_blank" rel="noopener noreferrer">noteを開く</a>`:''}
+      </div>`;
+    }).join('');
   }
-  list.innerHTML=items.map(item=>{
-    const href=brcResearchSafeUrl(item.url);
-    return `<div class="brc-research-item">
-      <div class="brc-research-item-main">
-        <div class="brc-research-item-meta"><span class="brc-research-category">${brcResearchEscape(item.category)}</span><span class="brc-research-draft">仮保存</span></div>
-        <div class="brc-research-item-title">${brcResearchEscape(item.title)}</div>
-        <div class="brc-research-item-url">${brcResearchEscape(item.url)}</div>
-      </div>
-      ${href?`<a class="brc-research-open" href="${brcResearchEscape(href)}" target="_blank" rel="noopener noreferrer">noteを開く</a>`:''}
-    </div>`;
-  }).join('');
+  brcRenderResearchAdminList(all);
 }
-function brcAddResearchArticle(){
+function brcResetResearchForm(clearStatus=false){
+  BRC_RESEARCH_EDIT_ID='';
+  const url=document.getElementById('brcResearchUrl');
+  const title=document.getElementById('brcResearchTitle');
+  const category=document.getElementById('brcResearchCategory');
+  const save=document.getElementById('brcResearchAddBtn');
+  const cancel=document.getElementById('brcResearchCancelBtn');
+  const head=document.getElementById('brcResearchAdminTitle');
+  if(url) url.value='';
+  if(title) title.value='';
+  if(category) category.value=BRC_RESEARCH_ACTIVE_TAB;
+  if(save) save.textContent='記事を登録';
+  if(cancel) cancel.classList.remove('is-visible');
+  if(head) head.textContent='記事を登録';
+  if(clearStatus) brcResearchSetStatus('');
+}
+function brcSaveResearchArticle(){
   if(!BRC_ADMIN_ACTIVE){ brcResearchSetStatus('管理者ログイン時のみ操作できます。','error'); return; }
   const urlInput=document.getElementById('brcResearchUrl');
   const titleInput=document.getElementById('brcResearchTitle');
   const categoryInput=document.getElementById('brcResearchCategory');
   const url=brcResearchSafeUrl(urlInput?.value||'');
   const title=String(titleInput?.value||'').trim();
-  const category=String(categoryInput?.value||'調査・検証');
+  const category=brcResearchNormalizeCategory(categoryInput?.value||BRC_RESEARCH_ACTIVE_TAB);
   if(!url){ brcResearchSetStatus('有効なnote URLを入力してください。','error'); urlInput?.focus(); return; }
   if(!title){ brcResearchSetStatus('タイトルを入力してください。','error'); titleInput?.focus(); return; }
   const items=brcResearchLoadArticles();
-  const article=brcResearchNormalizeArticle({url,title,category});
-  items.unshift(article);
-  brcResearchSaveArticles(items);
-  if(urlInput) urlInput.value='';
-  if(titleInput) titleInput.value='';
-  brcResearchSetStatus('記事をこの端末に仮保存しました。本番公開はされていません。','ok');
+  if(BRC_RESEARCH_EDIT_ID){
+    const index=items.findIndex(x=>x.id===BRC_RESEARCH_EDIT_ID);
+    if(index<0){ brcResearchSetStatus('編集対象の記事が見つかりません。','error'); brcResetResearchForm(); return; }
+    items[index]={...items[index],url,title,category,updatedAt:new Date().toISOString()};
+    brcResearchSaveArticles(items);
+    BRC_RESEARCH_ACTIVE_TAB=category;
+    brcResearchSetStatus('記事を更新しました。','ok');
+  }else{
+    const article=brcResearchNormalizeArticle({url,title,category});
+    items.unshift(article);
+    brcResearchSaveArticles(items);
+    BRC_RESEARCH_ACTIVE_TAB=category;
+    brcResearchSetStatus('記事をこの端末に仮保存しました。本番公開はされていません。','ok');
+  }
+  brcResetResearchForm(false);
   brcRenderResearchArticles();
+}
+function brcStartResearchEdit(id){
+  if(!BRC_ADMIN_ACTIVE) return;
+  const item=brcResearchLoadArticles().find(x=>x.id===id);
+  if(!item) return;
+  BRC_RESEARCH_EDIT_ID=item.id;
+  const url=document.getElementById('brcResearchUrl');
+  const title=document.getElementById('brcResearchTitle');
+  const category=document.getElementById('brcResearchCategory');
+  const save=document.getElementById('brcResearchAddBtn');
+  const cancel=document.getElementById('brcResearchCancelBtn');
+  const head=document.getElementById('brcResearchAdminTitle');
+  if(url) url.value=item.url;
+  if(title) title.value=item.title;
+  if(category) category.value=item.category;
+  if(save) save.textContent='変更を保存';
+  if(cancel) cancel.classList.add('is-visible');
+  if(head) head.textContent='記事を編集';
+  brcResearchSetStatus('編集内容を変更して「変更を保存」を押してください。');
+  document.getElementById('brcResearchForm')?.scrollIntoView({behavior:'smooth',block:'center'});
+}
+function brcDeleteResearchArticle(id){
+  if(!BRC_ADMIN_ACTIVE) return;
+  const items=brcResearchLoadArticles();
+  const item=items.find(x=>x.id===id);
+  if(!item) return;
+  if(!window.confirm(`「${item.title}」を削除しますか？`)) return;
+  const next=items.filter(x=>x.id!==id);
+  brcResearchSaveArticles(next);
+  if(BRC_RESEARCH_EDIT_ID===id) brcResetResearchForm();
+  brcResearchSetStatus('記事を削除しました。','ok');
+  brcRenderResearchArticles();
+}
+function brcMoveResearchArticle(id,direction){
+  if(!BRC_ADMIN_ACTIVE) return;
+  const items=brcResearchLoadArticles();
+  const from=items.findIndex(x=>x.id===id);
+  const to=from+(direction==='up'?-1:1);
+  if(from<0 || to<0 || to>=items.length) return;
+  [items[from],items[to]]=[items[to],items[from]];
+  brcResearchSaveArticles(items);
+  brcResearchSetStatus('記事の並び順を変更しました。','ok');
+  brcRenderResearchArticles();
+}
+function brcHandleResearchAdminAction(event){
+  const btn=event.target.closest('button[data-action]');
+  if(!btn || !BRC_ADMIN_ACTIVE) return;
+  const row=btn.closest('[data-research-id]');
+  const id=row?.dataset.researchId||'';
+  if(!id) return;
+  const action=btn.dataset.action;
+  if(action==='up' || action==='down') brcMoveResearchArticle(id,action);
+  else if(action==='edit') brcStartResearchEdit(id);
+  else if(action==='delete') brcDeleteResearchArticle(id);
 }
 function brcInitResearchPage(){
   if(!BRC_ADMIN_ACTIVE) return false;
   const page=document.getElementById('page-research');
   if(page) page.setAttribute('aria-hidden','false');
-  const add=document.getElementById('brcResearchAddBtn');
-  if(add && !BRC_RESEARCH_BOUND){
+  const adminPanel=document.getElementById('brcResearchAdminPanel');
+  if(adminPanel) adminPanel.style.display=BRC_ADMIN_ACTIVE?'':'none';
+  if(!BRC_RESEARCH_BOUND){
     BRC_RESEARCH_BOUND=true;
-    add.addEventListener('click',brcAddResearchArticle);
-    const title=document.getElementById('brcResearchTitle');
-    if(title) title.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();brcAddResearchArticle();} });
+    document.querySelectorAll('.brc-research-view-tab').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const target=brcResearchNormalizeCategory(btn.dataset.researchTab);
+        BRC_RESEARCH_ACTIVE_TAB=target;
+        if(!BRC_RESEARCH_EDIT_ID){
+          const category=document.getElementById('brcResearchCategory');
+          if(category) category.value=target;
+        }
+        brcRenderResearchArticles();
+      });
+    });
+    document.getElementById('brcResearchAddBtn')?.addEventListener('click',brcSaveResearchArticle);
+    document.getElementById('brcResearchCancelBtn')?.addEventListener('click',()=>brcResetResearchForm(true));
+    document.getElementById('brcResearchAdminList')?.addEventListener('click',brcHandleResearchAdminAction);
+    document.getElementById('brcResearchTitle')?.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();brcSaveResearchArticle();} });
+  }
+  if(!BRC_RESEARCH_EDIT_ID){
+    const category=document.getElementById('brcResearchCategory');
+    if(category) category.value=BRC_RESEARCH_ACTIVE_TAB;
   }
   brcRenderResearchArticles();
   return true;
