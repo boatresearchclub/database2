@@ -9023,14 +9023,13 @@ function brcWindTrendSummary(combo){
   if(notable.length===1) return `参考傾向：${fmt(notable[0])} が場平均との差として目立ちます。`;
   return `参考傾向：${fmt(notable[0])}、${fmt(notable[1])} が場平均との差として目立ちます。`;
 }
-function buildWindPanelHtml(venue){
+function buildWindPanelHtml(venue=''){
   const sel = window.__windSelection || {dir:'', speed:''};
   const dirs = ['北','北東','東','南東','南','南西','西','北西'];
   const dirOpts = [`<option value="">風向: 選択</option>`]
     .concat(dirs.map(d=>{
-      const relative=BRC_WIND_RELATIVE_MAP?.[venue]?.[d] || '';
-      const label=relative ? `風向: ${d}（${relative}）` : `風向: ${d}`;
-      return `<option value="${d}"${sel.dir===d?' selected':''}>${label}</option>`;
+      const quality = BRC_WIND_RELATIVE_MAP?.[venue]?.[d] || '風向参考';
+      return `<option value="${d}"${sel.dir===d?' selected':''}>風向: ${quality}（${d}）</option>`;
     })).join('');
   const speedOpts = [`<option value="">風速: 選択</option>`]
     .concat(Array.from({length:16},(_,i)=>`<option value="${i}"${String(sel.speed)===String(i)?' selected':''}>風速: ${i}m</option>`)).join('');
