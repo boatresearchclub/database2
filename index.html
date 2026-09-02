@@ -9,6 +9,7 @@
 <!-- BRC_UI_CLEANUP_20260831 -->
 <!-- BRC_POST_RACE_PUBLIC_20260831 -->
 <!-- BRC_SOCIAL_ARROW_SAME_DESIGN_20260902 -->
+<!-- BRC_RESEARCH_ARTICLE_CARD_V8_20260902 -->
 <!-- BRC_RESEARCH_CATEGORY_ORDER_SIMPLE_LIST_20260902 -->
 <!-- BRC_RESEARCH_MEMBER_VISIBILITY_DRAFT_20260902 -->
 <!-- BRC_RESEARCH_ADMIN_TAB_VISIBLE_V2_20260902 -->
@@ -1606,18 +1607,20 @@
   .brc-research-list-title{font-size:13px;font-weight:900;color:var(--navy);}
   .brc-research-count{font-size:10.5px;font-weight:800;color:var(--ink-soft);}
   .brc-research-list{display:grid;gap:8px;}
-  .brc-research-item{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid rgba(10,31,51,.09);border-radius:11px;background:#fff;}
-  .brc-research-item-main{min-width:0;flex:1;}
-  .brc-research-item-title-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+  .brc-research-item{display:block;padding:11px;border:1px solid rgba(10,31,51,.09);border-radius:11px;background:#fff;}
+  .brc-research-item-main{min-width:0;}
+  .brc-research-item-title-row{display:block;}
   .brc-research-item-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px;}
   .brc-research-category{display:inline-flex;align-items:center;border-radius:999px;background:rgba(0,87,219,.08);color:var(--wave);font-size:9.5px;font-weight:900;padding:2px 7px;}
   .brc-research-draft{font-size:9px;font-weight:900;color:#8a5a00;background:rgba(227,178,60,.18);padding:2px 6px;border-radius:999px;}
   .brc-research-access{display:inline-flex;align-items:center;border-radius:999px;font-size:9px;font-weight:900;padding:3px 7px;white-space:nowrap;}
-  .brc-research-access.public{color:#217247;background:rgba(47,143,91,.10);}
+  .brc-research-access.public{display:none;}
   .brc-research-access.member{color:#7a4a00;background:rgba(227,178,60,.18);}
+  .brc-research-item-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:9px;min-height:32px;}
+  .brc-research-item-actions .brc-research-access.member{margin-right:auto;}
   .brc-research-item.locked{background:rgba(10,31,51,.018);}
   .brc-research-open.locked{color:#7a4a00;border-color:rgba(227,178,60,.35);background:rgba(227,178,60,.09);cursor:default;}
-  .brc-research-item-title{font-size:14px;font-weight:900;color:var(--navy);line-height:1.45;overflow-wrap:anywhere;}
+  .brc-research-item-title{width:100%;font-size:14px;font-weight:900;color:var(--navy);line-height:1.45;overflow-wrap:anywhere;}
   .brc-research-item-url{margin-top:2px;font-size:10.5px;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .brc-research-open{flex:0 0 auto;text-decoration:none;border:1px solid rgba(0,87,219,.22);border-radius:9px;padding:8px 12px;color:var(--wave);font-size:11px;font-weight:900;background:rgba(0,87,219,.035);white-space:nowrap;}
   .brc-research-empty{padding:28px 12px;text-align:center;border:1px dashed rgba(10,31,51,.16);border-radius:11px;color:var(--ink-soft);font-size:12px;background:rgba(10,31,51,.012);}
@@ -1662,8 +1665,8 @@
     .brc-research-title{font-size:18px;}
     .brc-research-view-tab{font-size:12px;padding:9px 5px;}
     .brc-research-form{grid-template-columns:1fr;padding:10px;}
-    .brc-research-item{align-items:flex-start;}
-    .brc-research-open{margin-top:1px;}
+    .brc-research-item{padding:10px;}
+    .brc-research-item-actions{margin-top:8px;}
     .brc-research-admin-item{align-items:flex-start;flex-direction:column;}
     .brc-research-admin-actions{width:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));}
     .brc-research-admin-btn{width:100%;padding:0 5px;}
@@ -3748,20 +3751,22 @@ function brcRenderResearchArticles(){
       const canOpen=!memberOnly || BRC_MEMBER_ACTIVE || BRC_ADMIN_ACTIVE;
       const accessBadge=memberOnly
         ? '<span class="brc-research-access member">会員限定</span>'
-        : '<span class="brc-research-access public">一般公開</span>';
+        : '';
       const openHtml=href
         ? (canOpen
-          ? `<a class="brc-research-open" href="${brcResearchEscape(href)}" target="_blank" rel="noopener noreferrer">記事を見る</a>`
-          : '<span class="brc-research-open locked">会員限定</span>')
+          ? `<a class="brc-research-open" href="${brcResearchEscape(href)}" target="_blank" rel="noopener noreferrer">記事を読む</a>`
+          : '<span class="brc-research-open locked">記事を読む</span>')
         : '';
       return `<div class="brc-research-item${canOpen?'':' locked'}">
         <div class="brc-research-item-main">
           <div class="brc-research-item-title-row">
             <div class="brc-research-item-title">${brcResearchEscape(item.title)}</div>
-            ${accessBadge}
           </div>
         </div>
-        ${openHtml}
+        <div class="brc-research-item-actions">
+          ${accessBadge}
+          ${openHtml}
+        </div>
       </div>`;
     }).join('');
   }
