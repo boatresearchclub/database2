@@ -2355,6 +2355,21 @@
 #predictResult .motor-cell-rate .predict-unit{font-size:.78em !important;}
 </style>
 
+<style id="brc-main-tabs-mobile-fit-20260902">
+/* 5タブ時もスマホ幅に収める。非管理者は表示中の4タブが均等に広がる。 */
+@media (max-width:640px){
+  .page-tabs{gap:3px !important;}
+  .page-tabs > .page-tab{
+    flex:1 1 0 !important;
+    min-width:0 !important;
+    padding:9px 3px !important;
+    font-size:11.5px !important;
+    letter-spacing:-.02em;
+    text-align:center;
+  }
+}
+</style>
+
 <style id="brc-three-stage-sticky-fix">
 /* BRC_3STAGE_STICKY_FIX_20260829
    ①上部メインタブ
@@ -2480,7 +2495,7 @@
     <button class="page-tab active" data-page="predict" id="brcPredictTab">出走表AI</button>
     <button class="page-tab" data-page="today">本日厳選</button>
     <button class="page-tab sg-special-tab" data-page="special">特集</button>
-    <button class="page-tab" data-page="database">データベース</button>
+    <button class="page-tab" data-page="database">各種データ</button>
     <button class="page-tab brc-admin-research-tab" data-page="research" id="brcResearchTab" style="display:none;" aria-hidden="true">BRC研究室</button>
   </div>
 
