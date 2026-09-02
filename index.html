@@ -9,6 +9,7 @@
 <!-- BRC_UI_CLEANUP_20260831 -->
 <!-- BRC_POST_RACE_PUBLIC_20260831 -->
 <!-- BRC_SOCIAL_ARROW_SAME_DESIGN_20260902 -->
+<!-- BRC_RESEARCH_MEMBER_VISIBILITY_DRAFT_20260902 -->
 <!-- BRC_RESEARCH_ADMIN_TAB_VISIBLE_V2_20260902 -->
 <!-- BRC_ADMIN_RESEARCH_LAB_DRAFT_20260902 -->
 
@@ -1609,6 +1610,11 @@
   .brc-research-item-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px;}
   .brc-research-category{display:inline-flex;align-items:center;border-radius:999px;background:rgba(0,87,219,.08);color:var(--wave);font-size:9.5px;font-weight:900;padding:2px 7px;}
   .brc-research-draft{font-size:9px;font-weight:900;color:#8a5a00;background:rgba(227,178,60,.18);padding:2px 6px;border-radius:999px;}
+  .brc-research-access{display:inline-flex;align-items:center;border-radius:999px;font-size:9px;font-weight:900;padding:2px 6px;}
+  .brc-research-access.public{color:#217247;background:rgba(47,143,91,.10);}
+  .brc-research-access.member{color:#7a4a00;background:rgba(227,178,60,.18);}
+  .brc-research-item.locked{background:rgba(10,31,51,.018);}
+  .brc-research-open.locked{color:#7a4a00;border-color:rgba(227,178,60,.35);background:rgba(227,178,60,.09);cursor:default;}
   .brc-research-item-title{font-size:13px;font-weight:900;color:var(--navy);line-height:1.45;overflow-wrap:anywhere;}
   .brc-research-item-url{margin-top:2px;font-size:10.5px;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .brc-research-open{flex:0 0 auto;text-decoration:none;border:1px solid rgba(0,87,219,.22);border-radius:8px;padding:7px 9px;color:var(--wave);font-size:10.5px;font-weight:900;background:rgba(0,87,219,.035);}
@@ -1619,7 +1625,7 @@
   .brc-research-admin-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;}
   .brc-research-admin-title{font-size:14px;font-weight:900;color:var(--navy);}
   .brc-research-admin-sub{margin-top:2px;font-size:10.5px;line-height:1.5;color:var(--ink-soft);}
-  .brc-research-form{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1.2fr) minmax(140px,.65fr) auto;gap:8px;align-items:end;padding:12px;border:1px solid rgba(10,31,51,.09);border-radius:12px;background:rgba(10,31,51,.025);}
+  .brc-research-form{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1.15fr) minmax(120px,.6fr) minmax(120px,.6fr) auto;gap:8px;align-items:end;padding:12px;border:1px solid rgba(10,31,51,.09);border-radius:12px;background:rgba(10,31,51,.025);}
   .brc-research-field{display:flex;flex-direction:column;gap:5px;min-width:0;}
   .brc-research-field label{font-size:10.5px;font-weight:850;color:var(--ink-soft);}
   .brc-research-input,.brc-research-select{width:100%;min-width:0;height:40px;border:1px solid rgba(10,31,51,.14);border-radius:9px;background:#fff;color:var(--navy);font:inherit;font-size:13px;padding:8px 10px;outline:none;}
@@ -2943,6 +2949,13 @@
               <option value="コラム">コラム</option>
             </select>
           </div>
+          <div class="brc-research-field">
+            <label for="brcResearchVisibility">公開範囲</label>
+            <select id="brcResearchVisibility" class="brc-research-select">
+              <option value="public">一般公開</option>
+              <option value="member">会員限定</option>
+            </select>
+          </div>
           <div class="brc-research-form-actions">
             <button type="button" id="brcResearchAddBtn" class="brc-research-add">記事を登録</button>
             <button type="button" id="brcResearchCancelBtn" class="brc-research-cancel">キャンセル</button>
@@ -2954,7 +2967,7 @@
           <div class="brc-research-admin-list-title">記事の管理・並び替え</div>
         </div>
         <div id="brcResearchAdminList" class="brc-research-admin-list"></div>
-        <div class="brc-research-note">仮実装では記事情報と並び順をこの端末のブラウザ内にだけ保存します。本番公開・会員への配信は行いません。データ構造には将来のnote URLからタイトル・サムネイル・概要を自動取得するための項目を残しています。</div>
+        <div class="brc-research-note">仮実装では記事情報・並び順・公開範囲（一般公開 / 会員限定）をこの端末のブラウザ内にだけ保存します。本番公開・会員への配信は行いません。会員限定記事は将来、既存のBRC会員判定を使ってリンクを開けるユーザーを制御できる構造です。データ構造にはnote URLからタイトル・サムネイル・概要を自動取得するための項目も残しています。</div>
       </div>
     </section>
   </div><!-- /page-research -->
@@ -3647,6 +3660,7 @@ function brcResearchNormalizeArticle(raw={}){
     url:brcResearchSafeUrl(raw.url),
     title:String(raw.title||'').trim(),
     category:brcResearchNormalizeCategory(raw.category),
+    visibility:String(raw.visibility||'public')==='member'?'member':'public',
     order:Number.isFinite(Number(raw.order))?Number(raw.order):null,
     // 将来、note URLから自動取得した値を保存するための予約フィールド
     thumbnail:String(raw.thumbnail||''),
@@ -3701,7 +3715,7 @@ function brcRenderResearchAdminList(items=null){
   list.innerHTML=all.map((item,index)=>`<div class="brc-research-admin-item" data-research-id="${brcResearchEscape(item.id)}">
     <div class="brc-research-admin-item-main">
       <div class="brc-research-admin-item-title">${brcResearchEscape(item.title)}</div>
-      <div class="brc-research-admin-item-meta">${brcResearchEscape(item.category)} ・ ${index+1}番目</div>
+      <div class="brc-research-admin-item-meta">${brcResearchEscape(item.category)} ・ ${item.visibility==='member'?'会員限定':'一般公開'} ・ ${index+1}番目</div>
     </div>
     <div class="brc-research-admin-actions">
       <button type="button" class="brc-research-admin-btn" data-action="up" aria-label="上へ移動" ${index===0?'disabled':''}>↑</button>
@@ -3725,13 +3739,23 @@ function brcRenderResearchArticles(){
   }else{
     list.innerHTML=items.map(item=>{
       const href=brcResearchSafeUrl(item.url);
-      return `<div class="brc-research-item">
+      const memberOnly=item.visibility==='member';
+      const canOpen=!memberOnly || BRC_MEMBER_ACTIVE || BRC_ADMIN_ACTIVE;
+      const accessBadge=memberOnly
+        ? '<span class="brc-research-access member">会員限定</span>'
+        : '<span class="brc-research-access public">一般公開</span>';
+      const openHtml=href
+        ? (canOpen
+          ? `<a class="brc-research-open" href="${brcResearchEscape(href)}" target="_blank" rel="noopener noreferrer">noteを開く</a>`
+          : '<span class="brc-research-open locked">会員限定</span>')
+        : '';
+      return `<div class="brc-research-item${canOpen?'':' locked'}">
         <div class="brc-research-item-main">
-          <div class="brc-research-item-meta"><span class="brc-research-category">${brcResearchEscape(item.category)}</span><span class="brc-research-draft">仮保存</span></div>
+          <div class="brc-research-item-meta"><span class="brc-research-category">${brcResearchEscape(item.category)}</span>${accessBadge}<span class="brc-research-draft">仮保存</span></div>
           <div class="brc-research-item-title">${brcResearchEscape(item.title)}</div>
-          <div class="brc-research-item-url">${brcResearchEscape(item.url)}</div>
+          ${canOpen?`<div class="brc-research-item-url">${brcResearchEscape(item.url)}</div>`:'<div class="brc-research-item-url">BRC会員ログイン後に閲覧できます。</div>'}
         </div>
-        ${href?`<a class="brc-research-open" href="${brcResearchEscape(href)}" target="_blank" rel="noopener noreferrer">noteを開く</a>`:''}
+        ${openHtml}
       </div>`;
     }).join('');
   }
@@ -3742,12 +3766,14 @@ function brcResetResearchForm(clearStatus=false){
   const url=document.getElementById('brcResearchUrl');
   const title=document.getElementById('brcResearchTitle');
   const category=document.getElementById('brcResearchCategory');
+  const visibility=document.getElementById('brcResearchVisibility');
   const save=document.getElementById('brcResearchAddBtn');
   const cancel=document.getElementById('brcResearchCancelBtn');
   const head=document.getElementById('brcResearchAdminTitle');
   if(url) url.value='';
   if(title) title.value='';
   if(category) category.value=BRC_RESEARCH_ACTIVE_TAB;
+  if(visibility) visibility.value='public';
   if(save) save.textContent='記事を登録';
   if(cancel) cancel.classList.remove('is-visible');
   if(head) head.textContent='記事を登録';
@@ -3758,21 +3784,23 @@ function brcSaveResearchArticle(){
   const urlInput=document.getElementById('brcResearchUrl');
   const titleInput=document.getElementById('brcResearchTitle');
   const categoryInput=document.getElementById('brcResearchCategory');
+  const visibilityInput=document.getElementById('brcResearchVisibility');
   const url=brcResearchSafeUrl(urlInput?.value||'');
   const title=String(titleInput?.value||'').trim();
   const category=brcResearchNormalizeCategory(categoryInput?.value||BRC_RESEARCH_ACTIVE_TAB);
+  const visibility=String(visibilityInput?.value||'public')==='member'?'member':'public';
   if(!url){ brcResearchSetStatus('有効なnote URLを入力してください。','error'); urlInput?.focus(); return; }
   if(!title){ brcResearchSetStatus('タイトルを入力してください。','error'); titleInput?.focus(); return; }
   const items=brcResearchLoadArticles();
   if(BRC_RESEARCH_EDIT_ID){
     const index=items.findIndex(x=>x.id===BRC_RESEARCH_EDIT_ID);
     if(index<0){ brcResearchSetStatus('編集対象の記事が見つかりません。','error'); brcResetResearchForm(); return; }
-    items[index]={...items[index],url,title,category,updatedAt:new Date().toISOString()};
+    items[index]={...items[index],url,title,category,visibility,updatedAt:new Date().toISOString()};
     brcResearchSaveArticles(items);
     BRC_RESEARCH_ACTIVE_TAB=category;
     brcResearchSetStatus('記事を更新しました。','ok');
   }else{
-    const article=brcResearchNormalizeArticle({url,title,category});
+    const article=brcResearchNormalizeArticle({url,title,category,visibility});
     items.unshift(article);
     brcResearchSaveArticles(items);
     BRC_RESEARCH_ACTIVE_TAB=category;
@@ -3789,12 +3817,14 @@ function brcStartResearchEdit(id){
   const url=document.getElementById('brcResearchUrl');
   const title=document.getElementById('brcResearchTitle');
   const category=document.getElementById('brcResearchCategory');
+  const visibility=document.getElementById('brcResearchVisibility');
   const save=document.getElementById('brcResearchAddBtn');
   const cancel=document.getElementById('brcResearchCancelBtn');
   const head=document.getElementById('brcResearchAdminTitle');
   if(url) url.value=item.url;
   if(title) title.value=item.title;
   if(category) category.value=item.category;
+  if(visibility) visibility.value=item.visibility==='member'?'member':'public';
   if(save) save.textContent='変更を保存';
   if(cancel) cancel.classList.add('is-visible');
   if(head) head.textContent='記事を編集';
