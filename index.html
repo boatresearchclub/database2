@@ -8977,8 +8977,17 @@ const BRC_WIND_RELATIVE_MAP = {
   '唐津': {'北':'追い風','北東':'追い風','東':'追い風','南':'向かい風','南西':'向かい風','西':'向かい風','南東':'左横風','北西':'右横風'},
   '大村': {'南西':'追い風','西':'追い風','北東':'向かい風','東':'向かい風','北西':'左横風','北':'左横風','南東':'右横風','南':'右横風'}
 };
-function brcWindRelativeLabel(venue,dir,speed){
+function brcNormalizeOfficialWindQuality(v){
+  const s=String(v||'').replace(/[\s　]+/g,'').trim();
+  if(!s) return '';
+  if(s==='向い風' || s==='向風') return '向かい風';
+  if(['追い風','向かい風','左横風','右横風','無風'].includes(s)) return s;
+  return '';
+}
+function brcWindRelativeLabel(venue,dir,speed,officialQuality=''){
   if(Number(speed)===0 || dir==='無風') return '無風';
+  const official=brcNormalizeOfficialWindQuality(officialQuality);
+  if(official) return official;
   return BRC_WIND_RELATIVE_MAP?.[venue]?.[dir] || '風向参考';
 }
 function brcWindRelativeBadgeHtml(label){
@@ -9069,7 +9078,7 @@ function brcSyncWindPanelFromLiveRace(liveRace,venue){
   dirSel.value=x.speed===0 ? '' : x.dir;
   speedSel.value=String(x.speed);
   window.__windSelection={dir:dirSel.value,speed:String(x.speed)};
-  renderWindRef(venue,x.dir,x.speed);
+  renderWindRef(venue,x.dir,x.speed,x.windQuality);
 
   const obs=/^\d{4}$/.test(x.observedAt)
     ? `${x.observedAt.slice(0,2)}:${x.observedAt.slice(2)}`
@@ -9113,13 +9122,15 @@ function bindWindPanel(venue){
 
 // 会場・風向・風速から、コース1〜6の「生実測1着率・場平均差・N」参考テーブルを組み立てる。
 // ※表示専用。予想勝率・予想3連対率の計算には使用しない。
-function renderWindRef(venue, dir, speed){
+function renderWindRef(venue, dir, speed, officialQuality=''){
   const box = document.getElementById('windRefBox');
   if(!box) return;
 
   const speedKey = String(Math.max(0, Math.round(Number(speed) || 0)));
   const effectiveDir = speedKey === '0' ? '無風' : dir;
-  const relative = brcWindRelativeLabel(venue,effectiveDir,Number(speedKey));
+  const officialRelative=brcNormalizeOfficialWindQuality(officialQuality);
+  const relative = brcWindRelativeLabel(venue,effectiveDir,Number(speedKey),officialRelative);
+  const relativeSource = officialRelative ? 'BOAT RACE公式判定' : '会場方向からの参考判定';
   const relativeBadge = brcWindRelativeBadgeHtml(relative);
   const combo = WIND_COMBO_REF?.[venue]?.[effectiveDir]?.[speedKey];
 
@@ -9128,7 +9139,7 @@ function renderWindRef(venue, dir, speed){
     box.innerHTML = `
       <div class="wind-current-summary">
         <div class="wind-current-main"><span>現在の風</span><strong>${effectiveDir} ${speedKey}m</strong>${relativeBadge}</div>
-        <div class="wind-current-sub">スタートから1Mへ向かう艇を基準に判定</div>
+        <div class="wind-current-sub">${relativeSource}</div>
       </div>
       <div style="font-size:13px; color:var(--ink-soft);line-height:1.6;">
         この風向・風速の組み合わせ実測データはありません。風区分のみ参考にしてください。<br>
@@ -9167,7 +9178,7 @@ function renderWindRef(venue, dir, speed){
   box.innerHTML = `
     <div class="wind-current-summary">
       <div class="wind-current-main"><span>現在の風</span><strong>${effectiveDir} ${speedKey}m</strong>${relativeBadge}</div>
-      <div class="wind-current-sub">スタートから1Mへ向かう艇を基準に判定</div>
+      <div class="wind-current-sub">${relativeSource}</div>
     </div>
     <div class="wind-tendency-box">
       <div class="wind-tendency-title">${trend}</div>
@@ -10347,7 +10358,7 @@ async function runPredict(){
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">風向・風速 参考</div>
-            <div class="predict-guide-text">展示後の公式風向・風速を自動表示し、会場ごとに追い風・向かい風・左横風・右横風へ判定します。同条件の枠別1着実測と場平均との差も参考表示します。BRC予測の着率には反映しません。</div>
+            <div class="predict-guide-text">展示後の公式風向・風速とBOAT RACE公式の追い風・向かい風・左横風・右横風判定を自動表示します。同条件の枠別1着実測と場平均との差も参考表示します。BRC予測の着率には反映しません。</div>
           </div>
         </div>
 
