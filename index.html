@@ -813,7 +813,11 @@
     appearance:none; border:0; background:transparent; padding:0; margin-top:2px; min-height:15px;
     display:inline-flex; align-items:center; justify-content:center; gap:2px;
     font:inherit; font-size:8.5px; font-weight:900; line-height:1; cursor:pointer; white-space:nowrap;
+    text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:2px;
   }
+  .scenario-personal-trend:hover{opacity:.78;}
+  .scenario-personal-trend.watch{color:#667085 !important;text-decoration-style:dotted;}
+  .scenario-personal-trend .watch-mark{font-size:7.5px;font-weight:950;line-height:1;margin-left:1px;}
   .scenario-personal-trend .arrow{font-size:11px;font-weight:950;line-height:1;}
   .scenario-personal-trend-spacer{display:block;min-height:15px;margin-top:2px;font-size:1px;visibility:hidden;}
   table.predict-scenario-course-table th, table.predict-scenario-course-table td{text-align:center;}
@@ -1803,6 +1807,16 @@
   .brc-ex-personal-row .label{font-weight:900;}
   .brc-ex-personal-row .arrow{text-align:center;font-size:16px;font-weight:950;line-height:1;white-space:nowrap;}
   .brc-ex-personal-row .diff{text-align:right;font-weight:900;font-variant-numeric:tabular-nums;}
+  .brc-personal-adjust-focus{margin:4px 0 11px;padding:13px 12px;border-radius:12px;border:1px solid rgba(0,87,219,.16);background:linear-gradient(160deg,rgba(0,87,219,.055),rgba(255,255,255,.96));}
+  .brc-personal-adjust-focus.up{border-color:rgba(var(--trend-up-rgb),.24);background:rgba(var(--trend-up-rgb),.055);}
+  .brc-personal-adjust-focus.down{border-color:rgba(var(--trend-down-rgb),.24);background:rgba(var(--trend-down-rgb),.055);}
+  .brc-personal-adjust-focus.flat{border-color:rgba(61,74,99,.18);background:rgba(61,74,99,.045);}
+  .brc-personal-adjust-kicker{font-size:10px;font-weight:900;color:var(--ink-soft);margin-bottom:4px;}
+  .brc-personal-adjust-main{display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
+  .brc-personal-adjust-label{font-size:15px;font-weight:950;color:var(--line-white);}
+  .brc-personal-adjust-value{font-size:23px;font-weight:950;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .brc-personal-adjust-current{margin-top:5px;font-size:10.5px;color:var(--ink-soft);font-weight:750;}
+  .brc-personal-adjust-help{margin-top:9px;padding:8px 9px;border-radius:9px;background:#f7f9fc;font-size:10.5px;line-height:1.55;color:var(--ink-soft);}
   .brc-ex-alert-scale{margin-top:7px;font-size:9.5px;color:var(--ink-soft);line-height:1.45;}
   .brc-ex-metric-up{color:var(--trend-up);}
   .brc-ex-metric-down{color:var(--trend-down);}
@@ -6604,7 +6618,7 @@ function renderInlinePredictScenario(course){
         <tbody>${bodyRows}</tbody>
       </table>
     </div>
-    <div class="predict-detail-note" style="margin-top:9px;">「全体」は全決まり手を集計。2着・3着の数値は展示前のまま、TimeXは矢印だけ表示します。「本人」は1着・2着・3着・3連対それぞれの個人傾向で、自動加減せず手動判断用です。信頼は標本Nの目安です。</div>
+    <div class="predict-detail-note" style="margin-top:9px;line-height:1.7;">「全体」は全決まり手を集計。2着・3着の数値は展示前のまま、TimeXは矢印だけ表示します。<br>「本人」が出ている指標は、その選手×コース×TimeX差帯に個人傾向があります。<strong>本人をタップすると参考の着率加減値（本人効果 − 通常TimeX効果）</strong>を確認できます。参考加減値は表示着率へ自動反映せず、手動判断用です。<br>「本人△」は監視条件、信頼は標本Nの目安です。</div>
   `;
 }
 
@@ -6981,7 +6995,7 @@ const BRC_LIVE_EXHIBITION_POLL_NEAR_MS = 15 * 1000;
 const BRC_LIVE_EXHIBITION_POLL_FINAL_MS = 10 * 1000;
 const BRC_LIVE_EXHIBITION_FINAL_MIN = 5;
 const BRC_LIVE_EXHIBITION_NEAR_MIN = 15;
-const BRC_EXHIBITION_ADJUSTMENT_VERSION = 'timex-v2-final-personal-manual-20260904';
+const BRC_EXHIBITION_ADJUSTMENT_VERSION = 'timex-v2-final-personal-tap-adjust-20260904';
 // TimeX v2 final: 2023-24探索/構築 → 2025固定調整 → 2026完全OOS確認。
 // 1着率・3連対率だけを事前着率へ自動反映。2着率・3着率は数値へ反映せず矢印のみ。
 // 本人傾向は従来データを4着率（1着/2着/3着/3連対）で別表示し、自動加減せず手動判断用とする。
@@ -7897,6 +7911,34 @@ function brcShowExhibitionPlayerAlert(raw){
   document.body.appendChild(pop);
 }
 
+function brcShowScenarioPersonalAdjustment(raw,kind,currentRate){
+  let a; try{a=JSON.parse(raw)}catch(e){return}
+  const kindMap={
+    win:{label:'1着',key:'win'},
+    second:{label:'2着',key:'second'},
+    third:{label:'3着',key:'third'},
+    top3:{label:'3連対',key:'top3'}
+  };
+  const meta=kindMap[kind]||kindMap.second;
+  const diff=brcPersonalEffectDiff(a,meta.key);
+  const cls=brcMetricClass(diff);
+  const arrow=brcPersonalTrendArrow(diff);
+  const confidence=brcPersonalConfidence(a.N);
+  const rate=Number(currentRate);
+  const isWatch=a?.['採用区分']==='監視';
+  document.getElementById('brcExAlertPop')?.remove();
+  const pop=document.createElement('div'); pop.id='brcExAlertPop'; pop.className='brc-ex-alert-pop';
+  pop.onclick=e=>{if(e.target===pop)pop.remove();};
+  const rateText=Number.isFinite(rate)?`現在の表示${meta.label}率 ${r0(rate)}%`:'現在の表示着率はそのまま使用';
+  const allRows=['win','second','third','top3'].map(k=>{
+    const m=kindMap[k];
+    return brcAlertPersonalTrendRow(m.label,a,k);
+  }).join('');
+  const watchText=isWatch?'監視条件のため、参考度は低めに扱います。':'';
+  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']}　本人傾向</div><div class="brc-ex-alert-meta">${a['コース']}コース ／ タイムX差 ${a['平均差帯']}秒 ／ N=${a.N} ／ 参考度 ${confidence}${isWatch?' ／ 監視':''}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-personal-adjust-focus ${cls}"><div class="brc-personal-adjust-kicker">${meta.label}率の参考加減値</div><div class="brc-personal-adjust-main"><span class="brc-personal-adjust-label">本人 ${arrow}</span><span class="brc-personal-adjust-value brc-ex-metric-${cls}">${brcSignedPt(diff)}</span></div><div class="brc-personal-adjust-current">${rateText}</div><div class="brc-personal-adjust-help">参考加減値 ＝ この選手本人のTimeX効果 − 通常のTimeX効果。表示中の着率には自動加算しません。予想時に手動で加減するための参考値です。${watchText}</div></div><div class="brc-ex-alert-forecast-label">この条件での本人傾向</div><div class="brc-ex-personal-box">${allRows}</div><div class="brc-ex-alert-scale">矢印目安：5pt ↗↘ ／ 10pt ↑↓ ／ 15pt ↑↑↓↓</div></div>`;
+  document.body.appendChild(pop);
+}
+
 // 展開シナリオでは2着率・3着率の数値セルを汚さず、選手名横へBRCタイムXをまとめる。
 function brcBuildScenarioPlaceExhibitionArrow(b,kind){
   if(!b?.exhibitionApplied) return '';
@@ -7904,26 +7946,28 @@ function brcBuildScenarioPlaceExhibitionArrow(b,kind){
   const delta=kind==='third' ? Number(b.exhibitionThirdDeltaPt) : Number(b.exhibitionSecondDeltaPt);
   return brcBuildExhibitionProbabilityArrowIcon(delta,1.0);
 }
-function brcBuildScenarioPersonalTrendHtml(b,kind){
+function brcBuildScenarioPersonalTrendHtml(b,kind,currentRate=NaN){
   const a=brcFindExhibitionPlayerAlert(b);
-  if(!a || a?.['採用区分']==='監視') return '';
+  if(!a) return '';
   const diff=brcPersonalEffectDiff(a,kind);
-  if(!Number.isFinite(diff) || Math.abs(diff)<BRC_PERSONAL_TIMEX_ARROW_FLAT_PT) return '';
+  if(!Number.isFinite(diff)) return '';
   const cls=brcMetricClass(diff);
   const arrow=brcPersonalTrendArrow(diff);
   const payload=encodeURIComponent(JSON.stringify(brcAlertPayload(a,b)));
   const label=kind==='second'?'2着':kind==='third'?'3着':kind==='top3'?'3連対':'1着';
-  return `<button type="button" class="scenario-personal-trend brc-ex-metric-${cls}" onclick="event.stopPropagation();brcShowExhibitionPlayerAlert(decodeURIComponent('${payload}'))" title="本人の${label}傾向：通常より ${brcSignedPt(diff)}。自動加減せず手動判断用です"><span>本人</span><span class="arrow">${arrow}</span></button>`;
+  const isWatch=a?.['採用区分']==='監視';
+  const watchMark=isWatch?'<span class="watch-mark">△</span>':'';
+  return `<button type="button" class="scenario-personal-trend brc-ex-metric-${cls}${isWatch?' watch':''}" onclick="event.stopPropagation();brcShowScenarioPersonalAdjustment(decodeURIComponent('${payload}'),'${kind}',${Number.isFinite(Number(currentRate))?Number(currentRate):'NaN'})" title="本人の${label}傾向：参考加減 ${brcSignedPt(diff)}。タップで確認"><span>本人</span>${watchMark}<span class="arrow">${arrow}</span></button>`;
 }
 function brcBuildScenarioPlaceRateHtml(rate,b,kind='second'){
   const arrow=brcBuildScenarioPlaceExhibitionArrow(b,kind);
   const evalHtml=arrow || '<span class="scenario-rate-timex-empty" aria-label="BRCタイムX未反映">−</span>';
-  const personal=brcBuildScenarioPersonalTrendHtml(b,kind);
+  const personal=brcBuildScenarioPersonalTrendHtml(b,kind,rate);
   const personalLine=personal || '<span class="scenario-personal-trend-spacer" aria-hidden="true">&nbsp;</span>';
   return `<span class="scenario-rate-stack"><span class="scenario-rate-value">${r0(rate)}%</span><span class="scenario-rate-timex" title="TimeXによる今回展示の影響方向。2着率・3着率の数値には反映しません">${evalHtml}</span>${personalLine}</span>`;
 }
 function brcBuildScenarioTop3RateHtml(rate,b){
-  const personal=brcBuildScenarioPersonalTrendHtml(b,'top3');
+  const personal=brcBuildScenarioPersonalTrendHtml(b,'top3',rate);
   const secondLine=personal || '<span class="scenario-personal-trend-spacer" aria-hidden="true">&nbsp;</span>';
   return `<span class="scenario-top3-stack"><span class="scenario-top3-value">${r0(rate)}%</span><span class="scenario-rate-timex-empty" aria-hidden="true">&nbsp;</span>${secondLine}</span>`;
 }
