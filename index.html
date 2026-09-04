@@ -2983,7 +2983,7 @@
             </div>
             <div id="brcAdminSocialTheme" class="brc-admin-social-theme"><span>自動判定：</span><strong>レースを表示すると投稿テーマを判定します</strong></div>
             <div class="brc-admin-social-actions">
-              <button type="button" id="brcAdminSocialImage" class="brc-admin-social-btn secondary">SNS画像を作成</button>
+              <button type="button" id="brcAdminSocialImage" class="brc-admin-social-btn secondary">SNS画像を作成して保存</button>
               <button type="button" id="brcAdminSocialGenerate" class="brc-admin-social-btn">投稿文を作成</button>
               <button type="button" id="brcAdminSocialCopy" class="brc-admin-social-btn secondary">コピー</button>
             </div>
@@ -3777,7 +3777,19 @@ async function brcShareOrSaveAdminSocialImage(){
   a.download=fileName;
   a.target='_blank';
   document.body.appendChild(a); a.click(); a.remove();
-  return 'PNG画像を開きました。';
+  return 'PNG画像を保存しました。';
+}
+async function brcAutoSaveAdminSocialImage(){
+  if(!__brcAdminSocialImageBlob || !__brcAdminSocialImageUrl) throw new Error('先にSNS画像を作成してください。');
+  const fileName=brcAdminSocialImageFileName();
+  const a=document.createElement('a');
+  a.href=__brcAdminSocialImageUrl;
+  a.download=fileName;
+  a.target='_blank';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  return fileName;
 }
 
 function brcBindAdminSocial(){
@@ -3787,7 +3799,7 @@ function brcBindAdminSocial(){
   });
   ['brcAdminSocialPurpose','brcAdminSocialNote','brcAdminSocialResult','brcAdminSocialPayout'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.dataset.bound){el.dataset.bound='1';el.addEventListener('input',()=>brcAdminSocialUpdateTheme());el.addEventListener('change',()=>{if(id==='brcAdminSocialPurpose'&&el.value==='hit'){const root=document.getElementById('brcAdminSocialPhase');root?.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.value==='result'));}brcAdminSocialUpdateUi();});}});
   if(ta && !ta.dataset.counterBound){ta.dataset.counterBound='1';ta.addEventListener('input',brcAdminSocialUpdateCounter);}
-  if(imageBtn && !imageBtn.dataset.bound){imageBtn.dataset.bound='1';imageBtn.addEventListener('click',async()=>{if(!BRC_ADMIN_ACTIVE)return;const old=imageBtn.textContent;imageBtn.disabled=true;imageBtn.textContent='画像作成中…';if(status)status.textContent='出走表AIの表示部分をPNG画像にしています。';try{await brcCreateAdminSocialImage();if(status)status.textContent='SNS画像を作成しました。下にプレビューを表示しています。';}catch(err){if(status)status.textContent=`画像作成エラー: ${err?.message||err}`;}finally{imageBtn.disabled=false;imageBtn.textContent=old;}});}
+  if(imageBtn && !imageBtn.dataset.bound){imageBtn.dataset.bound='1';imageBtn.addEventListener('click',async()=>{if(!BRC_ADMIN_ACTIVE)return;const old=imageBtn.textContent;imageBtn.disabled=true;imageBtn.textContent='画像作成中…';if(status)status.textContent='出走表AIの表示部分をPNG画像にしています。';try{await brcCreateAdminSocialImage();await brcAutoSaveAdminSocialImage();if(status)status.textContent='SNS画像を作成し、端末へ保存しました。下にプレビューも表示しています。';}catch(err){if(status)status.textContent=`画像作成エラー: ${err?.message||err}`;}finally{imageBtn.disabled=false;imageBtn.textContent=old;}});}
   if(shareBtn && !shareBtn.dataset.bound){shareBtn.dataset.bound='1';shareBtn.addEventListener('click',async()=>{if(!BRC_ADMIN_ACTIVE)return;try{const msg=await brcShareOrSaveAdminSocialImage();if(status)status.textContent=msg;}catch(err){if(err?.name!=='AbortError'&&status)status.textContent=`画像保存エラー: ${err?.message||err}`;}});}
   if(gen && !gen.dataset.bound){gen.dataset.bound='1';gen.addEventListener('click',async()=>{if(!BRC_ADMIN_ACTIVE)return;const old=gen.textContent;gen.disabled=true;gen.textContent='AI分析中…';if(status)status.textContent='AIが「このレースで一番伝える価値のあるポイント」を選んでいます。';try{const out=await brcBuildAdminSocialPostAI();if(ta)ta.value=out.text||'';if(status)status.textContent=out.status||'';}catch(err){const fallback=brcBuildAdminSocialPost();if(ta)ta.value=fallback.text||'';if(status)status.textContent=`AI接続に失敗したためV2ローカル分析で作成しました（${err?.message||err}）。`;}finally{gen.disabled=false;brcAdminSocialUpdateUi();brcAdminSocialUpdateCounter();}});}
   if(copy && !copy.dataset.bound){copy.dataset.bound='1';copy.addEventListener('click',async()=>{if(!BRC_ADMIN_ACTIVE)return;const text=String(ta?.value||'');if(!text){if(status)status.textContent='先に投稿文を作成してください。';return;}try{await navigator.clipboard.writeText(text);if(status)status.textContent='コピーしました。';}catch(_){if(ta){ta.focus();ta.select();}let ok=false;try{ok=document.execCommand('copy');}catch(_e){}if(status)status.textContent=ok?'コピーしました。':'文章を選択したので、端末のコピー操作を使ってください。';}});}
