@@ -15,6 +15,7 @@
 <!-- BRC_RESEARCH_ADMIN_TAB_VISIBLE_V2_20260902 -->
 <!-- BRC_ADMIN_RESEARCH_LAB_DRAFT_20260902 -->
 <!-- BRC_RESEARCH_PUBLIC_SHARED_SUPABASE_20260904 -->
+<!-- BRC_RACE_DAY_FINAL_PRIORITY_FIX_20260904 -->
 
 <!-- BRC_PREDICT_METRIC_ROW_ALIGNMENT_20260828 -->
 <!-- BRC_SNS_ARROW_BAKED_COORDS_20260902 -->
@@ -8520,7 +8521,6 @@ function hasSemifinalRaceTitle(info){
 
 function hasFinalRaceTitle(info){
   if(!info || typeof info !== 'object') return false;
-  if(hasSemifinalRaceTitle(info)) return false;
   if(info.hasFinal === true) return true;
   const titles = Object.values(info.raceTitles || {}).map(normalizeRaceTitleText);
   return titles.some(t => t.includes('優勝戦') && !t.includes('準優勝戦'));
@@ -8528,11 +8528,21 @@ function hasFinalRaceTitle(info){
 
 function resolveRaceDayLabel(info){
   if(!info) return '';
-  if(hasSemifinalRaceTitle(info)) return '準優日';
+  // 優勝戦が実在する場合は最終日を最優先。準優勝戦の残存データが混ざっても逆転させない。
   if(hasFinalRaceTitle(info)) return '最終日';
+  if(hasSemifinalRaceTitle(info)) return '準優日';
   const d = String(info.rawDay || info.day || '').replace(/[\s　]/g, '');
   if(d === '1' || d === '1日目' || d === '初日') return '初日';
   return info.day || (d ? `${d}日目` : '');
+}
+
+function resolveSelectedRaceDayLabel(info, raceNo=''){
+  if(!info) return '';
+  const title = normalizeRaceTitleText(raceNo && info.raceTitles ? info.raceTitles[raceNo] : '');
+  // 選択中レースの実レース種別を最優先する。
+  if(title.includes('優勝戦') && !title.includes('準優勝戦')) return '最終日';
+  if(title.includes('準優勝戦') || (title.includes('準優') && !title.includes('優勝戦'))) return '準優日';
+  return resolveRaceDayLabel(info);
 }
 
 function normalizeRaceInfoDayLabels(infoMap){
@@ -9279,16 +9289,16 @@ function parseOfficialRaceCardText(text){
       }
 
       if(venue){
-        // 開催日種別は、この会場で読み取れた全レースのレース名だけで判定する。
-        // 余計な条件は付けない: 準優勝戦が1つでもあれば準優日、なければ優勝戦があれば最終日。
+        // 開催日種別は、この会場で読み取れた全レースのレース名から判定する。
+        // 優勝戦は最終日の決定情報なので、準優勝戦の残存データが混ざっても最終日を優先する。
         const allRaceTitleCompact = Object.values(raceTitles || {}).map(v => String(v || '').replace(/[\s　]+/g, ''));
         const hasSemifinal = allRaceTitleCompact.some(t => t.includes('準優勝戦'));
-        const hasFinal = !hasSemifinal && allRaceTitleCompact.some(t => t.includes('優勝戦'));
+        const hasFinal = allRaceTitleCompact.some(t => t.includes('優勝戦') && !t.includes('準優勝戦'));
         let dayLabel = dayRaw ? (String(dayRaw) + '日目') : '';
-        if(hasSemifinal){
-          dayLabel = '準優日';
-        } else if(hasFinal){
+        if(hasFinal){
           dayLabel = '最終日';
+        } else if(hasSemifinal){
+          dayLabel = '準優日';
         } else if(String(dayRaw || '') === '1'){
           dayLabel = '初日';
         }
@@ -10716,23 +10726,27 @@ async function openTodayPickRace(venue,raceNo){
 // 選択中レースの最小限の見出しを生成。
 // 「会場 + 開催日ラベル」「R + 締切 + レース種別」をイン信頼度の直上に表示する。
 function enforceSemifinalDayUi(){
+  // 旧名は互換のため維持。DOMに表示済みの「準優日」という文字は判定根拠にしない。
+  // 選択中レースの正式タイトル → 会場全体の順で開催日を同期する。
   const summary = document.querySelector('#predictResult .race-summary-compact');
   if(!summary) return;
-  const txt = String(summary.textContent || '').replace(/[\s　]+/g, '');
-  if(!txt.includes('準優勝戦') && !txt.includes('準優')) return;
-
-  // 詳細見出し側は、実際に画面へ描画されている「準優勝戦」を最終正解として扱う。
-  const dayEl = summary.querySelector('.rs-day');
-  if(dayEl && dayEl.textContent !== '準優日') dayEl.textContent = '準優日';
-
-  // 選択中会場の上部カードも同時に同期する。
   const daySel = document.getElementById('predictRaceDay');
+  const raceSel = document.getElementById('predictRaceNo');
   const selectedVenue = daySel && daySel.value ? String(daySel.value) : '';
+  const raceNo = raceSel && raceSel.value ? String(raceSel.value) : '';
+  const info = RACE_INFO_TODAY[selectedVenue] || {};
+  const dayLabel = resolveSelectedRaceDayLabel(info, raceNo);
+  if(!dayLabel) return;
+
+  const dayEl = summary.querySelector('.rs-day');
+  if(dayEl && dayEl.textContent !== dayLabel) dayEl.textContent = dayLabel;
+
   if(selectedVenue){
+    const venueDayLabel = resolveRaceDayLabel(info) || dayLabel;
     document.querySelectorAll('.venue-pill').forEach(btn => {
       if(btn.dataset.venue === selectedVenue){
         const vpDay = btn.querySelector('.vp-day');
-        if(vpDay && vpDay.textContent !== '準優日') vpDay.textContent = '準優日';
+        if(vpDay && vpDay.textContent !== venueDayLabel) vpDay.textContent = venueDayLabel;
       }
     });
   }
@@ -10746,11 +10760,8 @@ function buildCurrentRaceSummaryHtml(venue){
   const info = RACE_INFO_TODAY[selectedVenue] || {};
   const deadline = raceNo && info.deadlines ? info.deadlines[raceNo] : '';
   const raceTitle = raceNo && info.raceTitles ? info.raceTitles[raceNo] : '';
-  const currentRaceTitleCompact = String(raceTitle || '').replace(/[\s　]+/g, '');
-  // 選択中レースが準優勝戦なら、会場側の保存値に関係なく準優日を強制する。
-  const dayLabel = (currentRaceTitleCompact.includes('準優勝戦') || currentRaceTitleCompact.includes('準優') || hasSemifinalRaceTitle(info))
-    ? '準優日'
-    : resolveRaceDayLabel(info);
+  // 選択中レースの「優勝戦 / 準優勝戦」を会場側の保存値より優先する。
+  const dayLabel = resolveSelectedRaceDayLabel(info, raceNo);
 
   if(!selectedVenue && !raceNo) return '';
   return `
@@ -11256,11 +11267,11 @@ async function runPredict(){
   bindPredictMainTabs();
   bindWindPanel(venue);
   brcStartLiveExhibitionPolling(venue, raceNoLive);
-  // データ保存値や判定経路に関係なく、画面上のレース種別が準優勝戦なら最終表示を準優日にする。
+  // 選択中レースの正式タイトルを最優先し、開催日表示を最終同期する。
   enforceSemifinalDayUi();
 }
 
-// 描画後に別処理がDOMを書き換えた場合も、準優勝戦表示を最終的に守る。
+// 描画後に別処理がDOMを書き換えた場合も、正式な開催日表示へ戻す。
 const __brcSemifinalObserver = new MutationObserver(() => enforceSemifinalDayUi());
 document.addEventListener('DOMContentLoaded', () => {
   const root = document.getElementById('page-predict') || document.body;
