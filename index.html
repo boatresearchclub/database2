@@ -1672,50 +1672,21 @@
     .brc-research-admin-btn{width:100%;padding:0 5px;}
   }
 
-  /* BRC_ADMIN_SOCIAL_V2_20260903 */
-  .brc-admin-social{display:none;margin:10px 0 12px;padding:12px;border:1px solid rgba(0,87,219,.18);border-radius:13px;background:linear-gradient(160deg,rgba(0,87,219,.05),rgba(255,255,255,.96));}
+  /* BRC_ADMIN_SOCIAL_SAFE_20260830 */
+  .brc-admin-social{display:none;margin:8px 0 10px;padding:10px 10px 9px;border:1px solid rgba(0,87,219,.18);border-radius:12px;background:rgba(0,87,219,.035);}
   .brc-admin-social.is-visible{display:block;}
-  .brc-admin-social-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px;}
-  .brc-admin-social-title{font-size:13px;font-weight:950;color:var(--navy);letter-spacing:.01em;}
-  .brc-admin-social-sub{margin-top:2px;font-size:10px;line-height:1.45;color:var(--ink-soft);}
-  .brc-admin-social-tag{font-size:10px;font-weight:900;color:var(--wave);background:rgba(0,87,219,.08);padding:3px 7px;border-radius:999px;white-space:nowrap;}
-  .brc-admin-social-v2-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:8px;}
-  .brc-admin-social-field{min-width:0;}
-  .brc-admin-social-field.full{grid-column:1/-1;}
-  .brc-admin-social-label{display:block;margin:0 0 4px;font-size:10px;font-weight:900;color:var(--ink-soft);}
-  .brc-admin-social-select,.brc-admin-social-input,.brc-admin-social-note-input{width:100%;box-sizing:border-box;border:1px solid rgba(10,31,51,.14);border-radius:9px;background:#fff;color:#17324d;font:inherit;font-size:12px;outline:none;}
-  .brc-admin-social-select,.brc-admin-social-input{height:38px;padding:0 9px;}
-  .brc-admin-social-note-input{min-height:76px;padding:9px 10px;line-height:1.55;resize:vertical;}
-  .brc-admin-social-select:focus,.brc-admin-social-input:focus,.brc-admin-social-note-input:focus{border-color:rgba(0,87,219,.48);box-shadow:0 0 0 3px rgba(0,87,219,.06);}
-  .brc-admin-social-segment{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;padding:3px;border:1px solid rgba(10,31,51,.10);border-radius:10px;background:rgba(10,31,51,.025);}
-  .brc-admin-social-segment button{appearance:none;border:0;border-radius:7px;background:transparent;color:var(--ink-soft);height:32px;padding:0 7px;font:inherit;font-size:11px;font-weight:900;cursor:pointer;}
-  .brc-admin-social-segment button.active{background:#fff;color:var(--wave);box-shadow:0 1px 4px rgba(10,31,51,.09);}
-  .brc-admin-social-result-fields{display:none;grid-template-columns:1fr 1fr;gap:8px;grid-column:1/-1;}
-  .brc-admin-social-result-fields.is-visible{display:grid;}
-  .brc-admin-social-theme{display:flex;align-items:center;gap:7px;min-height:31px;margin:1px 0 9px;padding:6px 9px;border:1px solid rgba(10,31,51,.08);border-radius:9px;background:rgba(10,31,51,.022);font-size:10.5px;color:var(--ink-soft);}
-  .brc-admin-social-theme strong{color:var(--navy);font-size:11px;}
+  .brc-admin-social-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;}
+  .brc-admin-social-title{font-size:12px;font-weight:900;color:var(--line-white);letter-spacing:.01em;}
+  .brc-admin-social-tag{font-size:10px;font-weight:900;color:var(--wave);background:rgba(0,87,219,.08);padding:3px 6px;border-radius:999px;}
   .brc-admin-social-actions{display:flex;gap:7px;flex-wrap:wrap;}
-  .brc-admin-social-btn{appearance:none;border:0;border-radius:9px;padding:9px 11px;font-size:12px;font-weight:900;cursor:pointer;background:var(--wave);color:#fff;}
+  .brc-admin-social-btn{appearance:none;border:0;border-radius:9px;padding:8px 11px;font-size:12px;font-weight:900;cursor:pointer;background:var(--wave);color:#fff;}
   .brc-admin-social-btn.secondary{background:#eef3f8;color:#17324d;}
-  .brc-admin-social-btn:disabled{opacity:.5;cursor:wait;}
   .brc-admin-social-preview{display:none;margin-top:9px;padding:8px;border:1px solid rgba(10,31,51,.10);border-radius:10px;background:#fff;}
   .brc-admin-social-preview.is-visible{display:block;}
   .brc-admin-social-preview img{display:block;width:100%;height:auto;border-radius:7px;background:#fff;}
   .brc-admin-social-image-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;}
-  .brc-admin-social-output-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:9px;}
-  .brc-admin-social-counter{font-size:10px;font-weight:850;color:var(--ink-soft);font-variant-numeric:tabular-nums;}
-  .brc-admin-social-counter.over{color:#b42318;}
-  #brcAdminSocialText{width:100%;min-height:190px;margin-top:5px;border:1px solid rgba(10,31,51,.14);border-radius:9px;padding:10px 11px;box-sizing:border-box;font:inherit;font-size:13px;line-height:1.7;resize:vertical;background:#fff;color:#17324d;}
-  #brcAdminSocialStatus{min-height:17px;margin-top:5px;font-size:10.5px;line-height:1.45;color:var(--ink-soft);}
-  @media(max-width:520px){
-    .brc-admin-social{padding:10px 9px;}
-    .brc-admin-social-v2-grid{grid-template-columns:1fr;gap:7px;}
-    .brc-admin-social-field.full,.brc-admin-social-result-fields{grid-column:auto;}
-    .brc-admin-social-result-fields.is-visible{grid-template-columns:1fr 1fr;grid-column:1;}
-    .brc-admin-social-actions{display:grid;grid-template-columns:1fr 1fr;}
-    .brc-admin-social-btn{width:100%;padding:10px 7px;font-size:11.5px;}
-    #brcAdminSocialText{min-height:220px;font-size:13px;}
-  }
+  #brcAdminSocialText{width:100%;min-height:150px;margin-top:8px;border:1px solid rgba(10,31,51,.14);border-radius:9px;padding:9px 10px;box-sizing:border-box;font:inherit;font-size:13px;line-height:1.65;resize:vertical;background:#fff;color:#17324d;}
+  #brcAdminSocialStatus{min-height:16px;margin-top:5px;font-size:11px;color:var(--ink-soft);}
   @media(max-width:390px){
     .brc-free-preview-list{grid-template-columns:1fr;}
     .brc-free-race{font-size:15px;}
@@ -2925,58 +2896,21 @@
         <div class="predict-main-panel active" id="predictMainPanel-data">
           <div id="predictResult" style="padding:18px 22px;"></div>
           <div id="brcAdminSocial" class="brc-admin-social" aria-hidden="true">
-            <div class="brc-admin-social-head">
-              <div><div class="brc-admin-social-title">SNS投稿アシスタント V2</div><div class="brc-admin-social-sub">データだけでなく「このレースのどこが面白いか」を選んで文章化します。</div></div>
-              <span class="brc-admin-social-tag">管理者</span>
-            </div>
-            <div class="brc-admin-social-v2-grid">
-              <div class="brc-admin-social-field">
-                <span class="brc-admin-social-label">投稿先</span>
-                <div class="brc-admin-social-segment" id="brcAdminSocialPlatform">
-                  <button type="button" class="active" data-value="threads">Threads</button>
-                  <button type="button" data-value="x">X（140字）</button>
-                </div>
-              </div>
-              <div class="brc-admin-social-field">
-                <span class="brc-admin-social-label">状況</span>
-                <div class="brc-admin-social-segment" id="brcAdminSocialPhase">
-                  <button type="button" class="active" data-value="pre">レース前</button>
-                  <button type="button" data-value="result">結果後</button>
-                </div>
-              </div>
-              <div class="brc-admin-social-field full">
-                <label class="brc-admin-social-label" for="brcAdminSocialPurpose">投稿の目的</label>
-                <select id="brcAdminSocialPurpose" class="brc-admin-social-select">
-                  <option value="auto">自動（おすすめ）</option>
-                  <option value="analysis">分析・見解</option>
-                  <option value="pick">本日厳選</option>
-                  <option value="hit">的中・答え合わせ</option>
-                  <option value="app">BRCアプリへ自然に誘導</option>
-                </select>
-              </div>
-              <div id="brcAdminSocialResultFields" class="brc-admin-social-result-fields">
-                <div class="brc-admin-social-field"><label class="brc-admin-social-label" for="brcAdminSocialResult">結果（例 3-4-6）</label><input id="brcAdminSocialResult" class="brc-admin-social-input" inputmode="numeric" placeholder="3-4-6"></div>
-                <div class="brc-admin-social-field"><label class="brc-admin-social-label" for="brcAdminSocialPayout">配当（例 91.7倍）</label><input id="brcAdminSocialPayout" class="brc-admin-social-input" placeholder="91.7倍"></div>
-              </div>
-              <div class="brc-admin-social-field full">
-                <label class="brc-admin-social-label" for="brcAdminSocialNote">キタデの一言（任意）</label>
-                <textarea id="brcAdminSocialNote" class="brc-admin-social-note-input" placeholder="例：拮抗してる／本日厳選のイン鉄板／チルト上げてるから入りたくない／世間は展示悪いと見そうだけどBRCでは良い"></textarea>
-              </div>
-            </div>
-            <div id="brcAdminSocialTheme" class="brc-admin-social-theme"><span>自動判定：</span><strong>レースを表示すると投稿テーマを判定します</strong></div>
-            <div class="brc-admin-social-actions">
-              <button type="button" id="brcAdminSocialImage" class="brc-admin-social-btn secondary">SNS画像を作成</button>
-              <button type="button" id="brcAdminSocialGenerate" class="brc-admin-social-btn">投稿文を作成</button>
-              <button type="button" id="brcAdminSocialCopy" class="brc-admin-social-btn secondary">コピー</button>
-            </div>
-            <div class="brc-admin-social-output-head"><span class="brc-admin-social-label" style="margin:0;">生成結果</span><span id="brcAdminSocialCounter" class="brc-admin-social-counter">0文字</span></div>
-            <textarea id="brcAdminSocialText" placeholder="投稿文を作成すると、ここに表示されます。"></textarea>
-            <div id="brcAdminSocialPreview" class="brc-admin-social-preview">
-              <img id="brcAdminSocialPreviewImg" alt="SNS投稿用 出走表AI画像">
-              <div class="brc-admin-social-image-actions"><button type="button" id="brcAdminSocialImageShare" class="brc-admin-social-btn secondary">画像を共有 / 保存</button></div>
-            </div>
-            <div id="brcAdminSocialStatus"></div>
+        <div class="brc-admin-social-head"><div class="brc-admin-social-title">SNS投稿アシスタント</div><span class="brc-admin-social-tag">管理者</span></div>
+        <div class="brc-admin-social-actions">
+          <button type="button" id="brcAdminSocialImage" class="brc-admin-social-btn">SNS画像を作成</button>
+          <button type="button" id="brcAdminSocialGenerate" class="brc-admin-social-btn">Threads投稿文を作成</button>
+          <button type="button" id="brcAdminSocialCopy" class="brc-admin-social-btn secondary">コピー</button>
+        </div>
+        <textarea id="brcAdminSocialText" placeholder="出走表AIを表示したあとに「Threads投稿文を作成」を押してください。"></textarea>
+        <div id="brcAdminSocialPreview" class="brc-admin-social-preview">
+          <img id="brcAdminSocialPreviewImg" alt="SNS投稿用 出走表AI画像">
+          <div class="brc-admin-social-image-actions">
+            <button type="button" id="brcAdminSocialImageShare" class="brc-admin-social-btn secondary">画像を共有 / 保存</button>
           </div>
+        </div>
+        <div id="brcAdminSocialStatus"></div>
+      </div>
         </div>
         <div class="predict-main-panel" id="predictMainPanel-odds">
           <div class="brc-odds-wrap" id="brcOddsPanel">
@@ -3492,218 +3426,109 @@ function brcAdminHighTilts(){
   return boats.map(x=>({boat:Number(x?.boat_no),tilt:Number(x?.tilt)})).filter(x=>Number.isInteger(x.boat)&&Number.isFinite(x.tilt)&&x.tilt>=1.0).sort((a,b)=>b.tilt-a.tilt);
 }
 
-function brcAdminSocialChoice(rootId, fallback){
-  const root=document.getElementById(rootId);
-  return String(root?.querySelector('button.active')?.dataset?.value||fallback);
-}
-function brcAdminSocialOptions(){
-  const platform=brcAdminSocialChoice('brcAdminSocialPlatform','threads');
-  const phase=brcAdminSocialChoice('brcAdminSocialPhase','pre');
-  const purpose=String(document.getElementById('brcAdminSocialPurpose')?.value||'auto');
-  return {
-    version:'v2', platform, phase, purpose,
-    userNote:String(document.getElementById('brcAdminSocialNote')?.value||'').trim(),
-    result:String(document.getElementById('brcAdminSocialResult')?.value||'').trim(),
-    payout:String(document.getElementById('brcAdminSocialPayout')?.value||'').trim(),
-    maxChars:platform==='x'?140:null
-  };
-}
-function brcAdminPersonalAlertForBoat(b){
-  try{
-    const a=typeof brcFindExhibitionPlayerAlert==='function'?brcFindExhibitionPlayerAlert(b):null;
-    if(!a) return null;
-    const winDiff=typeof brcPersonalEffectDiff==='function'?brcPersonalEffectDiff(a,'win'):NaN;
-    const top3Diff=typeof brcPersonalEffectDiff==='function'?brcPersonalEffectDiff(a,'top3'):NaN;
-    return {
-      label:String(a?.['INDEX表示案']||''), evaluation:String(a?.['評価']||''), adoption:String(a?.['採用区分']||''),
-      n:Number(a?.N||0), band:String(a?.['平均差帯']||''), trait:String(a?.['個人特性']||''), basis:String(a?.['特性根拠']||''),
-      normalWinPct:Number(a?.['通常1着率']), playerWinPct:Number(a?.['本人1着率']),
-      normalTop3Pct:Number(a?.['通常3連対率']), playerTop3Pct:Number(a?.['本人3連対率']),
-      winEffectDiffPt:Number.isFinite(winDiff)?winDiff:null, top3EffectDiffPt:Number.isFinite(top3Diff)?top3Diff:null,
-      winPersonalArrow:Number.isFinite(winDiff)&&typeof brcPersonalTrendArrow==='function'?brcPersonalTrendArrow(winDiff):'',
-      top3PersonalArrow:Number.isFinite(top3Diff)&&typeof brcPersonalTrendArrow==='function'?brcPersonalTrendArrow(top3Diff):''
-    };
-  }catch(_){ return null; }
-}
-function brcAdminSocialRaceSignals(boats, rel){
-  const sorted=boats.slice().sort((a,b)=>Number(b.pctFloat||b.pct||0)-Number(a.pctFloat||a.pct||0));
-  const p1=boats.find(b=>Number(b.course)===1);
-  const rank=String(rel?.label||rel?.rank||rel?.grade||'');
-  const diff=Number(rel?.venueBaseDiff);
-  const p1win=Number(p1?.pctFloat||p1?.pct||0);
-  const personal=boats.map(b=>({boat:b,a:brcAdminPersonalAlertForBoat(b)})).filter(x=>x.a);
-  const strongestPersonal=personal.sort((x,y)=>Math.max(Math.abs(y.a.winEffectDiffPt||0),Math.abs(y.a.top3EffectDiffPt||0))-Math.max(Math.abs(x.a.winEffectDiffPt||0),Math.abs(x.a.top3EffectDiffPt||0)))[0]||null;
-  const up=boats.filter(b=>Number(b.exhibitionWinDeltaPt)>=0.75 || Number(b.exhibitionTop3DeltaPt)>=2);
-  const down=boats.filter(b=>Number(b.exhibitionWinDeltaPt)<=-0.75 || Number(b.exhibitionTop3DeltaPt)<=-2);
-  const highTilts=brcAdminHighTilts();
-  const entryNotice=String(document.getElementById('exhibitionRaceNotice')?.innerText||'').trim();
-  const top3=sorted.slice(0,3).map(b=>Number(b.pctFloat||b.pct||0));
-  const competitive=top3.length>=3 && (top3[0]-top3[2] <= 18 || (p1win<58 && Number(sorted[1]?.pctFloat||sorted[1]?.pct||0)>=18));
-  let theme='展示後の変化';
-  let reason='BRCタイムXの上げ下げを中心に見ます。';
-  if(highTilts.length){theme='見送り・不確定要素';reason='高チルトがあり、数字だけでは決めにくいレースです。';}
-  else if(/進入変更/.test(entryNotice)){theme='進入変更';reason='想定進入が変わっているため、前提条件を優先して見ます。';}
-  else if(strongestPersonal && Math.max(Math.abs(strongestPersonal.a.winEffectDiffPt||0),Math.abs(strongestPersonal.a.top3EffectDiffPt||0))>=10){theme='BRCタイムX 個人傾向';reason=`${brcAdminPlayerLabel(strongestPersonal.boat)}に通常評価との大きなズレがあります。`;}
-  else if(rank==='強イン否定' || rank==='E' || (Number.isFinite(diff)&&diff<=-10)){theme='イン否定';reason='1号艇を疑える条件がはっきり出ています。';}
-  else if((rank==='S'||rank==='A') && (p1win>=64 || (Number.isFinite(diff)&&diff>=10))){theme='イン信頼';reason='1号艇に複数の強い材料が揃っています。';}
-  else if(competitive){theme='拮抗';reason='1着率が割れていて、頭候補を1艇に決めにくいレースです。';}
-  else if(up.length && down.length){theme='展示で評価差';reason='展示後に上げたい艇・下げたい艇が分かれています。';}
-  return {theme,reason,competitive,rank,p1Win:p1win,venueBaseDiff:Number.isFinite(diff)?diff:null,entryNotice,highTilts,upCourses:up.map(b=>b.course),downCourses:down.map(b=>b.course),strongestPersonal:strongestPersonal?{course:strongestPersonal.boat.course,label:brcAdminPlayerLabel(strongestPersonal.boat),...strongestPersonal.a}:null};
-}
 function brcAdminSocialPayload(){
   const boats=Array.isArray(window.__predictBoatsCurrent)?window.__predictBoatsCurrent.slice().sort((a,b)=>Number(a.course)-Number(b.course)):[];
   if(boats.length!==6) throw new Error('先に出走表AIの「計算」を実行してください。');
   const rel=window.__currentLocalInReliability||null;
   const slitText=String(document.getElementById('slitEvaluationCard')?.innerText||'').trim();
-  const options=brcAdminSocialOptions();
-  const signals=brcAdminSocialRaceSignals(boats,rel);
-  // キタデの一言がある場合は、自動判定より本人の視点を優先する。
-  const note=options.userNote;
-  if(note){
-    if(/拮抗|割れ|混戦/.test(note)){ signals.theme='拮抗'; signals.reason='キタデの一言を優先：勝率が割れている点を主役にします。'; }
-    else if(/イン鉄板|鉄板|イン信頼/.test(note)){ signals.theme='イン信頼'; signals.reason='キタデの一言を優先：イン信頼を主役にします。'; }
-    else if(/イン否定|インを疑|逃げを疑/.test(note)){ signals.theme='イン否定'; signals.reason='キタデの一言を優先：イン否定を主役にします。'; }
-    else if(/チルト|入りたくない|見送|不確定/.test(note)){ signals.theme='見送り・不確定要素'; signals.reason='キタデの一言を優先：見送る理由を主役にします。'; }
-    else if(/進入|前付|枠なり/.test(note)){ signals.theme='進入変更'; signals.reason='キタデの一言を優先：進入条件を主役にします。'; }
-    else if(/展示.*悪|展示.*良|世間|タイムX|個人傾向/.test(note)){ signals.theme='BRCタイムX 個人傾向'; signals.reason='キタデの一言を優先：一般的な展示評価とのズレを主役にします。'; }
-  }
   return {
-    social:options,
-    instruction:'キタデ本人の視点を最優先し、数字の羅列ではなくこのレースで最も面白い分析ポイント1〜2個に絞ってSNS文を作成する。選手名には必ず「選手」、基本です・ます調、ハッシュタグなし。Threadsは人間味のある自然な解説、Xは140字以内。',
-    writerGuide:{
-      author:'キタデ', tone:'人間味のあるデータ好きの個人運営者。基本はです・ます調。少し会話っぽく、断定しすぎない。',
-      must:['選手名は必ず「①○○選手」の形式','ハッシュタグは付けない','数字を全部並べず、そのレースで一番面白いズレを1〜2個に絞る','BRCを毎回褒めない','買い目はユーザーが明示しない限り書かない','レース前は結果を断定しない'],
-      threads:'説明量は中程度。冒頭から毎回同じ型にせず、気になる理由から入ってよい。「個人的には」「こういうレースは」など自然な一言は可。',
-      x:'140字以内。数字・主役・一言の3要素を優先し、説明を詰め込みすぎない。',
-      app:'アプリ誘導を選んだ場合だけ露骨な宣伝は避け、「この上げ下げはBRCアプリで確認できます」程度に自然に締める。',
-      userNote:'「キタデの一言」があれば最優先の視点として文章に反映する。'
-    },
-    signals,
     race:{
-      title:brcAdminCurrentRaceTitle()||'このレース', women:brcAdminIsWomenRaceSafe(), grade:String(window.__predictGradeCurrent||''),
-      inReliability:String(rel?.label||rel?.rank||rel?.grade||''), venueBaseDiff:Number.isFinite(Number(rel?.venueBaseDiff))?Number(rel.venueBaseDiff):null,
-      slitEvaluation:slitText, highTilts:brcAdminHighTilts(), entryNotice:String(document.getElementById('exhibitionRaceNotice')?.innerText||'').trim(),
-      exhibitionAvailable:boats.some(b=>!!b?.exhibitionApplied)
+      title:brcAdminCurrentRaceTitle()||'このレース',
+      women:brcAdminIsWomenRaceSafe(),
+      grade:String(window.__predictGradeCurrent||''),
+      inReliability:String(rel?.label||rel?.rank||rel?.grade||''),
+      venueBaseDiff:Number.isFinite(Number(rel?.venueBaseDiff))?Number(rel.venueBaseDiff):null,
+      slitEvaluation:slitText,
+      highTilts:brcAdminHighTilts()
     },
     boats:boats.map(b=>({
-      course:Number(b.course), label:brcAdminPlayerLabel(b), name:String(b?.player?.name||''),
+      course:Number(b.course),
+      label:brcAdminPlayerLabel(b),
+      name:String(b?.player?.name||''),
       winPct:Number.isFinite(Number(b?.pctFloat))?Number(b.pctFloat):Number(b?.pct||0),
-      top3Pct:Number.isFinite(Number(b?.top3PctFloat))?Number(b.top3PctFloat):Number(b?.pct3||b?.top3Pct||b?.top3||0),
-      stRank:Number.isFinite(Number(b?.stRank))?Number(b.stRank):null, stStability:String(b?.stStabilityGrade||b?.stStableGrade||''),
-      motorGrade:String(b?.motorGrade||''), motorPct:Number.isFinite(Number(b?.motor2renPct))?Number(b.motor2renPct):Number.isFinite(Number(b?.motorPct))?Number(b.motorPct):null,
+      top3Pct:Number.isFinite(Number(b?.top3PctFloat))?Number(b.top3PctFloat):Number(b?.top3Pct||b?.top3||0),
+      stRank:Number.isFinite(Number(b?.stRank))?Number(b.stRank):null,
+      stStability:String(b?.stStabilityGrade||b?.stStableGrade||''),
+      motorGrade:String(b?.motorGrade||''),
+      motorPct:Number.isFinite(Number(b?.motor2renPct))?Number(b.motor2renPct):Number.isFinite(Number(b?.motorPct))?Number(b.motorPct):null,
       timeXWinDeltaPt:Number.isFinite(Number(b?.exhibitionWinDeltaPt))?Number(b.exhibitionWinDeltaPt):null,
       timeXTop3DeltaPt:Number.isFinite(Number(b?.exhibitionTop3DeltaPt))?Number(b.exhibitionTop3DeltaPt):null,
-      timeXWinArrow:brcAdminArrow(b?.exhibitionWinDeltaPt,0.75), timeXTop3Arrow:brcAdminArrow(b?.exhibitionTop3DeltaPt,2.0),
-      exhibitionApplied:!!b?.exhibitionApplied, personalTimeX:brcAdminPersonalAlertForBoat(b)
+      timeXWinArrow:brcAdminArrow(b?.exhibitionWinDeltaPt,2.0),
+      timeXTop3Arrow:brcAdminArrow(b?.exhibitionTop3DeltaPt,3.0),
+      exhibitionApplied:!!b?.exhibitionApplied
     }))
   };
 }
-async function brcBuildAdminSocialPostAI(){
+async function brcBuildAdminThreadsPostAI(){
   const session=await brcEnsureFreshSession();
   if(!session?.access_token) throw new Error('ログインセッションがありません。');
   const payload=brcAdminSocialPayload();
-  const res=await fetch(BRC_SOCIAL_AI_URL+'/admin/social-post',{method:'POST',headers:{'Authorization':'Bearer '+session.access_token,'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(payload)});
+  const res=await fetch(BRC_SOCIAL_AI_URL+'/admin/social-post',{
+    method:'POST',
+    headers:{
+      'Authorization':'Bearer '+session.access_token,
+      'Content-Type':'application/json',
+      'Accept':'application/json'
+    },
+    body:JSON.stringify(payload)
+  });
   let data=null; try{data=await res.json();}catch(_){data=null;}
-  if(!res.ok){const err=new Error((data&&(data.message||data.error||data.reason))||`SNS AI HTTP ${res.status}`);err.status=res.status;throw err;}
-  let text=String(data?.text||'').trim();
+  if(!res.ok){
+    const err=new Error((data&&(data.message||data.error||data.reason))||`SNS AI HTTP ${res.status}`);
+    err.status=res.status; throw err;
+  }
+  const text=String(data?.text||'').trim();
   if(!text) throw new Error('AIから投稿文が返りませんでした。');
-  if(payload.social.platform==='x') text=brcAdminClampXText(text,140);
-  return {ok:true,text,status:`AI生成：${payload.signals.theme}を主役にしました。`,theme:payload.signals.theme};
-}
-function brcAdminClampXText(text,max=140){
-  let t=String(text||'').replace(/#[^\s#]+/g,'').replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
-  if(Array.from(t).length<=max) return t;
-  const paras=t.split(/\n+/).map(x=>x.trim()).filter(Boolean); let out='';
-  for(const p of paras){const next=out?(out+'\n'+p):p;if(Array.from(next).length>max) break;out=next;}
-  if(!out) out=Array.from(t).slice(0,max-1).join('')+'…';
-  return out;
-}
-function brcAdminFormatPt(v){const n=Number(v);return Number.isFinite(n)?`${n>0?'+':''}${n.toFixed(1)}pt`:'';}
-function brcBuildAdminSocialPost(){
-  const payload=brcAdminSocialPayload(), o=payload.social, r=payload.race, boats=payload.boats, sig=payload.signals;
-  const p1=boats[0], top=boats.slice().sort((a,b)=>b.winPct-a.winPct)[0];
-  const byCourse=c=>boats.find(b=>b.course===Number(c));
-  const lines=[];
-  const note=o.userNote;
-  if(o.phase==='result' && (o.result||o.payout)){
-    lines.push(`${r.title}${o.result?' '+o.result:''}${o.payout?' '+o.payout:''} 🎯`.trim());
-    if(note) lines.push(note.replace(/[。！!]+$/,'')+'。');
-  }else{
-    if(note) lines.push(`${r.title}。\n\n${note.replace(/[。！!]+$/,'')}。`);
-    else if(sig.theme==='イン否定') lines.push(`${r.title}。\n\nここはインを疑って見たいレースです。`);
-    else if(sig.theme==='イン信頼') lines.push(`${r.title}。\n\n今日はここ、かなりイン寄りに見ています。`);
-    else if(sig.theme==='拮抗') lines.push(`${r.title}。\n\nこれ、かなり拮抗しています。`);
-    else if(sig.theme==='見送り・不確定要素') lines.push(`${r.title}。\n\n数字は見たいんですが、私は入りづらいレースです。`);
-    else lines.push(`${r.title}。\n\n展示後の数字を見ると、ちょっと面白いです。`);
-  }
-  if(sig.theme==='BRCタイムX 個人傾向' && sig.strongestPersonal){
-    const a=sig.strongestPersonal;
-    lines.push(`${a.label}にBRCタイムXの個人傾向が出ています。\n1着傾向 ${brcAdminFormatPt(a.winEffectDiffPt)} ${a.winPersonalArrow||''}\n3連対傾向 ${brcAdminFormatPt(a.top3EffectDiffPt)} ${a.top3PersonalArrow||''}`.trim());
-    lines.push('展示タイムを「速い・遅い」だけで見るのではなく、その選手にとってそのタイムがどうなのかまで見たいところです。');
-  }else if(sig.theme==='イン否定'){
-    lines.push(`${p1.label}はイン逃げ信頼度${r.inReliability||'低め'}、1着率${Math.round(p1.winPct)}％${r.venueBaseDiff!=null?`、場基準比${r.venueBaseDiff>=0?'+':''}${Math.round(r.venueBaseDiff)}pt`:''}。`);
-    if(top.course!==1) lines.push(`一方、1着率トップは${top.label}の${Math.round(top.winPct)}％。\n「①が飛ぶか」だけでなく、崩れた時に誰が頭まで来るかを見たいです。`);
-  }else if(sig.theme==='イン信頼'){
-    lines.push(`${p1.label}はイン逃げ信頼度${r.inReliability||''}、1着率${Math.round(p1.winPct)}％${r.venueBaseDiff!=null?`、場基準比${r.venueBaseDiff>=0?'+':''}${Math.round(r.venueBaseDiff)}pt`:''}。`);
-    const alts=boats.slice(1).sort((a,b)=>b.top3Pct-a.top3Pct).slice(0,2);
-    if(alts.length) lines.push(`頭は①を中心に見つつ、相手では${alts.map(x=>`${x.label}（3連対率${Math.round(x.top3Pct)}％）`).join('、')}が気になります。`);
-  }else if(sig.theme==='拮抗'){
-    const w=boats.slice().sort((a,b)=>b.winPct-a.winPct).slice(0,4);
-    lines.push(w.map(x=>`${x.label} ${Math.round(x.winPct)}％`).join('\n'));
-    lines.push('1艇だけ抜けている形ではありません。こういうレースは、展示後にどこが上がってどこが下がったかを重く見たいです。');
-  }else if(sig.theme==='見送り・不確定要素'){
-    const t=r.highTilts?.[0], b=t?byCourse(t.boat):null;
-    if(t) lines.push(`${b?.label||brcAdminBoatMark(t.boat)}がチルト${Number(t.tilt).toFixed(1)}。\n普段と違う展開になりやすく、不確定要素が一つ増えています。`);
-    lines.push('「狙えそうだから買う」ではなく、条件が崩れたら見送る。どのレースに入るかも大切にしています。');
-  }else if(sig.theme==='進入変更'){
-    lines.push(r.entryNotice||'展示で進入変更があります。');
-    lines.push('事前に狙っていても、想定していた進入が変われば話は別。私はいったん前提から見直します。');
-  }else{
-    const ups=boats.filter(b=>b.timeXWinArrow==='↗'||b.timeXTop3Arrow==='↗').slice(0,3);
-    const downs=boats.filter(b=>b.timeXWinArrow==='↘'||b.timeXTop3Arrow==='↘').slice(0,2);
-    if(ups.length) lines.push(`BRCタイムXでは、${ups.map(x=>`${x.label}が${x.timeXWinArrow==='↗'?'1着率↗':''}${x.timeXWinArrow==='↗'&&x.timeXTop3Arrow==='↗'?'・':''}${x.timeXTop3Arrow==='↗'?'3連対率↗':''}`).join('、')}。`);
-    if(downs.length) lines.push(`逆に${downs.map(x=>`${x.label}は${x.timeXWinArrow==='↘'?'1着率↘':''}${x.timeXWinArrow==='↘'&&x.timeXTop3Arrow==='↘'?'・':''}${x.timeXTop3Arrow==='↘'?'3連対率↘':''}`).join('、')}です。`);
-    lines.push('事前の数字だけで決めず、展示で評価がどう動いたかまで見て組み立てたいです。');
-  }
-  if(o.phase==='result'){
-    if(o.result) lines.push(`結果は ${o.result}${o.payout?`、${o.payout}`:''}。`);
-    lines.push('結果だけではなく、レース前に何が出ていたかを答え合わせしていきます。');
-  }
-  if(o.purpose==='pick') lines.push(sig.theme==='イン否定'?'本日の厳選では、こういう条件をイン否定レースとして拾っています。':'本日の厳選では、こういう条件を狙いレースとして拾っています。');
-  if(o.purpose==='app') lines.push('この辺の細かい上げ下げは、BRCアプリの出走データで確認できます。');
-  let text=lines.join('\n\n').replace(/\n{3,}/g,'\n\n').trim();
-  if(o.platform==='x') text=brcAdminBuildXFallback(payload);
-  return {ok:true,text,status:`V2生成：${sig.theme}を主役にしました。`,theme:sig.theme};
-}
-function brcAdminBuildXFallback(payload){
-  const {social:o,race:r,boats,signals:sig}=payload, p1=boats[0], top=boats.slice().sort((a,b)=>b.winPct-a.winPct)[0];
-  const head=o.phase==='result'&&o.result?`${r.title}🎯\n${o.result}${o.payout?' '+o.payout:''}`:`${r.title}`;
-  let body='';
-  if(o.userNote) body=o.userNote.replace(/[。！!]+$/,'')+'。';
-  if(sig.theme==='BRCタイムX 個人傾向'&&sig.strongestPersonal){const a=sig.strongestPersonal;body+=(body?'\n':'')+`${a.label}はBRCタイムX個人傾向で1着${a.winPersonalArrow||''}・3連対${a.top3PersonalArrow||''}。一般的な展示評価とのズレに注目。`;}
-  else if(sig.theme==='イン否定') body+=(body?'\n':'')+`①は1着率${Math.round(p1.winPct)}％${r.venueBaseDiff!=null?`・場基準比${r.venueBaseDiff>=0?'+':''}${Math.round(r.venueBaseDiff)}pt`:''}。${top.course!==1?`頭評価は${top.label}が${Math.round(top.winPct)}％。`:''}`;
-  else if(sig.theme==='イン信頼') body+=(body?'\n':'')+`①はイン信頼度${r.inReliability}・1着率${Math.round(p1.winPct)}％${r.venueBaseDiff!=null?`・場基準比${r.venueBaseDiff>=0?'+':''}${Math.round(r.venueBaseDiff)}pt`:''}。`;
-  else if(sig.theme==='見送り・不確定要素') body+=(body?'\n':'')+'高チルトで不確定要素あり。数字が良くても私は見送り寄りです。';
-  else body+=(body?'\n':'')+'展示後のBRCタイムXで評価差が出ています。表面の展示順位だけでなく「誰がそのタイムを出したか」を見ます。';
-  if(o.purpose==='app') body+=' 詳細はBRCアプリで。';
-  return brcAdminClampXText(`${head}\n\n${body}`,140);
-}
-function brcAdminSocialUpdateTheme(){
-  const el=document.getElementById('brcAdminSocialTheme'); if(!el) return;
-  try{const p=brcAdminSocialPayload();el.innerHTML=`<span>自動判定：</span><strong>${p.signals.theme}</strong><span>${p.signals.reason}</span>`;}catch(_){el.innerHTML='<span>自動判定：</span><strong>レースを表示すると投稿テーマを判定します</strong>';}
-}
-function brcAdminSocialUpdateUi(){
-  const o=brcAdminSocialOptions();
-  document.getElementById('brcAdminSocialResultFields')?.classList.toggle('is-visible',o.phase==='result');
-  const gen=document.getElementById('brcAdminSocialGenerate'); if(gen) gen.textContent=o.platform==='x'?'X投稿文を作成':'Threads投稿文を作成';
-  brcAdminSocialUpdateCounter();brcAdminSocialUpdateTheme();
-}
-function brcAdminSocialUpdateCounter(){
-  const ta=document.getElementById('brcAdminSocialText'), c=document.getElementById('brcAdminSocialCounter'); if(!c) return;
-  const n=Array.from(String(ta?.value||'')).length, isX=brcAdminSocialChoice('brcAdminSocialPlatform','threads')==='x';
-  c.textContent=isX?`${n}/140文字`:`${n}文字`;c.classList.toggle('over',isX&&n>140);
+  return {ok:true,text,status:'AIがレースごとの分析ポイントを選んで投稿文を作成しました。'};
 }
 
+function brcBuildAdminThreadsPost(){
+  const boats=Array.isArray(window.__predictBoatsCurrent)?window.__predictBoatsCurrent.slice().sort((a,b)=>a.course-b.course):[];
+  if(boats.length!==6) return {ok:false,text:'',status:'先に出走表AIの「計算」を実行してください。'};
+  const rel=window.__currentLocalInReliability||null;
+  const title=brcAdminCurrentRaceTitle()||'このレース';
+  const p1=boats.find(b=>Number(b.course)===1);
+  const sortedWin=boats.slice().sort((a,b)=>Number(b.pctFloat||0)-Number(a.pctFloat||0));
+  const women=brcAdminIsWomenRaceSafe();
+  const highTilts=brcAdminHighTilts();
+  const lines=[];
+  lines.push(`${title}、気になるレースです。`);
+  if(women) lines.push('BRCでは女子戦は女子戦のデータを使って分析しています。');
+
+  const relLabel=String(rel?.label||rel?.rank||rel?.grade||'').trim();
+  const p1Win=Math.round(Number(p1?.pctFloat||p1?.pct||0));
+  const venueDiff=Number(rel?.venueBaseDiff);
+  let first=`${brcAdminPlayerLabel(p1)}は${relLabel?`イン逃げ信頼度${relLabel}、`:''}1着率${p1Win}%`;
+  if(Number.isFinite(venueDiff)) first+=`、場基準比${venueDiff>=0?'+':''}${Math.round(venueDiff)}pt`;
+  first+='。';
+  lines.push(first);
+
+  const up=[], down=[];
+  for(const b of boats){
+    const w=brcAdminArrow(b.exhibitionWinDeltaPt,2.0);
+    const t=brcAdminArrow(b.exhibitionTop3DeltaPt,3.0);
+    if(w==='↗'||t==='↗') up.push(`${brcAdminPlayerLabel(b)}は${w==='↗'?'1着率↗':''}${w==='↗'&&t==='↗'?'・':''}${t==='↗'?'3連対率↗':''}`);
+    if(w==='↘'||t==='↘') down.push(`${brcAdminPlayerLabel(b)}は${w==='↘'?'1着率↘':''}${w==='↘'&&t==='↘'?'・':''}${t==='↘'?'3連対率↘':''}`);
+  }
+  if(up.length) lines.push(`展示後のBRCタイムXでは、${up.slice(0,3).join('、')}。`);
+  if(down.length) lines.push(`一方、${down.slice(0,3).join('、')}と評価を落としています。`);
+
+  if(highTilts.length){
+    const t=highTilts[0];
+    const b=boats.find(x=>Number(x.course)===t.boat);
+    lines.push(`${b?brcAdminPlayerLabel(b):brcAdminBoatMark(t.boat)}がチルト${t.tilt.toFixed(1)}。不確定要素が強くなるので、数字が良くても無理に入りたくない条件です。`);
+    lines.push('「買えそう」だけでなく、余計な不確定要素がないかも見て判断したいです。');
+  }else{
+    const top=sortedWin[0];
+    if(top && Number(top.course)!==1 && Number(top.pctFloat||0)>Number(p1?.pctFloat||0)){
+      lines.push(`1着率トップは${brcAdminPlayerLabel(top)}の${Math.round(Number(top.pctFloat||0))}%です。インをそのまま信頼するか、展示後の変化まで見て判断したいです。`);
+    }else{
+      lines.push('展示前の数字だけで決めず、展示後にどう評価が動いたかまで見て判断したいレースです。');
+    }
+  }
+  lines.push('BRCでは「何を買うか」だけでなく、「どのレースに入るか」も大切にしています。');
+  return {ok:true,text:lines.join('\n\n'),status:'投稿文を作成しました。必要ならそのまま編集できます。'};
+}
 let __brcAdminSocialImageBlob=null;
 let __brcAdminSocialImageUrl='';
 function brcLoadHtml2Canvas(){
@@ -3777,17 +3602,65 @@ async function brcShareOrSaveAdminSocialImage(){
 }
 
 function brcBindAdminSocial(){
-  const imageBtn=document.getElementById('brcAdminSocialImage'), shareBtn=document.getElementById('brcAdminSocialImageShare'), gen=document.getElementById('brcAdminSocialGenerate'), copy=document.getElementById('brcAdminSocialCopy'), ta=document.getElementById('brcAdminSocialText'), status=document.getElementById('brcAdminSocialStatus');
-  ['brcAdminSocialPlatform','brcAdminSocialPhase'].forEach(id=>{
-    const root=document.getElementById(id); if(root && !root.dataset.bound){root.dataset.bound='1';root.addEventListener('click',e=>{const b=e.target.closest('button[data-value]');if(!b)return;root.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));brcAdminSocialUpdateUi();});}
-  });
-  ['brcAdminSocialPurpose','brcAdminSocialNote','brcAdminSocialResult','brcAdminSocialPayout'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.dataset.bound){el.dataset.bound='1';el.addEventListener('input',()=>brcAdminSocialUpdateTheme());el.addEventListener('change',()=>{if(id==='brcAdminSocialPurpose'&&el.value==='hit'){const root=document.getElementById('brcAdminSocialPhase');root?.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.value==='result'));}brcAdminSocialUpdateUi();});}});
-  if(ta && !ta.dataset.counterBound){ta.dataset.counterBound='1';ta.addEventListener('input',brcAdminSocialUpdateCounter);}
-  if(imageBtn && !imageBtn.dataset.bound){imageBtn.dataset.bound='1';imageBtn.addEventListener('click',async()=>{if(!BRC_ADMIN_ACTIVE)return;const old=imageBtn.textContent;imageBtn.disabled=true;imageBtn.textContent='画像作成中…';if(status)status.textContent='出走表AIの表示部分をPNG画像にしています。';try{await brcCreateAdminSocialImage();if(status)status.textContent='SNS画像を作成しました。下にプレビューを表示しています。';}catch(err){if(status)status.textContent=`画像作成エラー: ${err?.message||err}`;}finally{imageBtn.disabled=false;imageBtn.textContent=old;}});}
-  if(shareBtn && !shareBtn.dataset.bound){shareBtn.dataset.bound='1';shareBtn.addEventListener('click',async()=>{if(!BRC_ADMIN_ACTIVE)return;try{const msg=await brcShareOrSaveAdminSocialImage();if(status)status.textContent=msg;}catch(err){if(err?.name!=='AbortError'&&status)status.textContent=`画像保存エラー: ${err?.message||err}`;}});}
-  if(gen && !gen.dataset.bound){gen.dataset.bound='1';gen.addEventListener('click',async()=>{if(!BRC_ADMIN_ACTIVE)return;const old=gen.textContent;gen.disabled=true;gen.textContent='AI分析中…';if(status)status.textContent='AIが「このレースで一番伝える価値のあるポイント」を選んでいます。';try{const out=await brcBuildAdminSocialPostAI();if(ta)ta.value=out.text||'';if(status)status.textContent=out.status||'';}catch(err){const fallback=brcBuildAdminSocialPost();if(ta)ta.value=fallback.text||'';if(status)status.textContent=`AI接続に失敗したためV2ローカル分析で作成しました（${err?.message||err}）。`;}finally{gen.disabled=false;brcAdminSocialUpdateUi();brcAdminSocialUpdateCounter();}});}
-  if(copy && !copy.dataset.bound){copy.dataset.bound='1';copy.addEventListener('click',async()=>{if(!BRC_ADMIN_ACTIVE)return;const text=String(ta?.value||'');if(!text){if(status)status.textContent='先に投稿文を作成してください。';return;}try{await navigator.clipboard.writeText(text);if(status)status.textContent='コピーしました。';}catch(_){if(ta){ta.focus();ta.select();}let ok=false;try{ok=document.execCommand('copy');}catch(_e){}if(status)status.textContent=ok?'コピーしました。':'文章を選択したので、端末のコピー操作を使ってください。';}});}
-  brcAdminSocialUpdateUi();
+  const imageBtn=document.getElementById('brcAdminSocialImage');
+  const shareBtn=document.getElementById('brcAdminSocialImageShare');
+  const gen=document.getElementById('brcAdminSocialGenerate');
+  const copy=document.getElementById('brcAdminSocialCopy');
+  const ta=document.getElementById('brcAdminSocialText');
+  const status=document.getElementById('brcAdminSocialStatus');
+  if(imageBtn && !imageBtn.dataset.bound){
+    imageBtn.dataset.bound='1';
+    imageBtn.addEventListener('click',async()=>{
+      if(!BRC_ADMIN_ACTIVE) return;
+      const old=imageBtn.textContent; imageBtn.disabled=true; imageBtn.textContent='画像作成中…';
+      if(status) status.textContent='出走表AIの表示部分をPNG画像にしています。';
+      try{ await brcCreateAdminSocialImage(); if(status) status.textContent='SNS画像を作成しました。下にプレビューを表示しています。'; }
+      catch(err){ if(status) status.textContent=`画像作成エラー: ${err?.message||err}`; }
+      finally{ imageBtn.disabled=false; imageBtn.textContent=old; }
+    });
+  }
+  if(shareBtn && !shareBtn.dataset.bound){
+    shareBtn.dataset.bound='1';
+    shareBtn.addEventListener('click',async()=>{
+      if(!BRC_ADMIN_ACTIVE) return;
+      try{ const msg=await brcShareOrSaveAdminSocialImage(); if(status) status.textContent=msg; }
+      catch(err){ if(err?.name!=='AbortError' && status) status.textContent=`画像保存エラー: ${err?.message||err}`; }
+    });
+  }
+  if(gen && !gen.dataset.bound){
+    gen.dataset.bound='1';
+    gen.addEventListener('click',async()=>{
+      if(!BRC_ADMIN_ACTIVE) return;
+      const old=gen.textContent; gen.disabled=true; gen.textContent='AI分析中…';
+      if(status) status.textContent='AIがこのレースで投稿する価値のあるポイントを分析しています。';
+      try{
+        const out=await brcBuildAdminThreadsPostAI();
+        if(ta) ta.value=out.text||'';
+        if(status) status.textContent=out.status||'';
+      }catch(err){
+        // AI Workerが未設定・一時障害でも従来のローカル生成は使えるようにする。
+        const fallback=brcBuildAdminThreadsPost();
+        if(ta) ta.value=fallback.text||'';
+        if(status) status.textContent=`AI生成に接続できないため従来方式で作成しました（${err?.message||err}）。`;
+      }finally{ gen.disabled=false; gen.textContent=old; }
+    });
+  }
+  if(copy && !copy.dataset.bound){
+    copy.dataset.bound='1';
+    copy.addEventListener('click',async()=>{
+      if(!BRC_ADMIN_ACTIVE) return;
+      const text=String(ta?.value||'');
+      if(!text){ if(status) status.textContent='先に投稿文を作成してください。'; return; }
+      try{
+        await navigator.clipboard.writeText(text);
+        if(status) status.textContent='コピーしました。';
+      }catch(_){
+        if(ta){ ta.focus(); ta.select(); }
+        let ok=false; try{ ok=document.execCommand('copy'); }catch(_e){}
+        if(status) status.textContent=ok?'コピーしました。':'文章を選択したので、端末のコピー操作を使ってください。';
+      }
+    });
+  }
 }
 
 // ---- BRC研究室（管理者限定・仮実装 V2） ----
@@ -6984,7 +6857,46 @@ const BRC_LIVE_EXHIBITION_POLL_NEAR_MS = 15 * 1000;
 const BRC_LIVE_EXHIBITION_POLL_FINAL_MS = 10 * 1000;
 const BRC_LIVE_EXHIBITION_FINAL_MIN = 5;
 const BRC_LIVE_EXHIBITION_NEAR_MIN = 15;
-const BRC_EXHIBITION_ADJUSTMENT_VERSION = 'timex-venue-shrink-2024build-2025val-v1-20260828';
+const BRC_EXHIBITION_ADJUSTMENT_VERSION = 'timex-v2-venue-course-band02-2024build-2025tuned-ooschecked-20260904';
+// TimeX v2 preview: 2023-24探索/構築 → 2025固定調整 → 2026完全OOS確認。
+// 確率補正は「会場×コース×6艇平均との差0.2帯」の実測着率差を使用。
+// 生の相対差表示は従来どおり0.1秒へ丸めて残す。v1は比較用としてコード内に保持。
+const BRC_TIMEX_ENGINE_DEFAULT = 'v2';
+const BRC_TIMEX_V2_EFFECT_PP = {"01":{"1":{"~-0.6":[-19.53252,-2.299709,2.495553,-19.336636,0],"-0.6~-0.4":[-18.33335,0.538679,2.972386,-14.822286,0],"-0.4~-0.2":[-18.875705,3.920593,4.294356,-10.660795,0],"-0.2~0":[-10.802391,1.244936,1.558612,-7.998842,0],"0~0.2":[-5.4121,1.5847,0.8693,-2.9581,0],"0.2~0.4":[-2.781179,0.933931,0.017378,-1.829867,0],"0.4~0.6":[0.499184,0.341447,-0.001159,0.839472,0],"0.6~":[8.587656,-2.100791,-1.064652,5.422253,0]},"2":{"~-0.6":[-5.067621,-8.87948,-0.671655,-14.61877,0],"-0.6~-0.4":[-5.702367,-5.530376,-1.91259,-13.145273,0],"-0.4~-0.2":[-3.865154,-5.748799,-0.905377,-10.519329,0],"-0.2~0":[-3.085212,-2.068574,-0.117242,-5.271028,0],"0~0.2":[-0.2619,0.4645,-0.0359,0.1667,0],"0.2~0.4":[1.715156,1.19592,1.530378,4.441454,0],"0.4~0.6":[4.662652,5.043887,0.458465,10.165004,0],"0.6~":[9.566087,5.777151,-0.660463,14.68279,0]},"3":{"~-0.6":[-4.58777,-6.509109,-2.387179,-13.484059,0],"-0.6~-0.4":[-5.082208,-3.512282,-2.64889,-11.243321,0],"-0.4~-0.2":[-3.837711,-3.25311,-0.243248,-7.334069,0],"-0.2~0":[-2.195429,-0.299731,-0.591662,-3.086822,0],"0~0.2":[0.6165,1.8754,1.4177,3.9096,0],"0.2~0.4":[2.628083,2.690004,1.24287,6.560968,0],"0.4~0.6":[6.597265,4.185413,1.090123,11.872801,0],"0.6~":[13.220748,3.080802,0.53227,16.833845,0]},"4":{"~-0.6":[-4.016912,-4.398359,-4.710396,-13.125596,0],"-0.6~-0.4":[-3.695026,-5.028951,-3.147877,-11.871897,0],"-0.4~-0.2":[-3.128085,-3.167796,-1.066185,-7.362111,0],"-0.2~0":[-1.46344,-1.333839,0.083567,-2.713712,0],"0~0.2":[2.0722,2.3448,0.1356,4.5527,0],"0.2~0.4":[2.101035,4.453759,2.739901,9.294695,0],"0.4~0.6":[5.321104,5.940477,4.001761,15.263342,0],"0.6~":[14.059006,7.112459,-0.071178,21.100292,0]},"5":{"~-0.6":[-2.923146,-5.573743,-5.822239,-14.319163,0],"-0.6~-0.4":[-2.774371,-2.609975,-2.451406,-7.835694,0],"-0.4~-0.2":[-1.163242,-1.516968,-2.35595,-5.036114,0],"-0.2~0":[-0.652644,-1.539021,0.41266,-1.779006,0],"0~0.2":[1.0301,2.4486,2.0034,5.4821,0],"0.2~0.4":[2.100752,3.100974,2.824822,8.026548,0],"0.4~0.6":[3.597784,5.286693,5.269346,14.153824,0],"0.6~":[7.570636,9.831821,3.254873,20.657304,0]},"6":{"~-0.6":[-1.104469,-3.271636,-5.981004,-10.35708,0],"-0.6~-0.4":[-0.988541,-2.861707,-4.242544,-8.092792,0],"-0.4~-0.2":[-0.514707,-0.822202,-2.253319,-3.590328,0],"-0.2~0":[-0.502177,-0.545785,-1.074223,-2.122086,0],"0~0.2":[0.5378,2.0178,1.8599,4.4155,0],"0.2~0.4":[0.853249,2.866943,4.550363,8.270566,0],"0.4~0.6":[2.067308,3.474164,8.016592,13.557964,0],"0.6~":[3.759775,5.233383,10.017768,19.010981,0]}},"02":{"1":{"~-0.6":[-19.530589,-2.340118,2.487033,-19.353786,4],"-0.6~-0.4":[-18.330713,0.544497,2.950193,-14.819496,10],"-0.4~-0.2":[-18.871383,3.691534,4.284548,-10.835324,30],"-0.2~0":[-10.813617,1.121088,1.60917,-8.359965,61],"0~0.2":[-5.423316,1.472731,0.80395,-3.850636,144],"0.2~0.4":[-2.77305,1.262899,0.016181,-1.118679,216],"0.4~0.6":[0.494748,0.217742,0.057097,0.791827,208],"0.6~":[8.5941,-1.851564,-1.071054,5.923193,342]},"2":{"~-0.6":[-5.070569,-8.792163,-0.670948,-14.623732,18],"-0.6~-0.4":[-5.704826,-5.448846,-1.91047,-13.129411,32],"-0.4~-0.2":[-3.858181,-5.814488,-1.007893,-10.840506,115],"-0.2~0":[-3.092536,-2.21495,0.056339,-4.90201,168],"0~0.2":[-0.269449,0.371052,0.050309,0.175455,218],"0.2~0.4":[1.719077,1.633417,1.371508,4.402275,217],"0.4~0.6":[4.658571,4.829085,0.407472,9.481549,144],"0.6~":[9.565233,5.489392,-0.629289,14.428272,103]},"3":{"~-0.6":[-4.589061,-6.521202,-2.409474,-13.668388,43],"-0.6~-0.4":[-5.087465,-3.872143,-2.609081,-11.726427,71],"-0.4~-0.2":[-3.834341,-3.013476,-0.21788,-6.772508,154],"-0.2~0":[-2.201223,-0.439709,-0.657235,-3.779064,229],"0~0.2":[0.611264,1.818424,1.427858,3.695448,231],"0.2~0.4":[2.633701,3.196101,1.245215,7.437678,166],"0.4~0.6":[6.605121,4.015288,1.059172,11.807764,76],"0.6~":[13.22105,2.907526,0.54738,16.694114,45]},"4":{"~-0.6":[-4.020256,-4.497783,-4.654618,-13.107709,68],"-0.6~-0.4":[-3.699941,-4.913219,-3.086998,-11.611662,113],"-0.4~-0.2":[-3.129023,-3.034163,-1.070128,-7.244119,181],"-0.2~0":[-1.473868,-1.450036,0.123405,-3.058364,196],"0~0.2":[2.075315,2.341447,0.106829,4.526688,228],"0.2~0.4":[2.11547,4.329313,2.775233,9.860319,135],"0.4~0.6":[5.331104,5.851979,3.923011,15.150411,67],"0.6~":[14.05208,7.287743,-0.123535,20.767918,27]},"5":{"~-0.6":[-2.923967,-5.578335,-5.851642,-14.507159,84],"-0.6~-0.4":[-2.775953,-2.529732,-2.384667,-7.462502,114],"-0.4~-0.2":[-1.164095,-1.303947,-2.317468,-4.609364,179],"-0.2~0":[-0.649188,-1.269803,0.349904,-1.599863,240],"0~0.2":[1.028057,1.975567,2.039111,4.967418,200],"0.2~0.4":[2.100387,2.936371,2.821199,7.779105,112],"0.4~0.6":[3.598215,5.251889,5.24728,14.013449,64],"0.6~":[7.57414,9.956419,3.225769,20.817626,22]},"6":{"~-0.6":[-1.106912,-3.144197,-5.987611,-10.318668,118],"-0.6~-0.4":[-0.991275,-2.706565,-4.221202,-7.890263,119],"-0.4~-0.2":[-0.514949,-0.919126,-2.243517,-3.677257,189],"-0.2~0":[-0.498832,-0.642259,-1.146123,-2.462881,197],"0~0.2":[0.537896,1.816303,2.041047,5.021849,183],"0.2~0.4":[0.855811,2.958083,4.509393,8.28734,122],"0.4~0.6":[2.069988,3.40277,7.928522,13.122688,62],"0.6~":[3.756881,5.299025,10.042211,19.105887,25]}},"03":{"1":{"~-0.6":[-19.53252,-2.299709,2.495553,-19.336636,0],"-0.6~-0.4":[-18.33335,0.538679,2.972386,-14.822286,0],"-0.4~-0.2":[-18.875705,3.920593,4.294356,-10.660795,0],"-0.2~0":[-10.802391,1.244936,1.558612,-7.998842,0],"0~0.2":[-5.4121,1.5847,0.8693,-2.9581,0],"0.2~0.4":[-2.781179,0.933931,0.017378,-1.829867,0],"0.4~0.6":[0.499184,0.341447,-0.001159,0.839472,0],"0.6~":[8.587656,-2.100791,-1.064652,5.422253,0]},"2":{"~-0.6":[-5.067621,-8.87948,-0.671655,-14.61877,0],"-0.6~-0.4":[-5.702367,-5.530376,-1.91259,-13.145273,0],"-0.4~-0.2":[-3.865154,-5.748799,-0.905377,-10.519329,0],"-0.2~0":[-3.085212,-2.068574,-0.117242,-5.271028,0],"0~0.2":[-0.2619,0.4645,-0.0359,0.1667,0],"0.2~0.4":[1.715156,1.19592,1.530378,4.441454,0],"0.4~0.6":[4.662652,5.043887,0.458465,10.165004,0],"0.6~":[9.566087,5.777151,-0.660463,14.68279,0]},"3":{"~-0.6":[-4.58777,-6.509109,-2.387179,-13.484059,0],"-0.6~-0.4":[-5.082208,-3.512282,-2.64889,-11.243321,0],"-0.4~-0.2":[-3.837711,-3.25311,-0.243248,-7.334069,0],"-0.2~0":[-2.195429,-0.299731,-0.591662,-3.086822,0],"0~0.2":[0.6165,1.8754,1.4177,3.9096,0],"0.2~0.4":[2.628083,2.690004,1.24287,6.560968,0],"0.4~0.6":[6.597265,4.185413,1.090123,11.872801,0],"0.6~":[13.220748,3.080802,0.53227,16.833845,0]},"4":{"~-0.6":[-4.016912,-4.398359,-4.710396,-13.125596,0],"-0.6~-0.4":[-3.695026,-5.028951,-3.147877,-11.871897,0],"-0.4~-0.2":[-3.128085,-3.167796,-1.066185,-7.362111,0],"-0.2~0":[-1.46344,-1.333839,0.083567,-2.713712,0],"0~0.2":[2.0722,2.3448,0.1356,4.5527,0],"0.2~0.4":[2.101035,4.453759,2.739901,9.294695,0],"0.4~0.6":[5.321104,5.940477,4.001761,15.263342,0],"0.6~":[14.059006,7.112459,-0.071178,21.100292,0]},"5":{"~-0.6":[-2.923146,-5.573743,-5.822239,-14.319163,0],"-0.6~-0.4":[-2.774371,-2.609975,-2.451406,-7.835694,0],"-0.4~-0.2":[-1.163242,-1.516968,-2.35595,-5.036114,0],"-0.2~0":[-0.652644,-1.539021,0.41266,-1.779006,0],"0~0.2":[1.0301,2.4486,2.0034,5.4821,0],"0.2~0.4":[2.100752,3.100974,2.824822,8.026548,0],"0.4~0.6":[3.597784,5.286693,5.269346,14.153824,0],"0.6~":[7.570636,9.831821,3.254873,20.657304,0]},"6":{"~-0.6":[-1.104469,-3.271636,-5.981004,-10.35708,0],"-0.6~-0.4":[-0.988541,-2.861707,-4.242544,-8.092792,0],"-0.4~-0.2":[-0.514707,-0.822202,-2.253319,-3.590328,0],"-0.2~0":[-0.502177,-0.545785,-1.074223,-2.122086,0],"0~0.2":[0.5378,2.0178,1.8599,4.4155,0],"0.2~0.4":[0.853249,2.866943,4.550363,8.270566,0],"0.4~0.6":[2.067308,3.474164,8.016592,13.557964,0],"0.6~":[3.759775,5.233383,10.017768,19.010981,0]}},"04":{"1":{"~-0.6":[-19.534117,-2.325149,2.538635,-19.211033,8],"-0.6~-0.4":[-18.328729,0.523061,2.960265,-14.711762,11],"-0.4~-0.2":[-18.868847,3.820254,4.316187,-10.393803,32],"-0.2~0":[-10.805908,1.519972,1.541938,-7.862639,82],"0~0.2":[-5.402531,1.238005,0.830468,-3.233731,182],"0.2~0.4":[-2.775514,0.90578,-0.084496,-2.136165,218],"0.4~0.6":[0.495941,0.483143,0.031486,1.056228,219],"0.6~":[8.584661,-2.090874,-1.017111,5.543935,296]},"2":{"~-0.6":[-5.070417,-9.001349,-0.617234,-14.612206,25],"-0.6~-0.4":[-5.701996,-5.405684,-1.970144,-13.263519,52],"-0.4~-0.2":[-3.86616,-5.555377,-0.814534,-9.858349,124],"-0.2~0":[-3.084205,-1.697428,-0.117883,-4.760306,194],"0~0.2":[-0.267235,0.127556,-0.051695,-0.528711,236],"0.2~0.4":[1.71311,1.633881,1.47792,4.681744,205],"0.4~0.6":[4.665359,4.588077,0.479585,9.778948,139],"0.6~":[9.570561,5.633543,-0.70943,14.425226,73]},"3":{"~-0.6":[-4.592162,-6.350689,-2.399749,-13.519121,54],"-0.6~-0.4":[-5.082449,-3.691781,-2.619728,-11.342846,88],"-0.4~-0.2":[-3.836818,-2.896936,-0.344896,-7.325677,177],"-0.2~0":[-2.209913,-0.346318,-0.516576,-3.32252,210],"0~0.2":[0.623242,1.545327,1.344096,3.38925,238],"0.2~0.4":[2.629527,2.828694,1.259477,6.875346,155],"0.4~0.6":[6.598114,4.012854,1.173032,12.099164,84],"0.6~":[13.233307,3.142315,0.500098,17.266011,42]},"4":{"~-0.6":[-4.024131,-4.304615,-4.720464,-13.34489,74],"-0.6~-0.4":[-3.696432,-4.779686,-3.168352,-11.704577,93],"-0.4~-0.2":[-3.121685,-3.358623,-1.085212,-7.458791,158],"-0.2~0":[-1.466574,-1.623456,0.189737,-2.701783,212],"0~0.2":[2.080185,2.094771,0.132288,4.503353,237],"0.2~0.4":[2.093767,4.645953,2.706002,9.106737,163],"0.4~0.6":[5.322892,5.812946,3.959348,14.953746,82],"0.6~":[14.057312,7.246382,-0.051552,21.309656,29]},"5":{"~-0.6":[-2.925128,-5.619712,-5.777743,-14.233607,76],"-0.6~-0.4":[-2.77695,-2.807089,-2.463089,-8.255299,98],"-0.4~-0.2":[-1.174016,-1.502242,-2.206642,-4.707011,178],"-0.2~0":[-0.652782,-1.937859,0.424154,-2.241301,226],"0~0.2":[1.035017,2.324531,1.987936,5.430167,200],"0.2~0.4":[2.109391,3.582611,2.654051,8.150722,151],"0.4~0.6":[3.599101,5.073543,5.266061,13.91088,79],"0.6~":[7.566126,10.063539,3.193819,20.462392,40]},"6":{"~-0.6":[-1.107312,-3.512174,-6.020765,-10.979404,110],"-0.6~-0.4":[-0.993353,-2.93857,-4.332909,-8.83288,105],"-0.4~-0.2":[-0.517942,-0.692435,-2.230792,-3.435804,165],"-0.2~0":[-0.502098,-0.462024,-1.050225,-1.899168,210],"0~0.2":[0.534159,1.564436,1.976511,4.249353,203],"0.2~0.4":[0.855533,2.982241,4.469571,8.11429,139],"0.4~0.6":[2.072205,3.684559,8.011087,14.002246,83],"0.6~":[3.764961,5.273773,10.021586,19.299947,33]}},"05":{"1":{"~-0.6":[-19.534475,-2.326019,2.505539,-19.401904,3],"-0.6~-0.4":[-18.331688,0.41264,2.980221,-14.878444,12],"-0.4~-0.2":[-18.873498,4.049984,4.231798,-10.723513,29],"-0.2~0":[-10.796437,0.927034,1.556997,-8.183736,64],"0~0.2":[-5.413844,1.161502,0.778781,-4.022251,124],"0.2~0.4":[-2.782636,1.037377,0.080784,-1.450721,197],"0.4~0.6":[0.501448,0.532839,-0.030162,1.031275,230],"0.6~":[8.566663,-1.63612,-0.961789,5.761163,390]},"2":{"~-0.6":[-5.069838,-8.862966,-0.654425,-14.599522,22],"-0.6~-0.4":[-5.702705,-5.429531,-1.937016,-13.153083,46],"-0.4~-0.2":[-3.866467,-6.011837,-0.885753,-10.81649,107],"-0.2~0":[-3.071094,-2.07992,-0.132381,-4.834635,186],"0~0.2":[-0.272276,0.853511,-0.086969,0.047655,209],"0.2~0.4":[1.714672,1.014617,1.538998,4.231996,238],"0.4~0.6":[4.651416,4.832273,0.490577,9.617754,148],"0.6~":[9.566792,5.812759,-0.667838,14.718767,93]},"3":{"~-0.6":[-4.583217,-6.5618,-2.431286,-13.593351,57],"-0.6~-0.4":[-5.085658,-3.209072,-2.663527,-11.057073,88],"-0.4~-0.2":[-3.843055,-3.193913,-0.151929,-7.019212,165],"-0.2~0":[-2.197886,-0.816148,-0.626272,-4.003771,201],"0~0.2":[0.617275,2.220184,1.316989,3.912309,236],"0.2~0.4":[2.632061,2.250311,1.299608,6.411646,188],"0.4~0.6":[6.60378,4.298445,1.108171,12.372053,86],"0.6~":[13.220206,3.232109,0.537839,17.040463,28]},"4":{"~-0.6":[-4.020097,-4.301786,-4.700128,-13.075409,74],"-0.6~-0.4":[-3.703779,-4.703746,-3.065204,-11.379286,107],"-0.4~-0.2":[-3.127227,-2.830564,-1.039506,-6.768183,183],"-0.2~0":[-1.447875,-1.876963,-0.056572,-3.497756,236],"0~0.2":[2.068748,2.347296,0.218526,4.818461,210],"0.2~0.4":[2.096972,4.27814,2.743245,8.927156,139],"0.4~0.6":[5.320075,5.896441,3.979518,15.051158,68],"0.6~":[14.064431,7.154781,-0.08597,21.304427,32]},"5":{"~-0.6":[-2.924644,-5.463212,-5.906991,-14.658271,98],"-0.6~-0.4":[-2.773266,-2.564606,-2.388548,-7.421589,111],"-0.4~-0.2":[-1.160922,-1.913157,-2.407766,-5.708741,175],"-0.2~0":[-0.647695,-1.518079,0.521344,-1.066268,220],"0~0.2":[1.026237,2.157597,1.924383,4.595737,205],"0.2~0.4":[2.094959,3.323103,2.87204,8.324107,135],"0.4~0.6":[3.594396,5.399722,5.24598,14.045887,65],"0.6~":[7.575054,9.913463,3.258568,20.968953,40]},"6":{"~-0.6":[-1.104584,-3.199309,-5.995485,-10.33805,152],"-0.6~-0.4":[-0.985048,-2.959104,-4.265906,-8.198751,133],"-0.4~-0.2":[-0.514856,-0.964293,-2.269696,-3.856903,171],"-0.2~0":[-0.500882,-0.443396,-1.093657,-2.035288,208],"0~0.2":[0.536324,2.029987,1.87647,4.455827,164],"0.2~0.4":[0.854034,2.74964,4.648004,8.627921,130],"0.4~0.6":[2.067514,3.66589,8.03687,13.924491,59],"0.6~":[3.75671,5.250714,10.016978,18.901685,32]}},"06":{"1":{"~-0.6":[-19.534564,-2.297303,2.50139,-19.389861,6],"-0.6~-0.4":[-18.332781,0.564155,2.939646,-14.936351,19],"-0.4~-0.2":[-18.877901,3.974224,4.310741,-10.595758,32],"-0.2~0":[-10.81211,1.218275,1.603619,-8.194372,84],"0~0.2":[-5.393214,1.581433,0.821378,-2.487947,181],"0.2~0.4":[-2.797716,1.048336,0.110633,-1.845028,233],"0.4~0.6":[0.523848,-0.095482,-0.119989,0.604438,285],"0.6~":[8.586706,-1.898052,-1.047499,5.720711,327]},"2":{"~-0.6":[-5.065775,-8.73577,-0.692204,-14.458333,35],"-0.6~-0.4":[-5.694545,-5.67518,-1.917262,-13.045352,74],"-0.4~-0.2":[-3.864592,-5.729607,-0.830997,-10.106126,128],"-0.2~0":[-3.098049,-1.705784,-0.059761,-5.003952,211],"0~0.2":[-0.260427,0.330652,-0.06623,-0.090509,253],"0.2~0.4":[1.710993,0.863771,1.537931,3.902047,233],"0.4~0.6":[4.665357,5.180494,0.377991,10.054672,155],"0.6~":[9.567603,5.89498,-0.673262,14.83183,78]},"3":{"~-0.6":[-4.584968,-6.459353,-2.391074,-13.324036,64],"-0.6~-0.4":[-5.083268,-3.601299,-2.731296,-11.81618,92],"-0.4~-0.2":[-3.839288,-3.001588,-0.16502,-6.694831,178],"-0.2~0":[-2.200278,-0.033057,-0.634811,-3.117161,248],"0~0.2":[0.605765,2.082855,1.374225,3.600434,270],"0.2~0.4":[2.626974,2.4246,1.273302,6.322975,167],"0.4~0.6":[6.618943,3.805108,1.080771,12.184929,100],"0.6~":[13.217388,2.914846,0.585429,16.75093,48]},"4":{"~-0.6":[-3.998364,-4.473381,-4.701612,-12.42238,55],"-0.6~-0.4":[-3.689845,-5.133672,-3.033948,-11.24016,110],"-0.4~-0.2":[-3.123327,-3.386679,-1.09884,-7.623007,201],"-0.2~0":[-1.46503,-1.429683,0.063489,-2.984835,245],"0~0.2":[2.06133,2.550684,0.01729,3.892436,262],"0.2~0.4":[2.091899,4.449423,2.778324,9.131743,182],"0.4~0.6":[5.320945,5.815246,4.024373,15.208186,77],"0.6~":[14.048175,7.318295,-0.086785,20.84262,35]},"5":{"~-0.6":[-2.928253,-5.63961,-5.868827,-14.845418,83],"-0.6~-0.4":[-2.77589,-2.447084,-2.496406,-7.906976,106],"-0.4~-0.2":[-1.169708,-1.760734,-2.176908,-4.738998,185],"-0.2~0":[-0.660782,-1.859023,0.330297,-2.86304,229],"0~0.2":[1.031495,2.261864,1.95657,5.079303,256],"0.2~0.4":[2.113672,3.443024,2.797465,8.816902,185],"0.4~0.6":[3.59641,5.314114,5.262264,14.098597,80],"0.6~":[7.57183,9.752244,3.252566,20.590782,43]},"6":{"~-0.6":[-1.103744,-2.972846,-6.071384,-10.386016,120],"-0.6~-0.4":[-0.990023,-2.938703,-4.286746,-8.469211,119],"-0.4~-0.2":[-0.515064,-0.625726,-2.2908,-3.527048,196],"-0.2~0":[-0.498062,-0.603949,-0.979045,-1.615851,256],"0~0.2":[0.540032,1.733314,1.949838,4.551091,224],"0.2~0.4":[0.849559,2.788338,4.542971,7.994022,157],"0.4~0.6":[2.06869,3.434347,8.004305,13.499277,62],"0.6~":[3.756304,5.135969,10.01791,18.737568,33]}},"07":{"1":{"~-0.6":[-19.531395,-2.28594,2.485493,-19.324545,6],"-0.6~-0.4":[-18.337083,0.656413,2.991023,-14.724001,7],"-0.4~-0.2":[-18.867917,3.829183,4.295306,-10.454061,39],"-0.2~0":[-10.804819,1.290419,1.53505,-8.154389,86],"0~0.2":[-5.400145,1.203781,0.86919,-2.998517,152],"0.2~0.4":[-2.781187,0.511795,0.055212,-2.195884,245],"0.4~0.6":[0.495419,0.427952,-0.036888,0.647647,220],"0.6~":[8.58708,-1.562803,-1.072269,6.047199,323]},"2":{"~-0.6":[-5.063357,-8.954109,-0.659409,-14.476375,36],"-0.6~-0.4":[-5.703798,-5.353796,-1.906766,-12.94224,62],"-0.4~-0.2":[-3.870015,-5.990166,-0.855354,-10.775735,120],"-0.2~0":[-3.078352,-1.896595,-0.122829,-4.825793,206],"0~0.2":[-0.263333,0.385365,-0.16796,-0.594049,241],"0.2~0.4":[1.71171,1.285245,1.565802,4.597212,201],"0.4~0.6":[4.658131,4.68179,0.562552,10.030441,124],"0.6~":[9.56937,6.271465,-0.731561,15.102512,88]},"3":{"~-0.6":[-4.589355,-6.52028,-2.309399,-13.162887,53],"-0.6~-0.4":[-5.08331,-3.154251,-2.733308,-11.241914,98],"-0.4~-0.2":[-3.835662,-3.738511,-0.25888,-7.960365,163],"-0.2~0":[-2.21329,0.412785,-0.595001,-2.836611,221],"0~0.2":[0.620143,1.631747,1.390099,3.602058,243],"0.2~0.4":[2.642991,2.180421,1.284544,6.66457,162],"0.4~0.6":[6.601703,4.037319,1.138542,12.098329,91],"0.6~":[13.217333,3.34469,0.478819,16.765559,47]},"4":{"~-0.6":[-4.013925,-4.343184,-4.716444,-12.963701,62],"-0.6~-0.4":[-3.688593,-5.090798,-3.128707,-11.600437,89],"-0.4~-0.2":[-3.137616,-3.182391,-0.998447,-7.412437,184],"-0.2~0":[-1.461992,-1.646772,-0.034883,-3.612216,228],"0~0.2":[2.066024,2.134331,0.10222,3.908853,242],"0.2~0.4":[2.10742,4.71679,2.797353,10.157859,148],"0.4~0.6":[5.321302,6.199467,3.989943,15.551281,84],"0.6~":[14.050484,6.925735,-0.046953,20.626847,41]},"5":{"~-0.6":[-2.921723,-5.752749,-5.822236,-14.497693,74],"-0.6~-0.4":[-2.771081,-2.517082,-2.501597,-7.834585,124],"-0.4~-0.2":[-1.168305,-1.722019,-2.427432,-5.8268,190],"-0.2~0":[-0.652505,-1.386282,0.499584,-1.173621,224],"0~0.2":[1.02728,2.598243,1.982153,5.471311,202],"0.2~0.4":[2.100651,2.832688,2.837771,7.738416,164],"0.4~0.6":[3.598564,5.417818,5.303071,14.529666,68],"0.6~":[7.570815,9.773289,3.226767,20.44099,32]},"6":{"~-0.6":[-1.107238,-3.273444,-5.97411,-10.432893,117],"-0.6~-0.4":[-0.98773,-2.894002,-4.26939,-8.235587,119],"-0.4~-0.2":[-0.510947,-0.772355,-2.166883,-2.968798,170],"-0.2~0":[-0.503233,-0.194994,-0.985376,-1.290069,195],"0~0.2":[0.5338,1.581953,1.809997,3.477082,212],"0.2~0.4":[0.85579,2.657747,4.456609,7.641309,148],"0.4~0.6":[2.066913,3.462614,7.986693,13.375667,73],"0.6~":[3.758457,5.324273,9.988732,18.925897,44]}},"08":{"1":{"~-0.6":[-19.530984,-2.309291,2.482104,-19.355118,8],"-0.6~-0.4":[-18.336716,0.566325,2.987878,-14.845499,9],"-0.4~-0.2":[-18.883206,4.043948,4.300309,-10.778464,29],"-0.2~0":[-10.795876,1.135127,1.612704,-7.606789,77],"0~0.2":[-5.411917,1.796805,0.846934,-2.785226,149],"0.2~0.4":[-2.788839,0.899611,0.080087,-1.858352,230],"0.4~0.6":[0.492844,0.439416,-0.028564,0.607276,218],"0.6~":[8.609868,-2.403663,-1.150052,5.414269,320]},"2":{"~-0.6":[-5.0625,-8.810914,-0.679734,-14.356128,25],"-0.6~-0.4":[-5.706027,-5.478909,-1.911433,-13.221273,59],"-0.4~-0.2":[-3.860982,-5.959483,-0.883342,-10.524069,132],"-0.2~0":[-3.087177,-2.05748,-0.084319,-5.174123,187],"0~0.2":[-0.278122,0.860268,-0.068585,-0.059243,236],"0.2~0.4":[1.711323,1.03115,1.522091,4.049025,195],"0.4~0.6":[4.677845,4.862593,0.486301,10.652688,126],"0.6~":[9.565862,5.946329,-0.698392,14.702594,80]},"3":{"~-0.6":[-4.594198,-6.45737,-2.382388,-13.652081,62],"-0.6~-0.4":[-5.077278,-3.319166,-2.698316,-11.043591,72],"-0.4~-0.2":[-3.838906,-3.514597,-0.235941,-7.682788,142],"-0.2~0":[-2.201789,-0.157897,-0.569953,-3.032169,250],"0~0.2":[0.637706,1.585818,1.445348,4.420481,248],"0.2~0.4":[2.620445,2.909881,1.189584,6.296833,151],"0.4~0.6":[6.596874,4.045733,1.11239,11.785951,80],"0.6~":[13.220565,3.11028,0.531337,16.861231,35]},"4":{"~-0.6":[-4.028099,-4.540411,-4.737868,-13.90355,70],"-0.6~-0.4":[-3.69844,-5.06508,-3.185285,-12.242372,91],"-0.4~-0.2":[-3.127533,-3.11507,-0.970508,-6.809067,151],"-0.2~0":[-1.462124,-1.152539,0.056517,-2.559942,217],"0~0.2":[2.065265,2.131289,0.133786,4.020416,228],"0.2~0.4":[2.100951,4.464623,2.713087,9.175832,161],"0.4~0.6":[5.317937,5.935393,4.073418,15.494523,72],"0.6~":[14.0724,6.964015,-0.117997,21.212276,50]},"5":{"~-0.6":[-2.923471,-5.693857,-5.820423,-14.480341,88],"-0.6~-0.4":[-2.775662,-2.737244,-2.423818,-7.915804,102],"-0.4~-0.2":[-1.16172,-1.493831,-2.386793,-5.096593,171],"-0.2~0":[-0.654283,-1.704862,0.411821,-2.056106,208],"0~0.2":[1.028635,2.349403,1.927136,4.948721,230],"0.2~0.4":[2.100454,3.225532,2.840037,8.250342,149],"0.4~0.6":[3.597901,5.506377,5.292229,14.56556,55],"0.6~":[7.571038,9.79195,3.264653,20.673182,37]},"6":{"~-0.6":[-1.10695,-3.179816,-5.954677,-10.202264,115],"-0.6~-0.4":[-0.984791,-2.860579,-4.236706,-7.91264,88],"-0.4~-0.2":[-0.510857,-1.028163,-2.283521,-3.855807,178],"-0.2~0":[-0.505965,-0.773841,-1.073375,-2.546621,231],"0~0.2":[0.536936,2.16401,1.822248,4.394486,198],"0.2~0.4":[0.857118,3.043576,4.529488,8.547778,131],"0.4~0.6":[2.065533,3.377469,8.016525,13.359363,68],"0.6~":[3.75616,5.199209,10.057639,19.021562,31]}},"09":{"1":{"~-0.6":[-19.53252,-2.299709,2.495553,-19.336636,0],"-0.6~-0.4":[-18.33335,0.538679,2.972386,-14.822286,0],"-0.4~-0.2":[-18.875705,3.920593,4.294356,-10.660795,0],"-0.2~0":[-10.802391,1.244936,1.558612,-7.998842,0],"0~0.2":[-5.4121,1.5847,0.8693,-2.9581,0],"0.2~0.4":[-2.781179,0.933931,0.017378,-1.829867,0],"0.4~0.6":[0.499184,0.341447,-0.001159,0.839472,0],"0.6~":[8.587656,-2.100791,-1.064652,5.422253,0]},"2":{"~-0.6":[-5.067621,-8.87948,-0.671655,-14.61877,0],"-0.6~-0.4":[-5.702367,-5.530376,-1.91259,-13.145273,0],"-0.4~-0.2":[-3.865154,-5.748799,-0.905377,-10.519329,0],"-0.2~0":[-3.085212,-2.068574,-0.117242,-5.271028,0],"0~0.2":[-0.2619,0.4645,-0.0359,0.1667,0],"0.2~0.4":[1.715156,1.19592,1.530378,4.441454,0],"0.4~0.6":[4.662652,5.043887,0.458465,10.165004,0],"0.6~":[9.566087,5.777151,-0.660463,14.68279,0]},"3":{"~-0.6":[-4.58777,-6.509109,-2.387179,-13.484059,0],"-0.6~-0.4":[-5.082208,-3.512282,-2.64889,-11.243321,0],"-0.4~-0.2":[-3.837711,-3.25311,-0.243248,-7.334069,0],"-0.2~0":[-2.195429,-0.299731,-0.591662,-3.086822,0],"0~0.2":[0.6165,1.8754,1.4177,3.9096,0],"0.2~0.4":[2.628083,2.690004,1.24287,6.560968,0],"0.4~0.6":[6.597265,4.185413,1.090123,11.872801,0],"0.6~":[13.220748,3.080802,0.53227,16.833845,0]},"4":{"~-0.6":[-4.016912,-4.398359,-4.710396,-13.125596,0],"-0.6~-0.4":[-3.695026,-5.028951,-3.147877,-11.871897,0],"-0.4~-0.2":[-3.128085,-3.167796,-1.066185,-7.362111,0],"-0.2~0":[-1.46344,-1.333839,0.083567,-2.713712,0],"0~0.2":[2.0722,2.3448,0.1356,4.5527,0],"0.2~0.4":[2.101035,4.453759,2.739901,9.294695,0],"0.4~0.6":[5.321104,5.940477,4.001761,15.263342,0],"0.6~":[14.059006,7.112459,-0.071178,21.100292,0]},"5":{"~-0.6":[-2.923146,-5.573743,-5.822239,-14.319163,0],"-0.6~-0.4":[-2.774371,-2.609975,-2.451406,-7.835694,0],"-0.4~-0.2":[-1.163242,-1.516968,-2.35595,-5.036114,0],"-0.2~0":[-0.652644,-1.539021,0.41266,-1.779006,0],"0~0.2":[1.0301,2.4486,2.0034,5.4821,0],"0.2~0.4":[2.100752,3.100974,2.824822,8.026548,0],"0.4~0.6":[3.597784,5.286693,5.269346,14.153824,0],"0.6~":[7.570636,9.831821,3.254873,20.657304,0]},"6":{"~-0.6":[-1.104469,-3.271636,-5.981004,-10.35708,0],"-0.6~-0.4":[-0.988541,-2.861707,-4.242544,-8.092792,0],"-0.4~-0.2":[-0.514707,-0.822202,-2.253319,-3.590328,0],"-0.2~0":[-0.502177,-0.545785,-1.074223,-2.122086,0],"0~0.2":[0.5378,2.0178,1.8599,4.4155,0],"0.2~0.4":[0.853249,2.866943,4.550363,8.270566,0],"0.4~0.6":[2.067308,3.474164,8.016592,13.557964,0],"0.6~":[3.759775,5.233383,10.017768,19.010981,0]}},"10":{"1":{"~-0.6":[-19.530681,-2.332026,2.505411,-19.249843,3],"-0.6~-0.4":[-18.331798,0.450294,2.984499,-14.809926,17],"-0.4~-0.2":[-18.878648,3.887618,4.285034,-10.874758,32],"-0.2~0":[-10.802062,1.490681,1.511954,-7.898478,95],"0~0.2":[-5.407619,1.671441,0.835743,-2.837025,139],"0.2~0.4":[-2.764652,0.816629,-0.022622,-1.561592,195],"0.4~0.6":[0.4824,0.696621,-0.03022,0.550482,218],"0.6~":[8.588692,-2.500437,-0.947738,5.466083,335]},"2":{"~-0.6":[-5.068869,-8.882059,-0.605366,-14.327231,32],"-0.6~-0.4":[-5.699121,-5.537198,-1.909807,-13.008446,59],"-0.4~-0.2":[-3.863848,-5.299139,-1.03938,-10.548576,106],"-0.2~0":[-3.089838,-2.560559,-0.087663,-5.93578,190],"0~0.2":[-0.268517,0.492064,-0.061551,-0.155985,225],"0.2~0.4":[1.717026,1.469555,1.469959,4.57654,204],"0.4~0.6":[4.658945,5.235713,0.48247,10.388259,118],"0.6~":[9.569972,5.392969,-0.566631,14.802157,100]},"3":{"~-0.6":[-4.586259,-6.569579,-2.355334,-13.338445,61],"-0.6~-0.4":[-5.081558,-3.471815,-2.614498,-10.993089,95],"-0.4~-0.2":[-3.827558,-3.209734,-0.269194,-7.017072,148],"-0.2~0":[-2.204749,-0.145494,-0.622193,-3.37217,208],"0~0.2":[0.622034,1.814874,1.333191,3.639098,219],"0.2~0.4":[2.631592,2.299958,1.262936,6.286758,147],"0.4~0.6":[6.589571,4.593681,1.065227,11.97919,101],"0.6~":[13.213909,2.869706,0.602558,16.637567,55]},"4":{"~-0.6":[-4.015634,-4.092003,-4.782966,-13.039121,81],"-0.6~-0.4":[-3.690849,-5.331281,-3.109152,-11.909062,103],"-0.4~-0.2":[-3.131261,-3.273188,-1.031752,-7.452305,170],"-0.2~0":[-1.460153,-1.051961,0.164889,-1.848774,206],"0~0.2":[2.069709,2.085683,0.182669,4.350115,212],"0.2~0.4":[2.097664,4.138215,2.740074,8.756293,137],"0.4~0.6":[5.315661,6.020456,3.906876,14.674098,87],"0.6~":[14.061139,7.328289,-0.090511,21.373124,38]},"5":{"~-0.6":[-2.920953,-5.583463,-5.841781,-14.342125,89],"-0.6~-0.4":[-2.774868,-2.294823,-2.482206,-7.598677,100],"-0.4~-0.2":[-1.161278,-1.547573,-2.370819,-5.073755,155],"-0.2~0":[-0.664006,-1.405753,0.440696,-1.892085,202],"0~0.2":[1.031108,2.157411,1.899025,4.664162,239],"0.2~0.4":[2.103432,2.935396,2.859425,8.081983,149],"0.4~0.6":[3.601441,5.344584,5.317878,14.624932,71],"0.6~":[7.567406,9.596956,3.265515,20.268392,29]},"6":{"~-0.6":[-1.102652,-3.329237,-5.980211,-10.358332,120],"-0.6~-0.4":[-0.986977,-2.650646,-4.190158,-7.496571,115],"-0.4~-0.2":[-0.514924,-0.99545,-2.22667,-3.694193,172],"-0.2~0":[-0.500782,-0.688004,-1.076025,-2.262423,195],"0~0.2":[0.533862,2.109369,1.749769,3.861493,178],"0.2~0.4":[0.850254,3.050785,4.601257,8.644936,126],"0.4~0.6":[2.064032,3.29723,8.003779,13.1319,83],"0.6~":[3.763259,5.137741,9.978251,18.822372,45]}},"11":{"1":{"~-0.6":[-19.536867,-2.239932,2.501616,-19.411175,6],"-0.6~-0.4":[-18.33061,0.450444,2.951756,-14.932672,12],"-0.4~-0.2":[-18.886108,3.977536,4.392324,-10.50576,30],"-0.2~0":[-10.796955,1.155206,1.534549,-8.02074,79],"0~0.2":[-5.403862,1.780995,0.796116,-2.744985,144],"0.2~0.4":[-2.752336,0.806025,-0.072621,-1.353657,186],"0.4~0.6":[0.487797,0.576642,-0.009298,0.683297,194],"0.6~":[8.582615,-2.403093,-0.97538,5.265698,260]},"2":{"~-0.6":[-5.068277,-8.954078,-0.703858,-14.913166,27],"-0.6~-0.4":[-5.699494,-5.672595,-1.939041,-13.352195,44],"-0.4~-0.2":[-3.875327,-5.819818,-0.87434,-10.852876,124],"-0.2~0":[-3.079614,-2.016356,-0.149159,-5.145814,161],"0~0.2":[-0.278613,0.844888,-0.092737,-0.223514,205],"0.2~0.4":[1.725321,1.202858,1.591252,5.124916,167],"0.4~0.6":[4.660269,5.133099,0.521976,10.50296,110],"0.6~":[9.57584,5.652479,-0.671058,14.856486,73]},"3":{"~-0.6":[-4.588107,-6.658673,-2.396734,-13.743725,48],"-0.6~-0.4":[-5.08378,-3.254702,-2.581696,-10.629918,83],"-0.4~-0.2":[-3.842406,-3.353612,-0.250874,-7.6807,142],"-0.2~0":[-2.194258,-0.131337,-0.683309,-3.26112,193],"0~0.2":[0.614897,1.921268,1.433877,3.986497,193],"0.2~0.4":[2.641581,2.697595,1.132157,6.547204,145],"0.4~0.6":[6.584164,4.085281,1.201898,11.781872,69],"0.6~":[13.230369,2.912153,0.549124,17.096042,38]},"4":{"~-0.6":[-4.016025,-4.58074,-4.642682,-12.979607,46],"-0.6~-0.4":[-3.693374,-5.202772,-3.239796,-12.497211,88],"-0.4~-0.2":[-3.128389,-3.465559,-1.107328,-7.964126,127],"-0.2~0":[-1.461831,-1.291525,0.132568,-2.368614,200],"0~0.2":[2.067382,2.234388,0.070688,3.927797,202],"0.2~0.4":[2.10319,4.467237,2.757347,9.479781,145],"0.4~0.6":[5.313873,6.308653,4.044632,15.674847,72],"0.6~":[14.058382,7.19737,-0.064561,21.221082,31]},"5":{"~-0.6":[-2.921105,-5.417614,-5.764972,-13.740219,73],"-0.6~-0.4":[-2.771858,-2.723698,-2.473696,-7.99759,96],"-0.4~-0.2":[-1.161222,-1.286613,-2.377541,-4.76665,157],"-0.2~0":[-0.655266,-1.626927,0.323889,-2.409694,189],"0~0.2":[1.026601,1.919066,2.04013,4.843535,178],"0.2~0.4":[2.09654,3.094921,2.833516,7.897291,119],"0.4~0.6":[3.59552,5.513514,5.254398,14.284785,67],"0.6~":[7.574122,9.814056,3.270876,20.861422,32]},"6":{"~-0.6":[-1.104654,-3.214813,-5.918135,-9.973558,92],"-0.6~-0.4":[-0.988941,-3.00741,-4.299312,-8.583274,94],"-0.4~-0.2":[-0.514743,-0.928602,-2.267427,-3.797938,147],"-0.2~0":[-0.498766,-0.644126,-1.044539,-1.980608,177],"0~0.2":[0.533667,1.993177,1.791027,3.901148,179],"0.2~0.4":[0.85046,2.70056,4.565555,8.020388,118],"0.4~0.6":[2.070894,3.479175,8.024655,13.751129,66],"0.6~":[3.758042,5.53414,9.994364,19.214425,38]}},"12":{"1":{"~-0.6":[-19.533704,-2.272067,2.489242,-19.384151,4],"-0.6~-0.4":[-18.333409,0.609478,2.975319,-14.71538,17],"-0.4~-0.2":[-18.874385,4.038366,4.235276,-10.757124,40],"-0.2~0":[-10.803122,1.317492,1.602235,-7.709206,56],"0~0.2":[-5.414029,1.424833,0.961572,-2.783565,105],"0.2~0.4":[-2.767346,0.517326,-0.054877,-2.195912,165],"0.4~0.6":[0.498872,0.17295,0.000891,0.620036,193],"0.6~":[8.565468,-1.583894,-1.068298,5.329951,380]},"2":{"~-0.6":[-5.069697,-8.842854,-0.643562,-14.508956,29],"-0.6~-0.4":[-5.698887,-5.773365,-1.925057,-13.387894,65],"-0.4~-0.2":[-3.865781,-5.884845,-0.853655,-10.463276,100],"-0.2~0":[-3.080645,-1.751134,-0.142538,-4.810238,161],"0~0.2":[-0.273556,0.680324,-0.090135,-0.249566,176],"0.2~0.4":[1.716835,0.553477,1.595313,3.983218,188],"0.4~0.6":[4.652232,5.383577,0.436541,10.087289,97],"0.6~":[9.567399,5.83629,-0.687251,14.679576,144]},"3":{"~-0.6":[-4.581002,-6.142431,-2.361156,-12.601055,83],"-0.6~-0.4":[-5.078299,-3.506229,-2.706338,-11.370096,81],"-0.4~-0.2":[-3.838301,-2.92879,-0.283383,-7.131154,139],"-0.2~0":[-2.18468,-1.050716,-0.53205,-3.374522,193],"0~0.2":[0.615043,1.90525,1.460941,4.102494,158],"0.2~0.4":[2.625242,2.574834,1.313985,6.64976,133],"0.4~0.6":[6.593316,4.018138,1.026251,11.179926,101],"0.6~":[13.201988,3.45346,0.495398,16.380102,72]},"4":{"~-0.6":[-4.025906,-4.420822,-4.680598,-13.361511,99],"-0.6~-0.4":[-3.694427,-5.338277,-3.023126,-11.627529,95],"-0.4~-0.2":[-3.115576,-3.198373,-1.218901,-7.668279,146],"-0.2~0":[-1.454288,-1.381051,0.036448,-2.658915,186],"0~0.2":[2.053782,2.330424,0.186465,4.087994,174],"0.2~0.4":[2.10212,4.378374,2.770193,9.387442,131],"0.4~0.6":[5.322162,6.30884,3.990853,15.734247,83],"0.6~":[14.057204,7.142093,-0.064589,21.097355,46]},"5":{"~-0.6":[-2.922157,-5.577357,-5.707115,-13.718225,120],"-0.6~-0.4":[-2.772318,-2.638255,-2.40447,-7.563878,129],"-0.4~-0.2":[-1.162395,-1.429217,-2.358995,-4.906037,162],"-0.2~0":[-0.650422,-1.673769,0.376992,-2.040822,171],"0~0.2":[1.030538,2.383544,1.983984,5.320491,157],"0.2~0.4":[2.096148,3.149663,2.740856,7.495322,118],"0.4~0.6":[3.597899,5.34238,5.228901,14.025451,63],"0.6~":[7.56993,9.90196,3.309437,21.005658,40]},"6":{"~-0.6":[-1.101332,-3.206579,-5.990099,-10.198916,156],"-0.6~-0.4":[-0.987369,-2.88774,-4.238022,-8.058141,109],"-0.4~-0.2":[-0.511269,-0.667333,-2.228327,-3.136557,147],"-0.2~0":[-0.503199,-0.329846,-1.093104,-1.972363,179],"0~0.2":[0.536022,1.677567,1.836686,3.795008,154],"0.2~0.4":[0.852631,2.727967,4.634116,8.482695,105],"0.4~0.6":[2.063169,3.454937,8.036752,13.468516,62],"0.6~":[3.758887,5.296441,9.962484,18.772415,48]}},"13":{"1":{"~-0.6":[-19.529404,-2.352573,2.50228,-19.239663,6],"-0.6~-0.4":[-18.32923,0.526903,2.961342,-14.721634,7],"-0.4~-0.2":[-18.88113,4.050384,4.314072,-10.61224,24],"-0.2~0":[-10.801869,1.274578,1.533455,-8.067478,65],"0~0.2":[-5.421783,1.742544,0.847746,-3.236166,118],"0.2~0.4":[-2.776873,0.271348,-0.024649,-2.726052,165],"0.4~0.6":[0.487101,0.761893,0.058674,1.216112,170],"0.6~":[8.55688,-1.820885,-1.016139,5.050389,557]},"2":{"~-0.6":[-5.065973,-8.621377,-0.701183,-14.362273,56],"-0.6~-0.4":[-5.70412,-5.575991,-1.894277,-13.183087,78],"-0.4~-0.2":[-3.855756,-5.552149,-0.987047,-10.299951,105],"-0.2~0":[-3.094399,-2.034256,-0.04763,-5.238485,167],"0~0.2":[-0.268313,0.195873,-0.01106,-0.295955,204],"0.2~0.4":[1.704802,0.898332,1.482961,3.460457,212],"0.4~0.6":[4.657458,5.115263,0.457539,10.05212,128],"0.6~":[9.572251,5.834841,-0.609555,15.235845,162]},"3":{"~-0.6":[-4.593603,-6.698549,-2.348587,-13.767888,101],"-0.6~-0.4":[-5.085244,-3.244927,-2.62424,-10.890889,102],"-0.4~-0.2":[-3.840945,-2.998665,-0.309773,-7.445983,165],"-0.2~0":[-2.187243,-0.770411,-0.550154,-3.19372,191],"0~0.2":[0.621369,1.854205,1.498874,4.443025,202],"0.2~0.4":[2.620988,2.556728,1.251295,6.157884,146],"0.4~0.6":[6.593525,4.564349,1.074143,12.141619,110],"0.6~":[13.221733,3.062476,0.423301,16.300803,95]},"4":{"~-0.6":[-4.002315,-4.390162,-4.636767,-12.189039,129],"-0.6~-0.4":[-3.697362,-4.883574,-3.238455,-12.216959,133],"-0.4~-0.2":[-3.131638,-2.834753,-1.107271,-7.264393,158],"-0.2~0":[-1.463304,-1.421917,0.135394,-2.577458,196],"0~0.2":[2.071761,2.574846,0.171552,5.00342,191],"0.2~0.4":[2.094165,4.136793,2.724166,8.539484,130],"0.4~0.6":[5.309847,5.844048,4.034087,14.855569,99],"0.6~":[14.059494,6.784043,-0.055872,20.766391,76]},"5":{"~-0.6":[-2.915854,-5.70865,-5.7769,-14.011159,198],"-0.6~-0.4":[-2.779518,-2.166329,-2.474035,-7.569524,130],"-0.4~-0.2":[-1.159322,-1.490606,-2.375798,-4.951427,181],"-0.2~0":[-0.65314,-1.722707,0.47977,-1.715013,188],"0~0.2":[1.037039,2.153483,1.946483,5.087824,158],"0.2~0.4":[2.098391,3.615266,2.835032,8.656042,120],"0.4~0.6":[3.591274,5.196429,5.31297,13.995398,80],"0.6~":[7.569672,9.7151,3.273158,20.55957,57]},"6":{"~-0.6":[-1.100565,-3.267233,-6.055838,-10.558493,228],"-0.6~-0.4":[-0.987441,-2.783179,-4.129345,-7.397395,145],"-0.4~-0.2":[-0.513057,-0.862509,-2.294844,-3.780534,147],"-0.2~0":[-0.502937,-0.604878,-0.989254,-1.817957,162],"0~0.2":[0.533023,2.101649,1.789983,4.01151,177],"0.2~0.4":[0.860157,3.173171,4.535023,8.862433,122],"0.4~0.6":[2.061783,3.405044,8.05326,13.43146,70],"0.6~":[3.756847,4.974252,10.051458,18.72228,61]}},"14":{"1":{"~-0.6":[-19.534307,-2.267641,2.489034,-19.404555,3],"-0.6~-0.4":[-18.336162,0.435559,2.987862,-14.996005,14],"-0.4~-0.2":[-18.86785,3.910029,4.278724,-10.429868,32],"-0.2~0":[-10.807016,1.169407,1.599467,-8.077057,57],"0~0.2":[-5.416296,1.210216,1.041301,-2.764304,137],"0.2~0.4":[-2.79146,1.207246,0.051984,-1.694078,191],"0.4~0.6":[0.510643,0.394447,-0.106229,0.832755,202],"0.6~":[8.584728,-1.888734,-1.197103,5.017727,359]},"2":{"~-0.6":[-5.063791,-9.060986,-0.695799,-14.825536,33],"-0.6~-0.4":[-5.702253,-5.618984,-1.945996,-13.431397,46],"-0.4~-0.2":[-3.877439,-5.689194,-0.850248,-10.650693,99],"-0.2~0":[-3.084836,-1.712586,-0.228126,-5.325611,186],"0~0.2":[-0.257898,0.705451,-0.077974,0.423878,228],"0.2~0.4":[1.704078,1.183445,1.583458,4.266898,192],"0.4~0.6":[4.679892,4.642727,0.504549,10.541774,117],"0.6~":[9.557495,5.782232,-0.61127,14.594646,94]},"3":{"~-0.6":[-4.589728,-6.651319,-2.326181,-13.437561,62],"-0.6~-0.4":[-5.080227,-3.663141,-2.654182,-11.38869,76],"-0.4~-0.2":[-3.833744,-2.9464,-0.297337,-7.047453,153],"-0.2~0":[-2.190527,-0.607195,-0.506456,-2.904225,211],"0~0.2":[0.617559,1.947541,1.370353,3.8199,218],"0.2~0.4":[2.616377,2.828394,1.323301,6.685009,148],"0.4~0.6":[6.600862,4.301486,0.974217,11.583746,87],"0.6~":[13.220753,3.005571,0.512299,16.630357,40]},"4":{"~-0.6":[-4.016439,-4.323605,-4.687049,-12.888791,69],"-0.6~-0.4":[-3.699381,-5.055635,-3.146518,-12.072602,95],"-0.4~-0.2":[-3.119922,-3.298644,-1.10072,-7.391863,182],"-0.2~0":[-1.474891,-1.282857,0.189946,-2.56683,210],"0~0.2":[2.064994,2.515912,0.164969,4.64554,185],"0.2~0.4":[2.111112,4.166128,2.730705,9.261683,144],"0.4~0.6":[5.323923,6.099126,3.909472,15.115924,71],"0.6~":[14.058413,7.02482,-0.08254,20.900389,39]},"5":{"~-0.6":[-2.922412,-5.289959,-5.880546,-14.212487,84],"-0.6~-0.4":[-2.776054,-2.879259,-2.375502,-7.87701,109],"-0.4~-0.2":[-1.154731,-1.86317,-2.391952,-5.337271,175],"-0.2~0":[-0.648775,-1.418718,0.472036,-1.209974,228],"0~0.2":[1.025319,2.668053,1.985394,5.501617,187],"0.2~0.4":[2.101626,3.18752,2.769577,7.900203,113],"0.4~0.6":[3.593589,5.116148,5.265896,13.741946,66],"0.6~":[7.566953,9.836696,3.278685,20.636573,33]},"6":{"~-0.6":[-1.105977,-3.409957,-6.039233,-10.885645,110],"-0.6~-0.4":[-0.986611,-2.819142,-4.167112,-7.590525,123],"-0.4~-0.2":[-0.515124,-0.902433,-2.186285,-3.387213,171],"-0.2~0":[-0.503066,-0.818522,-1.088434,-2.574567,188],"0~0.2":[0.533607,1.917608,1.926471,4.448064,177],"0.2~0.4":[0.852922,2.986402,4.471721,8.025618,119],"0.4~0.6":[2.06472,3.661814,7.92774,13.244995,60],"0.6~":[3.766375,5.389213,10.038189,19.592207,47]}},"15":{"1":{"~-0.6":[-19.529761,-2.187976,2.485829,-19.123221,7],"-0.6~-0.4":[-18.334662,0.637995,2.962043,-14.80095,7],"-0.4~-0.2":[-18.866019,3.889582,4.287002,-10.336763,32],"-0.2~0":[-10.803133,1.158826,1.515392,-8.359625,84],"0~0.2":[-5.428441,2.094628,0.793883,-3.271329,175],"0.2~0.4":[-2.789507,1.357759,0.026618,-1.542391,250],"0.4~0.6":[0.494874,0.206007,0.094841,0.955284,239],"0.6~":[8.611436,-2.94679,-1.039524,5.255569,353]},"2":{"~-0.6":[-5.064349,-8.927213,-0.68341,-14.607496,36],"-0.6~-0.4":[-5.705737,-5.510497,-1.938033,-13.387717,55],"-0.4~-0.2":[-3.87469,-5.56628,-0.892238,-10.587554,114],"-0.2~0":[-3.084131,-1.950175,-0.22489,-5.582774,218],"0~0.2":[-0.246799,0.207749,-0.061591,0.256784,251],"0.2~0.4":[1.716488,1.173396,1.664045,5.069706,258],"0.4~0.6":[4.656753,4.895336,0.454422,9.724511,132],"0.6~":[9.560614,6.045189,-0.654022,14.847402,83]},"3":{"~-0.6":[-4.591566,-6.520773,-2.365689,-13.544217,49],"-0.6~-0.4":[-5.087969,-3.468488,-2.570746,-11.022315,92],"-0.4~-0.2":[-3.851485,-3.743101,-0.262352,-8.562995,194],"-0.2~0":[-2.18614,-0.05252,-0.600911,-2.485294,251],"0~0.2":[0.623713,1.688832,1.501079,4.315141,236],"0.2~0.4":[2.637354,3.008453,1.015696,6.239111,198],"0.4~0.6":[6.591928,4.299677,1.14688,12.095959,87],"0.6~":[13.227881,2.976675,0.529253,16.974843,40]},"4":{"~-0.6":[-4.019399,-4.488977,-4.692507,-13.25509,66],"-0.6~-0.4":[-3.691281,-4.991824,-3.200717,-11.939409,115],"-0.4~-0.2":[-3.129693,-3.130441,-1.019983,-7.154282,185],"-0.2~0":[-1.467012,-0.969771,0.053781,-2.514388,224],"0~0.2":[2.065597,2.065451,0.245791,4.466103,266],"0.2~0.4":[2.108926,4.26158,2.683147,9.069974,180],"0.4~0.6":[5.318571,5.840799,3.956392,14.80339,86],"0.6~":[14.061426,7.129563,-0.065584,21.252747,25]},"5":{"~-0.6":[-2.92542,-5.626832,-5.88649,-14.800962,92],"-0.6~-0.4":[-2.776501,-2.519491,-2.454331,-7.815686,114],"-0.4~-0.2":[-1.157477,-1.411326,-2.43035,-5.039927,193],"-0.2~0":[-0.657739,-1.267488,0.40582,-1.644025,256],"0~0.2":[1.030812,2.252422,2.051175,5.476448,252],"0.2~0.4":[2.105864,2.411588,2.849212,7.445496,158],"0.4~0.6":[3.597439,5.465151,5.314917,14.608491,62],"0.6~":[7.569099,10.069744,3.257567,20.924469,20]},"6":{"~-0.6":[-1.102787,-3.401759,-6.01861,-10.647324,119],"-0.6~-0.4":[-0.989075,-2.959262,-4.310307,-8.575214,118],"-0.4~-0.2":[-0.515331,-0.979393,-2.177019,-3.453055,187],"-0.2~0":[-0.503473,-0.301961,-1.160384,-2.255814,232],"0~0.2":[0.53652,2.009127,1.854977,4.33441,208],"0.2~0.4":[0.854334,3.178723,4.573808,8.827173,166],"0.4~0.6":[2.068413,3.100863,8.024516,13.152779,74],"0.6~":[3.757547,5.200038,10.064028,19.114798,43]}},"16":{"1":{"~-0.6":[-19.536074,-2.229241,2.487068,-19.438121,5],"-0.6~-0.4":[-18.329463,0.438141,2.989801,-14.699205,8],"-0.4~-0.2":[-18.87623,3.680409,4.29261,-11.009741,25],"-0.2~0":[-10.792117,1.249029,1.51951,-7.774704,57],"0~0.2":[-5.430796,2.146119,0.886256,-2.872742,110],"0.2~0.4":[-2.791966,1.002724,0.018265,-2.143957,159],"0.4~0.6":[0.515469,0.018967,0.002181,1.031735,219],"0.6~":[8.581945,-2.078836,-1.054173,5.302412,316]},"2":{"~-0.6":[-5.065824,-8.841503,-0.655907,-14.410518,34],"-0.6~-0.4":[-5.703581,-5.60584,-1.850707,-12.975169,43],"-0.4~-0.2":[-3.866613,-5.571669,-1.020488,-10.922044,95],"-0.2~0":[-3.078292,-2.111067,-0.142154,-5.185042,158],"0~0.2":[-0.270235,0.33567,0.007415,-0.100466,204],"0.2~0.4":[1.715289,1.195144,1.521134,4.400737,170],"0.4~0.6":[4.667914,4.877017,0.440478,10.062041,124],"0.6~":[9.558633,6.038324,-0.621607,14.923529,71]},"3":{"~-0.6":[-4.583821,-6.389697,-2.392779,-13.193794,52],"-0.6~-0.4":[-5.083898,-3.841578,-2.663684,-11.818526,82],"-0.4~-0.2":[-3.833016,-3.203738,-0.337394,-7.549157,138],"-0.2~0":[-2.169303,-0.158893,-0.623044,-2.085191,185],"0~0.2":[0.611348,2.027196,1.378212,3.72731,184],"0.2~0.4":[2.614531,2.573793,1.337852,6.35442,141],"0.4~0.6":[6.590069,3.954065,1.209611,11.886601,78],"0.6~":[13.215033,3.263195,0.494808,16.64418,39]},"4":{"~-0.6":[-4.016591,-4.439419,-4.769792,-13.467696,72],"-0.6~-0.4":[-3.693206,-4.983151,-3.147014,-11.734331,72],"-0.4~-0.2":[-3.127011,-3.535096,-1.088952,-7.908429,152],"-0.2~0":[-1.466511,-0.33289,0.049194,-1.700325,185],"0~0.2":[2.073807,1.855415,0.132964,3.969719,203],"0.2~0.4":[2.106225,4.352538,2.755402,9.438498,134],"0.4~0.6":[5.317594,5.632583,4.124309,15.343256,60],"0.6~":[14.055268,7.264531,-0.077759,21.110555,21]},"5":{"~-0.6":[-2.922429,-5.712835,-5.810201,-14.411954,77],"-0.6~-0.4":[-2.773178,-2.723614,-2.552678,-8.445232,95],"-0.4~-0.2":[-1.159092,-1.330992,-2.317338,-4.450611,152],"-0.2~0":[-0.650259,-1.666678,0.462698,-1.620992,207],"0~0.2":[1.025259,2.695504,1.984761,5.53125,183],"0.2~0.4":[2.096625,3.215675,2.805271,7.917241,108],"0.4~0.6":[3.601553,5.059825,5.257426,13.947793,51],"0.6~":[7.567478,9.823764,3.294204,20.720818,26]},"6":{"~-0.6":[-1.102285,-3.278358,-5.997298,-10.361039,98],"-0.6~-0.4":[-0.990399,-2.942804,-4.231423,-8.216876,94],"-0.4~-0.2":[-0.514869,-0.815282,-2.262336,-3.630916,140],"-0.2~0":[-0.49988,-0.048149,-1.112278,-1.577114,188],"0~0.2":[0.535086,1.811726,1.7789,3.660961,173],"0.2~0.4":[0.852419,2.565614,4.597086,8.076854,120],"0.4~0.6":[2.068714,3.500756,8.084866,14.002152,56],"0.6~":[3.758352,5.141058,10.019784,18.839314,30]}},"17":{"1":{"~-0.6":[-19.534222,-2.365859,2.497551,-19.487111,8],"-0.6~-0.4":[-18.332219,0.524505,2.936634,-14.981604,20],"-0.4~-0.2":[-18.878539,3.994068,4.220477,-11.062148,45],"-0.2~0":[-10.803767,1.096949,1.54248,-8.329867,80],"0~0.2":[-5.403416,1.524631,0.826253,-2.916658,169],"0.2~0.4":[-2.793765,1.184853,0.06582,-1.734659,244],"0.4~0.6":[0.532442,-0.285679,0.017838,1.335819,209],"0.6~":[8.595954,-1.721028,-1.013589,6.440065,237]},"2":{"~-0.6":[-5.067127,-9.062946,-0.709962,-15.041517,25],"-0.6~-0.4":[-5.709929,-5.335118,-1.898434,-13.124288,61],"-0.4~-0.2":[-3.872453,-5.846089,-0.735319,-10.08946,119],"-0.2~0":[-3.080881,-2.209162,-0.122183,-5.315812,187],"0~0.2":[-0.259759,0.561176,-0.025679,0.41167,262],"0.2~0.4":[1.725769,0.831306,1.496659,4.206617,171],"0.4~0.6":[4.662206,5.96683,0.36791,10.902524,121],"0.6~":[9.565561,5.526122,-0.687441,14.192033,66]},"3":{"~-0.6":[-4.593968,-6.471662,-2.407303,-13.794574,38],"-0.6~-0.4":[-5.08124,-3.623922,-2.714113,-11.683804,70],"-0.4~-0.2":[-3.835458,-3.281845,-0.23361,-7.239383,152],"-0.2~0":[-2.181133,-0.390133,-0.623106,-2.832112,220],"0~0.2":[0.605818,1.646185,1.452201,3.395575,247],"0.2~0.4":[2.62526,2.983931,1.246213,6.851589,157],"0.4~0.6":[6.592938,4.433228,1.093355,12.041714,83],"0.6~":[13.225092,2.784058,0.56455,16.786428,45]},"4":{"~-0.6":[-4.018206,-4.636402,-4.677849,-13.324199,47],"-0.6~-0.4":[-3.696452,-5.115499,-3.222248,-12.419008,79],"-0.4~-0.2":[-3.136828,-3.061326,-1.070469,-7.575104,160],"-0.2~0":[-1.460995,-1.591415,0.03307,-3.189984,228],"0~0.2":[2.071204,2.084832,0.166027,4.324067,200],"0.2~0.4":[2.09696,4.881195,2.807299,10.015271,179],"0.4~0.6":[5.319145,5.860141,3.913773,14.634425,80],"0.6~":[14.066305,7.149009,-0.01708,21.730797,39]},"5":{"~-0.6":[-2.925397,-5.333658,-5.774328,-13.84707,45],"-0.6~-0.4":[-2.777658,-2.802005,-2.492739,-8.42548,95],"-0.4~-0.2":[-1.172454,-1.447159,-2.405301,-5.531291,164],"-0.2~0":[-0.640573,-1.361425,0.320002,-1.54689,238],"0~0.2":[1.025871,1.962645,1.948627,4.446055,208],"0.2~0.4":[2.101921,2.744587,3.019579,8.551158,157],"0.4~0.6":[3.598801,5.392533,5.235695,14.162642,75],"0.6~":[7.569497,9.975754,3.197664,20.502139,30]},"6":{"~-0.6":[-1.106637,-3.259309,-5.987911,-10.460549,104],"-0.6~-0.4":[-0.991244,-2.905012,-4.218335,-8.134189,117],"-0.4~-0.2":[-0.51381,-0.726646,-2.293976,-3.628916,153],"-0.2~0":[-0.505244,-0.91142,-1.056517,-2.619834,214],"0~0.2":[0.53724,2.049911,1.810527,4.202925,195],"0.2~0.4":[0.855619,2.85363,4.609639,8.638025,125],"0.4~0.6":[2.067948,3.501396,8.011406,13.593668,63],"0.6~":[3.762833,5.35646,9.994614,19.179325,41]}},"18":{"1":{"~-0.6":[-19.533727,-2.228533,2.486714,-19.341421,6],"-0.6~-0.4":[-18.338406,0.577777,2.990998,-14.886139,8],"-0.4~-0.2":[-18.879097,3.775503,4.316985,-10.876437,31],"-0.2~0":[-10.804354,1.304247,1.538092,-8.102931,84],"0~0.2":[-5.403531,1.626,0.847763,-2.676669,117],"0.2~0.4":[-2.802195,1.200524,0.077757,-1.974869,195],"0.4~0.6":[0.483921,0.78371,-0.010394,0.809259,218],"0.6~":[8.586833,-2.49593,-1.07478,4.872963,569]},"2":{"~-0.6":[-5.068131,-9.158583,-0.675346,-15.027448,34],"-0.6~-0.4":[-5.698641,-5.314408,-1.92185,-12.758001,68],"-0.4~-0.2":[-3.870046,-6.165979,-0.793153,-10.701932,153],"-0.2~0":[-3.10068,-2.307457,-0.088847,-6.019216,181],"0~0.2":[-0.277137,1.044892,0.11715,1.069715,242],"0.2~0.4":[1.727102,1.452926,1.350569,4.364811,219],"0.4~0.6":[4.670168,4.769157,0.484411,10.218257,156],"0.6~":[9.559483,5.753582,-0.782552,13.82032,175]},"3":{"~-0.6":[-4.579591,-6.691004,-2.37282,-13.325509,98],"-0.6~-0.4":[-5.078997,-3.64231,-2.525439,-10.669508,99],"-0.4~-0.2":[-3.840707,-3.38737,-0.174501,-7.292858,206],"-0.2~0":[-2.193474,-0.497502,-0.602811,-3.321532,239],"0~0.2":[0.621472,1.814227,1.314454,3.53246,236],"0.2~0.4":[2.625107,2.717891,1.202173,6.293472,185],"0.4~0.6":[6.588353,4.612259,1.040754,11.836261,110],"0.6~":[13.220885,3.458788,0.527759,17.314394,55]},"4":{"~-0.6":[-4.016971,-4.443659,-4.764606,-13.452767,133],"-0.6~-0.4":[-3.691115,-4.929514,-3.142683,-11.567955,144],"-0.4~-0.2":[-3.124631,-3.537068,-1.000088,-7.399774,207],"-0.2~0":[-1.472196,-0.886705,0.163192,-2.088825,247],"0~0.2":[2.085135,2.071623,0.062758,4.332275,201],"0.2~0.4":[2.093164,4.20624,2.739242,8.674012,160],"0.4~0.6":[5.326763,6.275709,4.024356,16.044776,80],"0.6~":[14.051863,7.323097,-0.041397,21.238253,56]},"5":{"~-0.6":[-2.927106,-5.410691,-5.841188,-14.349392,155],"-0.6~-0.4":[-2.767265,-2.620621,-2.350421,-7.094401,161],"-0.4~-0.2":[-1.163127,-1.439002,-2.347103,-4.89201,226],"-0.2~0":[-0.662551,-1.294076,0.432467,-1.730457,226],"0~0.2":[1.034705,2.330278,1.838423,4.715809,183],"0.2~0.4":[2.100143,2.842171,2.977385,8.409227,147],"0.4~0.6":[3.598336,5.149822,5.289533,14.099388,73],"0.6~":[7.575067,9.927945,3.194609,20.655739,57]},"6":{"~-0.6":[-1.103587,-3.335116,-5.917071,-10.107655,217],"-0.6~-0.4":[-0.988301,-2.704853,-4.246809,-7.900494,132],"-0.4~-0.2":[-0.516045,-1.019523,-2.23744,-3.819,180],"-0.2~0":[-0.503815,-0.485255,-1.044887,-1.966955,214],"0~0.2":[0.540142,1.859242,1.851471,4.257897,195],"0.2~0.4":[0.852069,2.845749,4.583399,8.359037,149],"0.4~0.6":[2.066643,3.559288,7.994397,13.531153,79],"0.6~":[3.759997,5.352098,9.938407,18.768741,62]}},"19":{"1":{"~-0.6":[-19.532878,-2.328107,2.490412,-19.418104,3],"-0.6~-0.4":[-18.331162,0.528263,2.981517,-14.694859,12],"-0.4~-0.2":[-18.880441,4.01277,4.282564,-10.797841,21],"-0.2~0":[-10.807943,1.724726,1.549131,-7.64051,64],"0~0.2":[-5.405758,1.267507,0.847577,-3.233212,160],"0.2~0.4":[-2.743369,0.479971,-5.7e-05,-1.121673,218],"0.4~0.6":[0.477984,0.269062,0.130743,0.59305,220],"0.6~":[8.565652,-1.744673,-1.137746,4.826657,363]},"2":{"~-0.6":[-5.066767,-8.71666,-0.651806,-14.26318,28],"-0.6~-0.4":[-5.704258,-5.610382,-1.840767,-12.960183,60],"-0.4~-0.2":[-3.869064,-5.691737,-0.97631,-10.947696,118],"-0.2~0":[-3.066158,-2.229963,-0.177779,-5.065027,201],"0~0.2":[-0.273909,0.265493,0.007911,-0.312119,252],"0.2~0.4":[1.715198,1.322108,1.492648,4.426626,202],"0.4~0.6":[4.66013,5.500754,0.387006,10.310298,126],"0.6~":[9.566163,5.577808,-0.559805,14.935264,74]},"3":{"~-0.6":[-4.58804,-6.470573,-2.3789,-13.400432,54],"-0.6~-0.4":[-5.067646,-3.591428,-2.619625,-10.628636,105],"-0.4~-0.2":[-3.837158,-3.171739,-0.319826,-7.576272,163],"-0.2~0":[-2.196259,-0.10811,-0.592071,-2.873321,223],"0~0.2":[0.612389,1.265339,1.344619,2.643701,234],"0.2~0.4":[2.618639,3.238213,1.284205,7.11314,167],"0.4~0.6":[6.604063,4.031345,1.103148,12.009843,77],"0.6~":[13.219422,3.066546,0.582601,17.021977,38]},"4":{"~-0.6":[-4.020524,-4.522256,-4.683807,-13.299521,70],"-0.6~-0.4":[-3.694684,-5.023014,-3.204595,-12.133772,100],"-0.4~-0.2":[-3.136564,-2.695197,-1.035991,-6.924648,162],"-0.2~0":[-1.45111,-1.583826,0.007699,-2.941823,244],"0~0.2":[2.054992,2.41347,0.260171,4.598227,223],"0.2~0.4":[2.09988,4.419086,2.698646,9.00686,160],"0.4~0.6":[5.329809,5.909013,4.022815,15.680729,71],"0.6~":[14.066211,6.858554,-0.09351,20.946988,31]},"5":{"~-0.6":[-2.918708,-5.694557,-5.830003,-14.340221,85],"-0.6~-0.4":[-2.774349,-2.759867,-2.523918,-8.388866,119],"-0.4~-0.2":[-1.161842,-1.833971,-2.19817,-4.643795,187],"-0.2~0":[-0.642257,-1.440511,0.388041,-1.389696,213],"0~0.2":[1.013513,2.543975,2.066476,5.297516,217],"0.2~0.4":[2.100113,3.404509,2.686889,7.730976,162],"0.4~0.6":[3.60239,5.121755,5.228921,13.916841,58],"0.6~":[7.567238,10.000555,3.296844,20.960961,20]},"6":{"~-0.6":[-1.107667,-3.346418,-5.977431,-10.56034,122],"-0.6~-0.4":[-0.988957,-2.758022,-4.285274,-8.188862,83],"-0.4~-0.2":[-0.51486,-0.792792,-2.359399,-4.069001,159],"-0.2~0":[-0.50296,-0.387128,-1.134932,-2.228812,226],"0~0.2":[0.537379,1.88983,1.895454,4.403143,208],"0.2~0.4":[0.851709,2.695155,4.625855,8.356699,145],"0.4~0.6":[2.068324,3.420422,8.038471,13.640551,77],"0.6~":[3.762611,5.116113,10.030695,19.039276,41]}},"20":{"1":{"~-0.6":[-19.53252,-2.299709,2.495553,-19.336636,0],"-0.6~-0.4":[-18.33335,0.538679,2.972386,-14.822286,0],"-0.4~-0.2":[-18.875705,3.920593,4.294356,-10.660795,0],"-0.2~0":[-10.802391,1.244936,1.558612,-7.998842,0],"0~0.2":[-5.4121,1.5847,0.8693,-2.9581,0],"0.2~0.4":[-2.781179,0.933931,0.017378,-1.829867,0],"0.4~0.6":[0.499184,0.341447,-0.001159,0.839472,0],"0.6~":[8.587656,-2.100791,-1.064652,5.422253,0]},"2":{"~-0.6":[-5.067621,-8.87948,-0.671655,-14.61877,0],"-0.6~-0.4":[-5.702367,-5.530376,-1.91259,-13.145273,0],"-0.4~-0.2":[-3.865154,-5.748799,-0.905377,-10.519329,0],"-0.2~0":[-3.085212,-2.068574,-0.117242,-5.271028,0],"0~0.2":[-0.2619,0.4645,-0.0359,0.1667,0],"0.2~0.4":[1.715156,1.19592,1.530378,4.441454,0],"0.4~0.6":[4.662652,5.043887,0.458465,10.165004,0],"0.6~":[9.566087,5.777151,-0.660463,14.68279,0]},"3":{"~-0.6":[-4.58777,-6.509109,-2.387179,-13.484059,0],"-0.6~-0.4":[-5.082208,-3.512282,-2.64889,-11.243321,0],"-0.4~-0.2":[-3.837711,-3.25311,-0.243248,-7.334069,0],"-0.2~0":[-2.195429,-0.299731,-0.591662,-3.086822,0],"0~0.2":[0.6165,1.8754,1.4177,3.9096,0],"0.2~0.4":[2.628083,2.690004,1.24287,6.560968,0],"0.4~0.6":[6.597265,4.185413,1.090123,11.872801,0],"0.6~":[13.220748,3.080802,0.53227,16.833845,0]},"4":{"~-0.6":[-4.016912,-4.398359,-4.710396,-13.125596,0],"-0.6~-0.4":[-3.695026,-5.028951,-3.147877,-11.871897,0],"-0.4~-0.2":[-3.128085,-3.167796,-1.066185,-7.362111,0],"-0.2~0":[-1.46344,-1.333839,0.083567,-2.713712,0],"0~0.2":[2.0722,2.3448,0.1356,4.5527,0],"0.2~0.4":[2.101035,4.453759,2.739901,9.294695,0],"0.4~0.6":[5.321104,5.940477,4.001761,15.263342,0],"0.6~":[14.059006,7.112459,-0.071178,21.100292,0]},"5":{"~-0.6":[-2.923146,-5.573743,-5.822239,-14.319163,0],"-0.6~-0.4":[-2.774371,-2.609975,-2.451406,-7.835694,0],"-0.4~-0.2":[-1.163242,-1.516968,-2.35595,-5.036114,0],"-0.2~0":[-0.652644,-1.539021,0.41266,-1.779006,0],"0~0.2":[1.0301,2.4486,2.0034,5.4821,0],"0.2~0.4":[2.100752,3.100974,2.824822,8.026548,0],"0.4~0.6":[3.597784,5.286693,5.269346,14.153824,0],"0.6~":[7.570636,9.831821,3.254873,20.657304,0]},"6":{"~-0.6":[-1.104469,-3.271636,-5.981004,-10.35708,0],"-0.6~-0.4":[-0.988541,-2.861707,-4.242544,-8.092792,0],"-0.4~-0.2":[-0.514707,-0.822202,-2.253319,-3.590328,0],"-0.2~0":[-0.502177,-0.545785,-1.074223,-2.122086,0],"0~0.2":[0.5378,2.0178,1.8599,4.4155,0],"0.2~0.4":[0.853249,2.866943,4.550363,8.270566,0],"0.4~0.6":[2.067308,3.474164,8.016592,13.557964,0],"0.6~":[3.759775,5.233383,10.017768,19.010981,0]}},"21":{"1":{"~-0.6":[-19.531397,-2.307582,2.494081,-19.307964,1],"-0.6~-0.4":[-18.332861,0.562196,2.965504,-14.806111,4],"-0.4~-0.2":[-18.875224,3.977417,4.304732,-10.509997,11],"-0.2~0":[-10.795487,1.19259,1.55258,-7.813785,36],"0~0.2":[-5.419072,1.755508,0.885461,-2.930171,91],"0.2~0.4":[-2.787103,1.236986,-0.000263,-1.746262,167],"0.4~0.6":[0.497467,0.338897,-0.043704,0.56332,150],"0.6~":[8.583931,-2.529287,-1.008084,5.001289,239]},"2":{"~-0.6":[-5.068586,-8.693966,-0.691814,-14.519289,13],"-0.6~-0.4":[-5.70295,-5.390445,-1.939229,-13.123211,41],"-0.4~-0.2":[-3.860483,-6.049348,-0.951766,-10.960832,92],"-0.2~0":[-3.087126,-2.224356,-0.118909,-5.554953,138],"0~0.2":[-0.256623,0.513047,-0.041001,0.403086,166],"0.2~0.4":[1.711633,1.377458,1.591596,4.843313,121],"0.4~0.6":[4.65619,5.060345,0.503557,10.15596,91],"0.6~":[9.57229,5.829955,-0.668613,14.966426,37]},"3":{"~-0.6":[-4.591817,-6.344454,-2.406057,-13.531533,33],"-0.6~-0.4":[-5.079798,-3.536816,-2.680339,-11.339315,65],"-0.4~-0.2":[-3.844145,-3.592685,-0.10052,-7.321325,118],"-0.2~0":[-2.201134,0.144304,-0.510045,-2.332876,149],"0~0.2":[0.618822,2.049586,1.402078,4.148246,155],"0.2~0.4":[2.62969,2.481316,1.173074,6.003784,105],"0.4~0.6":[6.608126,4.036334,0.996975,11.639834,54],"0.6~":[13.225007,3.010524,0.527114,16.891301,20]},"4":{"~-0.6":[-4.019994,-4.31691,-4.732407,-13.260581,42],"-0.6~-0.4":[-3.691954,-5.078005,-3.131366,-11.726871,53],"-0.4~-0.2":[-3.123089,-3.147885,-1.031755,-6.971744,120],"-0.2~0":[-1.467837,-1.341735,0.083658,-2.888383,164],"0~0.2":[2.071614,1.915758,0.189326,4.234116,166],"0.2~0.4":[2.095161,4.754698,2.688922,9.200971,98],"0.4~0.6":[5.325678,5.986527,3.965549,15.325071,43],"0.6~":[14.060667,7.097126,-0.064662,21.183386,13]},"5":{"~-0.6":[-2.924536,-5.543905,-5.872621,-14.598135,43],"-0.6~-0.4":[-2.776939,-2.617242,-2.472456,-8.056217,73],"-0.4~-0.2":[-1.161732,-1.214147,-2.401276,-4.806453,153],"-0.2~0":[-0.657848,-1.580384,0.407337,-2.052712,170],"0~0.2":[1.034178,2.459084,2.091381,6.081243,141],"0.2~0.4":[2.103074,2.734869,2.778275,7.402069,72],"0.4~0.6":[3.598534,5.404039,5.324412,14.628199,32],"0.6~":[7.572935,9.798619,3.28296,20.858943,15]},"6":{"~-0.6":[-1.106785,-3.248298,-5.909802,-10.052867,51],"-0.6~-0.4":[-0.991831,-3.009545,-4.291209,-8.66771,69],"-0.4~-0.2":[-0.517635,-0.748827,-2.219825,-3.442407,120],"-0.2~0":[-0.505012,-0.600302,-1.036732,-2.1191,152],"0~0.2":[0.545752,1.983478,1.82159,4.48746,149],"0.2~0.4":[0.85233,2.656561,4.4961,7.683954,81],"0.4~0.6":[2.06357,3.640305,8.032128,13.705483,53],"0.6~":[3.766166,5.245811,9.95722,18.975564,24]}},"22":{"1":{"~-0.6":[-19.530101,-2.318309,2.492019,-19.277352,2],"-0.6~-0.4":[-18.334116,0.527669,2.970465,-14.879589,1],"-0.4~-0.2":[-18.87968,3.936655,4.298712,-10.784002,13],"-0.2~0":[-10.797904,1.331089,1.533328,-7.829364,25],"0~0.2":[-5.421207,1.570554,0.93948,-2.986247,76],"0.2~0.4":[-2.809233,1.114104,0.035709,-2.579492,143],"0.4~0.6":[0.488351,0.308832,0.026808,0.530027,192],"0.6~":[8.595609,-2.079718,-1.117639,5.480492,376]},"2":{"~-0.6":[-5.068212,-8.880548,-0.678243,-14.680088,13],"-0.6~-0.4":[-5.699143,-5.57452,-1.917953,-13.097839,25],"-0.4~-0.2":[-3.85399,-5.673696,-0.931082,-10.094268,47],"-0.2~0":[-3.077522,-2.658128,-0.109116,-5.699911,117],"0~0.2":[-0.276099,0.478961,-0.08883,-0.594122,184],"0.2~0.4":[1.704214,1.352354,1.534917,4.261718,200],"0.4~0.6":[4.654387,5.182712,0.454334,10.009803,148],"0.6~":[9.555982,5.5196,-0.607223,14.212247,94]},"3":{"~-0.6":[-4.583675,-6.577372,-2.436451,-13.660217,38],"-0.6~-0.4":[-5.088267,-3.76351,-2.597491,-11.559688,42],"-0.4~-0.2":[-3.835596,-3.299905,-0.266759,-7.429147,90],"-0.2~0":[-2.197602,-0.166219,-0.548631,-2.788463,151],"0~0.2":[0.599863,1.886858,1.399026,3.221271,191],"0.2~0.4":[2.639818,2.764414,1.170635,6.751333,160],"0.4~0.6":[6.585942,3.799833,1.134927,11.144114,97],"0.6~":[13.221598,3.218713,0.512257,16.947887,59]},"4":{"~-0.6":[-4.008866,-4.543962,-4.759018,-13.239622,56],"-0.6~-0.4":[-3.692956,-4.914819,-3.174857,-11.775227,80],"-0.4~-0.2":[-3.118385,-3.026589,-1.003339,-6.502063,142],"-0.2~0":[-1.460316,-1.359338,0.09538,-2.574987,193],"0~0.2":[2.062559,2.188714,0.153784,4.076382,169],"0.2~0.4":[2.092799,4.755001,2.684485,9.089046,108],"0.4~0.6":[5.322354,5.899931,4.023948,15.375187,58],"0.6~":[14.053706,6.900213,-0.040095,20.759534,22]},"5":{"~-0.6":[-2.9222,-5.671812,-5.805767,-14.327479,98],"-0.6~-0.4":[-2.776682,-2.568278,-2.421482,-7.724157,129],"-0.4~-0.2":[-1.159588,-1.416934,-2.374955,-4.85967,155],"-0.2~0":[-0.64138,-1.51385,0.400611,-1.386669,189],"0~0.2":[1.030475,2.758689,1.997369,5.869238,142],"0.2~0.4":[2.097633,3.093975,2.924244,8.397321,70],"0.4~0.6":[3.599232,5.36909,5.261397,14.281623,28],"0.6~":[7.566638,9.67107,3.229489,20.142958,17]},"6":{"~-0.6":[-1.10077,-3.312051,-5.941723,-10.083675,180],"-0.6~-0.4":[-0.987522,-2.795747,-4.181114,-7.667489,136],"-0.4~-0.2":[-0.514986,-0.506633,-2.239647,-3.12665,160],"-0.2~0":[-0.498579,-0.575525,-1.041672,-1.866048,150],"0~0.2":[0.539093,1.825182,1.958338,4.701661,117],"0.2~0.4":[0.851629,3.166112,4.509759,8.390763,57],"0.4~0.6":[2.066055,3.421785,8.018411,13.446025,24],"0.6~":[3.759433,5.272243,10.035303,19.139947,4]}},"23":{"1":{"~-0.6":[-19.53084,-2.363647,2.498973,-19.332756,6],"-0.6~-0.4":[-18.337984,0.6008,2.992413,-14.828745,20],"-0.4~-0.2":[-18.871418,3.867066,4.330757,-10.364489,38],"-0.2~0":[-10.795375,1.019177,1.619519,-7.709906,91],"0~0.2":[-5.442538,1.801911,0.980409,-3.285211,172],"0.2~0.4":[-2.788204,1.138429,-0.036746,-2.071644,232],"0.4~0.6":[0.512803,0.227159,-0.018177,1.104628,228],"0.6~":[8.622396,-2.23482,-1.249728,5.615569,309]},"2":{"~-0.6":[-5.071219,-8.829038,-0.685479,-14.773787,29],"-0.6~-0.4":[-5.69642,-5.557564,-1.919059,-12.972095,54],"-0.4~-0.2":[-3.856908,-5.885235,-0.87882,-10.244313,116],"-0.2~0":[-3.095837,-1.766787,-0.170668,-5.513706,233],"0~0.2":[-0.265805,0.699184,-0.135998,-0.126922,267],"0.2~0.4":[1.71287,1.148145,1.710896,5.146283,200],"0.4~0.6":[4.66916,4.643951,0.460847,9.908521,116],"0.6~":[9.566486,5.935799,-0.70112,14.699526,81]},"3":{"~-0.6":[-4.583322,-6.371878,-2.469013,-13.541905,63],"-0.6~-0.4":[-5.083271,-3.342447,-2.682265,-11.232111,84],"-0.4~-0.2":[-3.838581,-3.33227,-0.171032,-7.12232,172],"-0.2~0":[-2.202061,-0.58774,-0.612904,-3.788105,246],"0~0.2":[0.629901,1.971794,1.359043,4.240757,244],"0.2~0.4":[2.620501,2.737417,1.314395,6.680886,144],"0.4~0.6":[6.599423,4.314498,1.084272,12.098056,93],"0.6~":[13.219075,2.855582,0.57574,16.690693,50]},"4":{"~-0.6":[-4.017549,-4.213572,-4.681685,-12.763346,73],"-0.6~-0.4":[-3.699707,-4.893861,-3.180967,-12.048116,84],"-0.4~-0.2":[-3.131622,-3.129733,-1.084832,-7.534152,181],"-0.2~0":[-1.46099,-1.540498,0.108301,-2.776366,241],"0~0.2":[2.053813,2.261265,0.071202,3.488724,235],"0.2~0.4":[2.106639,4.59149,2.799795,9.97662,150],"0.4~0.6":[5.320506,5.739464,4.023023,15.082654,86],"0.6~":[14.071354,6.874975,-0.089101,21.201287,46]},"5":{"~-0.6":[-2.926189,-5.584998,-5.736969,-14.023785,78],"-0.6~-0.4":[-2.774263,-2.671666,-2.502308,-8.164545,115],"-0.4~-0.2":[-1.157449,-1.526462,-2.420409,-5.140414,179],"-0.2~0":[-0.654892,-1.983937,0.455527,-2.22953,255],"0~0.2":[1.024173,2.419596,2.136381,5.852677,208],"0.2~0.4":[2.099207,3.573691,2.712388,8.033508,142],"0.4~0.6":[3.598666,5.317448,5.178557,13.769145,77],"0.6~":[7.573005,9.69386,3.263158,20.616719,42]},"6":{"~-0.6":[-1.104179,-3.239409,-5.966171,-10.228938,105],"-0.6~-0.4":[-0.988725,-2.984732,-4.1613,-7.858138,118],"-0.4~-0.2":[-0.517426,-0.627499,-2.216369,-3.262328,171],"-0.2~0":[-0.502858,-0.640147,-1.118914,-2.47408,237],"0~0.2":[0.538457,2.147702,1.723314,3.960301,190],"0.2~0.4":[0.851973,2.755673,4.470434,7.685001,132],"0.4~0.6":[2.070299,3.410604,8.041981,13.722964,87],"0.6~":[3.757475,5.020088,10.054412,18.82342,56]}},"24":{"1":{"~-0.6":[-19.530292,-2.315809,2.492219,-19.28135,2],"-0.6~-0.4":[-18.337207,0.637379,2.98758,-14.774135,9],"-0.4~-0.2":[-18.876583,4.004213,4.308082,-10.514606,40],"-0.2~0":[-10.807912,1.20378,1.560885,-8.25755,108],"0~0.2":[-5.414396,2.014669,0.807802,-2.780378,193],"0.2~0.4":[-2.766637,0.667194,0.023729,-1.622503,242],"0.4~0.6":[0.509238,0.378082,-0.007711,1.214178,241],"0.6~":[8.602157,-2.586982,-1.069909,5.288372,261]},"2":{"~-0.6":[-5.073135,-8.962429,-0.67833,-14.992759,35],"-0.6~-0.4":[-5.708908,-5.735354,-1.856106,-13.391673,72],"-0.4~-0.2":[-3.854254,-5.207185,-1.048481,-10.097265,123],"-0.2~0":[-3.092857,-2.221883,-0.072119,-5.531132,248],"0~0.2":[-0.264718,0.189084,0.085033,0.268981,252],"0.2~0.4":[1.725609,1.296745,1.510637,4.864195,186],"0.4~0.6":[4.670649,5.511417,0.412354,10.855936,123],"0.6~":[9.568152,5.772696,-0.667953,14.721642,57]},"3":{"~-0.6":[-4.58794,-6.749739,-2.406798,-13.910178,46],"-0.6~-0.4":[-5.084555,-3.460168,-2.685812,-11.452197,104],"-0.4~-0.2":[-3.827038,-3.253685,-0.215808,-6.805948,180],"-0.2~0":[-2.195633,-0.094051,-0.622801,-2.976284,218],"0~0.2":[0.608663,1.766554,1.493683,3.841743,257],"0.2~0.4":[2.62927,2.535249,1.279044,6.579701,165],"0.4~0.6":[6.598508,4.434797,0.978796,11.687305,85],"0.6~":[13.222384,3.018164,0.570251,17.015176,41]},"4":{"~-0.6":[-4.018953,-4.09597,-4.785174,-13.194865,53],"-0.6~-0.4":[-3.696754,-5.158762,-3.127215,-12.006376,97],"-0.4~-0.2":[-3.140695,-3.110502,-1.158775,-8.203594,173],"-0.2~0":[-1.46992,-1.435474,0.075764,-3.10964,245],"0~0.2":[2.08436,1.901422,0.157449,4.524434,226],"0.2~0.4":[2.106217,4.682745,2.705399,9.619839,163],"0.4~0.6":[5.321931,5.573943,4.143274,15.527834,90],"0.6~":[14.05379,7.287535,-0.062196,21.163336,49]},"5":{"~-0.6":[-2.921307,-5.563385,-5.867842,-14.463236,83],"-0.6~-0.4":[-2.767175,-2.620775,-2.388631,-7.249231,92],"-0.4~-0.2":[-1.17434,-1.395037,-2.425148,-5.618461,188],"-0.2~0":[-0.656536,-1.165378,0.349292,-1.730185,254],"0~0.2":[1.034963,2.663502,1.983311,5.839972,220],"0.2~0.4":[2.094776,2.665328,2.881697,7.51015,144],"0.4~0.6":[3.596439,4.984906,5.298657,13.85202,73],"0.6~":[7.574652,9.562735,3.257398,20.479985,42]},"6":{"~-0.6":[-1.102765,-3.299862,-5.91656,-9.997726,73],"-0.6~-0.4":[-0.985212,-2.73452,-4.291917,-8.041012,101],"-0.4~-0.2":[-0.515479,-0.860572,-2.373916,-4.241455,183],"-0.2~0":[-0.503878,-0.751938,-1.157008,-2.82736,242],"0~0.2":[0.534417,1.858449,1.808182,3.844721,206],"0.2~0.4":[0.848643,2.80705,4.574447,8.135957,158],"0.4~0.6":[2.07073,3.60194,8.052684,14.042194,97],"0.6~":[3.758187,5.155284,10.093517,19.23588,36]}}};
+function brcTimeXEngineMode(){
+  try{
+    const x=String(localStorage.getItem('brc_timex_engine')||'').toLowerCase();
+    if(x==='v1'||x==='v2') return x;
+  }catch(_e){}
+  return BRC_TIMEX_ENGINE_DEFAULT;
+}
+window.brcSetTimeXEngine=function(mode){
+  const x=String(mode||'').toLowerCase();
+  if(x!=='v1'&&x!=='v2') return false;
+  try{ localStorage.setItem('brc_timex_engine',x); }catch(_e){}
+  return true;
+};
+function brcTimeXBand02(diff){
+  const d=brcClamp(Number(diff),-1,1);
+  if(!Number.isFinite(d)) return null;
+  if(d < -0.6) return '~-0.6';
+  if(d < -0.4) return '-0.6~-0.4';
+  if(d < -0.2) return '-0.4~-0.2';
+  if(d < 0) return '-0.2~0';
+  if(d < 0.2) return '0~0.2';
+  if(d < 0.4) return '0.2~0.4';
+  if(d < 0.6) return '0.4~0.6';
+  return '0.6~';
+}
+function brcExhibitionV2Cell(course,diff,venueCode=''){
+  const vc=String(venueCode||'').padStart(2,'0');
+  const c=String(Number(course));
+  const band=brcTimeXBand02(diff);
+  if(!band) return null;
+  const a=BRC_TIMEX_V2_EFFECT_PP?.[vc]?.[c]?.[band];
+  if(!Array.isArray(a)||a.length<5) return null;
+  return {r1pp:Number(a[0])||0,r2pp:Number(a[1])||0,r3pp:Number(a[2])||0,top3pp:Number(a[3])||0,n:Number(a[4])||0,band,venueAware:(Number(a[4])||0)>0,venueCode:vc};
+}
 const BRC_EXHIBITION_ADJUSTMENT_MATRIX = {"1":{"-1.0":{"win":-0.215411,"top3":-0.327964},"-0.9":{"win":-0.19387,"top3":-0.295168},"-0.8":{"win":-0.172329,"top3":-0.262372},"-0.7":{"win":-0.150788,"top3":-0.229575},"-0.6":{"win":-0.129246,"top3":-0.196779},"-0.5":{"win":-0.107705,"top3":-0.163982},"-0.4":{"win":-0.086164,"top3":-0.131186},"-0.3":{"win":-0.064623,"top3":-0.098389},"-0.2":{"win":-0.043082,"top3":-0.065593},"-0.1":{"win":-0.021541,"top3":-0.032796},"0.0":{"win":0.0,"top3":0.0},"0.1":{"win":0.021541,"top3":0.032796},"0.2":{"win":0.043082,"top3":0.065593},"0.3":{"win":0.064623,"top3":0.098389},"0.4":{"win":0.086164,"top3":0.131186},"0.5":{"win":0.107705,"top3":0.163982},"0.6":{"win":0.129246,"top3":0.196779},"0.7":{"win":0.150788,"top3":0.229575},"0.8":{"win":0.172329,"top3":0.262372},"0.9":{"win":0.19387,"top3":0.295168},"1.0":{"win":0.215411,"top3":0.327964}},"2":{"-1.0":{"win":-0.322093,"top3":-0.389986},"-0.9":{"win":-0.289884,"top3":-0.350987},"-0.8":{"win":-0.257674,"top3":-0.311989},"-0.7":{"win":-0.225465,"top3":-0.27299},"-0.6":{"win":-0.193256,"top3":-0.233992},"-0.5":{"win":-0.161046,"top3":-0.194993},"-0.4":{"win":-0.128837,"top3":-0.155994},"-0.3":{"win":-0.096628,"top3":-0.116996},"-0.2":{"win":-0.064419,"top3":-0.077997},"-0.1":{"win":-0.032209,"top3":-0.038999},"0.0":{"win":0.0,"top3":0.0},"0.1":{"win":0.032209,"top3":0.038999},"0.2":{"win":0.064419,"top3":0.077997},"0.3":{"win":0.096628,"top3":0.116996},"0.4":{"win":0.128837,"top3":0.155994},"0.5":{"win":0.161046,"top3":0.194993},"0.6":{"win":0.193256,"top3":0.233992},"0.7":{"win":0.225465,"top3":0.27299},"0.8":{"win":0.257674,"top3":0.311989},"0.9":{"win":0.289884,"top3":0.350987},"1.0":{"win":0.322093,"top3":0.389986}},"3":{"-1.0":{"win":-0.311437,"top3":-0.437671},"-0.9":{"win":-0.280294,"top3":-0.393904},"-0.8":{"win":-0.24915,"top3":-0.350137},"-0.7":{"win":-0.218006,"top3":-0.30637},"-0.6":{"win":-0.186862,"top3":-0.262603},"-0.5":{"win":-0.155719,"top3":-0.218836},"-0.4":{"win":-0.124575,"top3":-0.175069},"-0.3":{"win":-0.093431,"top3":-0.131301},"-0.2":{"win":-0.062287,"top3":-0.087534},"-0.1":{"win":-0.031144,"top3":-0.043767},"0.0":{"win":0.0,"top3":0.0},"0.1":{"win":0.031144,"top3":0.043767},"0.2":{"win":0.062287,"top3":0.087534},"0.3":{"win":0.093431,"top3":0.131301},"0.4":{"win":0.124575,"top3":0.175069},"0.5":{"win":0.155719,"top3":0.218836},"0.6":{"win":0.186862,"top3":0.262603},"0.7":{"win":0.218006,"top3":0.30637},"0.8":{"win":0.24915,"top3":0.350137},"0.9":{"win":0.280294,"top3":0.393904},"1.0":{"win":0.311437,"top3":0.437671}},"4":{"-1.0":{"win":-0.320004,"top3":-0.358272},"-0.9":{"win":-0.288003,"top3":-0.322445},"-0.8":{"win":-0.256003,"top3":-0.286618},"-0.7":{"win":-0.224003,"top3":-0.250791},"-0.6":{"win":-0.192002,"top3":-0.214963},"-0.5":{"win":-0.160002,"top3":-0.179136},"-0.4":{"win":-0.128001,"top3":-0.143309},"-0.3":{"win":-0.096001,"top3":-0.107482},"-0.2":{"win":-0.064001,"top3":-0.071654},"-0.1":{"win":-0.032,"top3":-0.035827},"0.0":{"win":0.0,"top3":0.0},"0.1":{"win":0.032,"top3":0.035827},"0.2":{"win":0.064001,"top3":0.071654},"0.3":{"win":0.096001,"top3":0.107482},"0.4":{"win":0.128001,"top3":0.143309},"0.5":{"win":0.160002,"top3":0.179136},"0.6":{"win":0.192002,"top3":0.214963},"0.7":{"win":0.224003,"top3":0.250791},"0.8":{"win":0.256003,"top3":0.286618},"0.9":{"win":0.288003,"top3":0.322445},"1.0":{"win":0.320004,"top3":0.358272}},"5":{"-1.0":{"win":-0.345123,"top3":-0.405345},"-0.9":{"win":-0.310611,"top3":-0.36481},"-0.8":{"win":-0.276099,"top3":-0.324276},"-0.7":{"win":-0.241586,"top3":-0.283741},"-0.6":{"win":-0.207074,"top3":-0.243207},"-0.5":{"win":-0.172562,"top3":-0.202672},"-0.4":{"win":-0.138049,"top3":-0.162138},"-0.3":{"win":-0.103537,"top3":-0.121603},"-0.2":{"win":-0.069025,"top3":-0.081069},"-0.1":{"win":-0.034512,"top3":-0.040534},"0.0":{"win":0.0,"top3":0.0},"0.1":{"win":0.034512,"top3":0.040534},"0.2":{"win":0.069025,"top3":0.081069},"0.3":{"win":0.103537,"top3":0.121603},"0.4":{"win":0.138049,"top3":0.162138},"0.5":{"win":0.172562,"top3":0.202672},"0.6":{"win":0.207074,"top3":0.243207},"0.7":{"win":0.241586,"top3":0.283741},"0.8":{"win":0.276099,"top3":0.324276},"0.9":{"win":0.310611,"top3":0.36481},"1.0":{"win":0.345123,"top3":0.405345}},"6":{"-1.0":{"win":-0.466062,"top3":-0.456979},"-0.9":{"win":-0.419456,"top3":-0.411281},"-0.8":{"win":-0.37285,"top3":-0.365584},"-0.7":{"win":-0.326243,"top3":-0.319886},"-0.6":{"win":-0.279637,"top3":-0.274188},"-0.5":{"win":-0.233031,"top3":-0.22849},"-0.4":{"win":-0.186425,"top3":-0.182792},"-0.3":{"win":-0.139819,"top3":-0.137094},"-0.2":{"win":-0.093212,"top3":-0.091396},"-0.1":{"win":-0.046606,"top3":-0.045698},"0.0":{"win":0.0,"top3":0.0},"0.1":{"win":0.046606,"top3":0.045698},"0.2":{"win":0.093212,"top3":0.091396},"0.3":{"win":0.139819,"top3":0.137094},"0.4":{"win":0.186425,"top3":0.182792},"0.5":{"win":0.233031,"top3":0.22849},"0.6":{"win":0.279637,"top3":0.274188},"0.7":{"win":0.326243,"top3":0.319886},"0.8":{"win":0.37285,"top3":0.365584},"0.9":{"win":0.419456,"top3":0.411281},"1.0":{"win":0.466062,"top3":0.456979}}};
 // 2026-08-28: BRCタイムX 会場差縮約版
 // 2024構築 → 2025で縮約k選択 → 2026完全OOS確認。
@@ -7051,23 +6963,34 @@ function brcConstrainLogitProbabilities(probs,targetSum){
   const off=(lo+hi)/2;
   return logits.map(l=>brcSigmoid(l+off));
 }
-// BRCタイムXの表示矢印は「予測確率そのもの」ではなく、着率への影響ptの強さを示す。
-// 共通閾値：|pt|<1.0 → / 1.0以上6.0未満 ↗↘ / 6.0以上11.0未満 ↑↓ / 11.0以上 ↑↑↓↓
-const BRC_TIMEX_ARROW_FLAT_PT=1.0;
-const BRC_TIMEX_ARROW_UP_PT=6.0;
-const BRC_TIMEX_ARROW_DOUBLE_PT=11.0;
+// BRCタイムX v2 矢印。補正の有無ではなく、最終着率がどれだけ動いたかの強度表示。
+// 1着: <2pt なし / 2-5.9 ↗↘ / 6-10.9 ↑↓ / >=11 ↑↑↓↓
+// 3連: <3pt なし / 3-7.9 ↗↘ / 8-13.9 ↑↓ / >=14 ↑↑↓↓
+// 2着・3着の展開補助矢印は従来の1/6/11ptを維持する。
+const BRC_TIMEX_WIN_ARROW_FLAT_PT=2.0;
+const BRC_TIMEX_WIN_ARROW_UP_PT=6.0;
+const BRC_TIMEX_WIN_ARROW_DOUBLE_PT=11.0;
+const BRC_TIMEX_TOP3_ARROW_FLAT_PT=3.0;
+const BRC_TIMEX_TOP3_ARROW_UP_PT=8.0;
+const BRC_TIMEX_TOP3_ARROW_DOUBLE_PT=14.0;
+function brcTimeXArrowCuts(threshold){
+  const t=Number(threshold);
+  if(Math.abs(t-2.0)<1e-9) return {flat:BRC_TIMEX_TOP3_ARROW_FLAT_PT,up:BRC_TIMEX_TOP3_ARROW_UP_PT,double:BRC_TIMEX_TOP3_ARROW_DOUBLE_PT};
+  if(Math.abs(t-0.75)<1e-9) return {flat:BRC_TIMEX_WIN_ARROW_FLAT_PT,up:BRC_TIMEX_WIN_ARROW_UP_PT,double:BRC_TIMEX_WIN_ARROW_DOUBLE_PT};
+  return {flat:1.0,up:6.0,double:11.0};
+}
 function brcProbabilityArrow(deltaPt,threshold){
   const d=Number(deltaPt);
   if(!Number.isFinite(d)) return '→';
-  const a=Math.abs(d);
-  if(a < BRC_TIMEX_ARROW_FLAT_PT) return '→';
-  if(a < BRC_TIMEX_ARROW_UP_PT) return d>0 ? '↗' : '↘';
-  if(a < BRC_TIMEX_ARROW_DOUBLE_PT) return d>0 ? '↑' : '↓';
+  const a=Math.abs(d), cut=brcTimeXArrowCuts(threshold);
+  if(a < cut.flat) return '→';
+  if(a < cut.up) return d>0 ? '↗' : '↘';
+  if(a < cut.double) return d>0 ? '↑' : '↓';
   return d>0 ? '↑↑' : '↓↓';
 }
 function brcProbabilityDeltaColor(deltaPt,threshold){
-  const d=Number(deltaPt);
-  if(!Number.isFinite(d) || Math.abs(d)<BRC_TIMEX_ARROW_FLAT_PT) return 'var(--ink-soft)';
+  const d=Number(deltaPt), cut=brcTimeXArrowCuts(threshold);
+  if(!Number.isFinite(d) || Math.abs(d)<cut.flat) return 'var(--ink-soft)';
   return d>0 ? 'var(--trend-up)' : 'var(--trend-down)';
 }
 
@@ -7526,6 +7449,8 @@ function brcApplyExhibitionAdjustmentsToBoats(boats,liveRace){
     b.exhibition=byBoat.get(Number(b.course)) || null;
     b.exhibitionApplied=false;
     b.exhibitionDiffBucket=null;
+    b.exhibitionTimeXBand02='';
+    b.exhibitionTimeXEngine='';
     b.exhibitionWinDeltaPt=0;
     b.exhibitionTop3DeltaPt=0;
     b.exhibitionSecondDeltaPt=0;
@@ -7535,39 +7460,80 @@ function brcApplyExhibitionAdjustmentsToBoats(boats,liveRace){
   });
   if(!brcLiveExhibitionEligible(liveRace)) return false;
 
-  // b.course は出走表の元枠(1〜6)。進入変更時も entry_course へ付け替えず、
-  // 各艇を元枠の展示補正マトリックスへ通す「枠なり想定」で評価する。
+  // b.course は元枠。進入変更時も元枠のTimeXとして評価する。
+  const engine=brcTimeXEngineMode();
+  window.__brcTimeXEngineCurrent=engine;
   const cells=[];
   for(const b of boats){
     const raw=Number(b.exhibition?.relative_diff_capped ?? b.exhibition?.relative_diff);
-    const bucket=brcExhibitionDiffBucket(raw);
-    const cell=brcExhibitionMatrixCell(b.course,bucket,liveRace?.venue_code);
-    if(bucket===null || !cell || !Number.isFinite(Number(cell.win)) || !Number.isFinite(Number(cell.top3))) return false;
-    cells.push({b,bucket,cell});
+    const bucket=brcExhibitionDiffBucket(raw); // UI表示用0.1秒
+    if(bucket===null || !Number.isFinite(raw)) return false;
+    if(engine==='v2'){
+      const cell=brcExhibitionV2Cell(b.course,raw,liveRace?.venue_code);
+      if(!cell) return false;
+      cells.push({b,bucket,raw,cell});
+    }else{
+      const cell=brcExhibitionMatrixCell(b.course,bucket,liveRace?.venue_code);
+      if(!cell || !Number.isFinite(Number(cell.win)) || !Number.isFinite(Number(cell.top3))) return false;
+      cells.push({b,bucket,raw,cell});
+    }
   }
 
+  if(engine==='v2'){
+    const baseWin=cells.map(x=>Math.max(0,Number(x.b.basePctFloat)||0)/100);
+    const baseTop3=cells.map(x=>Math.max(0,Number(x.b.basePct3Float)||0)/100);
+    const baseSecond=cells.map(x=>{
+      const bw=Math.max(0,Number(x.b.basePctFloat)||0);
+      const bt=Math.max(0,Number(x.b.basePct3Float)||0);
+      const b2=Math.max(0,Number(x.b.basePct2)||0);
+      return Math.min(b2,Math.max(0,bt-bw))/100;
+    });
+    const baseThird=cells.map((x,i)=>Math.max(0,baseTop3[i]-baseWin[i]-baseSecond[i]));
+    const pre=(base,key)=>cells.map((x,i)=>brcClamp(base[i]+(Number(x.cell[key])||0)/100,1e-7,1-1e-7));
+    const winAdj=brcConstrainLogitProbabilities(pre(baseWin,'r1pp'),baseWin.reduce((a,v)=>a+v,0));
+    const top3Adj=brcConstrainLogitProbabilities(pre(baseTop3,'top3pp'),baseTop3.reduce((a,v)=>a+v,0));
+    const secondAdj=brcConstrainLogitProbabilities(pre(baseSecond,'r2pp'),baseSecond.reduce((a,v)=>a+v,0));
+    const thirdAdj=brcConstrainLogitProbabilities(pre(baseThird,'r3pp'),baseThird.reduce((a,v)=>a+v,0));
+
+    cells.forEach((x,i)=>{
+      const b=x.b;
+      b.exhibitionDiffBucket=x.bucket;
+      b.exhibitionTimeXBand02=x.cell.band;
+      b.exhibitionTimeXEngine='v2';
+      b.pctFloat=winAdj[i]*100;
+      b.pct3Float=top3Adj[i]*100;
+      b.pct=Math.round(b.pctFloat);
+      b.pct3=Math.round(b.pct3Float);
+      b.exhibitionWinDeltaPt=b.pctFloat-Number(b.basePctFloat);
+      b.exhibitionTop3DeltaPt=b.pct3Float-Number(b.basePct3Float);
+      b.exhibitionSecondPct=secondAdj[i]*100;
+      b.exhibitionThirdPct=thirdAdj[i]*100;
+      b.exhibitionSecondDeltaPt=b.exhibitionSecondPct-baseSecond[i]*100;
+      b.exhibitionThirdDeltaPt=b.exhibitionThirdPct-baseThird[i]*100;
+      b.exhibitionTimeXN=Number(x.cell.n)||0;
+      b.exhibitionTimeXVenueAware=!!x.cell.venueAware;
+      b.exhibitionApplied=true;
+    });
+    return true;
+  }
+
+  // v1 fallback: 0.1秒コース共通logit + 会場残差logit。
   const winPre=cells.map(x=>brcSigmoid(brcLogit(Number(x.b.basePctFloat)/100)+Number(x.cell.win)));
   const top3Pre=cells.map(x=>brcSigmoid(brcLogit(Number(x.b.basePct3Float)/100)+Number(x.cell.top3)));
-  // 展示補正は既存モデルの確率総量を変えず、艇間の配分だけを動かす。
-  // 一般戦は元モデルがlogit300%整合済みなので実質300%を維持し、
-  // SG/G1G2/G3等は各グレードの補正前合計をそのまま維持する。
   const winTarget=cells.reduce((sum,x)=>sum+(Number(x.b.basePctFloat)||0)/100,0);
   const top3Target=cells.reduce((sum,x)=>sum+(Number(x.b.basePct3Float)||0)/100,0);
   const winAdj=brcConstrainLogitProbabilities(winPre,winTarget);
   const top3Adj=brcConstrainLogitProbabilities(top3Pre,top3Target);
-
   cells.forEach((x,i)=>{
     const b=x.b;
     b.exhibitionDiffBucket=x.bucket;
+    b.exhibitionTimeXEngine='v1';
     b.pctFloat=winAdj[i]*100;
     b.pct3Float=top3Adj[i]*100;
     b.pct=Math.round(b.pctFloat);
     b.pct3=Math.round(b.pct3Float);
     b.exhibitionWinDeltaPt=b.pctFloat-Number(b.basePctFloat);
     b.exhibitionTop3DeltaPt=b.pct3Float-Number(b.basePct3Float);
-
-    // 2着・3着は2024構築→2025検証で固定した会場×コース×差帯の縮約効果を直接表示する。
-    // Nが薄いセルはコース共通効果へ自動縮約済み。確率本体への独立再加点は行わない。
     const baseWin=Math.max(0,Number(b.basePctFloat)||0);
     const baseTop3=Math.max(0,Number(b.basePct3Float)||0);
     const baseSecond=Math.max(0,Number(b.basePct2)||0);
@@ -7607,7 +7573,7 @@ function brcBuildExhibitionProbabilitySubHtml(b,kind){
     const arrow=brcProbabilityArrow(delta,threshold);
     const color=brcProbabilityDeltaColor(delta,threshold);
     const sign=delta>0?'+':'';
-    return `<div class="live-exhibition-slot" data-live-exhibition-course="${Number(b.course)||0}" style="font-size:10.5px;font-weight:700;color:${color};margin-top:2px;line-height:1.25;" title="BRCタイムXの6艇相対差を0.1秒単位で確率補正。"><span>タイムX ${sign}${delta.toFixed(1)}pt ${arrow}</span><span style="display:block;font-size:9.5px;font-weight:600;color:var(--ink-soft);">差 ${brcExhibitionDiffText(b)}</span></div>`;
+    return `<div class="live-exhibition-slot" data-live-exhibition-course="${Number(b.course)||0}" style="font-size:10.5px;font-weight:700;color:${color};margin-top:2px;line-height:1.25;" title="BRCタイムX v2：会場×コース×6艇平均との差0.2帯で確率補正（差表示は0.1秒）。"><span>タイムX ${sign}${delta.toFixed(1)}pt ${arrow}</span><span style="display:block;font-size:9.5px;font-weight:600;color:var(--ink-soft);">差 ${brcExhibitionDiffText(b)}</span></div>`;
   }
   const ex=b.exhibition;
   if(!ex) return '';
@@ -7701,6 +7667,8 @@ function brcAlertBandContains(band,d){
 }
 function brcFindExhibitionPlayerAlert(b){
   if(!b?.exhibitionApplied) return null;
+  // 個人TimeXはv1通常効果との差で構築済み。v2用再構築が終わるまで表示を止め、v2正式矢印を優先する。
+  if(brcTimeXEngineMode()==='v2') return null;
   const reg=Number(b?.player?.reg), course=Number(b?.course);
   const d=Number(b?.exhibition?.relative_diff_capped ?? b?.exhibition?.relative_diff);
   if(!Number.isFinite(reg)||!Number.isFinite(course)||!Number.isFinite(d)) return null;
