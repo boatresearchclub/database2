@@ -17,6 +17,7 @@
 <!-- BRC_RESEARCH_PUBLIC_SHARED_SUPABASE_20260904 -->
 <!-- BRC_RACE_DAY_FINAL_PRIORITY_FIX_20260904 -->
 <!-- BRC_RACE_SEARCH_ADMIN_BETA_20260905 -->
+<!-- BRC_NIGE_TIMEX_ARROW_LIVE_REFRESH_20260905 -->
 
 <!-- BRC_PREDICT_METRIC_ROW_ALIGNMENT_20260828 -->
 <!-- BRC_SNS_ARROW_BAKED_COORDS_20260902 -->
@@ -1123,8 +1124,10 @@
   .brc-nige-order-row:first-child{border-top:0;}
   .brc-nige-order-row.head{min-height:29px;background:var(--bg3);color:var(--ink-soft);font-size:10px;font-weight:850;text-align:center;}
   .brc-nige-order-boat{display:flex;align-items:center;justify-content:center;}
-  .brc-nige-order-metric{display:flex;align-items:baseline;justify-content:center;gap:5px;font-variant-numeric:tabular-nums;}
+  .brc-nige-order-metric{display:flex;align-items:center;justify-content:center;gap:4px;font-variant-numeric:tabular-nums;}
   .brc-nige-order-pct{font-size:15px;font-weight:900;color:var(--navy);white-space:nowrap;}
+  .brc-nige-order-timex{display:inline-flex;align-items:center;justify-content:center;min-width:15px;min-height:15px;line-height:1;flex:0 0 auto;}
+  .brc-nige-order-timex .exhibition-arrow-icon{width:15px;height:15px;}
   .brc-nige-order-base{font-size:8.5px;font-weight:800;color:var(--navy);white-space:nowrap;}
   .brc-nige-order-base.is-strong-plus{color:var(--trend-up);}
   .brc-nige-order-base.is-strong-minus{color:var(--trend-down);}
@@ -6649,6 +6652,18 @@ function brcGetNigeVenueBaseMap(venue){
   return out;
 }
 
+function brcBuildNigeOrderMetricHtml(x,b,kind,baseText='',baseClass=''){
+  const pct=Number(x?.pct);
+  if(!Number.isFinite(pct)) return '<div class="brc-nige-order-metric"><span class="brc-nige-order-pct">―</span></div>';
+  let timexHtml='';
+  if(b?.exhibitionApplied){
+    const delta=kind==='third' ? Number(b.exhibitionThirdDeltaPt) : Number(b.exhibitionSecondDeltaPt);
+    const arrow=brcBuildExhibitionProbabilityArrowIcon(delta,1.0);
+    if(arrow) timexHtml=`<span class="brc-nige-order-timex" title="今回のBRCタイムXによる${kind==='third'?'3着':'2着'}方向。数値には加減しません">${arrow}</span>`;
+  }
+  return `<div class="brc-nige-order-metric"><span class="brc-nige-order-pct">${Math.round(pct)}%</span>${timexHtml}${baseText?`<span class="brc-nige-order-base ${baseClass}">${baseText}</span>`:''}</div>`;
+}
+
 function brcBuildServerNigePredictionHtml(boats,workerPrediction,exhibitionApplied){
   const pred=brcFinalizeServerNigePrediction(workerPrediction,boats,exhibitionApplied);
   if(!pred){
@@ -6660,9 +6675,6 @@ function brcBuildServerNigePredictionHtml(boats,workerPrediction,exhibitionAppli
   const venue=document.getElementById('predictVenue')?.value||'';
   const venueBaseMap=brcGetNigeVenueBaseMap(venue);
   const candidates=(boats||[]).filter(b=>Number(b.course)>=2&&Number(b.course)<=6).sort((a,b)=>Number(a.course)-Number(b.course));
-  const metric=(x,baseText='',baseClass='')=>Number.isFinite(Number(x?.pct))
-    ? `<div class="brc-nige-order-metric"><span class="brc-nige-order-pct">${Math.round(Number(x.pct))}%</span>${baseText?`<span class="brc-nige-order-base ${baseClass}">${baseText}</span>`:''}</div>`
-    : '<div class="brc-nige-order-metric"><span class="brc-nige-order-pct">―</span></div>';
   const rows=candidates.map(b=>{
     const boat=Number(b.course);
     const basePct=Number(venueBaseMap[boat]);
@@ -6670,11 +6682,11 @@ function brcBuildServerNigePredictionHtml(boats,workerPrediction,exhibitionAppli
     const diff=Number.isFinite(basePct)&&Number.isFinite(predPct)?Math.round(predPct-basePct):null;
     const diffText=diff==null?'':(diff===0?'±0pt':`${diff>0?'+':''}${diff}pt`);
     const diffClass=diff!=null&&diff>0?'is-strong-plus':(diff!=null&&diff<0?'is-strong-minus':'');
-    return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${metric(secondMap.get(boat),diffText,diffClass)}${metric(thirdMap.get(boat))}</div>`;
+    return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${brcBuildNigeOrderMetricHtml(secondMap.get(boat),b,'second',diffText,diffClass)}${brcBuildNigeOrderMetricHtml(thirdMap.get(boat),b,'third')}</div>`;
   }).join('');
   const picks=`<div class="brc-nige-order-picks"><div class="brc-nige-order-picks-label">3連単上位</div><div class="brc-nige-order-pick-list">${pred.picks.map((x,i)=>`<span class="brc-nige-order-pick">${i+1}位 ${x}</span>`).join('')}</div></div>`;
   const phaseColor=pred.timexArrowOnly?'#8a5a00':'var(--wave)';
-  return `<div class="brc-nige-order-panel">
+  return `<div id="brcNigeOrderPredictionCard" class="brc-nige-order-panel">
     <div class="brc-nige-order-head"><div><div class="brc-nige-order-title">2着・3着予測</div><div class="brc-nige-order-sub">1号艇が逃げた場合</div></div><span class="brc-nige-order-rank" style="color:${phaseColor};">${pred.phaseLabel}</span></div>
     <div class="brc-nige-order-grid"><div class="brc-nige-order-row head"><div>艇</div><div>2着率<span class="brc-nige-order-head-base">場基準比</span></div><div>3着率</div></div>${rows}</div>
     ${picks}
@@ -6785,17 +6797,12 @@ function brcBuildInlineNigeOrderPredictionHtml(course, boats){
   if(Number(course)!==1) return '';
   const pred=brcComputeNigeOrderPrediction(boats);
   if(!pred){
-    return `<div class="brc-nige-order-panel"><div class="brc-nige-order-head"><div><div class="brc-nige-order-title">2着・3着予測</div><div class="brc-nige-order-sub">1号艇が逃げた場合</div></div></div><div class="brc-nige-order-note" style="margin-top:0;">予測データ未取得</div></div>`;
+    return `<div id="brcNigeOrderPredictionCard" class="brc-nige-order-panel"><div class="brc-nige-order-head"><div><div class="brc-nige-order-title">2着・3着予測</div><div class="brc-nige-order-sub">1号艇が逃げた場合</div></div></div><div class="brc-nige-order-note" style="margin-top:0;">予測データ未取得</div></div>`;
   }
   const secondMap=new Map(pred.second.map(x=>[Number(x.boat),x]));
   const thirdMap=new Map(pred.third.map(x=>[Number(x.boat),x]));
   const venueBaseMap=brcGetNigeVenueBaseMap(pred.venue);
   const candidates=(boats||[]).filter(b=>Number(b.course)>=2&&Number(b.course)<=6).sort((a,b)=>Number(a.course)-Number(b.course));
-  const metric=(x,baseText='',baseClass='')=>{
-    const pct=Number(x?.pct);
-    if(!Number.isFinite(pct)) return '<div class="brc-nige-order-metric"><span class="brc-nige-order-pct">―</span></div>';
-    return `<div class="brc-nige-order-metric"><span class="brc-nige-order-pct">${Math.round(pct)}%</span>${baseText?`<span class="brc-nige-order-base ${baseClass}">${baseText}</span>`:''}</div>`;
-  };
   const rows=candidates.map(b=>{
     const boat=Number(b.course);
     const basePct=Number(venueBaseMap[boat]);
@@ -6803,10 +6810,10 @@ function brcBuildInlineNigeOrderPredictionHtml(course, boats){
     const diff=Number.isFinite(basePct)&&Number.isFinite(predPct)?Math.round(predPct-basePct):null;
     const diffText=diff==null?'':(diff===0?'±0pt':`${diff>0?'+':''}${diff}pt`);
     const diffClass=diff!=null&&diff>0?'is-strong-plus':(diff!=null&&diff<0?'is-strong-minus':'');
-    return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${metric(secondMap.get(boat),diffText,diffClass)}${metric(thirdMap.get(boat))}</div>`;
+    return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${brcBuildNigeOrderMetricHtml(secondMap.get(boat),b,'second',diffText,diffClass)}${brcBuildNigeOrderMetricHtml(thirdMap.get(boat),b,'third')}</div>`;
   }).join('');
   const picksHtml=pred.picks.length?`<div class="brc-nige-order-picks"><div class="brc-nige-order-picks-label">3連単上位</div><div class="brc-nige-order-pick-list">${pred.picks.map((x,i)=>`<span class="brc-nige-order-pick">${i+1}位 ${x}</span>`).join('')}</div></div>`:'';
-  return `<div class="brc-nige-order-panel"><div class="brc-nige-order-head"><div><div class="brc-nige-order-title">2着・3着予測</div><div class="brc-nige-order-sub">1号艇が逃げた場合</div></div></div><div class="brc-nige-order-grid"><div class="brc-nige-order-row head"><div>艇</div><div>2着率<span class="brc-nige-order-head-base">場基準比</span></div><div>3着率</div></div>${rows}</div>${picksHtml}</div>`;
+  return `<div id="brcNigeOrderPredictionCard" class="brc-nige-order-panel"><div class="brc-nige-order-head"><div><div class="brc-nige-order-title">2着・3着予測</div><div class="brc-nige-order-sub">1号艇が逃げた場合</div></div></div><div class="brc-nige-order-grid"><div class="brc-nige-order-row head"><div>艇</div><div>2着率<span class="brc-nige-order-head-base">場基準比</span></div><div>3着率</div></div>${rows}</div>${picksHtml}</div>`;
 }
 
 function setPredictScenarioKimarite(course, kimarite){
@@ -7971,6 +7978,7 @@ function brcBakedArrowSvgGeometry(label){
   const map={
     '↑':{line:'12,20 12,5',head:'7,10 12,5 17,10'},
     '↗':{line:'6.34,17.66 16.95,7.05',head:'9.88,7.05 16.95,7.05 16.95,14.12'},
+    '→':{line:'4,12 19,12',head:'14,7 19,12 14,17'},
     '↘':{line:'6.34,6.34 16.95,16.95',head:'16.95,9.88 16.95,16.95 9.88,16.95'},
     '↓':{line:'12,4 12,19',head:'17,14 12,19 7,14'}
   };
@@ -8293,6 +8301,12 @@ function brcRefreshExhibitionAdjustedDom(liveRace,venue,raceNo){
   if(notice){
     const wrap=document.createElement('div'); wrap.innerHTML=brcBuildExhibitionRaceNoticeHtml(liveRace).trim();
     if(wrap.firstElementChild) notice.replaceWith(wrap.firstElementChild);
+  }
+  const nigeCard=document.getElementById('brcNigeOrderPredictionCard');
+  if(nigeCard && worker){
+    const wrap=document.createElement('div');
+    wrap.innerHTML=brcBuildServerNigePredictionHtml(boats,worker,applied).trim();
+    if(wrap.firstElementChild) nigeCard.replaceWith(wrap.firstElementChild);
   }
   const rec=document.getElementById('recommendedBetsCard');
   if(rec && worker){
