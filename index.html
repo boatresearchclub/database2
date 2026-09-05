@@ -17,6 +17,7 @@
 <!-- BRC_RESEARCH_PUBLIC_SHARED_SUPABASE_20260904 -->
 <!-- BRC_RACE_DAY_FINAL_PRIORITY_FIX_20260904 -->
 <!-- BRC_RACE_SEARCH_ADMIN_BETA_20260905 -->
+<!-- BRC_AI_NIGE_PERSONAL_TIMEX_CLEAR_20260905 -->
 <!-- BRC_NIGE_TIMEX_ARROW_LIVE_REFRESH_20260905 -->
 <!-- BRC_NIGE_TIMEX_ARROW_COLUMNS_20260905 -->
 <!-- BRC_TIMEX_ARROW_UNIFIED_5_10_15_20260905 -->
@@ -1129,16 +1130,24 @@
   .brc-nige-order-sub{margin-top:2px;font-size:10.5px;color:var(--ink-soft);line-height:1.45;}
   .brc-nige-order-rank{flex:0 0 auto;padding:3px 7px;border-radius:999px;background:rgba(0,87,219,.09);border:1px solid rgba(0,87,219,.18);color:var(--wave);font-size:10px;font-weight:900;white-space:nowrap;}
   .brc-nige-order-grid{border:1px solid rgba(10,31,51,.08);border-radius:9px;overflow:hidden;background:#fff;}
-  .brc-nige-order-row{display:grid;grid-template-columns:42px minmax(0,1.55fr) 46px minmax(0,1fr) 46px;align-items:center;min-height:37px;border-top:1px solid rgba(10,31,51,.055);}
+  .brc-nige-order-row{display:grid;grid-template-columns:42px minmax(0,1.55fr) 52px minmax(0,1fr) 52px;align-items:center;min-height:48px;border-top:1px solid rgba(10,31,51,.055);}
   .brc-nige-order-row:first-child{border-top:0;}
   .brc-nige-order-row.head{min-height:29px;background:var(--bg3);color:var(--ink-soft);font-size:10px;font-weight:850;text-align:center;}
   .brc-nige-order-boat{display:flex;align-items:center;justify-content:center;}
   .brc-nige-order-metric{display:flex;align-items:baseline;justify-content:center;gap:3px;font-variant-numeric:tabular-nums;min-width:0;}
   .brc-nige-order-pct{font-size:15px;font-weight:900;color:var(--navy);white-space:nowrap;}
-  .brc-nige-order-timex-cell{display:flex;align-items:center;justify-content:center;min-width:0;}
+  .brc-nige-order-timex-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;padding:3px 1px;}
+  .brc-nige-order-timex-line{display:flex;align-items:center;justify-content:center;gap:2px;width:100%;min-height:18px;white-space:nowrap;}
+  .brc-nige-order-timex-label{font-size:8px;font-weight:900;color:var(--ink-soft);line-height:1;letter-spacing:-.05em;flex:0 0 auto;}
   .brc-nige-order-timex{display:inline-flex;align-items:center;justify-content:center;min-width:18px;min-height:18px;line-height:1;flex:0 0 auto;}
   .brc-nige-order-timex .exhibition-arrow-icon{width:18px;height:18px;}
   .brc-nige-order-timex-empty{font-size:13px;font-weight:800;color:rgba(61,74,99,.45);line-height:1;}
+  .brc-nige-order-personal-btn{appearance:none;border:0;background:transparent;padding:0;margin:0;display:flex;align-items:center;justify-content:center;gap:2px;min-width:0;max-width:100%;font:inherit;cursor:pointer;line-height:1;}
+  .brc-nige-order-personal-btn:hover{opacity:.78;}
+  .brc-nige-order-personal-btn.watch .brc-nige-order-timex-label{color:#667085;}
+  .brc-nige-order-personal-empty{display:flex;align-items:center;justify-content:center;gap:2px;width:100%;min-height:18px;color:rgba(61,74,99,.45);}
+  .brc-nige-order-legend{margin:7px 2px 0;font-size:9px;line-height:1.5;color:var(--ink-soft);}
+  .brc-nige-order-legend strong{color:var(--navy);font-weight:900;}
   .brc-nige-order-base{font-size:8.5px;font-weight:800;color:var(--navy);white-space:nowrap;}
   .brc-nige-order-base.is-strong-plus{color:var(--trend-up);}
   .brc-nige-order-base.is-strong-minus{color:var(--trend-down);}
@@ -1151,11 +1160,14 @@
   @media(max-width:420px){
     .brc-nige-order-panel{padding:9px 8px;}
     .brc-nige-order-title{font-size:12px;}
-    .brc-nige-order-row{grid-template-columns:36px minmax(0,1.5fr) 34px minmax(0,.9fr) 34px;}
+    .brc-nige-order-row{grid-template-columns:34px minmax(0,1.45fr) 50px minmax(0,.9fr) 50px;}
     .brc-nige-order-pct{font-size:14px;}
     .brc-nige-order-base{font-size:8px;}
     .brc-nige-order-timex{min-width:16px;min-height:16px;}
     .brc-nige-order-timex .exhibition-arrow-icon{width:16px;height:16px;}
+    .brc-nige-order-timex-label{font-size:7.5px;}
+    .brc-nige-order-timex-line{gap:1px;min-height:17px;}
+    .brc-nige-order-legend{font-size:8.5px;}
   }
 
   /* ---- 展開シナリオ：標本信頼度S-E＋スマホ幅最適化 ---- */
@@ -6647,7 +6659,7 @@ function brcFinalizeServerNigePrediction(workerPrediction,boats,exhibitionApplie
   return {
     version:sa.version, second, third, thirdConditional, joint,
     picks:joint.slice(0,3).map(x=>x.combo), timexApplied:false, timexArrowOnly,
-    phaseLabel:timexArrowOnly?'展示前数値・TimeX矢印':'展示前予測'
+    phaseLabel:timexArrowOnly?'数値は展示前':'展示前予測'
   };
 }
 
@@ -6674,14 +6686,26 @@ function brcBuildNigeOrderMetricHtml(x,baseText='',baseClass=''){
   if(!Number.isFinite(pct)) return '<div class="brc-nige-order-metric"><span class="brc-nige-order-pct">―</span></div>';
   return `<div class="brc-nige-order-metric"><span class="brc-nige-order-pct">${Math.round(pct)}%</span>${baseText?`<span class="brc-nige-order-base ${baseClass}">(${baseText})</span>`:''}</div>`;
 }
-function brcBuildNigeOrderTimexHtml(b,kind){
-  let inner='<span class="brc-nige-order-timex-empty" aria-label="展示未反映">−</span>';
+function brcBuildNigeOrderPersonalHtml(b,kind,currentRate=NaN){
+  const a=brcFindExhibitionPlayerAlert(b);
+  if(!a) return `<span class="brc-nige-order-personal-empty" title="この条件の本人傾向データなし"><span class="brc-nige-order-timex-label">本人</span><span class="brc-nige-order-timex-empty">−</span></span>`;
+  const diff=brcPersonalEffectDiff(a,kind);
+  if(!Number.isFinite(diff)) return `<span class="brc-nige-order-personal-empty" title="この条件の本人傾向データなし"><span class="brc-nige-order-timex-label">本人</span><span class="brc-nige-order-timex-empty">−</span></span>`;
+  const payload=encodeURIComponent(JSON.stringify(brcAlertPayload(a,b)));
+  const icon=brcBuildPersonalTrendArrowIcon(diff);
+  const isWatch=a?.['採用区分']==='監視';
+  const label=kind==='third'?'3着':'2着';
+  return `<button type="button" class="brc-nige-order-personal-btn${isWatch?' watch':''}" onclick="event.stopPropagation();brcShowScenarioPersonalAdjustment(decodeURIComponent('${payload}'),'${kind}',${Number.isFinite(Number(currentRate))?Number(currentRate):'NaN'})" title="本人の${label}傾向：通常TimeXとの差 ${brcSignedPt(diff)}。表示率には自動加算しません"><span class="brc-nige-order-timex-label">本人</span>${icon||'<span class="brc-nige-order-timex-empty">−</span>'}</button>`;
+}
+function brcBuildNigeOrderTimexHtml(b,kind,currentRate=NaN){
+  let current='<span class="brc-nige-order-timex-empty" aria-label="今回展示未反映">−</span>';
   if(b?.exhibitionApplied){
     const delta=kind==='third' ? Number(b.exhibitionThirdDeltaPt) : Number(b.exhibitionSecondDeltaPt);
     const arrow=brcBuildExhibitionProbabilityArrowIcon(delta,1.0);
-    if(arrow) inner=`<span class="brc-nige-order-timex" title="今回のBRCタイムXによる${kind==='third'?'3着':'2着'}方向。数値には加減しません">${arrow}</span>`;
+    if(arrow) current=`<span class="brc-nige-order-timex" title="今回展示のBRCタイムXによる${kind==='third'?'3着':'2着'}方向。表示率には加減しません">${arrow}</span>`;
   }
-  return `<div class="brc-nige-order-timex-cell">${inner}</div>`;
+  const personal=brcBuildNigeOrderPersonalHtml(b,kind,currentRate);
+  return `<div class="brc-nige-order-timex-cell"><div class="brc-nige-order-timex-line"><span class="brc-nige-order-timex-label">今回</span>${current}</div><div class="brc-nige-order-timex-line">${personal}</div></div>`;
 }
 
 function brcBuildServerNigePredictionHtml(boats,workerPrediction,exhibitionApplied){
@@ -6702,13 +6726,14 @@ function brcBuildServerNigePredictionHtml(boats,workerPrediction,exhibitionAppli
     const diff=Number.isFinite(basePct)&&Number.isFinite(predPct)?Math.round(predPct-basePct):null;
     const diffText=diff==null?'':(diff===0?'±0pt':`${diff>0?'+':''}${diff}pt`);
     const diffClass=diff!=null&&diff>0?'is-strong-plus':(diff!=null&&diff<0?'is-strong-minus':'');
-    return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${brcBuildNigeOrderMetricHtml(secondMap.get(boat),diffText,diffClass)}${brcBuildNigeOrderTimexHtml(b,'second')}${brcBuildNigeOrderMetricHtml(thirdMap.get(boat))}${brcBuildNigeOrderTimexHtml(b,'third')}</div>`;
+    return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${brcBuildNigeOrderMetricHtml(secondMap.get(boat),diffText,diffClass)}${brcBuildNigeOrderTimexHtml(b,'second',secondMap.get(boat)?.pct)}${brcBuildNigeOrderMetricHtml(thirdMap.get(boat))}${brcBuildNigeOrderTimexHtml(b,'third',thirdMap.get(boat)?.pct)}</div>`;
   }).join('');
   const picks=`<div class="brc-nige-order-picks"><div class="brc-nige-order-picks-label">3連単上位</div><div class="brc-nige-order-pick-list">${pred.picks.map((x,i)=>`<span class="brc-nige-order-pick">${i+1}位 ${x}</span>`).join('')}</div></div>`;
   const phaseColor=pred.timexArrowOnly?'#8a5a00':'var(--wave)';
   return `<div id="brcNigeOrderPredictionCard" class="brc-nige-order-panel">
     <div class="brc-nige-order-head"><div><div class="brc-nige-order-title">2着・3着予測</div><div class="brc-nige-order-sub">1号艇が逃げた場合</div></div><span class="brc-nige-order-rank" style="color:${phaseColor};">${pred.phaseLabel}</span></div>
-    <div class="brc-nige-order-grid"><div class="brc-nige-order-row head"><div>艇</div><div>2着率<span class="brc-nige-order-head-base">（場基準比）</span></div><div>展示</div><div>3着率</div><div>展示</div></div>${rows}</div>
+    <div class="brc-nige-order-grid"><div class="brc-nige-order-row head"><div>艇</div><div>2着率<span class="brc-nige-order-head-base">（場基準比）</span></div><div>TimeX</div><div>3着率</div><div>TimeX</div></div>${rows}</div>
+    <div class="brc-nige-order-legend"><strong>今回</strong>＝今回展示のTimeX方向　<strong>本人</strong>＝個人傾向（参考・予測率には未反映）</div>
     ${picks}
   </div>`;
 }
@@ -6830,10 +6855,10 @@ function brcBuildInlineNigeOrderPredictionHtml(course, boats){
     const diff=Number.isFinite(basePct)&&Number.isFinite(predPct)?Math.round(predPct-basePct):null;
     const diffText=diff==null?'':(diff===0?'±0pt':`${diff>0?'+':''}${diff}pt`);
     const diffClass=diff!=null&&diff>0?'is-strong-plus':(diff!=null&&diff<0?'is-strong-minus':'');
-    return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${brcBuildNigeOrderMetricHtml(secondMap.get(boat),diffText,diffClass)}${brcBuildNigeOrderTimexHtml(b,'second')}${brcBuildNigeOrderMetricHtml(thirdMap.get(boat))}${brcBuildNigeOrderTimexHtml(b,'third')}</div>`;
+    return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${brcBuildNigeOrderMetricHtml(secondMap.get(boat),diffText,diffClass)}${brcBuildNigeOrderTimexHtml(b,'second',secondMap.get(boat)?.pct)}${brcBuildNigeOrderMetricHtml(thirdMap.get(boat))}${brcBuildNigeOrderTimexHtml(b,'third',thirdMap.get(boat)?.pct)}</div>`;
   }).join('');
   const picksHtml=pred.picks.length?`<div class="brc-nige-order-picks"><div class="brc-nige-order-picks-label">3連単上位</div><div class="brc-nige-order-pick-list">${pred.picks.map((x,i)=>`<span class="brc-nige-order-pick">${i+1}位 ${x}</span>`).join('')}</div></div>`:'';
-  return `<div id="brcNigeOrderPredictionCard" class="brc-nige-order-panel"><div class="brc-nige-order-head"><div><div class="brc-nige-order-title">2着・3着予測</div><div class="brc-nige-order-sub">1号艇が逃げた場合</div></div></div><div class="brc-nige-order-grid"><div class="brc-nige-order-row head"><div>艇</div><div>2着率<span class="brc-nige-order-head-base">（場基準比）</span></div><div>展示</div><div>3着率</div><div>展示</div></div>${rows}</div>${picksHtml}</div>`;
+  return `<div id="brcNigeOrderPredictionCard" class="brc-nige-order-panel"><div class="brc-nige-order-head"><div><div class="brc-nige-order-title">2着・3着予測</div><div class="brc-nige-order-sub">1号艇が逃げた場合</div></div></div><div class="brc-nige-order-grid"><div class="brc-nige-order-row head"><div>艇</div><div>2着率<span class="brc-nige-order-head-base">（場基準比）</span></div><div>TimeX</div><div>3着率</div><div>TimeX</div></div>${rows}</div><div class="brc-nige-order-legend"><strong>今回</strong>＝今回展示のTimeX方向　<strong>本人</strong>＝個人傾向（参考・予測率には未反映）</div>${picksHtml}</div>`;
 }
 
 function setPredictScenarioKimarite(course, kimarite){
