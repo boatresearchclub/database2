@@ -26,6 +26,7 @@
 <!-- BRC_TIMEX_ALL_PLACE_RATES_NUMERIC_20260905 -->
 <!-- BRC_RACE_RESULT_NO_KV_10M_90S_20260905 -->
 <!-- BRC_RACE_RESULT_INLINE_FOLD_20260905 -->
+<!-- BRC_RACE_RESULT_SHOW_ONLY_CONFIRMED_20260906 -->
 
 <!-- BRC_PREDICT_METRIC_ROW_ALIGNMENT_20260828 -->
 <!-- BRC_SNS_ARROW_BAKED_COORDS_20260902 -->
@@ -5883,10 +5884,11 @@ let __brcRaceResultToken = 0;
 let __brcRaceResultActive = null;
 
 function brcBuildRaceResultFoldHtml(){
-  return `<details class="brc-result-fold" id="brcRaceResultFold">
+  // 確定結果が取得できるまでは、レース結果バナー自体を表示しない。
+  return `<details class="brc-result-fold" id="brcRaceResultFold" hidden aria-hidden="true">
     <summary><span class="brc-result-fold-icon" aria-hidden="true">🏆</span><span class="brc-result-fold-title">レース結果を見る</span></summary>
     <div class="brc-result-wrap" id="brcRaceResultPanel">
-      <div id="brcRaceResultBody" class="brc-result-status">結果を確認しています。</div>
+      <div id="brcRaceResultBody" class="brc-result-status"></div>
     </div>
   </details>`;
 }
@@ -5907,10 +5909,24 @@ function brcRaceResultSpec(venue, raceNo){
   };
 }
 function brcRaceResultBody(){ return document.getElementById('brcRaceResultBody'); }
+function brcSetRaceResultVisibility(visible){
+  const fold=document.getElementById('brcRaceResultFold');
+  if(!fold) return;
+  if(visible){
+    fold.hidden=false;
+    fold.removeAttribute('aria-hidden');
+  }else{
+    fold.hidden=true;
+    fold.setAttribute('aria-hidden','true');
+    fold.open=false;
+  }
+}
 function brcRenderRaceResultStatus(message){
+  // 締切前・結果待ち・取得エラー中はバナーを出さない。監視だけバックグラウンドで続ける。
+  brcSetRaceResultVisibility(false);
   const box=brcRaceResultBody(); if(!box) return;
   box.className='brc-result-status';
-  box.textContent=message;
+  box.textContent=message||'';
 }
 function brcRenderRaceResultConfirmed(result){
   const box=brcRaceResultBody(); if(!box) return;
@@ -5923,6 +5939,8 @@ function brcRenderRaceResultConfirmed(result){
     <div class="brc-result-item"><div class="brc-result-label">配当</div><div class="brc-result-value payout">${Number.isFinite(payout)?payout.toLocaleString('ja-JP')+'円':'―'}</div></div>
     <div class="brc-result-item"><div class="brc-result-label">決まり手</div><div class="brc-result-value kimarite">${kimarite}</div></div>
   </div>`;
+  // 出目・配当・決まり手が揃った確定結果を取得した時点で初めてバナーを表示する。
+  brcSetRaceResultVisibility(true);
 }
 function brcClearRaceResultTimer(){
   if(__brcRaceResultTimer){ clearTimeout(__brcRaceResultTimer); __brcRaceResultTimer=null; }
