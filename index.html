@@ -20,6 +20,7 @@
 <!-- BRC_NIGE_TIMEX_ARROW_LIVE_REFRESH_20260905 -->
 <!-- BRC_NIGE_TIMEX_ARROW_COLUMNS_20260905 -->
 <!-- BRC_TIMEX_ARROW_UNIFIED_5_10_15_20260905 -->
+<!-- BRC_TIMEX_LAP_REQUIRED_20260905 -->
 
 <!-- BRC_PREDICT_METRIC_ROW_ALIGNMENT_20260828 -->
 <!-- BRC_SNS_ARROW_BAKED_COORDS_20260902 -->
@@ -606,6 +607,11 @@
   }
   .slit-eval-sep{display:none;}
   .slit-eval-muted{color:var(--ink-soft); font-weight:700;}
+  .slit-eval-timex-note{
+    flex:1 0 100%; width:100%; margin-top:2px; padding-top:5px;
+    border-top:1px dashed rgba(138,90,0,.22); color:#8a5a00;
+    font-size:10.5px; font-weight:850; line-height:1.45; white-space:normal;
+  }
   /* 2026-08-27: 検証済み着率方向を艇ごとに直接表示 */
   .slit-rate-row{
     display:inline-flex; align-items:center; gap:6px; min-width:0; flex:0 0 auto;
@@ -7370,7 +7376,7 @@ function brcConstrainLogitProbabilities(probs,targetSum){
   return logits.map(l=>brcSigmoid(l+off));
 }
 // BRCタイムX 共通矢印ルール。1着・2着・3着・3連対・本人傾向をすべて統一。
-// |変化| <5pt : → / ←（小変化）
+// |変化| <5pt : →（方向を分けない小変化）
 // 5〜9.9pt     : ↗ / ↘
 // 10〜14.9pt   : ↑ / ↓
 // 15pt以上     : ↑↑ / ↓↓
@@ -7385,7 +7391,7 @@ function brcProbabilityArrow(deltaPt,threshold){
   const d=Number(deltaPt);
   if(!Number.isFinite(d)) return '→';
   const a=Math.abs(d), cut=brcTimeXArrowCuts(threshold);
-  if(a < cut.flat) return d<0 ? '←' : '→';
+  if(a < cut.flat) return '→';
   if(a < cut.up) return d>0 ? '↗' : '↘';
   if(a < cut.double) return d>0 ? '↑' : '↓';
   return d>0 ? '↑↑' : '↓↓';
@@ -7396,6 +7402,41 @@ function brcProbabilityDeltaColor(deltaPt,threshold){
   return d>0 ? 'var(--trend-up)' : 'var(--trend-down)';
 }
 
+function brcHasMeasuredLapTime(v){
+  if(v===null || v===undefined || String(v).trim()==='') return false;
+  const n=Number(v);
+  return Number.isFinite(n) && n>0;
+}
+function brcTimeXLapState(liveRace){
+  const boats=Array.isArray(liveRace?.boats) ? liveRace.boats : [];
+  const validBoats=boats.filter(b=>{
+    const n=Number(b?.boat_no);
+    return Number.isInteger(n) && n>=1 && n<=6;
+  });
+  const hasValue=v=>v!==null && v!==undefined && String(v).trim()!=='' && Number.isFinite(Number(v));
+  const exhibitionStarted=validBoats.some(b=>
+    hasValue(b?.exhibition_time) || hasValue(b?.display_st) || hasValue(b?.turn_time) ||
+    hasValue(b?.straight_time) || hasValue(b?.relative_diff) || hasValue(b?.relative_diff_capped) ||
+    brcHasMeasuredLapTime(b?.lap_time)
+  );
+  const missing=validBoats
+    .filter(b=>!brcHasMeasuredLapTime(b?.lap_time))
+    .map(b=>Number(b.boat_no))
+    .sort((a,b)=>a-b);
+  const allSix=validBoats.length===6 && new Set(validBoats.map(b=>Number(b.boat_no))).size===6;
+  return {ready:allSix && missing.length===0, started:exhibitionStarted, allSix, missing};
+}
+function brcBuildTimeXLapNoticeHtml(liveRace){
+  const code=String(liveRace?.venue_code ?? '').padStart(2,'0');
+  if(code==='03') return '';
+  const st=brcTimeXLapState(liveRace);
+  if(!st.started || st.ready || !st.allSix) return '';
+  if(st.missing.length===6){
+    return '<span class="slit-eval-timex-note">周回短縮のためラップタイム未計測｜BRCタイムX対象外</span>';
+  }
+  return `<span class="slit-eval-timex-note">ラップタイム一部未取得（${st.missing.join('・')}号艇）｜BRCタイムX待機</span>`;
+}
+
 function brcLiveExhibitionEligible(liveRace){
   // BRCタイムXは「実際の展示進入」ではなく、艇番=元枠の枠なり想定で適用する。
   // そのため進入変更（fixed_course=false）でも、6艇の展示データが揃えば対象とする。
@@ -7403,6 +7444,9 @@ function brcLiveExhibitionEligible(liveRace){
   if(!liveRace || !Array.isArray(liveRace.boats)) return false;
   const venueCode=String(liveRace.venue_code ?? '').padStart(2,'0');
   if(venueCode==='03') return false;
+
+  // BRCタイムXはラップタイムを必須とする。周回短縮・欠測時は数値補正も矢印も出さない。
+  if(!brcTimeXLapState(liveRace).ready) return false;
 
   const nums=liveRace.boats
     .map(x=>Number(x?.boat_no))
@@ -7804,6 +7848,7 @@ function brcSlitMetricLabel(key){
 function brcBuildSlitEvaluationHtml(boats,liveRace,inReliability=null){
   const state=brcSlitEvaluationState(boats,liveRace,inReliability);
   const tiltHtml=brcBuildSlitHighTiltHtml(liveRace);
+  const timeXNotice=brcBuildTimeXLapNoticeHtml(liveRace);
 
   // 過去日も保存済み展示 + 固定OOS ST順位で同じスリット判定を再現する。
   let slitHtml='';
@@ -7825,17 +7870,17 @@ function brcBuildSlitEvaluationHtml(boats,liveRace,inReliability=null){
 
   // チルト1.0以上がいる場合は、スリット条件が非該当・待機中でも高チルト表示を優先。
   if(tiltHtml){
-    const body=`${slitHtml}${tiltHtml}`;
+    const body=`${slitHtml}${tiltHtml}${timeXNotice}`;
     return `<div id="slitEvaluationCard" class="slit-eval-compact"><span class="slit-eval-label">展示スリット評価</span><span class="slit-eval-items">${body}</span></div>`;
   }
 
   if(slitHtml){
-    return `<div id="slitEvaluationCard" class="slit-eval-compact"><span class="slit-eval-label">展示スリット評価</span><span class="slit-eval-items">${slitHtml}</span></div>`;
+    return `<div id="slitEvaluationCard" class="slit-eval-compact"><span class="slit-eval-label">展示スリット評価</span><span class="slit-eval-items">${slitHtml}${timeXNotice}</span></div>`;
   }
 
   const text=state.status==='excluded' ? '判定対象外' : state.status==='entry-waiting' ? '進入確認待ち' : state.status==='partial' ? '一部データ不足' : state.status==='none' ? '該当なし' : '展示待ち';
   const title=state.reason ? ` title="${state.reason}"` : '';
-  const body=`<span class="slit-eval-muted"${title}>―　${text}</span>`;
+  const body=`<span class="slit-eval-muted"${title}>―　${text}</span>${timeXNotice}`;
   return `<div id="slitEvaluationCard" class="slit-eval-compact"><span class="slit-eval-label">展示スリット評価</span><span class="slit-eval-items">${body}</span></div>`;
 }
 
@@ -7973,7 +8018,12 @@ function brcBuildExhibitionProbabilitySubHtml(b,kind){
   if(!ex) return '';
   const d=Number(ex.relative_diff_capped ?? ex.relative_diff);
   if(!Number.isFinite(d)) return '';
-  const eligible=brcLiveExhibitionEligible(window.__currentLiveExhibition);
+  const currentLive=window.__currentLiveExhibition;
+  const eligible=brcLiveExhibitionEligible(currentLive);
+  const lapState=brcTimeXLapState(currentLive);
+  if(lapState.started && lapState.allSix && !lapState.ready){
+    return `<div class="live-exhibition-slot" data-live-exhibition-course="${Number(b.course)||0}" style="font-size:10px;font-weight:650;color:#8a5a00;margin-top:2px;">BRCタイムX 対象外（ラップ未計測）</div>`;
+  }
   const sign=d>0?'+':'';
   return `<div class="live-exhibition-slot" data-live-exhibition-course="${Number(b.course)||0}" style="font-size:10px;font-weight:650;color:${eligible?'var(--ink-soft)':'#8a5a00'};margin-top:2px;">タイムX差 ${sign}${d.toFixed(2)}秒${eligible?'':' 対象外'}</div>`;
 }
@@ -8087,7 +8137,7 @@ function brcPersonalTrendArrow(v){
   const n=Number(v);
   if(!Number.isFinite(n)) return '→';
   const a=Math.abs(n);
-  if(a<BRC_PERSONAL_TIMEX_ARROW_FLAT_PT) return n<0?'←':'→';
+  if(a<BRC_PERSONAL_TIMEX_ARROW_FLAT_PT) return '→';
   if(a<BRC_PERSONAL_TIMEX_ARROW_STRONG_PT) return n>0?'↗':'↘';
   if(a<BRC_PERSONAL_TIMEX_ARROW_DOUBLE_PT) return n>0?'↑':'↓';
   return n>0?'↑↑':'↓↓';
@@ -8171,7 +8221,7 @@ function brcShowExhibitionPlayerAlert(raw){
   const currentHtml=(Number.isFinite(currentWin)||Number.isFinite(currentTop3))
     ? `<div class="brc-ex-alert-forecast-label">今回のBRC予測</div><div class="brc-ex-alert-forecast"><div class="brc-ex-alert-forecast-item"><div class="k">1着率</div><div class="v">${Number.isFinite(currentWin)?Math.round(currentWin)+'%':'―'}</div></div><div class="brc-ex-alert-forecast-item"><div class="k">3連対率</div><div class="v">${Number.isFinite(currentTop3)?Math.round(currentTop3)+'%':'―'}</div></div></div>`
     : '';
-  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']}　BRCタイムX・個人傾向</div><div class="brc-ex-alert-meta">${a['コース']}コース ／ タイムX差 ${a['平均差帯']}秒 ／ N=${a.N} ／ 参考度 ${confidence}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div>${currentHtml}<div class="brc-ex-alert-decision ${decision.cls}"><strong>判断：${decision.title}</strong>${decision.body}</div><div class="brc-ex-alert-forecast-label">本人傾向（手動判断）</div><div class="brc-ex-personal-box">${brcAlertPersonalTrendRow('1着',a,'win')}${brcAlertPersonalTrendRow('2着',a,'second')}${brcAlertPersonalTrendRow('3着',a,'third')}${brcAlertPersonalTrendRow('3連対',a,'top3')}</div><div class="brc-ex-alert-note">正式なTimeX自動補正は1着率・3連対率だけです。2着率・3着率はTimeX矢印のみで、数値へは加減しません。本人傾向は4着率とも別枠の参考情報として表示し、自動計算には入れず手動で判断します。</div><div class="brc-ex-alert-scale">BRCタイムX共通：5pt未満 →← ／ 5pt ↗↘ ／ 10pt ↑↓ ／ 15pt ↑↑↓↓</div></div>`;
+  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']}　BRCタイムX・個人傾向</div><div class="brc-ex-alert-meta">${a['コース']}コース ／ タイムX差 ${a['平均差帯']}秒 ／ N=${a.N} ／ 参考度 ${confidence}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div>${currentHtml}<div class="brc-ex-alert-decision ${decision.cls}"><strong>判断：${decision.title}</strong>${decision.body}</div><div class="brc-ex-alert-forecast-label">本人傾向（手動判断）</div><div class="brc-ex-personal-box">${brcAlertPersonalTrendRow('1着',a,'win')}${brcAlertPersonalTrendRow('2着',a,'second')}${brcAlertPersonalTrendRow('3着',a,'third')}${brcAlertPersonalTrendRow('3連対',a,'top3')}</div><div class="brc-ex-alert-note">正式なTimeX自動補正は1着率・3連対率だけです。2着率・3着率はTimeX矢印のみで、数値へは加減しません。本人傾向は4着率とも別枠の参考情報として表示し、自動計算には入れず手動で判断します。</div><div class="brc-ex-alert-scale">BRCタイムX共通：5pt未満 → ／ 5pt ↗↘ ／ 10pt ↑↓ ／ 15pt ↑↑↓↓</div></div>`;
   document.body.appendChild(pop);
 }
 
@@ -8199,7 +8249,7 @@ function brcShowScenarioPersonalAdjustment(raw,kind,currentRate){
     return brcAlertPersonalTrendRow(m.label,a,k);
   }).join('');
   const watchText=isWatch?'監視条件のため、参考度は低めに扱います。':'';
-  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']}　本人傾向</div><div class="brc-ex-alert-meta">${a['コース']}コース ／ タイムX差 ${a['平均差帯']}秒 ／ N=${a.N} ／ 参考度 ${confidence}${isWatch?' ／ 監視':''}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-personal-adjust-focus ${cls}"><div class="brc-personal-adjust-kicker">${meta.label}率の参考加減値</div><div class="brc-personal-adjust-main"><span class="brc-personal-adjust-label">本人 ${arrow}</span><span class="brc-personal-adjust-value brc-ex-metric-${cls}">${brcSignedPt(diff)}</span></div><div class="brc-personal-adjust-current">${rateText}</div><div class="brc-personal-adjust-help">参考加減値 ＝ この選手本人のTimeX効果 − 通常のTimeX効果。表示中の着率には自動加算しません。予想時に手動で加減するための参考値です。${watchText}</div></div><div class="brc-ex-alert-forecast-label">この条件での本人傾向</div><div class="brc-ex-personal-box">${allRows}</div><div class="brc-ex-alert-scale">BRCタイムX共通：5pt未満 →← ／ 5pt ↗↘ ／ 10pt ↑↓ ／ 15pt ↑↑↓↓</div></div>`;
+  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']}　本人傾向</div><div class="brc-ex-alert-meta">${a['コース']}コース ／ タイムX差 ${a['平均差帯']}秒 ／ N=${a.N} ／ 参考度 ${confidence}${isWatch?' ／ 監視':''}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-personal-adjust-focus ${cls}"><div class="brc-personal-adjust-kicker">${meta.label}率の参考加減値</div><div class="brc-personal-adjust-main"><span class="brc-personal-adjust-label">本人 ${arrow}</span><span class="brc-personal-adjust-value brc-ex-metric-${cls}">${brcSignedPt(diff)}</span></div><div class="brc-personal-adjust-current">${rateText}</div><div class="brc-personal-adjust-help">参考加減値 ＝ この選手本人のTimeX効果 − 通常のTimeX効果。表示中の着率には自動加算しません。予想時に手動で加減するための参考値です。${watchText}</div></div><div class="brc-ex-alert-forecast-label">この条件での本人傾向</div><div class="brc-ex-personal-box">${allRows}</div><div class="brc-ex-alert-scale">BRCタイムX共通：5pt未満 → ／ 5pt ↗↘ ／ 10pt ↑↓ ／ 15pt ↑↑↓↓</div></div>`;
   document.body.appendChild(pop);
 }
 
@@ -8255,6 +8305,11 @@ function buildLiveExhibitionStatusHtml(liveRace, venue='', raceNo=0){
     else { label='過去展示データなし'; color='var(--ink-soft)'; }
   }else if(eligible){
     label='BRCタイムX反映済'; color='#2f8f5b';
+  }else if(liveRace){
+    const lapState=brcTimeXLapState(liveRace);
+    if(lapState.started && lapState.allSix && !lapState.ready){
+      label='ラップタイム未計測・BRCタイムX対象外'; color='#8a5a00';
+    }
   }
   const sub=historical ? `<span style="display:block;margin-top:3px;font-size:10px;font-weight:600;color:var(--ink-soft);">${TODAY_LABEL} / ${venue} ${Number(raceNo)}R の保存データのみ使用</span>` : '';
   return `<div id="liveExhibitionCard" style="margin:10px 0 12px;border:1px solid rgba(0,102,255,.18);background:rgba(0,102,255,.025);border-radius:10px;padding:10px 12px;"><span style="font-size:12px;font-weight:800;color:${color};">${label}</span>${sub}</div>`;
