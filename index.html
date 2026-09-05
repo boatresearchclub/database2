@@ -18,6 +18,8 @@
 <!-- BRC_RACE_DAY_FINAL_PRIORITY_FIX_20260904 -->
 <!-- BRC_RACE_SEARCH_ADMIN_BETA_20260905 -->
 <!-- BRC_NIGE_TIMEX_ARROW_LIVE_REFRESH_20260905 -->
+<!-- BRC_NIGE_TIMEX_ARROW_COLUMNS_20260905 -->
+<!-- BRC_TIMEX_ARROW_UNIFIED_5_10_15_20260905 -->
 
 <!-- BRC_PREDICT_METRIC_ROW_ALIGNMENT_20260828 -->
 <!-- BRC_SNS_ARROW_BAKED_COORDS_20260902 -->
@@ -1120,14 +1122,16 @@
   .brc-nige-order-sub{margin-top:2px;font-size:10.5px;color:var(--ink-soft);line-height:1.45;}
   .brc-nige-order-rank{flex:0 0 auto;padding:3px 7px;border-radius:999px;background:rgba(0,87,219,.09);border:1px solid rgba(0,87,219,.18);color:var(--wave);font-size:10px;font-weight:900;white-space:nowrap;}
   .brc-nige-order-grid{border:1px solid rgba(10,31,51,.08);border-radius:9px;overflow:hidden;background:#fff;}
-  .brc-nige-order-row{display:grid;grid-template-columns:42px minmax(0,1fr) minmax(0,1fr);align-items:center;min-height:37px;border-top:1px solid rgba(10,31,51,.055);}
+  .brc-nige-order-row{display:grid;grid-template-columns:42px minmax(0,1.55fr) 46px minmax(0,1fr) 46px;align-items:center;min-height:37px;border-top:1px solid rgba(10,31,51,.055);}
   .brc-nige-order-row:first-child{border-top:0;}
   .brc-nige-order-row.head{min-height:29px;background:var(--bg3);color:var(--ink-soft);font-size:10px;font-weight:850;text-align:center;}
   .brc-nige-order-boat{display:flex;align-items:center;justify-content:center;}
-  .brc-nige-order-metric{display:flex;align-items:center;justify-content:center;gap:4px;font-variant-numeric:tabular-nums;}
+  .brc-nige-order-metric{display:flex;align-items:baseline;justify-content:center;gap:3px;font-variant-numeric:tabular-nums;min-width:0;}
   .brc-nige-order-pct{font-size:15px;font-weight:900;color:var(--navy);white-space:nowrap;}
-  .brc-nige-order-timex{display:inline-flex;align-items:center;justify-content:center;min-width:15px;min-height:15px;line-height:1;flex:0 0 auto;}
-  .brc-nige-order-timex .exhibition-arrow-icon{width:15px;height:15px;}
+  .brc-nige-order-timex-cell{display:flex;align-items:center;justify-content:center;min-width:0;}
+  .brc-nige-order-timex{display:inline-flex;align-items:center;justify-content:center;min-width:18px;min-height:18px;line-height:1;flex:0 0 auto;}
+  .brc-nige-order-timex .exhibition-arrow-icon{width:18px;height:18px;}
+  .brc-nige-order-timex-empty{font-size:13px;font-weight:800;color:rgba(61,74,99,.45);line-height:1;}
   .brc-nige-order-base{font-size:8.5px;font-weight:800;color:var(--navy);white-space:nowrap;}
   .brc-nige-order-base.is-strong-plus{color:var(--trend-up);}
   .brc-nige-order-base.is-strong-minus{color:var(--trend-down);}
@@ -1140,8 +1144,11 @@
   @media(max-width:420px){
     .brc-nige-order-panel{padding:9px 8px;}
     .brc-nige-order-title{font-size:12px;}
-    .brc-nige-order-row{grid-template-columns:38px minmax(0,1fr) minmax(0,1fr);}
+    .brc-nige-order-row{grid-template-columns:36px minmax(0,1.5fr) 34px minmax(0,.9fr) 34px;}
     .brc-nige-order-pct{font-size:14px;}
+    .brc-nige-order-base{font-size:8px;}
+    .brc-nige-order-timex{min-width:16px;min-height:16px;}
+    .brc-nige-order-timex .exhibition-arrow-icon{width:16px;height:16px;}
   }
 
   /* ---- 展開シナリオ：標本信頼度S-E＋スマホ幅最適化 ---- */
@@ -3632,11 +3639,8 @@ function brcAdminPlayerLabel(boat){
   return `${brcAdminBoatMark(boat?.course)}${brcAdminSurname(boat?.player?.name)}選手`;
 }
 function brcAdminArrow(delta, threshold){
-  const d=Number(delta);
-  if(!Number.isFinite(d)) return '→';
-  if(d>=threshold) return '↗';
-  if(d<=-threshold) return '↘';
-  return '→';
+  // SNSアシスタント側もBRCタイムX共通ルール（5 / 10 / 15pt）へ統一。
+  return brcProbabilityArrow(delta, threshold);
 }
 function brcAdminCurrentRaceTitle(){
   try{
@@ -6652,16 +6656,19 @@ function brcGetNigeVenueBaseMap(venue){
   return out;
 }
 
-function brcBuildNigeOrderMetricHtml(x,b,kind,baseText='',baseClass=''){
+function brcBuildNigeOrderMetricHtml(x,baseText='',baseClass=''){
   const pct=Number(x?.pct);
   if(!Number.isFinite(pct)) return '<div class="brc-nige-order-metric"><span class="brc-nige-order-pct">―</span></div>';
-  let timexHtml='';
+  return `<div class="brc-nige-order-metric"><span class="brc-nige-order-pct">${Math.round(pct)}%</span>${baseText?`<span class="brc-nige-order-base ${baseClass}">(${baseText})</span>`:''}</div>`;
+}
+function brcBuildNigeOrderTimexHtml(b,kind){
+  let inner='<span class="brc-nige-order-timex-empty" aria-label="展示未反映">−</span>';
   if(b?.exhibitionApplied){
     const delta=kind==='third' ? Number(b.exhibitionThirdDeltaPt) : Number(b.exhibitionSecondDeltaPt);
     const arrow=brcBuildExhibitionProbabilityArrowIcon(delta,1.0);
-    if(arrow) timexHtml=`<span class="brc-nige-order-timex" title="今回のBRCタイムXによる${kind==='third'?'3着':'2着'}方向。数値には加減しません">${arrow}</span>`;
+    if(arrow) inner=`<span class="brc-nige-order-timex" title="今回のBRCタイムXによる${kind==='third'?'3着':'2着'}方向。数値には加減しません">${arrow}</span>`;
   }
-  return `<div class="brc-nige-order-metric"><span class="brc-nige-order-pct">${Math.round(pct)}%</span>${timexHtml}${baseText?`<span class="brc-nige-order-base ${baseClass}">${baseText}</span>`:''}</div>`;
+  return `<div class="brc-nige-order-timex-cell">${inner}</div>`;
 }
 
 function brcBuildServerNigePredictionHtml(boats,workerPrediction,exhibitionApplied){
@@ -6682,13 +6689,13 @@ function brcBuildServerNigePredictionHtml(boats,workerPrediction,exhibitionAppli
     const diff=Number.isFinite(basePct)&&Number.isFinite(predPct)?Math.round(predPct-basePct):null;
     const diffText=diff==null?'':(diff===0?'±0pt':`${diff>0?'+':''}${diff}pt`);
     const diffClass=diff!=null&&diff>0?'is-strong-plus':(diff!=null&&diff<0?'is-strong-minus':'');
-    return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${brcBuildNigeOrderMetricHtml(secondMap.get(boat),b,'second',diffText,diffClass)}${brcBuildNigeOrderMetricHtml(thirdMap.get(boat),b,'third')}</div>`;
+    return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${brcBuildNigeOrderMetricHtml(secondMap.get(boat),diffText,diffClass)}${brcBuildNigeOrderTimexHtml(b,'second')}${brcBuildNigeOrderMetricHtml(thirdMap.get(boat))}${brcBuildNigeOrderTimexHtml(b,'third')}</div>`;
   }).join('');
   const picks=`<div class="brc-nige-order-picks"><div class="brc-nige-order-picks-label">3連単上位</div><div class="brc-nige-order-pick-list">${pred.picks.map((x,i)=>`<span class="brc-nige-order-pick">${i+1}位 ${x}</span>`).join('')}</div></div>`;
   const phaseColor=pred.timexArrowOnly?'#8a5a00':'var(--wave)';
   return `<div id="brcNigeOrderPredictionCard" class="brc-nige-order-panel">
     <div class="brc-nige-order-head"><div><div class="brc-nige-order-title">2着・3着予測</div><div class="brc-nige-order-sub">1号艇が逃げた場合</div></div><span class="brc-nige-order-rank" style="color:${phaseColor};">${pred.phaseLabel}</span></div>
-    <div class="brc-nige-order-grid"><div class="brc-nige-order-row head"><div>艇</div><div>2着率<span class="brc-nige-order-head-base">場基準比</span></div><div>3着率</div></div>${rows}</div>
+    <div class="brc-nige-order-grid"><div class="brc-nige-order-row head"><div>艇</div><div>2着率<span class="brc-nige-order-head-base">（場基準比）</span></div><div>展示</div><div>3着率</div><div>展示</div></div>${rows}</div>
     ${picks}
   </div>`;
 }
@@ -6810,10 +6817,10 @@ function brcBuildInlineNigeOrderPredictionHtml(course, boats){
     const diff=Number.isFinite(basePct)&&Number.isFinite(predPct)?Math.round(predPct-basePct):null;
     const diffText=diff==null?'':(diff===0?'±0pt':`${diff>0?'+':''}${diff}pt`);
     const diffClass=diff!=null&&diff>0?'is-strong-plus':(diff!=null&&diff<0?'is-strong-minus':'');
-    return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${brcBuildNigeOrderMetricHtml(secondMap.get(boat),b,'second',diffText,diffClass)}${brcBuildNigeOrderMetricHtml(thirdMap.get(boat),b,'third')}</div>`;
+    return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${brcBuildNigeOrderMetricHtml(secondMap.get(boat),diffText,diffClass)}${brcBuildNigeOrderTimexHtml(b,'second')}${brcBuildNigeOrderMetricHtml(thirdMap.get(boat))}${brcBuildNigeOrderTimexHtml(b,'third')}</div>`;
   }).join('');
   const picksHtml=pred.picks.length?`<div class="brc-nige-order-picks"><div class="brc-nige-order-picks-label">3連単上位</div><div class="brc-nige-order-pick-list">${pred.picks.map((x,i)=>`<span class="brc-nige-order-pick">${i+1}位 ${x}</span>`).join('')}</div></div>`:'';
-  return `<div id="brcNigeOrderPredictionCard" class="brc-nige-order-panel"><div class="brc-nige-order-head"><div><div class="brc-nige-order-title">2着・3着予測</div><div class="brc-nige-order-sub">1号艇が逃げた場合</div></div></div><div class="brc-nige-order-grid"><div class="brc-nige-order-row head"><div>艇</div><div>2着率<span class="brc-nige-order-head-base">場基準比</span></div><div>3着率</div></div>${rows}</div>${picksHtml}</div>`;
+  return `<div id="brcNigeOrderPredictionCard" class="brc-nige-order-panel"><div class="brc-nige-order-head"><div><div class="brc-nige-order-title">2着・3着予測</div><div class="brc-nige-order-sub">1号艇が逃げた場合</div></div></div><div class="brc-nige-order-grid"><div class="brc-nige-order-row head"><div>艇</div><div>2着率<span class="brc-nige-order-head-base">（場基準比）</span></div><div>展示</div><div>3着率</div><div>展示</div></div>${rows}</div>${picksHtml}</div>`;
 }
 
 function setPredictScenarioKimarite(course, kimarite){
@@ -7362,27 +7369,23 @@ function brcConstrainLogitProbabilities(probs,targetSum){
   const off=(lo+hi)/2;
   return logits.map(l=>brcSigmoid(l+off));
 }
-// BRCタイムX v2 矢印。補正の有無ではなく、最終着率がどれだけ動いたかの強度表示。
-// 1着: <2pt なし / 2-5.9 ↗↘ / 6-10.9 ↑↓ / >=11 ↑↑↓↓
-// 3連: <3pt なし / 3-7.9 ↗↘ / 8-13.9 ↑↓ / >=14 ↑↑↓↓
-// 2着・3着は数値へ反映せず、展開補助矢印だけ従来の1/6/11pt基準で表示する。
-const BRC_TIMEX_WIN_ARROW_FLAT_PT=2.0;
-const BRC_TIMEX_WIN_ARROW_UP_PT=6.0;
-const BRC_TIMEX_WIN_ARROW_DOUBLE_PT=11.0;
-const BRC_TIMEX_TOP3_ARROW_FLAT_PT=3.0;
-const BRC_TIMEX_TOP3_ARROW_UP_PT=8.0;
-const BRC_TIMEX_TOP3_ARROW_DOUBLE_PT=14.0;
-function brcTimeXArrowCuts(threshold){
-  const t=Number(threshold);
-  if(Math.abs(t-2.0)<1e-9) return {flat:BRC_TIMEX_TOP3_ARROW_FLAT_PT,up:BRC_TIMEX_TOP3_ARROW_UP_PT,double:BRC_TIMEX_TOP3_ARROW_DOUBLE_PT};
-  if(Math.abs(t-0.75)<1e-9) return {flat:BRC_TIMEX_WIN_ARROW_FLAT_PT,up:BRC_TIMEX_WIN_ARROW_UP_PT,double:BRC_TIMEX_WIN_ARROW_DOUBLE_PT};
-  return {flat:1.0,up:6.0,double:11.0};
+// BRCタイムX 共通矢印ルール。1着・2着・3着・3連対・本人傾向をすべて統一。
+// |変化| <5pt : → / ←（小変化）
+// 5〜9.9pt     : ↗ / ↘
+// 10〜14.9pt   : ↑ / ↓
+// 15pt以上     : ↑↑ / ↓↓
+const BRC_TIMEX_ARROW_DIAGONAL_PT=5.0;
+const BRC_TIMEX_ARROW_VERTICAL_PT=10.0;
+const BRC_TIMEX_ARROW_DOUBLE_PT=15.0;
+function brcTimeXArrowCuts(_threshold){
+  // 旧呼び出しとの互換のため引数は残すが、閾値は全指標で共通。
+  return {flat:BRC_TIMEX_ARROW_DIAGONAL_PT,up:BRC_TIMEX_ARROW_VERTICAL_PT,double:BRC_TIMEX_ARROW_DOUBLE_PT};
 }
 function brcProbabilityArrow(deltaPt,threshold){
   const d=Number(deltaPt);
   if(!Number.isFinite(d)) return '→';
   const a=Math.abs(d), cut=brcTimeXArrowCuts(threshold);
-  if(a < cut.flat) return '→';
+  if(a < cut.flat) return d<0 ? '←' : '→';
   if(a < cut.up) return d>0 ? '↗' : '↘';
   if(a < cut.double) return d>0 ? '↑' : '↓';
   return d>0 ? '↑↑' : '↓↓';
@@ -7979,6 +7982,7 @@ function brcBakedArrowSvgGeometry(label){
     '↑':{line:'12,20 12,5',head:'7,10 12,5 17,10'},
     '↗':{line:'6.34,17.66 16.95,7.05',head:'9.88,7.05 16.95,7.05 16.95,14.12'},
     '→':{line:'4,12 19,12',head:'14,7 19,12 14,17'},
+    '←':{line:'20,12 5,12',head:'10,7 5,12 10,17'},
     '↘':{line:'6.34,6.34 16.95,16.95',head:'16.95,9.88 16.95,16.95 9.88,16.95'},
     '↓':{line:'12,4 12,19',head:'17,14 12,19 7,14'}
   };
@@ -8064,11 +8068,10 @@ function brcFindExhibitionPlayerAlert(b){
 function brcSignedPt(v){ const n=Number(v); return Number.isFinite(n)?`${n>0?'+':''}${n.toFixed(1)}pt`:'―'; }
 
 // 個人傾向は「本人効果 − 通常効果」の差で表示する。
-// 差の大きさと信頼度(N)は別物として扱う。
-// |差|<5pt: → / 5〜9.9pt: ↗↘ / 10〜14.9pt: ↑↓ / 15pt以上: ↑↑↓↓
-const BRC_PERSONAL_TIMEX_ARROW_FLAT_PT=5.0;
-const BRC_PERSONAL_TIMEX_ARROW_STRONG_PT=10.0;
-const BRC_PERSONAL_TIMEX_ARROW_DOUBLE_PT=15.0;
+// 差の大きさと信頼度(N)は別物として扱い、矢印閾値はBRCタイムX共通ルールを使用。
+const BRC_PERSONAL_TIMEX_ARROW_FLAT_PT=BRC_TIMEX_ARROW_DIAGONAL_PT;
+const BRC_PERSONAL_TIMEX_ARROW_STRONG_PT=BRC_TIMEX_ARROW_VERTICAL_PT;
+const BRC_PERSONAL_TIMEX_ARROW_DOUBLE_PT=BRC_TIMEX_ARROW_DOUBLE_PT;
 function brcPersonalEffectDiff(a,kind){
   const keyMap={
     win:['本人1着効果pt','通常1着効果pt'],
@@ -8084,7 +8087,7 @@ function brcPersonalTrendArrow(v){
   const n=Number(v);
   if(!Number.isFinite(n)) return '→';
   const a=Math.abs(n);
-  if(a<BRC_PERSONAL_TIMEX_ARROW_FLAT_PT) return '→';
+  if(a<BRC_PERSONAL_TIMEX_ARROW_FLAT_PT) return n<0?'←':'→';
   if(a<BRC_PERSONAL_TIMEX_ARROW_STRONG_PT) return n>0?'↗':'↘';
   if(a<BRC_PERSONAL_TIMEX_ARROW_DOUBLE_PT) return n>0?'↑':'↓';
   return n>0?'↑↑':'↓↓';
@@ -8168,7 +8171,7 @@ function brcShowExhibitionPlayerAlert(raw){
   const currentHtml=(Number.isFinite(currentWin)||Number.isFinite(currentTop3))
     ? `<div class="brc-ex-alert-forecast-label">今回のBRC予測</div><div class="brc-ex-alert-forecast"><div class="brc-ex-alert-forecast-item"><div class="k">1着率</div><div class="v">${Number.isFinite(currentWin)?Math.round(currentWin)+'%':'―'}</div></div><div class="brc-ex-alert-forecast-item"><div class="k">3連対率</div><div class="v">${Number.isFinite(currentTop3)?Math.round(currentTop3)+'%':'―'}</div></div></div>`
     : '';
-  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']}　BRCタイムX・個人傾向</div><div class="brc-ex-alert-meta">${a['コース']}コース ／ タイムX差 ${a['平均差帯']}秒 ／ N=${a.N} ／ 参考度 ${confidence}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div>${currentHtml}<div class="brc-ex-alert-decision ${decision.cls}"><strong>判断：${decision.title}</strong>${decision.body}</div><div class="brc-ex-alert-forecast-label">本人傾向（手動判断）</div><div class="brc-ex-personal-box">${brcAlertPersonalTrendRow('1着',a,'win')}${brcAlertPersonalTrendRow('2着',a,'second')}${brcAlertPersonalTrendRow('3着',a,'third')}${brcAlertPersonalTrendRow('3連対',a,'top3')}</div><div class="brc-ex-alert-note">正式なTimeX自動補正は1着率・3連対率だけです。2着率・3着率はTimeX矢印のみで、数値へは加減しません。本人傾向は4着率とも別枠の参考情報として表示し、自動計算には入れず手動で判断します。</div><div class="brc-ex-alert-scale">本人傾向の矢印目安：5pt ↗↘ ／ 10pt ↑↓ ／ 15pt ↑↑↓↓</div></div>`;
+  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']}　BRCタイムX・個人傾向</div><div class="brc-ex-alert-meta">${a['コース']}コース ／ タイムX差 ${a['平均差帯']}秒 ／ N=${a.N} ／ 参考度 ${confidence}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div>${currentHtml}<div class="brc-ex-alert-decision ${decision.cls}"><strong>判断：${decision.title}</strong>${decision.body}</div><div class="brc-ex-alert-forecast-label">本人傾向（手動判断）</div><div class="brc-ex-personal-box">${brcAlertPersonalTrendRow('1着',a,'win')}${brcAlertPersonalTrendRow('2着',a,'second')}${brcAlertPersonalTrendRow('3着',a,'third')}${brcAlertPersonalTrendRow('3連対',a,'top3')}</div><div class="brc-ex-alert-note">正式なTimeX自動補正は1着率・3連対率だけです。2着率・3着率はTimeX矢印のみで、数値へは加減しません。本人傾向は4着率とも別枠の参考情報として表示し、自動計算には入れず手動で判断します。</div><div class="brc-ex-alert-scale">BRCタイムX共通：5pt未満 →← ／ 5pt ↗↘ ／ 10pt ↑↓ ／ 15pt ↑↑↓↓</div></div>`;
   document.body.appendChild(pop);
 }
 
@@ -8196,7 +8199,7 @@ function brcShowScenarioPersonalAdjustment(raw,kind,currentRate){
     return brcAlertPersonalTrendRow(m.label,a,k);
   }).join('');
   const watchText=isWatch?'監視条件のため、参考度は低めに扱います。':'';
-  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']}　本人傾向</div><div class="brc-ex-alert-meta">${a['コース']}コース ／ タイムX差 ${a['平均差帯']}秒 ／ N=${a.N} ／ 参考度 ${confidence}${isWatch?' ／ 監視':''}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-personal-adjust-focus ${cls}"><div class="brc-personal-adjust-kicker">${meta.label}率の参考加減値</div><div class="brc-personal-adjust-main"><span class="brc-personal-adjust-label">本人 ${arrow}</span><span class="brc-personal-adjust-value brc-ex-metric-${cls}">${brcSignedPt(diff)}</span></div><div class="brc-personal-adjust-current">${rateText}</div><div class="brc-personal-adjust-help">参考加減値 ＝ この選手本人のTimeX効果 − 通常のTimeX効果。表示中の着率には自動加算しません。予想時に手動で加減するための参考値です。${watchText}</div></div><div class="brc-ex-alert-forecast-label">この条件での本人傾向</div><div class="brc-ex-personal-box">${allRows}</div><div class="brc-ex-alert-scale">矢印目安：5pt ↗↘ ／ 10pt ↑↓ ／ 15pt ↑↑↓↓</div></div>`;
+  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']}　本人傾向</div><div class="brc-ex-alert-meta">${a['コース']}コース ／ タイムX差 ${a['平均差帯']}秒 ／ N=${a.N} ／ 参考度 ${confidence}${isWatch?' ／ 監視':''}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-personal-adjust-focus ${cls}"><div class="brc-personal-adjust-kicker">${meta.label}率の参考加減値</div><div class="brc-personal-adjust-main"><span class="brc-personal-adjust-label">本人 ${arrow}</span><span class="brc-personal-adjust-value brc-ex-metric-${cls}">${brcSignedPt(diff)}</span></div><div class="brc-personal-adjust-current">${rateText}</div><div class="brc-personal-adjust-help">参考加減値 ＝ この選手本人のTimeX効果 − 通常のTimeX効果。表示中の着率には自動加算しません。予想時に手動で加減するための参考値です。${watchText}</div></div><div class="brc-ex-alert-forecast-label">この条件での本人傾向</div><div class="brc-ex-personal-box">${allRows}</div><div class="brc-ex-alert-scale">BRCタイムX共通：5pt未満 →← ／ 5pt ↗↘ ／ 10pt ↑↓ ／ 15pt ↑↑↓↓</div></div>`;
   document.body.appendChild(pop);
 }
 
