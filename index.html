@@ -25,6 +25,7 @@
 <!-- BRC_TIMEX_ARROW_0_5_10_15_TRIPLE_20260905 -->
 <!-- BRC_TIMEX_ALL_PLACE_RATES_NUMERIC_20260905 -->
 <!-- BRC_RACE_RESULT_NO_KV_10M_90S_20260905 -->
+<!-- BRC_RACE_RESULT_INLINE_FOLD_20260905 -->
 
 <!-- BRC_PREDICT_METRIC_ROW_ALIGNMENT_20260828 -->
 <!-- BRC_SNS_ARROW_BAKED_COORDS_20260902 -->
@@ -866,9 +867,9 @@
   }
 
 
-  /* ---- 出走表AI 4タブ（出走データ / オッズ / AI予測 / 結果） ---- */
+  /* ---- 出走表AI 3タブ（出走データ / オッズ / AI予測） ---- */
   .predict-main-tabs{
-    display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:0;
+    display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:0;
     border-bottom:1px solid rgba(10,31,51,.10); background:rgba(255,255,255,.98);
     /* BRC_PREDICT_MAIN_TABS_STICKY_20260828: スクロール中もメインタブ直下へ固定 */
     position:sticky; top:calc(var(--page-tabs-sticky-h) + 1px); z-index:98;
@@ -981,28 +982,48 @@
   .brc-odds-foot{margin:6px 2px 0;font-size:9px;line-height:1.45;color:var(--ink-soft);}
   .brc-odds-empty{padding:22px 10px;text-align:center;color:var(--ink-soft);font-size:11px;line-height:1.6;}
 
-  /* ---- BRC_RACE_RESULT_NO_KV_10M_90S_20260905 ---- */
-  .brc-result-wrap{padding:16px 14px 18px;}
+  /* ---- BRC_RACE_RESULT_INLINE_FOLD_20260905 ---- */
+  .brc-result-fold{
+    margin:0 0 10px;border:1px solid rgba(0,87,219,.14);border-radius:11px;
+    background:linear-gradient(160deg,rgba(0,87,219,.045),rgba(255,255,255,.98));
+    overflow:hidden;
+  }
+  .brc-result-fold > summary{
+    list-style:none;display:flex;align-items:center;gap:8px;min-height:44px;padding:10px 12px;
+    cursor:pointer;user-select:none;color:var(--navy);font-size:12.5px;font-weight:900;
+  }
+  .brc-result-fold > summary::-webkit-details-marker{display:none;}
+  .brc-result-fold > summary::after{
+    content:"⌄";margin-left:auto;color:var(--wave);font-size:17px;font-weight:900;line-height:1;
+    transition:transform .16s ease;
+  }
+  .brc-result-fold[open] > summary::after{transform:rotate(180deg);}
+  .brc-result-fold-icon{font-size:17px;line-height:1;}
+  .brc-result-fold-title{white-space:nowrap;}
+  .brc-result-wrap{padding:0 10px 11px;}
   .brc-result-status{
-    padding:24px 10px;text-align:center;color:var(--ink-soft);font-size:12px;line-height:1.7;
+    padding:16px 8px;text-align:center;color:var(--ink-soft);font-size:11px;line-height:1.65;
+    border-top:1px solid rgba(10,31,51,.07);
   }
   .brc-result-grid{
     display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:hidden;
-    border:1px solid rgba(10,31,51,.10);border-radius:12px;background:#fff;
+    border:1px solid rgba(10,31,51,.10);border-radius:10px;background:#fff;
   }
-  .brc-result-item{min-width:0;padding:15px 8px;text-align:center;border-left:1px solid rgba(10,31,51,.07);}
+  .brc-result-item{min-width:0;padding:13px 6px;text-align:center;border-left:1px solid rgba(10,31,51,.07);}
   .brc-result-item:first-child{border-left:0;}
-  .brc-result-label{font-size:10px;font-weight:850;color:var(--ink-soft);}
-  .brc-result-value{margin-top:4px;font-size:20px;font-weight:950;color:var(--navy);line-height:1.2;white-space:nowrap;font-variant-numeric:tabular-nums;}
-  .brc-result-value.payout{font-size:18px;}
-  .brc-result-value.kimarite{font-size:17px;}
+  .brc-result-label{font-size:9.5px;font-weight:850;color:var(--ink-soft);}
+  .brc-result-value{margin-top:4px;font-size:18px;font-weight:950;color:var(--navy);line-height:1.2;white-space:nowrap;font-variant-numeric:tabular-nums;}
+  .brc-result-value.payout{font-size:17px;}
+  .brc-result-value.kimarite{font-size:16px;}
   @media(max-width:420px){
-    .brc-result-wrap{padding:12px 8px 15px;}
-    .brc-result-item{padding:13px 4px;}
+    .brc-result-fold > summary{min-height:42px;padding:9px 10px;font-size:12px;}
+    .brc-result-fold-icon{font-size:16px;}
+    .brc-result-wrap{padding:0 7px 9px;}
+    .brc-result-item{padding:11px 3px;}
     .brc-result-label{font-size:9px;}
-    .brc-result-value{font-size:18px;}
-    .brc-result-value.payout{font-size:16px;}
-    .brc-result-value.kimarite{font-size:15px;}
+    .brc-result-value{font-size:17px;}
+    .brc-result-value.payout{font-size:15.5px;}
+    .brc-result-value.kimarite{font-size:14.5px;}
   }
   .brc-odds-builder{display:grid;gap:10px;}
   .brc-odds-builder-box{border:1px solid rgba(10,31,51,.10);border-radius:12px;background:#fff;overflow:hidden;}
@@ -1287,7 +1308,7 @@
 
   /* BRC_STICKY_OVERLAP_FIX_20260829
      「まもなく締切」は通常スクロールに戻し、
-     出走データ / オッズ / AI予測 / 結果 の sticky と競合しないようにする。 */
+     出走データ / オッズ / AI予測 の sticky と競合しないようにする。 */
   #deadlineSchedule{
     position:relative;
     top:auto;
@@ -3086,7 +3107,6 @@
           <button type="button" class="predict-main-tab active" data-predict-main-tab="data">出走データ</button>
           <button type="button" class="predict-main-tab" data-predict-main-tab="odds">オッズ</button>
           <button type="button" class="predict-main-tab" data-predict-main-tab="ai">AI予測</button>
-          <button type="button" class="predict-main-tab" data-predict-main-tab="result">結果</button>
         </div>
         <div class="predict-main-panel active" id="predictMainPanel-data">
           <div id="predictResult" style="padding:18px 22px;"></div>
@@ -3159,11 +3179,6 @@
         </div>
         <div class="predict-main-panel" id="predictMainPanel-ai">
           <div id="predictAiResult" class="predict-ai-wrap"></div>
-        </div>
-        <div class="predict-main-panel" id="predictMainPanel-result">
-          <div class="brc-result-wrap" id="brcRaceResultPanel">
-            <div id="brcRaceResultBody" class="brc-result-status">レースを選択してください。</div>
-          </div>
         </div>
       </div>
       
@@ -5822,9 +5837,9 @@ function scrollPredictMainTabsToFixedPosition(behavior='smooth'){
   }));
 }
 
-// 出走表AI：4タブ切り替え
+// 出走表AI：3タブ切り替え
 function setPredictMainTab(key){
-  const valid=['data','odds','ai','result'];
+  const valid=['data','odds','ai'];
   const k=valid.includes(key)?key:'data';
   document.querySelectorAll('.predict-main-tab').forEach(btn=>{
     const on=btn.dataset.predictMainTab===k;
@@ -5837,7 +5852,6 @@ function setPredictMainTab(key){
   });
   window.__predictMainTabCurrent=k;
   if(k==='odds' && typeof brcRenderOddsPanel==='function') setTimeout(()=>brcRenderOddsPanel(),0);
-  if(k==='result' && typeof brcEnsureCurrentRaceResultMonitor==='function') setTimeout(()=>brcEnsureCurrentRaceResultMonitor(),0);
 }
 
 function bindPredictMainTabs(){
@@ -5852,15 +5866,25 @@ function bindPredictMainTabs(){
   setPredictMainTab(window.__predictMainTabCurrent||'data');
 }
 
-// ===== BRC_RACE_RESULT_NO_KV_10M_90S_20260905 =====
-// 結果はKVへ保存しない。Live Workerの /live-result が公式一次データを参照し、
+// ===== BRC_RACE_RESULT_INLINE_FOLD_20260905 =====
+// 結果はKVへ保存しない。Live Workerの /live-result からD1保存済みの確定結果を参照する。
 // INDEXは締切10分後から選択中の1レースだけ確認する。未確定時は90秒後に再確認し、確定後は停止。
+// 結果は出走データ内の折りたたみ表示。初期状態は必ず閉じ、予想前に答えが見えないようにする。
 const BRC_RESULT_FIRST_CHECK_MIN = 10;
 const BRC_RESULT_RETRY_MS = 90 * 1000;
 const __brcRaceResultCache = new Map();
 let __brcRaceResultTimer = null;
 let __brcRaceResultToken = 0;
 let __brcRaceResultActive = null;
+
+function brcBuildRaceResultFoldHtml(){
+  return `<details class="brc-result-fold" id="brcRaceResultFold">
+    <summary><span class="brc-result-fold-icon" aria-hidden="true">🏆</span><span class="brc-result-fold-title">レース結果を見る</span></summary>
+    <div class="brc-result-wrap" id="brcRaceResultPanel">
+      <div id="brcRaceResultBody" class="brc-result-status">結果を確認しています。</div>
+    </div>
+  </details>`;
+}
 
 function brcRaceResultSpec(venue, raceNo){
   const r=Number(raceNo);
@@ -5962,7 +5986,14 @@ function brcEnsureCurrentRaceResultMonitor(){
   if(!spec){ brcRenderRaceResultStatus('レースを選択してください。'); return; }
   if(__brcRaceResultActive?.key===spec.key){
     const cached=__brcRaceResultCache.get(spec.key);
-    if(cached?.confirmed && cached.result) brcRenderRaceResultConfirmed(cached.result);
+    if(cached?.confirmed && cached.result){
+      brcRenderRaceResultConfirmed(cached.result);
+    }else{
+      const waitMs=spec.dueMs-Date.now();
+      brcRenderRaceResultStatus(waitMs>0
+        ? '締切10分後から結果を確認します。'
+        : '結果確認中です。未確定の場合は90秒後に再確認します。');
+    }
     return;
   }
   brcStartRaceResultMonitor(venue,raceNo);
@@ -10124,7 +10155,7 @@ function loadTodaysRace(venue, raceNo){
   // レースを切り替えた時は、前レースの風向・風速条件を持ち越さない。
   window.__windSelection = {dir:'', speed:''};
 
-  // 結果は予測APIとは独立して監視。締切10分後から確認し、未確定時のみ90秒後に再確認する。
+  // 折りたたみ結果は予測APIとは独立して監視。締切10分後から確認し、未確定時のみ90秒後に再確認する。
   try{ brcStartRaceResultMonitor(venue, Number(raceNo)); }catch(_e){}
 
   // 予測計算で例外が発生しても、レース番号クリック・出走表表示を止めない。
@@ -11773,6 +11804,7 @@ async function runPredict(){
     ${buildCurrentRaceSummaryHtml(venue)}
     ${buildInReliabilityCardHtmlFromServer(localInReliability)}
     ${brcBuildSlitEvaluationHtml(boats, liveExhibitionRace, localInReliability)}
+    ${brcBuildRaceResultFoldHtml()}
     ${brcBuildExhibitionRaceNoticeHtml(liveExhibitionRace)}
     <div id="predictTableWrap" style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
     <table class="predict-table">
@@ -11904,6 +11936,7 @@ async function runPredict(){
     </details>
     ${buildWindPanelHtml(venue)}
   `;
+  try{ brcEnsureCurrentRaceResultMonitor(); }catch(_e){}
 
   renderPredictAiPanel(boats, workerPrediction, localInReliability, exhibitionApplied);
   bindPredictMainTabs();
