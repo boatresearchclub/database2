@@ -29,6 +29,7 @@
 <!-- BRC_RACE_RESULT_START_FORMATION_RESTORE_20260906 -->
 <!-- BRC_RACE_RESULT_SHOW_ONLY_CONFIRMED_20260906 -->
 <!-- BRC_AI_NIGE_FORWARD_OOS_LOG_20260906 -->
+<!-- BRC_VISIBLE_OOS_SNAPSHOT_V1_20260906 -->
 
 <!-- BRC_PREDICT_METRIC_ROW_ALIGNMENT_20260828 -->
 <!-- BRC_SNS_ARROW_BAKED_COORDS_20260902 -->
@@ -12488,6 +12489,531 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   }else{
     init();
   }
+})();
+</script>
+
+
+<!-- BRC_VISIBLE_OOS_SNAPSHOT_V1_20260906 -->
+<script id="brc-visible-oos-snapshot-v1">
+(function(){
+  'use strict';
+
+  const BRC_SNAPSHOT_DB_NAME='brc_visible_oos_v1';
+  const BRC_SNAPSHOT_STORE='race_snapshots';
+  const BRC_SNAPSHOT_DB_VERSION=1;
+  // 条件・計算ロジックを変更した時はこの値を必ず更新する。
+  const BRC_SNAPSHOT_LOGIC_VERSION='BRC_VISIBLE_OOS_V1_20260906';
+
+  function brcSnapNum(v){
+    const n=Number(v);
+    return Number.isFinite(n)?n:null;
+  }
+  function brcSnapRound(v,d=4){
+    const n=Number(v);
+    if(!Number.isFinite(n)) return null;
+    const p=Math.pow(10,d);
+    return Math.round(n*p)/p;
+  }
+  function brcSnapText(v){ return v===null||v===undefined?'':String(v); }
+  function brcSnapClone(v){
+    if(v===null||v===undefined) return null;
+    try{return JSON.parse(JSON.stringify(v));}catch(_e){return null;}
+  }
+  function brcSnapDateCompact(date){return String(date||'').replace(/-/g,'');}
+  function brcSnapVenueCode(venue,liveRace=null){
+    let code='';
+    try{ if(typeof brcVenueCodeFromName==='function') code=brcVenueCodeFromName(venue); }catch(_e){}
+    if(!code && liveRace?.venue_code!==undefined) code=liveRace.venue_code;
+    const s=String(code??'').replace(/\D/g,'');
+    return s?String(Number(s)).padStart(2,'0'):'';
+  }
+  function brcSnapRaceCode(date,venue,raceNo,liveRace=null){
+    const d=brcSnapDateCompact(date), j=brcSnapVenueCode(venue,liveRace), r=Number(raceNo);
+    return /^\d{8}$/.test(d)&&/^\d{2}$/.test(j)&&r>=1&&r<=12 ? `${d}${j}${String(r).padStart(2,'0')}` : '';
+  }
+  function brcSnapCurrentMeta(){
+    const date=String(typeof TODAY_LABEL!=='undefined' ? TODAY_LABEL : '');
+    const venue=String(document.getElementById('predictRaceDay')?.value||document.getElementById('predictVenue')?.value||'').trim();
+    const raceNo=Number(document.getElementById('predictRaceNo')?.value||0);
+    const info=(typeof RACE_INFO_TODAY!=='undefined' ? RACE_INFO_TODAY : {})?.[venue]||{};
+    const deadline=String(info?.deadlines?.[String(raceNo)]||'');
+    let raceDayLabel='';
+    let raceTitle='';
+    try{
+      if(typeof resolveSelectedRaceDayLabel==='function') raceDayLabel=String(resolveSelectedRaceDayLabel(info,String(raceNo))||'');
+    }catch(_e){}
+    try{ raceTitle=String(info?.raceTitles?.[String(raceNo)]||info?.raceTitles?.[raceNo]||''); }catch(_e){}
+    return {date,venue,raceNo,deadline,info,raceDayLabel,raceTitle};
+  }
+  function brcSnapBeforeDeadline(date,deadline){
+    if(String(date)!==String(typeof getJstDateLabel==='function'?getJstDateLabel():date)) return false;
+    const m=String(deadline||'').match(/^(\d{1,2}):(\d{2})$/);
+    if(!m||!/^\d{4}-\d{2}-\d{2}$/.test(String(date||''))) return false;
+    const ms=Date.parse(`${date}T${m[1].padStart(2,'0')}:${m[2]}:00+09:00`);
+    return Number.isFinite(ms)&&Date.now()<ms;
+  }
+  function brcSnapMinutesToDeadline(date,deadline){
+    const m=String(deadline||'').match(/^(\d{1,2}):(\d{2})$/);
+    if(!m||!/^\d{4}-\d{2}-\d{2}$/.test(String(date||''))) return null;
+    const ms=Date.parse(`${date}T${m[1].padStart(2,'0')}:${m[2]}:00+09:00`);
+    return Number.isFinite(ms)?brcSnapRound((ms-Date.now())/60000,2):null;
+  }
+
+  function brcSnapOpenDb(){
+    return new Promise((resolve,reject)=>{
+      if(!('indexedDB' in window)){reject(new Error('IndexedDBを利用できません'));return;}
+      const req=indexedDB.open(BRC_SNAPSHOT_DB_NAME,BRC_SNAPSHOT_DB_VERSION);
+      req.onupgradeneeded=()=>{
+        const db=req.result;
+        if(!db.objectStoreNames.contains(BRC_SNAPSHOT_STORE)){
+          const st=db.createObjectStore(BRC_SNAPSHOT_STORE,{keyPath:'id'});
+          st.createIndex('date','date',{unique:false});
+          st.createIndex('raceCode','raceCode',{unique:false});
+          st.createIndex('phase','phase',{unique:false});
+          st.createIndex('logicVersion','logicVersion',{unique:false});
+        }
+      };
+      req.onsuccess=()=>resolve(req.result);
+      req.onerror=()=>reject(req.error||new Error('IndexedDB open failed'));
+    });
+  }
+  async function brcSnapGet(id){
+    const db=await brcSnapOpenDb();
+    try{
+      return await new Promise((resolve,reject)=>{
+        const tx=db.transaction(BRC_SNAPSHOT_STORE,'readonly');
+        const q=tx.objectStore(BRC_SNAPSHOT_STORE).get(id);
+        q.onsuccess=()=>resolve(q.result||null);
+        q.onerror=()=>reject(q.error);
+      });
+    }finally{db.close();}
+  }
+  async function brcSnapPut(row){
+    const db=await brcSnapOpenDb();
+    try{
+      return await new Promise((resolve,reject)=>{
+        const tx=db.transaction(BRC_SNAPSHOT_STORE,'readwrite');
+        const q=tx.objectStore(BRC_SNAPSHOT_STORE).put(row);
+        q.onsuccess=()=>resolve(true);
+        q.onerror=()=>reject(q.error);
+      });
+    }finally{db.close();}
+  }
+  async function brcSnapAddFirst(row){
+    const db=await brcSnapOpenDb();
+    try{
+      return await new Promise((resolve,reject)=>{
+        const tx=db.transaction(BRC_SNAPSHOT_STORE,'readwrite');
+        const q=tx.objectStore(BRC_SNAPSHOT_STORE).add(row);
+        q.onsuccess=()=>resolve(true);
+        q.onerror=(ev)=>{
+          if(q.error?.name==='ConstraintError'){
+            try{ev.preventDefault();ev.stopPropagation();}catch(_e){}
+            resolve(false);
+          }else reject(q.error);
+        };
+      });
+    }finally{db.close();}
+  }
+  async function brcSnapGetAll(){
+    const db=await brcSnapOpenDb();
+    try{
+      return await new Promise((resolve,reject)=>{
+        const tx=db.transaction(BRC_SNAPSHOT_STORE,'readonly');
+        const q=tx.objectStore(BRC_SNAPSHOT_STORE).getAll();
+        q.onsuccess=()=>resolve(Array.isArray(q.result)?q.result:[]);
+        q.onerror=()=>reject(q.error);
+      });
+    }finally{db.close();}
+  }
+
+  function brcSnapEntryState(liveRace){
+    const boats=Array.isArray(liveRace?.boats)?liveRace.boats:[];
+    const rows=boats.map(x=>({boat:Number(x?.boat_no),course:Number(x?.entry_course)}))
+      .filter(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isInteger(x.course)&&x.course>=1&&x.course<=6)
+      .sort((a,b)=>a.course-b.course||a.boat-b.boat);
+    const sequence=rows.map(x=>x.boat);
+    const entryChanged=sequence.length===6 && sequence.some((n,i)=>n!==i+1);
+    let absent=[];
+    try{
+      if(typeof brcCollectConfirmedAbsentBoats==='function') absent=[...brcCollectConfirmedAbsentBoats(liveRace)].map(Number).sort((a,b)=>a-b);
+    }catch(_e){}
+    return {sequence,entryChanged,fixedCourse:liveRace?.fixed_course??null,absent};
+  }
+  function brcSnapLapState(liveRace){
+    try{
+      if(typeof brcTimeXLapState==='function') return brcTimeXLapState(liveRace);
+    }catch(_e){}
+    return {ready:false,started:false,allSix:false,missing:[]};
+  }
+  function brcSnapWeather(liveRace){
+    const w=liveRace?.weather||{};
+    return {
+      direction:brcSnapText(w.wind_direction),
+      speedM:brcSnapNum(w.wind_speed_m),
+      waveCm:brcSnapNum(w.wave_cm),
+      quality:brcSnapText(w.wind_quality),
+      observedAt:brcSnapText(w.observed_at)
+    };
+  }
+  function brcSnapPersonal(b){
+    try{
+      if(typeof brcAdminPersonalAlertForBoat==='function') return brcAdminPersonalAlertForBoat(b);
+    }catch(_e){}
+    return null;
+  }
+  function brcSnapST(b){
+    const reg=String(b?.player?.reg||'');
+    const course=Number(b?.course);
+    const d=(typeof ST_COURSE!=='undefined' ? ST_COURSE : {})?.[reg]?.[String(course)]||null;
+    let stability=null;
+    try{ if(typeof getSTStability==='function') stability=getSTStability(reg,course); }catch(_e){}
+    return {
+      avgRank:brcSnapNum(d?.avg),
+      n:brcSnapNum(d?.n),
+      stabilityGrade:brcSnapText(stability?.data?.grade),
+      stabilityN:brcSnapNum(stability?.data?.n),
+      meanSt:brcSnapNum(stability?.data?.mean_st),
+      sd:brcSnapNum(stability?.data?.seg_sd),
+      hit05:brcSnapNum(stability?.data?.hit05),
+      late25:brcSnapNum(stability?.data?.late25)
+    };
+  }
+  function brcSnapBoat(b,phase){
+    const pre=phase==='pre';
+    const baseWin=brcSnapNum(b?.basePctFloat);
+    const baseTop3=brcSnapNum(b?.basePct3Float);
+    const baseSecond=brcSnapNum(b?.basePct2);
+    const safeBaseSecond=baseSecond===null?null:Math.max(0,Math.min(baseSecond,Math.max(0,(baseTop3??0)-(baseWin??0))));
+    const baseThird=(baseWin===null||baseTop3===null||safeBaseSecond===null)?null:Math.max(0,baseTop3-baseWin-safeBaseSecond);
+    const win=pre?baseWin:brcSnapNum(b?.pctFloat);
+    const top3=pre?baseTop3:brcSnapNum(b?.pct3Float);
+    const second=pre?safeBaseSecond:brcSnapNum(b?.exhibitionApplied?b?.exhibitionSecondPct:b?.basePct2);
+    const third=pre?baseThird:brcSnapNum(b?.exhibitionApplied?b?.exhibitionThirdPct:baseThird);
+    const st=brcSnapST(b);
+    const personal=pre?null:brcSnapPersonal(b);
+    const ex=pre?null:(b?.exhibition||null);
+    const dxWin=pre?0:brcSnapNum(b?.exhibitionWinDeltaPt);
+    const dxSecond=pre?0:brcSnapNum(b?.exhibitionSecondDeltaPt);
+    const dxThird=pre?0:brcSnapNum(b?.exhibitionThirdDeltaPt);
+    const dxTop3=pre?0:brcSnapNum(b?.exhibitionTop3DeltaPt);
+    const arrow=v=>{
+      if(pre||v===null) return '';
+      try{return typeof brcProbabilityArrow==='function'?brcProbabilityArrow(v,0):'';}catch(_e){return '';}
+    };
+    return {
+      course:Number(b?.course)||0,
+      reg:brcSnapText(b?.player?.reg),
+      name:brcSnapText(b?.player?.name),
+      racerClass:brcSnapText(b?.racerClass),
+      win:brcSnapRound(win),second:brcSnapRound(second),third:brcSnapRound(third),top3:brcSnapRound(top3),
+      baseWin:brcSnapRound(baseWin),baseSecond:brcSnapRound(safeBaseSecond),baseThird:brcSnapRound(baseThird),baseTop3:brcSnapRound(baseTop3),
+      timeXApplied:!pre&&!!b?.exhibitionApplied,
+      timeXEngine:pre?'':brcSnapText(b?.exhibitionTimeXEngine||window.__brcTimeXEngineCurrent||''),
+      timeXBand:pre?'':brcSnapText(b?.exhibitionTimeXBand02),
+      timeXN:pre?null:brcSnapNum(b?.exhibitionTimeXN),
+      timeXVenueAware:pre?false:!!b?.exhibitionTimeXVenueAware,
+      timeXDiffSec:pre?null:brcSnapNum(b?.exhibitionDiffBucket),
+      timeXWinDelta:brcSnapRound(dxWin),timeXSecondDelta:brcSnapRound(dxSecond),timeXThirdDelta:brcSnapRound(dxThird),timeXTop3Delta:brcSnapRound(dxTop3),
+      timeXWinArrow:arrow(dxWin),timeXSecondArrow:arrow(dxSecond),timeXThirdArrow:arrow(dxThird),timeXTop3Arrow:arrow(dxTop3),
+      personal,
+      st,
+      motorNo:brcSnapNum(b?.motorNo),motor2:brcSnapNum(b?.motor2),motorGrade:brcSnapText(b?.motorGrade),
+      exhibitionTime:brcSnapNum(ex?.exhibition_time),
+      displaySt:brcSnapNum(ex?.display_st),
+      lapTime:brcSnapNum(ex?.lap_time),
+      turnTime:brcSnapNum(ex?.turn_time),
+      straightTime:brcSnapNum(ex?.straight_time),
+      tilt:brcSnapNum(ex?.tilt),
+      entryCourse:brcSnapNum(ex?.entry_course),
+      relativeDiff:brcSnapNum(ex?.relative_diff_capped??ex?.relative_diff)
+    };
+  }
+  function brcSnapReliability(phase,boats,worker,grade,apiBoats){
+    if(phase==='pre'){
+      const p1=boats.find(b=>Number(b.course)===1);
+      let x=null;
+      try{
+        if(typeof classifyInReliabilityByWinPct==='function'&&worker?.inReliability){
+          x=classifyInReliabilityByWinPct(p1?.basePctFloat,grade,(apiBoats||[]).map(b=>b.reg),worker.inReliability);
+        }
+      }catch(_e){}
+      if(x&&Number.isFinite(Number(p1?.venueAvgWin))){
+        x={...x,venueBaseDiff:Number(p1.basePctFloat)-Number(p1.venueAvgWin)};
+      }
+      return x;
+    }
+    return window.__currentLocalInReliability||worker?.uiInReliability||null;
+  }
+  function brcSnapRecommendation(worker){
+    try{
+      if(typeof brcGetAiModePayload==='function'){
+        const m=brcGetAiModePayload(worker);
+        if(m) return brcSnapClone({stable:m.stable,hit:m.hit,return:m.return});
+      }
+    }catch(_e){}
+    return brcSnapClone(worker?.recommendation||null);
+  }
+  function brcSnapBuildRow(phase,source){
+    const meta=brcSnapCurrentMeta();
+    const boats=Array.isArray(window.__predictBoatsCurrent)?window.__predictBoatsCurrent:[];
+    const worker=window.__predictWorkerCurrent||null;
+    const grade=String(window.__predictGradeCurrent||document.getElementById('predictGrade')?.value||'');
+    const apiBoats=Array.isArray(window.__predictApiBoatsCurrent)?window.__predictApiBoatsCurrent:[];
+    if(boats.length!==6||!worker||!meta.venue||!meta.raceNo) return null;
+    const liveRace=phase==='pre'?null:(window.__currentLiveExhibition||null);
+    const lap=brcSnapLapState(liveRace);
+    const entry=brcSnapEntryState(liveRace);
+    const rel=brcSnapReliability(phase,boats,worker,grade,apiBoats);
+    const venueCode=brcSnapVenueCode(meta.venue,liveRace);
+    const raceCode=brcSnapRaceCode(meta.date,meta.venue,meta.raceNo,liveRace);
+    const capturedAt=new Date().toISOString();
+    let slitText='';
+    let noticeText='';
+    if(phase!=='pre'){
+      slitText=String(document.getElementById('slitEvaluationCard')?.innerText||'').trim();
+      noticeText=String(document.getElementById('exhibitionRaceNotice')?.innerText||'').trim();
+    }
+    let highTilts=[];
+    try{ if(phase!=='pre'&&typeof brcSlitHighTiltItems==='function') highTilts=brcSlitHighTiltItems(liveRace); }catch(_e){}
+    const weather=brcSnapWeather(liveRace);
+    return {
+      id:`${BRC_SNAPSHOT_LOGIC_VERSION}|${meta.date}|${meta.venue}|${meta.raceNo}|${phase}`,
+      logicVersion:BRC_SNAPSHOT_LOGIC_VERSION,
+      date:meta.date,venue:meta.venue,venueCode,raceNo:meta.raceNo,raceCode,
+      grade,raceDayLabel:meta.raceDayLabel,raceTitle:meta.raceTitle,deadline:meta.deadline,
+      phase,source,capturedAt,firstCapturedAt:capturedAt,updateCount:1,
+      minutesToDeadline:brcSnapMinutesToDeadline(meta.date,meta.deadline),
+      predictionVersion:brcSnapText(worker?.version),
+      scenarioVersion:brcSnapText(worker?.scenarioAssist?.version),
+      timeXEngine:phase==='pre'?'':brcSnapText(window.__brcTimeXEngineCurrent||''),
+      timeXApplied:phase!=='pre'&&!!window.__currentExhibitionApplied,
+      timeXEligible:phase!=='pre'&&!!(liveRace&&typeof brcLiveExhibitionEligible==='function'&&brcLiveExhibitionEligible(liveRace)),
+      exhibitionStarted:phase!=='pre'&&!!lap.started,
+      lapReady:phase!=='pre'&&!!lap.ready,
+      lapMissing:phase!=='pre'&&Array.isArray(lap.missing)?lap.missing:[],
+      entryChanged:phase!=='pre'&&!!entry.entryChanged,
+      entrySequence:phase!=='pre'?entry.sequence:[],
+      fixedCourse:phase!=='pre'?entry.fixedCourse:null,
+      absentBoats:phase!=='pre'?entry.absent:[],
+      inReliability:brcSnapText(rel?.rank||rel?.label||''),
+      inPct:brcSnapRound(rel?.pct??boats.find(b=>Number(b.course)===1)?.[phase==='pre'?'basePctFloat':'pctFloat']),
+      venueBaseDiff:brcSnapRound(rel?.venueBaseDiff),
+      reliabilityRule:brcSnapText(rel?.ruleVersion),
+      women:!!rel?.women,sg:!!rel?.sg,strong:!!rel?.strong,
+      todayReject:!!worker?.inReliability?.todayReject,
+      slitText,noticeText,highTilts:brcSnapClone(highTilts),
+      weather,
+      recommendation:brcSnapRecommendation(worker),
+      scenarioAssist:brcSnapClone(worker?.scenarioAssist||null),
+      workerInReliability:brcSnapClone(worker?.inReliability||null),
+      boats:boats.slice().sort((a,b)=>Number(a.course)-Number(b.course)).map(b=>brcSnapBoat(b,phase))
+    };
+  }
+
+  async function brcSnapSavePhase(phase,source){
+    const row=brcSnapBuildRow(phase,source);
+    if(!row) return false;
+    if(!brcSnapBeforeDeadline(row.date,row.deadline)) return false;
+    if(phase==='pre') return brcSnapAddFirst(row);
+
+    // 展示後は同一レース・同一ロジックの1レコードだけを保持し、
+    // 締切前にデータが更新された時だけ最新の展示状態へ更新する。
+    const old=await brcSnapGet(row.id);
+    if(old){
+      row.firstCapturedAt=old.firstCapturedAt||old.capturedAt||row.capturedAt;
+      row.updateCount=(Number(old.updateCount)||1)+1;
+    }
+    await brcSnapPut(row);
+    return true;
+  }
+  async function brcSnapshotCaptureCurrent(source='predict'){
+    try{
+      if(typeof BRC_ADMIN_ACTIVE==='undefined'||!BRC_ADMIN_ACTIVE) return false;
+      const meta=brcSnapCurrentMeta();
+      if(!brcSnapBeforeDeadline(meta.date,meta.deadline)) return false;
+      const boats=window.__predictBoatsCurrent;
+      if(!Array.isArray(boats)||boats.length!==6||!window.__predictWorkerCurrent) return false;
+
+      await brcSnapSavePhase('pre',source);
+
+      const live=window.__currentLiveExhibition;
+      const lap=brcSnapLapState(live);
+      if(live&&lap.started) await brcSnapSavePhase('exhibition',source);
+
+      brcSnapshotRefreshStatus();
+      return true;
+    }catch(err){
+      console.warn('BRC visible OOS snapshot failed:',err);
+      brcSnapshotSetStatus('検証ログ保存エラー');
+      return false;
+    }
+  }
+  window.brcSnapshotCaptureCurrent=brcSnapshotCaptureCurrent;
+
+  function brcSnapCsvEscape(v){
+    const s=String(v??'');
+    return /[",\r\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s;
+  }
+  function brcSnapJson(v){
+    if(v===null||v===undefined) return '';
+    try{return JSON.stringify(v);}catch(_e){return '';}
+  }
+  function brcSnapFlatBoat(row,course){
+    return (Array.isArray(row?.boats)?row.boats:[]).find(b=>Number(b.course)===Number(course))||{};
+  }
+  function brcSnapCsvColumns(){
+    const common=[
+      'date','race_code','venue','venue_code','race_no','grade','race_day_label','race_title','deadline','phase',
+      'first_captured_at','captured_at','update_count','minutes_to_deadline','logic_version','prediction_version','scenario_version',
+      'timex_engine','timex_applied','timex_eligible','exhibition_started','lap_ready','lap_missing',
+      'entry_changed','entry_sequence','fixed_course','absent_boats',
+      'in_reliability','in_pct','venue_base_diff','reliability_rule','women','sg','strong','today_reject',
+      'slit_text','notice_text','high_tilts','wind_direction','wind_speed_m','wind_quality','wave_cm','weather_observed_at',
+      'recommendation_json','scenario_assist_json','worker_in_reliability_json'
+    ];
+    const per=[
+      'reg','name','class','win','second','third','top3','base_win','base_second','base_third','base_top3',
+      'timex_applied','timex_engine','timex_band','timex_n','timex_venue_aware','timex_diff_sec',
+      'timex_win_delta','timex_second_delta','timex_third_delta','timex_top3_delta',
+      'timex_win_arrow','timex_second_arrow','timex_third_arrow','timex_top3_arrow',
+      'personal_label','personal_evaluation','personal_adoption','personal_n','personal_win_diff','personal_top3_diff','personal_win_arrow','personal_top3_arrow',
+      'st_rank','st_n','st_stability','st_stability_n','st_mean','st_sd','st_hit05','st_late25',
+      'motor_no','motor2','motor_grade','exhibition_time','display_st','lap_time','turn_time','straight_time','tilt','entry_course','relative_diff'
+    ];
+    const cols=[...common];
+    for(let c=1;c<=6;c++) per.forEach(k=>cols.push(`b${c}_${k}`));
+    return cols;
+  }
+  function brcSnapFlatten(row){
+    const o={
+      date:row.date,race_code:row.raceCode,venue:row.venue,venue_code:row.venueCode,race_no:row.raceNo,grade:row.grade,
+      race_day_label:row.raceDayLabel,race_title:row.raceTitle,deadline:row.deadline,phase:row.phase,
+      first_captured_at:row.firstCapturedAt,captured_at:row.capturedAt,update_count:row.updateCount,minutes_to_deadline:row.minutesToDeadline,
+      logic_version:row.logicVersion,prediction_version:row.predictionVersion,scenario_version:row.scenarioVersion,
+      timex_engine:row.timeXEngine,timex_applied:row.timeXApplied,timex_eligible:row.timeXEligible,exhibition_started:row.exhibitionStarted,
+      lap_ready:row.lapReady,lap_missing:(row.lapMissing||[]).join(';'),entry_changed:row.entryChanged,entry_sequence:(row.entrySequence||[]).join('-'),
+      fixed_course:row.fixedCourse,absent_boats:(row.absentBoats||[]).join(';'),
+      in_reliability:row.inReliability,in_pct:row.inPct,venue_base_diff:row.venueBaseDiff,reliability_rule:row.reliabilityRule,
+      women:row.women,sg:row.sg,strong:row.strong,today_reject:row.todayReject,
+      slit_text:row.slitText,notice_text:row.noticeText,high_tilts:brcSnapJson(row.highTilts),
+      wind_direction:row.weather?.direction,wind_speed_m:row.weather?.speedM,wind_quality:row.weather?.quality,wave_cm:row.weather?.waveCm,weather_observed_at:row.weather?.observedAt,
+      recommendation_json:brcSnapJson(row.recommendation),scenario_assist_json:brcSnapJson(row.scenarioAssist),worker_in_reliability_json:brcSnapJson(row.workerInReliability)
+    };
+    for(let c=1;c<=6;c++){
+      const b=brcSnapFlatBoat(row,c), p=b.personal||{}, st=b.st||{};
+      const set=(k,v)=>{o[`b${c}_${k}`]=v??'';};
+      set('reg',b.reg);set('name',b.name);set('class',b.racerClass);
+      set('win',b.win);set('second',b.second);set('third',b.third);set('top3',b.top3);
+      set('base_win',b.baseWin);set('base_second',b.baseSecond);set('base_third',b.baseThird);set('base_top3',b.baseTop3);
+      set('timex_applied',b.timeXApplied);set('timex_engine',b.timeXEngine);set('timex_band',b.timeXBand);set('timex_n',b.timeXN);set('timex_venue_aware',b.timeXVenueAware);set('timex_diff_sec',b.timeXDiffSec);
+      set('timex_win_delta',b.timeXWinDelta);set('timex_second_delta',b.timeXSecondDelta);set('timex_third_delta',b.timeXThirdDelta);set('timex_top3_delta',b.timeXTop3Delta);
+      set('timex_win_arrow',b.timeXWinArrow);set('timex_second_arrow',b.timeXSecondArrow);set('timex_third_arrow',b.timeXThirdArrow);set('timex_top3_arrow',b.timeXTop3Arrow);
+      set('personal_label',p.label);set('personal_evaluation',p.evaluation);set('personal_adoption',p.adoption);set('personal_n',p.n);set('personal_win_diff',p.winEffectDiffPt);set('personal_top3_diff',p.top3EffectDiffPt);set('personal_win_arrow',p.winPersonalArrow);set('personal_top3_arrow',p.top3PersonalArrow);
+      set('st_rank',st.avgRank);set('st_n',st.n);set('st_stability',st.stabilityGrade);set('st_stability_n',st.stabilityN);set('st_mean',st.meanSt);set('st_sd',st.sd);set('st_hit05',st.hit05);set('st_late25',st.late25);
+      set('motor_no',b.motorNo);set('motor2',b.motor2);set('motor_grade',b.motorGrade);
+      set('exhibition_time',b.exhibitionTime);set('display_st',b.displaySt);set('lap_time',b.lapTime);set('turn_time',b.turnTime);set('straight_time',b.straightTime);set('tilt',b.tilt);set('entry_course',b.entryCourse);set('relative_diff',b.relativeDiff);
+    }
+    return o;
+  }
+  async function brcSnapshotExport(){
+    const rows=(await brcSnapGetAll()).sort((a,b)=>
+      String(a.date).localeCompare(String(b.date))||
+      String(a.venueCode).localeCompare(String(b.venueCode))||
+      Number(a.raceNo)-Number(b.raceNo)||
+      String(a.phase).localeCompare(String(b.phase))
+    );
+    if(!rows.length) throw new Error('検証スナップショットはまだありません');
+    const cols=brcSnapCsvColumns();
+    const lines=[cols.join(',')];
+    for(const row of rows){
+      const o=brcSnapFlatten(row);
+      lines.push(cols.map(k=>brcSnapCsvEscape(o[k])).join(','));
+    }
+    const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`BRC_VISIBLE_OOS_${(typeof getJstDateLabel==='function'?getJstDateLabel():'').replace(/-/g,'')}.csv`;
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),2000);
+  }
+  window.brcSnapshotExport=brcSnapshotExport;
+
+  function brcSnapshotSetStatus(msg){
+    const el=document.getElementById('brcSnapshotStatus');
+    if(el) el.textContent=msg;
+  }
+  async function brcSnapshotRefreshStatus(){
+    const el=document.getElementById('brcSnapshotStatus');
+    if(!el||typeof BRC_ADMIN_ACTIVE==='undefined'||!BRC_ADMIN_ACTIVE) return;
+    try{
+      const rows=await brcSnapGetAll();
+      const raceSet=new Set(rows.map(r=>r.raceCode||`${r.date}|${r.venue}|${r.raceNo}`));
+      const pre=rows.filter(r=>r.phase==='pre').length;
+      const ex=rows.filter(r=>r.phase==='exhibition').length;
+      const applied=rows.filter(r=>r.phase==='exhibition'&&r.timeXApplied).length;
+      el.textContent=`検証ログ ${raceSet.size}R / 事前${pre}・展示${ex}（TimeX ${applied}）`;
+    }catch(_e){el.textContent='検証ログを確認できませんでした';}
+  }
+  window.brcSnapshotRefreshStatus=brcSnapshotRefreshStatus;
+
+  function brcSnapshotInitUi(){
+    const host=document.getElementById('brcOosAdminTools');
+    if(host&&!document.getElementById('brcSnapshotExportBtn')){
+      const sep=document.createElement('span');
+      sep.style.cssText='width:1px;height:22px;background:rgba(10,31,51,.12);';
+      const btn=document.createElement('button');
+      btn.type='button';btn.id='brcSnapshotExportBtn';btn.textContent='検証データCSV';
+      btn.style.cssText='appearance:none;border:1px solid rgba(47,143,91,.28);border-radius:8px;background:rgba(47,143,91,.055);color:#217247;padding:7px 10px;font:inherit;font-size:11px;font-weight:900;cursor:pointer;';
+      const status=document.createElement('span');
+      status.id='brcSnapshotStatus';status.textContent='事前・展示後を自動保存';
+      status.style.cssText='font-size:10.5px;color:var(--ink-soft);';
+      btn.addEventListener('click',async()=>{
+        const old=btn.textContent;btn.disabled=true;btn.textContent='書き出し中…';
+        try{await brcSnapshotExport();await brcSnapshotRefreshStatus();}
+        catch(err){brcSnapshotSetStatus(err?.message||String(err));}
+        finally{btn.disabled=false;btn.textContent=old;}
+      });
+      host.appendChild(sep);host.appendChild(btn);host.appendChild(status);
+    }
+    brcSnapshotRefreshStatus();
+  }
+
+  function brcSnapshotInstallHooks(){
+    if(typeof window.runPredict==='function'&&!window.__brcSnapshotRunPredictWrapped){
+      window.__brcSnapshotRunPredictWrapped=true;
+      const orig=window.runPredict;
+      window.runPredict=async function(){
+        const out=await orig.apply(this,arguments);
+        try{await brcSnapshotCaptureCurrent('predict');}catch(_e){}
+        return out;
+      };
+    }
+    if(typeof window.brcRefreshExhibitionAdjustedDom==='function'&&!window.__brcSnapshotExhibitionWrapped){
+      window.__brcSnapshotExhibitionWrapped=true;
+      const orig=window.brcRefreshExhibitionAdjustedDom;
+      window.brcRefreshExhibitionAdjustedDom=function(){
+        const out=orig.apply(this,arguments);
+        Promise.resolve().then(()=>brcSnapshotCaptureCurrent('live_update')).catch(()=>{});
+        return out;
+      };
+    }
+  }
+
+  function init(){
+    brcSnapshotInitUi();
+    brcSnapshotInstallHooks();
+    // 認証復元やページ初期化が後から走るケースへの保険。
+    setTimeout(()=>{brcSnapshotInitUi();brcSnapshotInstallHooks();},500);
+    setTimeout(()=>{brcSnapshotInitUi();brcSnapshotInstallHooks();},1800);
+  }
+  // このスクリプトはbody末尾にあるため、既存関数定義後すぐフックを入れる。
+  // 先行DOMContentLoadedハンドラが自動予測を走らせても初回記録を取りこぼさない。
+  brcSnapshotInstallHooks();
+  brcSnapshotInitUi();
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true});
+  else init();
 })();
 </script>
 
