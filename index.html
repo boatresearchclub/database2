@@ -28,6 +28,7 @@
 <!-- BRC_RACE_RESULT_INLINE_FOLD_20260905 -->
 <!-- BRC_RACE_RESULT_START_FORMATION_RESTORE_20260906 -->
 <!-- BRC_RACE_RESULT_SHOW_ONLY_CONFIRMED_20260906 -->
+<!-- BRC_AI_NIGE_FORWARD_OOS_LOG_20260906 -->
 
 <!-- BRC_PREDICT_METRIC_ROW_ALIGNMENT_20260828 -->
 <!-- BRC_SNS_ARROW_BAKED_COORDS_20260902 -->
@@ -3324,6 +3325,10 @@
         </div>
         <div class="today-picks-rule" id="todayPicksRule">イン鉄板 = イン信頼度S</div>
         <div id="todayPicksStats" class="today-picks-stats" aria-live="polite"></div>
+        <div id="brcOosAdminTools" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 10px;">
+          <button type="button" id="brcOosExportBtn" style="appearance:none;border:1px solid rgba(0,87,219,.22);border-radius:8px;background:rgba(0,87,219,.04);color:var(--wave);padding:7px 10px;font:inherit;font-size:11px;font-weight:900;cursor:pointer;">OOSログを書き出す</button>
+          <span id="brcOosLogStatus" style="font-size:10.5px;color:var(--ink-soft);">S判定の締切前スナップショットを自動保存</span>
+        </div>
         <div id="todayPicksBody"></div>
       </div>
 
@@ -3743,6 +3748,8 @@ function brcSetAdminSocialUi(user=null){
   }
   const raceCardTools=document.getElementById('raceCardFoldWrap');
   if(raceCardTools) raceCardTools.style.display=BRC_ADMIN_ACTIVE?'':'none';
+  const oosTools=document.getElementById('brcOosAdminTools');
+  if(oosTools) oosTools.style.display=BRC_ADMIN_ACTIVE?'flex':'none';
   brcSetAdminResearchUi(BRC_ADMIN_ACTIVE);
   try{ brcSyncRaceSearchAccess(); }catch(_e){}
 }
@@ -11210,6 +11217,113 @@ async function openBrcPostRacePreview(venue,raceNo){
 
 window.addEventListener('load',()=>{setTimeout(brcRenderPostRaceCards,500);setInterval(brcRenderPostRaceCards,30000);});
 
+// ============================================================
+// AIイン逃げ予測 前向きOOSログ（管理者端末 / IndexedDB）
+// 2026-09-06 固定候補:
+// 2023-2024探索 -> 2025検証 -> 2026 OOSで、
+// 1〜3R / 逃げ時2・3着累積70%が6点以内 / 1位買い目条件付き確率>=16% を記録対象候補として保持。
+// 過去結果による上書きを避けるため、同一レースは「締切前の最初のS判定」だけ保存する。
+// ============================================================
+const BRC_OOS_DB_NAME='brc_oos_forward_v1';
+const BRC_OOS_STORE='nige_snapshots';
+const BRC_OOS_STRATEGY_VERSION='BRC_NIGE_FORWARD_V1_20260906';
+function brcOosOpenDb(){
+  return new Promise((resolve,reject)=>{
+    if(!('indexedDB' in window)){ reject(new Error('indexeddb_unavailable')); return; }
+    const req=indexedDB.open(BRC_OOS_DB_NAME,1);
+    req.onupgradeneeded=()=>{
+      const db=req.result;
+      if(!db.objectStoreNames.contains(BRC_OOS_STORE)){
+        const st=db.createObjectStore(BRC_OOS_STORE,{keyPath:'id'});
+        st.createIndex('date','date',{unique:false});
+        st.createIndex('rank','rank',{unique:false});
+      }
+    };
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error||new Error('indexeddb_open_failed'));
+  });
+}
+async function brcOosGetAll(){
+  const db=await brcOosOpenDb();
+  try{return await new Promise((resolve,reject)=>{const tx=db.transaction(BRC_OOS_STORE,'readonly');const q=tx.objectStore(BRC_OOS_STORE).getAll();q.onsuccess=()=>resolve(Array.isArray(q.result)?q.result:[]);q.onerror=()=>reject(q.error);});}
+  finally{db.close();}
+}
+async function brcOosPutFirst(row){
+  const db=await brcOosOpenDb();
+  try{return await new Promise((resolve,reject)=>{const tx=db.transaction(BRC_OOS_STORE,'readwrite');const q=tx.objectStore(BRC_OOS_STORE).add(row);q.onsuccess=()=>resolve(true);q.onerror=()=>{if(q.error?.name==='ConstraintError'){q.preventDefault?.();resolve(false);}else reject(q.error);};});}
+  finally{db.close();}
+}
+function brcOosBeforeDeadline(date,deadline){
+  const m=String(deadline||'').match(/^(\d{1,2}):(\d{2})$/);
+  if(!m||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(String(date||''))) return false;
+  const ms=Date.parse(`${date}T${m[1].padStart(2,'0')}:${m[2]}:00+09:00`);
+  return Number.isFinite(ms)&&Date.now()<ms;
+}
+function brcOosJointFromPrediction(result){
+  const sa=result?.scenarioAssist;
+  if(!sa||!Array.isArray(sa.second)||!sa.thirdConditional) return [];
+  const p2=[];
+  for(const x of sa.second){const boat=Number(x?.boat),p=Math.max(0,Number(x?.pct)||0)/100;if(boat>=2&&boat<=6&&p>0)p2.push({boat,p});}
+  if(p2.length!==5) return [];
+  const z2=p2.reduce((a,x)=>a+x.p,0); if(!(z2>0)) return [];
+  const out=[];
+  for(const s of p2){
+    const raw=Array.isArray(sa.thirdConditional?.[String(s.boat)])?sa.thirdConditional[String(s.boat)]:[];
+    const ts=[];
+    for(const x of raw){const boat=Number(x?.boat),p=Math.max(0,Number(x?.pct)||0)/100;if(boat>=2&&boat<=6&&boat!==s.boat&&p>0)ts.push({boat,p});}
+    const z3=ts.reduce((a,x)=>a+x.p,0); if(ts.length!==4||!(z3>0)) return [];
+    for(const t of ts) out.push({combo:`1-${s.boat}-${t.boat}`,p:(s.p/z2)*(t.p/z3)});
+  }
+  out.sort((a,b)=>b.p-a.p||a.combo.localeCompare(b.combo));
+  return out;
+}
+function brcOosTargetSet(joint,target=.70){
+  let cum=0;const picks=[];
+  for(const x of joint){picks.push(x.combo);cum+=Number(x.p)||0;if(cum>=target)break;}
+  return {picks,cum,pointCount:picks.length,top1Prob:Number(joint?.[0]?.p)||0};
+}
+async function brcOosLogPrediction(spec,result,localIr){
+  try{
+    if(!BRC_ADMIN_ACTIVE||String(localIr?.rank||'')!=='S') return false;
+    if(!brcOosBeforeDeadline(TODAY_LABEL,spec?.deadline)) return false;
+    const joint=brcOosJointFromPrediction(result); if(joint.length!==20) return false;
+    const set70=brcOosTargetSet(joint,.70);
+    const id=`${TODAY_LABEL}|${spec.venue}|${Number(spec.raceNo)}`;
+    const row={
+      id,date:TODAY_LABEL,venue:String(spec.venue||''),raceNo:Number(spec.raceNo)||0,grade:String(spec.grade||''),deadline:String(spec.deadline||''),
+      capturedAt:new Date().toISOString(),strategyVersion:BRC_OOS_STRATEGY_VERSION,
+      predictionVersion:String(result?.version||''),scenarioVersion:String(result?.scenarioAssist?.version||''),
+      inPct:Number(localIr?.pct),rank:String(localIr?.rank||''),reliabilityRule:String(localIr?.ruleVersion||''),women:!!localIr?.women,sg:!!localIr?.sg,
+      boats:(spec.apiBoats||[]).map(b=>({course:Number(b.course),reg:String(b.reg||'')})),
+      target:0.70,targetPointCount:set70.pointCount,targetCum:Number(set70.cum.toFixed(8)),top1Prob:Number(set70.top1Prob.toFixed(8)),
+      concentratedCandidate:Number(spec.raceNo)<=3&&set70.pointCount<=6&&set70.top1Prob>=.16,
+      picks:set70.picks,
+      joint:joint.map(x=>({combo:x.combo,p:Number(x.p.toFixed(8))}))
+    };
+    const saved=await brcOosPutFirst(row);
+    if(saved) brcOosRefreshStatus();
+    return saved;
+  }catch(err){console.warn('BRC OOS log failed:',err);return false;}
+}
+async function brcOosRefreshStatus(){
+  const el=document.getElementById('brcOosLogStatus'); if(!el||!BRC_ADMIN_ACTIVE)return;
+  try{const rows=await brcOosGetAll();const cand=rows.filter(x=>x.concentratedCandidate).length;el.textContent=`前向きOOS ${rows.length}件保存 / 集中条件 ${cand}件`;}
+  catch(_){el.textContent='OOSログを確認できませんでした';}
+}
+function brcOosCsvEscape(v){const s=String(v??'');return /[",\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s;}
+async function brcOosExport(){
+  const rows=(await brcOosGetAll()).sort((a,b)=>String(a.date).localeCompare(String(b.date))||String(a.venue).localeCompare(String(b.venue))||Number(a.raceNo)-Number(b.raceNo));
+  if(!rows.length) throw new Error('OOSログはまだありません');
+  const cols=['date','venue','raceNo','grade','deadline','capturedAt','inPct','rank','targetPointCount','targetCum','top1Prob','concentratedCandidate','picks','joint','predictionVersion','scenarioVersion','strategyVersion'];
+  const lines=[cols.join(',')];
+  for(const r of rows){const obj={...r,picks:(r.picks||[]).join(';'),joint:JSON.stringify(r.joint||[])};lines.push(cols.map(k=>brcOosCsvEscape(obj[k])).join(','));}
+  const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`BRC_OOS_NIGE_${getJstDateLabel().replace(/-/g,'')}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
+}
+function brcOosInitUi(){
+  const btn=document.getElementById('brcOosExportBtn'); if(btn&&!btn.dataset.bound){btn.dataset.bound='1';btn.addEventListener('click',async()=>{const old=btn.textContent;btn.disabled=true;btn.textContent='書き出し中…';try{await brcOosExport();await brcOosRefreshStatus();}catch(err){const el=document.getElementById('brcOosLogStatus');if(el)el.textContent=err?.message||String(err);}finally{btn.disabled=false;btn.textContent=old;}});}
+  brcOosRefreshStatus();
+}
+
 let TODAY_PICKS_PROMISE=null;
 
 function todayDeadlineMinutes(t){
@@ -11252,6 +11366,9 @@ async function buildTodayPicksCache(){
       if(!serverIr || !Number.isFinite(diff)){ skipped++; continue; }
       const localIr=classifyInReliabilityByWinPct(inPct, spec.grade, spec.apiBoats.map(b=>b.reg), serverIr);
       if(!localIr){ skipped++; continue; }
+      // 管理者端末では、締切前に初めて取得したS判定だけを前向きOOSとして固定保存する。
+      // awaitし、画面再描画より前に保存を確定する。保存失敗は予想表示を止めない。
+      try{ await brcOosLogPrediction(spec,result,localIr); }catch(_e){}
       all.push({
         venue:spec.venue,raceNo:spec.raceNo,grade:spec.grade,deadline:spec.deadline,
         inPct,diff,rank:String(localIr.rank||''),strong:!!localIr.strong,todayReject:!!serverIr.todayReject,
@@ -11556,6 +11673,7 @@ function brcSetRaceSearchMode(mode){
 }
 function initTodayPicksPage(){
   brcSyncRaceSearchAccess();
+  try{ brcOosInitUi(); }catch(_e){}
   if(!window.__raceSearchRendered){
     document.querySelectorAll('.race-search-tab').forEach(btn=>btn.addEventListener('click',()=>brcSetRaceSearchMode(btn.dataset.raceSearchMode)));
     document.getElementById('scenarioSearchRun')?.addEventListener('click',brcRenderScenarioSearch);
