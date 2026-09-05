@@ -21,6 +21,7 @@
 <!-- BRC_NIGE_TIMEX_ARROW_COLUMNS_20260905 -->
 <!-- BRC_TIMEX_ARROW_UNIFIED_5_10_15_20260905 -->
 <!-- BRC_TIMEX_LAP_REQUIRED_20260905 -->
+<!-- BRC_TIMEX_ARROW_0_5_10_15_TRIPLE_20260905 -->
 
 <!-- BRC_PREDICT_METRIC_ROW_ALIGNMENT_20260828 -->
 <!-- BRC_SNS_ARROW_BAKED_COORDS_20260902 -->
@@ -2014,6 +2015,12 @@
   .exhibition-arrow-icon{
     display:block; width:20px; height:20px; overflow:visible;
   }
+  /* TimeXの↑↑/↓↓/↑↑↑/↓↓↓はSVGを重ねてコンパクト表示。展示列34pxでも3本収める。 */
+  .brc-timex-arrow-group{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;line-height:1;}
+  .brc-timex-arrow-group .exhibition-arrow-icon{width:14px;height:14px;flex:0 0 14px;}
+  .brc-timex-arrow-group .exhibition-arrow-icon + .exhibition-arrow-icon{margin-left:-4px;}
+  .brc-timex-arrow-group.count-3 .exhibition-arrow-icon{width:13px;height:13px;flex-basis:13px;}
+  .brc-timex-arrow-group.count-3 .exhibition-arrow-icon + .exhibition-arrow-icon{margin-left:-4px;}
   /* 確率と展示矢印を別スロットに固定し、狭い画面でも重ならないようにする */
   .prob-arrow-wrap{
     display:grid; grid-template-columns:auto 20px; align-items:center; justify-content:center;
@@ -3645,7 +3652,7 @@ function brcAdminPlayerLabel(boat){
   return `${brcAdminBoatMark(boat?.course)}${brcAdminSurname(boat?.player?.name)}選手`;
 }
 function brcAdminArrow(delta, threshold){
-  // SNSアシスタント側もBRCタイムX共通ルール（5 / 10 / 15pt）へ統一。
+  // SNSアシスタント側もBRCタイムX共通ルール（0 / 5 / 10 / 15pt）へ統一。
   return brcProbabilityArrow(delta, threshold);
 }
 function brcAdminCurrentRaceTitle(){
@@ -7376,29 +7383,36 @@ function brcConstrainLogitProbabilities(probs,targetSum){
   return logits.map(l=>brcSigmoid(l+off));
 }
 // BRCタイムX 共通矢印ルール。1着・2着・3着・3連対・本人傾向をすべて統一。
-// |変化| <5pt : →（方向を分けない小変化）
-// 5〜9.9pt     : ↗ / ↘
-// 10〜14.9pt   : ↑ / ↓
-// 15pt以上     : ↑↑ / ↓↓
-const BRC_TIMEX_ARROW_DIAGONAL_PT=5.0;
-const BRC_TIMEX_ARROW_VERTICAL_PT=10.0;
-const BRC_TIMEX_ARROW_DOUBLE_PT=15.0;
+// 0.0pt         : →
+// 0.1〜4.9pt    : ↗ / ↘
+// 5.0〜9.9pt    : ↑ / ↓
+// 10.0〜14.9pt  : ↑↑ / ↓↓
+// 15.0pt以上    : ↑↑↑ / ↓↓↓
+// 判定は画面表示と揃えて0.1pt単位へ丸めてから行う。
+const BRC_TIMEX_ARROW_VERTICAL_PT=5.0;
+const BRC_TIMEX_ARROW_DOUBLE_PT=10.0;
+const BRC_TIMEX_ARROW_TRIPLE_PT=15.0;
 function brcTimeXArrowCuts(_threshold){
   // 旧呼び出しとの互換のため引数は残すが、閾値は全指標で共通。
-  return {flat:BRC_TIMEX_ARROW_DIAGONAL_PT,up:BRC_TIMEX_ARROW_VERTICAL_PT,double:BRC_TIMEX_ARROW_DOUBLE_PT};
+  return {up:BRC_TIMEX_ARROW_VERTICAL_PT,double:BRC_TIMEX_ARROW_DOUBLE_PT,triple:BRC_TIMEX_ARROW_TRIPLE_PT};
+}
+function brcTimeXArrowRoundedPt(deltaPt){
+  const d=Number(deltaPt);
+  return Number.isFinite(d) ? Math.round(d*10)/10 : NaN;
 }
 function brcProbabilityArrow(deltaPt,threshold){
-  const d=Number(deltaPt);
+  const d=brcTimeXArrowRoundedPt(deltaPt);
   if(!Number.isFinite(d)) return '→';
   const a=Math.abs(d), cut=brcTimeXArrowCuts(threshold);
-  if(a < cut.flat) return '→';
+  if(a===0) return '→';
   if(a < cut.up) return d>0 ? '↗' : '↘';
   if(a < cut.double) return d>0 ? '↑' : '↓';
-  return d>0 ? '↑↑' : '↓↓';
+  if(a < cut.triple) return d>0 ? '↑↑' : '↓↓';
+  return d>0 ? '↑↑↑' : '↓↓↓';
 }
 function brcProbabilityDeltaColor(deltaPt,threshold){
-  const d=Number(deltaPt), cut=brcTimeXArrowCuts(threshold);
-  if(!Number.isFinite(d) || Math.abs(d)<cut.flat) return 'var(--ink-soft)';
+  const d=brcTimeXArrowRoundedPt(deltaPt);
+  if(!Number.isFinite(d) || d===0) return 'var(--ink-soft)';
   return d>0 ? 'var(--trend-up)' : 'var(--trend-down)';
 }
 
@@ -8045,14 +8059,19 @@ function brcBuildBakedArrowSvg(label){
   const a=p[0].split(','), b=p[1].split(',');
   return `<svg class="exhibition-arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"></line><polyline points="${g.head}"></polyline></svg>`;
 }
+function brcBuildRepeatedTimeXArrowSvg(label){
+  const m=String(label||'').match(/^(↑{2,3}|↓{2,3})$/);
+  if(!m) return '';
+  const base=label[0], count=label.length;
+  return `<span class="brc-timex-arrow-group count-${count}">${Array.from({length:count},()=>brcBuildBakedArrowSvg(base)).join('')}</span>`;
+}
 function brcBuildExhibitionProbabilityArrowIcon(deltaPt,threshold){
   if(!Number.isFinite(Number(deltaPt))) return '';
   const label=brcProbabilityArrow(deltaPt,threshold);
   const color=brcProbabilityDeltaColor(deltaPt,threshold);
-  if(label==='↑↑' || label==='↓↓'){
-    return `<span aria-label="BRCタイムX ${label}" title="BRCタイムX ${label}" style="display:inline-flex;align-items:center;justify-content:center;color:${color};font-size:15px;font-weight:950;letter-spacing:-.12em;line-height:1;white-space:nowrap;flex:0 0 auto;padding-right:1px;">${label}</span>`;
-  }
-  return `<span aria-label="BRCタイムX ${label}" title="BRCタイムX ${label}" style="display:inline-flex;align-items:center;justify-content:center;color:${color};line-height:1;flex:0 0 auto;">${brcBuildBakedArrowSvg(label)}</span>`;
+  const repeated=brcBuildRepeatedTimeXArrowSvg(label);
+  const icon=repeated || brcBuildBakedArrowSvg(label);
+  return `<span aria-label="BRCタイムX ${label}" title="BRCタイムX ${label}" style="display:inline-flex;align-items:center;justify-content:center;color:${color};line-height:1;flex:0 0 auto;">${icon}</span>`;
 }
 function brcBuildProbabilityCell(value,arrowHtml){
   const evalHtml=arrowHtml || '<span class="prob-eval-hyphen" aria-label="展示未反映">−</span>';
@@ -8119,9 +8138,9 @@ function brcSignedPt(v){ const n=Number(v); return Number.isFinite(n)?`${n>0?'+'
 
 // 個人傾向は「本人効果 − 通常効果」の差で表示する。
 // 差の大きさと信頼度(N)は別物として扱い、矢印閾値はBRCタイムX共通ルールを使用。
-const BRC_PERSONAL_TIMEX_ARROW_FLAT_PT=BRC_TIMEX_ARROW_DIAGONAL_PT;
 const BRC_PERSONAL_TIMEX_ARROW_STRONG_PT=BRC_TIMEX_ARROW_VERTICAL_PT;
 const BRC_PERSONAL_TIMEX_ARROW_DOUBLE_PT=BRC_TIMEX_ARROW_DOUBLE_PT;
+const BRC_PERSONAL_TIMEX_ARROW_TRIPLE_PT=BRC_TIMEX_ARROW_TRIPLE_PT;
 function brcPersonalEffectDiff(a,kind){
   const keyMap={
     win:['本人1着効果pt','通常1着効果pt'],
@@ -8134,17 +8153,11 @@ function brcPersonalEffectDiff(a,kind){
   return Number.isFinite(player)&&Number.isFinite(normal) ? player-normal : NaN;
 }
 function brcPersonalTrendArrow(v){
-  const n=Number(v);
-  if(!Number.isFinite(n)) return '→';
-  const a=Math.abs(n);
-  if(a<BRC_PERSONAL_TIMEX_ARROW_FLAT_PT) return '→';
-  if(a<BRC_PERSONAL_TIMEX_ARROW_STRONG_PT) return n>0?'↗':'↘';
-  if(a<BRC_PERSONAL_TIMEX_ARROW_DOUBLE_PT) return n>0?'↑':'↓';
-  return n>0?'↑↑':'↓↓';
+  return brcProbabilityArrow(v,0);
 }
 function brcMetricClass(v){
-  const n=Number(v);
-  if(!Number.isFinite(n)||Math.abs(n)<BRC_PERSONAL_TIMEX_ARROW_FLAT_PT) return 'flat';
+  const n=brcTimeXArrowRoundedPt(v);
+  if(!Number.isFinite(n)||n===0) return 'flat';
   return n>0?'up':'down';
 }
 function brcBuildPersonalTrendArrowIcon(deltaPt){
@@ -8152,10 +8165,9 @@ function brcBuildPersonalTrendArrowIcon(deltaPt){
   const label=brcPersonalTrendArrow(deltaPt);
   const cls=brcMetricClass(deltaPt);
   const color=cls==='up'?'var(--trend-up)':cls==='down'?'var(--trend-down)':'var(--ink-soft)';
-  if(label==='↑↑'||label==='↓↓'){
-    return `<span aria-label="個人傾向 ${label}" title="個人傾向：通常より ${brcSignedPt(deltaPt)}" style="display:inline-flex;align-items:center;justify-content:center;color:${color};font-size:15px;font-weight:950;letter-spacing:-.12em;line-height:1;white-space:nowrap;flex:0 0 auto;padding-right:1px;">${label}</span>`;
-  }
-  return `<span aria-label="個人傾向 ${label}" title="個人傾向：通常より ${brcSignedPt(deltaPt)}" style="display:inline-flex;align-items:center;justify-content:center;color:${color};line-height:1;flex:0 0 auto;">${brcBuildBakedArrowSvg(label)}</span>`;
+  const repeated=brcBuildRepeatedTimeXArrowSvg(label);
+  const icon=repeated || brcBuildBakedArrowSvg(label);
+  return `<span aria-label="個人傾向 ${label}" title="個人傾向：通常より ${brcSignedPt(deltaPt)}" style="display:inline-flex;align-items:center;justify-content:center;color:${color};line-height:1;flex:0 0 auto;">${icon}</span>`;
 }
 function brcPersonalConfidence(n){
   const x=Number(n);
@@ -8221,7 +8233,7 @@ function brcShowExhibitionPlayerAlert(raw){
   const currentHtml=(Number.isFinite(currentWin)||Number.isFinite(currentTop3))
     ? `<div class="brc-ex-alert-forecast-label">今回のBRC予測</div><div class="brc-ex-alert-forecast"><div class="brc-ex-alert-forecast-item"><div class="k">1着率</div><div class="v">${Number.isFinite(currentWin)?Math.round(currentWin)+'%':'―'}</div></div><div class="brc-ex-alert-forecast-item"><div class="k">3連対率</div><div class="v">${Number.isFinite(currentTop3)?Math.round(currentTop3)+'%':'―'}</div></div></div>`
     : '';
-  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']}　BRCタイムX・個人傾向</div><div class="brc-ex-alert-meta">${a['コース']}コース ／ タイムX差 ${a['平均差帯']}秒 ／ N=${a.N} ／ 参考度 ${confidence}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div>${currentHtml}<div class="brc-ex-alert-decision ${decision.cls}"><strong>判断：${decision.title}</strong>${decision.body}</div><div class="brc-ex-alert-forecast-label">本人傾向（手動判断）</div><div class="brc-ex-personal-box">${brcAlertPersonalTrendRow('1着',a,'win')}${brcAlertPersonalTrendRow('2着',a,'second')}${brcAlertPersonalTrendRow('3着',a,'third')}${brcAlertPersonalTrendRow('3連対',a,'top3')}</div><div class="brc-ex-alert-note">正式なTimeX自動補正は1着率・3連対率だけです。2着率・3着率はTimeX矢印のみで、数値へは加減しません。本人傾向は4着率とも別枠の参考情報として表示し、自動計算には入れず手動で判断します。</div><div class="brc-ex-alert-scale">BRCタイムX共通：5pt未満 → ／ 5pt ↗↘ ／ 10pt ↑↓ ／ 15pt ↑↑↓↓</div></div>`;
+  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']}　BRCタイムX・個人傾向</div><div class="brc-ex-alert-meta">${a['コース']}コース ／ タイムX差 ${a['平均差帯']}秒 ／ N=${a.N} ／ 参考度 ${confidence}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div>${currentHtml}<div class="brc-ex-alert-decision ${decision.cls}"><strong>判断：${decision.title}</strong>${decision.body}</div><div class="brc-ex-alert-forecast-label">本人傾向（手動判断）</div><div class="brc-ex-personal-box">${brcAlertPersonalTrendRow('1着',a,'win')}${brcAlertPersonalTrendRow('2着',a,'second')}${brcAlertPersonalTrendRow('3着',a,'third')}${brcAlertPersonalTrendRow('3連対',a,'top3')}</div><div class="brc-ex-alert-note">正式なTimeX自動補正は1着率・3連対率だけです。2着率・3着率はTimeX矢印のみで、数値へは加減しません。本人傾向は4着率とも別枠の参考情報として表示し、自動計算には入れず手動で判断します。</div><div class="brc-ex-alert-scale">BRCタイムX共通：0pt → ／ 0.1pt ↗↘ ／ 5pt ↑↓ ／ 10pt ↑↑↓↓ ／ 15pt ↑↑↑↓↓↓</div></div>`;
   document.body.appendChild(pop);
 }
 
@@ -8249,7 +8261,7 @@ function brcShowScenarioPersonalAdjustment(raw,kind,currentRate){
     return brcAlertPersonalTrendRow(m.label,a,k);
   }).join('');
   const watchText=isWatch?'監視条件のため、参考度は低めに扱います。':'';
-  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']}　本人傾向</div><div class="brc-ex-alert-meta">${a['コース']}コース ／ タイムX差 ${a['平均差帯']}秒 ／ N=${a.N} ／ 参考度 ${confidence}${isWatch?' ／ 監視':''}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-personal-adjust-focus ${cls}"><div class="brc-personal-adjust-kicker">${meta.label}率の参考加減値</div><div class="brc-personal-adjust-main"><span class="brc-personal-adjust-label">本人 ${arrow}</span><span class="brc-personal-adjust-value brc-ex-metric-${cls}">${brcSignedPt(diff)}</span></div><div class="brc-personal-adjust-current">${rateText}</div><div class="brc-personal-adjust-help">参考加減値 ＝ この選手本人のTimeX効果 − 通常のTimeX効果。表示中の着率には自動加算しません。予想時に手動で加減するための参考値です。${watchText}</div></div><div class="brc-ex-alert-forecast-label">この条件での本人傾向</div><div class="brc-ex-personal-box">${allRows}</div><div class="brc-ex-alert-scale">BRCタイムX共通：5pt未満 → ／ 5pt ↗↘ ／ 10pt ↑↓ ／ 15pt ↑↑↓↓</div></div>`;
+  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']}　本人傾向</div><div class="brc-ex-alert-meta">${a['コース']}コース ／ タイムX差 ${a['平均差帯']}秒 ／ N=${a.N} ／ 参考度 ${confidence}${isWatch?' ／ 監視':''}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-personal-adjust-focus ${cls}"><div class="brc-personal-adjust-kicker">${meta.label}率の参考加減値</div><div class="brc-personal-adjust-main"><span class="brc-personal-adjust-label">本人 ${arrow}</span><span class="brc-personal-adjust-value brc-ex-metric-${cls}">${brcSignedPt(diff)}</span></div><div class="brc-personal-adjust-current">${rateText}</div><div class="brc-personal-adjust-help">参考加減値 ＝ この選手本人のTimeX効果 − 通常のTimeX効果。表示中の着率には自動加算しません。予想時に手動で加減するための参考値です。${watchText}</div></div><div class="brc-ex-alert-forecast-label">この条件での本人傾向</div><div class="brc-ex-personal-box">${allRows}</div><div class="brc-ex-alert-scale">BRCタイムX共通：0pt → ／ 0.1pt ↗↘ ／ 5pt ↑↓ ／ 10pt ↑↑↓↓ ／ 15pt ↑↑↑↓↓↓</div></div>`;
   document.body.appendChild(pop);
 }
 
