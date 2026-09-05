@@ -1520,9 +1520,13 @@
   .scenario-search-btn{appearance:none;border:0;border-radius:9px;background:var(--wave);color:#fff;padding:10px 14px;font:inherit;font-size:12px;font-weight:950;cursor:pointer;flex:1;}
   .scenario-search-btn.secondary{flex:0 0 auto;background:#e9eef5;color:#30465c;}
   .scenario-search-note{grid-column:1/-1;font-size:9.5px;line-height:1.55;color:var(--ink-soft);}
-  .scenario-search-summary{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:13px 2px 7px;}
+  .scenario-search-summary{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:13px 2px 7px;flex-wrap:wrap;}
   .scenario-search-summary-title{font-size:12.5px;font-weight:950;color:var(--navy);}
-  .scenario-search-summary-count{font-size:10px;font-weight:850;color:var(--ink-soft);}
+  .scenario-search-summary-right{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap;}
+  .scenario-search-summary-count{font-size:10px;font-weight:850;color:var(--ink-soft);white-space:nowrap;}
+  .scenario-search-sort{display:inline-flex;align-items:center;padding:2px;border:1px solid rgba(10,31,51,.10);border-radius:8px;background:#f1f4f8;}
+  .scenario-search-sort-btn{appearance:none;border:0;background:transparent;color:var(--ink-soft);border-radius:6px;padding:5px 8px;font:inherit;font-size:9.5px;font-weight:900;cursor:pointer;white-space:nowrap;}
+  .scenario-search-sort-btn.active{background:#fff;color:var(--wave);box-shadow:0 1px 3px rgba(10,31,51,.10);}
   .scenario-search-results{display:grid;gap:7px;}
   .scenario-search-result{border:1px solid rgba(10,31,51,.09);border-radius:11px;background:#fff;padding:10px 11px;cursor:pointer;transition:.12s;}
   .scenario-search-result:hover{border-color:rgba(0,87,219,.28);background:rgba(0,87,219,.018);}
@@ -1545,6 +1549,9 @@
     .scenario-search-form{grid-template-columns:1fr;padding:9px;}
     .scenario-search-field.full,.scenario-search-action,.scenario-search-note{grid-column:auto;}
     .scenario-search-thresholds{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;}
+    .scenario-search-summary{align-items:flex-start;}
+    .scenario-search-summary-right{width:100%;justify-content:space-between;}
+    .scenario-search-sort-btn{padding:5px 7px;font-size:9px;}
     .scenario-search-metrics{gap:4px;}
     .scenario-search-metric{padding:6px 3px;}
     .scenario-search-metric .v{font-size:12px;}
@@ -3240,7 +3247,16 @@
             </div>
             <div class="scenario-search-note">決まり手は直近1年の選手×コース実績、STは選手×今回コースの平均ST順位を使用。検索結果は予測確率ではなく、指定条件への該当レースです。</div>
           </div>
-          <div class="scenario-search-summary"><div class="scenario-search-summary-title">検索結果</div><div id="scenarioSearchCount" class="scenario-search-summary-count">条件を指定して検索</div></div>
+          <div class="scenario-search-summary">
+            <div class="scenario-search-summary-title">検索結果</div>
+            <div class="scenario-search-summary-right">
+              <div class="scenario-search-sort" role="group" aria-label="検索結果の並び順">
+                <button type="button" class="scenario-search-sort-btn active" data-scenario-sort="deadline">締切順</button>
+                <button type="button" class="scenario-search-sort-btn" data-scenario-sort="venue">会場順</button>
+              </div>
+              <div id="scenarioSearchCount" class="scenario-search-summary-count">条件を指定して検索</div>
+            </div>
+          </div>
           <div id="scenarioSearchResults" class="scenario-search-results"><div class="scenario-search-empty">条件を設定して「この条件で検索」を押してください。</div></div>
         </div>
       </div>
@@ -10857,6 +10873,8 @@ async function renderTodayPicks(force=false){
 }
 
 let RACE_SEARCH_MODE='picks';
+let SCENARIO_SEARCH_SORT='deadline';
+let SCENARIO_SEARCH_HAS_RUN=false;
 
 function brcScenarioMetricKeys(kind){
   if(kind==='makuri') return {inKey:'mr',attackKey:'mr',inLabel:'まくられ率',attackLabel:'まくり率'};
@@ -10923,16 +10941,40 @@ function brcBuildScenarioSearchRows(){
       rows.push({venue,raceNo,deadline,course,kind,keys,inPct,attackPct,inN,attackN,st,attackName,inName});
     }
   }
+  brcSortScenarioRows(rows);
+  return {rows,course,kind,keys,inMin,attackMin,nMin,stMode};
+}
+function brcSortScenarioRows(rows){
+  const venueOrder=sortVenuesNorthToSouth(Object.keys(RACE_CARDS_TODAY||{}));
+  const venueIndex=new Map(venueOrder.map((v,i)=>[v,i]));
   rows.sort((a,b)=>{
-    const strength=(b.attackPct+b.inPct)-(a.attackPct+a.inPct); if(Math.abs(strength)>1e-9) return strength;
-    const td=todayDeadlineMinutes(a.deadline)-todayDeadlineMinutes(b.deadline); if(td) return td;
+    if(SCENARIO_SEARCH_SORT==='venue'){
+      const va=(venueIndex.get(a.venue)??999), vb=(venueIndex.get(b.venue)??999);
+      if(va!==vb) return va-vb;
+      if(a.raceNo!==b.raceNo) return a.raceNo-b.raceNo;
+      return todayDeadlineMinutes(a.deadline)-todayDeadlineMinutes(b.deadline);
+    }
+    const da=todayDeadlineMinutes(a.deadline), db=todayDeadlineMinutes(b.deadline);
+    if(da!==db) return da-db;
+    const va=(venueIndex.get(a.venue)??999), vb=(venueIndex.get(b.venue)??999);
+    if(va!==vb) return va-vb;
     return a.raceNo-b.raceNo;
   });
-  return {rows,course,kind,keys,inMin,attackMin,nMin,stMode};
+  return rows;
+}
+function brcSyncScenarioSortButtons(){
+  document.querySelectorAll('[data-scenario-sort]').forEach(btn=>btn.classList.toggle('active',btn.dataset.scenarioSort===SCENARIO_SEARCH_SORT));
+}
+function brcSetScenarioSearchSort(mode){
+  SCENARIO_SEARCH_SORT=mode==='venue'?'venue':'deadline';
+  brcSyncScenarioSortButtons();
+  if(SCENARIO_SEARCH_HAS_RUN) brcRenderScenarioSearch();
 }
 function brcRenderScenarioSearch(){
   const box=document.getElementById('scenarioSearchResults'), count=document.getElementById('scenarioSearchCount');
   if(!box || !BRC_ADMIN_ACTIVE) return;
+  SCENARIO_SEARCH_HAS_RUN=true;
+  brcSyncScenarioSortButtons();
   const q=brcBuildScenarioSearchRows();
   if(count) count.textContent=`該当 ${q.rows.length}レース`;
   if(!q.rows.length){
@@ -10961,6 +11003,9 @@ function brcRenderScenarioSearch(){
 function brcResetScenarioSearch(){
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v;};
   set('scenarioSearchCourse','2');set('scenarioSearchKimarite','sashi');set('scenarioSearchInMin','10');set('scenarioSearchAttackMin','15');set('scenarioSearchNMin','10');set('scenarioSearchSt','none');
+  SCENARIO_SEARCH_SORT='deadline';
+  SCENARIO_SEARCH_HAS_RUN=false;
+  brcSyncScenarioSortButtons();
   const c=document.getElementById('scenarioSearchCount');if(c)c.textContent='条件を指定して検索';
   const r=document.getElementById('scenarioSearchResults');if(r)r.innerHTML='<div class="scenario-search-empty">条件を設定して「この条件で検索」を押してください。</div>';
 }
@@ -10987,6 +11032,8 @@ function initTodayPicksPage(){
     document.querySelectorAll('.race-search-tab').forEach(btn=>btn.addEventListener('click',()=>brcSetRaceSearchMode(btn.dataset.raceSearchMode)));
     document.getElementById('scenarioSearchRun')?.addEventListener('click',brcRenderScenarioSearch);
     document.getElementById('scenarioSearchReset')?.addEventListener('click',brcResetScenarioSearch);
+    document.querySelectorAll('[data-scenario-sort]').forEach(btn=>btn.addEventListener('click',()=>brcSetScenarioSearchSort(btn.dataset.scenarioSort)));
+    brcSyncScenarioSortButtons();
     window.__raceSearchRendered=true;
   }
   if(!window.__todayPicksRendered){
