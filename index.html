@@ -26,6 +26,7 @@
 <!-- BRC_TIMEX_ALL_PLACE_RATES_NUMERIC_20260905 -->
 <!-- BRC_RACE_RESULT_NO_KV_10M_90S_20260905 -->
 <!-- BRC_RACE_RESULT_INLINE_FOLD_20260905 -->
+<!-- BRC_RACE_RESULT_START_FORMATION_RESTORE_20260906 -->
 <!-- BRC_RACE_RESULT_SHOW_ONLY_CONFIRMED_20260906 -->
 
 <!-- BRC_PREDICT_METRIC_ROW_ALIGNMENT_20260828 -->
@@ -1026,6 +1027,52 @@
     .brc-result-value.payout{font-size:15.5px;}
     .brc-result-value.kimarite{font-size:14.5px;}
   }
+  /* ---- BRC_RACE_RESULT_START_FORMATION_RESTORE_20260906 ---- */
+  .brc-result-start{
+    margin-top:8px;padding:10px 9px 9px;border:1px solid rgba(10,31,51,.10);
+    border-radius:10px;background:#fff;
+  }
+  .brc-result-start-label{
+    margin-bottom:7px;font-size:9.5px;font-weight:850;color:var(--ink-soft);text-align:left;
+  }
+  .brc-result-start-line{
+    display:flex;align-items:flex-start;justify-content:center;gap:5px;min-width:0;
+  }
+  .brc-result-start-arrow{
+    flex:0 0 auto;display:flex;align-items:center;justify-content:center;height:25px;
+    margin-right:1px;color:var(--ink-soft);font-size:18px;font-weight:950;line-height:1;
+  }
+  .brc-result-start-entry{
+    flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-width:27px;
+  }
+  .brc-result-start-boat{
+    width:25px;height:25px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    border:1px solid rgba(10,31,51,.16);font-size:12px;font-weight:950;line-height:1;
+    box-shadow:0 1px 2px rgba(10,31,51,.08);font-variant-numeric:tabular-nums;
+  }
+  .brc-result-start-boat.lane1{background:var(--lane1);color:var(--lane1-text);border-color:#718096;}
+  .brc-result-start-boat.lane2{background:var(--lane2);color:var(--lane2-text);border-color:var(--lane2);}
+  .brc-result-start-boat.lane3{background:var(--lane3);color:var(--lane3-text);border-color:var(--lane3);}
+  .brc-result-start-boat.lane4{background:var(--lane4);color:var(--lane4-text);border-color:var(--lane4);}
+  .brc-result-start-boat.lane5{background:var(--lane5);color:var(--lane5-text);border-color:#c4972d;}
+  .brc-result-start-boat.lane6{background:var(--lane6);color:var(--lane6-text);border-color:var(--lane6);}
+  .brc-result-start-st{
+    min-height:13px;margin-top:3px;font-size:9px;font-weight:850;line-height:1;color:var(--ink-soft);
+    white-space:nowrap;font-variant-numeric:tabular-nums;
+  }
+  .brc-result-start-st.is-flying{color:#d1373f;font-weight:950;}
+  .brc-result-start-note{
+    margin-top:6px;font-size:8.5px;line-height:1.4;color:var(--ink-soft);text-align:center;
+  }
+  @media(max-width:420px){
+    .brc-result-start{padding:9px 5px 8px;}
+    .brc-result-start-line{gap:3px;}
+    .brc-result-start-arrow{height:23px;font-size:16px;margin-right:0;}
+    .brc-result-start-entry{min-width:25px;}
+    .brc-result-start-boat{width:23px;height:23px;font-size:11px;}
+    .brc-result-start-st{font-size:8.5px;}
+  }
+
   .brc-odds-builder{display:grid;gap:10px;}
   .brc-odds-builder-box{border:1px solid rgba(10,31,51,.10);border-radius:12px;background:#fff;overflow:hidden;}
   .brc-odds-builder-head{display:grid;grid-template-columns:40px minmax(96px,1fr) repeat(3,52px);align-items:center;background:#f7f9fc;border-bottom:1px solid rgba(10,31,51,.08);}
@@ -5928,18 +5975,144 @@ function brcRenderRaceResultStatus(message){
   box.className='brc-result-status';
   box.textContent=message||'';
 }
+function brcRaceResultNumber(v){
+  if(v===null || v===undefined || v==='') return null;
+  const n=Number(v);
+  return Number.isFinite(n)?n:null;
+}
+function brcRaceResultBoatNo(row){
+  if(row===null || row===undefined) return null;
+  if(typeof row==='number' || typeof row==='string'){
+    const n=Number(row); return Number.isInteger(n)&&n>=1&&n<=6?n:null;
+  }
+  const n=Number(row.boat_no ?? row.boatNo ?? row.boat ?? row.lane ?? row.frame ?? row.waku ?? row.teiban);
+  return Number.isInteger(n)&&n>=1&&n<=6?n:null;
+}
+function brcRaceResultCourseNo(row, fallback){
+  if(!row || typeof row!=='object') return fallback;
+  const n=Number(row.entry_course ?? row.entryCourse ?? row.course ?? row.start_course ?? row.startCourse ?? row.actual_course ?? row.actualCourse);
+  return Number.isInteger(n)&&n>=1&&n<=6?n:fallback;
+}
+function brcRaceResultStartValue(row){
+  if(!row || typeof row!=='object') return null;
+  return brcRaceResultNumber(row.start_timing ?? row.startTiming ?? row.start_time ?? row.startTime ?? row.st ?? row.start);
+}
+function brcRaceResultStartStatus(row){
+  if(!row || typeof row!=='object') return '';
+  return String(row.start_status ?? row.startStatus ?? row.status ?? '').trim().toUpperCase();
+}
+function brcRaceResultFormationSource(result){
+  const candidates=[
+    result?.start_formation,result?.startFormation,result?.entry_order,result?.entryOrder,
+    result?.entry_sequence,result?.entrySequence,result?.actual_entry,result?.actualEntry,
+    result?.start_order,result?.startOrder,result?.start_entries,result?.startEntries,
+    result?.starts,result?.entries,result?.start_boats,result?.startBoats,result?.boats
+  ];
+  for(const x of candidates){ if(x!==null && x!==undefined && x!=='') return x; }
+  return null;
+}
+function brcNormalizeRaceStartFormation(result){
+  let src=brcRaceResultFormationSource(result);
+  if(src && !Array.isArray(src) && typeof src==='object'){
+    src=src.order ?? src.entries ?? src.boats ?? src.sequence ?? src.formation ?? src.rows ?? src;
+  }
+  let raw=[];
+  if(Array.isArray(src)){
+    raw=src.slice(0,12);
+  }else if(typeof src==='string'){
+    // "123456", "1-2-3/4-5-6", "1 2 4 3 5 6" などを受け付ける。
+    raw=(src.match(/[1-6]/g)||[]).map(Number);
+  }else if(src && typeof src==='object'){
+    // {"1": {...}, ...} のような艇番キー形式にも対応。
+    raw=Object.entries(src).map(([k,v])=>{
+      if(v && typeof v==='object') return {boat_no:Number(k),...v};
+      return Number(k);
+    });
+  }
+
+  const rows=[];
+  const seen=new Set();
+  raw.forEach((row,index)=>{
+    const boat=brcRaceResultBoatNo(row);
+    if(!boat || seen.has(boat)) return;
+    seen.add(boat);
+    const course=brcRaceResultCourseNo(row,index+1);
+    rows.push({
+      boat,course,
+      st:brcRaceResultStartValue(row),
+      status:brcRaceResultStartStatus(row)
+    });
+  });
+
+  // 隊形本体が艇番順だけで、ST詳細が別配列にあるAPI形も吸収する。
+  const detailCandidates=[result?.start_entries,result?.startEntries,result?.starts,result?.entries,result?.start_boats,result?.startBoats];
+  const detail=detailCandidates.find(Array.isArray);
+  if(detail && rows.length){
+    const byBoat=new Map();
+    detail.forEach((row,index)=>{
+      const boat=brcRaceResultBoatNo(row);
+      if(boat) byBoat.set(boat,{row,index});
+    });
+    rows.forEach(r=>{
+      const d=byBoat.get(r.boat);
+      if(!d) return;
+      const st=brcRaceResultStartValue(d.row);
+      const status=brcRaceResultStartStatus(d.row);
+      const course=brcRaceResultCourseNo(d.row,r.course);
+      if(st!==null) r.st=st;
+      if(status) r.status=status;
+      if(course) r.course=course;
+    });
+  }
+
+  rows.sort((a,b)=>(a.course-b.course)||(a.boat-b.boat));
+  return rows.length>=2?rows:[];
+}
+function brcFormatRaceResultSt(row){
+  if(!row) return '';
+  const status=String(row.status||'').toUpperCase();
+  const n=Number(row.st);
+  const hasSt=Number.isFinite(n);
+  let value='';
+  if(hasSt){
+    const abs=Math.abs(n).toFixed(2).replace(/^0/, '');
+    value=abs;
+  }
+  if(/^F/.test(status)) return `F${value}`;
+  if(/^L/.test(status)) return `L${value}`;
+  return value;
+}
+function brcRaceResultStartFormationHtml(result){
+  const rows=brcNormalizeRaceStartFormation(result);
+  if(!rows.length) return '';
+  const entries=rows.map(row=>{
+    const st=brcFormatRaceResultSt(row);
+    const flying=/^F/.test(String(row.status||'').toUpperCase());
+    return `<div class="brc-result-start-entry">
+      <div class="brc-result-start-boat lane${row.boat}" title="${row.course}コース・${row.boat}号艇">${row.boat}</div>
+      <div class="brc-result-start-st${flying?' is-flying':''}">${st||'&nbsp;'}</div>
+    </div>`;
+  }).join('');
+  const hasSt=rows.some(row=>brcFormatRaceResultSt(row));
+  return `<div class="brc-result-start">
+    <div class="brc-result-start-label">スタート隊形</div>
+    <div class="brc-result-start-line"><div class="brc-result-start-arrow" aria-hidden="true">→</div>${entries}</div>
+    ${hasSt?'<div class="brc-result-start-note">艇番下は本番ST</div>':''}
+  </div>`;
+}
 function brcRenderRaceResultConfirmed(result){
   const box=brcRaceResultBody(); if(!box) return;
   const combo=String(result?.combination||'―');
   const payout=Number(result?.payout_yen);
   const kimarite=String(result?.kimarite||'―');
+  const startFormation=brcRaceResultStartFormationHtml(result);
   box.className='';
   box.innerHTML=`<div class="brc-result-grid">
     <div class="brc-result-item"><div class="brc-result-label">出目</div><div class="brc-result-value">${combo}</div></div>
     <div class="brc-result-item"><div class="brc-result-label">配当</div><div class="brc-result-value payout">${Number.isFinite(payout)?payout.toLocaleString('ja-JP')+'円':'―'}</div></div>
     <div class="brc-result-item"><div class="brc-result-label">決まり手</div><div class="brc-result-value kimarite">${kimarite}</div></div>
-  </div>`;
-  // 出目・配当・決まり手が揃った確定結果を取得した時点で初めてバナーを表示する。
+  </div>${startFormation}`;
+  // 確定結果を取得した時点で初めてバナーを表示。スタート隊形は取得できた場合だけ追加する。
   brcSetRaceResultVisibility(true);
 }
 function brcClearRaceResultTimer(){
