@@ -24,6 +24,7 @@
 <!-- BRC_TIMEX_LAP_REQUIRED_20260905 -->
 <!-- BRC_TIMEX_ARROW_0_5_10_15_TRIPLE_20260905 -->
 <!-- BRC_TIMEX_ALL_PLACE_RATES_NUMERIC_20260905 -->
+<!-- BRC_RACE_RESULT_NO_KV_10M_90S_20260905 -->
 
 <!-- BRC_PREDICT_METRIC_ROW_ALIGNMENT_20260828 -->
 <!-- BRC_SNS_ARROW_BAKED_COORDS_20260902 -->
@@ -865,9 +866,9 @@
   }
 
 
-  /* ---- 出走表AI 3タブ（出走データ / オッズ / AI予測） ---- */
+  /* ---- 出走表AI 4タブ（出走データ / オッズ / AI予測 / 結果） ---- */
   .predict-main-tabs{
-    display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:0;
+    display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:0;
     border-bottom:1px solid rgba(10,31,51,.10); background:rgba(255,255,255,.98);
     /* BRC_PREDICT_MAIN_TABS_STICKY_20260828: スクロール中もメインタブ直下へ固定 */
     position:sticky; top:calc(var(--page-tabs-sticky-h) + 1px); z-index:98;
@@ -979,6 +980,30 @@
   .brc-odds-combo-sep{font-size:10px;color:var(--ink-soft);font-weight:800;}
   .brc-odds-foot{margin:6px 2px 0;font-size:9px;line-height:1.45;color:var(--ink-soft);}
   .brc-odds-empty{padding:22px 10px;text-align:center;color:var(--ink-soft);font-size:11px;line-height:1.6;}
+
+  /* ---- BRC_RACE_RESULT_NO_KV_10M_90S_20260905 ---- */
+  .brc-result-wrap{padding:16px 14px 18px;}
+  .brc-result-status{
+    padding:24px 10px;text-align:center;color:var(--ink-soft);font-size:12px;line-height:1.7;
+  }
+  .brc-result-grid{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:hidden;
+    border:1px solid rgba(10,31,51,.10);border-radius:12px;background:#fff;
+  }
+  .brc-result-item{min-width:0;padding:15px 8px;text-align:center;border-left:1px solid rgba(10,31,51,.07);}
+  .brc-result-item:first-child{border-left:0;}
+  .brc-result-label{font-size:10px;font-weight:850;color:var(--ink-soft);}
+  .brc-result-value{margin-top:4px;font-size:20px;font-weight:950;color:var(--navy);line-height:1.2;white-space:nowrap;font-variant-numeric:tabular-nums;}
+  .brc-result-value.payout{font-size:18px;}
+  .brc-result-value.kimarite{font-size:17px;}
+  @media(max-width:420px){
+    .brc-result-wrap{padding:12px 8px 15px;}
+    .brc-result-item{padding:13px 4px;}
+    .brc-result-label{font-size:9px;}
+    .brc-result-value{font-size:18px;}
+    .brc-result-value.payout{font-size:16px;}
+    .brc-result-value.kimarite{font-size:15px;}
+  }
   .brc-odds-builder{display:grid;gap:10px;}
   .brc-odds-builder-box{border:1px solid rgba(10,31,51,.10);border-radius:12px;background:#fff;overflow:hidden;}
   .brc-odds-builder-head{display:grid;grid-template-columns:40px minmax(96px,1fr) repeat(3,52px);align-items:center;background:#f7f9fc;border-bottom:1px solid rgba(10,31,51,.08);}
@@ -3061,6 +3086,7 @@
           <button type="button" class="predict-main-tab active" data-predict-main-tab="data">出走データ</button>
           <button type="button" class="predict-main-tab" data-predict-main-tab="odds">オッズ</button>
           <button type="button" class="predict-main-tab" data-predict-main-tab="ai">AI予測</button>
+          <button type="button" class="predict-main-tab" data-predict-main-tab="result">結果</button>
         </div>
         <div class="predict-main-panel active" id="predictMainPanel-data">
           <div id="predictResult" style="padding:18px 22px;"></div>
@@ -3133,6 +3159,11 @@
         </div>
         <div class="predict-main-panel" id="predictMainPanel-ai">
           <div id="predictAiResult" class="predict-ai-wrap"></div>
+        </div>
+        <div class="predict-main-panel" id="predictMainPanel-result">
+          <div class="brc-result-wrap" id="brcRaceResultPanel">
+            <div id="brcRaceResultBody" class="brc-result-status">レースを選択してください。</div>
+          </div>
         </div>
       </div>
       
@@ -5793,7 +5824,7 @@ function scrollPredictMainTabsToFixedPosition(behavior='smooth'){
 
 // 出走表AI：4タブ切り替え
 function setPredictMainTab(key){
-  const valid=['data','odds','ai'];
+  const valid=['data','odds','ai','result'];
   const k=valid.includes(key)?key:'data';
   document.querySelectorAll('.predict-main-tab').forEach(btn=>{
     const on=btn.dataset.predictMainTab===k;
@@ -5806,6 +5837,7 @@ function setPredictMainTab(key){
   });
   window.__predictMainTabCurrent=k;
   if(k==='odds' && typeof brcRenderOddsPanel==='function') setTimeout(()=>brcRenderOddsPanel(),0);
+  if(k==='result' && typeof brcEnsureCurrentRaceResultMonitor==='function') setTimeout(()=>brcEnsureCurrentRaceResultMonitor(),0);
 }
 
 function bindPredictMainTabs(){
@@ -5820,6 +5852,121 @@ function bindPredictMainTabs(){
   setPredictMainTab(window.__predictMainTabCurrent||'data');
 }
 
+// ===== BRC_RACE_RESULT_NO_KV_10M_90S_20260905 =====
+// 結果はKVへ保存しない。Live Workerの /live-result が公式一次データを参照し、
+// INDEXは締切10分後から選択中の1レースだけ確認する。未確定時は90秒後に再確認し、確定後は停止。
+const BRC_RESULT_FIRST_CHECK_MIN = 10;
+const BRC_RESULT_RETRY_MS = 90 * 1000;
+const __brcRaceResultCache = new Map();
+let __brcRaceResultTimer = null;
+let __brcRaceResultToken = 0;
+let __brcRaceResultActive = null;
+
+function brcRaceResultSpec(venue, raceNo){
+  const r=Number(raceNo);
+  const code=brcVenueCodeFromName(venue);
+  const date=String(TODAY_LABEL||getJstDateLabel()||'');
+  const deadline=String(RACE_INFO_TODAY?.[venue]?.deadlines?.[String(r)]||'');
+  const m=deadline.match(/^(\d{1,2}):(\d{2})$/);
+  if(!code || !Number.isInteger(r) || r<1 || r>12 || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !m) return null;
+  const deadlineMs=Date.parse(`${date}T${m[1].padStart(2,'0')}:${m[2]}:00+09:00`);
+  if(!Number.isFinite(deadlineMs)) return null;
+  return {
+    key:`${date}:${String(code).padStart(2,'0')}:${String(r).padStart(2,'0')}`,
+    date,venue,venueCode:String(code).padStart(2,'0'),raceNo:r,deadline,
+    dueMs:deadlineMs + BRC_RESULT_FIRST_CHECK_MIN*60*1000
+  };
+}
+function brcRaceResultBody(){ return document.getElementById('brcRaceResultBody'); }
+function brcRenderRaceResultStatus(message){
+  const box=brcRaceResultBody(); if(!box) return;
+  box.className='brc-result-status';
+  box.textContent=message;
+}
+function brcRenderRaceResultConfirmed(result){
+  const box=brcRaceResultBody(); if(!box) return;
+  const combo=String(result?.combination||'―');
+  const payout=Number(result?.payout_yen);
+  const kimarite=String(result?.kimarite||'―');
+  box.className='';
+  box.innerHTML=`<div class="brc-result-grid">
+    <div class="brc-result-item"><div class="brc-result-label">出目</div><div class="brc-result-value">${combo}</div></div>
+    <div class="brc-result-item"><div class="brc-result-label">配当</div><div class="brc-result-value payout">${Number.isFinite(payout)?payout.toLocaleString('ja-JP')+'円':'―'}</div></div>
+    <div class="brc-result-item"><div class="brc-result-label">決まり手</div><div class="brc-result-value kimarite">${kimarite}</div></div>
+  </div>`;
+}
+function brcClearRaceResultTimer(){
+  if(__brcRaceResultTimer){ clearTimeout(__brcRaceResultTimer); __brcRaceResultTimer=null; }
+}
+function brcScheduleRaceResultCheck(spec, delayMs, token){
+  brcClearRaceResultTimer();
+  __brcRaceResultTimer=setTimeout(()=>brcCheckRaceResult(spec,token),Math.max(0,delayMs));
+}
+async function brcFetchRaceResult(spec){
+  if(!BRC_LIVE_EXHIBITION_API_URL) return null;
+  const qs=new URLSearchParams({date:spec.date,venue_code:spec.venueCode,race_no:String(spec.raceNo)});
+  const res=await fetch(`${BRC_LIVE_EXHIBITION_API_URL}/live-result?${qs.toString()}`,{
+    method:'GET',cache:'no-store',headers:{'Accept':'application/json'}
+  });
+  if(!res.ok) throw new Error(`live_result_http_${res.status}`);
+  const obj=await res.json();
+  if(!obj || obj.ok!==true) throw new Error('live_result_invalid');
+  if(String(obj.date)!==spec.date || String(obj.venue_code).padStart(2,'0')!==spec.venueCode || Number(obj.race_no)!==spec.raceNo){
+    throw new Error('live_result_mismatch');
+  }
+  return obj;
+}
+async function brcCheckRaceResult(spec, token){
+  if(!spec || token!==__brcRaceResultToken || __brcRaceResultActive?.key!==spec.key) return;
+  const cached=__brcRaceResultCache.get(spec.key);
+  if(cached?.confirmed && cached.result){ brcRenderRaceResultConfirmed(cached.result); return; }
+  brcRenderRaceResultStatus('結果確認中です。');
+  try{
+    const obj=await brcFetchRaceResult(spec);
+    if(token!==__brcRaceResultToken || __brcRaceResultActive?.key!==spec.key) return;
+    if(obj?.confirmed===true && obj?.result){
+      __brcRaceResultCache.set(spec.key,obj);
+      brcClearRaceResultTimer();
+      brcRenderRaceResultConfirmed(obj.result);
+      return;
+    }
+    brcRenderRaceResultStatus('結果確認中です。未確定のため90秒後に再確認します。');
+  }catch(err){
+    console.warn('BRC live result fetch failed:',err);
+    if(token!==__brcRaceResultToken || __brcRaceResultActive?.key!==spec.key) return;
+    brcRenderRaceResultStatus('結果確認中です。90秒後に再確認します。');
+  }
+  brcScheduleRaceResultCheck(spec,BRC_RESULT_RETRY_MS,token);
+}
+function brcStartRaceResultMonitor(venue,raceNo){
+  const spec=brcRaceResultSpec(venue,raceNo);
+  brcClearRaceResultTimer();
+  __brcRaceResultToken+=1;
+  const token=__brcRaceResultToken;
+  __brcRaceResultActive=spec;
+  if(!spec){ brcRenderRaceResultStatus('レースを選択してください。'); return; }
+  const cached=__brcRaceResultCache.get(spec.key);
+  if(cached?.confirmed && cached.result){ brcRenderRaceResultConfirmed(cached.result); return; }
+  const waitMs=spec.dueMs-Date.now();
+  if(waitMs>0){
+    brcRenderRaceResultStatus('締切10分後から結果を確認します。');
+    brcScheduleRaceResultCheck(spec,waitMs,token);
+    return;
+  }
+  brcScheduleRaceResultCheck(spec,0,token);
+}
+function brcEnsureCurrentRaceResultMonitor(){
+  const venue=document.getElementById('predictRaceDay')?.value || document.getElementById('predictVenue')?.value || '';
+  const raceNo=Number(document.getElementById('predictRaceNo')?.value||0);
+  const spec=brcRaceResultSpec(venue,raceNo);
+  if(!spec){ brcRenderRaceResultStatus('レースを選択してください。'); return; }
+  if(__brcRaceResultActive?.key===spec.key){
+    const cached=__brcRaceResultCache.get(spec.key);
+    if(cached?.confirmed && cached.result) brcRenderRaceResultConfirmed(cached.result);
+    return;
+  }
+  brcStartRaceResultMonitor(venue,raceNo);
+}
 
 // ===== BRC_ODDS_MATRIX_POPULARITY_20260830 =====
 // オッズタブを開いただけでは外部取得しない。
@@ -9976,6 +10123,9 @@ function loadTodaysRace(venue, raceNo){
 
   // レースを切り替えた時は、前レースの風向・風速条件を持ち越さない。
   window.__windSelection = {dir:'', speed:''};
+
+  // 結果は予測APIとは独立して監視。締切10分後から確認し、未確定時のみ90秒後に再確認する。
+  try{ brcStartRaceResultMonitor(venue, Number(raceNo)); }catch(_e){}
 
   // 予測計算で例外が発生しても、レース番号クリック・出走表表示を止めない。
   try {
