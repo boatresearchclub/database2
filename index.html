@@ -31,6 +31,7 @@
 <!-- BRC_RACE_RESULT_BANNER_AFTER_DEADLINE_20260906 -->
 <!-- BRC_AI_NIGE_FORWARD_OOS_LOG_20260906 -->
 <!-- BRC_VISIBLE_OOS_SNAPSHOT_V1_20260906 -->
+<!-- BRC_PREDICT_GUIDE_REVIEW_V2_20260906 -->
 
 <!-- BRC_PREDICT_METRIC_ROW_ALIGNMENT_20260828 -->
 <!-- BRC_SNS_ARROW_BAKED_COORDS_20260902 -->
@@ -2635,6 +2636,46 @@
   font-size:9.5px;
   font-weight:850;
   vertical-align:1px;
+}
+.predict-guide-lead{
+  margin:8px 0 2px;
+  padding:10px 11px;
+  border:1px solid rgba(0,87,219,.14);
+  border-radius:10px;
+  background:rgba(0,87,219,.045);
+  color:var(--ink-soft);
+  font-size:11.5px;
+  line-height:1.65;
+}
+.predict-guide-lead strong{color:var(--line-white);}
+.predict-guide-status{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin:0 4px 2px 0;
+  padding:2px 6px;
+  border-radius:999px;
+  font-size:9.5px;
+  font-weight:900;
+  line-height:1.35;
+  white-space:nowrap;
+}
+.predict-guide-status.applied{
+  color:#217247;
+  background:rgba(47,143,91,.09);
+  border:1px solid rgba(47,143,91,.22);
+}
+.predict-guide-status.reference{
+  color:#8a5a00;
+  background:rgba(227,178,60,.10);
+  border:1px solid rgba(227,178,60,.25);
+}
+.predict-guide-scale{
+  display:block;
+  margin-top:5px;
+  color:var(--ink-soft);
+  font-size:10.5px;
+  line-height:1.65;
 }
 @media(max-width:640px){
   .predict-guide > summary{padding:11px 12px;font-size:13px;}
@@ -12153,7 +12194,7 @@ async function runPredict(){
     <table class="predict-table">
       <thead><tr>
         <th>枠</th><th>選手</th>
-        <th class="num">勝率</th>
+        <th class="num">1着率</th>
         <th class="num">3連対率</th>
         <th class="num">ST順位</th><th class="num">モーター</th><th class="predict-col-opt">備考</th>
       </tr></thead>
@@ -12189,46 +12230,92 @@ async function runPredict(){
       <summary>出走データの見方</summary>
       <div class="predict-guide-body">
 
+        <div class="predict-guide-lead">
+          <strong>迷ったら、①インを見る → ②相手を絞る → ③展示後に変化を見る → ④補助情報で確認 → ⑤AI予測で最終確認</strong><br>
+          BRCは1つの数字だけで決めるより、事前予測と展示後の変化を順番に重ねて見る使い方がおすすめです。
+        </div>
+
+        <div class="predict-guide-group">
+          <div class="predict-guide-group-title">おすすめの見る順番</div>
+
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">① インを見る</div>
+            <div class="predict-guide-text">まず「イン逃げ信頼度」と1号艇の「1着率」を確認します。1号艇を軸にするレースか、イン否定まで考えるレースかの入口です。</div>
+          </div>
+
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">② 相手を絞る</div>
+            <div class="predict-guide-text">②〜⑥の1着率・3連対率に、ST順位とモーターを重ねます。1着候補と、2・3着で残したい艇を整理します。</div>
+          </div>
+
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">③ 展示後</div>
+            <div class="predict-guide-text">BRCタイムXで、事前予測から誰の評価が上がったか・下がったかを確認します。表示中の各着率は、対象レースではBRCタイムX反映後の数値です。</div>
+          </div>
+
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">④ 補助情報</div>
+            <div class="predict-guide-text">本人傾向・展示スリット評価・風データは、数値だけでは拾いにくい注意点を見るための参考情報です。正式な着率へ二重加点はしません。</div>
+          </div>
+
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">⑤ AI予測</div>
+            <div class="predict-guide-text">1号艇が逃げる想定なら2着・3着予測を確認し、最後にBRC参考買い目の安定型・的中型・回収型を見ます。条件不足時は見送りになります。</div>
+          </div>
+        </div>
+
         <div class="predict-guide-group">
           <div class="predict-guide-group-title">まず見る数字</div>
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">イン逃げ信頼度</div>
-            <div class="predict-guide-text">1号艇をどれだけ信頼できるかをS〜E・強イン否定で表示します。「場基準比」は、その会場の1コース基準との差です。</div>
+            <div class="predict-guide-text">1号艇をどれだけ信頼できるかをS〜E・強イン否定で表示します。「場基準比」は、今回の1号艇1着率がその会場の1コース基準より何pt高い・低いかを示します。</div>
           </div>
 
           <div class="predict-guide-item">
-            <div class="predict-guide-key">勝率</div>
-            <div class="predict-guide-text">その艇が1着になるBRC予測確率です。展示取得後はBRCタイムXも反映します。</div>
+            <div class="predict-guide-key">1着率</div>
+            <div class="predict-guide-text">その艇が1着になるBRC予測確率です。展示取得後、BRCタイムX対象レースでは展示補正後の数値へ更新されます。</div>
           </div>
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">3連対率</div>
-            <div class="predict-guide-text">その艇が1〜3着に入るBRC予測確率です。2着・3着で残す艇の判断にも使えます。</div>
+            <div class="predict-guide-text">その艇が1〜3着に入るBRC予測確率です。頭候補だけでなく、2着・3着で残す相手候補を比較する時に使います。</div>
           </div>
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">ST順位</div>
-            <div class="predict-guide-text">1段目は今回コースの平均ST順位で、数字が小さいほどスタートで前に出る傾向です。2段目の「安定S〜D」はSTの再現性を示します。</div>
+            <div class="predict-guide-text">1段目は原則「選手×今回コース」の平均ST順位で、数字が小さいほどスタートで前に出る傾向です。コース別データがない場合は全体値を表示します。2段目の安定度は、1〜3C＝スロー、4〜6C＝ダッシュに分けたSTの再現性でS〜E表示。N&lt;50は「－」です。</div>
           </div>
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">モーター</div>
-            <div class="predict-guide-text">今節の6艇でモーターを相対比較したA〜E評価です。Aほど高評価、Eほど低評価です。</div>
+            <div class="predict-guide-text">このレースの6艇のモーター2連対率を相対比較したA〜E評価です。Aほど高評価、Eほど低評価。絶対評価ではなく「今回の6艇の中でどうか」を見る指標です。</div>
           </div>
         </div>
 
         <div class="predict-guide-group">
-          <div class="predict-guide-group-title">展示・直線評価</div>
+          <div class="predict-guide-group-title">展示後に見る項目</div>
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">BRCタイムX</div>
-            <div class="predict-guide-text">展示の6艇相対差を会場×コースで評価し、1着率・2着率・3着率・3連対率すべてへ数値反映します。ラップタイム未計測時はBRCタイムXを計算しません。<br><strong>各着率＝BRCタイムX反映済｜本人傾向＝参考・数値未反映</strong></div>
+            <div class="predict-guide-text"><span class="predict-guide-status applied">着率へ反映</span>展示の6艇相対差を会場×コースで評価し、1着率・2着率・3着率・3連対率すべてへ数値反映します。ラップタイムが6艇分そろわない場合は計算しません。進入変更時も艇番＝元枠基準で評価し、江戸川は現行対象外です。
+              <span class="predict-guide-scale">矢印の大きさ：0.0pt → ／ 0.1〜4.9pt ↗↘ ／ 5.0〜9.9pt ↑↓ ／ 10.0〜14.9pt ↑↑↓↓ ／ 15.0pt以上 ↑↑↑↓↓↓</span>
+            </div>
+          </div>
+
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">本人傾向</div>
+            <div class="predict-guide-text"><span class="predict-guide-status reference">参考・数値未反映</span>その選手本人が同じコース×TimeX差帯で見せた傾向です。「本人」をタップすると通常のTimeX効果との差を参考加減値で確認できます。N数不足のため、1着・2着・3着・3連対率の正式数値には加算しません。</div>
           </div>
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">展示スリット評価</div>
-            <div class="predict-guide-text">展示タイムとST順位から、隣接艇に対する攻めの優位性を評価します。該当時は着率への影響方向を表示します。</div>
+            <div class="predict-guide-text"><span class="predict-guide-status reference">参考・再加点なし</span>展示タイム差と「選手×今回コース」の平均ST順位を組み合わせ、隣接艇に攻めの優位性がある検証済み条件だけを表示します。展示ST順位を使った判定ではありません。進入変更時は判定対象外で、該当時は1着・2着・3連対への影響方向を矢印で示します。</div>
+          </div>
+
+          <div class="predict-guide-item">
+            <div class="predict-guide-key">数値反映の整理</div>
+            <div class="predict-guide-text"><span class="predict-guide-status applied">追加反映</span>BRCタイムX　<span class="predict-guide-status reference">参考表示</span>本人傾向・展示スリット評価・風データ・ST安定度。参考表示の項目を、画面側で着率へもう一度加算することはありません。</div>
           </div>
         </div>
 
@@ -12242,36 +12329,36 @@ async function runPredict(){
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">展開</div>
-            <div class="predict-guide-text">その選手が1着になった時、他艇が2着・3着に残る傾向を確認できます。決まり手別にも切り替えられます。</div>
+            <div class="predict-guide-text">その選手が1着になった時、他艇が2着・3着に残る傾向を確認できます。決まり手別にも切り替えられ、展示取得後は表示率へBRCタイムXを反映します。本人傾向は参考表示のみです。</div>
           </div>
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">ST</div>
-            <div class="predict-guide-text">今回コースの平均ST順位とST安定度を確認できます。平均STやブレなど、スタートの速さと再現性を詳しく見られます。</div>
+            <div class="predict-guide-text">今回コースの平均ST順位に加え、スロー／ダッシュ区分の平均ST・ブレ・本人基準±0.05内率・ST .25以上率などを確認できます。ST安定度は平均STの速さとは別の指標です。</div>
           </div>
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">モーター</div>
-            <div class="predict-guide-text">モーター評価・2連対率に加え、前回使用者や優出・優勝などの機歴を確認できます。</div>
+            <div class="predict-guide-text">モーター評価・2連対率に加え、前回使用者や優出・優勝などの機歴を確認できます。相対評価だけでなく中身を確認したい時に使います。</div>
           </div>
         </div>
 
         <div class="predict-guide-group">
-          <div class="predict-guide-group-title">AI予測・参考</div>
+          <div class="predict-guide-group-title">AI予測・参考買い目</div>
 
           <div class="predict-guide-item">
-            <div class="predict-guide-key">イン逃げ時予測</div>
-            <div class="predict-guide-text">1号艇が逃げた場合の、②〜⑥の2着・3着率を表示します。</div>
+            <div class="predict-guide-key">2着・3着予測</div>
+            <div class="predict-guide-text">1号艇が逃げた場合の②〜⑥の2着率・3着率と3連単上位を表示します。展示取得後は対象レースで2着・3着率にもBRCタイムXを反映します。</div>
           </div>
 
           <div class="predict-guide-item">
-            <div class="predict-guide-key">推奨買い目</div>
-            <div class="predict-guide-text">BRC予測から3連単の組み合わせ・点数・想定的中率・参加目安の合成オッズを表示します。条件が弱い場合は「推奨なし」とします。展示後は確率へ反映し、買い目は展示前の構成です。</div>
+            <div class="predict-guide-key">BRC参考買い目</div>
+            <div class="predict-guide-text">期待値条件を満たす3連単を最大10点の可変点数で表示します。「安定型」は期待値と確率余白のバランス、「的中型」は期待値を確保しながら想定的中率を優先、「回収型」は期待回収率を優先します。条件を満たさない場合は「見送り」です。買い目カードに「展示反映済み」の表示がない場合、着率がTimeX反映後でも買い目構成は展示前です。</div>
           </div>
 
           <div class="predict-guide-item">
-            <div class="predict-guide-key">風向・風速 参考</div>
-            <div class="predict-guide-text">展示後の公式風向・風速とBOAT RACE公式の追い風・向かい風・左横風・右横風判定を「向かい風（北東）」のように方角付きで自動表示します。同条件の枠別1着実測と場平均との差も参考表示します。BRC予測の着率には反映しません。</div>
+            <div class="predict-guide-key">風向・風速</div>
+            <div class="predict-guide-text"><span class="predict-guide-status reference">参考・数値未反映</span>展示後の水面気象を自動反映します。追い風・向かい風・左右横風は公式の風区分が取得できた場合はBOAT RACE公式判定を使用し、取得できない場合は会場方向から参考判定します。同条件の枠別1着実測・場平均との差・Nも表示しますが、BRC予測着率へは加算しません。</div>
           </div>
         </div>
 
