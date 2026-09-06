@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V1 -->
+<!-- BRC_REFERENCE_PICKS_ODDS_COMPOSITE_SIMPLE_20260906 -->
 <!-- BRC_GRADE_COLOR_UNIFIED_20260828 -->
 <!-- BRC_WOMEN_CALC_BELOW_DEADLINE_20260828 -->
 <!-- BRC_PREDICT_UNIFIED_DETAIL_TABS_20260828 -->
@@ -32,11 +33,13 @@
 <!-- BRC_AI_NIGE_FORWARD_OOS_LOG_20260906 -->
 <!-- BRC_VISIBLE_OOS_SNAPSHOT_V1_20260906 -->
 <!-- BRC_PREDICT_GUIDE_REVIEW_V2_20260906 -->
+<!-- BRC_NIGE_REFERENCE_PICKS_ODDS_FLOW_20260906 -->
 <!-- BRC_NIGE_REFERENCE_PICKS_CUM70_20260906 -->
 
 <!-- BRC_PREDICT_METRIC_ROW_ALIGNMENT_20260828 -->
 <!-- BRC_SNS_ARROW_BAKED_COORDS_20260902 -->
 <!-- BRC_RESEARCH_LAB_V2_TABS_ADMIN_CRUD_ORDER_20260902 -->
+<!-- BRC_NIGE_REFERENCE_PICKS_UX_V2_20260906 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Boat Research Club ～データベース～</title>
@@ -1252,12 +1255,15 @@
   .brc-nige-order-base.is-strong-plus{color:var(--trend-up);}
   .brc-nige-order-base.is-strong-minus{color:var(--trend-down);}
   .brc-nige-order-head-base{display:block;margin-top:1px;font-size:8px;font-weight:750;color:var(--ink-soft);line-height:1.05;}
-  .brc-nige-order-picks{display:block;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(0,87,219,.18);}
-  .brc-nige-order-picks-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;}
-  .brc-nige-order-picks-label{font-size:11px;font-weight:950;color:var(--navy);}
-  .brc-nige-order-picks-meta{font-size:9.5px;font-weight:850;color:var(--wave);white-space:nowrap;}
-  .brc-nige-order-pick-list{display:flex;flex-wrap:wrap;gap:5px;}
-  .brc-nige-order-pick{display:inline-flex;padding:4px 8px;border-radius:7px;border:1px solid rgba(0,87,219,.18);background:#fff;color:var(--navy);font-size:11px;font-weight:900;white-space:nowrap;}
+  .brc-nige-order-picks{display:block;margin-top:9px;padding-top:9px;border-top:1px dashed rgba(0,87,219,.18);}
+  .brc-nige-order-picks-label{font-size:11.5px;font-weight:950;color:var(--navy);margin-bottom:6px;}
+  .brc-nige-order-pick-list{display:grid;gap:4px;}
+  .brc-nige-order-pick{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:5px 8px;border-radius:7px;background:#fff;border:1px solid rgba(10,31,51,.08);font-size:11px;white-space:nowrap;}
+  .brc-nige-order-pick-combo{font-weight:950;color:var(--navy);}
+  .brc-nige-order-pick-odds{font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums;}
+  .brc-nige-order-composite{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:6px;padding:7px 8px;border-radius:8px;background:rgba(0,87,219,.05);border:1px solid rgba(0,87,219,.12);}
+  .brc-nige-order-composite-label{font-size:10.5px;font-weight:900;color:var(--ink-soft);}
+  .brc-nige-order-composite-value{font-size:15px;font-weight:950;color:var(--wave);font-variant-numeric:tabular-nums;white-space:nowrap;}
   .brc-nige-order-note{margin-top:6px;font-size:9.5px;line-height:1.5;color:var(--ink-soft);}
   @media(max-width:420px){
     .brc-nige-order-panel{padding:9px 8px;}
@@ -6500,6 +6506,24 @@ function brcOddsPoolAddCurrent(sel,odds){
   return {added:next.length-before.length,total:next.length};
 }
 
+// BRC_NIGE_REFERENCE_PICKS_TO_ODDS_POOL_20260906
+// 参考買い目を、オッズ画面の候補プールへ直接セットする。
+function brcOddsPoolAddCombos(key,combos){
+  if(!key) return {added:0,total:0};
+  const clean=(Array.isArray(combos)?combos:[])
+    .map(x=>String(x||'').trim())
+    .filter(x=>/^[1-6]-[1-6]-[1-6]$/.test(x));
+  if(!clean.length) return {added:0,total:brcOddsPoolGet(key).length};
+  const all=brcOddsPoolReadAll();
+  const before=brcOddsPoolGet(key);
+  const set=new Set(before);
+  clean.forEach(x=>set.add(x));
+  const next=Array.from(set);
+  all[key]=next;
+  brcOddsPoolWriteAll(all);
+  return {added:next.length-before.length,total:next.length};
+}
+
 function brcOddsPoolRemove(key,comb){
   if(!key||!comb) return;
   const all=brcOddsPoolReadAll();
@@ -6916,6 +6940,7 @@ function brcRenderOddsPanel(message='',isError=false){
   if(passed && !historical && !rec?.final && !__brcOddsFinalLoading[sel.key] && Number(__brcOddsFinalRetryAfter[sel.key]||0)<=Date.now()){
     setTimeout(()=>brcEnsureFinalOdds(sel),0);
   }
+  try{ brcRefreshNigeReferenceOdds(); }catch(_e){}
 }
 
 async function brcRefreshOddsManual(){
@@ -7203,12 +7228,74 @@ function brcBuildNigeReferencePicksHtml(pred,target=0.70){
     if(cumulative+1e-12>=goal) break;
   }
   if(!picks.length) return '';
-  const chips=picks.map(x=>`<span class="brc-nige-order-pick">${x.combo}</span>`).join('');
-  return `<div class="brc-nige-order-picks">
-    <div class="brc-nige-order-picks-head"><div class="brc-nige-order-picks-label">参考買い目</div><div class="brc-nige-order-picks-meta">${picks.length}点｜累積${Math.round(goal*100)}％基準</div></div>
-    <div class="brc-nige-order-pick-list">${chips}</div>
-    <div class="brc-nige-order-note">1号艇が逃げた場合の2・3着予測を確率順に積み上げ、累積${Math.round(goal*100)}％に達するまで表示。参考情報であり、収益性を保証する推奨買い目ではありません。</div>
+
+  const sel=brcOddsSelection();
+  const odds=sel?.key ? (__brcOddsLocal[sel.key]?.odds||null) : null;
+  const pickRows=picks.map(x=>{
+    const v=brcOddsValue(odds,x.combo);
+    return `<div class="brc-nige-order-pick" data-brc-ref-combo="${x.combo}"><span class="brc-nige-order-pick-combo">${x.combo}</span><span class="brc-nige-order-pick-odds" data-brc-ref-odds="${x.combo}">${v===null?'―':v.toFixed(1)+'倍'}</span></div>`;
+  }).join('');
+  const available=picks.map(x=>brcOddsValue(odds,x.combo)).filter(v=>v!==null);
+  const composite=(available.length===picks.length)?brcOddsBuilderComposite(picks.map((x,i)=>({odds:available[i]}))):null;
+  return `<div class="brc-nige-order-picks" data-brc-ref-picks="${picks.map(x=>x.combo).join(',')}">
+    <div class="brc-nige-order-picks-label">参考買い目</div>
+    <div class="brc-nige-order-pick-list">${pickRows}</div>
+    <div class="brc-nige-order-composite"><span class="brc-nige-order-composite-label">合成オッズ</span><span class="brc-nige-order-composite-value" data-brc-ref-composite>${composite===null?'―':composite.toFixed(1)+'倍'}</span></div>
   </div>`;
+}
+
+function brcRefreshNigeReferenceOdds(){
+  const box=document.querySelector('.brc-nige-order-picks[data-brc-ref-picks]');
+  if(!box) return;
+  const combos=String(box.dataset.brcRefPicks||'').split(',').map(x=>x.trim()).filter(Boolean);
+  if(!combos.length) return;
+  const sel=brcOddsSelection();
+  const odds=sel?.key ? (__brcOddsLocal[sel.key]?.odds||null) : null;
+  const vals=[];
+  combos.forEach(comb=>{
+    const v=brcOddsValue(odds,comb);
+    if(v!==null) vals.push(v);
+    const el=box.querySelector(`[data-brc-ref-odds="${comb}"]`);
+    if(el) el.textContent=v===null?'―':`${v.toFixed(1)}倍`;
+  });
+  const composite=(vals.length===combos.length)?brcOddsBuilderComposite(vals.map(v=>({odds:v}))):null;
+  const cel=box.querySelector('[data-brc-ref-composite]');
+  if(cel) cel.textContent=composite===null?'―':`${composite.toFixed(1)}倍`;
+}
+
+function brcOpenOddsFromReferencePicks(ev,text=''){
+  try{ ev?.stopPropagation?.(); }catch(_e){}
+  const combos=String(text||'').trim().split(/\s+/).filter(Boolean);
+  let addResult={added:0,total:0};
+  try{
+    const sel=brcOddsSelection();
+    if(sel?.key && combos.length){ addResult=brcOddsPoolAddCombos(sel.key,combos); }
+  }catch(_e){}
+  try{ __brcOddsView='builder'; }catch(_e){}
+  try{ setPredictMainTab('odds'); }catch(_e){}
+  try{
+    const msg=combos.length ? `参考買い目${combos.length}点をオッズ候補へセットしました。` : '';
+    brcRenderOddsPanel(msg,false);
+  }catch(_e){}
+  try{ scrollPredictMainTabsToFixedPosition('smooth'); }catch(_e){}
+}
+
+async function brcCopyReferencePicks(ev,text){
+  try{ ev?.stopPropagation?.(); }catch(_e){}
+  const value=String(text||'').trim();
+  if(!value) return;
+  const btn=ev?.currentTarget;
+  try{
+    if(navigator.clipboard?.writeText){
+      await navigator.clipboard.writeText(value);
+    }else{
+      const ta=document.createElement('textarea');
+      ta.value=value;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();
+    }
+    if(btn){ const old=btn.textContent; btn.textContent='コピーしました'; setTimeout(()=>{btn.textContent=old;},1200); }
+  }catch(_e){
+    if(btn){ const old=btn.textContent; btn.textContent='コピーできません'; setTimeout(()=>{btn.textContent=old;},1200); }
+  }
 }
 
 function brcBuildServerNigePredictionHtml(boats,workerPrediction,exhibitionApplied){
@@ -12038,9 +12125,8 @@ function brcBuildLegacyRecommendedBetsHtml(workerPrediction, localInReliability=
 }
 function brcBuildAi3ModePreviewHtml(){ return ''; }
 function buildRecommendedBetsHtmlFromServer(workerPrediction, localInReliability=null, exhibitionApplied=false){
-  const ai3=brcBuildAi3ModeRecommendationHtml(workerPrediction);
-  if(ai3) return ai3;
-  // 実データ未配信中はサンプル値をユーザーへ見せない。
+  // BRC_NIGE_REFERENCE_PICKS_CUM70_20260906:
+  // 旧EV型/BRC参考買い目はユーザー表示しない。参考買い目は累積70%表示へ一本化。
   return '';
 }
 
@@ -12288,7 +12374,7 @@ async function runPredict(){
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">⑤ AI予測</div>
-            <div class="predict-guide-text">1号艇が逃げる想定なら、2着・3着予測と参考買い目を確認します。参考買い目は3連単20通りを予測確率順に積み上げ、累積70％に達するまでを可変点数で表示します。</div>
+            <div class="predict-guide-text">1号艇が逃げる想定なら、2着・3着予測と参考買い目を確認します。参考買い目は3連単20通りを予測確率順に積み上げ、累積70％に達するまでを表示します。オッズ取得後は各買い目のオッズと合成オッズを表示します。</div>
           </div>
         </div>
 
@@ -12376,7 +12462,7 @@ async function runPredict(){
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">2着・3着予測</div>
-            <div class="predict-guide-text">1号艇が逃げた場合の②〜⑥の2着率・3着率と参考買い目を表示します。参考買い目は3連単20通りを予測確率順に積み上げ、累積70％に達するまでを表示します。展示取得後は対象レースで2着・3着率にもBRCタイムXを反映します。</div>
+            <div class="predict-guide-text">1号艇が逃げた場合の②〜⑥の2着率・3着率と参考買い目を表示します。参考買い目は3連単20通りを予測確率順に積み上げ、累積70％に達するまでを表示します。オッズ取得後は各買い目のオッズと合成オッズを表示します。展示取得後は対象レースで2着・3着率にもBRCタイムXを反映します。</div>
           </div>
 
 
