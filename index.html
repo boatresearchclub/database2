@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V1 -->
+<!-- BRC_AI_NIGE_POST_DEADLINE_AUTO_ODDS_20260906 -->
 <!-- BRC_NIGE_REFERENCE_FORMATION_POINTS_20260906 -->
 <!-- BRC_REFERENCE_PICKS_ODDS_COMPOSITE_SIMPLE_20260906 -->
 <!-- BRC_GRADE_COLOR_UNIFIED_20260828 -->
@@ -5953,6 +5954,27 @@ function scrollPredictMainTabsToFixedPosition(behavior='smooth'){
   }));
 }
 
+// BRC_AI_NIGE_POST_DEADLINE_AUTO_ODDS_20260906
+// AI予測側だけ見ていても、締切後はオッズタブと同じ最終オッズを裏で取得し、
+// 参考買い目の個別オッズ・合成オッズへ反映する。
+function brcEnsureAiReferenceOddsAfterDeadline(){
+  try{
+    const sel=brcOddsSelection();
+    if(!sel?.key) return;
+    // すでにローカルへ入っているオッズは即反映。
+    brcRefreshNigeReferenceOdds();
+    // 自動外部取得は当日の締切済みレースだけ。締切前の取得方針は従来どおり手動。
+    if(String(sel.date)!==String(getJstDateLabel())) return;
+    if(!brcOddsDeadlinePassed(sel)) return;
+    const rec=__brcOddsLocal[sel.key]||null;
+    if(rec?.final && rec?.odds){
+      brcRefreshNigeReferenceOdds();
+      return;
+    }
+    if(typeof brcEnsureFinalOdds==='function') brcEnsureFinalOdds(sel);
+  }catch(_e){}
+}
+
 // 出走表AI：3タブ切り替え
 function setPredictMainTab(key){
   const valid=['data','odds','ai'];
@@ -5968,6 +5990,7 @@ function setPredictMainTab(key){
   });
   window.__predictMainTabCurrent=k;
   if(k==='odds' && typeof brcRenderOddsPanel==='function') setTimeout(()=>brcRenderOddsPanel(),0);
+  if(k==='ai') setTimeout(()=>brcEnsureAiReferenceOddsAfterDeadline(),0);
 }
 
 function bindPredictMainTabs(){
@@ -7396,6 +7419,8 @@ function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhib
   // 念のためAI予測エリア内の買い目カードは常に1枚に制限する。
   const recommendationCards=box.querySelectorAll('[data-brc-ai3-root], #recommendedBetsCard');
   recommendationCards.forEach((card,index)=>{ if(index>0) card.remove(); });
+  // AI予測を再描画した直後にも、締切済みなら最終オッズを自動反映。
+  setTimeout(()=>brcEnsureAiReferenceOddsAfterDeadline(),0);
 }
 
 // 旧：勝率タップから展開詳細を開く関数。勝率セルからの呼び出しは廃止。
