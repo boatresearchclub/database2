@@ -32,6 +32,7 @@
 <!-- BRC_AI_NIGE_FORWARD_OOS_LOG_20260906 -->
 <!-- BRC_VISIBLE_OOS_SNAPSHOT_V1_20260906 -->
 <!-- BRC_PREDICT_GUIDE_REVIEW_V2_20260906 -->
+<!-- BRC_NIGE_REFERENCE_PICKS_CUM70_20260906 -->
 
 <!-- BRC_PREDICT_METRIC_ROW_ALIGNMENT_20260828 -->
 <!-- BRC_SNS_ARROW_BAKED_COORDS_20260902 -->
@@ -1251,10 +1252,12 @@
   .brc-nige-order-base.is-strong-plus{color:var(--trend-up);}
   .brc-nige-order-base.is-strong-minus{color:var(--trend-down);}
   .brc-nige-order-head-base{display:block;margin-top:1px;font-size:8px;font-weight:750;color:var(--ink-soft);line-height:1.05;}
-  .brc-nige-order-picks{display:flex;align-items:flex-start;gap:7px;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(0,87,219,.18);}
-  .brc-nige-order-picks-label{flex:0 0 auto;font-size:10.5px;font-weight:900;color:var(--ink-soft);padding-top:3px;}
+  .brc-nige-order-picks{display:block;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(0,87,219,.18);}
+  .brc-nige-order-picks-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;}
+  .brc-nige-order-picks-label{font-size:11px;font-weight:950;color:var(--navy);}
+  .brc-nige-order-picks-meta{font-size:9.5px;font-weight:850;color:var(--wave);white-space:nowrap;}
   .brc-nige-order-pick-list{display:flex;flex-wrap:wrap;gap:5px;}
-  .brc-nige-order-pick{display:inline-flex;padding:3px 7px;border-radius:7px;border:1px solid rgba(0,87,219,.18);background:#fff;color:var(--navy);font-size:11px;font-weight:900;white-space:nowrap;}
+  .brc-nige-order-pick{display:inline-flex;padding:4px 8px;border-radius:7px;border:1px solid rgba(0,87,219,.18);background:#fff;color:var(--navy);font-size:11px;font-weight:900;white-space:nowrap;}
   .brc-nige-order-note{margin-top:6px;font-size:9.5px;line-height:1.5;color:var(--ink-soft);}
   @media(max-width:420px){
     .brc-nige-order-panel{padding:9px 8px;}
@@ -7182,6 +7185,32 @@ function brcBuildNigeOrderTimexHtml(b,kind,currentRate=NaN){
   return `<div class="brc-nige-order-timex-cell"><div class="brc-nige-order-timex-line"><span class="brc-nige-order-timex-label">今回</span>${current}</div><div class="brc-nige-order-timex-line">${personal}</div></div>`;
 }
 
+// BRC_NIGE_REFERENCE_PICKS_CUM70_20260906
+// 「3連単上位3点」ではなく、1号艇が逃げた場合の20通りを予測確率順に積み上げ、
+// 累積70%へ到達するまでを参考買い目として表示する。収益性は未確定のため推奨表現は使わない。
+function brcBuildNigeReferencePicksHtml(pred,target=0.70){
+  const rows=(Array.isArray(pred?.joint)?pred.joint:[])
+    .map(x=>({combo:String(x?.combo||''),p:Number(x?.p)}))
+    .filter(x=>x.combo&&Number.isFinite(x.p)&&x.p>0)
+    .sort((a,b)=>b.p-a.p||a.combo.localeCompare(b.combo));
+  if(!rows.length) return '';
+  const goal=Math.min(.99,Math.max(.01,Number(target)||.70));
+  const picks=[];
+  let cumulative=0;
+  for(const x of rows){
+    picks.push(x);
+    cumulative+=x.p;
+    if(cumulative+1e-12>=goal) break;
+  }
+  if(!picks.length) return '';
+  const chips=picks.map(x=>`<span class="brc-nige-order-pick">${x.combo}</span>`).join('');
+  return `<div class="brc-nige-order-picks">
+    <div class="brc-nige-order-picks-head"><div class="brc-nige-order-picks-label">参考買い目</div><div class="brc-nige-order-picks-meta">${picks.length}点｜累積${Math.round(goal*100)}％基準</div></div>
+    <div class="brc-nige-order-pick-list">${chips}</div>
+    <div class="brc-nige-order-note">1号艇が逃げた場合の2・3着予測を確率順に積み上げ、累積${Math.round(goal*100)}％に達するまで表示。参考情報であり、収益性を保証する推奨買い目ではありません。</div>
+  </div>`;
+}
+
 function brcBuildServerNigePredictionHtml(boats,workerPrediction,exhibitionApplied){
   const pred=brcFinalizeServerNigePrediction(workerPrediction,boats,exhibitionApplied);
   if(!pred){
@@ -7202,7 +7231,7 @@ function brcBuildServerNigePredictionHtml(boats,workerPrediction,exhibitionAppli
     const diffClass=diff!=null&&diff>0?'is-strong-plus':(diff!=null&&diff<0?'is-strong-minus':'');
     return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${brcBuildNigeOrderMetricHtml(secondMap.get(boat),diffText,diffClass)}${brcBuildNigeOrderTimexHtml(b,'second',secondMap.get(boat)?.pct)}${brcBuildNigeOrderMetricHtml(thirdMap.get(boat))}${brcBuildNigeOrderTimexHtml(b,'third',thirdMap.get(boat)?.pct)}</div>`;
   }).join('');
-  const picks=`<div class="brc-nige-order-picks"><div class="brc-nige-order-picks-label">3連単上位</div><div class="brc-nige-order-pick-list">${pred.picks.map((x,i)=>`<span class="brc-nige-order-pick">${i+1}位 ${x}</span>`).join('')}</div></div>`;
+  const picks=brcBuildNigeReferencePicksHtml(pred,.70);
   const phaseColor=pred.timexApplied?'#2f8f5b':'var(--wave)';
   return `<div id="brcNigeOrderPredictionCard" class="brc-nige-order-panel">
     <div class="brc-nige-order-head"><div><div class="brc-nige-order-title">2着・3着予測</div><div class="brc-nige-order-sub">1号艇が逃げた場合</div></div><span class="brc-nige-order-rank" style="color:${phaseColor};">${pred.phaseLabel}</span></div>
@@ -7227,7 +7256,6 @@ function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhib
       ${reliability}
     </div>
     ${nigeHtml}
-    ${buildRecommendedBetsHtmlFromServer(workerPrediction, localInReliability, exhibitionApplied)}
   `;
   // 念のためAI予測エリア内の買い目カードは常に1枚に制限する。
   const recommendationCards=box.querySelectorAll('[data-brc-ai3-root], #recommendedBetsCard');
@@ -7333,7 +7361,7 @@ function brcBuildInlineNigeOrderPredictionHtml(course, boats){
     const diffClass=diff!=null&&diff>0?'is-strong-plus':(diff!=null&&diff<0?'is-strong-minus':'');
     return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${brcBuildNigeOrderMetricHtml(secondMap.get(boat),diffText,diffClass)}${brcBuildNigeOrderTimexHtml(b,'second',secondMap.get(boat)?.pct)}${brcBuildNigeOrderMetricHtml(thirdMap.get(boat))}${brcBuildNigeOrderTimexHtml(b,'third',thirdMap.get(boat)?.pct)}</div>`;
   }).join('');
-  const picksHtml=pred.picks.length?`<div class="brc-nige-order-picks"><div class="brc-nige-order-picks-label">3連単上位</div><div class="brc-nige-order-pick-list">${pred.picks.map((x,i)=>`<span class="brc-nige-order-pick">${i+1}位 ${x}</span>`).join('')}</div></div>`:'';
+  const picksHtml=brcBuildNigeReferencePicksHtml(pred,.70);
   return `<div id="brcNigeOrderPredictionCard" class="brc-nige-order-panel"><div class="brc-nige-order-head"><div><div class="brc-nige-order-title">2着・3着予測</div><div class="brc-nige-order-sub">1号艇が逃げた場合</div></div></div><div class="brc-nige-order-grid"><div class="brc-nige-order-row head"><div>艇</div><div>2着率<span class="brc-nige-order-head-base">（場基準比）</span></div><div>TimeX</div><div>3着率</div><div>TimeX</div></div>${rows}</div><div class="brc-nige-order-legend">各着率＝BRCタイムX反映済｜本人傾向＝参考・数値未反映</div>${picksHtml}</div>`;
 }
 
@@ -12260,7 +12288,7 @@ async function runPredict(){
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">⑤ AI予測</div>
-            <div class="predict-guide-text">1号艇が逃げる想定なら、2着・3着予測と3連単上位を確認します。事前の相手評価と展示後の変化を重ねて、相手候補を整理するために使います。</div>
+            <div class="predict-guide-text">1号艇が逃げる想定なら、2着・3着予測と参考買い目を確認します。参考買い目は3連単20通りを予測確率順に積み上げ、累積70％に達するまでを可変点数で表示します。</div>
           </div>
         </div>
 
@@ -12348,7 +12376,7 @@ async function runPredict(){
 
           <div class="predict-guide-item">
             <div class="predict-guide-key">2着・3着予測</div>
-            <div class="predict-guide-text">1号艇が逃げた場合の②〜⑥の2着率・3着率と3連単上位を表示します。展示取得後は対象レースで2着・3着率にもBRCタイムXを反映します。</div>
+            <div class="predict-guide-text">1号艇が逃げた場合の②〜⑥の2着率・3着率と参考買い目を表示します。参考買い目は3連単20通りを予測確率順に積み上げ、累積70％に達するまでを表示します。展示取得後は対象レースで2着・3着率にもBRCタイムXを反映します。</div>
           </div>
 
 
