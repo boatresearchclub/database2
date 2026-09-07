@@ -10913,12 +10913,11 @@ function brcTimeXTendencyReliabilityGrade(row){
 }
 function brcTimeXTendencyReliabilityUse(grade){
   const g=String(grade||'E').toUpperCase();
-  if(g==='S') return '強く評価へ使える';
-  if(g==='A') return '評価材料として使える';
-  if(g==='B') return '補助材料として使う';
-  if(g==='C') return '参考として使う';
-  if(g==='D') return '参考度は低め';
-  return '方向だけ確認';
+  if(g==='S') return '強く評価へ使う';
+  if(g==='A') return '評価へ使う';
+  if(g==='B') return '1段階だけ考慮';
+  if(g==='C') return '参考程度';
+  return '評価は変えない';
 }
 function brcTimeXTendencyReliabilityHtml(grade){
   const g=['S','A','B','C','D','E'].includes(String(grade||'').toUpperCase())?String(grade).toUpperCase():'E';
@@ -10942,33 +10941,49 @@ function brcTimeXPracticalEvaluation(a,grade,direction){
   ];
   const get=k=>Number(metrics.find(x=>x.key===k)?.v);
   const win=get('win'), second=get('second'), third=get('third'), top3=get('top3');
-  let title='', body='', cls='flat';
-  if((Number.isFinite(second)&&second>=10)||(Number.isFinite(top3)&&top3>=10)){
-    title='相手評価アップ'; cls='up';
-    body='2・3着候補として評価を上げたい個人傾向です。';
-    if(Number.isFinite(win)&&win<=-10) body+=' 頭評価は慎重に見ます。';
-  }else if((Number.isFinite(second)&&second<=-10)||(Number.isFinite(top3)&&top3<=-10)){
-    title='相手評価は慎重'; cls='down';
-    body='2・3着候補としては通常より評価を下げたい個人傾向です。';
-    if(Number.isFinite(win)&&win>=10) body+=' 一方で頭評価は残ります。';
-  }else if(Number.isFinite(win)&&win>=10){
-    title='頭評価アップ'; cls='up'; body='1着評価にプラスが出やすい個人傾向です。';
-  }else if(Number.isFinite(win)&&win<=-10){
-    title='頭評価は慎重'; cls='down'; body='1着評価は通常より慎重に見たい個人傾向です。';
-  }else if(direction==='hard'){
-    title='悪展示でも評価を下げすぎない'; cls='up'; body='タイムを出しにくいタイプなので、悪いタイムXだけで評価を落としすぎないようにします。';
-  }else if(direction==='easy'){
-    title='好展示でも過信しない'; cls='down'; body='タイムを出しやすいタイプなので、良いタイムXだけで評価を上げすぎないようにします。';
-  }else{
-    title='個人傾向を補助材料に'; body='通常のタイムXだけでは見えにくい個人差があります。';
-  }
   const g=String(grade||'E').toUpperCase();
-  const prefix=(g==='B'||g==='C')?'補助：':(g==='D'||g==='E')?'参考：':'';
   const impacts=metrics.filter(x=>Number.isFinite(Number(x.v))&&Math.abs(Number(x.v))>=5).map(x=>{
     const up=Number(x.v)>0;
     return `<span class="brc-timex-impact ${up?'up':'down'}">${x.label} ${brcTimeXImpactLabel(x.v)}${up?'＋':'－'}</span>`;
   }).join('');
-  return {cls,title:prefix+title,body,impacts};
+  if(g==='D'||g==='E'){
+    return {cls:'flat',title:'評価は変えない',body:'選手特性は確認しますが、信頼度が低いため今回の予想評価は変更しません。',impacts:''};
+  }
+  if(g==='C'){
+    return {cls:'flat',title:'参考程度',body:'選手特性と着順別本人傾向は確認だけにとどめ、今回の予想評価は変更しません。',impacts};
+  }
+
+  let title='', body='', cls='flat';
+  const supportUp=Math.max(Number.isFinite(second)?second:-Infinity,Number.isFinite(third)?third:-Infinity,Number.isFinite(top3)?top3:-Infinity);
+  const supportDown=Math.min(Number.isFinite(second)?second:Infinity,Number.isFinite(third)?third:Infinity,Number.isFinite(top3)?top3:Infinity);
+  if(Number.isFinite(win)&&win>=10&&win>=supportUp){
+    title='頭評価アップ'; cls='up'; body='1着候補として評価を上げる本人傾向です。';
+  }else if(supportUp>=10){
+    title='相手評価アップ'; cls='up'; body='2・3着候補として評価を上げる本人傾向です。';
+    if(Number.isFinite(win)&&win<=-10) body+=' 頭評価は下げます。';
+  }else if(Number.isFinite(win)&&win<=-10&&win<=supportDown){
+    title='頭評価ダウン'; cls='down'; body='1着候補として評価を下げる本人傾向です。';
+  }else if(supportDown<=-10){
+    title='相手評価ダウン'; cls='down'; body='2・3着候補として評価を下げる本人傾向です。';
+    if(Number.isFinite(win)&&win>=10) body+=' 頭評価は残します。';
+  }else if(direction==='hard'){
+    title='評価ダウンを抑える'; cls='up'; body='タイムを出しにくいタイプなので、悪いタイムXだけで評価を下げすぎないようにします。';
+  }else if(direction==='easy'){
+    title='評価アップを抑える'; cls='down'; body='タイムを出しやすいタイプなので、良いタイムXだけで評価を上げすぎないようにします。';
+  }else{
+    title='評価は変えない'; body='着順別本人傾向に、今回の予想評価を変えるほどの差はありません。';
+  }
+  if(g==='B'){
+    if(title==='頭評価アップ') title='頭評価を1段階アップ';
+    else if(title==='相手評価アップ') title='相手評価を1段階アップ';
+    else if(title==='頭評価ダウン') title='頭評価を1段階ダウン';
+    else if(title==='相手評価ダウン') title='相手評価を1段階ダウン';
+    else{
+      title='1段階だけ考慮';
+      body='信頼度Bのため、展示特性による評価変更は1段階までにします。 '+body;
+    }
+  }
+  return {cls,title,body,impacts};
 }
 function brcGetExhibitionAlertMeta(a){
   const isWatch=a?.['採用区分']==='監視';
@@ -11011,7 +11026,6 @@ function brcIsAllCourseTimeXTendencyRow(row){
   return trait.includes('全コース') || basis.includes('全コース共通型');
 }
 function brcFindPlayerTimeXTendency(b){
-  if(!brcPlayerTimeXTendencyExhibitionStarted(b)) return null;
   const reg=Number(b?.player?.reg), course=Number(b?.course);
   if(!Number.isFinite(reg)||!Number.isFinite(course)||course<1||course>6) return null;
   const rows=BRC_EXHIBITION_PLAYER_ALERTS.filter(x=>Number(x?.['登録番号'])===reg)
@@ -11072,11 +11086,13 @@ function brcFindPlayerTimeXTendencyDetailRow(b,tendency){
   rows=rows.filter(x=>brcAlertBandContains(x.row?.['平均差帯'],d));
   if(!rows.length) return null;
   const rank={'S':5,'S候補':5,'A':4,'A候補':4,'B':3,'B候補':3,'監視':2};
-  return rows.sort((a,z)=>
+  const selected=rows.sort((a,z)=>
     ((z.row?.['採用区分']==='本採用')?1:0)-((a.row?.['採用区分']==='本採用')?1:0) ||
     (rank[z.row?.['評価']]||0)-(rank[a.row?.['評価']]||0) ||
     Number(z.row?.N||0)-Number(a.row?.N||0)
   )[0]?.row||null;
+  // 着順別本人傾向は、現在コース×現在帯でN=12以上ある場合だけ予想への使い方を具体化する。
+  return selected && Number(selected.N)>=12 ? selected : null;
 }
 function brcShowPlayerTimeXTendency(raw){
   let info; try{info=JSON.parse(raw)}catch(e){return}
@@ -11100,14 +11116,21 @@ function brcShowPlayerTimeXTendency(raw){
   const tendency=easy?`展示特性：${courseLabel}で出しやすい傾向`:`展示特性：${courseLabel}で出しにくい傾向`;
   const grade=String(info?.reliabilityGrade||'E').toUpperCase();
   const use=brcTimeXTendencyReliabilityUse(grade);
-  const actionTitle=(grade==='D'||grade==='E')?'方向だけ参考にする':'展示のクセを考慮する';
-  const body=easy
-    ? `この選手は${courseLabel}でタイムを出しやすいタイプです。好展示だけで評価を上げすぎないようにします。`
-    : `この選手は${courseLabel}でタイムを出しにくいタイプです。悪展示だけで評価を下げすぎないようにします。`;
+  const actionTitle=(grade==='D'||grade==='E')?'評価は変えない':grade==='C'?'参考程度':grade==='B'?'展示のクセを1段階だけ考慮':'展示のクセを考慮する';
+  const directionBody=easy
+    ? `この選手は${courseLabel}でタイムを出しやすいタイプです。`
+    : `この選手は${courseLabel}でタイムを出しにくいタイプです。`;
+  const body=(grade==='D'||grade==='E')
+    ? `${directionBody} 特性は確認しますが、信頼度が低いため今回の予想評価は変更しません。`
+    : grade==='C'
+      ? `${directionBody} 今回は参考程度に確認し、予想評価は変更しません。`
+      : grade==='B'
+        ? `${directionBody} ${easy?'好展示による評価アップ':'悪展示による評価ダウン'}を1段階だけ調整します。`
+        : `${directionBody} ${easy?'好展示だけで評価を上げすぎない':'悪展示だけで評価を下げすぎない'}ようにします。`;
   const pop=document.createElement('div');
   pop.id='brcExAlertPop'; pop.className='brc-ex-alert-pop';
   pop.onclick=e=>{if(e.target===pop)pop.remove();};
-  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${info?.name||''}　BRCタイムX 選手特性</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-timex-trait-top"><div class="brc-ex-alert-direction ${cls}" style="margin:0;">${tendency}</div>${brcTimeXTendencyReliabilityHtml(grade)}</div><div class="brc-timex-action ${cls}"><div class="brc-timex-action-kicker">今回の評価｜${use}</div><div class="brc-timex-action-title">${actionTitle}</div><div class="brc-timex-action-body">${body}</div></div><div class="brc-ex-alert-note">着順別の本人傾向は、現在のタイムX帯では十分な該当データがありません。方向の特性だけを表示しています。本人傾向は正式な予測数値には加算していません。</div></div>`;
+  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${info?.name||''}　BRCタイムX 選手特性</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-timex-trait-top"><div class="brc-ex-alert-direction ${cls}" style="margin:0;">${tendency}</div>${brcTimeXTendencyReliabilityHtml(grade)}</div><div class="brc-timex-action ${cls}"><div class="brc-timex-action-kicker">今回の予想への使い方｜${use}</div><div class="brc-timex-action-title">${actionTitle}</div><div class="brc-timex-action-body">${body}</div></div><div class="brc-ex-alert-note">着順別の本人傾向は、現在のタイムX帯では十分な該当データがありません。方向の特性だけを表示しています。本人傾向は正式な予測数値には加算していません。</div></div>`;
   document.body.appendChild(pop);
 }
 function brcBuildPredictExhibitionLabelHtml(b){
@@ -11163,7 +11186,7 @@ function brcShowExhibitionPlayerAlert(raw){
   const tendencyCls=tendencyEasy?'up':tendencyHard?'down':'flat';
   const practical=brcTimeXPracticalEvaluation(a,grade,tendencyDirection);
   const details=`<details class="brc-timex-detail"><summary>詳しい本人傾向を見る</summary><div class="brc-ex-personal-box">${brcAlertPersonalTrendRow('1着',a,'win')}${brcAlertPersonalTrendRow('2着',a,'second')}${brcAlertPersonalTrendRow('3着',a,'third')}${brcAlertPersonalTrendRow('3連対',a,'top3')}</div><div class="brc-timex-detail-note">表示値は「通常のタイムX効果との差」です。本人傾向は参考情報で、正式な1着率・2着率・3着率・3連対率には加算していません。</div></details>`;
-  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']||''}　BRCタイムX 選手特性</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-timex-trait-top"><div class="brc-ex-alert-direction ${tendencyCls}" style="margin:0;">${tendencyText}</div>${brcTimeXTendencyReliabilityHtml(grade)}</div><div class="brc-timex-action ${practical.cls}"><div class="brc-timex-action-kicker">今回の評価｜${use}</div><div class="brc-timex-action-title">${practical.title}</div><div class="brc-timex-action-body">${practical.body}</div>${practical.impacts?`<div class="brc-timex-impact-list">${practical.impacts}</div>`:''}</div>${details}</div>`;
+  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']||''}　BRCタイムX 選手特性</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-timex-trait-top"><div class="brc-ex-alert-direction ${tendencyCls}" style="margin:0;">${tendencyText}</div>${brcTimeXTendencyReliabilityHtml(grade)}</div><div class="brc-timex-action ${practical.cls}"><div class="brc-timex-action-kicker">今回の予想への使い方｜${use}</div><div class="brc-timex-action-title">${practical.title}</div><div class="brc-timex-action-body">${practical.body}</div>${practical.impacts?`<div class="brc-timex-impact-list">${practical.impacts}</div>`:''}</div>${details}</div>`;
   document.body.appendChild(pop);
 }
 
