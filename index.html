@@ -5,7 +5,8 @@
 <!-- BRC_ADMIN_INVESTMENT_MANAGER_V4_MONTH_BACKFILL_20260907 -->
 <!-- BRC_ADMIN_INVESTMENT_MANAGER_V3_AUTO_SA_BACKGROUND_20260907 -->
 <!-- BRC_ADMIN_INVESTMENT_MANAGER_V2_AI_ACTUAL_MONTHLY_20260907 -->
-<!-- BRC_ADMIN_INVESTMENT_MANAGER_V1_20260907 -->
+<!-- BRC_ADMIN_INVESTMENT_MANAGER_V6_20260907 -->
+<!-- BRC_INV_SA_DETAIL_PREDICT_FIX_20260907 -->
 <!-- BRC_AI_NIGE_POST_DEADLINE_AUTO_ODDS_20260906 -->
 <!-- BRC_NIGE_REFERENCE_FORMATION_POINTS_20260906 -->
 <!-- BRC_REFERENCE_PICKS_ODDS_COMPOSITE_SIMPLE_20260906 -->
@@ -6232,7 +6233,7 @@ function predictRecentCourseKimariteHtml(reg, course){
 // AI成績は参考買い目を「1点100円固定」の仮想投資として評価するため、管理者が見送ったレースもAI成績へ含める。
 // 公式結果が取得された瞬間に、AI成績と実投資成績をそれぞれ独立して自動判定する。
 const BRC_INVESTMENT_STORAGE_KEY='brc_admin_investment_manager_v1'; // V1データをそのまま引き継ぐ
-const BRC_INVESTMENT_VERSION='v5-20260907-idb-ledger-fix';
+const BRC_INVESTMENT_VERSION='v6-20260907-sa-detail-predict-fix';
 const BRC_INV_AI_UNIT_STAKE=100;
 
 function brcInvDefaultStore(){
@@ -6897,6 +6898,57 @@ function brcInvAutoReferenceSet(result,target=.70){
   const formation=typeof brcBuildNigeFormationLabel==='function'?brcBuildNigeFormationLabel(picks.map(x=>x.combo)):'';
   return {picks,cumulative,formation,pointCount:picks.length};
 }
+
+const BRC_INV_DETAIL_PREDICT_CONCURRENCY=4;
+function brcInvRecordKeyFromSpec(spec,date){
+  const code=String(spec?.venueCode||brcVenueCodeFromName(spec?.venue)||'').padStart(2,'0');
+  const raceNo=Number(spec?.raceNo)||0;
+  return date&&code&&raceNo?`${date}:${code}:${String(raceNo).padStart(2,'0')}`:'';
+}
+function brcInvHasFrozenAiRecord(store,spec,date){
+  const key=brcInvRecordKeyFromSpec(spec,date);
+  const rec=key?store?.records?.[key]:null;
+  return !!(rec?.ai?.picks?.length || rec?.ai?.settledAt);
+}
+async function brcInvFetchDetailedPrediction(spec){
+  let lastErr=null;
+  for(let attempt=0;attempt<3;attempt++){
+    try{
+      const result=await brcPredictApi({venue:String(spec?.venue||''),grade:String(spec?.grade||'一般'),boats:Array.isArray(spec?.apiBoats)?spec.apiBoats:[]});
+      if(!result||result.prediction_api!==true||!Array.isArray(result.wins)||!result.inReliability) throw new Error('prediction_detail_invalid');
+      const set70=brcInvAutoReferenceSet(result,.70);
+      if(!set70?.picks?.length) throw new Error('prediction_detail_reference_not_ready');
+      const w1=result.wins.find(w=>Number(w?.course)===1),inPct=Number(w1?.pctFloat),serverIr=result?.inReliability;
+      if(!Number.isFinite(inPct)||!serverIr) throw new Error('prediction_detail_reliability_not_ready');
+      let localIr=null;
+      try{localIr=classifyInReliabilityByWinPct(inPct,spec?.grade,(spec?.apiBoats||[]).map(b=>b.reg),serverIr);}catch(_e){}
+      if(!localIr) throw new Error('prediction_detail_local_reliability_not_ready');
+      return {result,localIr,set70};
+    }catch(err){
+      lastErr=err;
+      const status=Number(err?.status)||0;
+      const retryable=status===429||status>=500||status===0;
+      if(attempt>=2||!retryable) break;
+      await new Promise(r=>setTimeout(r,450*(attempt+1)));
+    }
+  }
+  throw lastErr||new Error('prediction_detail_failed');
+}
+async function brcInvMapDetailedPredictions(items,concurrency=BRC_INV_DETAIL_PREDICT_CONCURRENCY){
+  const list=Array.isArray(items)?items:[];
+  const out=new Array(list.length);let cursor=0;
+  async function worker(){
+    while(cursor<list.length){
+      const i=cursor++,item=list[i];
+      try{out[i]={item,...await brcInvFetchDetailedPrediction(item.spec)};}
+      catch(error){out[i]={item,error};}
+    }
+  }
+  const n=Math.min(Math.max(1,Number(concurrency)||1),Math.max(1,list.length));
+  await Promise.all(Array.from({length:n},()=>worker()));
+  return out;
+}
+
 function brcInvAutoSelectionFromSpec(spec,date){
   const code=typeof brcVenueCodeFromName==='function'?brcVenueCodeFromName(spec?.venue):'';
   const raceNo=Number(spec?.raceNo)||0;
@@ -6921,11 +6973,8 @@ function brcInvAutoCaptureBatchIntoStore(store,spec,result,localIr,date){
   // 画面を開いて保存した締切前AIスナップショットがある場合は、それを優先して自動バッチで上書きしない。
   const existing=rec.ai&&typeof rec.ai==='object'?rec.ai:null;
   if(existing?.settledAt) return {sa:true,captured:false};
-  if(existing?.picks?.length && existing?.source!=='auto-batch-sa-70pct'){
-    return {sa:true,captured:false};
-  }
-  // 同一日の自動保存は「最初にS/Aとして観測した予測」を固定し、後から結果を見て書き換えない。
-  if(existing?.source==='auto-batch-sa-70pct'&&existing?.picks?.length){
+  if(existing?.picks?.length){
+    // 締切前に最初に保存されたAI予測を固定。手動・自動を問わず後から上書きしない。
     return {sa:true,captured:false};
   }
 
@@ -6934,7 +6983,7 @@ function brcInvAutoCaptureBatchIntoStore(store,spec,result,localIr,date){
   rec.deadline=String(spec?.deadline||rec.deadline||'');
   rec.raceTitle=String(RACE_INFO_TODAY?.[spec?.venue]?.raceTitles?.[String(spec?.raceNo)]||rec.raceTitle||'');
   rec.ai={
-    source:'auto-batch-sa-70pct',
+    source:'auto-sa-full-predict-70pct',
     inRank:rank,
     inPct:Number.isFinite(inPct)?inPct:null,
     picks:set70.picks.map(x=>({combo:x.combo,probability:Number(x.p),odds:null})),
@@ -6998,6 +7047,7 @@ async function brcInvAutoCollectToday(force=false){
     if(!api||api.prediction_api!==true||!Array.isArray(api.races)) throw new Error('prediction_batch_not_ready');
     const byId=new Map(api.races.map(r=>[String(r.id),r]));
     let scanned=0,saCount=0,captured=0;
+    const detailTargets=[];
     for(const spec of specs){
       const result=byId.get(String(spec.id));if(!result) continue;
       scanned++;
@@ -7007,23 +7057,38 @@ async function brcInvAutoCollectToday(force=false){
       if(!Number.isFinite(inPct)||!serverIr) continue;
       let localIr=null;
       try{localIr=classifyInReliabilityByWinPct(inPct,spec.grade,spec.apiBoats.map(b=>b.reg),serverIr);}catch(_e){}
-      if(!localIr) continue;
-      const x=brcInvAutoCaptureBatchIntoStore(store,spec,result,localIr,today);
-      if(x.sa) saCount++;
+      const rank=String(localIr?.rank||'');
+      if(rank!=='S'&&rank!=='A') continue;
+      saCount++;
+      // /predict-batch はS/A抽出専用。参考買い目に必要な scenarioAssist は
+      // S/A候補だけ通常 /predict を呼び、画面のAI予測と同じデータから固定する。
+      if(!brcInvHasFrozenAiRecord(store,spec,today)) detailTargets.push({spec,batchResult:result,batchIr:localIr});
+    }
+    const details=await brcInvMapDetailedPredictions(detailTargets);
+    let detailErrors=0;
+    for(const d of details){
+      if(d?.error){detailErrors++;continue;}
+      const rank=String(d?.localIr?.rank||'');
+      if(rank!=='S'&&rank!=='A') continue;
+      const x=brcInvAutoCaptureBatchIntoStore(store,d.item.spec,d.result,d.localIr,today);
       if(x.captured) captured++;
     }
     a.lastPredictionScanAt=new Date().toISOString();
     a.lastPredictionScanDate=today;
-    a.lastPredictionScanStatus='ok';
+    a.lastPredictionScanStatus=detailErrors?'partial':'ok';
     a.lastPredictionScanned=scanned;
     a.lastPredictionCaptured=captured;
     a.lastPredictionSA=saCount;
-    a.lastPredictionError='';
+    a.lastPredictionError=detailErrors?`AI詳細取得 ${detailErrors}R未完了（次回再試行）`:'';
     brcInvWrite(store);
     __brcInvAutoStartedForDate=today;
-    try{if(window.__predictMainTabCurrent==='invest')brcRenderInvestmentManager(captured?`S/Aを${captured}R自動保存しました。`:'本日のS/A自動収集を確認しました。');}catch(_e){}
+    if(detailErrors){
+      if(__brcInvAutoRetryTimer) clearTimeout(__brcInvAutoRetryTimer);
+      __brcInvAutoRetryTimer=setTimeout(()=>{__brcInvAutoRetryTimer=null;brcInvAutoCollectToday(true);},BRC_INV_AUTO_SCAN_RETRY_MS);
+    }
+    try{if(window.__predictMainTabCurrent==='invest')brcRenderInvestmentManager(detailErrors?`S/A ${saCount}R中、${captured}Rを保存。未完了${detailErrors}Rは自動再試行します。`:(captured?`S/Aを${captured}R自動保存しました。`:'本日のS/A自動収集を確認しました。'));}catch(_e){}
     try{brcInvAutoSweepResults(true);}catch(_e){}
-    return true;
+    return detailErrors===0;
   }catch(err){
     const store=brcInvRead(),a=store.automation=store.automation||{};
     a.lastPredictionScanAt=new Date().toISOString();
@@ -7074,10 +7139,14 @@ function brcInvBackfillBuildSpecs(payload,date){
       const regs=races[String(raceNo)];
       if(!Array.isArray(regs)||regs.length<6) continue;
       const apiBoats=[];let ok=true;
+      const motors=payload?.motor?.[venue]?.[String(raceNo)]||[];
+      const classes=payload?.racerClass?.[venue]?.[String(raceNo)]||payload?.classes?.[venue]?.[String(raceNo)]||[];
       for(let c=1;c<=6;c++){
         const p=PLAYERS[String(regs[c-1])];
         if(!p){ok=false;break;}
-        apiBoats.push({course:c,reg:String(p.reg)});
+        const motor2=Number(motors?.[c-1]);
+        const racerClass=String(classes?.[c-1]||'');
+        apiBoats.push({course:c,reg:String(p.reg),racerClass,motor2:Number.isFinite(motor2)?motor2:null});
       }
       if(!ok) continue;
       const info=payload?.info?.[venue]||{};
@@ -7222,27 +7291,42 @@ async function brcInvBackfillCurrentMonth(force=false){
         if(!api||api.prediction_api!==true||!Array.isArray(api.races)) throw new Error('prediction_batch_not_ready');
         const byId=new Map(api.races.map(r=>[String(r.id),r])),specByKey=new Map(),rows=[];
         let scanned=0,sa=0,captured=0;
-        const merged=brcInvRead();
+        const merged=brcInvRead(),detailTargets=[];
         for(const spec of specs){
           const result=byId.get(String(spec.id));if(!result) continue;
           scanned++;
           const w1=result?.wins?.find(w=>Number(w.course)===1),inPct=Number(w1?.pctFloat),serverIr=result?.inReliability;
           if(!Number.isFinite(inPct)||!serverIr) continue;
           let localIr=null;try{localIr=classifyInReliabilityByWinPct(inPct,spec.grade,spec.apiBoats.map(b=>b.reg),serverIr);}catch(_e){}
-          if(!localIr) continue;
-          const x=brcInvBackfillBuildRecord(merged,spec,result,localIr,date,rebuild||force);
-          if(x.sa) sa++;
-          if(x.captured&&x.record){captured++;rows.push(x.record);specByKey.set(x.record.key,spec);merged.records[x.record.key]=x.record;}
+          const rank=String(localIr?.rank||'');
+          if(rank!=='S'&&rank!=='A') continue;
+          sa++;
+          const key=brcInvRecordKeyFromSpec(spec,date),existing=key?merged.records?.[key]:null;
+          if(existing?.ai?.picks?.length&&existing.ai.backfilled!==true) continue;
+          if(existing?.ai?.settledAt&&existing.ai.backfilled!==true) continue;
+          if(existing?.ai?.backfilled===true&&!rebuild&&!force) continue;
+          detailTargets.push({spec,batchResult:result,batchIr:localIr});
+        }
+        const details=await brcInvMapDetailedPredictions(detailTargets);
+        let detailErrors=0;
+        for(const d of details){
+          if(d?.error){detailErrors++;continue;}
+          const rank=String(d?.localIr?.rank||'');
+          if(rank!=='S'&&rank!=='A') continue;
+          const x=brcInvBackfillBuildRecord(merged,d.item.spec,d.result,d.localIr,date,rebuild||force);
+          if(x.captured&&x.record){captured++;rows.push(x.record);specByKey.set(x.record.key,d.item.spec);merged.records[x.record.key]=x.record;}
         }
         const settle=await brcInvBackfillSettleRecords(rows,specByKey);
         await brcInvBfDbPutMany(rows);
         totalScanned+=scanned;totalSA+=sa;totalCaptured+=captured;
         const stats=brcInvBfMonthStats(range.month);
         store=brcInvRead();a=store.automation=store.automation||{};a.backfillDates=a.backfillDates||{};
-        a.backfillDates[date]={status:'ok',source:payload.__source||'',scanned,sa,captured,stored:rows.length,settled:settle.settled,pending:settle.pending,updatedAt:new Date().toISOString()};
+        const dateStatus=detailErrors?'partial':'ok';
+        a.backfillDates[date]={status:dateStatus,source:payload.__source||'',scanned,sa,captured,stored:rows.length,settled:settle.settled,pending:settle.pending,detailErrors,updatedAt:new Date().toISOString()};
+        if(detailErrors) failures.push(`${date}:AI詳細 ${detailErrors}R未完了`);
         a.backfillLastDate=date;a.backfillScanned=totalScanned;a.backfillSA=totalSA;a.backfillCaptured=totalCaptured;
         a.backfillStored=stats.total;a.backfillSettled=stats.settled;a.backfillPending=stats.pending;brcInvWrite(store);
-        try{if(window.__predictMainTabCurrent==='invest')brcRenderInvestmentManager(`${date.slice(5)} を反映しました。S/A ${sa}R・結果確定 ${settle.settled}R。`);}catch(_e){}
+        try{if(window.__predictMainTabCurrent==='invest')brcRenderInvestmentManager(`${date.slice(5)} を反映しました。S/A ${sa}R・AI記録 ${captured}R・結果確定 ${settle.settled}R。`);}catch(_e){}
       }catch(err){
         failures.push(`${date}:${String(err?.message||err||'error')}`);
         store=brcInvRead();a=store.automation=store.automation||{};a.backfillDates=a.backfillDates||{};
@@ -7340,9 +7424,10 @@ function brcInvFmtAutoTime(iso){
 function brcInvAutomationStatusHtml(store){
   const a=store?.automation||{};
   const scanOk=a.lastPredictionScanStatus==='ok';
+  const scanPartial=a.lastPredictionScanStatus==='partial';
   const scanErr=a.lastPredictionScanStatus==='error';
-  const cls=scanErr?'error':(scanOk?'on':'');
-  const title=scanErr?'S/A自動収集：再試行中':'S/A自動収集：ON';
+  const cls=scanErr?'error':(scanOk?'on':(scanPartial?'error':''));
+  const title=(scanErr||scanPartial)?'S/A自動収集：再試行中':'S/A自動収集：ON';
   const backfillRunning=a.backfillStatus==='running';
   const backfillPartial=a.backfillStatus==='partial'||a.backfillStatus==='error';
   const bfMonth=String(store?.settings?.reportMonth||brcInvAutoJstToday().slice(0,7));
@@ -7350,8 +7435,8 @@ function brcInvAutomationStatusHtml(store){
   const bfStoredDisplay=__brcInvBfCacheReady?bfStats.total:(Number(a.backfillStored)||0);
   const bfSettledDisplay=__brcInvBfCacheReady?bfStats.settled:(Number(a.backfillSettled)||0);
   const bfPendingDisplay=__brcInvBfCacheReady?bfStats.pending:(Number(a.backfillPending)||0);
-  const sub=scanErr
-    ? `前回エラー ${brcInvEscape(a.lastPredictionError||'不明')}｜レースを開かずに再試行します。`
+  const sub=(scanErr||scanPartial)
+    ? `前回未完了 ${brcInvEscape(a.lastPredictionError||'不明')}｜レースを開かずに自動再試行します。`
     : `当日は全開催を自動保存。月初〜前日は現行固定ロジックで自動バックフィルし、公式結果へ照合します。`;
   return `<div class="brc-invest-auto-status">
     <span class="brc-invest-auto-dot ${cls}" aria-hidden="true"></span>
@@ -7676,7 +7761,7 @@ function brcRenderInvestmentManager(message=''){
     <div class="brc-invest-section">
       <div class="brc-invest-section-head"><div class="brc-invest-section-title">本日の履歴</div><span class="brc-invest-section-note">${summary.rows.length}レース記録</span></div>
       ${brcInvHistoryHtml(summary)}
-      <div class="brc-invest-local-note">V5はS/Aをレース未選択でも自動収集し、月初〜導入前日をIndexedDB台帳へ自動バックフィルします。V4で件数だけ進んだ未反映データも自動修復します。前向き保存済みAIは上書きしません。</div>
+      <div class="brc-invest-local-note">V6は/predict-batchをS/A抽出だけに使い、S/A候補は通常/predictでAI詳細を取得して参考買い目を保存します。月初〜導入前日も同じ方式でIndexedDBへバックフィルし、V4/V5の「検出だけ進んでAI記録0R」を自動修復します。前向き保存済みAIは上書きしません。</div>
     </div>
   `;
   brcInvBindManager(sel,analysis,store);
@@ -13251,11 +13336,14 @@ function buildTodayRaceSpec(venue, raceNo){
   if(!Array.isArray(regs) || regs.length < 6) return null;
   const grade = resolvedTodayGrade(venue, raceNo);
   const motors = RACE_MOTOR_TODAY?.[venue]?.[String(raceNo)] || [];
+  const classes = RACE_CLASS_TODAY?.[venue]?.[String(raceNo)] || [];
   const apiBoats=[];
   for(let c=1;c<=6;c++){
     const p=PLAYERS[String(regs[c-1])];
     if(!p) return null;
-    apiBoats.push({course:c,reg:String(p.reg)});
+    const motor2=Number(motors?.[c-1]);
+    const racerClass=String(classes?.[c-1]||'');
+    apiBoats.push({course:c,reg:String(p.reg),racerClass,motor2:Number.isFinite(motor2)?motor2:null});
   }
   const info=RACE_INFO_TODAY[venue]||{};
   return {
