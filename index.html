@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V1 -->
+<!-- BRC_ADMIN_INVESTMENT_MANAGER_V3_AUTO_SA_BACKGROUND_20260907 -->
 <!-- BRC_ADMIN_INVESTMENT_MANAGER_V2_AI_ACTUAL_MONTHLY_20260907 -->
 <!-- BRC_ADMIN_INVESTMENT_MANAGER_V1_20260907 -->
 <!-- BRC_AI_NIGE_POST_DEADLINE_AUTO_ODDS_20260906 -->
@@ -1953,6 +1954,41 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
     .brc-invest-result-common{font-size:9.5px;}
     .brc-invest-result-common strong{font-size:11.5px;}
     .brc-invest-ai-meta{align-items:flex-start;}
+  }
+
+
+  /* ---- BRC_ADMIN_INVESTMENT_MANAGER_V3_AUTO_SA_BACKGROUND_20260907 ---- */
+  .brc-invest-auto-status{
+    display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 10px;align-items:center;
+    margin:0 0 9px;padding:10px 11px;border:1px solid rgba(0,87,219,.14);
+    border-radius:11px;background:linear-gradient(160deg,rgba(0,87,219,.045),rgba(255,255,255,.96));
+  }
+  .brc-invest-auto-dot{
+    width:10px;height:10px;border-radius:50%;background:#94a3b8;box-shadow:0 0 0 4px rgba(148,163,184,.12);
+  }
+  .brc-invest-auto-dot.on{background:var(--trend-up);box-shadow:0 0 0 4px rgba(var(--trend-up-rgb),.12);}
+  .brc-invest-auto-dot.error{background:var(--trend-down);box-shadow:0 0 0 4px rgba(var(--trend-down-rgb),.12);}
+  .brc-invest-auto-main{min-width:0;}
+  .brc-invest-auto-title{font-size:11.5px;font-weight:950;color:var(--navy);}
+  .brc-invest-auto-sub{margin-top:2px;font-size:9px;line-height:1.5;color:var(--ink-soft);}
+  .brc-invest-auto-metrics{
+    grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:1px;
+  }
+  .brc-invest-auto-metric{
+    min-width:0;padding:6px 4px;border-radius:8px;border:1px solid rgba(10,31,51,.07);
+    background:rgba(255,255,255,.78);text-align:center;
+  }
+  .brc-invest-auto-metric .k{font-size:7.5px;font-weight:850;color:var(--ink-soft);white-space:nowrap;}
+  .brc-invest-auto-metric .v{margin-top:2px;font-size:11px;font-weight:950;color:var(--navy);white-space:nowrap;}
+  .brc-invest-auto-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:6px;margin-top:2px;}
+  .brc-invest-auto-btn{
+    appearance:none;border:1px solid rgba(0,87,219,.20);border-radius:8px;background:#fff;color:var(--wave);
+    min-height:31px;padding:0 9px;font:inherit;font-size:9.5px;font-weight:900;cursor:pointer;
+  }
+  .brc-invest-auto-btn:disabled{opacity:.5;cursor:wait;}
+  @media(max-width:420px){
+    .brc-invest-auto-status{padding:9px 8px;}
+    .brc-invest-auto-metrics{grid-template-columns:repeat(2,minmax(0,1fr));}
   }
 
   /* ---- BRC会員認証：出走表AIタブ ---- */
@@ -4070,6 +4106,10 @@ function brcSetAdminSocialUi(user=null){
   brcSetAdminResearchUi(BRC_ADMIN_ACTIVE);
   try{ brcSyncRaceSearchAccess(); }catch(_e){}
   try{ brcSetInvestmentManagerUi(BRC_ADMIN_ACTIVE); }catch(_e){}
+  try{
+    if(BRC_ADMIN_ACTIVE) brcInvStartBackgroundAutomation();
+    else brcInvStopBackgroundAutomation();
+  }catch(_e){}
 }
 function brcAdminBoatMark(course){
   return ['','①','②','③','④','⑤','⑥'][Number(course)] || `${course}号艇`;
@@ -6191,13 +6231,18 @@ function predictRecentCourseKimariteHtml(reg, course){
 // AI成績は参考買い目を「1点100円固定」の仮想投資として評価するため、管理者が見送ったレースもAI成績へ含める。
 // 公式結果が取得された瞬間に、AI成績と実投資成績をそれぞれ独立して自動判定する。
 const BRC_INVESTMENT_STORAGE_KEY='brc_admin_investment_manager_v1'; // V1データをそのまま引き継ぐ
-const BRC_INVESTMENT_VERSION='v2-20260907';
+const BRC_INVESTMENT_VERSION='v3-20260907-auto-sa';
 const BRC_INV_AI_UNIT_STAKE=100;
 
 function brcInvDefaultStore(){
   return {
     version:BRC_INVESTMENT_VERSION,
     settings:{bankroll:10000,raceCap:1000,dailyLossLimit:3000,targetRoi:120,reportMonth:''},
+    automation:{
+      enabled:true,lastPredictionScanAt:'',lastPredictionScanDate:'',lastPredictionScanStatus:'',
+      lastPredictionScanned:0,lastPredictionCaptured:0,lastPredictionSA:0,lastPredictionError:'',
+      lastResultSweepAt:'',lastResultSettled:0,lastResultPending:0,lastResultError:''
+    },
     records:{}
   };
 }
@@ -6206,6 +6251,8 @@ function brcInvNormalizeStore(x){
   const out=(x&&typeof x==='object'&&!Array.isArray(x))?x:base;
   if(!out.settings||typeof out.settings!=='object') out.settings={...base.settings};
   out.settings={...base.settings,...out.settings};
+  if(!out.automation||typeof out.automation!=='object'||Array.isArray(out.automation)) out.automation={...base.automation};
+  out.automation={...base.automation,...out.automation};
   if(!out.records||typeof out.records!=='object'||Array.isArray(out.records)) out.records={};
   out.version=BRC_INVESTMENT_VERSION;
   return out;
@@ -6658,6 +6705,298 @@ function brcInvApplyOfficialResult(spec,result){
     return true;
   }catch(_e){return false;}
 }
+
+// ===== BRC_ADMIN_INVESTMENT_MANAGER_V3_AUTO_SA_BACKGROUND_20260907 =====
+// 管理者が各レースを開かなくても、当日の全開催をバッチAIで走査し、イン信頼度S/Aを前向き保存する。
+// 保存後は選択中レースとは独立した結果巡回で公式結果を取得し、AI成績/実投資成績へ自動反映する。
+// INDEXだけで動くため、ブラウザが閉じている間は実行されない。次回管理者ログイン時に未精算分を追いつく。
+const BRC_INV_AUTO_RESULT_SWEEP_MS=90*1000;
+const BRC_INV_AUTO_DAY_WATCH_MS=5*60*1000;
+const BRC_INV_AUTO_SCAN_RETRY_MS=5*60*1000;
+const BRC_INV_AUTO_SETTLE_BATCH_MAX=18;
+let __brcInvAutoResultTimer=null;
+let __brcInvAutoDayTimer=null;
+let __brcInvAutoRetryTimer=null;
+let __brcInvAutoScanBusy=false;
+let __brcInvAutoSettleBusy=false;
+let __brcInvAutoStartedForDate='';
+
+function brcInvAutoJstToday(){
+  try{return getJstDateLabel();}catch(_e){}
+  try{return new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}catch(_e){}
+  return '';
+}
+function brcInvAutoBeforeDeadline(date,deadline){
+  const d=String(date||''),m=String(deadline||'').match(/^(\d{1,2}):(\d{2})$/);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d)||!m) return false;
+  const ms=Date.parse(`${d}T${m[1].padStart(2,'0')}:${m[2]}:00+09:00`);
+  return Number.isFinite(ms)&&Date.now()<ms;
+}
+function brcInvAutoDueMs(date,deadline){
+  const d=String(date||''),m=String(deadline||'').match(/^(\d{1,2}):(\d{2})$/);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d)||!m) return null;
+  const ms=Date.parse(`${d}T${m[1].padStart(2,'0')}:${m[2]}:00+09:00`);
+  return Number.isFinite(ms)?ms+BRC_RESULT_FIRST_CHECK_MIN*60*1000:null;
+}
+function brcInvAutoReferenceSet(result,target=.70){
+  let joint=[];
+  try{
+    if(typeof brcOosJointFromPrediction==='function') joint=brcOosJointFromPrediction(result);
+  }catch(_e){}
+  if(!Array.isArray(joint)||!joint.length) return null;
+  joint=joint.map(x=>({combo:String(x?.combo||''),p:Number(x?.p)}))
+    .filter(x=>/^[1-6]-[1-6]-[1-6]$/.test(x.combo)&&Number.isFinite(x.p)&&x.p>0)
+    .sort((a,b)=>b.p-a.p||a.combo.localeCompare(b.combo));
+  if(!joint.length) return null;
+  const goal=Math.min(.99,Math.max(.01,Number(target)||.70));
+  const picks=[];let cumulative=0;
+  for(const x of joint){
+    picks.push(x);cumulative+=x.p;
+    if(cumulative+1e-12>=goal) break;
+  }
+  if(!picks.length) return null;
+  const formation=typeof brcBuildNigeFormationLabel==='function'?brcBuildNigeFormationLabel(picks.map(x=>x.combo)):'';
+  return {picks,cumulative,formation,pointCount:picks.length};
+}
+function brcInvAutoSelectionFromSpec(spec,date){
+  const code=typeof brcVenueCodeFromName==='function'?brcVenueCodeFromName(spec?.venue):'';
+  const raceNo=Number(spec?.raceNo)||0;
+  const venueCode=String(code||'').padStart(2,'0');
+  if(!date||!venueCode||!raceNo) return null;
+  return {
+    key:`${date}:${venueCode}:${String(raceNo).padStart(2,'0')}`,
+    date,venue:String(spec?.venue||''),raceNo,code:venueCode,venueCode
+  };
+}
+function brcInvAutoCaptureBatchIntoStore(store,spec,result,localIr,date){
+  const rank=String(localIr?.rank||'').trim();
+  if(rank!=='S'&&rank!=='A') return {sa:false,captured:false};
+  if(!brcInvAutoBeforeDeadline(date,spec?.deadline)) return {sa:true,captured:false};
+  const set70=brcInvAutoReferenceSet(result,.70);
+  if(!set70?.picks?.length) return {sa:true,captured:false};
+  const sel=brcInvAutoSelectionFromSpec(spec,date);
+  if(!sel?.key) return {sa:true,captured:false};
+  const rec=brcInvEnsureRecord(store,sel,null);
+  if(!rec) return {sa:true,captured:false};
+
+  // 画面を開いて保存した締切前AIスナップショットがある場合は、それを優先して自動バッチで上書きしない。
+  const existing=rec.ai&&typeof rec.ai==='object'?rec.ai:null;
+  if(existing?.settledAt) return {sa:true,captured:false};
+  if(existing?.picks?.length && existing?.source!=='auto-batch-sa-70pct'){
+    return {sa:true,captured:false};
+  }
+  // 同一日の自動保存は「最初にS/Aとして観測した予測」を固定し、後から結果を見て書き換えない。
+  if(existing?.source==='auto-batch-sa-70pct'&&existing?.picks?.length){
+    return {sa:true,captured:false};
+  }
+
+  const nowIso=new Date().toISOString();
+  const inPct=Number(localIr?.pct);
+  rec.deadline=String(spec?.deadline||rec.deadline||'');
+  rec.raceTitle=String(RACE_INFO_TODAY?.[spec?.venue]?.raceTitles?.[String(spec?.raceNo)]||rec.raceTitle||'');
+  rec.ai={
+    source:'auto-batch-sa-70pct',
+    inRank:rank,
+    inPct:Number.isFinite(inPct)?inPct:null,
+    picks:set70.picks.map(x=>({combo:x.combo,probability:Number(x.p),odds:null})),
+    pointCount:set70.pointCount,
+    formation:set70.formation||'',
+    cumulativeProbability:Number(set70.cumulative),
+    compositeOdds:null,
+    unitStakeYen:BRC_INV_AI_UNIT_STAKE,
+    virtualStakeYen:set70.pointCount*BRC_INV_AI_UNIT_STAKE,
+    capturedAt:nowIso,
+    updatedAt:nowIso,
+    capturedAfterDeadline:false,
+    autoCaptured:true,
+    predictionVersion:String(result?.version||''),
+    scenarioVersion:String(result?.scenarioAssist?.version||'')
+  };
+  rec.autoCollected=true;
+  rec.autoCollectedAt=nowIso;
+  rec.updatedAt=nowIso;
+  return {sa:true,captured:true};
+}
+async function brcInvAutoCollectToday(force=false){
+  if(__brcInvAutoScanBusy) return false;
+  if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE&&typeof BRC_MEMBER_ACTIVE!=='undefined'&&BRC_MEMBER_ACTIVE)) return false;
+  if(typeof brcIsHistoricalRaceCardMode==='function'&&brcIsHistoricalRaceCardMode()) return false;
+  __brcInvAutoScanBusy=true;
+  const today=brcInvAutoJstToday();
+  try{
+    // 番組表がまだ準備前なら、既存の自動番組表取得を先に使う。
+    if(!today||String(TODAY_LABEL||'')!==today||!RACE_CARDS_TODAY||!Object.keys(RACE_CARDS_TODAY).length){
+      if(typeof autoLoadHostedRaceCardToday==='function') await autoLoadHostedRaceCardToday({reason:'investment-auto-sa'});
+    }
+    if(String(TODAY_LABEL||'')!==today) throw new Error('racecard_date_not_ready');
+
+    const store=brcInvRead();
+    const a=store.automation=store.automation||{};
+    if(!force&&a.lastPredictionScanDate===today&&a.lastPredictionScanStatus==='ok'){
+      __brcInvAutoStartedForDate=today;
+      return true;
+    }
+
+    const specs=[];
+    for(const venue of sortVenuesNorthToSouth(Object.keys(RACE_CARDS_TODAY||{}))){
+      const races=RACE_CARDS_TODAY?.[venue]||{};
+      for(const raceNo of Object.keys(races).map(Number).sort((x,y)=>x-y)){
+        const spec=typeof buildTodayRaceSpec==='function'?buildTodayRaceSpec(venue,raceNo):null;
+        if(!spec||!brcInvAutoBeforeDeadline(today,spec.deadline)) continue;
+        specs.push(spec);
+      }
+    }
+    if(!specs.length){
+      a.lastPredictionScanAt=new Date().toISOString();
+      a.lastPredictionScanDate=today;
+      a.lastPredictionScanStatus='ok';
+      a.lastPredictionScanned=0;a.lastPredictionCaptured=0;a.lastPredictionSA=0;a.lastPredictionError='';
+      brcInvWrite(store);__brcInvAutoStartedForDate=today;
+      return true;
+    }
+
+    const api=await brcPredictBatchApi({races:specs.map(x=>({id:x.id,venue:x.venue,grade:x.grade,boats:x.apiBoats}))});
+    if(!api||api.prediction_api!==true||!Array.isArray(api.races)) throw new Error('prediction_batch_not_ready');
+    const byId=new Map(api.races.map(r=>[String(r.id),r]));
+    let scanned=0,saCount=0,captured=0;
+    for(const spec of specs){
+      const result=byId.get(String(spec.id));if(!result) continue;
+      scanned++;
+      const w1=result?.wins?.find(w=>Number(w.course)===1);
+      const inPct=Number(w1?.pctFloat);
+      const serverIr=result?.inReliability;
+      if(!Number.isFinite(inPct)||!serverIr) continue;
+      let localIr=null;
+      try{localIr=classifyInReliabilityByWinPct(inPct,spec.grade,spec.apiBoats.map(b=>b.reg),serverIr);}catch(_e){}
+      if(!localIr) continue;
+      const x=brcInvAutoCaptureBatchIntoStore(store,spec,result,localIr,today);
+      if(x.sa) saCount++;
+      if(x.captured) captured++;
+    }
+    a.lastPredictionScanAt=new Date().toISOString();
+    a.lastPredictionScanDate=today;
+    a.lastPredictionScanStatus='ok';
+    a.lastPredictionScanned=scanned;
+    a.lastPredictionCaptured=captured;
+    a.lastPredictionSA=saCount;
+    a.lastPredictionError='';
+    brcInvWrite(store);
+    __brcInvAutoStartedForDate=today;
+    try{if(window.__predictMainTabCurrent==='invest')brcRenderInvestmentManager(captured?`S/Aを${captured}R自動保存しました。`:'本日のS/A自動収集を確認しました。');}catch(_e){}
+    try{brcInvAutoSweepResults(true);}catch(_e){}
+    return true;
+  }catch(err){
+    const store=brcInvRead(),a=store.automation=store.automation||{};
+    a.lastPredictionScanAt=new Date().toISOString();
+    a.lastPredictionScanDate=today;
+    a.lastPredictionScanStatus='error';
+    a.lastPredictionError=String(err?.message||err||'unknown');
+    brcInvWrite(store);
+    console.warn('BRC investment auto S/A scan failed:',err);
+    if(__brcInvAutoRetryTimer) clearTimeout(__brcInvAutoRetryTimer);
+    __brcInvAutoRetryTimer=setTimeout(()=>{__brcInvAutoRetryTimer=null;brcInvAutoCollectToday(true);},BRC_INV_AUTO_SCAN_RETRY_MS);
+    try{if(window.__predictMainTabCurrent==='invest')brcRenderInvestmentManager('S/A自動収集を再試行します。');}catch(_e){}
+    return false;
+  }finally{
+    __brcInvAutoScanBusy=false;
+  }
+}
+function brcInvResultSpecFromRecord(key,rec){
+  const date=String(rec?.date||String(key||'').split(':')[0]||'');
+  const venue=String(rec?.venue||'');
+  const raceNo=Number(rec?.raceNo||String(key||'').split(':')[2]||0);
+  const venueCode=String(rec?.venueCode||String(key||'').split(':')[1]||brcVenueCodeFromName(venue)||'').padStart(2,'0');
+  const deadline=String(rec?.deadline||'');
+  const dueMs=brcInvAutoDueMs(date,deadline);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!venueCode||!raceNo||!Number.isFinite(Number(dueMs))) return null;
+  return {key:`${date}:${venueCode}:${String(raceNo).padStart(2,'0')}`,date,venue,venueCode,raceNo,deadline,dueMs};
+}
+async function brcInvAutoSweepResults(force=false){
+  if(__brcInvAutoSettleBusy) return false;
+  if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return false;
+  __brcInvAutoSettleBusy=true;
+  try{
+    const store=brcInvRead();
+    const due=Object.entries(store.records||{})
+      .map(([key,rec])=>({key,rec,spec:brcInvResultSpecFromRecord(key,rec)}))
+      .filter(x=>x.spec&&!x.rec?.resultSettledAt&&Array.isArray(x.rec?.ai?.picks)&&x.rec.ai.picks.length&&Date.now()>=Number(x.spec.dueMs))
+      .sort((a,b)=>Number(a.spec.dueMs)-Number(b.spec.dueMs))
+      .slice(0,BRC_INV_AUTO_SETTLE_BATCH_MAX);
+    let settled=0,pending=0,lastError='';
+    for(const x of due){
+      try{
+        const cached=__brcRaceResultCache?.get?.(x.spec.key);
+        let obj=cached?.confirmed?cached:null;
+        if(!obj) obj=await brcFetchRaceResult(x.spec);
+        if(obj?.confirmed===true&&obj?.result){
+          try{__brcRaceResultCache?.set?.(x.spec.key,obj);}catch(_e){}
+          if(brcInvApplyOfficialResult(x.spec,obj.result)) settled++;
+        }else pending++;
+      }catch(err){
+        pending++;lastError=String(err?.message||err||'result_fetch_failed');
+      }
+    }
+    const fresh=brcInvRead(),a=fresh.automation=fresh.automation||{};
+    a.lastResultSweepAt=new Date().toISOString();
+    a.lastResultSettled=settled;
+    a.lastResultPending=pending;
+    a.lastResultError=lastError;
+    brcInvWrite(fresh);
+    try{if(window.__predictMainTabCurrent==='invest'&&(settled||force))brcRenderInvestmentManager(settled?`${settled}Rの公式結果を自動反映しました。`:'公式結果の自動確認を行いました。');}catch(_e){}
+    return true;
+  }finally{
+    __brcInvAutoSettleBusy=false;
+  }
+}
+function brcInvStopBackgroundAutomation(){
+  if(__brcInvAutoResultTimer){clearInterval(__brcInvAutoResultTimer);__brcInvAutoResultTimer=null;}
+  if(__brcInvAutoDayTimer){clearInterval(__brcInvAutoDayTimer);__brcInvAutoDayTimer=null;}
+  if(__brcInvAutoRetryTimer){clearTimeout(__brcInvAutoRetryTimer);__brcInvAutoRetryTimer=null;}
+  __brcInvAutoStartedForDate='';
+}
+function brcInvStartBackgroundAutomation(){
+  if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return;
+  if(__brcInvAutoResultTimer||__brcInvAutoDayTimer) return;
+  setTimeout(()=>brcInvAutoCollectToday(false),250);
+  setTimeout(()=>brcInvAutoSweepResults(true),1200);
+  __brcInvAutoResultTimer=setInterval(()=>{try{brcInvAutoSweepResults(false);}catch(_e){}},BRC_INV_AUTO_RESULT_SWEEP_MS);
+  __brcInvAutoDayTimer=setInterval(()=>{
+    try{
+      const today=brcInvAutoJstToday();
+      if(today&&today!==__brcInvAutoStartedForDate) brcInvAutoCollectToday(false);
+    }catch(_e){}
+  },BRC_INV_AUTO_DAY_WATCH_MS);
+}
+function brcInvFmtAutoTime(iso){
+  if(!iso) return '未実行';
+  try{return new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(iso));}catch(_e){}
+  return String(iso);
+}
+function brcInvAutomationStatusHtml(store){
+  const a=store?.automation||{};
+  const scanOk=a.lastPredictionScanStatus==='ok';
+  const scanErr=a.lastPredictionScanStatus==='error';
+  const cls=scanErr?'error':(scanOk?'on':'');
+  const title=scanErr?'S/A自動収集：再試行中':'S/A自動収集：ON';
+  const sub=scanErr
+    ? `前回エラー ${brcInvEscape(a.lastPredictionError||'不明')}｜レースを開かずに再試行します。`
+    : `全開催を一括判定し、S/Aを自動保存。公式結果は90秒間隔で未精算Rを確認します。`;
+  return `<div class="brc-invest-auto-status">
+    <span class="brc-invest-auto-dot ${cls}" aria-hidden="true"></span>
+    <div class="brc-invest-auto-main"><div class="brc-invest-auto-title">${title}</div><div class="brc-invest-auto-sub">${sub}</div></div>
+    <div class="brc-invest-auto-metrics">
+      <div class="brc-invest-auto-metric"><div class="k">最終AI走査</div><div class="v">${brcInvEscape(brcInvFmtAutoTime(a.lastPredictionScanAt))}</div></div>
+      <div class="brc-invest-auto-metric"><div class="k">S/A検出</div><div class="v">${Number(a.lastPredictionSA)||0}R</div></div>
+      <div class="brc-invest-auto-metric"><div class="k">新規保存</div><div class="v">${Number(a.lastPredictionCaptured)||0}R</div></div>
+      <div class="brc-invest-auto-metric"><div class="k">最終結果確認</div><div class="v">${brcInvEscape(brcInvFmtAutoTime(a.lastResultSweepAt))}</div></div>
+    </div>
+    <div class="brc-invest-auto-actions">
+      <button type="button" class="brc-invest-auto-btn" id="brcInvAutoScanNow">S/Aを今すぐ再走査</button>
+      <button type="button" class="brc-invest-auto-btn" id="brcInvAutoSettleNow">結果を今すぐ確認</button>
+    </div>
+  </div>`;
+}
+
 function brcInvAiRankSummary(store,month,rank){
   const all=brcInvMonthRecords(store,month).filter(r=>String(r?.ai?.inRank||'')===rank&&Array.isArray(r?.ai?.picks)&&r.ai.picks.length);
   const settled=all.filter(r=>!!r.ai?.settledAt);
@@ -6840,6 +7179,8 @@ function brcRenderInvestmentManager(message=''){
       <span class="brc-invest-admin-badge">管理者専用</span>
     </div>
 
+    ${brcInvAutomationStatusHtml(store)}
+
     <div class="brc-invest-section">
       <div class="brc-invest-section-head"><div class="brc-invest-section-title">月間 AI成績｜イン信頼度 S / A</div><span class="brc-invest-section-note">見送りも含む・実投資と別集計</span></div>
       <div class="brc-invest-month-toolbar">
@@ -6957,7 +7298,7 @@ function brcRenderInvestmentManager(message=''){
     <div class="brc-invest-section">
       <div class="brc-invest-section-head"><div class="brc-invest-section-title">本日の履歴</div><span class="brc-invest-section-note">${summary.rows.length}レース記録</span></div>
       ${brcInvHistoryHtml(summary)}
-      <div class="brc-invest-local-note">V2もこのブラウザ内へ保存します。V1の保存データを引き継ぎ、一般ユーザー画面・予測ロジック・サーバーデータには影響しません。</div>
+      <div class="brc-invest-local-note">V3はS/Aをレース未選択でも自動収集し、V1/V2の保存データを引き継ぎます。記録はこのブラウザ内に保存され、次回管理者ログイン時に未精算結果を自動追跡します。</div>
     </div>
   `;
   brcInvBindManager(sel,analysis,store);
@@ -6972,6 +7313,14 @@ function brcInvSaveSettingsFromDom(store){
   if(/^\d{4}-\d{2}$/.test(month)) store.settings.reportMonth=month;
 }
 function brcInvBindManager(sel,analysis,store){
+  document.getElementById('brcInvAutoScanNow')?.addEventListener('click',async(e)=>{
+    const btn=e.currentTarget;btn.disabled=true;
+    try{await brcInvAutoCollectToday(true);}finally{btn.disabled=false;}
+  });
+  document.getElementById('brcInvAutoSettleNow')?.addEventListener('click',async(e)=>{
+    const btn=e.currentTarget;btn.disabled=true;
+    try{await brcInvAutoSweepResults(true);}finally{btn.disabled=false;}
+  });
   const saveSettings=()=>{
     const s=brcInvRead();brcInvSaveSettingsFromDom(s);brcInvWrite(s);
   };
@@ -7074,6 +7423,9 @@ window.brcRenderInvestmentManager=brcRenderInvestmentManager;
 window.brcSetInvestmentManagerUi=brcSetInvestmentManagerUi;
 window.brcInvAutoCaptureAiPrediction=brcInvAutoCaptureAiPrediction;
 window.brcInvApplyOfficialResult=brcInvApplyOfficialResult;
+window.brcInvAutoCollectToday=brcInvAutoCollectToday;
+window.brcInvAutoSweepResults=brcInvAutoSweepResults;
+window.brcInvStartBackgroundAutomation=brcInvStartBackgroundAutomation;
 
 
 function scrollPredictMainTabsToFixedPosition(behavior='smooth'){
@@ -12824,6 +13176,12 @@ async function buildTodayPicksCache(){
 
 function invalidateTodayPicks(renderNow=false){
   TODAY_PICKS_CACHE=null;
+  try{
+    if(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE&&typeof brcInvAutoCollectToday==='function'){
+      const s=brcInvRead();if(s?.automation){s.automation.lastPredictionScanDate='';s.automation.lastPredictionScanStatus='';brcInvWrite(s);}
+      setTimeout(()=>brcInvAutoCollectToday(false),500);
+    }
+  }catch(_e){}
   if(renderNow) requestAnimationFrame(()=>renderTodayPicks(true));
 }
 
