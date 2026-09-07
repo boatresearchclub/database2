@@ -2369,6 +2369,15 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
   .brc-timex-action.up .brc-timex-action-title{color:var(--trend-up);}
   .brc-timex-action.down .brc-timex-action-title{color:var(--trend-down);}
   .brc-timex-action-body{margin-top:5px;font-size:11.5px;line-height:1.6;color:var(--line-white);font-weight:750;}
+  .brc-timex-rate-guide{margin-top:11px;border:1px solid rgba(10,31,51,.10);border-radius:10px;overflow:hidden;background:#fff;}
+  .brc-timex-rate-guide-title{padding:7px 9px;background:#f4f7fb;font-size:10px;font-weight:900;color:var(--ink-soft);}
+  .brc-timex-rate-guide-row{padding:8px 9px;border-top:1px solid var(--border);font-size:11px;line-height:1.5;font-weight:800;color:var(--line-white);}
+  .brc-timex-rate-guide-row:first-of-type{border-top:0;}
+  .brc-timex-rate-guide-row .metric{font-weight:950;white-space:nowrap;}
+  .brc-timex-rate-guide-row.up .metric{color:var(--trend-up);}
+  .brc-timex-rate-guide-row.down .metric{color:var(--trend-down);}
+  .brc-timex-rate-guide-row.flat .metric{color:var(--ink-soft);}
+  .brc-timex-unchanged-note{margin-top:9px;font-size:9.5px;line-height:1.5;color:var(--ink-soft);}
   .brc-timex-impact-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;}
   .brc-timex-impact{display:inline-flex;align-items:center;gap:4px;padding:5px 8px;border-radius:8px;background:#fff;border:1px solid rgba(10,31,51,.09);font-size:10.5px;font-weight:900;white-space:nowrap;}
   .brc-timex-impact.up{color:var(--trend-up);border-color:rgba(var(--trend-up-rgb),.20);}
@@ -10932,6 +10941,45 @@ function brcTimeXImpactLabel(v){
   if(a>=5) return 'やや';
   return '小さく';
 }
+function brcTimeXViewingRule(grade,direction,polarity){
+  const g=String(grade||'E').toUpperCase();
+  if(polarity!=='up'&&polarity!=='down') return {title:'通常どおり見る',suffix:'通常どおり見る'};
+  if(g==='D'||g==='E') return {title:'通常どおり見る',suffix:'通常どおり見る'};
+  const easy=direction==='easy';
+  const restrained=(easy&&polarity==='up')||(!easy&&polarity==='down');
+  if(restrained){
+    if(g==='S'||g==='A') return {title:`${polarity==='up'?'↑':'↓'}は控えめに見る`,suffix:'控えめに見る'};
+    if(g==='B') return {title:`${polarity==='up'?'↑':'↓'}は1段階控えめに見る`,suffix:'1段階控えめに見る'};
+    return {title:`${polarity==='up'?'↑':'↓'}は参考程度に見る`,suffix:'参考程度に見る'};
+  }
+  if(g==='S'||g==='A') return {title:`${polarity==='up'?'↑':'↓'}を重く見る`,suffix:'重く見る'};
+  if(g==='B') return {title:`${polarity==='up'?'↑':'↓'}を1段階強めに見る`,suffix:'1段階強めに見る'};
+  return {title:`${polarity==='up'?'↑':'↓'}を少し意識する`,suffix:'少し意識する'};
+}
+function brcTimeXRateMeaning(kind,polarity){
+  if(polarity==='flat') return kind==='win'?'頭評価は据え置き':kind==='second'?'2着評価は据え置き':kind==='third'?'3着評価は据え置き':'相手評価は据え置き';
+  if(polarity==='down') return kind==='win'?'頭評価を下げる材料':kind==='second'?'2着評価を下げる材料':kind==='third'?'3着評価を下げる材料':'相手候補全体の評価を下げる材料';
+  return kind==='win'?'頭候補としてプラス':kind==='second'?'2着候補としてプラス':kind==='third'?'3着候補としてプラス':'相手候補全体としてプラス';
+}
+function brcBuildTimeXRateGuide(a,grade,direction){
+  const metrics=[
+    {kind:'win',label:'1着率',v:a?.__currentWinDeltaPt},
+    {kind:'second',label:'2着率',v:a?.__currentSecondDeltaPt},
+    {kind:'third',label:'3着率',v:a?.__currentThirdDeltaPt},
+    {kind:'top3',label:'3連対率',v:a?.__currentTop3DeltaPt}
+  ];
+  const rows=metrics.map(x=>{
+    const v=Number(x.v);
+    const arrow=Number.isFinite(v)?brcProbabilityArrow(v,0):'→';
+    const rounded=Number.isFinite(v)?brcTimeXArrowRoundedPt(v):0;
+    const polarity=rounded>0?'up':rounded<0?'down':'flat';
+    const meaning=brcTimeXRateMeaning(x.kind,polarity);
+    const rule=brcTimeXViewingRule(grade,direction,polarity);
+    const tail=polarity==='flat'?'':rule.suffix==='通常どおり見る'?'。通常どおり見る':`。ただし${rule.suffix}`;
+    return `<div class="brc-timex-rate-guide-row ${polarity}"><span class="metric">${x.label} ${arrow}</span> → ${meaning}${tail}</div>`;
+  }).join('');
+  return `<div class="brc-timex-rate-guide"><div class="brc-timex-rate-guide-title">各着率の予想への使い方</div>${rows}</div>`;
+}
 function brcTimeXPracticalEvaluation(a,grade,direction){
   const metrics=[
     {key:'win',label:'1着',v:brcPersonalEffectDiff(a,'win')},
@@ -10958,39 +11006,26 @@ function brcTimeXPracticalEvaluation(a,grade,direction){
     };
   }
 
-  // 表示専用：選手の展示特性 × 今回のTimeX差の良否で、今回の判断を4方向に固定する。
+  // 表示専用：選手の展示特性 × 今回のTimeX差の良否 × 既存信頼度で、矢印の見方を固定する。
   // 確率補正・矢印・AI予測計算には使用しない。
-  const good=diff>=0;
+  const roundedDiff=brcTimeXArrowRoundedPt(diff);
+  const polarity=roundedDiff>0?'up':roundedDiff<0?'down':'flat';
+  const good=polarity==='up';
   const easy=direction==='easy';
-  let baseTitle='', title='', body='', cls='flat', oneStep='';
-  if(easy&&good){
-    baseTitle='好展示を割り引く'; cls='down'; oneStep='通常より1段階控えめに評価します。';
-    body='普段からタイムを出しやすい選手です。今回タイムXが良くても、それだけで評価を上げすぎません。';
-  }else if(easy&&!good){
-    baseTitle='悪展示を重く見る'; cls='down'; oneStep='通常より1段階重く評価を下げます。';
-    body='普段からタイムを出しやすい選手です。今回タイムXが悪いのは、いつもより出せていないため悪材料として見ます。';
-  }else if(!easy&&good){
-    baseTitle='好展示を重く見る'; cls='up'; oneStep='通常より1段階重く評価を上げます。';
-    body='普段はタイムを出しにくい選手です。今回タイムXが良いのは、いつも以上に出せているため好材料として見ます。';
+  const rule=brcTimeXViewingRule(g,direction,polarity);
+  let body='', cls=polarity==='up'?'up':polarity==='down'?'down':'flat';
+  if(polarity==='flat'){
+    body='今回のBRCタイムXは横ばいです。各着率の評価は据え置きで見てください。';
+  }else if(easy&&good){
+    body=`今回の上向き矢印はプラス材料ですが、${rule.suffix}評価してください。`;
+  }else if(easy){
+    body=`今回の下向き矢印は、いつもよりタイムを出せていない悪材料として${rule.suffix}評価してください。`;
+  }else if(good){
+    body=`今回の上向き矢印は、いつも以上にタイムを出せている好材料として${rule.suffix}評価してください。`;
   }else{
-    baseTitle='悪展示を割り引く'; cls='up'; oneStep='評価ダウンを通常より1段階抑えます。';
-    body='普段からタイムを出しにくい選手です。今回タイムXが悪くても、それだけで評価を下げすぎません。';
+    body=`今回の下向き矢印はマイナス材料ですが、${rule.suffix}評価してください。`;
   }
-
-  if(g==='S'||g==='A'){
-    title=baseTitle;
-    body+=` 信頼度${g}のため、この判断を強く使います。`;
-  }else if(g==='B'){
-    title=baseTitle.replace('割り引く','少し割り引く').replace('重く見る','少し重く見る');
-    body+=` 信頼度Bのため、${oneStep}`;
-  }else if(g==='C'){
-    title=`${baseTitle}（軽く参考）`;
-    body+=' 信頼度Cのため、評価を大きく変えず軽い参考にします。';
-  }else{
-    title='評価は変えない'; cls='flat';
-    body+=` 信頼度${g}のため、特性は確認だけにとどめ、今回の評価は変えません。`;
-  }
-  return {cls,title,confidenceTitle:`信頼度${g}｜${brcTimeXTendencyReliabilityUse(g)}`,body,impacts};
+  return {cls,title:rule.title,confidenceTitle:`信頼度${g}｜${brcTimeXTendencyReliabilityUse(g)}`,body,impacts,rateGuide:brcBuildTimeXRateGuide(a,g,direction)};
 }
 function brcGetExhibitionAlertMeta(a){
   const isWatch=a?.['採用区分']==='監視';
@@ -11002,7 +11037,7 @@ function brcGetExhibitionAlertMeta(a){
   return {isWatch,plan,cls,text,buttonText,title};
 }
 function brcAlertPayload(a,b){
-  return {...a,__currentWinPct:Number(b?.pct),__currentSecondPct:Number(b?.exhibitionApplied?b?.exhibitionSecondPct:b?.basePct2),__currentThirdPct:Number(b?.exhibitionApplied?b?.exhibitionThirdPct:Math.max(0,(Number(b?.basePct3Float)||0)-(Number(b?.basePctFloat)||0)-(Number(b?.basePct2)||0))),__currentTop3Pct:Number(b?.pct3),__currentTimeXDiff:Number(b?.exhibition?.relative_diff_capped??b?.exhibition?.relative_diff)};
+  return {...a,__currentWinPct:Number(b?.pct),__currentSecondPct:Number(b?.exhibitionApplied?b?.exhibitionSecondPct:b?.basePct2),__currentThirdPct:Number(b?.exhibitionApplied?b?.exhibitionThirdPct:Math.max(0,(Number(b?.basePct3Float)||0)-(Number(b?.basePctFloat)||0)-(Number(b?.basePct2)||0))),__currentTop3Pct:Number(b?.pct3),__currentTimeXDiff:Number(b?.exhibition?.relative_diff_capped??b?.exhibition?.relative_diff),__currentWinDeltaPt:Number(b?.exhibitionWinDeltaPt),__currentSecondDeltaPt:Number(b?.exhibitionSecondDeltaPt),__currentThirdDeltaPt:Number(b?.exhibitionThirdDeltaPt),__currentTop3DeltaPt:Number(b?.exhibitionTop3DeltaPt)};
 }
 function brcBuildExhibitionAlertButton(b){
   const a=brcFindExhibitionPlayerAlert(b); if(!a) return '';
@@ -11120,14 +11155,14 @@ function brcShowPlayerTimeXTendency(raw){
   const cls=easy?'up':'down';
   const course=Number(info?.course);
   const courseLabel=Number.isFinite(course)&&course>=1&&course<=6?`${course}コース`:'現在コース';
-  const tendency=easy?`展示特性：${courseLabel}で出しやすい傾向`:`展示特性：${courseLabel}で出しにくい傾向`;
+  const tendency=easy?`${courseLabel}でタイムを出しやすい傾向`:`${courseLabel}でタイムを出しにくい傾向`;
   const grade=String(info?.reliabilityGrade||'E').toUpperCase();
   const practical=brcTimeXPracticalEvaluation(info?.current||{},grade,info?.direction||'');
-  const body=`この選手は${courseLabel}でタイムを${easy?'出しやすい':'出しにくい'}タイプです。 ${practical.body}`;
+  const body=`この選手は${courseLabel}でタイムを${easy?'出しやすい':'出しにくい'}傾向があります。 ${practical.body}`;
   const pop=document.createElement('div');
   pop.id='brcExAlertPop'; pop.className='brc-ex-alert-pop';
   pop.onclick=e=>{if(e.target===pop)pop.remove();};
-  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${info?.name||''}　BRCタイムX 選手特性</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-timex-trait-top"><div class="brc-ex-alert-direction ${cls}" style="margin:0;">${tendency}</div>${brcTimeXTendencyReliabilityHtml(grade)}</div><div class="brc-timex-action ${practical.cls}"><div class="brc-timex-action-kicker">今回の判断｜${practical.title}</div><div class="brc-timex-action-title">${practical.confidenceTitle}</div><div class="brc-timex-action-body">${body}</div></div><div class="brc-ex-alert-note">着順別の本人傾向は、現在のタイムX帯では十分な該当データがありません。方向の特性だけを表示しています。本人傾向は正式な予測数値には加算していません。</div></div>`;
+  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${info?.name||''}　BRCタイムX 選手特性</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-timex-trait-top"><div class="brc-ex-alert-direction ${cls}" style="margin:0;">${tendency}</div>${brcTimeXTendencyReliabilityHtml(grade)}</div><div class="brc-timex-action ${practical.cls}"><div class="brc-timex-action-kicker">今回のタイムXの見方</div><div class="brc-timex-action-title">${practical.title}</div><div class="brc-timex-action-body">${body}</div>${practical.rateGuide||''}</div><div class="brc-ex-alert-note">着順別の本人傾向は、現在のタイムX帯では十分な該当データがありません。方向の特性だけを表示しています。</div><div class="brc-timex-unchanged-note">予測数値自体は変更していません。選手特性は、表示中の矢印と各着率の見方を補助する情報です。</div></div>`;
   document.body.appendChild(pop);
 }
 function brcBuildPredictExhibitionLabelHtml(b){
@@ -11177,12 +11212,15 @@ function brcShowExhibitionPlayerAlert(raw){
   const tendencyHard=tendencyDirection==='hard';
   const grade=String(a?.__tendencyReliability||brcTimeXTendencyReliabilityGrade(a)||'E').toUpperCase();
   const tendencyText=(tendencyEasy||tendencyHard)
-    ? `展示特性：${tendencyCourseLabel}で${tendencyEasy?'出しやすい':'出しにくい'}傾向${tendencyScope==='all'?'（全コース型）':''}`
+    ? `${tendencyCourseLabel}でタイムを${tendencyEasy?'出しやすい':'出しにくい'}傾向${tendencyScope==='all'?'（全コース型）':''}`
     : '個人傾向あり';
   const tendencyCls=tendencyEasy?'up':tendencyHard?'down':'flat';
   const practical=brcTimeXPracticalEvaluation(a,grade,tendencyDirection);
+  const practicalBody=(tendencyEasy||tendencyHard)
+    ? `この選手は${tendencyCourseLabel}でタイムを${tendencyEasy?'出しやすい':'出しにくい'}傾向があります。 ${practical.body}`
+    : practical.body;
   const details=`<details class="brc-timex-detail"><summary>詳しい本人傾向を見る</summary><div class="brc-ex-personal-box">${brcAlertPersonalTrendRow('1着',a,'win')}${brcAlertPersonalTrendRow('2着',a,'second')}${brcAlertPersonalTrendRow('3着',a,'third')}${brcAlertPersonalTrendRow('3連対',a,'top3')}</div><div class="brc-timex-detail-note">表示値は「通常のタイムX効果との差」です。本人傾向は参考情報で、正式な1着率・2着率・3着率・3連対率には加算していません。</div></details>`;
-  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']||''}　BRCタイムX 選手特性</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-timex-trait-top"><div class="brc-ex-alert-direction ${tendencyCls}" style="margin:0;">${tendencyText}</div>${brcTimeXTendencyReliabilityHtml(grade)}</div><div class="brc-timex-action ${practical.cls}"><div class="brc-timex-action-kicker">今回の判断｜${practical.title}</div><div class="brc-timex-action-title">${practical.confidenceTitle}</div><div class="brc-timex-action-body">${practical.body}</div>${practical.impacts?`<div class="brc-timex-impact-list">${practical.impacts}</div>`:''}</div>${details}</div>`;
+  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']||''}　BRCタイムX 選手特性</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-timex-trait-top"><div class="brc-ex-alert-direction ${tendencyCls}" style="margin:0;">${tendencyText}</div>${brcTimeXTendencyReliabilityHtml(grade)}</div><div class="brc-timex-action ${practical.cls}"><div class="brc-timex-action-kicker">今回のタイムXの見方</div><div class="brc-timex-action-title">${practical.title}</div><div class="brc-timex-action-body">${practicalBody}</div>${practical.rateGuide||''}</div>${details}<div class="brc-timex-unchanged-note">予測数値自体は変更していません。選手特性は、表示中の矢印と各着率の見方を補助する情報です。</div></div>`;
   document.body.appendChild(pop);
 }
 
