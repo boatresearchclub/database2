@@ -6232,7 +6232,7 @@ function predictRecentCourseKimariteHtml(reg, course){
 // AI成績は参考買い目を「1点100円固定」の仮想投資として評価するため、管理者が見送ったレースもAI成績へ含める。
 // 公式結果が取得された瞬間に、AI成績と実投資成績をそれぞれ独立して自動判定する。
 const BRC_INVESTMENT_STORAGE_KEY='brc_admin_investment_manager_v1'; // V1データをそのまま引き継ぐ
-const BRC_INVESTMENT_VERSION='v4-20260907-month-backfill';
+const BRC_INVESTMENT_VERSION='v5-20260907-idb-ledger-fix';
 const BRC_INV_AI_UNIT_STAKE=100;
 
 function brcInvDefaultStore(){
@@ -6245,7 +6245,7 @@ function brcInvDefaultStore(){
       lastResultSweepAt:'',lastResultSettled:0,lastResultPending:0,lastResultError:'',
       backfillEnabled:true,backfillMonth:'',backfillStatus:'',backfillStartedAt:'',backfillCompletedAt:'',
       backfillLastDate:'',backfillDates:{},backfillScanned:0,backfillSA:0,backfillCaptured:0,
-      backfillSettled:0,backfillPending:0,backfillError:''
+      backfillStored:0,backfillSettled:0,backfillPending:0,backfillError:''
     },
     records:{}
   };
@@ -6262,19 +6262,145 @@ function brcInvNormalizeStore(x){
   out.version=BRC_INVESTMENT_VERSION;
   return out;
 }
+// V5: 大量の月初バックフィルAI記録は localStorage ではなく IndexedDB へ保存する。
+// iPhone/Safari 等で localStorage 容量上限に達しても、BF件数だけ進んでAI成績が空になる不整合を防ぐ。
+const BRC_INV_BF_DB_NAME='brc_admin_investment_ai_ledger_v1';
+const BRC_INV_BF_DB_STORE='records';
+let __brcInvBfDbPromise=null;
+let __brcInvBfCache={};
+let __brcInvBfCacheReady=false;
+function brcInvBfDbOpen(){
+  if(__brcInvBfDbPromise) return __brcInvBfDbPromise;
+  __brcInvBfDbPromise=new Promise((resolve,reject)=>{
+    try{
+      if(!('indexedDB' in window)) return reject(new Error('indexeddb_unavailable'));
+      const req=indexedDB.open(BRC_INV_BF_DB_NAME,1);
+      req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(BRC_INV_BF_DB_STORE)) db.createObjectStore(BRC_INV_BF_DB_STORE,{keyPath:'key'});};
+      req.onsuccess=()=>resolve(req.result);
+      req.onerror=()=>reject(req.error||new Error('indexeddb_open_failed'));
+    }catch(err){reject(err);}
+  });
+  return __brcInvBfDbPromise;
+}
+function brcInvBfCompactRecord(rec,key=''){
+  if(!rec||typeof rec!=='object') return null;
+  const ai=rec.ai&&typeof rec.ai==='object'?rec.ai:null;
+  if(!ai||ai.backfilled!==true) return null;
+  const picks=(Array.isArray(ai.picks)?ai.picks:[]).map(x=>({combo:String(x?.combo||'').trim()})).filter(x=>x.combo);
+  if(!picks.length) return null;
+  const k=String(key||rec.key||'');
+  if(!k) return null;
+  return {
+    key:k,date:String(rec.date||''),venue:String(rec.venue||''),raceNo:Number(rec.raceNo)||0,
+    venueCode:String(rec.venueCode||String(k).split(':')[1]||'').padStart(2,'0'),
+    deadline:String(rec.deadline||''),raceTitle:String(rec.raceTitle||''),backfilled:true,
+    ai:{
+      source:String(ai.source||'month-backfill-sa-70pct'),backfilled:true,reconstructed:true,
+      inRank:String(ai.inRank||''),inPct:Number.isFinite(Number(ai.inPct))?Number(ai.inPct):null,
+      picks,pointCount:Number(ai.pointCount)||picks.length,unitStakeYen:BRC_INV_AI_UNIT_STAKE,
+      virtualStakeYen:Number(ai.virtualStakeYen)||picks.length*BRC_INV_AI_UNIT_STAKE,
+      predictionAsOfDate:String(ai.predictionAsOfDate||rec.date||''),
+      resultCombo:String(ai.resultCombo||''),resultPayoutYen:Number.isFinite(Number(ai.resultPayoutYen))?Number(ai.resultPayoutYen):null,
+      hit:ai.hit===true?true:ai.hit===false?false:null,
+      virtualReturnYen:Number.isFinite(Number(ai.virtualReturnYen))?Number(ai.virtualReturnYen):0,
+      roi:Number.isFinite(Number(ai.roi))?Number(ai.roi):null,settledAt:String(ai.settledAt||'')
+    }
+  };
+}
+function brcInvBfMergeIntoStore(store){
+  if(!store||!__brcInvBfCacheReady) return store;
+  store.records=store.records||{};
+  for(const [key,bf] of Object.entries(__brcInvBfCache||{})){
+    const cur=store.records[key];
+    // 締切前に実際保存したAIは、再構築バックフィルより優先する。
+    if(cur?.ai&&cur.ai.backfilled!==true) continue;
+    if(cur){
+      store.records[key]={...bf,...cur,ai:bf.ai};
+    }else store.records[key]=bf;
+  }
+  return store;
+}
+function brcInvStripBfForLocalStorage(store){
+  const normalized=brcInvNormalizeStore(store||brcInvDefaultStore());
+  const clean={...normalized,records:{}};
+  for(const [key,rec] of Object.entries(normalized.records||{})){
+    if(rec?.ai?.backfilled===true){
+      // BFのAI本体はIndexedDB側。実投資を後から入力した場合だけ、その手入力部分をlocalStorageへ残す。
+      const hasManual=(Array.isArray(rec.bets)&&rec.bets.length>0)||(Number(rec.actualStake)||0)>0||(Number(rec.plannedStake)||0)>0||!!rec.decision||!!String(rec.note||'').trim();
+      if(hasManual){
+        const copy={...rec};delete copy.ai;delete copy.backfilled;delete copy.backfilledAt;
+        clean.records[key]=copy;
+      }
+      continue;
+    }
+    clean.records[key]=rec;
+  }
+  return clean;
+}
+async function brcInvBfDbPutMany(rows){
+  const list=(rows||[]).map(r=>brcInvBfCompactRecord(r,r?.key)).filter(Boolean);
+  if(!list.length) return 0;
+  const db=await brcInvBfDbOpen();
+  await new Promise((resolve,reject)=>{
+    const tx=db.transaction(BRC_INV_BF_DB_STORE,'readwrite'),st=tx.objectStore(BRC_INV_BF_DB_STORE);
+    list.forEach(r=>st.put(r));
+    tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error||new Error('indexeddb_write_failed'));tx.onabort=()=>reject(tx.error||new Error('indexeddb_write_aborted'));
+  });
+  list.forEach(r=>{__brcInvBfCache[r.key]=r;});
+  __brcInvBfCacheReady=true;
+  return list.length;
+}
+async function brcInvBfDbDeleteMonth(month){
+  const db=await brcInvBfDbOpen();
+  await new Promise((resolve,reject)=>{
+    const tx=db.transaction(BRC_INV_BF_DB_STORE,'readwrite'),st=tx.objectStore(BRC_INV_BF_DB_STORE),req=st.openCursor();
+    req.onsuccess=()=>{const c=req.result;if(!c)return;if(String(c.value?.date||'').startsWith(String(month||''))) c.delete();c.continue();};
+    req.onerror=()=>reject(req.error||new Error('indexeddb_cursor_failed'));tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error||new Error('indexeddb_delete_failed'));
+  });
+  for(const [k,r] of Object.entries(__brcInvBfCache||{})) if(String(r?.date||'').startsWith(String(month||''))) delete __brcInvBfCache[k];
+}
+function brcInvBfMonthStats(month){
+  const rows=Object.values(__brcInvBfCache||{}).filter(r=>String(r?.date||'').startsWith(String(month||''))&&r?.ai?.backfilled===true);
+  const settled=rows.filter(r=>!!r?.ai?.settledAt).length;
+  return {total:rows.length,settled,pending:rows.length-settled};
+}
+async function brcInvBfDbInit(){
+  if(__brcInvBfCacheReady) return true;
+  try{
+    const db=await brcInvBfDbOpen();
+    const all=await new Promise((resolve,reject)=>{
+      const tx=db.transaction(BRC_INV_BF_DB_STORE,'readonly'),req=tx.objectStore(BRC_INV_BF_DB_STORE).getAll();
+      req.onsuccess=()=>resolve(Array.isArray(req.result)?req.result:[]);req.onerror=()=>reject(req.error||new Error('indexeddb_read_failed'));
+    });
+    __brcInvBfCache={};all.forEach(r=>{if(r?.key)__brcInvBfCache[r.key]=r;});
+    // V4でlocalStorageへ一部だけ保存できていたBFがあれば、先にIndexedDBへ救出する。
+    try{
+      const raw=localStorage.getItem(BRC_INVESTMENT_STORAGE_KEY),legacy=raw?brcInvNormalizeStore(JSON.parse(raw)):null;
+      const migrate=[];for(const [k,r] of Object.entries(legacy?.records||{})){const c=brcInvBfCompactRecord(r,k);if(c)migrate.push(c);}
+      if(migrate.length) await brcInvBfDbPutMany(migrate);
+      if(legacy&&migrate.length) brcInvWrite(legacy);
+    }catch(_e){}
+    __brcInvBfCacheReady=true;
+    try{if(window.__predictMainTabCurrent==='invest')setTimeout(()=>brcRenderInvestmentManager(),0);}catch(_e){}
+    return true;
+  }catch(err){console.warn('BRC investment IndexedDB init failed:',err);return false;}
+}
 function brcInvRead(){
   try{
     const raw=localStorage.getItem(BRC_INVESTMENT_STORAGE_KEY);
-    return brcInvNormalizeStore(raw?JSON.parse(raw):null);
+    return brcInvBfMergeIntoStore(brcInvNormalizeStore(raw?JSON.parse(raw):null));
   }catch(_e){}
-  return brcInvDefaultStore();
+  return brcInvBfMergeIntoStore(brcInvDefaultStore());
 }
 function brcInvWrite(store){
   try{
-    const normalized=brcInvNormalizeStore(store||brcInvDefaultStore());
-    localStorage.setItem(BRC_INVESTMENT_STORAGE_KEY,JSON.stringify(normalized));
+    const clean=brcInvStripBfForLocalStorage(store||brcInvDefaultStore());
+    localStorage.setItem(BRC_INVESTMENT_STORAGE_KEY,JSON.stringify(clean));
     return true;
-  }catch(_e){return false;}
+  }catch(err){
+    console.warn('BRC investment localStorage write failed:',err);
+    return false;
+  }
 }
 function brcInvMoney(v){
   const n=Number(v);
@@ -6989,37 +7115,27 @@ async function brcInvBackfillFetchRaceCard(date){
   if(seed) return {...seed,__source:'embedded-brcdatabase'};
   throw lastError||new Error(`racecard_not_found_${date}`);
 }
-function brcInvBackfillCaptureIntoStore(store,spec,result,localIr,date,force=false){
+function brcInvBackfillBuildRecord(store,spec,result,localIr,date,force=false){
   const rank=String(localIr?.rank||'').trim();
-  if(rank!=='S'&&rank!=='A') return {sa:false,captured:false};
+  if(rank!=='S'&&rank!=='A') return {sa:false,captured:false,record:null};
   const set70=brcInvAutoReferenceSet(result,.70);
-  if(!set70?.picks?.length) return {sa:true,captured:false};
-  const sel={key:`${date}:${String(spec.venueCode).padStart(2,'0')}:${String(spec.raceNo).padStart(2,'0')}`,date,venue:spec.venue,raceNo:spec.raceNo,code:spec.venueCode,venueCode:spec.venueCode};
-  const rec=brcInvEnsureRecord(store,sel,null);
-  if(!rec) return {sa:true,captured:false};
-  const existing=rec.ai&&typeof rec.ai==='object'?rec.ai:null;
-  // 実際に締切前保存したもの、または旧V3の自動前向き保存は保護する。
-  if(existing?.picks?.length&&!existing?.backfilled) return {sa:true,captured:false};
-  if(existing?.settledAt&&!existing?.backfilled) return {sa:true,captured:false};
-  if(existing?.picks?.length&&existing?.backfilled&&!force) return {sa:true,captured:false};
-  const nowIso=new Date().toISOString();
-  const inPct=Number(localIr?.pct);
-  rec.deadline=String(spec?.deadline||rec.deadline||'');
-  rec.raceTitle=String(spec?.raceTitle||rec.raceTitle||'');
-  rec.ai={
-    ...(existing?.backfilled?existing:{}),
-    source:'month-backfill-sa-70pct',backfilled:true,reconstructed:true,
-    inRank:rank,inPct:Number.isFinite(inPct)?inPct:null,
-    picks:set70.picks.map(x=>({combo:x.combo,probability:Number(x.p),odds:null})),
-    pointCount:set70.pointCount,formation:set70.formation||'',cumulativeProbability:Number(set70.cumulative),
-    compositeOdds:null,unitStakeYen:BRC_INV_AI_UNIT_STAKE,virtualStakeYen:set70.pointCount*BRC_INV_AI_UNIT_STAKE,
-    capturedAt:nowIso,updatedAt:nowIso,capturedAfterDeadline:true,autoCaptured:true,
-    backfilledAt:nowIso,predictionAsOfDate:date,predictionVersion:String(result?.version||''),scenarioVersion:String(result?.scenarioAssist?.version||'')
+  if(!set70?.picks?.length) return {sa:true,captured:false,record:null};
+  const key=`${date}:${String(spec.venueCode).padStart(2,'0')}:${String(spec.raceNo).padStart(2,'0')}`;
+  const existing=store?.records?.[key]||null;
+  // 実際に締切前保存した予測は保護。BFは別台帳にだけ作る。
+  if(existing?.ai?.picks?.length&&existing.ai.backfilled!==true) return {sa:true,captured:false,record:null};
+  if(existing?.ai?.settledAt&&existing.ai.backfilled!==true) return {sa:true,captured:false,record:null};
+  if(existing?.ai?.backfilled===true&&!force) return {sa:true,captured:false,record:null};
+  const inPct=Number(localIr?.pct),picks=set70.picks.map(x=>({combo:String(x.combo)}));
+  const rec={
+    key,date,venue:String(spec.venue||''),raceNo:Number(spec.raceNo)||0,venueCode:String(spec.venueCode).padStart(2,'0'),
+    deadline:String(spec.deadline||''),raceTitle:String(spec.raceTitle||''),backfilled:true,
+    ai:{source:'month-backfill-sa-70pct',backfilled:true,reconstructed:true,inRank:rank,
+      inPct:Number.isFinite(inPct)?inPct:null,picks,pointCount:picks.length,unitStakeYen:BRC_INV_AI_UNIT_STAKE,
+      virtualStakeYen:picks.length*BRC_INV_AI_UNIT_STAKE,predictionAsOfDate:date,
+      resultCombo:'',resultPayoutYen:null,hit:null,virtualReturnYen:0,roi:null,settledAt:''}
   };
-  // force再構築時は旧判定を消し、結果をもう一度照合する。
-  delete rec.ai.settledAt;delete rec.ai.hit;delete rec.ai.virtualReturnYen;delete rec.ai.roi;delete rec.ai.resultCombo;delete rec.ai.resultPayoutYen;
-  rec.backfilled=true;rec.backfilledAt=nowIso;rec.updatedAt=nowIso;
-  return {sa:true,captured:true,key:sel.key};
+  return {sa:true,captured:true,record:rec,key};
 }
 function brcInvBackfillSeedResult(spec){
   const key=`${spec.date}:${String(spec.venueCode).padStart(2,'0')}:${String(spec.raceNo).padStart(2,'0')}`;
@@ -7030,24 +7146,25 @@ async function brcInvBackfillFetchResult(spec){
   if(seed?.combination&&Number.isFinite(Number(seed?.payout_yen))) return {confirmed:true,result:seed,__source:'embedded-brcdatabase'};
   return brcFetchRaceResult({key:`${spec.date}:${String(spec.venueCode).padStart(2,'0')}:${String(spec.raceNo).padStart(2,'0')}`,date:spec.date,venue:spec.venue,venueCode:String(spec.venueCode).padStart(2,'0'),raceNo:Number(spec.raceNo),deadline:spec.deadline||''});
 }
-async function brcInvBackfillSettleSpecs(specs){
-  const queue=[];
-  const store=brcInvRead();
-  for(const spec of specs||[]){
-    const key=`${spec.date}:${String(spec.venueCode).padStart(2,'0')}:${String(spec.raceNo).padStart(2,'0')}`;
-    const rec=store.records?.[key];
-    if(rec?.ai?.picks?.length&&!rec?.ai?.settledAt) queue.push({key,spec});
-  }
+function brcInvApplyResultToBfRecord(rec,result){
+  if(!rec?.ai||!Array.isArray(rec.ai.picks)||!rec.ai.picks.length||!result) return false;
+  const combo=String(result?.combination||'').trim(),payout=Number(result?.payout_yen);
+  if(!combo||!Number.isFinite(payout)) return false;
+  const stake=rec.ai.picks.length*BRC_INV_AI_UNIT_STAKE,hit=rec.ai.picks.some(x=>String(x?.combo)===combo),ret=hit?payout:0;
+  rec.ai.resultCombo=combo;rec.ai.resultPayoutYen=payout;rec.ai.hit=hit;rec.ai.virtualStakeYen=stake;
+  rec.ai.virtualReturnYen=ret;rec.ai.roi=stake>0?ret/stake*100:null;rec.ai.settledAt=new Date().toISOString();
+  return true;
+}
+async function brcInvBackfillSettleRecords(rows,specByKey){
+  const queue=(rows||[]).filter(r=>r?.ai?.picks?.length&&!r.ai.settledAt);
   let settled=0,pending=0,cursor=0;
   async function worker(){
     while(cursor<queue.length){
-      const item=queue[cursor++];
+      const rec=queue[cursor++],spec=specByKey.get(rec.key);
+      if(!spec){pending++;continue;}
       try{
-        const obj=await brcInvBackfillFetchResult(item.spec);
-        if(obj?.confirmed===true&&obj?.result){
-          if(brcInvApplyOfficialResult({key:item.key,date:item.spec.date,venue:item.spec.venue,venueCode:String(item.spec.venueCode).padStart(2,'0'),raceNo:item.spec.raceNo,deadline:item.spec.deadline},obj.result)) settled++;
-          else pending++;
-        }else pending++;
+        const obj=await brcInvBackfillFetchResult(spec);
+        if(obj?.confirmed===true&&obj?.result&&brcInvApplyResultToBfRecord(rec,obj.result)) settled++;else pending++;
       }catch(_e){pending++;}
     }
   }
@@ -7055,38 +7172,57 @@ async function brcInvBackfillSettleSpecs(specs){
   await Promise.all(Array.from({length:n},()=>worker()));
   return {settled,pending,total:queue.length};
 }
+async function brcInvBackfillSweepPendingResults(limit=BRC_INV_AUTO_SETTLE_BATCH_MAX){
+  await brcInvBfDbInit();
+  const rows=Object.values(__brcInvBfCache||{}).filter(r=>r?.ai?.backfilled===true&&r?.ai?.picks?.length&&!r.ai.settledAt)
+    .sort((a,b)=>String(a.date).localeCompare(String(b.date))||String(a.key).localeCompare(String(b.key))).slice(0,Math.max(1,Number(limit)||1));
+  if(!rows.length) return {settled:0,pending:0};
+  const specs=new Map(rows.map(r=>[r.key,{date:r.date,venue:r.venue,venueCode:r.venueCode,raceNo:r.raceNo,deadline:r.deadline,key:r.key}]));
+  const res=await brcInvBackfillSettleRecords(rows,specs);
+  await brcInvBfDbPutMany(rows);
+  const month=brcInvAutoJstToday().slice(0,7),stats=brcInvBfMonthStats(month),store=brcInvRead(),a=store.automation=store.automation||{};
+  a.backfillStored=stats.total;a.backfillSettled=stats.settled;a.backfillPending=stats.pending;brcInvWrite(store);
+  return res;
+}
 async function brcInvBackfillCurrentMonth(force=false){
   if(__brcInvBackfillBusy) return false;
   if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE&&typeof BRC_MEMBER_ACTIVE!=='undefined'&&BRC_MEMBER_ACTIVE)) return false;
+  await brcInvBfDbInit();
   const range=brcInvBackfillDateRange();
   if(!range.month||!range.dates.length) return true;
   __brcInvBackfillBusy=true;
   try{
-    let store=brcInvRead();let a=store.automation=store.automation||{};
-    if(!force&&a.backfillMonth===range.month&&a.backfillStatus==='ok') return true;
+    let store=brcInvRead(),a=store.automation=store.automation||{};
+    const cachedStats=brcInvBfMonthStats(range.month);
+    const expected=Math.max(Number(a.backfillStored)||0,Number(a.backfillCaptured)||0,Number(a.backfillSA)||0);
+    // V4不具合の自動修復: 「BF完了」なのに台帳がほぼ空なら強制再構築する。
+    const repairNeeded=a.backfillStatus==='ok'&&expected>0&&cachedStats.total<Math.max(1,Math.floor(expected*.8));
+    if(!force&&!repairNeeded&&a.backfillMonth===range.month&&a.backfillStatus==='ok'&&cachedStats.total>0) return true;
+    const rebuild=force||repairNeeded;
+    if(rebuild) await brcInvBfDbDeleteMonth(range.month);
+    store=brcInvRead();a=store.automation=store.automation||{};
     a.backfillEnabled=true;a.backfillMonth=range.month;a.backfillStatus='running';a.backfillStartedAt=new Date().toISOString();a.backfillCompletedAt='';a.backfillError='';
-    a.backfillScanned=0;a.backfillSA=0;a.backfillCaptured=0;a.backfillSettled=0;a.backfillPending=0;
-    if(force) a.backfillDates={}; else a.backfillDates=a.backfillDates||{};
+    a.backfillScanned=0;a.backfillSA=0;a.backfillCaptured=0;a.backfillStored=0;a.backfillSettled=0;a.backfillPending=0;
+    if(rebuild) a.backfillDates={}; else a.backfillDates=a.backfillDates||{};
     brcInvWrite(store);
-    try{if(window.__predictMainTabCurrent==='invest')brcRenderInvestmentManager(`${range.month} の導入前データをバックフィル中です。`);}catch(_e){}
+    try{if(window.__predictMainTabCurrent==='invest')brcRenderInvestmentManager(repairNeeded?'V4の未反映バックフィルを自動修復中です。':`${range.month} の導入前データをバックフィル中です。`);}catch(_e){}
 
-    let totalScanned=0,totalSA=0,totalCaptured=0,totalSettled=0,totalPending=0,failures=[];
+    let totalScanned=0,totalSA=0,totalCaptured=0,failures=[];
     for(const date of range.dates){
       store=brcInvRead();a=store.automation=store.automation||{};
       const prev=a.backfillDates?.[date];
-      if(!force&&prev?.status==='ok'){
-        totalScanned+=Number(prev.scanned)||0;totalSA+=Number(prev.sa)||0;totalCaptured+=Number(prev.captured)||0;totalSettled+=Number(prev.settled)||0;totalPending+=Number(prev.pending)||0;
+      if(!rebuild&&!force&&prev?.status==='ok'){
+        totalScanned+=Number(prev.scanned)||0;totalSA+=Number(prev.sa)||0;totalCaptured+=Number(prev.captured)||0;
         continue;
       }
       try{
-        const payload=await brcInvBackfillFetchRaceCard(date);
-        const specs=brcInvBackfillBuildSpecs(payload,date);
+        const payload=await brcInvBackfillFetchRaceCard(date),specs=brcInvBackfillBuildSpecs(payload,date);
         if(!specs.length) throw new Error('no_backfill_races');
         const api=await brcPredictBatchApi({races:specs.map(x=>({id:x.id,venue:x.venue,grade:x.grade,boats:x.apiBoats}))});
         if(!api||api.prediction_api!==true||!Array.isArray(api.races)) throw new Error('prediction_batch_not_ready');
-        const byId=new Map(api.races.map(r=>[String(r.id),r]));
+        const byId=new Map(api.races.map(r=>[String(r.id),r])),specByKey=new Map(),rows=[];
         let scanned=0,sa=0,captured=0;
-        store=brcInvRead();
+        const merged=brcInvRead();
         for(const spec of specs){
           const result=byId.get(String(spec.id));if(!result) continue;
           scanned++;
@@ -7094,29 +7230,30 @@ async function brcInvBackfillCurrentMonth(force=false){
           if(!Number.isFinite(inPct)||!serverIr) continue;
           let localIr=null;try{localIr=classifyInReliabilityByWinPct(inPct,spec.grade,spec.apiBoats.map(b=>b.reg),serverIr);}catch(_e){}
           if(!localIr) continue;
-          const x=brcInvBackfillCaptureIntoStore(store,spec,result,localIr,date,force);
-          if(x.sa) sa++;if(x.captured) captured++;
+          const x=brcInvBackfillBuildRecord(merged,spec,result,localIr,date,rebuild||force);
+          if(x.sa) sa++;
+          if(x.captured&&x.record){captured++;rows.push(x.record);specByKey.set(x.record.key,spec);merged.records[x.record.key]=x.record;}
         }
-        brcInvWrite(store);
-        const settled=await brcInvBackfillSettleSpecs(specs);
-        totalScanned+=scanned;totalSA+=sa;totalCaptured+=captured;totalSettled+=settled.settled;totalPending+=settled.pending;
+        const settle=await brcInvBackfillSettleRecords(rows,specByKey);
+        await brcInvBfDbPutMany(rows);
+        totalScanned+=scanned;totalSA+=sa;totalCaptured+=captured;
+        const stats=brcInvBfMonthStats(range.month);
         store=brcInvRead();a=store.automation=store.automation||{};a.backfillDates=a.backfillDates||{};
-        a.backfillDates[date]={status:'ok',source:payload.__source||'',scanned,sa,captured,settled:settled.settled,pending:settled.pending,updatedAt:new Date().toISOString()};
-        a.backfillLastDate=date;a.backfillScanned=totalScanned;a.backfillSA=totalSA;a.backfillCaptured=totalCaptured;a.backfillSettled=totalSettled;a.backfillPending=totalPending;
-        brcInvWrite(store);
-        try{if(window.__predictMainTabCurrent==='invest')brcRenderInvestmentManager(`${date.slice(5)} をバックフィルしました。S/A ${sa}R。`);}catch(_e){}
+        a.backfillDates[date]={status:'ok',source:payload.__source||'',scanned,sa,captured,stored:rows.length,settled:settle.settled,pending:settle.pending,updatedAt:new Date().toISOString()};
+        a.backfillLastDate=date;a.backfillScanned=totalScanned;a.backfillSA=totalSA;a.backfillCaptured=totalCaptured;
+        a.backfillStored=stats.total;a.backfillSettled=stats.settled;a.backfillPending=stats.pending;brcInvWrite(store);
+        try{if(window.__predictMainTabCurrent==='invest')brcRenderInvestmentManager(`${date.slice(5)} を反映しました。S/A ${sa}R・結果確定 ${settle.settled}R。`);}catch(_e){}
       }catch(err){
         failures.push(`${date}:${String(err?.message||err||'error')}`);
         store=brcInvRead();a=store.automation=store.automation||{};a.backfillDates=a.backfillDates||{};
-        a.backfillDates[date]={status:'error',error:String(err?.message||err||'error'),updatedAt:new Date().toISOString()};a.backfillLastDate=date;
-        brcInvWrite(store);
+        a.backfillDates[date]={status:'error',error:String(err?.message||err||'error'),updatedAt:new Date().toISOString()};a.backfillLastDate=date;brcInvWrite(store);
       }
     }
+    const stats=brcInvBfMonthStats(range.month);
     store=brcInvRead();a=store.automation=store.automation||{};
-    a.backfillMonth=range.month;a.backfillStatus=failures.length?'partial':'ok';a.backfillCompletedAt=new Date().toISOString();
-    a.backfillError=failures.join(' / ');a.backfillScanned=totalScanned;a.backfillSA=totalSA;a.backfillCaptured=totalCaptured;a.backfillSettled=totalSettled;a.backfillPending=totalPending;
-    brcInvWrite(store);
-    try{if(window.__predictMainTabCurrent==='invest')brcRenderInvestmentManager(failures.length?'バックフィルの一部を次回再試行します。':`${range.month} のバックフィルが完了しました。`);}catch(_e){}
+    a.backfillMonth=range.month;a.backfillStatus=failures.length?'partial':'ok';a.backfillCompletedAt=new Date().toISOString();a.backfillError=failures.join(' / ');
+    a.backfillScanned=totalScanned;a.backfillSA=totalSA;a.backfillCaptured=totalCaptured;a.backfillStored=stats.total;a.backfillSettled=stats.settled;a.backfillPending=stats.pending;brcInvWrite(store);
+    try{if(window.__predictMainTabCurrent==='invest')brcRenderInvestmentManager(failures.length?'バックフィルの一部を次回再試行します。':`${range.month} のAI成績バックフィルを反映しました。`);}catch(_e){}
     try{await brcInvAutoSweepResults(true);}catch(_e){}
     return !failures.length;
   }catch(err){
@@ -7125,7 +7262,6 @@ async function brcInvBackfillCurrentMonth(force=false){
     return false;
   }finally{__brcInvBackfillBusy=false;}
 }
-
 function brcInvResultSpecFromRecord(key,rec){
   const date=String(rec?.date||String(key||'').split(':')[0]||'');
   const venue=String(rec?.venue||'');
@@ -7141,10 +7277,11 @@ async function brcInvAutoSweepResults(force=false){
   if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return false;
   __brcInvAutoSettleBusy=true;
   try{
+    try{await brcInvBackfillSweepPendingResults(force?60:BRC_INV_AUTO_SETTLE_BATCH_MAX);}catch(_e){}
     const store=brcInvRead();
     const due=Object.entries(store.records||{})
       .map(([key,rec])=>({key,rec,spec:brcInvResultSpecFromRecord(key,rec)}))
-      .filter(x=>x.spec&&!x.rec?.resultSettledAt&&Array.isArray(x.rec?.ai?.picks)&&x.rec.ai.picks.length&&Date.now()>=Number(x.spec.dueMs))
+      .filter(x=>x.spec&&x.rec?.ai?.backfilled!==true&&!x.rec?.resultSettledAt&&Array.isArray(x.rec?.ai?.picks)&&x.rec.ai.picks.length&&Date.now()>=Number(x.spec.dueMs))
       .sort((a,b)=>Number(a.spec.dueMs)-Number(b.spec.dueMs))
       .slice(0,BRC_INV_AUTO_SETTLE_BATCH_MAX);
     let settled=0,pending=0,lastError='';
@@ -7182,7 +7319,8 @@ function brcInvStopBackgroundAutomation(){
 function brcInvStartBackgroundAutomation(){
   if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return;
   if(__brcInvAutoResultTimer||__brcInvAutoDayTimer) return;
-  // 当日分を最優先で先に保存。その後に月初〜前日のバックフィルを走らせる。
+  // 当日分を最優先で先に保存。BF台帳はIndexedDBを読み込み、その後に月初〜前日を自動修復/バックフィルする。
+  try{brcInvBfDbInit();}catch(_e){}
   setTimeout(()=>brcInvAutoCollectToday(false),250);
   setTimeout(()=>brcInvBackfillCurrentMonth(false),1800);
   setTimeout(()=>brcInvAutoSweepResults(true),3000);
@@ -7207,6 +7345,11 @@ function brcInvAutomationStatusHtml(store){
   const title=scanErr?'S/A自動収集：再試行中':'S/A自動収集：ON';
   const backfillRunning=a.backfillStatus==='running';
   const backfillPartial=a.backfillStatus==='partial'||a.backfillStatus==='error';
+  const bfMonth=String(store?.settings?.reportMonth||brcInvAutoJstToday().slice(0,7));
+  const bfStats=brcInvBfMonthStats(bfMonth);
+  const bfStoredDisplay=__brcInvBfCacheReady?bfStats.total:(Number(a.backfillStored)||0);
+  const bfSettledDisplay=__brcInvBfCacheReady?bfStats.settled:(Number(a.backfillSettled)||0);
+  const bfPendingDisplay=__brcInvBfCacheReady?bfStats.pending:(Number(a.backfillPending)||0);
   const sub=scanErr
     ? `前回エラー ${brcInvEscape(a.lastPredictionError||'不明')}｜レースを開かずに再試行します。`
     : `当日は全開催を自動保存。月初〜前日は現行固定ロジックで自動バックフィルし、公式結果へ照合します。`;
@@ -7220,8 +7363,9 @@ function brcInvAutomationStatusHtml(store){
       <div class="brc-invest-auto-metric"><div class="k">最終結果確認</div><div class="v">${brcInvEscape(brcInvFmtAutoTime(a.lastResultSweepAt))}</div></div>
       <div class="brc-invest-auto-metric"><div class="k">月初BF</div><div class="v">${backfillRunning?'実行中':backfillPartial?'要再試行':a.backfillStatus==='ok'?'完了':'未実行'}</div></div>
       <div class="brc-invest-auto-metric"><div class="k">BF S/A</div><div class="v">${Number(a.backfillSA)||0}R</div></div>
-      <div class="brc-invest-auto-metric"><div class="k">BF結果確定</div><div class="v">${Number(a.backfillSettled)||0}R</div></div>
-      <div class="brc-invest-auto-metric"><div class="k">BF未確定</div><div class="v">${Number(a.backfillPending)||0}R</div></div>
+      <div class="brc-invest-auto-metric"><div class="k">BF記録</div><div class="v">${bfStoredDisplay}R</div></div>
+      <div class="brc-invest-auto-metric"><div class="k">BF結果確定</div><div class="v">${bfSettledDisplay}R</div></div>
+      <div class="brc-invest-auto-metric"><div class="k">BF未確定</div><div class="v">${bfPendingDisplay}R</div></div>
     </div>
     <div class="brc-invest-auto-actions">
       <button type="button" class="brc-invest-auto-btn" id="brcInvAutoScanNow">S/Aを今すぐ再走査</button>
@@ -7532,7 +7676,7 @@ function brcRenderInvestmentManager(message=''){
     <div class="brc-invest-section">
       <div class="brc-invest-section-head"><div class="brc-invest-section-title">本日の履歴</div><span class="brc-invest-section-note">${summary.rows.length}レース記録</span></div>
       ${brcInvHistoryHtml(summary)}
-      <div class="brc-invest-local-note">V4はS/Aをレース未選択でも自動収集し、月初〜導入前日も自動バックフィルします。V1〜V3の保存データを引き継ぎ、前向き保存済みAIは上書きしません。記録はこのブラウザ内に保存されます。</div>
+      <div class="brc-invest-local-note">V5はS/Aをレース未選択でも自動収集し、月初〜導入前日をIndexedDB台帳へ自動バックフィルします。V4で件数だけ進んだ未反映データも自動修復します。前向き保存済みAIは上書きしません。</div>
     </div>
   `;
   brcInvBindManager(sel,analysis,store);
@@ -7664,6 +7808,7 @@ window.brcInvApplyOfficialResult=brcInvApplyOfficialResult;
 window.brcInvAutoCollectToday=brcInvAutoCollectToday;
 window.brcInvAutoSweepResults=brcInvAutoSweepResults;
 window.brcInvBackfillCurrentMonth=brcInvBackfillCurrentMonth;
+window.brcInvBfDbInit=brcInvBfDbInit;
 window.brcInvStartBackgroundAutomation=brcInvStartBackgroundAutomation;
 
 
