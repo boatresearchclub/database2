@@ -10962,11 +10962,11 @@ function brcTimeXViewingRule(grade,direction,polarity){
   const g=String(grade||'E').toUpperCase();
   const arrow=polarity==='up'?'↑':polarity==='down'?'↓':'→';
   if(polarity!=='up'&&polarity!=='down'){
-    return {title:'表示着率をそのまま使う',suffix:'選手特性による追加判断なし',mode:'base'};
+    return {title:'表示着率をそのまま使う',suffix:'表示着率を基準に見る',mode:'base'};
   }
   // D/Eは選手特性を予想判断に追加しない。表示着率はすでにBRCタイムX反映後の完成値。
   if(g==='D'||g==='E'){
-    return {title:'表示着率をそのまま使う',suffix:'選手特性による追加判断なし',mode:'base'};
+    return {title:'表示着率をそのまま使う',suffix:'表示着率を基準に見る',mode:'base'};
   }
   const easy=direction==='easy';
   const restrained=(easy&&polarity==='up')||(!easy&&polarity==='down');
@@ -11035,8 +11035,10 @@ function brcTimeXPracticalEvaluation(a,grade,direction){
   let title='着率ごとに見る';
   let body='';
   if(g==='D'||g==='E'){
-    title='追加判断なし';
-    body='表示着率をそのまま使います。';
+    // 信頼度D/Eは「選手特性」だけで着率を動かさない。
+    // 本人傾向が別枠で存在する場合まで無効に見えないよう、追加判断なしとは表現しない。
+    title='表示着率を基準に見る';
+    body='';
   }else{
     const titles=metrics.map(x=>{
       const v=Number(x.v);
