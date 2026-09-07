@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V1 -->
+<!-- BRC_ADMIN_INVESTMENT_MANAGER_V2_AI_ACTUAL_MONTHLY_20260907 -->
 <!-- BRC_ADMIN_INVESTMENT_MANAGER_V1_20260907 -->
 <!-- BRC_AI_NIGE_POST_DEADLINE_AUTO_ODDS_20260906 -->
 <!-- BRC_NIGE_REFERENCE_FORMATION_POINTS_20260906 -->
@@ -1877,6 +1878,82 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
   .predict-main-tabs.brc-admin-invest-enabled .predict-main-tab{font-size:10.5px;padding-left:1px;padding-right:1px;}
 }
 
+
+
+  /* ---- BRC_ADMIN_INVESTMENT_MANAGER_V2_AI_ACTUAL_MONTHLY_20260907 ---- */
+  .brc-invest-month-toolbar{
+    display:flex;align-items:center;justify-content:flex-end;gap:7px;margin:-2px 0 9px;
+  }
+  .brc-invest-month-toolbar label{font-size:9.5px;font-weight:900;color:var(--ink-soft);}
+  .brc-invest-month-input{
+    width:132px;height:34px;border:1px solid rgba(10,31,51,.14);border-radius:8px;background:#fff;
+    color:var(--navy);font:inherit;font-size:11.5px;font-weight:850;padding:0 7px;outline:none;
+  }
+  .brc-invest-month-table-wrap,.brc-invest-record-table-wrap{
+    width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid rgba(10,31,51,.09);
+    border-radius:10px;background:#fff;
+  }
+  table.brc-invest-month-table{
+    width:100%;min-width:690px;border-collapse:collapse;table-layout:auto;font-variant-numeric:tabular-nums;
+  }
+  table.brc-invest-month-table th{
+    padding:7px 6px;background:#f1f5f9;color:var(--ink-soft);font-size:8.5px;font-weight:900;
+    text-align:center;white-space:nowrap;cursor:default;
+  }
+  table.brc-invest-month-table td{
+    padding:8px 6px;border-top:1px solid rgba(10,31,51,.07);font-size:10px;font-weight:850;
+    text-align:right;white-space:nowrap;
+  }
+  table.brc-invest-month-table td.rank{text-align:center;font-size:12px;font-weight:950;color:var(--navy);}
+  table.brc-invest-month-table td.positive{color:var(--trend-up);}
+  table.brc-invest-month-table td.negative{color:var(--trend-down);}
+  table.brc-invest-month-table td.accent{color:var(--wave);font-weight:950;}
+  .brc-invest-pending{display:block;margin-top:1px;font-size:7.5px;font-weight:800;color:var(--ink-soft);}
+  .brc-invest-result-common{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;
+    margin:0 0 8px;padding:8px 9px;border-radius:9px;background:#f7f9fc;border:1px solid rgba(10,31,51,.07);
+    font-size:10px;color:var(--ink-soft);
+  }
+  .brc-invest-result-common strong{color:var(--navy);font-size:12px;font-weight:950;}
+  .brc-invest-ai-score,.brc-invest-actual-score{
+    margin-top:7px;padding:9px;border-radius:10px;border:1px solid rgba(10,31,51,.09);background:#fff;
+  }
+  .brc-invest-ai-score.hit{border-color:rgba(47,143,91,.25);background:rgba(47,143,91,.035);}
+  .brc-invest-ai-score.miss{border-color:rgba(209,55,63,.20);background:rgba(209,55,63,.025);}
+  .brc-invest-ai-score.pending{border-color:rgba(217,119,6,.20);background:rgba(217,119,6,.025);}
+  .brc-invest-ai-score-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;}
+  .brc-invest-ai-score-head strong{font-size:11.5px;color:var(--navy);font-weight:950;}
+  .brc-invest-ai-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:5px;font-size:9px;color:var(--ink-soft);font-weight:800;}
+  .brc-invest-ai-picks{margin-bottom:7px;padding:6px 7px;border-radius:7px;background:rgba(10,31,51,.035);font-size:9px;line-height:1.5;color:var(--navy);font-weight:850;overflow-wrap:anywhere;}
+  .brc-invest-status-chip{
+    display:inline-flex;align-items:center;justify-content:center;padding:2px 6px;border-radius:999px;
+    font-size:8px;font-weight:950;line-height:1.2;white-space:nowrap;
+  }
+  .brc-invest-status-chip.hit{color:#217247;background:rgba(47,143,91,.10);}
+  .brc-invest-status-chip.miss{color:#b4232c;background:rgba(209,55,63,.09);}
+  .brc-invest-status-chip.pending{color:#8a5a00;background:rgba(217,119,6,.10);}
+  .brc-invest-status-chip.none{color:#667085;background:rgba(61,74,99,.08);}
+  table.brc-invest-record-table{
+    width:100%;min-width:860px;border-collapse:collapse;table-layout:auto;font-variant-numeric:tabular-nums;
+  }
+  table.brc-invest-record-table th{
+    padding:6px 5px;background:#f1f5f9;color:var(--ink-soft);font-size:8px;font-weight:900;
+    text-align:center;white-space:nowrap;cursor:default;
+  }
+  table.brc-invest-record-table td{
+    padding:7px 5px;border-top:1px solid rgba(10,31,51,.07);font-size:9px;text-align:right;
+    white-space:nowrap;color:var(--navy);font-weight:800;
+  }
+  table.brc-invest-record-table td.race,table.brc-invest-record-table td.rank{text-align:center;font-weight:950;}
+  table.brc-invest-record-table tbody tr{cursor:pointer;}
+  table.brc-invest-record-table tbody tr:hover td{background:rgba(0,87,219,.025);}
+  @media(max-width:520px){
+    .brc-invest-month-toolbar{justify-content:space-between;}
+    .brc-invest-month-input{width:128px;}
+    .brc-invest-result-common{font-size:9.5px;}
+    .brc-invest-result-common strong{font-size:11.5px;}
+    .brc-invest-ai-meta{align-items:flex-start;}
+  }
 
   /* ---- BRC会員認証：出走表AIタブ ---- */
   .brc-auth-gate{
@@ -6109,34 +6186,41 @@ function predictRecentCourseKimariteHtml(reg, course){
 // 「上部メインタブ → まもなく締切 → 出走データ/オッズ/AI予測/結果」
 // が常に同じ高さで並ぶよう、4タブ自身の位置を基準に合わせる。
 
-// ===== BRC_ADMIN_INVESTMENT_MANAGER_V1_20260907 =====
-// 管理者専用。既存Workerの予測・期待値、現在オッズ、公式結果を1レース単位でまとめる。
-// 最終投資判断は管理者がGO/慎重/見送りを確定し、ブラウザlocalStorageへ保存する。
-const BRC_INVESTMENT_STORAGE_KEY='brc_admin_investment_manager_v1';
-const BRC_INVESTMENT_VERSION='v1-20260907';
+// ===== BRC_ADMIN_INVESTMENT_MANAGER_V2_20260907 =====
+// 管理者専用。V1の実投資管理を維持しながら、AI参考買い目の成績を実投資から完全分離して記録する。
+// AI成績は参考買い目を「1点100円固定」の仮想投資として評価するため、管理者が見送ったレースもAI成績へ含める。
+// 公式結果が取得された瞬間に、AI成績と実投資成績をそれぞれ独立して自動判定する。
+const BRC_INVESTMENT_STORAGE_KEY='brc_admin_investment_manager_v1'; // V1データをそのまま引き継ぐ
+const BRC_INVESTMENT_VERSION='v2-20260907';
+const BRC_INV_AI_UNIT_STAKE=100;
 
 function brcInvDefaultStore(){
   return {
     version:BRC_INVESTMENT_VERSION,
-    settings:{bankroll:10000,raceCap:1000,dailyLossLimit:3000,targetRoi:120},
+    settings:{bankroll:10000,raceCap:1000,dailyLossLimit:3000,targetRoi:120,reportMonth:''},
     records:{}
   };
+}
+function brcInvNormalizeStore(x){
+  const base=brcInvDefaultStore();
+  const out=(x&&typeof x==='object'&&!Array.isArray(x))?x:base;
+  if(!out.settings||typeof out.settings!=='object') out.settings={...base.settings};
+  out.settings={...base.settings,...out.settings};
+  if(!out.records||typeof out.records!=='object'||Array.isArray(out.records)) out.records={};
+  out.version=BRC_INVESTMENT_VERSION;
+  return out;
 }
 function brcInvRead(){
   try{
     const raw=localStorage.getItem(BRC_INVESTMENT_STORAGE_KEY);
-    const x=raw?JSON.parse(raw):null;
-    if(x && typeof x==='object' && !Array.isArray(x)){
-      if(!x.settings || typeof x.settings!=='object') x.settings=brcInvDefaultStore().settings;
-      if(!x.records || typeof x.records!=='object') x.records={};
-      return x;
-    }
+    return brcInvNormalizeStore(raw?JSON.parse(raw):null);
   }catch(_e){}
   return brcInvDefaultStore();
 }
 function brcInvWrite(store){
   try{
-    localStorage.setItem(BRC_INVESTMENT_STORAGE_KEY,JSON.stringify(store||brcInvDefaultStore()));
+    const normalized=brcInvNormalizeStore(store||brcInvDefaultStore());
+    localStorage.setItem(BRC_INVESTMENT_STORAGE_KEY,JSON.stringify(normalized));
     return true;
   }catch(_e){return false;}
 }
@@ -6171,14 +6255,18 @@ function brcInvDeadline(sel){
 function brcInvRaceTitle(sel){
   return String(RACE_INFO_TODAY?.[sel?.venue]?.raceTitles?.[String(sel?.raceNo)]||'');
 }
+function brcInvMonthFromDate(date){
+  const s=String(date||'');
+  return /^\d{4}-\d{2}/.test(s)?s.slice(0,7):'';
+}
 function brcInvCurrentRecord(store,sel){
-  return (sel?.key && store?.records?.[sel.key]) ? store.records[sel.key] : null;
+  return (sel?.key&&store?.records?.[sel.key])?store.records[sel.key]:null;
 }
 function brcInvModeInfo(mode,key){
-  if(!mode || typeof mode!=='object') return null;
+  if(!mode||typeof mode!=='object') return null;
   const rawPicks=Array.isArray(mode.picks)?mode.picks:(Array.isArray(mode.bets)?mode.bets:(Array.isArray(mode.selections)?mode.selections:[]));
   const picks=rawPicks.map(x=>({raw:x,combo:brcAi3ComboText(x)})).filter(x=>x.combo).slice(0,10);
-  const recommended=mode.recommended!==false && mode.skip!==true && mode.pass!==true && picks.length>0;
+  const recommended=mode.recommended!==false&&mode.skip!==true&&mode.pass!==true&&picks.length>0;
   const hit=brcAi3Num(mode,['hitProbability','setHitProbability','totalHitProbability','safe','cal','probability']);
   const comp=brcAi3Num(mode,['compositeOdds','setCompositeOdds','composite','targetOdds','target120']);
   const exp=brcAi3Num(mode,['expectedReturn','expectedReturnRate','returnRate','setEV','ev','EV']);
@@ -6212,9 +6300,9 @@ function brcInvCurrentModes(){
 function brcInvCurrentHeadStats(){
   const boats=Array.isArray(window.__predictBoatsCurrent)?window.__predictBoatsCurrent:[];
   const rows=boats.map(b=>{
-    const cur=Number(b?.pctFloat ?? b?.pct);
-    const base=Number(b?.basePctFloat ?? b?.basePct ?? b?.pctFloat ?? b?.pct);
-    const ex=Number(b?.exhibition?.relative_diff_capped ?? b?.exhibition?.relative_diff);
+    const cur=Number(b?.pctFloat??b?.pct);
+    const base=Number(b?.basePctFloat??b?.basePct??b?.pctFloat??b?.pct);
+    const ex=Number(b?.exhibition?.relative_diff_capped??b?.exhibition?.relative_diff);
     return {boat:Number(b?.course),cur,base,ex,b};
   }).filter(x=>x.boat>=1&&x.boat<=6&&Number.isFinite(x.cur)).sort((a,b)=>b.cur-a.cur||a.boat-b.boat);
   if(rows.length!==6) return {ready:false,rows:[]};
@@ -6269,7 +6357,7 @@ function brcInvAutoAnalysis(){
   if(flags.absent.length){
     risk=100;forced=true;reasons.push({t:`欠場 ${flags.absent.join('・')}号艇`,c:'bad'});
   }
-  if(flags.lap?.started && flags.lap?.allSix && !flags.lap?.ready){
+  if(flags.lap?.started&&flags.lap?.allSix&&!flags.lap?.ready){
     risk+=45;reasons.push({t:'TimeXラップ未完備',c:'bad'});
   }else if(flags.lap?.ready){
     reasons.push({t:'TimeX計測完備',c:'good'});
@@ -6330,6 +6418,21 @@ function brcInvModeTable(modes){
     <tbody>${rows}</tbody>
   </table></div>`;
 }
+function brcInvReferencePicksSnapshot(){
+  const ref=document.querySelector('.brc-nige-order-picks[data-brc-ref-picks]');
+  const combos=String(ref?.dataset?.brcRefPicks||'').split(',').map(x=>x.trim()).filter(x=>/^[1-6]-[1-6]-[1-6]$/.test(x));
+  const sel=brcInvCurrentSelection();
+  const odds=sel?.key?(__brcOddsLocal?.[sel.key]?.odds||null):null;
+  const formation=String(ref?.querySelector('.brc-nige-order-formation-value')?.textContent||'').trim();
+  const compositeText=String(ref?.querySelector('[data-brc-ref-composite]')?.textContent||'').trim();
+  const composite=Number(compositeText.replace(/[^0-9.]/g,''));
+  return {
+    combos,
+    picks:combos.map(combo=>({combo,odds:typeof brcOddsValue==='function'?brcOddsValue(odds,combo):null})),
+    formation,
+    compositeOdds:Number.isFinite(composite)&&composite>0?composite:null
+  };
+}
 function brcInvAutoBetSnapshot(sel,analysis){
   const key=sel?.key||'';
   if(!key) return [];
@@ -6344,13 +6447,9 @@ function brcInvAutoBetSnapshot(sel,analysis){
       }));
     }
   }catch(_e){}
-  try{
-    const ref=document.querySelector('.brc-nige-order-picks[data-brc-ref-picks]');
-    combos=String(ref?.dataset?.brcRefPicks||'').split(',').map(x=>x.trim()).filter(Boolean);
-  }catch(_e){}
+  try{combos=brcInvReferencePicksSnapshot().combos;}catch(_e){}
   if(!combos.length){
-    const stable=analysis?.modes?.find(x=>x.key==='stable'&&x.recommended) ||
-      analysis?.modes?.find(x=>x.recommended);
+    const stable=analysis?.modes?.find(x=>x.key==='stable'&&x.recommended)||analysis?.modes?.find(x=>x.recommended);
     combos=stable?.picks||[];
   }
   const odds=__brcOddsLocal?.[key]?.odds||null;
@@ -6364,21 +6463,34 @@ function brcInvTodayRecords(store,date){
     .filter(r=>String(r.date||'')===String(date||''))
     .sort((a,b)=>String(a.deadline||'').localeCompare(String(b.deadline||''))||String(a.key).localeCompare(String(b.key)));
 }
+function brcInvMonthRecords(store,month){
+  return Object.entries(store?.records||{}).map(([key,r])=>({key,...r}))
+    .filter(r=>brcInvMonthFromDate(r.date)===String(month||''))
+    .sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))||String(a.deadline||'').localeCompare(String(b.deadline||''))||String(a.key).localeCompare(String(b.key)));
+}
 function brcInvRecordStake(r){
-  const n=Number(r?.actualStake);
-  if(Number.isFinite(n)&&n>0) return n;
+  if(r&&Object.prototype.hasOwnProperty.call(r,'actualStake')){
+    const n=Number(r.actualStake);
+    if(Number.isFinite(n)&&n>=0) return n;
+  }
   return (Array.isArray(r?.bets)?r.bets:[]).reduce((s,b)=>s+(Number(b?.amount)||0),0);
 }
 function brcInvRecordReturn(r){
   const n=Number(r?.returnYen);
   return Number.isFinite(n)&&n>=0?n:0;
 }
+function brcInvActualRoi(r){
+  const stake=brcInvRecordStake(r);
+  if(!(stake>0)) return null;
+  const ret=brcInvRecordReturn(r);
+  return ret/stake*100;
+}
 function brcInvDaySummary(store,date){
   const rows=brcInvTodayRecords(store,date);
   const invested=rows.reduce((s,r)=>s+brcInvRecordStake(r),0);
   const returned=rows.reduce((s,r)=>s+brcInvRecordReturn(r),0);
   const planned=rows.reduce((s,r)=>s+(Number(r.plannedStake)||0),0);
-  const settled=rows.filter(r=>r.resultCombo||Number.isFinite(Number(r.returnYen))).length;
+  const settled=rows.filter(r=>r.resultCombo||r.resultSettledAt||r.settledAt).length;
   const decisions={go:0,caution:0,skip:0};
   rows.forEach(r=>{if(decisions[r.decision]!=null) decisions[r.decision]++;});
   return {rows,invested,returned,planned,profit:returned-invested,roi:invested>0?returned/invested*100:null,settled,decisions};
@@ -6393,14 +6505,270 @@ function brcInvResultForSelection(sel){
   return null;
 }
 function brcInvCalculateReturnFromResult(record,result){
-  if(!record||!result) return {returnYen:0,hit:false};
+  if(!record||!result) return {returnYen:0,hit:false,matchedAmount:0};
   const combo=String(result?.combination||'');
   const payout=Number(result?.payout_yen);
-  if(!combo||!Number.isFinite(payout)) return {returnYen:0,hit:false};
+  if(!combo||!Number.isFinite(payout)) return {returnYen:0,hit:false,matchedAmount:0};
   const bet=(Array.isArray(record.bets)?record.bets:[]).find(x=>String(x?.combo)===combo);
-  if(!bet) return {returnYen:0,hit:false};
+  if(!bet) return {returnYen:0,hit:false,matchedAmount:0};
   const amount=Math.max(0,Number(bet.amount)||0);
-  return {returnYen:payout*(amount/100),hit:amount>0};
+  return {returnYen:payout*(amount/100),hit:amount>0,matchedAmount:amount};
+}
+function brcInvEnsureRecord(store,sel,analysis=null){
+  if(!sel?.key) return null;
+  const old=store.records?.[sel.key]||{};
+  const rec={
+    ...old,key:sel.key,date:sel.date,venue:sel.venue,raceNo:sel.raceNo,
+    venueCode:String(sel.code||sel.venueCode||'').padStart(2,'0'),deadline:brcInvDeadline(sel)||old.deadline||'',
+    raceTitle:brcInvRaceTitle(sel)||old.raceTitle||'',updatedAt:new Date().toISOString()
+  };
+  if(!rec.createdAt) rec.createdAt=rec.updatedAt;
+  if(analysis){
+    rec.autoAnalysis={
+      decision:analysis.decision,risk:analysis.risk,
+      reasons:(analysis.reasons||[]).map(x=>x.t),
+      topBoat:analysis.head?.topBoat||null,topPct:analysis.head?.topPct??null,
+      margin:analysis.head?.margin??null,baseTopBoat:analysis.head?.baseTopBoat||null,
+      bestExpectedReturnPct:analysis.bestExp??null
+    };
+    rec.expectedValueModes=analysis.modes;
+  }
+  store.records=store.records||{};
+  store.records[sel.key]=rec;
+  return rec;
+}
+function brcInvAiStatus(rec){
+  const ai=rec?.ai;
+  if(!ai||!Array.isArray(ai.picks)||!ai.picks.length) return {key:'none',label:'未記録'};
+  if(!ai.settledAt) return {key:'pending',label:'結果待ち'};
+  return ai.hit?{key:'hit',label:'的中'}:{key:'miss',label:'不的中'};
+}
+function brcInvAiVirtualStake(rec){
+  const n=Number(rec?.ai?.virtualStakeYen);
+  if(Number.isFinite(n)&&n>=0) return n;
+  const points=Array.isArray(rec?.ai?.picks)?rec.ai.picks.length:0;
+  return points*BRC_INV_AI_UNIT_STAKE;
+}
+function brcInvAiVirtualReturn(rec){
+  const n=Number(rec?.ai?.virtualReturnYen);
+  return Number.isFinite(n)&&n>=0?n:0;
+}
+function brcInvAiRoi(rec){
+  const stake=brcInvAiVirtualStake(rec);
+  if(!(stake>0)||!rec?.ai?.settledAt) return null;
+  return brcInvAiVirtualReturn(rec)/stake*100;
+}
+function brcInvAutoCaptureAiPrediction(localInReliability=null){
+  try{
+    if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return false;
+    const sel=brcInvCurrentSelection();
+    if(!sel?.key) return false;
+    const snap=brcInvReferencePicksSnapshot();
+    if(!snap.combos.length) return false;
+    const rel=localInReliability||window.__currentLocalInReliability||null;
+    const rank=String(rel?.rank||'').trim();
+    const inPct=Number(rel?.pct);
+    const store=brcInvRead();
+    const analysis=brcInvAutoAnalysis();
+    const rec=brcInvEnsureRecord(store,sel,analysis);
+    const deadlinePassed=typeof brcOddsDeadlinePassed==='function'?brcOddsDeadlinePassed(sel):false;
+    const existing=rec.ai&&typeof rec.ai==='object'?rec.ai:null;
+    // 締切後に既に締切前スナップショットがある場合は内容を固定。結果判定後も上書きしない。
+    if(existing?.settledAt||(deadlinePassed&&existing?.picks?.length&&!existing?.capturedAfterDeadline)){
+      return false;
+    }
+    const capturedAt=existing?.capturedAt||new Date().toISOString();
+    rec.ai={
+      ...(existing||{}),
+      source:'reference-picks-70pct',
+      inRank:rank||existing?.inRank||'',
+      inPct:Number.isFinite(inPct)?inPct:(Number.isFinite(Number(existing?.inPct))?Number(existing.inPct):null),
+      picks:snap.picks.map(x=>({combo:x.combo,odds:Number.isFinite(Number(x.odds))?Number(x.odds):null})),
+      pointCount:snap.combos.length,
+      formation:snap.formation||existing?.formation||'',
+      compositeOdds:Number.isFinite(Number(snap.compositeOdds))?Number(snap.compositeOdds):null,
+      unitStakeYen:BRC_INV_AI_UNIT_STAKE,
+      virtualStakeYen:snap.combos.length*BRC_INV_AI_UNIT_STAKE,
+      capturedAt,
+      updatedAt:new Date().toISOString(),
+      capturedAfterDeadline:existing?.capturedAfterDeadline===true||(!existing&&deadlinePassed)
+    };
+    brcInvWrite(store);
+    const cached=brcInvResultForSelection(sel);
+    if(cached) brcInvApplyOfficialResult({key:sel.key,date:sel.date,venue:sel.venue,venueCode:String(sel.code||'').padStart(2,'0'),raceNo:sel.raceNo,deadline:brcInvDeadline(sel)},cached);
+    return true;
+  }catch(_e){return false;}
+}
+function brcInvApplyOfficialResult(spec,result){
+  try{
+    if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return false;
+    if(!spec?.key||!result) return false;
+    const store=brcInvRead();
+    let rec=store.records?.[spec.key]||null;
+    const current=brcInvCurrentSelection();
+    if(!rec&&current?.key===spec.key){
+      rec=brcInvEnsureRecord(store,current,brcInvAutoAnalysis());
+    }
+    if(!rec) return false;
+
+    const combo=String(result?.combination||'').trim();
+    const payout=Number(result?.payout_yen);
+    if(!combo||!Number.isFinite(payout)) return false;
+
+    rec.resultCombo=combo;
+    rec.resultPayoutYen=payout;
+    rec.resultKimarite=String(result?.kimarite||'');
+    rec.resultSettledAt=new Date().toISOString();
+
+    // AI成績: 実投資・最終判断とは独立。見送りでもAI参考買い目を100円/点で判定する。
+    if(rec.ai&&Array.isArray(rec.ai.picks)&&rec.ai.picks.length){
+      const hit=rec.ai.picks.some(x=>String(x?.combo)===combo);
+      const stake=rec.ai.picks.length*BRC_INV_AI_UNIT_STAKE;
+      const ret=hit?payout:0; // 的中買い目へ100円投資した場合の払戻
+      rec.ai={
+        ...rec.ai,
+        resultCombo:combo,
+        resultPayoutYen:payout,
+        hit,
+        virtualStakeYen:stake,
+        virtualReturnYen:ret,
+        roi:stake>0?ret/stake*100:null,
+        settledAt:new Date().toISOString()
+      };
+    }
+
+    // 実投資成績: 実際に保存した買い目だけで判定。AI成績とは混ぜない。
+    const actualStake=brcInvRecordStake(rec);
+    if(Array.isArray(rec.bets)&&rec.bets.length&&actualStake>0){
+      const calc=brcInvCalculateReturnFromResult(rec,result);
+      rec.returnYen=calc.returnYen;
+      rec.hit=calc.hit;
+      rec.actualRoi=actualStake>0?calc.returnYen/actualStake*100:null;
+      rec.settledAt=new Date().toISOString();
+    }else if(actualStake===0){
+      rec.returnYen=0;
+      rec.hit=null;
+      rec.actualRoi=null;
+      rec.settledAt=new Date().toISOString();
+    }
+
+    rec.updatedAt=new Date().toISOString();
+    brcInvWrite(store);
+    if(window.__predictMainTabCurrent==='invest') setTimeout(()=>brcRenderInvestmentManager(),0);
+    return true;
+  }catch(_e){return false;}
+}
+function brcInvAiRankSummary(store,month,rank){
+  const all=brcInvMonthRecords(store,month).filter(r=>String(r?.ai?.inRank||'')===rank&&Array.isArray(r?.ai?.picks)&&r.ai.picks.length);
+  const settled=all.filter(r=>!!r.ai?.settledAt);
+  const hits=settled.filter(r=>r.ai?.hit===true).length;
+  const invested=settled.reduce((s,r)=>s+brcInvAiVirtualStake(r),0);
+  const returned=settled.reduce((s,r)=>s+brcInvAiVirtualReturn(r),0);
+  return {
+    rank,captured:all.length,targetR:settled.length,pending:all.length-settled.length,hits,
+    invested,returned,profit:returned-invested,
+    hitRate:settled.length?hits/settled.length*100:null,
+    roi:invested>0?returned/invested*100:null
+  };
+}
+function brcInvCombineAiSummaries(a,b){
+  const targetR=a.targetR+b.targetR,hits=a.hits+b.hits,invested=a.invested+b.invested,returned=a.returned+b.returned;
+  return {
+    rank:'S+A',captured:a.captured+b.captured,targetR,pending:a.pending+b.pending,hits,invested,returned,
+    profit:returned-invested,hitRate:targetR?hits/targetR*100:null,roi:invested>0?returned/invested*100:null
+  };
+}
+function brcInvMonthlyAiTable(store,month){
+  const s=brcInvAiRankSummary(store,month,'S');
+  const a=brcInvAiRankSummary(store,month,'A');
+  const both=brcInvCombineAiSummaries(s,a);
+  const row=x=>`<tr>
+    <td class="rank">${x.rank}</td>
+    <td>${x.targetR}${x.pending?`<span class="brc-invest-pending"> +${x.pending}未確定</span>`:''}</td>
+    <td>${x.hits}</td>
+    <td>${brcInvMoney(x.invested)}</td>
+    <td>${brcInvMoney(x.returned)}</td>
+    <td class="${x.profit>0?'positive':x.profit<0?'negative':''}">${x.profit>0?'+':''}${brcInvMoney(x.profit)}</td>
+    <td>${Number.isFinite(x.hitRate)?x.hitRate.toFixed(1)+'%':'―'}</td>
+    <td class="accent">${Number.isFinite(x.roi)?x.roi.toFixed(1)+'%':'―'}</td>
+  </tr>`;
+  return `<div class="brc-invest-month-table-wrap"><table class="brc-invest-month-table">
+    <thead><tr><th>信頼度</th><th>対象R</th><th>的中</th><th>AI投資</th><th>回収</th><th>損益</th><th>的中率</th><th>回収率</th></tr></thead>
+    <tbody>${row(s)}${row(a)}${row(both)}</tbody>
+  </table></div>
+  <div class="brc-invest-local-note">AI月間成績は参考買い目を1点100円固定で計算。結果未確定Rは率・金額集計から除外し、管理者が「見送り」にしたレースもAI成績には含めます。</div>`;
+}
+function brcInvMonthlyActualSummary(store,month){
+  const rows=brcInvMonthRecords(store,month);
+  const betRows=rows.filter(r=>brcInvRecordStake(r)>0);
+  const settled=betRows.filter(r=>r.resultSettledAt||r.settledAt);
+  const invested=settled.reduce((s,r)=>s+brcInvRecordStake(r),0);
+  const returned=settled.reduce((s,r)=>s+brcInvRecordReturn(r),0);
+  const hits=settled.filter(r=>r.hit===true).length;
+  return {
+    targetR:settled.length,hits,invested,returned,profit:returned-invested,
+    hitRate:settled.length?hits/settled.length*100:null,roi:invested>0?returned/invested*100:null
+  };
+}
+function brcInvMonthlyActualHtml(store,month){
+  const x=brcInvMonthlyActualSummary(store,month);
+  return `<div class="brc-invest-day-kpis">
+    <div class="brc-invest-kpi"><div class="k">実投資R</div><div class="v">${x.targetR}</div></div>
+    <div class="brc-invest-kpi"><div class="k">的中</div><div class="v">${x.hits}</div></div>
+    <div class="brc-invest-kpi"><div class="k">実投資</div><div class="v">${brcInvMoney(x.invested)}</div></div>
+    <div class="brc-invest-kpi"><div class="k">回収</div><div class="v">${brcInvMoney(x.returned)}</div></div>
+    <div class="brc-invest-kpi"><div class="k">損益</div><div class="v ${x.profit>0?'positive':x.profit<0?'negative':''}">${x.profit>0?'+':''}${brcInvMoney(x.profit)}</div></div>
+    <div class="brc-invest-kpi"><div class="k">的中率</div><div class="v">${Number.isFinite(x.hitRate)?x.hitRate.toFixed(1)+'%':'―'}</div></div>
+    <div class="brc-invest-kpi"><div class="k">回収率</div><div class="v accent">${Number.isFinite(x.roi)?x.roi.toFixed(1)+'%':'―'}</div></div>
+  </div>`;
+}
+function brcInvAiOutcomeHtml(rec){
+  const ai=rec?.ai;
+  const status=brcInvAiStatus(rec);
+  if(!ai||!Array.isArray(ai.picks)||!ai.picks.length){
+    return `<div class="brc-invest-ai-score is-empty"><div class="brc-invest-ai-score-head"><strong>AI予測成績</strong><span class="brc-invest-status-chip none">未記録</span></div><div class="brc-invest-empty">AI予測の参考買い目が表示されると自動記録します。</div></div>`;
+  }
+  const stake=brcInvAiVirtualStake(rec),ret=brcInvAiVirtualReturn(rec),roi=brcInvAiRoi(rec);
+  const picks=ai.picks.map(x=>x.combo).join(' / ');
+  return `<div class="brc-invest-ai-score ${status.key}">
+    <div class="brc-invest-ai-score-head"><strong>AI予測成績</strong><span class="brc-invest-status-chip ${status.key}">${status.label}</span></div>
+    <div class="brc-invest-ai-meta"><span>イン信頼度 <b>${brcInvEscape(ai.inRank||'―')}</b></span><span>${ai.pointCount||ai.picks.length}点 × 100円</span></div>
+    <div class="brc-invest-ai-picks">${brcInvEscape(picks)}</div>
+    <div class="brc-invest-result-box">
+      <div class="brc-invest-result-item"><div class="k">AI投資</div><div class="v">${brcInvMoney(stake)}</div></div>
+      <div class="brc-invest-result-item"><div class="k">AI回収</div><div class="v">${ai.settledAt?brcInvMoney(ret):'―'}</div></div>
+      <div class="brc-invest-result-item"><div class="k">AI損益</div><div class="v">${ai.settledAt?`${ret-stake>0?'+':''}${brcInvMoney(ret-stake)}`:'―'}</div></div>
+      <div class="brc-invest-result-item"><div class="k">AI回収率</div><div class="v">${Number.isFinite(roi)?roi.toFixed(1)+'%':'―'}</div></div>
+    </div>
+  </div>`;
+}
+function brcInvMonthRaceLogHtml(store,month){
+  const rows=brcInvMonthRecords(store,month).filter(r=>
+    (Array.isArray(r?.ai?.picks)&&r.ai.picks.length)||brcInvRecordStake(r)>0||r.decision
+  );
+  if(!rows.length) return '<div class="brc-invest-empty">この月の記録はまだありません。</div>';
+  const html=rows.slice().reverse().map(r=>{
+    const aiStatus=brcInvAiStatus(r);
+    const aiStake=brcInvAiVirtualStake(r),aiRet=brcInvAiVirtualReturn(r),aiRoi=brcInvAiRoi(r);
+    const actualStake=brcInvRecordStake(r),actualRet=brcInvRecordReturn(r),actualRoi=brcInvActualRoi(r);
+    return `<tr data-brc-invest-history-key="${brcInvEscape(r.key)}">
+      <td>${brcInvEscape(String(r.date||'').slice(5))}</td>
+      <td class="race">${brcInvEscape(`${r.venue||''}${r.raceNo||''}R`)}</td>
+      <td class="rank">${brcInvEscape(r?.ai?.inRank||'―')}</td>
+      <td><span class="brc-invest-status-chip ${aiStatus.key}">${aiStatus.label}</span></td>
+      <td>${aiStake?brcInvMoney(aiStake):'―'}</td>
+      <td>${r?.ai?.settledAt?brcInvMoney(aiRet):'―'}</td>
+      <td>${Number.isFinite(aiRoi)?aiRoi.toFixed(1)+'%':'―'}</td>
+      <td>${brcInvDecisionLabel(r.decision)}</td>
+      <td>${actualStake?brcInvMoney(actualStake):'0円'}</td>
+      <td>${r.resultSettledAt||r.settledAt?brcInvMoney(actualRet):'―'}</td>
+      <td>${Number.isFinite(actualRoi)?actualRoi.toFixed(1)+'%':'―'}</td>
+    </tr>`;
+  }).join('');
+  return `<div class="brc-invest-record-table-wrap"><table class="brc-invest-record-table">
+    <thead><tr><th>日</th><th>R</th><th>信頼</th><th>AI</th><th>AI投資</th><th>AI回収</th><th>AI率</th><th>判断</th><th>実投資</th><th>実回収</th><th>実率</th></tr></thead>
+    <tbody>${html}</tbody>
+  </table></div>`;
 }
 function brcInvHistoryHtml(summary){
   if(!summary.rows.length) return '<div class="brc-invest-empty">本日の保存記録はまだありません。</div>';
@@ -6409,8 +6777,9 @@ function brcInvHistoryHtml(summary){
     const cls=pl>0?'positive':pl<0?'negative':'';
     const d=brcInvDecisionLabel(r.decision);
     const race=`${r.venue||''}${r.raceNo||''}R`;
+    const ai=brcInvAiStatus(r);
     return `<div class="brc-invest-history-row" data-brc-invest-history-key="${brcInvEscape(r.key)}">
-      <div class="brc-invest-history-race">${brcInvEscape(race)}</div>
+      <div class="brc-invest-history-race">${brcInvEscape(race)} <span class="brc-invest-status-chip ${ai.key}">${ai.label}</span></div>
       <div class="brc-invest-history-decision">${d}</div>
       <div class="brc-invest-history-money">${brcInvMoney(stake)}</div>
       <div class="brc-invest-history-pl ${cls}">${pl>0?'+':''}${brcInvMoney(pl)}</div>
@@ -6426,11 +6795,15 @@ function brcRenderInvestmentManager(message=''){
     return;
   }
   const sel=brcInvCurrentSelection();
+  // AIパネルが既に描画済みなら、投資管理を開いた時点でも最新AI参考買い目を自動保存。
+  try{brcInvAutoCaptureAiPrediction(window.__currentLocalInReliability||null);}catch(_e){}
   const store=brcInvRead();
   const settings={...brcInvDefaultStore().settings,...(store.settings||{})};
   const analysis=brcInvAutoAnalysis();
   const rec=brcInvCurrentRecord(store,sel)||{};
   const summary=brcInvDaySummary(store,sel?.date||'');
+  const defaultMonth=brcInvMonthFromDate(sel?.date)||brcInvMonthFromDate(typeof getJstDateLabel==='function'?getJstDateLabel():'');
+  const reportMonth=/^\d{4}-\d{2}$/.test(String(settings.reportMonth||''))?settings.reportMonth:defaultMonth;
   const finalDecision=rec.decision||'';
   const finalLabel=finalDecision?brcInvDecisionLabel(finalDecision):'未確定';
   const title=brcInvRaceTitle(sel);
@@ -6440,10 +6813,11 @@ function brcRenderInvestmentManager(message=''){
   const head=analysis.head||{};
   const result=brcInvResultForSelection(sel);
   const resultCombo=rec.resultCombo||String(result?.combination||'');
-  const resultPayout=Number(rec.resultPayoutYen ?? result?.payout_yen);
+  const resultPayout=Number(rec.resultPayoutYen??result?.payout_yen);
   const resultReturn=Number(rec.returnYen);
   const stake=brcInvRecordStake(rec);
   const profit=(Number.isFinite(resultReturn)?resultReturn:0)-stake;
+  const actualRoi=stake>0&&Number.isFinite(resultReturn)?resultReturn/stake*100:null;
   const bets=Array.isArray(rec.bets)?rec.bets:[];
   const betsHtml=bets.length?`<div class="brc-invest-bets">${bets.map(b=>`<div class="brc-invest-bet-row">
     <div class="brc-invest-bet-combo">${brcInvEscape(b.combo)}</div>
@@ -6451,15 +6825,15 @@ function brcRenderInvestmentManager(message=''){
     <div class="brc-invest-bet-amount">${brcInvMoney(b.amount)}</div>
   </div>`).join('')}</div>`:'';
 
-  const dailyLossReached=summary.profit<=-Math.abs(Number(settings.dailyLossLimit)||0) && Number(settings.dailyLossLimit)>0;
+  const dailyLossReached=summary.profit<=-Math.abs(Number(settings.dailyLossLimit)||0)&&Number(settings.dailyLossLimit)>0;
   const dayNotice=dailyLossReached
     ? `<span class="brc-invest-reason bad">1日損失上限に到達</span>`
-    : `<span class="brc-invest-section-note">保存したレースを自動集計</span>`;
+    : `<span class="brc-invest-section-note">実投資だけを集計</span>`;
 
   box.innerHTML=`
     <div class="brc-invest-top">
       <div>
-        <div class="brc-invest-kicker">BRC INVESTMENT CONTROL</div>
+        <div class="brc-invest-kicker">BRC INVESTMENT CONTROL V2</div>
         <div class="brc-invest-title">競艇投資 管理</div>
         <div class="brc-invest-race">${brcInvEscape(raceLabel)}</div>
       </div>
@@ -6467,7 +6841,21 @@ function brcRenderInvestmentManager(message=''){
     </div>
 
     <div class="brc-invest-section">
-      <div class="brc-invest-section-head"><div class="brc-invest-section-title">本日の運用</div>${dayNotice}</div>
+      <div class="brc-invest-section-head"><div class="brc-invest-section-title">月間 AI成績｜イン信頼度 S / A</div><span class="brc-invest-section-note">見送りも含む・実投資と別集計</span></div>
+      <div class="brc-invest-month-toolbar">
+        <label for="brcInvReportMonth">集計月</label>
+        <input type="month" id="brcInvReportMonth" class="brc-invest-month-input" value="${brcInvEscape(reportMonth)}">
+      </div>
+      ${brcInvMonthlyAiTable(store,reportMonth)}
+    </div>
+
+    <div class="brc-invest-section">
+      <div class="brc-invest-section-head"><div class="brc-invest-section-title">月間 実投資成績</div><span class="brc-invest-section-note">AI成績とは完全分離</span></div>
+      ${brcInvMonthlyActualHtml(store,reportMonth)}
+    </div>
+
+    <div class="brc-invest-section">
+      <div class="brc-invest-section-head"><div class="brc-invest-section-title">本日の実運用</div>${dayNotice}</div>
       <div class="brc-invest-day-kpis">
         <div class="brc-invest-kpi"><div class="k">投資</div><div class="v">${brcInvMoney(summary.invested)}</div></div>
         <div class="brc-invest-kpi"><div class="k">払戻</div><div class="v">${brcInvMoney(summary.returned)}</div></div>
@@ -6483,7 +6871,7 @@ function brcRenderInvestmentManager(message=''){
     </div>
 
     <div class="brc-invest-section">
-      <div class="brc-invest-section-head"><div class="brc-invest-section-title">運用ルール</div><span class="brc-invest-section-note">金額は100円単位</span></div>
+      <div class="brc-invest-section-head"><div class="brc-invest-section-title">運用ルール</div><span class="brc-invest-section-note">実投資の管理設定</span></div>
       <div class="brc-invest-settings">
         <div class="brc-invest-field"><label class="brc-invest-label">軍資金</label><input class="brc-invest-input" id="brcInvBankroll" inputmode="numeric" value="${Math.round(settings.bankroll||0)}"></div>
         <div class="brc-invest-field"><label class="brc-invest-label">1R上限</label><input class="brc-invest-input" id="brcInvRaceCap" inputmode="numeric" value="${Math.round(settings.raceCap||0)}"></div>
@@ -6493,7 +6881,7 @@ function brcRenderInvestmentManager(message=''){
     </div>
 
     <div class="brc-invest-section">
-      <div class="brc-invest-section-head"><div class="brc-invest-section-title">レース判断</div><span class="brc-invest-section-note">自動判定β → 管理者が最終確定</span></div>
+      <div class="brc-invest-section-head"><div class="brc-invest-section-title">レース判断</div><span class="brc-invest-section-note">判断は実投資だけに使用</span></div>
       <div class="brc-invest-decision-card ${brcInvDecisionClass(analysis.decision)}">
         <div class="brc-invest-decision-top">
           <div><div class="brc-invest-decision-label">BRC自動判断 β</div><div class="brc-invest-decision-value">${brcInvDecisionLabel(analysis.decision)}</div></div>
@@ -6512,7 +6900,7 @@ function brcRenderInvestmentManager(message=''){
         <button type="button" class="brc-invest-decision-btn ${finalDecision==='caution'?'active':''}" data-value="caution">慎重</button>
         <button type="button" class="brc-invest-decision-btn ${finalDecision==='skip'?'active':''}" data-value="skip">見送り</button>
       </div>
-      <div class="brc-invest-status">最終判断：<strong>${finalLabel}</strong></div>
+      <div class="brc-invest-status">最終判断：<strong>${finalLabel}</strong>　※見送りでもAI成績はそのまま判定します。</div>
     </div>
 
     <div class="brc-invest-section">
@@ -6521,7 +6909,7 @@ function brcRenderInvestmentManager(message=''){
     </div>
 
     <div class="brc-invest-section">
-      <div class="brc-invest-section-head"><div class="brc-invest-section-title">投資計画・記録</div><span class="brc-invest-section-note">オッズ候補から購入内容を取込可</span></div>
+      <div class="brc-invest-section-head"><div class="brc-invest-section-title">実投資計画・記録</div><span class="brc-invest-section-note">AI参考買い目とは別データ</span></div>
       <div class="brc-invest-form-grid">
         <div class="brc-invest-field"><label class="brc-invest-label">予定投資額</label><input class="brc-invest-input" id="brcInvPlannedStake" inputmode="numeric" value="${Math.round(Number(rec.plannedStake)||0)}"></div>
         <div class="brc-invest-field"><label class="brc-invest-label">実投資額</label><input class="brc-invest-input" id="brcInvActualStake" inputmode="numeric" value="${Math.round(stake||0)}"></div>
@@ -6529,34 +6917,47 @@ function brcRenderInvestmentManager(message=''){
       </div>
       ${betsHtml}
       <div class="brc-invest-actions">
-        <button type="button" class="brc-invest-btn" id="brcInvCaptureBets">現在の買い目を取込</button>
-        <button type="button" class="brc-invest-btn primary" id="brcInvSave">このレースを保存</button>
+        <button type="button" class="brc-invest-btn" id="brcInvCaptureBets">現在の買い目を実投資へ取込</button>
+        <button type="button" class="brc-invest-btn primary" id="brcInvSave">実投資を保存</button>
       </div>
       <div id="brcInvStatus" class="brc-invest-status">${brcInvEscape(message)}</div>
     </div>
 
     <div class="brc-invest-section">
-      <div class="brc-invest-section-head"><div class="brc-invest-section-title">結果・成果</div><span class="brc-invest-section-note">公式結果が取れれば自動反映</span></div>
-      <div class="brc-invest-result-box">
-        <div class="brc-invest-result-item"><div class="k">出目</div><div class="v">${resultCombo||'―'}</div></div>
-        <div class="brc-invest-result-item"><div class="k">3連単配当</div><div class="v">${Number.isFinite(resultPayout)?brcInvMoney(resultPayout):'―'}</div></div>
-        <div class="brc-invest-result-item"><div class="k">払戻</div><div class="v">${Number.isFinite(resultReturn)?brcInvMoney(resultReturn):'―'}</div></div>
-        <div class="brc-invest-result-item"><div class="k">損益</div><div class="v">${Number.isFinite(resultReturn)?`${profit>0?'+':''}${brcInvMoney(profit)}`:'―'}</div></div>
+      <div class="brc-invest-section-head"><div class="brc-invest-section-title">結果・成果</div><span class="brc-invest-section-note">公式結果取得時に自動判定</span></div>
+      <div class="brc-invest-result-common">
+        <span>出目 <strong>${brcInvEscape(resultCombo||'―')}</strong></span>
+        <span>3連単配当 <strong>${Number.isFinite(resultPayout)?brcInvMoney(resultPayout):'―'}</strong></span>
       </div>
-      <div class="brc-invest-form-grid" style="margin-top:7px;">
-        <div class="brc-invest-field"><label class="brc-invest-label">払戻（手入力可）</label><input class="brc-invest-input" id="brcInvReturnYen" inputmode="numeric" value="${Number.isFinite(resultReturn)?Math.round(resultReturn):''}" placeholder="0"></div>
+      ${brcInvAiOutcomeHtml(rec)}
+      <div class="brc-invest-actual-score">
+        <div class="brc-invest-ai-score-head"><strong>実投資成績</strong><span class="brc-invest-status-chip ${stake>0?(rec.hit===true?'hit':(rec.resultSettledAt||rec.settledAt?'miss':'pending')):'none'}">${stake>0?(rec.hit===true?'的中':(rec.resultSettledAt||rec.settledAt?'不的中':'結果待ち')):'投資なし'}</span></div>
+        <div class="brc-invest-result-box">
+          <div class="brc-invest-result-item"><div class="k">実投資</div><div class="v">${brcInvMoney(stake)}</div></div>
+          <div class="brc-invest-result-item"><div class="k">実回収</div><div class="v">${rec.resultSettledAt||rec.settledAt?brcInvMoney(brcInvRecordReturn(rec)):'―'}</div></div>
+          <div class="brc-invest-result-item"><div class="k">実損益</div><div class="v">${rec.resultSettledAt||rec.settledAt?`${profit>0?'+':''}${brcInvMoney(profit)}`:'―'}</div></div>
+          <div class="brc-invest-result-item"><div class="k">実回収率</div><div class="v">${Number.isFinite(actualRoi)?actualRoi.toFixed(1)+'%':'―'}</div></div>
+        </div>
+      </div>
+      <div class="brc-invest-form-grid" style="margin-top:8px;">
+        <div class="brc-invest-field"><label class="brc-invest-label">実払戻（手入力可）</label><input class="brc-invest-input" id="brcInvReturnYen" inputmode="numeric" value="${Number.isFinite(resultReturn)?Math.round(resultReturn):''}" placeholder="0"></div>
         <div class="brc-invest-field"><label class="brc-invest-label">結果出目</label><input class="brc-invest-input" id="brcInvResultCombo" value="${brcInvEscape(resultCombo)}" placeholder="1-2-3"></div>
       </div>
       <div class="brc-invest-actions">
-        <button type="button" class="brc-invest-btn" id="brcInvApplyResult">公式結果を反映</button>
-        <button type="button" class="brc-invest-btn primary" id="brcInvSaveResult">結果を保存</button>
+        <button type="button" class="brc-invest-btn" id="brcInvApplyResult">公式結果を今すぐ反映</button>
+        <button type="button" class="brc-invest-btn primary" id="brcInvSaveResult">実投資結果を手動保存</button>
       </div>
     </div>
 
     <div class="brc-invest-section">
-      <div class="brc-invest-section-head"><div class="brc-invest-section-title">本日の履歴</div><span class="brc-invest-section-note">${summary.rows.length}レース保存</span></div>
+      <div class="brc-invest-section-head"><div class="brc-invest-section-title">${brcInvEscape(reportMonth)} レース別記録</div><span class="brc-invest-section-note">AI / 実投資を横並び比較</span></div>
+      ${brcInvMonthRaceLogHtml(store,reportMonth)}
+    </div>
+
+    <div class="brc-invest-section">
+      <div class="brc-invest-section-head"><div class="brc-invest-section-title">本日の履歴</div><span class="brc-invest-section-note">${summary.rows.length}レース記録</span></div>
       ${brcInvHistoryHtml(summary)}
-      <div class="brc-invest-local-note">V1はこのブラウザ内に保存します。BRCの一般ユーザー画面・予測ロジック・サーバーデータには影響しません。</div>
+      <div class="brc-invest-local-note">V2もこのブラウザ内へ保存します。V1の保存データを引き継ぎ、一般ユーザー画面・予測ロジック・サーバーデータには影響しません。</div>
     </div>
   `;
   brcInvBindManager(sel,analysis,store);
@@ -6567,27 +6968,8 @@ function brcInvSaveSettingsFromDom(store){
   store.settings.raceCap=Math.max(0,brcInvNum(document.getElementById('brcInvRaceCap')?.value));
   store.settings.dailyLossLimit=Math.max(0,brcInvNum(document.getElementById('brcInvDailyLoss')?.value));
   store.settings.targetRoi=Math.max(0,brcInvNum(document.getElementById('brcInvTargetRoi')?.value)||120);
-}
-function brcInvEnsureRecord(store,sel,analysis){
-  if(!sel?.key) return null;
-  const old=store.records?.[sel.key]||{};
-  const rec={
-    ...old,key:sel.key,date:sel.date,venue:sel.venue,raceNo:sel.raceNo,
-    venueCode:String(sel.code||'').padStart(2,'0'),deadline:brcInvDeadline(sel),raceTitle:brcInvRaceTitle(sel),
-    updatedAt:new Date().toISOString()
-  };
-  if(!rec.createdAt) rec.createdAt=rec.updatedAt;
-  rec.autoAnalysis={
-    decision:analysis.decision,risk:analysis.risk,
-    reasons:analysis.reasons.map(x=>x.t),
-    topBoat:analysis.head?.topBoat||null,topPct:analysis.head?.topPct??null,
-    margin:analysis.head?.margin??null,baseTopBoat:analysis.head?.baseTopBoat||null,
-    bestExpectedReturnPct:analysis.bestExp??null
-  };
-  rec.expectedValueModes=analysis.modes;
-  store.records=store.records||{};
-  store.records[sel.key]=rec;
-  return rec;
+  const month=String(document.getElementById('brcInvReportMonth')?.value||'');
+  if(/^\d{4}-\d{2}$/.test(month)) store.settings.reportMonth=month;
 }
 function brcInvBindManager(sel,analysis,store){
   const saveSettings=()=>{
@@ -6596,6 +6978,9 @@ function brcInvBindManager(sel,analysis,store){
   ['brcInvBankroll','brcInvRaceCap','brcInvDailyLoss','brcInvTargetRoi'].forEach(id=>{
     document.getElementById(id)?.addEventListener('change',saveSettings);
   });
+  document.getElementById('brcInvReportMonth')?.addEventListener('change',()=>{
+    const s=brcInvRead();brcInvSaveSettingsFromDom(s);brcInvWrite(s);brcRenderInvestmentManager();
+  });
   document.querySelectorAll('#brcInvDecisionButtons .brc-invest-decision-btn').forEach(btn=>{
     btn.addEventListener('click',()=>{
       if(!sel?.key) return brcRenderInvestmentManager('先にレースを選択してください。');
@@ -6603,7 +6988,7 @@ function brcInvBindManager(sel,analysis,store){
       const rec=brcInvEnsureRecord(s,sel,analysis);
       rec.decision=String(btn.dataset.value||'');
       rec.decisionAt=new Date().toISOString();
-      brcInvWrite(s);brcRenderInvestmentManager('最終判断を保存しました。');
+      brcInvWrite(s);brcRenderInvestmentManager('最終判断を保存しました。AI成績は判断と無関係に継続します。');
     });
   });
   document.getElementById('brcInvCaptureBets')?.addEventListener('click',()=>{
@@ -6614,8 +6999,9 @@ function brcInvBindManager(sel,analysis,store){
     rec.bets=bets;
     rec.actualStake=bets.reduce((sum,b)=>sum+(Number(b.amount)||0),0);
     if(!Number(rec.plannedStake)) rec.plannedStake=rec.actualStake;
+    if(rec.actualStake>0&&rec.decision==='skip') rec.decision='';
     brcInvWrite(s);
-    brcRenderInvestmentManager(bets.length?`${bets.length}点を取り込みました。`:'取り込める買い目がありません。');
+    brcRenderInvestmentManager(bets.length?`${bets.length}点を実投資へ取り込みました。`:'取り込める買い目がありません。');
   });
   document.getElementById('brcInvSave')?.addEventListener('click',()=>{
     if(!sel?.key) return brcRenderInvestmentManager('先にレースを選択してください。');
@@ -6625,11 +7011,10 @@ function brcInvBindManager(sel,analysis,store){
     rec.actualStake=Math.max(0,brcInvNum(document.getElementById('brcInvActualStake')?.value));
     rec.note=String(document.getElementById('brcInvNote')?.value||'').trim();
     if(rec.decision==='skip'){
-      rec.plannedStake=0;rec.actualStake=0;
-      if(!Array.isArray(rec.bets)) rec.bets=[];
+      rec.plannedStake=0;rec.actualStake=0;rec.bets=[];
     }
     const cap=Number(s.settings?.raceCap)||0;
-    const status=(cap>0&&rec.actualStake>cap)?`保存しました。1R上限 ${brcInvMoney(cap)} を超えています。`:'保存しました。';
+    const status=(cap>0&&rec.actualStake>cap)?`保存しました。1R上限 ${brcInvMoney(cap)} を超えています。`:'実投資を保存しました。';
     brcInvWrite(s);brcRenderInvestmentManager(status);
   });
   document.getElementById('brcInvApplyResult')?.addEventListener('click',()=>{
@@ -6639,24 +7024,20 @@ function brcInvBindManager(sel,analysis,store){
       try{if(typeof brcEnsureCurrentRaceResultMonitor==='function') brcEnsureCurrentRaceResultMonitor();}catch(_e){}
       return brcRenderInvestmentManager('公式結果はまだ取得できていません。');
     }
-    const s=brcInvRead();const rec=brcInvEnsureRecord(s,sel,analysis);
-    const calc=brcInvCalculateReturnFromResult(rec,result);
-    rec.resultCombo=String(result.combination||'');
-    rec.resultPayoutYen=Number(result.payout_yen)||0;
-    rec.resultKimarite=String(result.kimarite||'');
-    rec.returnYen=calc.returnYen;
-    rec.hit=calc.hit;
-    rec.settledAt=new Date().toISOString();
-    brcInvWrite(s);brcRenderInvestmentManager(calc.hit?'公式結果と払戻を反映しました。':'公式結果を反映しました。購入買い目は不的中です。');
+    const spec=typeof brcRaceResultSpec==='function'?brcRaceResultSpec(sel.venue,sel.raceNo):{key:sel.key,date:sel.date,venue:sel.venue,venueCode:String(sel.code||'').padStart(2,'0'),raceNo:sel.raceNo};
+    brcInvApplyOfficialResult(spec,result);
+    brcRenderInvestmentManager('AI成績と実投資成績へ公式結果を反映しました。');
   });
   document.getElementById('brcInvSaveResult')?.addEventListener('click',()=>{
     if(!sel?.key) return brcRenderInvestmentManager('先にレースを選択してください。');
     const s=brcInvRead();const rec=brcInvEnsureRecord(s,sel,analysis);
     rec.resultCombo=String(document.getElementById('brcInvResultCombo')?.value||'').trim();
     rec.returnYen=Math.max(0,brcInvNum(document.getElementById('brcInvReturnYen')?.value));
-    rec.hit=rec.returnYen>0;
+    rec.hit=brcInvRecordStake(rec)>0?rec.returnYen>0:null;
+    rec.actualRoi=brcInvRecordStake(rec)>0?rec.returnYen/brcInvRecordStake(rec)*100:null;
     rec.settledAt=new Date().toISOString();
-    brcInvWrite(s);brcRenderInvestmentManager('結果を保存しました。');
+    rec.resultSettledAt=rec.resultSettledAt||rec.settledAt;
+    brcInvWrite(s);brcRenderInvestmentManager('実投資結果を手動保存しました。AI成績は公式結果判定を優先します。');
   });
   document.querySelectorAll('[data-brc-invest-history-key]').forEach(row=>{
     row.addEventListener('click',()=>{
@@ -6682,15 +7063,17 @@ function brcSetInvestmentManagerUi(active){
   }
   if(tabs) tabs.classList.toggle('brc-admin-invest-enabled',isAdmin);
   if(panel) panel.setAttribute('aria-hidden',isAdmin?'false':'true');
-  if(!isAdmin && window.__predictMainTabCurrent==='invest'){
+  if(!isAdmin&&window.__predictMainTabCurrent==='invest'){
     try{setPredictMainTab('data');}catch(_e){}
   }
-  if(isAdmin && window.__predictMainTabCurrent==='invest'){
+  if(isAdmin&&window.__predictMainTabCurrent==='invest'){
     try{brcRenderInvestmentManager();}catch(_e){}
   }
 }
 window.brcRenderInvestmentManager=brcRenderInvestmentManager;
 window.brcSetInvestmentManagerUi=brcSetInvestmentManagerUi;
+window.brcInvAutoCaptureAiPrediction=brcInvAutoCaptureAiPrediction;
+window.brcInvApplyOfficialResult=brcInvApplyOfficialResult;
 
 
 function scrollPredictMainTabsToFixedPosition(behavior='smooth'){
@@ -6982,6 +7365,11 @@ function brcRenderRaceResultConfirmed(result){
   // 確定後は通常の『レース結果を見る』表示へ切り替える。スタート隊形は取得できた場合だけ追加する。
   brcSetRaceResultTitle('レース結果を見る');
   brcSetRaceResultVisibility(true);
+  try{
+    if(typeof brcInvApplyOfficialResult==='function' && __brcRaceResultActive){
+      brcInvApplyOfficialResult(__brcRaceResultActive,result);
+    }
+  }catch(_e){}
   try{
     if(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE&&window.__predictMainTabCurrent==='invest'&&typeof brcRenderInvestmentManager==='function'){
       brcRenderInvestmentManager();
@@ -8117,6 +8505,7 @@ function brcRefreshNigeReferenceOdds(){
   const composite=(vals.length===combos.length)?brcOddsBuilderComposite(vals.map(v=>({odds:v}))):null;
   const cel=box.querySelector('[data-brc-ref-composite]');
   if(cel) cel.textContent=composite===null?'―':`${composite.toFixed(1)}倍`;
+  try{ brcInvAutoCaptureAiPrediction(window.__currentLocalInReliability||null); }catch(_e){}
 }
 
 function brcOpenOddsFromReferencePicks(ev,text=''){
@@ -8205,6 +8594,7 @@ function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhib
   recommendationCards.forEach((card,index)=>{ if(index>0) card.remove(); });
   // AI予測を再描画した直後にも、締切済みなら最終オッズを自動反映。
   setTimeout(()=>brcEnsureAiReferenceOddsAfterDeadline(),0);
+  setTimeout(()=>{ try{ brcInvAutoCaptureAiPrediction(localInReliability); }catch(_e){} },0);
 }
 
 // 旧：勝率タップから展開詳細を開く関数。勝率セルからの呼び出しは廃止。
