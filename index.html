@@ -79,6 +79,7 @@
 <!-- BRC_TIMEX_V2_FINAL_02BAND_PERSONAL_MANUAL_20260904 -->
 <!-- BRC_TIMEX_V2_PERSONAL_ALERT_LABEL_RESTORE_20260904 -->
 <!-- BRC_TIMEX_PLAYER_TENDENCY_ALWAYS_NOTICE_20260907 -->
+<!-- BRC_TIMEX_COURSE_DETAIL_MODAL_RESTORE_20260908 -->
 <!-- BRC_TIMEX_PLAYER_COURSE_PRIORITY_20260908 -->
 <!-- BRC_TIMEX_RENAME_20260828 -->
 <!-- BRC_ST_STABILITY_20260827 -->
@@ -10947,8 +10948,44 @@ function brcFindPlayerTimeXTendency(b){
     sourceCount:selectedRows.length
   };
 }
+function brcFindPlayerTimeXTendencyDetailRow(b,tendency){
+  if(!tendency||!b?.exhibitionApplied) return null;
+  const reg=Number(b?.player?.reg), course=Number(b?.course);
+  const d=Number(b?.exhibition?.relative_diff_capped ?? b?.exhibition?.relative_diff);
+  if(!Number.isFinite(reg)||!Number.isFinite(course)||!Number.isFinite(d)) return null;
+  const scope=String(tendency?.scope||'course');
+  const direction=String(tendency?.direction||'');
+  let rows=BRC_EXHIBITION_PLAYER_ALERTS.filter(x=>Number(x?.['登録番号'])===reg)
+    .map(x=>({row:x,direction:brcPlayerTimeXTendencyDirection(x?.['個人特性'])}))
+    .filter(x=>x.direction===direction);
+  if(scope==='all'){
+    // 全コース型を採用した場合でも、詳細数値は現在コースの実測サンプルだけを表示する。
+    rows=rows.filter(x=>brcIsAllCourseTimeXTendencyRow(x.row) && Number(x.row?.['コース'])===course);
+  }else{
+    rows=rows.filter(x=>!brcIsAllCourseTimeXTendencyRow(x.row) && Number(x.row?.['コース'])===course);
+  }
+  rows=rows.filter(x=>brcAlertBandContains(x.row?.['平均差帯'],d));
+  if(!rows.length) return null;
+  const rank={'S':5,'S候補':5,'A':4,'A候補':4,'B':3,'B候補':3,'監視':2};
+  return rows.sort((a,z)=>
+    ((z.row?.['採用区分']==='本採用')?1:0)-((a.row?.['採用区分']==='本採用')?1:0) ||
+    (rank[z.row?.['評価']]||0)-(rank[a.row?.['評価']]||0) ||
+    Number(z.row?.N||0)-Number(a.row?.N||0)
+  )[0]?.row||null;
+}
 function brcShowPlayerTimeXTendency(raw){
   let info; try{info=JSON.parse(raw)}catch(e){return}
+  // 現在コース×現在のTimeX差帯に対応する本人傾向データがあるときは、
+  // 従来の「BRCタイムX・個人傾向」詳細をそのまま復活させる。
+  if(info?.detail && typeof info.detail==='object'){
+    const detail={...info.detail,
+      __tendencyDirection:String(info?.direction||''),
+      __tendencyScope:String(info?.scope||''),
+      __tendencyCourse:Number(info?.course)
+    };
+    brcShowExhibitionPlayerAlert(JSON.stringify(detail));
+    return;
+  }
   document.getElementById('brcExAlertPop')?.remove();
   const easy=info?.direction==='easy';
   const cls=easy?'up':'down';
@@ -10959,22 +10996,32 @@ function brcShowPlayerTimeXTendency(raw){
   const body=info?.scope==='all'
     ? `現在コース固有の判定がないため、過去検証の全コース型を参照しています。`
     : `過去検証で、この選手は${courseLabel}で同方向の展示タイム傾向が確認されています。`;
+  const cur=info?.current||{};
+  const currentWin=Number(cur.__currentWinPct), currentSecond=Number(cur.__currentSecondPct), currentThird=Number(cur.__currentThirdPct), currentTop3=Number(cur.__currentTop3Pct);
+  const currentHtml=[currentWin,currentSecond,currentThird,currentTop3].some(Number.isFinite)
+    ? `<div class="brc-ex-alert-forecast-label">今回のBRC予測</div><div class="brc-ex-alert-forecast"><div class="brc-ex-alert-forecast-item"><div class="k">1着率</div><div class="v">${Number.isFinite(currentWin)?Math.round(currentWin)+'%':'―'}</div></div><div class="brc-ex-alert-forecast-item"><div class="k">2着率</div><div class="v">${Number.isFinite(currentSecond)?Math.round(currentSecond)+'%':'―'}</div></div><div class="brc-ex-alert-forecast-item"><div class="k">3着率</div><div class="v">${Number.isFinite(currentThird)?Math.round(currentThird)+'%':'―'}</div></div><div class="brc-ex-alert-forecast-item"><div class="k">3連対率</div><div class="v">${Number.isFinite(currentTop3)?Math.round(currentTop3)+'%':'―'}</div></div></div>`
+    : '';
   const pop=document.createElement('div');
   pop.id='brcExAlertPop';
   pop.className='brc-ex-alert-pop';
   pop.onclick=e=>{if(e.target===pop)pop.remove();};
-  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${info?.name||''}　BRCタイムX</div><div class="brc-ex-alert-meta">${sourceLabel}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-ex-alert-direction ${cls}">${tendency}傾向</div><div class="brc-ex-alert-decision ${cls}"><strong>${tendency}傾向</strong>${body}</div><div class="brc-ex-alert-note"><strong>この表示は注意喚起のみ</strong><br>当日のBRCタイムX矢印条件に該当しない場合でも、展示反映後は選手×現在コースを優先して表示します。確率補正・矢印・AI予測ロジックには追加反映しません。</div></div>`;
+  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${info?.name||''}　BRCタイムX・個人傾向</div><div class="brc-ex-alert-meta">${sourceLabel}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-ex-alert-direction ${cls}">${tendency}傾向</div>${currentHtml}<div class="brc-ex-alert-decision ${cls}"><strong>${tendency}傾向</strong>${body}</div><div class="brc-ex-alert-note"><strong>本人傾向の着率差データは現在のタイムX差帯に該当なし</strong><br>注意表示は選手×現在コースの傾向として継続します。確率補正・矢印・AI予測ロジックには追加反映しません。</div></div>`;
   document.body.appendChild(pop);
 }
 function brcBuildPredictExhibitionLabelHtml(b){
   const base=`<span class="predict-exhibition-base"><span class="brc">BRC</span><span>タイムX</span></span>`;
   const tendency=brcFindPlayerTimeXTendency(b);
   if(!tendency) return `<span class="predict-exhibition-inline">${base}</span>`;
-  const payload=encodeURIComponent(JSON.stringify(tendency));
+  const detailRow=brcFindPlayerTimeXTendencyDetailRow(b,tendency);
+  const payloadObj={...tendency,
+    detail:detailRow?brcAlertPayload(detailRow,b):null,
+    current:brcAlertPayload({},b)
+  };
+  const payload=encodeURIComponent(JSON.stringify(payloadObj));
   const easy=tendency.direction==='easy';
   const cls=easy?'brc-ex-alert-up':'brc-ex-alert-down';
   const courseLabel=Number.isFinite(Number(tendency.course))?`${Number(tendency.course)}コース`:'現在コース';
-  const title=easy?`${courseLabel}で出しやすい傾向。タップで説明`:`${courseLabel}で出しにくい傾向。タップで説明`;
+  const title=easy?`${courseLabel}で出しやすい傾向。タップで詳細`:`${courseLabel}で出しにくい傾向。タップで詳細`;
   return `<span class="predict-exhibition-inline"><button type="button" class="predict-exhibition-alert ${cls}" onclick="event.stopPropagation();brcShowPlayerTimeXTendency(decodeURIComponent('${payload}'))" title="${title}">BRCタイムX 注意</button></span>`;
 }
 function brcAlertPct(v){
@@ -11003,10 +11050,19 @@ function brcShowExhibitionPlayerAlert(raw){
   const decision=brcAlertDecision(a);
   const currentWin=Number(a.__currentWinPct), currentSecond=Number(a.__currentSecondPct), currentThird=Number(a.__currentThirdPct), currentTop3=Number(a.__currentTop3Pct);
   const confidence=brcPersonalConfidence(a.N);
+  const tendencyDirection=String(a?.__tendencyDirection||'');
+  const tendencyCourse=Number(a?.__tendencyCourse);
+  const tendencyCourseLabel=Number.isFinite(tendencyCourse)&&tendencyCourse>=1&&tendencyCourse<=6?`${tendencyCourse}コース`:'現在コース';
+  const tendencyScope=String(a?.__tendencyScope||'');
+  const tendencyEasy=tendencyDirection==='easy';
+  const tendencyHard=tendencyDirection==='hard';
+  const tendencyHtml=(tendencyEasy||tendencyHard)
+    ? `<div class="brc-ex-alert-direction ${tendencyEasy?'up':'down'}">${tendencyCourseLabel}で${tendencyEasy?'出しやすい':'出しにくい'}傾向${tendencyScope==='all'?'（全コース型）':''}</div>`
+    : '';
   const currentHtml=[currentWin,currentSecond,currentThird,currentTop3].some(Number.isFinite)
     ? `<div class="brc-ex-alert-forecast-label">今回のBRC予測</div><div class="brc-ex-alert-forecast"><div class="brc-ex-alert-forecast-item"><div class="k">1着率</div><div class="v">${Number.isFinite(currentWin)?Math.round(currentWin)+'%':'―'}</div></div><div class="brc-ex-alert-forecast-item"><div class="k">2着率</div><div class="v">${Number.isFinite(currentSecond)?Math.round(currentSecond)+'%':'―'}</div></div><div class="brc-ex-alert-forecast-item"><div class="k">3着率</div><div class="v">${Number.isFinite(currentThird)?Math.round(currentThird)+'%':'―'}</div></div><div class="brc-ex-alert-forecast-item"><div class="k">3連対率</div><div class="v">${Number.isFinite(currentTop3)?Math.round(currentTop3)+'%':'―'}</div></div></div>`
     : '';
-  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']}　BRCタイムX・個人傾向</div><div class="brc-ex-alert-meta">${a['コース']}コース ／ タイムX差 ${a['平均差帯']}秒 ／ N=${a.N} ／ 参考度 ${confidence}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div>${currentHtml}<div class="brc-ex-alert-decision ${decision.cls}"><strong>判断：${decision.title}</strong>${decision.body}</div><div class="brc-ex-alert-forecast-label">本人傾向（参考・数値未反映）</div><div class="brc-ex-personal-box">${brcAlertPersonalTrendRow('1着',a,'win')}${brcAlertPersonalTrendRow('2着',a,'second')}${brcAlertPersonalTrendRow('3着',a,'third')}${brcAlertPersonalTrendRow('3連対',a,'top3')}</div><div class="brc-ex-alert-note"><strong>各着率＝BRCタイムX反映済｜本人傾向＝参考・数値未反映</strong><br>本人傾向はN数不足のため、4着率とも正式な予測数値へ加算しません。</div><div class="brc-ex-alert-scale">BRCタイムX共通：0.0pt → ／ 0.1〜4.9pt ↗↘ ／ 5.0〜9.9pt ↑↓ ／ 10.0〜14.9pt ↑↑↓↓ ／ 15.0pt以上 ↑↑↑↓↓↓</div></div>`;
+  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']}　BRCタイムX・個人傾向</div><div class="brc-ex-alert-meta">${a['コース']}コース ／ タイムX差 ${a['平均差帯']}秒 ／ N=${a.N} ／ 参考度 ${confidence}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div>${tendencyHtml}${currentHtml}<div class="brc-ex-alert-decision ${decision.cls}"><strong>判断：${decision.title}</strong>${decision.body}</div><div class="brc-ex-alert-forecast-label">本人傾向（参考・数値未反映）</div><div class="brc-ex-personal-box">${brcAlertPersonalTrendRow('1着',a,'win')}${brcAlertPersonalTrendRow('2着',a,'second')}${brcAlertPersonalTrendRow('3着',a,'third')}${brcAlertPersonalTrendRow('3連対',a,'top3')}</div><div class="brc-ex-alert-note"><strong>各着率＝BRCタイムX反映済｜本人傾向＝参考・数値未反映</strong><br>本人傾向はN数不足のため、4着率とも正式な予測数値へ加算しません。</div><div class="brc-ex-alert-scale">BRCタイムX共通：0.0pt → ／ 0.1〜4.9pt ↗↘ ／ 5.0〜9.9pt ↑↓ ／ 10.0〜14.9pt ↑↑↓↓ ／ 15.0pt以上 ↑↑↑↓↓↓</div></div>`;
   document.body.appendChild(pop);
 }
 
