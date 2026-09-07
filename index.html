@@ -2374,10 +2374,10 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
   .brc-timex-action-body{margin-top:5px;font-size:11.5px;line-height:1.45;color:var(--ink-soft);font-weight:800;}
   .brc-timex-rate-guide{margin-top:10px;border:1px solid rgba(10,31,51,.10);border-radius:10px;overflow:hidden;background:#fff;}
   .brc-timex-rate-guide-title{padding:7px 9px;background:#f4f7fb;font-size:10px;font-weight:900;color:var(--ink-soft);}
-  .brc-timex-rate-guide-row{display:grid;grid-template-columns:minmax(118px,auto) minmax(0,1fr);gap:8px;align-items:center;padding:8px 9px;border-top:1px solid var(--border);font-size:11px;line-height:1.35;font-weight:850;color:var(--line-white);}
+  .brc-timex-rate-guide-row{display:block;padding:8px 9px;border-top:1px solid var(--border);font-size:11px;line-height:1.35;font-weight:850;color:var(--line-white);}
   .brc-timex-rate-guide-row:first-of-type{border-top:0;}
   .brc-timex-rate-guide-row .metric{font-weight:950;white-space:nowrap;}
-  .brc-timex-rate-guide-row .judgement{font-weight:900;}
+  
   .brc-timex-rate-guide-row.up .metric{color:var(--trend-up);}
   .brc-timex-rate-guide-row.down .metric{color:var(--trend-down);}
   .brc-timex-rate-guide-row.flat .metric{color:var(--ink-soft);}
@@ -2386,12 +2386,12 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
   .brc-timex-data-status{margin-top:8px;padding:6px 8px;border-radius:8px;background:rgba(10,31,51,.035);font-size:9.5px;font-weight:850;color:var(--ink-soft);}
   .brc-timex-personal-band{margin:9px 0 0;border:1px solid rgba(0,87,219,.14);border-radius:11px;overflow:hidden;background:#fff;}
   .brc-timex-personal-band-title{padding:8px 9px;font-size:11px;font-weight:950;color:var(--navy);}
-  .brc-timex-personal-band-title span{display:inline-flex;margin-left:4px;padding:2px 6px;border-radius:999px;background:rgba(0,87,219,.08);color:var(--wave);font-size:8.5px;font-weight:950;vertical-align:1px;}
+  
   .brc-timex-personal-band-sub{display:none;}
-  .brc-timex-personal-band-row{display:grid;grid-template-columns:54px 60px minmax(0,1fr);gap:6px;align-items:center;padding:8px 9px;border-top:1px solid rgba(10,31,51,.07);font-size:10.5px;line-height:1.35;}
+  .brc-timex-personal-band-row{display:grid;grid-template-columns:minmax(54px,1fr) auto;gap:10px;align-items:center;padding:8px 9px;border-top:1px solid rgba(10,31,51,.07);font-size:10.5px;line-height:1.35;}
   .brc-timex-personal-band-row .metric{font-weight:950;white-space:nowrap;}
   .brc-timex-personal-band-row .pt{font-weight:950;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
-  .brc-timex-personal-band-row .use{font-weight:900;color:var(--line-white);}
+  
   .brc-timex-personal-band-row.up .metric,.brc-timex-personal-band-row.up .pt{color:var(--trend-up);}
   .brc-timex-personal-band-row.down .metric,.brc-timex-personal-band-row.down .pt{color:var(--trend-down);}
   .brc-timex-personal-band-row.flat .metric,.brc-timex-personal-band-row.flat .pt{color:var(--ink-soft);}
@@ -10996,26 +10996,19 @@ function brcTimeXRateMeaning(kind,polarity,pct){
 }
 function brcBuildTimeXRateGuide(a,grade,direction){
   const metrics=[
-    {kind:'win',label:'1着',v:a?.__currentWinDeltaPt,pct:a?.__currentWinPct,role:'頭候補'},
-    {kind:'second',label:'2着',v:a?.__currentSecondDeltaPt,pct:a?.__currentSecondPct,role:'2着候補'},
-    {kind:'third',label:'3着',v:a?.__currentThirdDeltaPt,pct:a?.__currentThirdPct,role:'3着候補'},
-    {kind:'top3',label:'3連対',v:a?.__currentTop3DeltaPt,pct:a?.__currentTop3Pct,role:'相手候補'}
+    {label:'1着',v:a?.__currentWinDeltaPt,pct:a?.__currentWinPct},
+    {label:'2着',v:a?.__currentSecondDeltaPt,pct:a?.__currentSecondPct},
+    {label:'3着',v:a?.__currentThirdDeltaPt,pct:a?.__currentThirdPct},
+    {label:'3連対',v:a?.__currentTop3DeltaPt,pct:a?.__currentTop3Pct}
   ];
-  const g=String(grade||'E').toUpperCase();
   const rows=metrics.map(x=>{
     const v=Number(x.v);
     const arrow=Number.isFinite(v)?brcProbabilityArrow(v,0):'→';
     const rounded=Number.isFinite(v)?brcTimeXArrowRoundedPt(v):0;
     const polarity=rounded>0?'up':rounded<0?'down':'flat';
-    const rule=brcTimeXViewingRule(g,direction,polarity);
     const pct=Number(x.pct);
     const metricText=`${x.label}${Number.isFinite(pct)?` ${r0(pct)}%`:''} ${arrow}`;
-    let judgement='そのまま';
-    if(g!=='D'&&g!=='E'){
-      if(polarity==='flat') judgement='据え置き';
-      else judgement=`${x.role}｜${rule.title}`;
-    }
-    return `<div class="brc-timex-rate-guide-row ${polarity}"><span class="metric">${metricText}</span><span class="judgement">${judgement}</span></div>`;
+    return `<div class="brc-timex-rate-guide-row ${polarity}"><span class="metric">${metricText}</span></div>`;
   }).join('');
   return `<div class="brc-timex-rate-guide"><div class="brc-timex-rate-guide-title">各着率</div>${rows}<div class="brc-timex-rate-guide-note">※着率はBRCタイムX反映済み</div></div>`;
 }
@@ -11040,7 +11033,7 @@ function brcTimeXPracticalEvaluation(a,grade,direction){
   }
 
   let title='着率ごとに見る';
-  let body='表示着率を基準に、↑↓だけ補助材料として見ます。';
+  let body='';
   if(g==='D'||g==='E'){
     title='追加判断なし';
     body='表示着率をそのまま使います。';
@@ -11057,15 +11050,6 @@ function brcTimeXPracticalEvaluation(a,grade,direction){
   }
   return {cls:'flat',title,confidenceTitle:`信頼度${g}｜${brcTimeXTendencyReliabilityUse(g)}`,body,impacts:'',rateGuide:brcBuildTimeXRateGuide(a,g,direction)};
 }
-function brcTimeXPersonalBandRole(kind,diff){
-  const rounded=brcTimeXArrowRoundedPt(diff);
-  if(!Number.isFinite(rounded)||rounded===0) return '差なし';
-  const positive=rounded>0;
-  if(kind==='win') return positive?'頭に注目':'頭は慎重';
-  if(kind==='second') return positive?'2着に注目':'2着は慎重';
-  if(kind==='third') return positive?'3着に注目':'3着は慎重';
-  return positive?'相手に注目':'相手は慎重';
-}
 function brcBuildPersonalBandGuide(a){
   const metrics=[
     {kind:'win',label:'1着',v:brcPersonalEffectDiff(a,'win')},
@@ -11079,9 +11063,9 @@ function brcBuildPersonalBandGuide(a){
     const rounded=brcTimeXArrowRoundedPt(diff);
     const cls=rounded>0?'up':rounded<0?'down':'flat';
     const arrow=brcPersonalTrendArrow(diff);
-    return `<div class="brc-timex-personal-band-row ${cls}"><span class="metric">${x.label} ${arrow}</span><span class="pt">${brcSignedPt(diff)}</span><span class="use">${brcTimeXPersonalBandRole(x.kind,diff)}</span></div>`;
+    return `<div class="brc-timex-personal-band-row ${cls}"><span class="metric">${x.label} ${arrow}</span><span class="pt">${brcSignedPt(diff)}</span></div>`;
   }).join('');
-  return `<div class="brc-timex-personal-band"><div class="brc-timex-personal-band-title">本人傾向 <span>参考</span></div>${rows}</div>`;
+  return `<div class="brc-timex-personal-band"><div class="brc-timex-personal-band-title">本人傾向</div>${rows}</div>`;
 }
 function brcGetExhibitionAlertMeta(a){
   const isWatch=a?.['採用区分']==='監視';
@@ -11218,7 +11202,7 @@ function brcShowPlayerTimeXTendency(raw){
   const pop=document.createElement('div');
   pop.id='brcExAlertPop'; pop.className='brc-ex-alert-pop';
   pop.onclick=e=>{if(e.target===pop)pop.remove();};
-  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${info?.name||''}　BRCタイムX 選手特性</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-timex-trait-top"><div class="brc-ex-alert-direction ${cls}" style="margin:0;">${tendency}</div>${brcTimeXTendencyReliabilityHtml(grade)}</div><div class="brc-timex-action ${practical.cls}"><div class="brc-timex-action-kicker">今回の見方</div><div class="brc-timex-action-title">${practical.title}</div><div class="brc-timex-action-body">${body}</div>${practical.rateGuide||''}</div><div class="brc-timex-data-status">本人傾向：データ不足</div><div class="brc-timex-unchanged-note">※選手特性で着率を再加減しません</div></div>`;
+  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${info?.name||''}　BRCタイムX 選手特性</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-timex-trait-top"><div class="brc-ex-alert-direction ${cls}" style="margin:0;">${tendency}</div>${brcTimeXTendencyReliabilityHtml(grade)}</div><div class="brc-timex-action ${practical.cls}"><div class="brc-timex-action-kicker">今回の見方</div><div class="brc-timex-action-title">${practical.title}</div>${body?`<div class="brc-timex-action-body">${body}</div>`:''}${practical.rateGuide||''}</div><div class="brc-timex-data-status">本人傾向：データ不足</div><div class="brc-timex-unchanged-note">※選手特性で着率を再加減しません</div></div>`;
   document.body.appendChild(pop);
 }
 function brcBuildPredictExhibitionLabelHtml(b){
@@ -11275,7 +11259,7 @@ function brcShowExhibitionPlayerAlert(raw){
   const practicalBody=practical.body;
   const personalBandGuide=brcBuildPersonalBandGuide(a);
   const details=personalBandGuide?`<details class="brc-timex-detail"><summary>根拠を見る</summary><div class="brc-timex-detail-note">タイムX帯：${a?.['平均差帯']||'―'} ／ N=${Number.isFinite(Number(a?.N))?Number(a.N):'―'}。±ptは本人傾向の参考値で、表示着率には加算していません。</div></details>`:'';
-  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']||''}　BRCタイムX 選手特性</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-timex-trait-top"><div class="brc-ex-alert-direction ${tendencyCls}" style="margin:0;">${tendencyText}</div>${brcTimeXTendencyReliabilityHtml(grade)}</div><div class="brc-timex-action ${practical.cls}"><div class="brc-timex-action-kicker">今回の見方</div><div class="brc-timex-action-title">${practical.title}</div><div class="brc-timex-action-body">${practicalBody}</div>${practical.rateGuide||''}</div>${personalBandGuide}${details}<div class="brc-timex-unchanged-note">※着率はBRCタイムX反映済み。選手特性・本人傾向で数値を再加減しません</div></div>`;
+  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']||''}　BRCタイムX 選手特性</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-timex-trait-top"><div class="brc-ex-alert-direction ${tendencyCls}" style="margin:0;">${tendencyText}</div>${brcTimeXTendencyReliabilityHtml(grade)}</div><div class="brc-timex-action ${practical.cls}"><div class="brc-timex-action-kicker">今回の見方</div><div class="brc-timex-action-title">${practical.title}</div>${practicalBody?`<div class="brc-timex-action-body">${practicalBody}</div>`:''}${practical.rateGuide||''}</div>${personalBandGuide}${details}<div class="brc-timex-unchanged-note">※着率はBRCタイムX反映済み。選手特性・本人傾向で数値を再加減しません</div></div>`;
   document.body.appendChild(pop);
 }
 
