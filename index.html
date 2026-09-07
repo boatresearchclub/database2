@@ -78,6 +78,7 @@
 <!-- BRC_TIMEX_VENUE_SHRINK_2024BUILD_2025VAL_20260828 -->
 <!-- BRC_TIMEX_V2_FINAL_02BAND_PERSONAL_MANUAL_20260904 -->
 <!-- BRC_TIMEX_V2_PERSONAL_ALERT_LABEL_RESTORE_20260904 -->
+<!-- BRC_TIMEX_PLAYER_TENDENCY_ALWAYS_NOTICE_20260907 -->
 <!-- BRC_TIMEX_RENAME_20260828 -->
 <!-- BRC_ST_STABILITY_20260827 -->
 <!-- BRC_RACECARD_HISTORY_LOCK_20260827 -->
@@ -10881,15 +10882,75 @@ function brcBuildExhibitionAlertButton(b){
   const meta=brcGetExhibitionAlertMeta(a);
   return `<button type="button" class="brc-ex-alert-btn ${meta.cls}" onclick="event.stopPropagation();brcShowExhibitionPlayerAlert(decodeURIComponent('${payload}'))" title="${meta.title}">${meta.buttonText}</button>`;
 }
+// ---- 2026-09-07: 選手固有の「タイムを出しやすい / 出しにくい」傾向を常時注意表示 ----
+// 既存のBRC_EXHIBITION_PLAYER_ALERTSを表示用途だけに再利用する。
+// 当日のTimeX差帯・矢印条件とは切り離し、確率補正・矢印・AI予測ロジックは変更しない。
+function brcPlayerTimeXTendencyDirection(type){
+  const t=String(type||'');
+  if(t.includes('出さない型')) return 'hard';
+  if(t.includes('出す型')) return 'easy';
+  return '';
+}
+function brcPlayerTimeXTendencyExhibitionStarted(b){
+  const ex=b?.exhibition;
+  if(!ex) return false;
+  const hasValue=v=>v!==null && v!==undefined && String(v).trim()!=='' && Number.isFinite(Number(v));
+  return hasValue(ex.exhibition_time) || hasValue(ex.display_st) || hasValue(ex.turn_time) ||
+    hasValue(ex.straight_time) || hasValue(ex.relative_diff) || hasValue(ex.relative_diff_capped) ||
+    brcHasMeasuredLapTime(ex.lap_time);
+}
+function brcFindPlayerTimeXTendency(b){
+  if(!brcPlayerTimeXTendencyExhibitionStarted(b)) return null;
+  const reg=Number(b?.player?.reg);
+  if(!Number.isFinite(reg)) return null;
+  const rows=BRC_EXHIBITION_PLAYER_ALERTS.filter(x=>Number(x?.['登録番号'])===reg)
+    .map(x=>({row:x,direction:brcPlayerTimeXTendencyDirection(x?.['個人特性'])}))
+    .filter(x=>x.direction);
+  if(!rows.length) return null;
+  const directions=[...new Set(rows.map(x=>x.direction))];
+  // 方向が競合する選手は誤表示を避けて通常表示へ戻す。
+  if(directions.length!==1) return null;
+  const rank={'S':5,'S候補':5,'A':4,'A候補':4,'B':3,'B候補':3,'監視':2};
+  const sorted=rows.slice().sort((a,z)=>
+    ((z.row?.['採用区分']==='本採用')?1:0)-((a.row?.['採用区分']==='本採用')?1:0) ||
+    (rank[z.row?.['評価']]||0)-(rank[a.row?.['評価']]||0) ||
+    Number(z.row?.N||0)-Number(a.row?.N||0)
+  );
+  const row=sorted[0]?.row||rows[0].row;
+  const direction=directions[0];
+  return {
+    direction,
+    reg,
+    name:String(b?.player?.name||row?.['選手名']||''),
+    type:String(row?.['個人特性']||''),
+    sourceCount:rows.length
+  };
+}
+function brcShowPlayerTimeXTendency(raw){
+  let info; try{info=JSON.parse(raw)}catch(e){return}
+  document.getElementById('brcExAlertPop')?.remove();
+  const easy=info?.direction==='easy';
+  const cls=easy?'up':'down';
+  const tendency=easy?'タイムを出しやすい':'タイムを出しにくい';
+  const body=easy
+    ? '過去の検証で、通常より良い展示タイムを出しやすい選手固有傾向が確認されています。'
+    : '過去の検証で、通常より良い展示タイムを出しにくい選手固有傾向が確認されています。';
+  const pop=document.createElement('div');
+  pop.id='brcExAlertPop';
+  pop.className='brc-ex-alert-pop';
+  pop.onclick=e=>{if(e.target===pop)pop.remove();};
+  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${info?.name||''}　BRCタイムX</div><div class="brc-ex-alert-meta">選手固有傾向</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-ex-alert-direction ${cls}">${tendency}傾向</div><div class="brc-ex-alert-decision ${cls}"><strong>${tendency}</strong>${body}</div><div class="brc-ex-alert-note"><strong>この表示は注意喚起のみ</strong><br>当日のBRCタイムX矢印条件に該当しない場合でも、展示反映後は選手固有傾向として表示します。確率補正・矢印・AI予測ロジックには追加反映しません。</div></div>`;
+  document.body.appendChild(pop);
+}
 function brcBuildPredictExhibitionLabelHtml(b){
-  const a=brcFindExhibitionPlayerAlert(b);
   const base=`<span class="predict-exhibition-base"><span class="brc">BRC</span><span>タイムX</span></span>`;
-  if(!a) return `<span class="predict-exhibition-inline">${base}</span>`;
-  const payload=encodeURIComponent(JSON.stringify(brcAlertPayload(a,b)));
-  const meta=brcGetExhibitionAlertMeta(a);
-  // 個人傾向が該当する艇は従来どおり、選手名の下に明示的な注意ラベルを表示。
-  // 本人傾向は正式確率を変更せず、タップで1着/2着/3着/3連対の参考値を確認する。
-  return `<span class="predict-exhibition-inline"><button type="button" class="predict-exhibition-alert ${meta.cls}" onclick="event.stopPropagation();brcShowExhibitionPlayerAlert(decodeURIComponent('${payload}'))" title="${meta.title}">${meta.text}</button></span>`;
+  const tendency=brcFindPlayerTimeXTendency(b);
+  if(!tendency) return `<span class="predict-exhibition-inline">${base}</span>`;
+  const payload=encodeURIComponent(JSON.stringify(tendency));
+  const easy=tendency.direction==='easy';
+  const cls=easy?'brc-ex-alert-up':'brc-ex-alert-down';
+  const title=easy?'タイムを出しやすい傾向。タップで説明':'タイムを出しにくい傾向。タップで説明';
+  return `<span class="predict-exhibition-inline"><button type="button" class="predict-exhibition-alert ${cls}" onclick="event.stopPropagation();brcShowPlayerTimeXTendency(decodeURIComponent('${payload}'))" title="${title}">BRCタイムX 注意</button></span>`;
 }
 function brcAlertPct(v){
   const n=Number(v); return Number.isFinite(n)?`${n.toFixed(1)}%`:'―';
