@@ -80,6 +80,7 @@
 <!-- BRC_TIMEX_V2_PERSONAL_ALERT_LABEL_RESTORE_20260904 -->
 <!-- BRC_TIMEX_PLAYER_TENDENCY_ALWAYS_NOTICE_20260907 -->
 <!-- BRC_TIMEX_PLAYER_TENDENCY_RELIABILITY_SE_20260908 -->
+<!-- BRC_TIMEX_VIEW_GUIDE_PERSONAL_BAND_20260908 -->
 <!-- BRC_TIMEX_COURSE_DETAIL_MODAL_RESTORE_20260908 -->
 <!-- BRC_TIMEX_PLAYER_COURSE_PRIORITY_20260908 -->
 <!-- BRC_TIMEX_RENAME_20260828 -->
@@ -2378,6 +2379,17 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
   .brc-timex-rate-guide-row.down .metric{color:var(--trend-down);}
   .brc-timex-rate-guide-row.flat .metric{color:var(--ink-soft);}
   .brc-timex-unchanged-note{margin-top:9px;font-size:9.5px;line-height:1.5;color:var(--ink-soft);}
+  .brc-timex-personal-band{margin:10px 0 0;border:1px solid rgba(0,87,219,.14);border-radius:11px;overflow:hidden;background:#fff;}
+  .brc-timex-personal-band-title{padding:8px 9px 5px;font-size:11px;font-weight:950;color:var(--navy);}
+  .brc-timex-personal-band-title span{display:inline-flex;margin-left:4px;padding:2px 6px;border-radius:999px;background:rgba(0,87,219,.08);color:var(--wave);font-size:8.5px;font-weight:950;vertical-align:1px;}
+  .brc-timex-personal-band-sub{padding:0 9px 8px;font-size:9.5px;line-height:1.5;color:var(--ink-soft);}
+  .brc-timex-personal-band-row{display:grid;grid-template-columns:58px 66px minmax(0,1fr);gap:6px;align-items:center;padding:8px 9px;border-top:1px solid rgba(10,31,51,.07);font-size:10.5px;line-height:1.45;}
+  .brc-timex-personal-band-row .metric{font-weight:950;white-space:nowrap;}
+  .brc-timex-personal-band-row .pt{font-weight:950;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .brc-timex-personal-band-row .use{font-weight:800;color:var(--line-white);}
+  .brc-timex-personal-band-row.up .metric,.brc-timex-personal-band-row.up .pt{color:var(--trend-up);}
+  .brc-timex-personal-band-row.down .metric,.brc-timex-personal-band-row.down .pt{color:var(--trend-down);}
+  .brc-timex-personal-band-row.flat .metric,.brc-timex-personal-band-row.flat .pt{color:var(--ink-soft);}
   .brc-timex-impact-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;}
   .brc-timex-impact{display:inline-flex;align-items:center;gap:4px;padding:5px 8px;border-radius:8px;background:#fff;border:1px solid rgba(10,31,51,.09);font-size:10.5px;font-weight:900;white-space:nowrap;}
   .brc-timex-impact.up{color:var(--trend-up);border-color:rgba(var(--trend-up-rgb),.20);}
@@ -10943,42 +10955,60 @@ function brcTimeXImpactLabel(v){
 }
 function brcTimeXViewingRule(grade,direction,polarity){
   const g=String(grade||'E').toUpperCase();
-  if(polarity!=='up'&&polarity!=='down') return {title:'通常どおり見る',suffix:'通常どおり見る'};
-  if(g==='D'||g==='E') return {title:'通常どおり見る',suffix:'通常どおり見る'};
+  const arrow=polarity==='up'?'↑':polarity==='down'?'↓':'→';
+  if(polarity!=='up'&&polarity!=='down'){
+    return {title:'表示着率をそのまま使う',suffix:'選手特性による追加判断なし',mode:'base'};
+  }
+  // D/Eは選手特性を予想判断に追加しない。表示着率はすでにBRCタイムX反映後の完成値。
+  if(g==='D'||g==='E'){
+    return {title:'表示着率をそのまま使う',suffix:'選手特性による追加判断なし',mode:'base'};
+  }
   const easy=direction==='easy';
   const restrained=(easy&&polarity==='up')||(!easy&&polarity==='down');
   if(restrained){
-    if(g==='S'||g==='A') return {title:`${polarity==='up'?'↑':'↓'}は控えめに見る`,suffix:'控えめに見る'};
-    if(g==='B') return {title:`${polarity==='up'?'↑':'↓'}は1段階控えめに見る`,suffix:'1段階控えめに見る'};
-    return {title:`${polarity==='up'?'↑':'↓'}は参考程度に見る`,suffix:'参考程度に見る'};
+    if(g==='S'||g==='A') return {
+      title:`${arrow}だけで評価を${polarity==='up'?'上げ':'下げ'}ない`,
+      suffix:`この${arrow}だけでさらに評価を${polarity==='up'?'上げ':'下げ'}ない`,mode:'restrained'
+    };
+    if(g==='B') return {title:`${arrow}はやや過信しない`,suffix:`この${arrow}は補助材料として見る`,mode:'restrained'};
+    return {title:`${arrow}は参考程度`,suffix:`この${arrow}は参考程度に見る`,mode:'restrained'};
   }
-  if(g==='S'||g==='A') return {title:`${polarity==='up'?'↑':'↓'}を重く見る`,suffix:'重く見る'};
-  if(g==='B') return {title:`${polarity==='up'?'↑':'↓'}を1段階強めに見る`,suffix:'1段階強めに見る'};
-  return {title:`${polarity==='up'?'↑':'↓'}を少し意識する`,suffix:'少し意識する'};
+  if(polarity==='up'){
+    if(g==='S'||g==='A') return {title:'↑は注目',suffix:'この↑はプラス材料として注目',mode:'emphasis'};
+    if(g==='B') return {title:'↑はやや注目',suffix:'この↑はやや注目',mode:'emphasis'};
+    return {title:'↑は軽く注目',suffix:'この↑は軽く注目',mode:'emphasis'};
+  }
+  if(g==='S'||g==='A') return {title:'↓は見逃さない',suffix:'この↓は警戒材料として注目',mode:'emphasis'};
+  if(g==='B') return {title:'↓はやや注意',suffix:'この↓はやや注意',mode:'emphasis'};
+  return {title:'↓は軽く注意',suffix:'この↓は軽く注意',mode:'emphasis'};
 }
-function brcTimeXRateMeaning(kind,polarity){
-  if(polarity==='flat') return kind==='win'?'頭評価は据え置き':kind==='second'?'2着評価は据え置き':kind==='third'?'3着評価は据え置き':'相手評価は据え置き';
-  if(polarity==='down') return kind==='win'?'頭評価を下げる材料':kind==='second'?'2着評価を下げる材料':kind==='third'?'3着評価を下げる材料':'相手候補全体の評価を下げる材料';
-  return kind==='win'?'頭候補としてプラス':kind==='second'?'2着候補としてプラス':kind==='third'?'3着候補としてプラス':'相手候補全体としてプラス';
+function brcTimeXRateMeaning(kind,polarity,pct){
+  const n=Number(pct);
+  const pctText=Number.isFinite(n)?`${r0(n)}%`:'表示率';
+  const role=kind==='win'?'頭評価':kind==='second'?'2着評価':kind==='third'?'3着評価':'相手評価';
+  const applied=polarity==='up'?'TimeXで上方補正済み':polarity==='down'?'TimeXで下方補正済み':'TimeX補正は横ばい';
+  return `${applied}。${role}は${pctText}をそのまま使う`;
 }
 function brcBuildTimeXRateGuide(a,grade,direction){
   const metrics=[
-    {kind:'win',label:'1着率',v:a?.__currentWinDeltaPt},
-    {kind:'second',label:'2着率',v:a?.__currentSecondDeltaPt},
-    {kind:'third',label:'3着率',v:a?.__currentThirdDeltaPt},
-    {kind:'top3',label:'3連対率',v:a?.__currentTop3DeltaPt}
+    {kind:'win',label:'1着率',v:a?.__currentWinDeltaPt,pct:a?.__currentWinPct},
+    {kind:'second',label:'2着率',v:a?.__currentSecondDeltaPt,pct:a?.__currentSecondPct},
+    {kind:'third',label:'3着率',v:a?.__currentThirdDeltaPt,pct:a?.__currentThirdPct},
+    {kind:'top3',label:'3連対率',v:a?.__currentTop3DeltaPt,pct:a?.__currentTop3Pct}
   ];
   const rows=metrics.map(x=>{
     const v=Number(x.v);
     const arrow=Number.isFinite(v)?brcProbabilityArrow(v,0):'→';
     const rounded=Number.isFinite(v)?brcTimeXArrowRoundedPt(v):0;
     const polarity=rounded>0?'up':rounded<0?'down':'flat';
-    const meaning=brcTimeXRateMeaning(x.kind,polarity);
+    const meaning=brcTimeXRateMeaning(x.kind,polarity,x.pct);
     const rule=brcTimeXViewingRule(grade,direction,polarity);
-    const tail=polarity==='flat'?'':rule.suffix==='通常どおり見る'?'。通常どおり見る':`。ただし${rule.suffix}`;
-    return `<div class="brc-timex-rate-guide-row ${polarity}"><span class="metric">${x.label} ${arrow}</span> → ${meaning}${tail}</div>`;
+    const pct=Number(x.pct);
+    const metricText=`${x.label}${Number.isFinite(pct)?` ${r0(pct)}%`:''} ${arrow}`;
+    const tail=rule.mode==='base'?'。選手特性による追加判断なし':`。${rule.suffix}`;
+    return `<div class="brc-timex-rate-guide-row ${polarity}"><span class="metric">${metricText}</span> → ${meaning}${tail}</div>`;
   }).join('');
-  return `<div class="brc-timex-rate-guide"><div class="brc-timex-rate-guide-title">各着率の予想への使い方</div>${rows}</div>`;
+  return `<div class="brc-timex-rate-guide"><div class="brc-timex-rate-guide-title">各着率の見方（表示率はBRCタイムX反映済み）</div>${rows}</div>`;
 }
 function brcTimeXPracticalEvaluation(a,grade,direction){
   const metrics=[
@@ -10987,8 +11017,6 @@ function brcTimeXPracticalEvaluation(a,grade,direction){
     {key:'third',label:'3着',v:brcPersonalEffectDiff(a,'third')},
     {key:'top3',label:'3連対',v:brcPersonalEffectDiff(a,'top3')}
   ];
-  const get=k=>Number(metrics.find(x=>x.key===k)?.v);
-  const win=get('win'), second=get('second'), third=get('third'), top3=get('top3');
   const g=String(grade||'E').toUpperCase();
   const impacts=metrics.filter(x=>Number.isFinite(Number(x.v))&&Math.abs(Number(x.v))>=5).map(x=>{
     const up=Number(x.v)>0;
@@ -10999,33 +11027,51 @@ function brcTimeXPracticalEvaluation(a,grade,direction){
   if(diffRaw===null || diffRaw===undefined || String(diffRaw).trim()==='' || !Number.isFinite(diff) || (direction!=='easy'&&direction!=='hard')){
     return {
       cls:'flat',
-      title:'展示後に判断',
+      title:'展示後に確認',
       confidenceTitle:`信頼度${g}｜${brcTimeXTendencyReliabilityUse(g)}`,
-      body:'今回のタイムXが出てから、展示特性と組み合わせて評価します。',
+      body:'展示反映後に、BRCタイムX反映済みの各着率と矢印の見方を表示します。',
       impacts
     };
   }
 
-  // 表示専用：選手の展示特性 × 今回のTimeX差の良否 × 既存信頼度で、矢印の見方を固定する。
-  // 確率補正・矢印・AI予測計算には使用しない。
-  const roundedDiff=brcTimeXArrowRoundedPt(diff);
-  const polarity=roundedDiff>0?'up':roundedDiff<0?'down':'flat';
-  const good=polarity==='up';
-  const easy=direction==='easy';
-  const rule=brcTimeXViewingRule(g,direction,polarity);
-  let body='', cls=polarity==='up'?'up':polarity==='down'?'down':'flat';
-  if(polarity==='flat'){
-    body='今回のBRCタイムXは横ばいです。各着率の評価は据え置きで見てください。';
-  }else if(easy&&good){
-    body=`今回の上向き矢印はプラス材料ですが、${rule.suffix}評価してください。`;
-  }else if(easy){
-    body=`今回の下向き矢印は、いつもよりタイムを出せていない悪材料として${rule.suffix}評価してください。`;
-  }else if(good){
-    body=`今回の上向き矢印は、いつも以上にタイムを出せている好材料として${rule.suffix}評価してください。`;
-  }else{
-    body=`今回の下向き矢印はマイナス材料ですが、${rule.suffix}評価してください。`;
+  // 表示専用。表示着率はすでにBRCタイムX反映後の完成値であり、
+  // 選手特性によって確率を再計算・再補正しない。各着率の↑↓の「意味づけ」だけを補助する。
+  let title='表示着率を基準に、矢印の意味を見る';
+  let body='表示中の各着率はBRCタイムX補正後です。選手特性で数値をさらに上げ下げせず、各着率の↑↓を「注目する／過信しない」ための補助情報として使います。';
+  if(g==='D'||g==='E'){
+    title='表示着率をそのまま使う';
+    body=`表示中の各着率はBRCタイムX補正後です。信頼度${g}のため、選手特性による追加判断はせず、表示着率をそのまま予想の基準にしてください。`;
+  }else if(g==='C'){
+    title='表示着率を基準に、矢印は参考';
+    body='表示中の各着率はBRCタイムX補正後です。数値はそのまま使い、選手特性は各着率の↑↓を軽く確認する参考情報として見てください。';
   }
-  return {cls,title:rule.title,confidenceTitle:`信頼度${g}｜${brcTimeXTendencyReliabilityUse(g)}`,body,impacts,rateGuide:brcBuildTimeXRateGuide(a,g,direction)};
+  return {cls:'flat',title,confidenceTitle:`信頼度${g}｜${brcTimeXTendencyReliabilityUse(g)}`,body,impacts,rateGuide:brcBuildTimeXRateGuide(a,g,direction)};
+}
+function brcTimeXPersonalBandRole(kind,diff){
+  const rounded=brcTimeXArrowRoundedPt(diff);
+  if(!Number.isFinite(rounded)||rounded===0) return '大きな本人差はありません';
+  const positive=rounded>0;
+  if(kind==='win') return positive?'頭候補として注目する参考':'頭候補は慎重に見る参考';
+  if(kind==='second') return positive?'2着候補として注目する参考':'2着候補は慎重に見る参考';
+  if(kind==='third') return positive?'3着候補として注目する参考':'3着候補は慎重に見る参考';
+  return positive?'相手候補として注目する参考':'相手候補は慎重に見る参考';
+}
+function brcBuildPersonalBandGuide(a){
+  const metrics=[
+    {kind:'win',label:'1着',v:brcPersonalEffectDiff(a,'win')},
+    {kind:'second',label:'2着',v:brcPersonalEffectDiff(a,'second')},
+    {kind:'third',label:'3着',v:brcPersonalEffectDiff(a,'third')},
+    {kind:'top3',label:'3連対',v:brcPersonalEffectDiff(a,'top3')}
+  ].filter(x=>Number.isFinite(Number(x.v)));
+  if(!metrics.length) return '';
+  const rows=metrics.map(x=>{
+    const diff=Number(x.v);
+    const rounded=brcTimeXArrowRoundedPt(diff);
+    const cls=rounded>0?'up':rounded<0?'down':'flat';
+    const arrow=brcPersonalTrendArrow(diff);
+    return `<div class="brc-timex-personal-band-row ${cls}"><span class="metric">${x.label} ${arrow}</span><span class="pt">${brcSignedPt(diff)}</span><span class="use">${brcTimeXPersonalBandRole(x.kind,diff)}</span></div>`;
+  }).join('');
+  return `<div class="brc-timex-personal-band"><div class="brc-timex-personal-band-title">このタイム帯での本人傾向 <span>参考</span></div><div class="brc-timex-personal-band-sub">本人傾向の±ptは表示着率には未反映です。表示率にそのまま足し引きせず、着順ごとの注目・慎重材料として使います。</div>${rows}</div>`;
 }
 function brcGetExhibitionAlertMeta(a){
   const isWatch=a?.['採用区分']==='監視';
@@ -11162,7 +11208,7 @@ function brcShowPlayerTimeXTendency(raw){
   const pop=document.createElement('div');
   pop.id='brcExAlertPop'; pop.className='brc-ex-alert-pop';
   pop.onclick=e=>{if(e.target===pop)pop.remove();};
-  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${info?.name||''}　BRCタイムX 選手特性</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-timex-trait-top"><div class="brc-ex-alert-direction ${cls}" style="margin:0;">${tendency}</div>${brcTimeXTendencyReliabilityHtml(grade)}</div><div class="brc-timex-action ${practical.cls}"><div class="brc-timex-action-kicker">今回のタイムXの見方</div><div class="brc-timex-action-title">${practical.title}</div><div class="brc-timex-action-body">${body}</div>${practical.rateGuide||''}</div><div class="brc-ex-alert-note">着順別の本人傾向は、現在のタイムX帯では十分な該当データがありません。方向の特性だけを表示しています。</div><div class="brc-timex-unchanged-note">予測数値自体は変更していません。選手特性は、表示中の矢印と各着率の見方を補助する情報です。</div></div>`;
+  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${info?.name||''}　BRCタイムX 選手特性</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-timex-trait-top"><div class="brc-ex-alert-direction ${cls}" style="margin:0;">${tendency}</div>${brcTimeXTendencyReliabilityHtml(grade)}</div><div class="brc-timex-action ${practical.cls}"><div class="brc-timex-action-kicker">今回のタイムXの見方</div><div class="brc-timex-action-title">${practical.title}</div><div class="brc-timex-action-body">${body}</div>${practical.rateGuide||''}</div><div class="brc-ex-alert-note">現在のタイムX帯では、着順別の本人傾向を使えるだけの該当データがありません。今回は出しやすい／出しにくい特性だけを参考表示しています。</div><div class="brc-timex-unchanged-note">表示着率はBRCタイムX反映後の数値です。選手特性で数値をさらに上げ下げしません。</div></div>`;
   document.body.appendChild(pop);
 }
 function brcBuildPredictExhibitionLabelHtml(b){
@@ -11219,8 +11265,9 @@ function brcShowExhibitionPlayerAlert(raw){
   const practicalBody=(tendencyEasy||tendencyHard)
     ? `この選手は${tendencyCourseLabel}でタイムを${tendencyEasy?'出しやすい':'出しにくい'}傾向があります。 ${practical.body}`
     : practical.body;
-  const details=`<details class="brc-timex-detail"><summary>詳しい本人傾向を見る</summary><div class="brc-ex-personal-box">${brcAlertPersonalTrendRow('1着',a,'win')}${brcAlertPersonalTrendRow('2着',a,'second')}${brcAlertPersonalTrendRow('3着',a,'third')}${brcAlertPersonalTrendRow('3連対',a,'top3')}</div><div class="brc-timex-detail-note">表示値は「通常のタイムX効果との差」です。本人傾向は参考情報で、正式な1着率・2着率・3着率・3連対率には加算していません。</div></details>`;
-  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']||''}　BRCタイムX 選手特性</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-timex-trait-top"><div class="brc-ex-alert-direction ${tendencyCls}" style="margin:0;">${tendencyText}</div>${brcTimeXTendencyReliabilityHtml(grade)}</div><div class="brc-timex-action ${practical.cls}"><div class="brc-timex-action-kicker">今回のタイムXの見方</div><div class="brc-timex-action-title">${practical.title}</div><div class="brc-timex-action-body">${practicalBody}</div>${practical.rateGuide||''}</div>${details}<div class="brc-timex-unchanged-note">予測数値自体は変更していません。選手特性は、表示中の矢印と各着率の見方を補助する情報です。</div></div>`;
+  const personalBandGuide=brcBuildPersonalBandGuide(a);
+  const details=`<details class="brc-timex-detail"><summary>本人傾向の根拠を見る</summary><div class="brc-timex-detail-note">現在のタイムX帯：${a?.['平均差帯']||'―'} ／ N=${Number.isFinite(Number(a?.N))?Number(a.N):'―'}。表示される±ptは「本人のTimeX効果 − 通常のTimeX効果」の差で、表示着率には加算していません。</div></details>`;
+  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']||''}　BRCタイムX 選手特性</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-timex-trait-top"><div class="brc-ex-alert-direction ${tendencyCls}" style="margin:0;">${tendencyText}</div>${brcTimeXTendencyReliabilityHtml(grade)}</div><div class="brc-timex-action ${practical.cls}"><div class="brc-timex-action-kicker">今回のタイムXの見方</div><div class="brc-timex-action-title">${practical.title}</div><div class="brc-timex-action-body">${practicalBody}</div>${practical.rateGuide||''}</div>${personalBandGuide}${details}<div class="brc-timex-unchanged-note">表示着率はBRCタイムX反映後の数値です。本人傾向の±ptや選手特性は参考情報で、表示率へ二重に足し引きしていません。</div></div>`;
   document.body.appendChild(pop);
 }
 
@@ -11248,7 +11295,7 @@ function brcShowScenarioPersonalAdjustment(raw,kind,currentRate){
     return brcAlertPersonalTrendRow(m.label,a,k);
   }).join('');
   const watchText=isWatch?'監視条件のため、参考度は低めに扱います。':'';
-  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']}　本人傾向</div><div class="brc-ex-alert-meta">${a['コース']}コース ／ タイムX差 ${a['平均差帯']}秒 ／ N=${a.N} ／ 参考度 ${confidence}${isWatch?' ／ 監視':''}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-personal-adjust-focus ${cls}"><div class="brc-personal-adjust-kicker">${meta.label}率の参考加減値</div><div class="brc-personal-adjust-main"><span class="brc-personal-adjust-label">本人 ${arrow}</span><span class="brc-personal-adjust-value brc-ex-metric-${cls}">${brcSignedPt(diff)}</span></div><div class="brc-personal-adjust-current">${rateText}</div><div class="brc-personal-adjust-help">参考加減値 ＝ この選手本人のTimeX効果 − 通常のTimeX効果。表示中の着率には加算しません。N数不足のため参考表示のみです。${watchText}</div></div><div class="brc-ex-alert-forecast-label">この条件での本人傾向</div><div class="brc-ex-personal-box">${allRows}</div><div class="brc-ex-alert-scale">BRCタイムX共通：0.0pt → ／ 0.1〜4.9pt ↗↘ ／ 5.0〜9.9pt ↑↓ ／ 10.0〜14.9pt ↑↑↓↓ ／ 15.0pt以上 ↑↑↑↓↓↓</div></div>`;
+  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a['選手名']}　本人傾向</div><div class="brc-ex-alert-meta">${a['コース']}コース ／ タイムX差 ${a['平均差帯']}秒 ／ N=${a.N} ／ 参考度 ${confidence}${isWatch?' ／ 監視':''}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-personal-adjust-focus ${cls}"><div class="brc-personal-adjust-kicker">${meta.label}率の本人傾向差</div><div class="brc-personal-adjust-main"><span class="brc-personal-adjust-label">本人 ${arrow}</span><span class="brc-personal-adjust-value brc-ex-metric-${cls}">${brcSignedPt(diff)}</span></div><div class="brc-personal-adjust-current">${rateText}</div><div class="brc-personal-adjust-help">本人傾向差 ＝ この選手本人のTimeX効果 − 通常のTimeX効果。表示中の着率へ${brcSignedPt(diff)}をそのまま足し引きする意味ではありません。＋は注目材料、－は慎重材料として参考にします。${watchText}</div></div><div class="brc-ex-alert-forecast-label">この条件での本人傾向</div><div class="brc-ex-personal-box">${allRows}</div><div class="brc-ex-alert-scale">BRCタイムX共通：0.0pt → ／ 0.1〜4.9pt ↗↘ ／ 5.0〜9.9pt ↑↓ ／ 10.0〜14.9pt ↑↑↓↓ ／ 15.0pt以上 ↑↑↑↓↓↓</div></div>`;
   document.body.appendChild(pop);
 }
 
