@@ -9958,6 +9958,7 @@ function brcBuildServerNigePredictionHtml(boats,workerPrediction,exhibitionAppli
 
 
 // BRC_ADMIN_SCENARIO_MARK_MATRIX_V1_20260909
+// BRC_ADMIN_SCENARIO_MARK_MATRIX_LABELS_V2_20260909
 // 管理者β：AI予測内の「展開印」。既存予測・TimeX・本人傾向へは一切再加点せず、
 // 画面へ出ている最終着率を検証済みマトリックスへ変換して表示するだけのレイヤー。
 function brcMarkNum(v,fallback=NaN){
@@ -10079,10 +10080,10 @@ function brcBuildScenarioMarkMatrixHtml(boats,localInReliability=null){
     const third=brcMarkThird(c,r.third,thirdRanks[i],inWin);
     const top3=brcMarkTop3(r.top3,top3Ranks[i]);
     const name=String(b?.player?.name||'').trim().split(/[\s　]+/)[0]||'';
-    const headMeta=c===1?'':`外${Math.round(share)}%`;
+    const headMeta='';
     const headTitle=c===1
       ? `1号艇1着率 ${r.win.toFixed(1)}%`
-      : `1着率 ${r.win.toFixed(1)}% / 1号艇 ${inWin.toFixed(1)}% / 外頭シェア ${share.toFixed(1)}%`;
+      : `1着率 ${r.win.toFixed(1)}% / 1号艇 ${inWin.toFixed(1)}%`;
     return `<tr>
       <td><div class="brc-mark-boat">${scenarioLaneBadge(c)}<span class="brc-mark-name">${name}</span></div></td>
       <td>${brcMarkCellHtml(head,r.win,headMeta,headTitle)}</td>
@@ -10099,11 +10100,11 @@ function brcBuildScenarioMarkMatrixHtml(boats,localInReliability=null){
     </div>
     <div class="brc-mark-table-wrap">
       <table class="brc-mark-table">
-        <thead><tr><th>艇</th><th>頭</th><th>2着</th><th>3着</th><th>残り<br><span style="font-size:7.5px;font-weight:800;">3連対</span></th></tr></thead>
+        <thead><tr><th>艇</th><th>1着</th><th>2着</th><th>3着</th><th>3連対</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>
-    <div class="brc-mark-note"><strong>頭：</strong>1号艇はイン信頼度帯、2〜6号艇は「1号艇の強さ × 外頭シェア」で判定。<br><strong>2着・3着・残り：</strong>着率と6艇内順位を使用。本人傾向は参考表示のみで印へ再加点しません。穴・妙味はオッズ取得後の別評価です。</div>
+    <div class="brc-mark-note"><strong>1着：</strong>1号艇はイン信頼度帯、2〜6号艇は1号艇の強さとの関係を含めて判定。<br><strong>2着・3着・3連対：</strong>着率と6艇内順位を使用。本人傾向は参考表示のみで印へ再加点しません。穴・妙味はオッズ取得後の別評価です。</div>
   </div>`;
 }
 function brcSetAiAdminSubTab(key){
