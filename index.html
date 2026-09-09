@@ -4,6 +4,7 @@
 <!-- BRC_CLOUDFLARE_SPLIT_V1 -->
 <!-- BRC_TIMEX_COMPACT_DECISION_UI_20260908 -->
 <!-- BRC_SCENARIO_PERSONAL_TREND_RECONNECT_20260909 -->
+<!-- BRC_DEADLINE_T16_CANCEL_SYNC_20260909 -->
 
 <!-- BRC_ADMIN_INVESTMENT_MANAGER_V4_MONTH_BACKFILL_20260907 -->
 <!-- BRC_ADMIN_INVESTMENT_MANAGER_V3_AUTO_SA_BACKGROUND_20260907 -->
@@ -560,6 +561,14 @@
   }
   .race-pill.deadline-passed.active .rp-time{color:#626c78;}
   .race-pill:disabled{opacity:.35; cursor:not-allowed;}
+  .venue-pill.venue-cancelled, .race-pill.race-cancelled{
+    background:#fff1f2 !important; border-color:rgba(209,55,63,.38) !important; color:#b4232c !important; opacity:1 !important;
+  }
+  .venue-pill.venue-cancelled .vp-day, .race-pill.race-cancelled .rp-time{color:#b4232c !important;font-weight:900;}
+  .race-pill.race-cancelled{cursor:not-allowed;}
+  .deadline-cancel-status{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin:0 0 7px;font-size:10.5px;font-weight:850;color:#b4232c;}
+  .deadline-cancel-chip{display:inline-flex;align-items:center;padding:3px 7px;border-radius:999px;border:1px solid rgba(209,55,63,.22);background:rgba(209,55,63,.06);white-space:nowrap;}
+
   .picker-row.empty-row{color:var(--ink-soft); font-size:14px; padding:8px 4px;}
 
   /* ---- 締切一覧：会場・レースと同じ横スクロールカード ---- */
@@ -3879,6 +3888,11 @@ const BRC_API_URL = 'https://brc-api.sk48159212.workers.dev';
 // Cloudflare Live Workerを作成後、このURLだけ実URLへ変更する。
 // 空欄の間は外部通信せず、展示補正は発火しない。
 const BRC_LIVE_EXHIBITION_API_URL = 'https://brc-live-exhibition.sk48159212.workers.dev';
+
+const BRC_LIVE_SCHEDULE_POLL_MS = 15 * 1000;
+const BRC_LIVE_SCHEDULE_AHEAD_MIN = 17;
+let __brcLiveScheduleInFlight = false;
+let __brcLiveScheduleLastAppliedAt = 0;
 
 const BRC_SESSION_STORAGE_KEY = 'brc_supabase_session_v1';
 const BRC_MEMBER_EMAIL_DOMAIN = 'members.example.com'; // 会員IDをSupabase Auth用の内部メールへ変換（外部送信には使用しない）
@@ -8382,6 +8396,7 @@ function brcOddsSelection(){
 
 function brcOddsDeadlinePassed(sel){
   if(!sel?.venue || !sel?.raceNo) return false;
+  if(brcRaceCancelled(sel.venue,sel.raceNo)) return true;
   const info = RACE_INFO_TODAY?.[sel.venue] || {};
   const hhmm = info?.deadlines?.[String(sel.raceNo)] || '';
   if(!hhmm) return false;
@@ -8942,6 +8957,7 @@ function brcOddsStartCooldown(seconds){
 
 async function brcEnsureFinalOdds(sel){
   if(!sel?.key || !BRC_LIVE_EXHIBITION_API_URL) return;
+  if(brcRaceCancelled(sel?.venue,sel?.raceNo)) return;
   if(!brcOddsDeadlinePassed(sel)) return;
   const existing=__brcOddsLocal[sel.key];
   if(existing?.final) return;
@@ -8996,6 +9012,13 @@ function brcRenderOddsPanel(message='',isError=false){
     btn.disabled=true; btn.textContent='オッズ更新';
     return;
   }
+  if(brcRaceCancelled(sel.venue,sel.raceNo)){
+    meta.textContent=`${sel.venue} ${sel.raceNo}R`;
+    status.textContent=message || brcRaceCancelReason(sel.venue,sel.raceNo);
+    body.innerHTML=`<div class="brc-odds-empty">${brcRaceCancelReason(sel.venue,sel.raceNo)}のため、オッズ取得対象外です。</div>`;
+    btn.disabled=true; btn.textContent='中止';
+    return;
+  }
   const today=getJstDateLabel();
   const historical=String(sel.date)!==String(today);
   const passed=brcOddsDeadlinePassed(sel);
@@ -9032,6 +9055,7 @@ async function brcRefreshOddsManual(){
   const sel=brcOddsSelection();
   if(!sel.key||!btn||!BRC_LIVE_EXHIBITION_API_URL) return;
   if(String(sel.date)!==String(getJstDateLabel())){brcRenderOddsPanel('過去レースではオッズ更新を行いません。',true);return;}
+  if(brcRaceCancelled(sel.venue,sel.raceNo)){brcRenderOddsPanel(brcRaceCancelReason(sel.venue,sel.raceNo),true);return;}
   if(brcOddsDeadlinePassed(sel)){brcRenderOddsPanel('締切済みのため、新しいオッズ取得は行いません。',true);return;}
   btn.disabled=true; btn.textContent='取得中…';
   brcRenderOddsPanel('オッズ取得中');
@@ -12043,6 +12067,7 @@ function initPredictPage(){
   if(!window.__publicRaceUnlockTimer){
     window.__publicRaceUnlockTimer = setInterval(()=>{ try{ refreshRaceDeadlineGray(); }catch(_e){} }, 2000);
   }
+  try{ brcStartLiveScheduleSync(); }catch(_e){}
 
   // BRC_AUTO_RACECARD_CALL_V3
   // 当日TXTを初期表示直後に確認。さらに日付跨ぎ・アプリ復帰も監視する。
@@ -12054,6 +12079,164 @@ function initPredictPage(){
   if(!brcIsHistoricalRaceCardMode()){
     setTimeout(()=>{ autoLoadHostedRaceCardToday({reason:'init'}); }, 0);
   }
+}
+
+// BRC_DEADLINE_T16_CANCEL_SYNC_20260909
+// Collector がT-16で公式再確認した締切・中止情報を Live Worker から受け取り、
+// 朝の番組表を基準にした表示/判定へ上書きする。公式サイトへの再アクセスはブラウザから行わない。
+function brcVenueNameFromCode(code){
+  return (BOAT_VENUE_CODE && BOAT_VENUE_CODE[String(code||'').padStart(2,'0')]) || '';
+}
+function brcVenueCancelled(venue){
+  return !!RACE_INFO_TODAY?.[venue]?.brcCancelled;
+}
+function brcRaceCancelled(venue,raceNo){
+  const info=RACE_INFO_TODAY?.[venue]||{};
+  if(info.brcCancelled) return true;
+  return !!info?.brcCancelledRaces?.[String(Number(raceNo))];
+}
+function brcRaceCancelReason(venue,raceNo){
+  const info=RACE_INFO_TODAY?.[venue]||{};
+  if(info.brcCancelled) return String(info.brcCancelReason||'開催中止・打ち切り');
+  return String(info?.brcCancelledRaces?.[String(Number(raceNo))]||'レース中止');
+}
+function brcDeadlineMsFor(venue,raceNo){
+  const date=TODAY_LABEL||getJstDateLabel();
+  const hhmm=RACE_INFO_TODAY?.[venue]?.deadlines?.[String(Number(raceNo))]||'';
+  const m=String(hhmm).match(/^(\d{1,2}):(\d{2})$/);
+  if(!m||!/^\d{4}-\d{2}-\d{2}$/.test(String(date))) return null;
+  const ms=Date.parse(`${date}T${m[1].padStart(2,'0')}:${m[2]}:00+09:00`);
+  return Number.isFinite(ms)?ms:null;
+}
+function brcLiveScheduleNeedsPoll(){
+  if(brcIsHistoricalRaceCardMode()) return false;
+  let nearest=Infinity;
+  for(const venue of Object.keys(RACE_INFO_TODAY||{})){
+    const info=RACE_INFO_TODAY[venue]||{};
+    if(info.brcCancelled) continue;
+    for(const raceNo of Object.keys(info.deadlines||{})){
+      if(brcRaceCancelled(venue,raceNo)) continue;
+      const ms=brcDeadlineMsFor(venue,raceNo);
+      if(!Number.isFinite(ms)) continue;
+      const diff=(ms-Date.now())/60000;
+      if(diff>=-2 && diff<nearest) nearest=diff;
+    }
+  }
+  return Number.isFinite(nearest) && nearest<=BRC_LIVE_SCHEDULE_AHEAD_MIN;
+}
+function brcStopCancelledCurrentRace(){
+  const venue=document.getElementById('predictRaceDay')?.value||document.getElementById('predictVenue')?.value||'';
+  const raceNo=Number(document.getElementById('predictRaceNo')?.value||0);
+  if(!venue||!raceNo||!brcRaceCancelled(venue,raceNo)) return;
+  try{brcStopLiveExhibitionPolling();}catch(_e){}
+  try{
+    if(typeof __brcRaceResultTimer!=='undefined'&&__brcRaceResultTimer){clearTimeout(__brcRaceResultTimer);__brcRaceResultTimer=null;}
+    if(typeof __brcRaceResultToken!=='undefined') __brcRaceResultToken+=1;
+    if(typeof __brcRaceResultActive!=='undefined') __brcRaceResultActive=null;
+  }catch(_e){}
+  const resultBox=document.getElementById('predictResult');
+  if(resultBox) resultBox.innerHTML=`<div class="trend-note" style="padding:16px 12px;border:1px solid rgba(209,55,63,.22);border-radius:10px;background:rgba(209,55,63,.055);color:#b4232c;font-weight:850;">${venue} ${raceNo}R は${brcRaceCancelReason(venue,raceNo)}です。予測・オッズ取得・結果監視の対象外です。</div>`;
+  try{brcRenderOddsPanel(`${venue} ${raceNo}R は${brcRaceCancelReason(venue,raceNo)}です。`,true);}catch(_e){}
+}
+function brcRefreshScheduleUi(){
+  const daySel=document.getElementById('predictRaceDay');
+  const raceSel=document.getElementById('predictRaceNo');
+  const currentVenue=daySel?.value||'';
+  document.querySelectorAll('.venue-pill').forEach(btn=>{
+    const cancelled=brcVenueCancelled(btn.dataset.venue);
+    btn.classList.toggle('venue-cancelled',cancelled);
+    btn.disabled=cancelled;
+    const sub=btn.querySelector('.vp-day');
+    if(sub) sub.textContent=cancelled?'中止':resolveRaceDayLabel(RACE_INFO_TODAY?.[btn.dataset.venue]||{});
+  });
+  if(currentVenue && raceSel){
+    const info=RACE_INFO_TODAY?.[currentVenue]||{};
+    Array.from(raceSel.options).forEach(o=>{
+      if(!o.value) return;
+      const n=Number(o.value), cancelled=brcRaceCancelled(currentVenue,n), hhmm=info?.deadlines?.[String(n)]||'';
+      o.textContent=cancelled?`${n}R　中止`:`${n}R${hhmm?'　締切'+hhmm:''}`;
+      o.disabled=cancelled;
+    });
+    document.querySelectorAll('#raceTabRow .race-pill').forEach(btn=>{
+      const n=Number(btn.dataset.raceno), cancelled=brcRaceCancelled(currentVenue,n), hhmm=info?.deadlines?.[String(n)]||'';
+      btn.classList.toggle('race-cancelled',cancelled);
+      btn.disabled=cancelled;
+      let sub=btn.querySelector('.rp-time');
+      if(!sub && (cancelled||hhmm)){sub=document.createElement('span');sub.className='rp-time';btn.appendChild(sub);}
+      if(sub) sub.textContent=cancelled?'中止':(hhmm?`締切${hhmm}`:'');
+    });
+    const currentRace=Number(raceSel.value||0);
+    if(currentRace && !brcRaceCancelled(currentVenue,currentRace)){
+      const hhmm=info?.deadlines?.[String(currentRace)]||'';
+      const dl=document.querySelector('#predictResult .rs-deadline');
+      if(dl && hhmm) dl.textContent=`締切 ${hhmm}`;
+      // 結果取得タイマーも最新締切を基準に作り直す。
+      try{if(typeof brcStartRaceResultMonitor==='function') brcStartRaceResultMonitor(currentVenue,currentRace);}catch(_e){}
+    }
+  }
+  try{renderDeadlineSchedule();}catch(_e){}
+  try{refreshRaceDeadlineGray();}catch(_e){}
+  try{if(window.__todayPicksRendered) renderTodayPicks();}catch(_e){}
+  try{if(typeof SCENARIO_SEARCH_HAS_RUN!=='undefined'&&SCENARIO_SEARCH_HAS_RUN) brcRenderScenarioSearch();}catch(_e){}
+  brcStopCancelledCurrentRace();
+}
+function brcApplyLiveSchedule(schedule){
+  const date=String(schedule?.date||'');
+  const expected=TODAY_LABEL||getJstDateLabel();
+  if(!date||date!==String(expected)||!schedule?.venues||typeof schedule.venues!=='object') return false;
+  let changed=false;
+  for(const [code,v] of Object.entries(schedule.venues)){
+    const venue=String(v?.venue||brcVenueNameFromCode(code)||'');
+    const info=RACE_INFO_TODAY?.[venue];
+    if(!venue||!info) continue;
+    const venueCancelled=v?.cancelled===true;
+    if(!!info.brcCancelled!==venueCancelled){info.brcCancelled=venueCancelled;changed=true;}
+    const vreason=String(v?.cancel_reason||'');
+    if(String(info.brcCancelReason||'')!==vreason){info.brcCancelReason=vreason;changed=true;}
+    if(!info.deadlines||typeof info.deadlines!=='object') info.deadlines={};
+    const cancelledRaces={};
+    for(const [raceNo,rr] of Object.entries(v?.races||{})){
+      const n=String(Number(rr?.race_no||raceNo));
+      if(!/^\d+$/.test(n)||Number(n)<1||Number(n)>12) continue;
+      const hhmm=String(rr?.deadline||'');
+      if(/^\d{1,2}:\d{2}$/.test(hhmm) && info.deadlines[n]!==hhmm){info.deadlines[n]=hhmm;changed=true;}
+      if(rr?.cancelled===true) cancelledRaces[n]=String(rr?.cancel_reason||'レース中止');
+    }
+    const prev=JSON.stringify(info.brcCancelledRaces||{}), next=JSON.stringify(cancelledRaces);
+    if(prev!==next){info.brcCancelledRaces=cancelledRaces;changed=true;}
+  }
+  if(changed){
+    __brcLiveScheduleLastAppliedAt=Date.now();
+    try{saveRaceCardForToday('live-schedule');}catch(_e){}
+    brcRefreshScheduleUi();
+  }
+  return changed;
+}
+async function brcRefreshLiveScheduleStatus(reason='timer'){
+  if(__brcLiveScheduleInFlight||!BRC_LIVE_EXHIBITION_API_URL||brcIsHistoricalRaceCardMode()) return false;
+  if(reason==='timer'&&!brcLiveScheduleNeedsPoll()) return false;
+  const date=TODAY_LABEL||getJstDateLabel();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(date))) return false;
+  __brcLiveScheduleInFlight=true;
+  try{
+    const qs=new URLSearchParams({date,_:String(Date.now())});
+    const res=await fetch(`${BRC_LIVE_EXHIBITION_API_URL}/live-schedule?${qs.toString()}`,{method:'GET',cache:'no-store',headers:{'Accept':'application/json'}});
+    if(res.status===404) return false;
+    if(!res.ok) throw new Error(`live_schedule_http_${res.status}`);
+    const obj=await res.json();
+    if(!obj||obj.ok!==true||!obj.schedule) return false;
+    return brcApplyLiveSchedule(obj.schedule);
+  }catch(err){console.warn('BRC live schedule fetch failed:',err);return false;}
+  finally{__brcLiveScheduleInFlight=false;}
+}
+function brcStartLiveScheduleSync(){
+  if(window.__brcLiveScheduleTimer) return;
+  const tick=()=>{if(document.visibilityState!=='hidden') brcRefreshLiveScheduleStatus('timer');};
+  window.__brcLiveScheduleTimer=setInterval(tick,BRC_LIVE_SCHEDULE_POLL_MS);
+  setTimeout(()=>brcRefreshLiveScheduleStatus('start'),0);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible') brcRefreshLiveScheduleStatus('resume');});
+  window.addEventListener('pageshow',()=>brcRefreshLiveScheduleStatus('resume'));
+  window.addEventListener('focus',()=>brcRefreshLiveScheduleStatus('resume'));
 }
 
 // 締切時刻を日本時間（JST）として比較し、レース番号カードの締切済み表示に使う。
@@ -12075,11 +12258,15 @@ function refreshRaceDeadlineGray(){
   const info = RACE_INFO_TODAY[daySel.value];
   const deadlines = (info && info.deadlines) || {};
   raceTabRow.querySelectorAll('.race-pill').forEach(btn=>{
-    const passed = isRaceDeadlinePassed(deadlines[String(btn.dataset.raceno)]);
-    const isFree = !!brcFindFreePreviewRace(daySel.value, Number(btn.dataset.raceno));
+    const cancelled = brcRaceCancelled(daySel.value, Number(btn.dataset.raceno));
+    const passed = !cancelled && isRaceDeadlinePassed(deadlines[String(btn.dataset.raceno)]);
+    const isFree = !cancelled && !!brcFindFreePreviewRace(daySel.value, Number(btn.dataset.raceno));
+    btn.classList.toggle('race-cancelled', cancelled);
     btn.classList.toggle('deadline-passed', passed);
     btn.classList.toggle('free-preview-race', isFree);
-    if(passed) btn.setAttribute('aria-label', `${btn.dataset.raceno}R 締切済み・無料公開`);
+    btn.disabled=cancelled;
+    if(cancelled) btn.setAttribute('aria-label', `${btn.dataset.raceno}R ${brcRaceCancelReason(daySel.value,btn.dataset.raceno)}`);
+    else if(passed) btn.setAttribute('aria-label', `${btn.dataset.raceno}R 締切済み・無料公開`);
     else if(isFree) btn.setAttribute('aria-label', `${btn.dataset.raceno}R 本日の無料公開`);
     else btn.setAttribute('aria-label', `${btn.dataset.raceno}R 締切前・会員限定`);
   });
@@ -12129,10 +12316,12 @@ function populateDaySelect(){
     venueTabRow.innerHTML = todayVenues.map(v=>{
       const info = RACE_INFO_TODAY[v];
       const active = newDaySel.value === v ? ' active' : '';
-      return `<button type="button" class="venue-pill${active}" data-venue="${v}">${v}<span class="vp-day">${resolveRaceDayLabel(info)}</span></button>`;
+      const cancelled=brcVenueCancelled(v);
+      return `<button type="button" class="venue-pill${active}${cancelled?' venue-cancelled':''}" data-venue="${v}"${cancelled?' disabled':''}>${v}<span class="vp-day">${cancelled?'中止':resolveRaceDayLabel(info)}</span></button>`;
     }).join('');
     venueTabRow.querySelectorAll('.venue-pill').forEach(btn=>{
       btn.addEventListener('click', ()=>{
+        if(brcVenueCancelled(btn.dataset.venue)) return;
         if(newDaySel.value === btn.dataset.venue) return;
         newDaySel.value = btn.dataset.venue;
         newDaySel.dispatchEvent(new Event('change'));
@@ -12159,16 +12348,20 @@ function populateDaySelect(){
       const active = newRaceNoSel.value === o.value ? ' active' : '';
       const info = RACE_INFO_TODAY[newDaySel.value];
       const deadline = info && info.deadlines && info.deadlines[String(o.value)];
-      const passedBool = isRaceDeadlinePassed(deadline);
+      const cancelled=brcRaceCancelled(newDaySel.value,Number(o.value));
+      const passedBool = !cancelled && isRaceDeadlinePassed(deadline);
       const passed = passedBool ? ' deadline-passed' : '';
-      const isFree = !!brcFindFreePreviewRace(newDaySel.value, Number(o.value));
+      const isFree = !cancelled && !!brcFindFreePreviewRace(newDaySel.value, Number(o.value));
       const freeClass = isFree ? ' free-preview-race' : '';
-      const ariaText = passedBool ? `${o.value}R 締切済み・無料公開` : (isFree ? `${o.value}R 本日の無料公開` : `${o.value}R 締切前・会員限定`);
+      const cancelClass=cancelled?' race-cancelled':'';
+      const ariaText = cancelled ? `${o.value}R ${brcRaceCancelReason(newDaySel.value,o.value)}` : (passedBool ? `${o.value}R 締切済み・無料公開` : (isFree ? `${o.value}R 本日の無料公開` : `${o.value}R 締切前・会員限定`));
       const aria = ` aria-label="${ariaText}"`;
-      return `<button type="button" class="race-pill${active}${passed}${freeClass}" data-raceno="${o.value}"${aria}>${main}${sub ? `<span class="rp-time">${sub}</span>` : ''}</button>`;
+      const subText=cancelled?'中止':sub;
+      return `<button type="button" class="race-pill${active}${passed}${freeClass}${cancelClass}" data-raceno="${o.value}"${aria}${cancelled?' disabled':''}>${main}${subText ? `<span class="rp-time">${subText}</span>` : ''}</button>`;
     }).join('');
     raceTabRow.querySelectorAll('.race-pill').forEach(btn=>{
       btn.addEventListener('click', ()=>{
+        if(brcRaceCancelled(newDaySel.value,btn.dataset.raceno)) return;
         newRaceNoSel.value = btn.dataset.raceno;
         newRaceNoSel.dispatchEvent(new Event('change'));
         loadTodaysRace(newDaySel.value, newRaceNoSel.value);
@@ -12195,7 +12388,8 @@ function populateDaySelect(){
     newRaceNoSel.innerHTML = '<option value="">R番号</option>' +
       raceNos.map(n=>{
         const t = deadlines[String(n)];
-        return `<option value="${n}">${n}R${t ? '　締切' + t : ''}</option>`;
+        const cancelled=brcRaceCancelled(v,n);
+        return `<option value="${n}"${cancelled?' disabled':''}>${n}R${cancelled?'　中止':(t ? '　締切' + t : '')}</option>`;
       }).join('');
     newRaceNoSel.disabled = raceNos.length === 0;
     newLoadBtn.disabled = true;
@@ -12253,26 +12447,39 @@ function renderDeadlineSchedule(){
 
   const now = new Date();
   const todayStr = TODAY_LABEL && /^\d{4}-\d{2}-\d{2}$/.test(TODAY_LABEL) ? TODAY_LABEL : null;
-
   const entries = [];
+  const cancelLabels=[];
+
   for(const venue of Object.keys(RACE_INFO_TODAY)){
-    const info = RACE_INFO_TODAY[venue];
-    const deadlines = info && info.deadlines;
+    const info = RACE_INFO_TODAY[venue]||{};
+    if(info.brcCancelled){
+      cancelLabels.push(`${venue} 開催中止`);
+      continue;
+    }
+    const deadlines = info.deadlines;
     if(!deadlines) continue;
     for(const raceNo of Object.keys(deadlines)){
-      const timeStr = deadlines[raceNo];
+      if(brcRaceCancelled(venue,raceNo)){
+        cancelLabels.push(`${venue} ${Number(raceNo)}R 中止`);
+        continue;
+      }
+      const timeStr = String(deadlines[raceNo]||'');
       const m = timeStr.match(/^(\d{1,2}):(\d{2})$/);
       if(!m) continue;
       let dt = null;
       if(todayStr){
-        dt = new Date(`${todayStr}T${m[1].padStart(2,'0')}:${m[2]}:00`);
+        dt = new Date(`${todayStr}T${m[1].padStart(2,'0')}:${m[2]}:00+09:00`);
       }
       entries.push({ venue, raceNo: parseInt(raceNo,10), timeStr, dt });
     }
   }
 
+  const cancelHtml=cancelLabels.length
+    ? `<div class="deadline-cancel-status">${[...new Set(cancelLabels)].map(x=>`<span class="deadline-cancel-chip">${x}</span>`).join('')}</div>`
+    : '';
+
   if(entries.length === 0){
-    box.innerHTML = `<span style="font-size:13px; color:var(--ink-soft);">締切時刻の情報はありません。</span>`;
+    box.innerHTML = `${cancelHtml}<span style="font-size:13px; color:var(--ink-soft);">締切時刻の情報はありません。</span>`;
     return;
   }
 
@@ -12289,7 +12496,7 @@ function renderDeadlineSchedule(){
     </button>`;
 
   if(!todayStr){
-    box.innerHTML = `
+    box.innerHTML = `${cancelHtml}
       <div style="font-size:12.5px; color:var(--ink-soft); margin-bottom:5px;">締切一覧</div>
       <div class="deadline-scroll-row">${entries.map(e=>makePill(e)).join('')}</div>
     `;
@@ -12307,13 +12514,13 @@ function renderDeadlineSchedule(){
 
   if(soonEntries.length === 0){
     const next = entries.find(e => e.dt && e.dt.getTime() > now.getTime());
-    box.innerHTML = next
+    box.innerHTML = cancelHtml + (next
       ? `<div style="font-size:12.5px; color:var(--ink-soft);">次の締切　<strong style="color:var(--line-white);">${next.venue} ${next.raceNo}R ${next.timeStr}</strong></div>`
-      : `<div style="font-size:12.5px; color:var(--ink-soft);">本日の残りレースはすべて締切済みです。</div>`;
+      : `<div style="font-size:12.5px; color:var(--ink-soft);">本日の残りレースはすべて締切済みです。</div>`);
     return;
   }
 
-  box.innerHTML = `
+  box.innerHTML = `${cancelHtml}
     <div style="font-size:12.5px; color:var(--ink-soft); margin-bottom:5px;">まもなく締切</div>
     <div class="deadline-scroll-row">${soonEntries.map(e=>{
       const diffMin = (e.dt.getTime() - now.getTime()) / 60000;
@@ -12883,6 +13090,11 @@ function onRaceCardFileSelected(ev){
 // 当日の番組表（RACE_CARDS_TODAY）から該当レースの6艇を出走表AIの入力欄に自動入力する
 function loadTodaysRace(venue, raceNo){
   const metaBox = document.getElementById('predictRaceMeta');
+  if(brcRaceCancelled(venue,raceNo)){
+    if(metaBox) metaBox.innerHTML=`${venue} ${raceNo}R は${brcRaceCancelReason(venue,raceNo)}です。`;
+    brcStopCancelledCurrentRace();
+    return;
+  }
   const races = RACE_CARDS_TODAY[venue];
   const regs = races && races[String(raceNo)];
   if(!regs){
@@ -14054,15 +14266,15 @@ async function renderTodayPicks(force=false){
   if(dateEl) dateEl.textContent=TODAY_LABEL||'-';
   const ci=document.getElementById('todayCountIron');
   const cr=document.getElementById('todayCountReject');
-  if(ci) ci.textContent=cache.iron.length;
-  if(cr) cr.textContent=cache.reject.length;
+  if(ci) ci.textContent=(cache.iron||[]).filter(r=>!brcRaceCancelled(r.venue,r.raceNo)).length;
+  if(cr) cr.textContent=(cache.reject||[]).filter(r=>!brcRaceCancelled(r.venue,r.raceNo)).length;
   const rule=document.getElementById('todayPicksRule');
   if(rule) rule.textContent=TODAY_PICKS_MODE==='iron'
     ? 'イン鉄板 = イン信頼度S'
     : 'イン否定 = イン場基準差 -10pt未満';
   renderTodayPicksStats();
 
-  const rows=sortTodayPickRows(cache[TODAY_PICKS_MODE]||[]);
+  const rows=sortTodayPickRows((cache[TODAY_PICKS_MODE]||[]).filter(r=>!brcRaceCancelled(r.venue,r.raceNo)));
   if(!rows.length){
     body.innerHTML=`<div class="today-empty">${TODAY_PICKS_MODE==='iron'?'イン信頼度S':'イン場基準差 -10pt未満'}の該当レースはありません。</div>`;
     if(cache.skipped) body.innerHTML+=`<div class="today-picks-note">選手データ不足などで判定できなかったレース: ${cache.skipped}件</div>`;
@@ -14153,6 +14365,7 @@ function brcBuildScenarioSearchRows(){
   for(const venue of sortVenuesNorthToSouth(Object.keys(RACE_CARDS_TODAY||{}))){
     const races=RACE_CARDS_TODAY?.[venue]||{};
     for(const raceNo of Object.keys(races).map(Number).sort((a,b)=>a-b)){
+      if(brcRaceCancelled(venue,raceNo)) continue;
       const regs=(races[String(raceNo)]||[]).map(String);
       if(regs.length<6) continue;
       const inD=LOSE1_DATA?.[regs[0]]?.recent;
