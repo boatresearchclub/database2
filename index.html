@@ -3292,6 +3292,80 @@ body.brc-legal-lock{overflow:hidden;}
 }
 </style>
 
+
+<style id="brc-admin-scenario-mark-style">
+/* BRC_ADMIN_SCENARIO_MARK_MATRIX_V1_20260909 */
+.brc-ai-admin-tabs{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;
+  margin:0 0 11px;padding:4px;border:1px solid rgba(10,31,51,.10);
+  border-radius:11px;background:rgba(10,31,51,.035);
+}
+.brc-ai-admin-tab{
+  appearance:none;border:0;border-radius:8px;background:transparent;color:var(--ink-soft);
+  min-width:0;padding:9px 6px;font:inherit;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap;
+}
+.brc-ai-admin-tab.active{background:#fff;color:var(--wave);box-shadow:0 1px 5px rgba(10,31,51,.09);}
+.brc-ai-admin-panel{display:none;min-width:0;}
+.brc-ai-admin-panel.active{display:block;}
+.brc-mark-card{
+  margin:0;padding:11px;border:1px solid rgba(0,87,219,.16);border-radius:12px;
+  background:linear-gradient(160deg,rgba(0,87,219,.045),rgba(255,255,255,.96));
+}
+.brc-mark-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:9px;}
+.brc-mark-title{font-size:13px;font-weight:950;color:var(--navy);}
+.brc-mark-sub{margin-top:2px;font-size:9.5px;line-height:1.5;color:var(--ink-soft);}
+.brc-mark-head-right{display:flex;align-items:center;gap:5px;flex:0 0 auto;flex-wrap:wrap;justify-content:flex-end;}
+.brc-mark-badge{
+  display:inline-flex;align-items:center;justify-content:center;padding:3px 7px;border-radius:999px;
+  background:rgba(0,87,219,.08);border:1px solid rgba(0,87,219,.16);
+  color:var(--wave);font-size:8.5px;font-weight:950;white-space:nowrap;
+}
+.brc-mark-badge.phase{background:rgba(47,143,91,.08);border-color:rgba(47,143,91,.18);color:#217247;}
+.brc-mark-table-wrap{overflow:hidden;border:1px solid rgba(10,31,51,.09);border-radius:10px;background:#fff;}
+table.brc-mark-table{width:100%;table-layout:fixed;border-collapse:collapse;}
+table.brc-mark-table th{
+  padding:7px 3px;background:var(--bg3);color:var(--ink-soft);font-size:9.5px;
+  font-weight:900;text-align:center;cursor:default;white-space:nowrap;
+}
+table.brc-mark-table th:first-child{width:32%;text-align:left;padding-left:8px;}
+table.brc-mark-table th:not(:first-child){width:17%;}
+table.brc-mark-table td{
+  padding:7px 3px;border-top:1px solid rgba(10,31,51,.065);text-align:center;
+  vertical-align:middle;white-space:nowrap;
+}
+table.brc-mark-table td:first-child{text-align:left;padding-left:7px;}
+.brc-mark-boat{display:flex;align-items:center;gap:6px;min-width:0;}
+.brc-mark-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10.5px;font-weight:900;color:var(--navy);}
+.brc-mark-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:37px;line-height:1;}
+.brc-mark-symbol{font-size:19px;font-weight:950;line-height:1;}
+.brc-mark-symbol.a{color:#6d28d9;}
+.brc-mark-symbol.b{color:var(--wave);}
+.brc-mark-symbol.c{color:#b36a00;}
+.brc-mark-symbol.d{color:#a52c35;}
+.brc-mark-pct{margin-top:3px;font-size:8.5px;font-weight:850;color:var(--ink-soft);font-variant-numeric:tabular-nums;}
+.brc-mark-meta{margin-top:2px;font-size:7.5px;font-weight:850;color:#667085;font-variant-numeric:tabular-nums;}
+.brc-mark-note{
+  margin:8px 2px 0;font-size:9px;line-height:1.55;color:var(--ink-soft);
+}
+.brc-mark-note strong{color:var(--navy);}
+@media(max-width:420px){
+  .brc-ai-admin-tab{padding:8px 4px;font-size:11px;}
+  .brc-mark-card{padding:9px 7px;}
+  .brc-mark-title{font-size:12px;}
+  .brc-mark-sub{font-size:9px;}
+  table.brc-mark-table th{font-size:8.5px;padding:6px 1px;}
+  table.brc-mark-table th:first-child{width:30%;padding-left:5px;}
+  table.brc-mark-table th:not(:first-child){width:17.5%;}
+  table.brc-mark-table td{padding:6px 1px;}
+  table.brc-mark-table td:first-child{padding-left:4px;}
+  .brc-mark-boat{gap:4px;}
+  .brc-mark-name{font-size:9px;}
+  .brc-mark-symbol{font-size:18px;}
+  .brc-mark-pct{font-size:8px;}
+  .brc-mark-meta{font-size:7px;}
+}
+</style>
+
 </head>
 <body>
 <div class="wrap">
@@ -4507,6 +4581,14 @@ function brcSetAdminSocialUi(user=null){
   brcSetAdminResearchUi(BRC_ADMIN_ACTIVE);
   try{ brcSyncRaceSearchAccess(); }catch(_e){}
   try{ brcSetInvestmentManagerUi(BRC_ADMIN_ACTIVE); }catch(_e){}
+  // AI予測の管理者β（展開印）も同じ管理者判定で出し分ける。
+  try{
+    const boats=window.__predictBoatsCurrent;
+    const worker=window.__predictWorkerCurrent;
+    if(Array.isArray(boats)&&boats.length===6&&worker&&typeof renderPredictAiPanel==='function'){
+      renderPredictAiPanel(boats,worker,window.__currentLocalInReliability||worker?.uiInReliability||null,!!window.__currentExhibitionApplied);
+    }
+  }catch(_e){}
   try{
     if(BRC_ADMIN_ACTIVE) brcInvStartBackgroundAutomation();
     else brcInvStopBackgroundAutomation();
@@ -9874,6 +9956,181 @@ function brcBuildServerNigePredictionHtml(boats,workerPrediction,exhibitionAppli
   </div>`;
 }
 
+
+// BRC_ADMIN_SCENARIO_MARK_MATRIX_V1_20260909
+// 管理者β：AI予測内の「展開印」。既存予測・TimeX・本人傾向へは一切再加点せず、
+// 画面へ出ている最終着率を検証済みマトリックスへ変換して表示するだけのレイヤー。
+function brcMarkNum(v,fallback=NaN){
+  const n=Number(v);
+  return Number.isFinite(n)?n:fallback;
+}
+function brcMarkClamp(v){
+  const n=brcMarkNum(v,0);
+  return Math.max(0,Math.min(100,n));
+}
+function brcMarkFinalRates(b){
+  const win=brcMarkClamp(b?.pctFloat);
+  const top3=brcMarkClamp(b?.pct3Float);
+  const second=brcMarkClamp(
+    b?.exhibitionApplied && Number.isFinite(Number(b?.exhibitionSecondPct))
+      ? b.exhibitionSecondPct
+      : (Number.isFinite(Number(b?.pct2))?b.pct2:b?.basePct2)
+  );
+  let third=brcMarkNum(
+    b?.exhibitionApplied && Number.isFinite(Number(b?.exhibitionThirdPct))
+      ? b.exhibitionThirdPct
+      : NaN
+  );
+  if(!Number.isFinite(third)) third=Math.max(0,top3-win-second);
+  return {win,second:brcMarkClamp(second),third:brcMarkClamp(third),top3};
+}
+function brcMarkCompetitionRank(values,index){
+  const v=Number(values?.[index]);
+  if(!Number.isFinite(v)) return 99;
+  let better=0;
+  (values||[]).forEach((x,i)=>{
+    if(i===index) return;
+    const n=Number(x);
+    if(Number.isFinite(n) && n>v+1e-9) better++;
+  });
+  return better+1;
+}
+function brcMarkHeadForIn(inWin){
+  const p=Number(inWin);
+  if(!Number.isFinite(p)) return '×';
+  if(p>=64) return '◎';
+  if(p>=54) return '○';
+  if(p>=39) return '△';
+  return '×';
+}
+function brcMarkHeadForOuter(inWin,share){
+  const p=Number(inWin), s=Number(share);
+  if(!Number.isFinite(p)||!Number.isFinite(s)) return '×';
+  const bin=s<16?0:s<28?1:s<40?2:s<55?3:4;
+  if(p<39) return ['×','△','○','◎','◎'][bin];
+  if(p<54) return ['×','△','○','○','◎'][bin];
+  if(p<60) return ['×','△','△','○','○'][bin];
+  if(p<64) return ['×','×','△','△','○'][bin];
+  return ['×','×','×','△','△'][bin];
+}
+function brcMarkSecond(course,pct,rank){
+  const c=Number(course), p=Number(pct), r=Number(rank);
+  if(!Number.isFinite(p)) return '×';
+  // 1コースは検証上「2着◎」を出さない。△下限も13%へ専用化。
+  if(c===1){
+    if(p>=20 && r<=2) return '○';
+    if(p>=13) return '△';
+    return '×';
+  }
+  if(p>=25 && r===1) return '◎';
+  if(p>=20 && r<=2) return '○';
+  if(p>=15) return '△';
+  return '×';
+}
+function brcMarkThird(course,pct,rank,inWin){
+  const c=Number(course), p=Number(pct), r=Number(rank), iw=Number(inWin);
+  if(!Number.isFinite(p)) return '×';
+  // 1コース3着は現行3着率を通常マトリックスへ入れず、強イン否定時だけ最大△。
+  if(c===1) return (Number.isFinite(iw)&&iw<39&&p>=10)?'△':'×';
+  // 2コースは◎を出さず、△下限13%。
+  if(c===2){
+    if(p>=20 && r<=2) return '○';
+    if(p>=13) return '△';
+    return '×';
+  }
+  if(p>=25 && r===1) return '◎';
+  if(p>=20 && r<=2) return '○';
+  if(p>=15) return '△';
+  return '×';
+}
+function brcMarkTop3(pct,rank){
+  const p=Number(pct), r=Number(rank);
+  if(!Number.isFinite(p)) return '×';
+  if(p>=75 && r===1) return '◎';
+  if(p>=55 && r<=2) return '○';
+  if(p>=40) return '△';
+  return '×';
+}
+function brcMarkSymbolClass(mark){
+  return mark==='◎'?'a':mark==='○'?'b':mark==='△'?'c':'d';
+}
+function brcMarkCellHtml(mark,pct,meta='',title=''){
+  const safeTitle=String(title||'').replace(/"/g,'&quot;');
+  return `<div class="brc-mark-cell" title="${safeTitle}"><span class="brc-mark-symbol ${brcMarkSymbolClass(mark)}">${mark}</span><span class="brc-mark-pct">${Math.round(brcMarkClamp(pct))}%</span>${meta?`<span class="brc-mark-meta">${meta}</span>`:''}</div>`;
+}
+function brcBuildScenarioMarkMatrixHtml(boats,localInReliability=null){
+  const src=(Array.isArray(boats)?boats:[]).filter(Boolean).slice().sort((a,b)=>Number(a.course)-Number(b.course));
+  if(src.length!==6) return `<div class="brc-mark-card"><div class="brc-mark-note" style="margin:0;">6艇分の予測データが揃っていません。</div></div>`;
+  const rates=src.map(brcMarkFinalRates);
+  const inWin=Number(rates[0]?.win);
+  const secondVals=rates.map(x=>x.second);
+  const thirdVals=rates.map(x=>x.third);
+  const top3Vals=rates.map(x=>x.top3);
+  const secondRanks=secondVals.map((_,i)=>brcMarkCompetitionRank(secondVals,i));
+  const thirdRanks=thirdVals.map((_,i)=>brcMarkCompetitionRank(thirdVals,i));
+  const top3Ranks=top3Vals.map((_,i)=>brcMarkCompetitionRank(top3Vals,i));
+  const denom=Math.max(.001,100-inWin);
+  const phase=src.some(b=>!!b.exhibitionApplied);
+  const rows=src.map((b,i)=>{
+    const c=Number(b.course), r=rates[i];
+    const share=c===1?NaN:(r.win/denom*100);
+    const head=c===1?brcMarkHeadForIn(inWin):brcMarkHeadForOuter(inWin,share);
+    const second=brcMarkSecond(c,r.second,secondRanks[i]);
+    const third=brcMarkThird(c,r.third,thirdRanks[i],inWin);
+    const top3=brcMarkTop3(r.top3,top3Ranks[i]);
+    const name=String(b?.player?.name||'').trim().split(/[\s　]+/)[0]||'';
+    const headMeta=c===1?'':`外${Math.round(share)}%`;
+    const headTitle=c===1
+      ? `1号艇1着率 ${r.win.toFixed(1)}%`
+      : `1着率 ${r.win.toFixed(1)}% / 1号艇 ${inWin.toFixed(1)}% / 外頭シェア ${share.toFixed(1)}%`;
+    return `<tr>
+      <td><div class="brc-mark-boat">${scenarioLaneBadge(c)}<span class="brc-mark-name">${name}</span></div></td>
+      <td>${brcMarkCellHtml(head,r.win,headMeta,headTitle)}</td>
+      <td>${brcMarkCellHtml(second,r.second,'',`2着率 ${r.second.toFixed(1)}% / 6艇${secondRanks[i]}位`)}</td>
+      <td>${brcMarkCellHtml(third,r.third,'',`3着率 ${r.third.toFixed(1)}% / 6艇${thirdRanks[i]}位`)}</td>
+      <td>${brcMarkCellHtml(top3,r.top3,'',`3連対率 ${r.top3.toFixed(1)}% / 6艇${top3Ranks[i]}位`)}</td>
+    </tr>`;
+  }).join('');
+  const relRank=String(localInReliability?.rank||'').trim();
+  return `<div class="brc-mark-card">
+    <div class="brc-mark-head">
+      <div><div class="brc-mark-title">展開印マトリックス</div><div class="brc-mark-sub">最終着率を◎○△×へ翻訳。買い目・オッズ評価とは分離。</div></div>
+      <div class="brc-mark-head-right"><span class="brc-mark-badge">管理者β</span><span class="brc-mark-badge phase">${phase?'TimeX反映済':'展示前'}</span>${relRank?`<span class="brc-mark-badge">イン ${relRank}</span>`:''}</div>
+    </div>
+    <div class="brc-mark-table-wrap">
+      <table class="brc-mark-table">
+        <thead><tr><th>艇</th><th>頭</th><th>2着</th><th>3着</th><th>残り<br><span style="font-size:7.5px;font-weight:800;">3連対</span></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div class="brc-mark-note"><strong>頭：</strong>1号艇はイン信頼度帯、2〜6号艇は「1号艇の強さ × 外頭シェア」で判定。<br><strong>2着・3着・残り：</strong>着率と6艇内順位を使用。本人傾向は参考表示のみで印へ再加点しません。穴・妙味はオッズ取得後の別評価です。</div>
+  </div>`;
+}
+function brcSetAiAdminSubTab(key){
+  if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return;
+  const valid=['marks','nige'];
+  const k=valid.includes(key)?key:'marks';
+  window.__brcAiAdminSubTabCurrent=k;
+  document.querySelectorAll('#predictAiResult [data-brc-ai-admin-tab]').forEach(btn=>{
+    const on=btn.dataset.brcAiAdminTab===k;
+    btn.classList.toggle('active',on);
+    btn.setAttribute('aria-selected',on?'true':'false');
+  });
+  valid.forEach(x=>{
+    const panel=document.getElementById(`brcAiAdminPanel-${x}`);
+    if(panel) panel.classList.toggle('active',x===k);
+  });
+  if(k==='nige') setTimeout(()=>brcEnsureAiReferenceOddsAfterDeadline(),0);
+}
+function brcBindAiAdminSubTabs(){
+  document.querySelectorAll('#predictAiResult [data-brc-ai-admin-tab]').forEach(btn=>{
+    if(btn.dataset.brcBound==='1') return;
+    btn.dataset.brcBound='1';
+    btn.addEventListener('click',()=>brcSetAiAdminSubTab(btn.dataset.brcAiAdminTab));
+  });
+  brcSetAiAdminSubTab(window.__brcAiAdminSubTabCurrent||'marks');
+}
+
 function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhibitionApplied){
   const box=document.getElementById('predictAiResult');
   if(!box) return;
@@ -9882,14 +10139,34 @@ function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhib
   const reliability=localInReliability?.rank
     ? `<span style="display:inline-flex;padding:2px 7px;border-radius:999px;background:rgba(0,87,219,.08);border:1px solid rgba(0,87,219,.16);color:var(--wave);font-size:10px;font-weight:900;">イン信頼度 ${localInReliability.rank}</span>`
     : '';
-  box.innerHTML=`
-    ${buildCurrentRaceSummaryHtml(venue)}
-    <div class="predict-ai-head">
-      <div><div class="predict-ai-title">イン逃げ時予測</div></div>
-      ${reliability}
-    </div>
-    ${nigeHtml}
-  `;
+  const isAdmin=!!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE);
+  if(isAdmin){
+    const marksHtml=brcBuildScenarioMarkMatrixHtml(boats,localInReliability);
+    box.innerHTML=`
+      ${buildCurrentRaceSummaryHtml(venue)}
+      <div class="predict-ai-head">
+        <div><div class="predict-ai-title">AI予測</div><div class="predict-ai-sub">管理者β</div></div>
+        ${reliability}
+      </div>
+      <div class="brc-ai-admin-tabs" role="tablist" aria-label="AI予測の管理者表示切り替え">
+        <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="marks">展開印</button>
+        <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="nige">イン逃げ予測</button>
+      </div>
+      <div id="brcAiAdminPanel-marks" class="brc-ai-admin-panel">${marksHtml}</div>
+      <div id="brcAiAdminPanel-nige" class="brc-ai-admin-panel">${nigeHtml}</div>
+    `;
+    brcBindAiAdminSubTabs();
+  }else{
+    // 会員側は従来UIのまま。管理者βが公開画面へ漏れないよう分岐する。
+    box.innerHTML=`
+      ${buildCurrentRaceSummaryHtml(venue)}
+      <div class="predict-ai-head">
+        <div><div class="predict-ai-title">イン逃げ時予測</div></div>
+        ${reliability}
+      </div>
+      ${nigeHtml}
+    `;
+  }
   // 念のためAI予測エリア内の買い目カードは常に1枚に制限する。
   const recommendationCards=box.querySelectorAll('[data-brc-ai3-root], #recommendedBetsCard');
   recommendationCards.forEach((card,index)=>{ if(index>0) card.remove(); });
