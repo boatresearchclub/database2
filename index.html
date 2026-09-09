@@ -4,6 +4,8 @@
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V1 -->
+<!-- BRC_PREDICT_TIMEX_TRAIT_LABEL_RESTORE_20260910 -->
+
 <!-- BRC_TIMEX_COMPACT_DECISION_UI_20260908 -->
 <!-- BRC_TIMEX_SIMPLE_READ_INTEGER_V1_20260910 -->
 <!-- BRC_SCENARIO_PERSONAL_TREND_RECONNECT_20260909 -->
@@ -12033,7 +12035,19 @@ function brcBuildPlayerTimeXTendencyBadgeHtml(b){
 }
 function brcBuildPredictExhibitionLabelHtml(b){
   const base=`<span class="predict-exhibition-base"><span class="brc">BRC</span><span>タイムX</span></span>`;
-  return `<span class="predict-exhibition-inline">${base}</span>`;
+  const tendency=brcFindPlayerTimeXTendency(b);
+  if(!tendency) return `<span class="predict-exhibition-inline">${base}</span>`;
+  const detailRow=brcFindPlayerTimeXTendencyDetailRow(b,tendency);
+  const payloadObj={...tendency,
+    detail:detailRow?brcAlertPayload(detailRow,b):null,
+    current:brcAlertPayload({},b)
+  };
+  const payload=encodeURIComponent(JSON.stringify(payloadObj));
+  const easy=tendency.direction==='easy';
+  const cls=easy?'brc-ex-alert-up':'brc-ex-alert-down';
+  const courseLabel=Number.isFinite(Number(tendency.course))?`${Number(tendency.course)}コース`:'現在コース';
+  const title=easy?`${courseLabel}で出しやすい傾向。タップで詳細`:`${courseLabel}で出しにくい傾向。タップで詳細`;
+  return `<span class="predict-exhibition-inline"><button type="button" class="predict-exhibition-alert ${cls}" onclick="event.stopPropagation();brcShowPlayerTimeXTendency(decodeURIComponent('${payload}'))" title="${title}">BRCタイムX 注意</button></span>`;
 }
 function brcAlertPct(v){
   const n=Number(v); return Number.isFinite(n)?`${n.toFixed(1)}%`:'―';
