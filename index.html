@@ -3357,8 +3357,21 @@ table.brc-mark-table td{
   vertical-align:middle;white-space:nowrap;
 }
 table.brc-mark-table td:first-child{text-align:left;padding-left:7px;}
-.brc-mark-boat{display:flex;align-items:center;gap:6px;min-width:0;}
+.brc-mark-boat{display:flex;align-items:center;gap:5px;min-width:0;}
 .brc-mark-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10.5px;font-weight:900;color:var(--navy);}
+.brc-mark-name-btn{appearance:none;border:0;background:transparent;padding:0;margin:0;cursor:pointer;text-align:left;font:inherit;}
+.brc-mark-name-btn:hover{color:var(--wave);}
+.brc-mark-boat .brc-player-tendency-badge{
+  appearance:none;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;
+  padding:2px 5px;margin:0;border-radius:999px;font:inherit;font-size:7.5px;font-weight:950;
+  line-height:1.1;cursor:pointer;white-space:nowrap;letter-spacing:0;
+}
+.brc-mark-boat .brc-player-tendency-badge.easy{
+  color:var(--trend-up);border:1px solid rgba(var(--trend-up-rgb),.32);background:rgba(var(--trend-up-rgb),.08);
+}
+.brc-mark-boat .brc-player-tendency-badge.hard{
+  color:var(--trend-down);border:1px solid rgba(var(--trend-down-rgb),.32);background:rgba(var(--trend-down-rgb),.08);
+}
 .brc-mark-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:37px;line-height:1;}
 .brc-mark-symbol{font-size:19px;font-weight:950;line-height:1;}
 .brc-mark-symbol.a{color:#6d28d9;}
@@ -9982,6 +9995,7 @@ function brcBuildServerNigePredictionHtml(boats,workerPrediction,exhibitionAppli
 
 // BRC_ADMIN_SCENARIO_MARK_MATRIX_V1_20260909
 // BRC_ADMIN_SCENARIO_MARK_MATRIX_LABELS_V2_20260909
+// BRC_ADMIN_SCENARIO_MARK_MATRIX_TENDENCY_BADGE_V4_20260910
 // 管理者β：AI予測内の「展開印」。既存予測・TimeX・本人傾向へは一切再加点せず、
 // 画面へ出ている最終着率を検証済みマトリックスへ変換して表示するだけのレイヤー。
 function brcMarkNum(v,fallback=NaN){
@@ -10103,12 +10117,17 @@ function brcBuildScenarioMarkMatrixHtml(boats,localInReliability=null){
     const third=brcMarkThird(c,r.third,thirdRanks[i],inWin);
     const top3=brcMarkTop3(r.top3,top3Ranks[i]);
     const name=String(b?.player?.name||'').trim().split(/[\s　]+/)[0]||'';
+    const tendency=brcFindPlayerTimeXTendency(b);
+    const nameHtml=tendency
+      ? `<button type="button" class="brc-mark-name brc-mark-name-btn" onclick="event.stopPropagation();brcShowPlayerTimeXTendencyForCourse(${c})" title="タイムX選手特性の詳細を表示">${name}</button>`
+      : `<span class="brc-mark-name">${name}</span>`;
+    const tendencyBadge=tendency?brcBuildPlayerTimeXTendencyBadgeHtml(b):'';
     const headMeta='';
     const headTitle=c===1
       ? `1号艇1着率 ${r.win.toFixed(1)}%`
       : `1着率 ${r.win.toFixed(1)}% / 1号艇 ${inWin.toFixed(1)}%`;
     return `<tr>
-      <td><div class="brc-mark-boat">${scenarioLaneBadge(c)}<span class="brc-mark-name">${name}</span></div></td>
+      <td><div class="brc-mark-boat">${scenarioLaneBadge(c)}${nameHtml}${tendencyBadge}</div></td>
       <td>${brcMarkCellHtml(head,r.win,headMeta,headTitle)}</td>
       <td>${brcMarkCellHtml(second,r.second,'',`2着率 ${r.second.toFixed(1)}% / 6艇${secondRanks[i]}位`)}</td>
       <td>${brcMarkCellHtml(third,r.third,'',`3着率 ${r.third.toFixed(1)}% / 6艇${thirdRanks[i]}位`)}</td>
@@ -15654,7 +15673,7 @@ async function runPredict(){
               : '<span style="color:var(--ink-soft);">―</span>';
           return `<tr>
             <td><span class="num-badge" style="width:22px;height:22px;font-size:12.5px;background:${col.bg};color:${col.text};${b.course===1?'border:1.5px solid rgba(10,31,51,.35);box-sizing:border-box;':''}display:inline-flex;align-items:center;justify-content:center;border-radius:50%;">${b.course}</span></td>
-            <td class="predict-player-cell"><div id="predict-player-name-${b.course}" class="predict-player-name">${brcBuildPredictPlayerNameHtml(b,venue)}</div><div id="predict-exhibition-label-${b.course}" class="predict-exhibition-label">${brcBuildPredictExhibitionLabelHtml(b)}</div></td>
+            <td class="predict-player-cell"><div class="predict-player-name"><a href="#" style="color:var(--line-white); text-decoration:none; cursor:pointer; font-weight:800;" onclick="event.preventDefault(); togglePredictPlayer(${b.course}, '${b.player.reg}', '${venue}');" title="タップで選手・展開・ST・モーター詳細を表示">${b.player.name}</a></div><div id="predict-exhibition-label-${b.course}" class="predict-exhibition-label">${brcBuildPredictExhibitionLabelHtml(b)}</div></td>
             <td id="predict-win-cell-${b.course}" class="num" style="font-weight:800; color:var(--line-white);">${brcBuildWinCellInner(b,venue)}</td>
             <td id="predict-top3-cell-${b.course}" class="num" style="font-weight:800; color:var(--line-white);">${brcBuildTop3CellInner(b)}</td>
             <td class="num" title="タップで詳細の「ST」タブを表示" onclick="openSTStabilityDetail('${b.player.reg}',${b.course})"><div class="st-rank-stack"><span class="st-rank-main">${stText}</span>${buildSTStabilitySub(b.player.reg,b.course)}</div></td>
