@@ -3,6 +3,7 @@
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V1 -->
 <!-- BRC_TIMEX_COMPACT_DECISION_UI_20260908 -->
+<!-- BRC_SCENARIO_PERSONAL_TREND_RECONNECT_20260909 -->
 
 <!-- BRC_ADMIN_INVESTMENT_MANAGER_V4_MONTH_BACKFILL_20260907 -->
 <!-- BRC_ADMIN_INVESTMENT_MANAGER_V3_AUTO_SA_BACKGROUND_20260907 -->
@@ -11277,8 +11278,14 @@ function brcBuildScenarioAdjustedRate(rate,b,kind){
     : Number(b.exhibitionSecondDeltaPt);
   return brcClamp(base+(Number.isFinite(delta)?delta:0),0,100);
 }
+function brcFindScenarioPersonalTrendRow(b){
+  // 展開タブの「本人傾向」は、常時表示の「タイムを出しやすい／出しにくい」選手特性とは別系統。
+  // 選手×現在コース×今回のTimeX差帯が一致し、既存基準どおりN=12以上の条件だけ参考表示する。
+  const selected=brcFindExhibitionPlayerAlert(b);
+  return selected && Number(selected.N)>=12 ? selected : null;
+}
 function brcBuildScenarioPersonalTrendHtml(b,kind,currentRate=NaN){
-  const a=brcFindExhibitionPlayerAlert(b);
+  const a=brcFindScenarioPersonalTrendRow(b);
   if(!a) return '';
   const diff=brcPersonalEffectDiff(a,kind);
   if(!Number.isFinite(diff)) return '';
@@ -11391,6 +11398,14 @@ function brcRefreshExhibitionAdjustedDom(liveRace,venue,raceNo){
   if(rec && worker){
     const wrap=document.createElement('div'); wrap.innerHTML=buildRecommendedBetsHtmlFromServer(worker,local,applied).trim();
     if(wrap.firstElementChild) rec.replaceWith(wrap.firstElementChild);
+  }
+
+  // 詳細モーダルを開いたままTimeXが更新された場合も、展開タブの表示だけを現在値へ再接続する。
+  // 2着率・3着率・3連対率は既存の一般TimeX補正をそのまま再描画し、本人傾向は参考表示のみ。
+  const scenarioBox=document.querySelector('#predictDetailBody [id^="predict-sc-box-"]');
+  if(scenarioBox){
+    const m=String(scenarioBox.id||'').match(/^predict-sc-box-(\d+)$/);
+    if(m) renderInlinePredictScenario(Number(m[1]));
   }
 }
 
