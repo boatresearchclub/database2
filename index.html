@@ -5,6 +5,7 @@
 <!-- BRC_TIMEX_COMPACT_DECISION_UI_20260908 -->
 <!-- BRC_SCENARIO_PERSONAL_TREND_RECONNECT_20260909 -->
 <!-- BRC_DEADLINE_T16_CANCEL_SYNC_20260909 -->
+<!-- BRC_1DAY_JST_SESSION_EXPIRY_20260909 -->
 
 <!-- BRC_ADMIN_INVESTMENT_MANAGER_V4_MONTH_BACKFILL_20260907 -->
 <!-- BRC_ADMIN_INVESTMENT_MANAGER_V3_AUTO_SA_BACKGROUND_20260907 -->
@@ -3929,6 +3930,10 @@ let __brcLiveScheduleLastAppliedAt = 0;
 
 const BRC_SESSION_STORAGE_KEY = 'brc_supabase_session_v1';
 const BRC_MEMBER_EMAIL_DOMAIN = 'members.example.com'; // 会員IDをSupabase Auth用の内部メールへ変換（外部送信には使用しない）
+// BRC_1DAY_JST_SESSION_EXPIRY_20260909
+// BRC_1DAY_PIN4_UI_20260909
+// 1DAY PASSは固定IDだけを判定対象にし、パスワードはINDEXへ一切保持しない。
+const BRC_ONE_DAY_MEMBER_ID = 'BRC1DAY';
 let BRC_MEMBER_ACTIVE = false;
 let BRC_MEMBER_CHECKED_AT = 0;
 const BRC_MEMBERSHIP_RECHECK_MS = 60 * 1000; // 会員停止を最長約1分で反映
@@ -3947,21 +3952,87 @@ function brcGetStoredSession(){
     return (s && s.access_token && s.refresh_token) ? s : null;
   }catch(_){ return null; }
 }
-function brcStoreSession(session){
+function brcJapanDateKey(ms=Date.now()){
+  try{
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone:'Asia/Tokyo', year:'numeric', month:'2-digit', day:'2-digit'
+    }).formatToParts(new Date(ms));
+    const map = {};
+    parts.forEach(p=>{ if(p && p.type) map[p.type]=p.value; });
+    if(map.year && map.month && map.day) return `${map.year}-${map.month}-${map.day}`;
+  }catch(_e){}
+  // Asia/TokyoはDSTなしのUTC+9。Intlが使えない古い環境だけの保険。
+  const d = new Date(Number(ms||Date.now()) + 9*60*60*1000);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
+}
+function brcIsOneDayIdentifier(identifier){
+  const raw=String(identifier||'').trim();
+  if(!raw) return false;
+  if(raw.includes('@')) return raw.toLowerCase() === `${BRC_ONE_DAY_MEMBER_ID.toLowerCase()}@${BRC_MEMBER_EMAIL_DOMAIN}`;
+  return raw.replace(/\s+/g,'').toUpperCase() === BRC_ONE_DAY_MEMBER_ID;
+}
+function brcIsOneDaySession(session){
+  if(!session) return false;
+  if(session.brc_one_day === true) return true;
+  const email=String(session.user && session.user.email || '').toLowerCase();
+  return email === `${BRC_ONE_DAY_MEMBER_ID.toLowerCase()}@${BRC_MEMBER_EMAIL_DOMAIN}`;
+}
+function brcOneDaySessionDateValid(session){
+  if(!brcIsOneDaySession(session)) return true;
+  const loginDate=String(session && session.brc_one_day_login_jst_date || '');
+  return !!loginDate && loginDate === brcJapanDateKey();
+}
+function brcScheduleOneDayExpiryTimer(){
+  if(window.__brcOneDayExpiryTimer){
+    clearTimeout(window.__brcOneDayExpiryTimer);
+    window.__brcOneDayExpiryTimer=null;
+  }
+  const session=brcGetStoredSession();
+  if(!session || !brcIsOneDaySession(session)) return;
+  const dayMs=24*60*60*1000;
+  const jstOffsetMs=9*60*60*1000;
+  const shifted=Date.now()+jstOffsetMs;
+  const untilNextJstMidnight=dayMs-(shifted%dayMs)+500;
+  window.__brcOneDayExpiryTimer=setTimeout(async()=>{
+    const current=brcGetStoredSession();
+    if(current && !brcOneDaySessionDateValid(current)) await brcExpireOneDaySession();
+    brcScheduleOneDayExpiryTimer();
+  }, Math.max(1000, untilNextJstMidnight));
+}
+function brcStoreSession(session, authMeta=null){
   if(!session) return;
+  const previous=brcGetStoredSession();
   const rawExpiresAt = Number(session.expires_at||0);
   const expiresAt = rawExpiresAt ? (rawExpiresAt > 1e12 ? rawExpiresAt : rawExpiresAt*1000) : (Date.now() + Math.max(60, Number(session.expires_in||3600))*1000);
+  let oneDay=false;
+  let oneDayLoginDate='';
+  if(authMeta && Object.prototype.hasOwnProperty.call(authMeta,'oneDay')){
+    oneDay = authMeta.oneDay === true;
+    oneDayLoginDate = oneDay ? brcJapanDateKey() : '';
+  }else{
+    oneDay = brcIsOneDaySession(session) || brcIsOneDaySession(previous);
+    oneDayLoginDate = String(session.brc_one_day_login_jst_date || previous?.brc_one_day_login_jst_date || '');
+  }
   const clean = {
     access_token: session.access_token,
     refresh_token: session.refresh_token,
     expires_at: expiresAt,
     user: session.user || null
   };
+  if(oneDay){
+    clean.brc_one_day = true;
+    clean.brc_one_day_login_jst_date = oneDayLoginDate;
+  }
   localStorage.setItem(BRC_SESSION_STORAGE_KEY, JSON.stringify(clean));
+  brcScheduleOneDayExpiryTimer();
   return clean;
 }
 function brcClearSession(){
   localStorage.removeItem(BRC_SESSION_STORAGE_KEY);
+  if(window.__brcOneDayExpiryTimer){
+    clearTimeout(window.__brcOneDayExpiryTimer);
+    window.__brcOneDayExpiryTimer=null;
+  }
   BRC_MEMBER_ACTIVE = false;
   BRC_MEMBER_CHECKED_AT = 0;
 }
@@ -3994,8 +4065,16 @@ async function brcRefreshSession(session){
 async function brcEnsureFreshSession(){
   let session = brcGetStoredSession();
   if(!session) return null;
+  if(!brcOneDaySessionDateValid(session)){
+    await brcExpireOneDaySession();
+    return null;
+  }
   if(!session.expires_at || Number(session.expires_at) < Date.now()+60000){
     session = await brcRefreshSession(session);
+  }
+  if(session && !brcOneDaySessionDateValid(session)){
+    await brcExpireOneDaySession();
+    return null;
   }
   return session;
 }
@@ -4015,6 +4094,8 @@ async function brcCheckMembership(session){
   if(!session || !session.access_token) return {ok:false, reason:'session'};
   const user = await brcGetUser(session);
   if(!user || !user.id) return {ok:false, reason:'session'};
+  const currentSession=brcGetStoredSession();
+  if(currentSession && !brcOneDaySessionDateValid(currentSession)) return {ok:false, user, reason:'one_day_expired'};
 
   const res = await fetch(BRC_API_URL, {
     method:'GET',
@@ -5078,6 +5159,11 @@ function brcFindFreePreviewRace(venue,raceNo){
 }
 
 async function brcEnsurePredictAccess({silent=false, force=false}={}){
+  const storedSession=brcGetStoredSession();
+  if(storedSession && !brcOneDaySessionDateValid(storedSession)){
+    await brcExpireOneDaySession();
+    return false;
+  }
   const membershipFresh = BRC_MEMBER_ACTIVE && BRC_MEMBER_CHECKED_AT && (Date.now() - BRC_MEMBER_CHECKED_AT < BRC_MEMBERSHIP_RECHECK_MS);
   if(membershipFresh && !force) return true;
   if(BRC_AUTH_BUSY) return false;
@@ -5094,6 +5180,10 @@ async function brcEnsurePredictAccess({silent=false, force=false}={}){
     }
     const result = await brcCheckMembership(session);
     if(result.ok){ brcRenderMember(result.user); return true; }
+    if(result.reason==='one_day_expired'){
+      await brcExpireOneDaySession();
+      return false;
+    }
     if(result.reason==='session'){
       brcClearSession();
       brcRenderGate('login');
@@ -5121,13 +5211,27 @@ async function brcLogin(identifier,password){
     if(submit){submit.disabled=false; submit.textContent='ログインして開く';}
     return false;
   }
+  const oneDay = brcIsOneDayIdentifier(identifier);
+  const rawPassword = String(password||'');
+  if(oneDay && !/^\d{4}$/.test(rawPassword)){
+    brcSetAuthMessage('1DAY PASSのパスワードは数字4桁で入力してください。');
+    if(submit){submit.disabled=false; submit.textContent='ログインして開く';}
+    return false;
+  }
+  // Supabase Authは4文字パスワードを受け付けないため、BRC1DAYだけ内部で固定接頭辞を付ける。
+  // 当日の4桁PIN自体はINDEXへ保存・埋め込みしない。通常会員のパスワードは一切変換しない。
+  const authPassword = oneDay ? `BRC1DAY-${rawPassword}` : rawPassword;
   try{
     const data = await brcApi('/auth/v1/token?grant_type=password', {
-      method:'POST', body:JSON.stringify({email,password})
+      method:'POST', body:JSON.stringify({email,password:authPassword})
     });
-    brcStoreSession(data);
+    brcStoreSession(data,{oneDay});
     const result = await brcCheckMembership(brcGetStoredSession());
     if(!result.ok){
+      if(result.reason==='one_day_expired'){
+        await brcExpireOneDaySession();
+        return false;
+      }
       brcRenderGate('inactive',result.user);
       return false;
     }
@@ -5162,11 +5266,40 @@ async function brcLogout(){
   setTimeout(()=>brcLoadFreePreview(false),0);
   const pw=document.getElementById('brcLoginPassword'); if(pw) pw.value='';
 }
+async function brcExpireOneDaySession(){
+  const session=brcGetStoredSession();
+  if(!session || !brcIsOneDaySession(session)) return false;
+  await brcLogout();
+  brcSetAuthMessage('1DAY PASSの利用期限が終了しました。本日分のパスワードでログインしてください。','info');
+  return true;
+}
 async function brcInitAuthUi(){
   try{ brcBindAdminSocial(); }catch(_e){}
   const form=document.getElementById('brcLoginForm');
   if(form && !form.dataset.bound){
     form.dataset.bound='1';
+    const idInput=document.getElementById('brcLoginId');
+    const pwInput=document.getElementById('brcLoginPassword');
+    const syncOneDayPinUi=()=>{
+      const oneDay=brcIsOneDayIdentifier(idInput?.value||'');
+      if(!pwInput) return;
+      if(oneDay){
+        pwInput.inputMode='numeric';
+        pwInput.maxLength=4;
+        pwInput.pattern='[0-9]{4}';
+        pwInput.placeholder='数字4桁';
+      }else{
+        pwInput.inputMode='text';
+        pwInput.removeAttribute('maxlength');
+        pwInput.removeAttribute('pattern');
+        pwInput.removeAttribute('placeholder');
+      }
+    };
+    if(idInput){
+      idInput.addEventListener('input',syncOneDayPinUi);
+      idInput.addEventListener('change',syncOneDayPinUi);
+    }
+    syncOneDayPinUi();
     form.addEventListener('submit',async e=>{
       e.preventDefault();
       const memberId=(document.getElementById('brcLoginId')?.value||'').trim();
@@ -5191,6 +5324,8 @@ async function brcInitAuthUi(){
     });
   }
   // 保存済みセッションが有効なら、ページ表示時点で会員状態を復元。
+  // BRC1DAYだけはJST日付を先に確認し、日付をまたいだセッションを復元しない。
+  brcScheduleOneDayExpiryTimer();
   // 出走表AIを初期タブにしたため、ログイン済みなら中身もそのまま初期化する。
   const allowed = await brcEnsurePredictAccess({silent:true});
   const activeMain = document.querySelector('.page-tabs > .page-tab.active')?.dataset.page;
@@ -5214,6 +5349,14 @@ setInterval(()=>{
 
 // アプリへ戻った時にも会員状態を即再確認する。
 window.addEventListener('focus', ()=>{
+  if(BRC_MEMBER_ACTIVE || brcGetStoredSession()) brcEnsurePredictAccess({silent:true, force:true});
+});
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='visible' && (BRC_MEMBER_ACTIVE || brcGetStoredSession())){
+    brcEnsurePredictAccess({silent:true, force:true});
+  }
+});
+window.addEventListener('pageshow', ()=>{
   if(BRC_MEMBER_ACTIVE || brcGetStoredSession()) brcEnsurePredictAccess({silent:true, force:true});
 });
 
