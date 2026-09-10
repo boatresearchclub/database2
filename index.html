@@ -1319,7 +1319,7 @@
   }
 
   /* ---- BRC_AI_PREDICT_HIT_MARK_V2_HIT_ONLY_20260910 ---- */
-  .brc-nige-order-pick.brc-ai-pick-hit,.brc-nonin-ref-pick.brc-ai-pick-hit{
+  .brc-nige-order-pick.brc-ai-pick-hit,.brc-nonin-ref-pick.brc-ai-pick-hit,.brc-refmon-pick.brc-ai-pick-hit{
     border-color:rgba(47,143,91,.34);background:rgba(47,143,91,.065);
   }
   .brc-ai-pick-hit-badge{
@@ -10096,7 +10096,7 @@ function brcRefreshNigeReferenceOdds(){
   try{ brcInvAutoCaptureAiPrediction(window.__currentLocalInReliability||null); }catch(_e){}
 }
 
-// BRC_AI_PREDICT_HIT_MARK_V3_STABLE_20260910
+// BRC_AI_PREDICT_HIT_MARK_V4_REFMON_20260910
 // 公式確定結果と、現在表示中のAI参考買い目を照合し、当たった買い目の行だけに「的中」を表示する。
 // 同一レースでは一度確認した確定出目をメモリ保持し、AI欄の再描画やオッズ更新で結果キャッシュが一時的に
 // 参照できない瞬間があっても的中表示を消さない。レースが変わった時だけ表示中マークをリセットする。
@@ -10186,6 +10186,10 @@ function brcApplyAiOutcomeMark(result=null){
     });
     document.querySelectorAll('#predictAiResult .brc-nonin-ref-picks[data-brc-nonin-ref-picks]').forEach(box=>{
       apply(box,box.dataset.brcNoninRefPicks,'[data-brc-nonin-ref-combo]','data-brc-nonin-ref-combo','.brc-nonin-ref-pick-combo');
+    });
+    // 現行の管理者「参考買い目監視β」も同じ確定結果で照合する。
+    document.querySelectorAll('#predictAiResult .brc-refmon-picks[data-brc-ref-monitor-picks]').forEach(box=>{
+      apply(box,box.dataset.brcRefMonitorPicks,'[data-brc-refmon-combo]','data-brc-refmon-combo','strong');
     });
     return true;
   }catch(_e){return false;}
@@ -17400,7 +17404,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     if(data.decision==='pass'){
       body=`<div class="brc-refmon-pass"><strong>${esc(status)}</strong><span>${esc(reasonText(data))}</span></div>`;
     }else{
-      const list=(data.picks||[]).map((x,i)=>`<div class="brc-refmon-pick"><span class="idx">${i+1}</span><strong>${esc(x.combo)}</strong><span class="marks">2着${esc(x.secondMark||'—')} / 3着${esc(x.thirdMark||'—')}</span><span class="odds" data-brc-refmon-odds="${esc(x.combo)}">${Number.isFinite(Number(x.odds))?Number(x.odds).toFixed(1)+'倍':'―'}</span></div>`).join('');
+      const list=(data.picks||[]).map((x,i)=>`<div class="brc-refmon-pick" data-brc-refmon-combo="${esc(x.combo)}"><span class="idx">${i+1}</span><strong>${esc(x.combo)}</strong><span class="marks">2着${esc(x.secondMark||'—')} / 3着${esc(x.thirdMark||'—')}</span><span class="odds" data-brc-refmon-odds="${esc(x.combo)}">${Number.isFinite(Number(x.odds))?Number(x.odds).toFixed(1)+'倍':'―'}</span></div>`).join('');
       body=`<div class="brc-refmon-picks" data-brc-ref-monitor-picks="${esc((data.picks||[]).map(x=>x.combo).join(','))}">
         <div class="brc-refmon-picks-head"><span>参考買い目候補</span><strong>${data.pointCount}点</strong></div>
         ${data.formation?`<div class="brc-refmon-formation">${esc(data.formation)}</div>`:''}
@@ -17443,6 +17447,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       marksPanel?.insertAdjacentElement('afterend',panel);
     }
     panel.innerHTML=buildHtml(boats,workerPrediction,localInReliability,exhibitionApplied);
+    // 監視βパネルを差し替えた直後、保持済みの確定結果から的中表示を再適用する。
+    try{brcApplyAiOutcomeMark();}catch(_e){}
     try{window.brcSetAiAdminSubTab?.(window.__brcAiAdminSubTabCurrent||'marks');}catch(_e){}
     Promise.resolve().then(()=>saveCurrent(boats,workerPrediction,localInReliability,exhibitionApplied)).catch(()=>{});
   }
