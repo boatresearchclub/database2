@@ -2,6 +2,7 @@
 <!-- BRC_TOP_BANNER_REPLACE_20260909 -->
 <!-- BRC_ADMIN_MATRIX_NAME_LAYOUT_FIX_20260910 -->
 <!-- BRC_ADMIN_NONIN_REFERENCE_BETA_V0_20260910 -->
+<!-- BRC_ADMIN_REFERENCE_MONITOR_V1_20260910 -->
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V1 -->
@@ -3479,6 +3480,77 @@ table.brc-mark-table td:first-child{text-align:left;padding-left:7px;}
   .brc-mark-pct{font-size:8px;}
   .brc-mark-meta{font-size:7px;}
 }
+</style>
+
+
+<style id="brc-admin-reference-monitor-v1-style">
+/* BRC_ADMIN_REFERENCE_MONITOR_V1_20260910 */
+.brc-ai-admin-tabs.brc-refmon-enabled{grid-template-columns:repeat(3,minmax(0,1fr));}
+.brc-refmon-card{margin:0;padding:11px;border:1px solid rgba(124,58,237,.18);border-radius:12px;background:linear-gradient(160deg,rgba(124,58,237,.045),rgba(255,255,255,.97));}
+.brc-refmon-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:9px;}
+.brc-refmon-title{font-size:13px;font-weight:950;color:var(--navy);}
+.brc-refmon-sub{margin-top:2px;font-size:9.5px;line-height:1.45;color:var(--ink-soft);}
+.brc-refmon-badges{display:flex;align-items:center;justify-content:flex-end;gap:4px;flex-wrap:wrap;}
+.brc-refmon-badges span{display:inline-flex;align-items:center;padding:3px 6px;border-radius:999px;background:rgba(124,58,237,.07);border:1px solid rgba(124,58,237,.16);color:#6d28d9;font-size:8px;font-weight:950;white-space:nowrap;}
+.brc-refmon-status{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:9px 10px;border:1px solid rgba(10,31,51,.08);border-radius:10px;background:#fff;}
+.brc-refmon-status.one{border-color:rgba(47,143,91,.22);background:rgba(47,143,91,.035);}
+.brc-refmon-status.two{border-color:rgba(0,87,219,.22);background:rgba(0,87,219,.035);}
+.brc-refmon-status.skip{border-color:rgba(209,55,63,.22);background:rgba(209,55,63,.035);}
+.brc-refmon-status>div:first-child{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;}
+.brc-refmon-status .k{font-size:9px;font-weight:850;color:var(--ink-soft);}
+.brc-refmon-status strong{font-size:15px;font-weight:950;color:var(--navy);}
+.brc-refmon-status small{font-size:9px;font-weight:900;color:var(--ink-soft);}
+.brc-refmon-heads{display:flex;align-items:center;justify-content:flex-end;gap:5px;flex-wrap:wrap;}
+.brc-refmon-head-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 6px;border-radius:999px;background:#fff;border:1px solid rgba(10,31,51,.10);font-size:9px;color:var(--navy);white-space:nowrap;}
+.brc-refmon-head-chip .entry-lane-badge,.brc-refmon-head-chip .brc-result-start-boat{width:19px!important;height:19px!important;font-size:9px!important;}
+.brc-refmon-head-chip strong{font-size:11px;line-height:1;}
+.brc-refmon-head-chip span:last-child{font-weight:900;font-variant-numeric:tabular-nums;}
+.brc-refmon-heads .muted{font-size:9.5px;color:var(--ink-soft);}
+.brc-refmon-detail{margin-top:8px;border:1px solid rgba(10,31,51,.08);border-radius:9px;background:rgba(255,255,255,.78);overflow:hidden;}
+.brc-refmon-detail>summary{list-style:none;cursor:pointer;padding:7px 9px;font-size:9.5px;font-weight:900;color:var(--wave);user-select:none;}
+.brc-refmon-detail>summary::-webkit-details-marker{display:none;}
+.brc-refmon-detail>summary::after{content:' ▾';}
+.brc-refmon-mark-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border-top:1px solid rgba(10,31,51,.07);}
+.brc-refmon-mark-row{min-width:0;padding:6px 2px;text-align:center;border-left:1px solid rgba(10,31,51,.055);font-size:8.5px;color:var(--ink-soft);}
+.brc-refmon-mark-row:first-child{border-left:0;}
+.brc-refmon-mark-row>span{display:block;}
+.brc-refmon-mark-row .mk{margin:2px 0;font-size:16px;font-weight:950;line-height:1;}
+.brc-refmon-mark-row .mk.a{color:#6d28d9}.brc-refmon-mark-row .mk.b{color:var(--wave)}.brc-refmon-mark-row .mk.c{color:#b36a00}.brc-refmon-mark-row .mk.d{color:#a52c35}
+.brc-refmon-rule{padding:7px 9px;border-top:1px solid rgba(10,31,51,.06);font-size:8.8px;line-height:1.55;color:var(--ink-soft);}
+.brc-refmon-pass{margin-top:8px;padding:10px;border-radius:9px;border:1px solid rgba(209,55,63,.16);background:rgba(209,55,63,.035);}
+.brc-refmon-pass strong{display:block;color:#b4232c;font-size:12px;font-weight:950;}
+.brc-refmon-pass span{display:block;margin-top:3px;font-size:9.5px;line-height:1.5;color:var(--ink-soft);}
+.brc-refmon-picks{margin-top:8px;border:1px solid rgba(10,31,51,.09);border-radius:10px;background:#fff;overflow:hidden;}
+.brc-refmon-picks-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 9px;background:#f7f9fc;border-bottom:1px solid rgba(10,31,51,.07);}
+.brc-refmon-picks-head span{font-size:10.5px;font-weight:950;color:var(--navy);}
+.brc-refmon-picks-head strong{font-size:11px;font-weight:950;color:var(--wave);}
+.brc-refmon-formation{padding:8px 9px;border-bottom:1px solid rgba(10,31,51,.06);font-size:13px;font-weight:950;color:var(--navy);overflow-wrap:anywhere;}
+.brc-refmon-pick-list{display:grid;}
+.brc-refmon-pick{display:grid;grid-template-columns:24px 58px minmax(0,1fr) 52px;align-items:center;gap:5px;padding:6px 8px;border-top:1px solid rgba(10,31,51,.055);font-size:9.5px;}
+.brc-refmon-pick:first-child{border-top:0;}
+.brc-refmon-pick .idx{color:var(--ink-soft);font-weight:850;text-align:center;}
+.brc-refmon-pick strong{font-size:10.5px;font-weight:950;color:var(--navy);}
+.brc-refmon-pick .marks{color:var(--ink-soft);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.brc-refmon-pick .odds{text-align:right;font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.brc-refmon-composite{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:7px 9px;background:rgba(124,58,237,.035);border-top:1px solid rgba(124,58,237,.10);}
+.brc-refmon-composite span{font-size:9.5px;font-weight:900;color:var(--ink-soft);}
+.brc-refmon-composite strong{font-size:14px;font-weight:950;color:#6d28d9;}
+.brc-refmon-note{margin:7px 2px 0;font-size:8.8px;line-height:1.55;color:var(--ink-soft);}
+@media(max-width:420px){
+  .brc-ai-admin-tabs.brc-refmon-enabled{gap:3px;padding:3px;}
+  .brc-ai-admin-tabs.brc-refmon-enabled .brc-ai-admin-tab{font-size:9.5px;padding:8px 2px;letter-spacing:-.03em;}
+  .brc-refmon-card{padding:9px 7px;}
+  .brc-refmon-head{display:block;}
+  .brc-refmon-badges{justify-content:flex-start;margin-top:5px;}
+  .brc-refmon-status{align-items:flex-start;padding:8px;}
+  .brc-refmon-head-chip{padding:3px 5px;}
+  .brc-refmon-mark-row{font-size:8px;}
+  .brc-refmon-mark-row .mk{font-size:15px;}
+  .brc-refmon-pick{grid-template-columns:20px 52px minmax(0,1fr) 48px;padding:6px 5px;gap:3px;font-size:8.8px;}
+  .brc-refmon-pick strong{font-size:10px;}
+  .brc-refmon-formation{font-size:12px;}
+}
+
 </style>
 
 </head>
@@ -16968,6 +17040,374 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
 })();
+</script>
+
+<!-- BRC_ADMIN_REFERENCE_MONITOR_V1_20260910 -->
+<script id="brc-admin-reference-monitor-v1">
+(function(){
+  'use strict';
+  const VERSION='BRC_ADMIN_REFERENCE_MONITOR_V1_20260910';
+  const DB_NAME='brc_admin_reference_monitor_v1';
+  const DB_STORE='snapshots';
+
+  function num(v,f=0){ const n=Number(v); return Number.isFinite(n)?n:f; }
+  function clamp(v){ return Math.max(0,Math.min(100,num(v,0))); }
+  function markScore(m){ return m==='◎'?3:m==='○'?2:m==='△'?1:0; }
+  function esc(v){ return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+  function round(v,d=3){ const n=Number(v); if(!Number.isFinite(n)) return null; const p=10**d; return Math.round(n*p)/p; }
+
+  function phaseRates(b,phase){
+    if(phase==='pre'){
+      const win=clamp(b?.basePctFloat);
+      const top3=clamp(b?.basePct3Float);
+      const second=clamp(b?.basePct2);
+      const third=clamp(Math.max(0,top3-win-second));
+      return {win,second,third,top3};
+    }
+    return (typeof brcMarkFinalRates==='function') ? brcMarkFinalRates(b) : {win:0,second:0,third:0,top3:0};
+  }
+
+  function buildMarks(boats,phase='current'){
+    const src=(Array.isArray(boats)?boats:[]).filter(Boolean).slice().sort((a,b)=>Number(a.course)-Number(b.course));
+    if(src.length!==6) return null;
+    const rates=src.map(b=>phaseRates(b,phase));
+    const inWin=num(rates[0]?.win,0);
+    const denom=Math.max(.001,100-inWin);
+    const secondVals=rates.map(x=>x.second);
+    const thirdVals=rates.map(x=>x.third);
+    const top3Vals=rates.map(x=>x.top3);
+    const secondRanks=secondVals.map((_,i)=>typeof brcMarkCompetitionRank==='function'?brcMarkCompetitionRank(secondVals,i):i+1);
+    const thirdRanks=thirdVals.map((_,i)=>typeof brcMarkCompetitionRank==='function'?brcMarkCompetitionRank(thirdVals,i):i+1);
+    const top3Ranks=top3Vals.map((_,i)=>typeof brcMarkCompetitionRank==='function'?brcMarkCompetitionRank(top3Vals,i):i+1);
+    return src.map((b,i)=>{
+      const course=Number(b.course), r=rates[i];
+      const share=course===1?null:r.win/denom*100;
+      const head=course===1?brcMarkHeadForIn(inWin):brcMarkHeadForOuter(inWin,share);
+      const second=brcMarkSecond(course,r.second,secondRanks[i]);
+      const third=brcMarkThird(course,r.third,thirdRanks[i],inWin);
+      const top3=brcMarkTop3(r.top3,top3Ranks[i]);
+      return {course,name:String(b?.player?.name||''),rates:r,share:round(share,2),head,second,third,top3,headScore:markScore(head)};
+    });
+  }
+
+  function headDecision(marks){
+    if(!Array.isArray(marks)||marks.length!==6) return {decision:'pass',reason:'DATA_NOT_READY',heads:[],maxScore:0};
+    const maxScore=Math.max(...marks.map(x=>x.headScore));
+    const heads=marks.filter(x=>x.headScore===maxScore).map(x=>x.course);
+    if(maxScore<2) return {decision:'pass',reason:'HEAD_MARK_WEAK',heads,maxScore};
+    if(heads.length>2) return {decision:'pass',reason:'HEAD_3PLUS',heads,maxScore};
+    const includes1=heads.includes(1);
+    const mode=heads.length===1?(heads[0]===1?'nige':'nonin'):(includes1?'mixed':'nonin');
+    return {decision:heads.length===1?'one':'two',reason:'OK',heads,maxScore,mode};
+  }
+
+  function normalizeRows(rows,key='w'){
+    const a=(Array.isArray(rows)?rows:[]).map(x=>({...x,[key]:Math.max(.0001,num(x[key],0))}));
+    const z=a.reduce((s,x)=>s+x[key],0);
+    return z>0?a.map(x=>({...x,p:x[key]/z})):[];
+  }
+
+  function genericConditionalForHead(head,marks){
+    const byCourse=new Map(marks.map(x=>[x.course,x]));
+    const seconds=[1,2,3,4,5,6].filter(c=>c!==head).map(c=>({course:c,w:Math.max(.05,num(byCourse.get(c)?.rates?.second,0))}));
+    const sNorm=normalizeRows(seconds,'w');
+    const rows=[];
+    for(const s of sNorm){
+      const thirds=[1,2,3,4,5,6].filter(c=>c!==head&&c!==s.course).map(c=>({course:c,w:Math.max(.05,num(byCourse.get(c)?.rates?.third,0))}));
+      const tNorm=normalizeRows(thirds,'w');
+      for(const t of tNorm){
+        rows.push({
+          combo:`${head}-${s.course}-${t.course}`,
+          head,second:s.course,third:t.course,
+          condP:s.p*t.p,
+          secondMark:byCourse.get(s.course)?.second||'×',
+          thirdMark:byCourse.get(t.course)?.third||'×',
+          secondRate:round(byCourse.get(s.course)?.rates?.second,3),
+          thirdRate:round(byCourse.get(t.course)?.rates?.third,3),
+          source:'FINAL_RATES'
+        });
+      }
+    }
+    const z=rows.reduce((s,x)=>s+x.condP,0)||1;
+    return rows.map(x=>({...x,condP:x.condP/z}));
+  }
+
+  function nigeConditional(workerPrediction,boats,phase){
+    try{
+      const pred=brcFinalizeServerNigePrediction(workerPrediction,boats,phase!=='pre'&&!!boats?.some?.(b=>b?.exhibitionApplied));
+      const rows=(Array.isArray(pred?.joint)?pred.joint:[])
+        .map(x=>({combo:String(x.combo||''),head:1,second:Number(x.second),third:Number(x.third),condP:num(x.p,0),source:'NIGE_V2'}))
+        .filter(x=>/^1-[2-6]-[2-6]$/.test(x.combo)&&x.condP>0);
+      if(rows.length===20){
+        const z=rows.reduce((s,x)=>s+x.condP,0)||1;
+        return rows.map(x=>({...x,condP:x.condP/z}));
+      }
+    }catch(_e){}
+    return genericConditionalForHead(1,buildMarks(boats,phase)||[]);
+  }
+
+  function nigeCumulative70(rows){
+    const src=(Array.isArray(rows)?rows:[]).slice().sort((a,b)=>b.condP-a.condP||a.combo.localeCompare(b.combo));
+    const out=[]; let cum=0;
+    for(const x of src){ out.push(x); cum+=x.condP; if(cum+1e-12>=.70) break; }
+    return {rows:out,cum};
+  }
+
+  function formationLabel(picks){
+    const combos=(Array.isArray(picks)?picks:[]).map(x=>String(x?.combo||x||'')).filter(x=>/^[1-6]-[1-6]-[1-6]$/.test(x));
+    if(!combos.length) return '';
+    const heads=Array.from(new Set(combos.map(x=>x[0]))).sort();
+    const parts=[];
+    for(const h of heads){
+      const group=combos.filter(x=>x.startsWith(h+'-'));
+      let label='';
+      try{ label=brcBuildNigeFormationLabel(group); }catch(_e){}
+      parts.push(label||group.join(' / '));
+    }
+    return parts.join(' / ');
+  }
+
+  function oddsForPicks(picks){
+    let odds=null;
+    try{ const sel=brcOddsSelection(); odds=sel?.key?(__brcOddsLocal?.[sel.key]?.odds||null):null; }catch(_e){}
+    const rows=(Array.isArray(picks)?picks:[]).map(x=>{
+      let v=null; try{v=brcOddsValue(odds,x.combo);}catch(_e){}
+      return {...x,odds:v};
+    });
+    const vals=rows.map(x=>x.odds).filter(v=>Number.isFinite(v)&&v>0);
+    let composite=null;
+    if(vals.length===rows.length&&rows.length){
+      try{composite=brcOddsBuilderComposite(vals.map(v=>({odds:v})));}catch(_e){}
+    }
+    return {rows,composite:Number.isFinite(composite)?composite:null};
+  }
+
+  function buildData(boats,workerPrediction,localInReliability,phase='current'){
+    const marks=buildMarks(boats,phase);
+    const hd=headDecision(marks);
+    const phaseLabel=phase==='pre'?'展示前':'TimeX反映後';
+    const inPct=marks?.find(x=>x.course===1)?.rates?.win??null;
+    let rank=String(localInReliability?.rank||'');
+    if(phase==='pre'){
+      try{
+        const grade=String(window.__predictGradeCurrent||document.getElementById('predictGrade')?.value||'');
+        const regs=(Array.isArray(window.__predictApiBoatsCurrent)?window.__predictApiBoatsCurrent:[]).map(b=>b.reg);
+        const pre=classifyInReliabilityByWinPct(inPct,grade,regs,workerPrediction?.inReliability||null);
+        rank=String(pre?.rank||rank);
+      }catch(_e){}
+    }
+    const base={version:VERSION,phase,phaseLabel,inReliability:rank,inPct:round(inPct,3),marks,decision:hd.decision,reason:hd.reason,heads:hd.heads,mode:hd.mode||'',pointCount:0,picks:[],formation:'',compositeOdds:null,variants:{}};
+    if(hd.decision==='pass') return base;
+
+    const headWeights=normalizeRows(hd.heads.map(h=>({head:h,w:Math.max(.05,num(marks.find(x=>x.course===h)?.rates?.win,0))})),'w');
+    const headWeightMap=new Map(headWeights.map(x=>[x.head,x.p]));
+    let ranked=[];
+
+    if(hd.mode==='nige'){
+      const cond=nigeConditional(workerPrediction,boats,phase);
+      const chosen=nigeCumulative70(cond);
+      ranked=chosen.rows.map(x=>({...x,p:x.condP,headWeight:1}));
+      base.variants={cum70:ranked.map(x=>x.combo),cum70Value:round(chosen.cum,5)};
+    }else{
+      for(const h of hd.heads){
+        const hw=headWeightMap.get(h)||0;
+        const cond=h===1?nigeConditional(workerPrediction,boats,phase):genericConditionalForHead(h,marks);
+        for(const x of cond) ranked.push({...x,headWeight:hw,p:hw*x.condP});
+      }
+      ranked.sort((a,b)=>b.p-a.p||markScore(b.secondMark)-markScore(a.secondMark)||markScore(b.thirdMark)-markScore(a.thirdMark)||a.combo.localeCompare(b.combo));
+      const limit=hd.heads.length===1?6:8;
+      base.variants=hd.heads.length===1
+        ? {top4:ranked.slice(0,4).map(x=>x.combo),top5:ranked.slice(0,5).map(x=>x.combo),top6:ranked.slice(0,6).map(x=>x.combo)}
+        : {top6:ranked.slice(0,6).map(x=>x.combo),top7:ranked.slice(0,7).map(x=>x.combo),top8:ranked.slice(0,8).map(x=>x.combo)};
+      ranked=ranked.slice(0,limit);
+    }
+
+    const withOdds=oddsForPicks(ranked);
+    base.picks=withOdds.rows.map(x=>({combo:x.combo,p:round(x.p,8),head:x.head,second:x.second,third:x.third,source:x.source||'',secondMark:x.secondMark||marks?.find(m=>m.course===x.second)?.second||'',thirdMark:x.thirdMark||marks?.find(m=>m.course===x.third)?.third||'',odds:x.odds}));
+    base.pointCount=base.picks.length;
+    base.formation=formationLabel(base.picks);
+    base.compositeOdds=round(withOdds.composite,3);
+    return base;
+  }
+  window.brcBuildReferenceMonitorData=buildData;
+
+  function reasonText(data){
+    if(data.reason==='HEAD_MARK_WEAK') return '1着の最高印が△以下。頭を無理に作らず監視上は見送り。';
+    if(data.reason==='HEAD_3PLUS') return `1着の最高印が${data.marks?.find(x=>data.heads.includes(x.course))?.head||''}で${data.heads.length}艇並び。2艇以内に絞れないため見送り。`;
+    if(data.reason==='DATA_NOT_READY') return '6艇分の予測データが揃っていません。';
+    return '';
+  }
+
+  function headChips(data){
+    const items=(data.marks||[]).filter(x=>data.heads.includes(x.course));
+    return items.map(x=>`<span class="brc-refmon-head-chip">${typeof scenarioLaneBadge==='function'?scenarioLaneBadge(x.course):x.course}<strong>${x.head}</strong><span>${Math.round(x.rates.win)}%</span></span>`).join('');
+  }
+
+  function buildHtml(boats,workerPrediction,localInReliability,exhibitionApplied){
+    const phase=exhibitionApplied?'current':'pre';
+    const data=buildData(boats,workerPrediction,localInReliability,phase);
+    const status=data.decision==='pass'?'見送り':(data.decision==='one'?'1頭型':'2頭型');
+    const statusClass=data.decision==='pass'?'skip':(data.decision==='one'?'one':'two');
+    const modeLabel=data.mode==='nige'?'イン逃げ':data.mode==='mixed'?'①＋外艇':data.mode==='nonin'?'外艇頭':'—';
+    const markRows=(data.marks||[]).map(x=>`<div class="brc-refmon-mark-row"><span>${typeof scenarioLaneBadge==='function'?scenarioLaneBadge(x.course):x.course}</span><span class="mk ${esc(typeof brcMarkSymbolClass==='function'?brcMarkSymbolClass(x.head):'')}">${esc(x.head)}</span><span>${Math.round(x.rates.win)}%</span></div>`).join('');
+    let body='';
+    if(data.decision==='pass'){
+      body=`<div class="brc-refmon-pass"><strong>${esc(status)}</strong><span>${esc(reasonText(data))}</span></div>`;
+    }else{
+      const list=(data.picks||[]).map((x,i)=>`<div class="brc-refmon-pick"><span class="idx">${i+1}</span><strong>${esc(x.combo)}</strong><span class="marks">2着${esc(x.secondMark||'—')} / 3着${esc(x.thirdMark||'—')}</span><span class="odds" data-brc-refmon-odds="${esc(x.combo)}">${Number.isFinite(Number(x.odds))?Number(x.odds).toFixed(1)+'倍':'―'}</span></div>`).join('');
+      body=`<div class="brc-refmon-picks" data-brc-ref-monitor-picks="${esc((data.picks||[]).map(x=>x.combo).join(','))}">
+        <div class="brc-refmon-picks-head"><span>参考買い目候補</span><strong>${data.pointCount}点</strong></div>
+        ${data.formation?`<div class="brc-refmon-formation">${esc(data.formation)}</div>`:''}
+        <div class="brc-refmon-pick-list">${list}</div>
+        <div class="brc-refmon-composite"><span>合成オッズ</span><strong data-brc-refmon-composite>${Number.isFinite(Number(data.compositeOdds))?Number(data.compositeOdds).toFixed(1)+'倍':'―'}</strong></div>
+      </div>`;
+    }
+    return `<div class="brc-refmon-card" data-brc-refmon-root>
+      <div class="brc-refmon-head"><div><div class="brc-refmon-title">参考買い目監視 β</div><div class="brc-refmon-sub">展開印 → 頭判定 → 最終2着/3着率でShadow生成</div></div><div class="brc-refmon-badges"><span>管理者のみ</span><span>Shadow</span><span>${esc(data.phaseLabel)}</span></div></div>
+      <div class="brc-refmon-status ${statusClass}"><div><span class="k">判定</span><strong>${esc(status)}</strong><small>${esc(modeLabel)}</small></div><div class="brc-refmon-heads">${headChips(data)||'<span class="muted">頭候補なし</span>'}</div></div>
+      <details class="brc-refmon-detail"><summary>1着印の判定詳細</summary><div class="brc-refmon-mark-grid">${markRows}</div><div class="brc-refmon-rule">最高印が○以上で1〜2艇なら監視続行。3艇以上、または最高△以下は見送り。①単独は既存イン逃げロジック、①＋外艇は混合、外艇のみは非インShadow。</div></details>
+      ${body}
+      <div class="brc-refmon-note">監視専用V1です。既存AI予測・TimeX・本人傾向・一般会員表示・投資判断には反映しません。買い目候補は結果前に保存して比較します。</div>
+    </div>`;
+  }
+
+  function injectMonitor(boats,workerPrediction,localInReliability,exhibitionApplied){
+    if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return;
+    const box=document.getElementById('predictAiResult');
+    const tabs=box?.querySelector('.brc-ai-admin-tabs');
+    if(!tabs) return;
+    // V0の非インβロジック/OOSログは残し、画面だけ監視V1へ一本化する。
+    const legacyRefBtn=tabs.querySelector('[data-brc-ai-admin-tab="ref"]');
+    if(legacyRefBtn) legacyRefBtn.remove();
+    const legacyRefPanel=document.getElementById('brcAiAdminPanel-ref');
+    if(legacyRefPanel) legacyRefPanel.remove();
+    tabs.classList.add('brc-refmon-enabled');
+    let btn=tabs.querySelector('[data-brc-ai-admin-tab="monitor"]');
+    if(!btn){
+      btn=document.createElement('button');
+      btn.type='button'; btn.className='brc-ai-admin-tab'; btn.dataset.brcAiAdminTab='monitor'; btn.textContent='参考買い目監視β';
+      const nigeBtn=tabs.querySelector('[data-brc-ai-admin-tab="nige"]');
+      tabs.insertBefore(btn,nigeBtn||null);
+      btn.addEventListener('click',()=>window.brcSetAiAdminSubTab?.('monitor'));
+    }
+    let panel=document.getElementById('brcAiAdminPanel-monitor');
+    if(!panel){
+      panel=document.createElement('div'); panel.id='brcAiAdminPanel-monitor'; panel.className='brc-ai-admin-panel';
+      const marksPanel=document.getElementById('brcAiAdminPanel-marks');
+      marksPanel?.insertAdjacentElement('afterend',panel);
+    }
+    panel.innerHTML=buildHtml(boats,workerPrediction,localInReliability,exhibitionApplied);
+    try{window.brcSetAiAdminSubTab?.(window.__brcAiAdminSubTabCurrent||'marks');}catch(_e){}
+    Promise.resolve().then(()=>saveCurrent(boats,workerPrediction,localInReliability,exhibitionApplied)).catch(()=>{});
+  }
+
+  function refreshOdds(){
+    const root=document.querySelector('[data-brc-refmon-root]');
+    const picksBox=root?.querySelector('[data-brc-ref-monitor-picks]');
+    if(!picksBox) return;
+    const combos=String(picksBox.dataset.brcRefMonitorPicks||'').split(',').map(x=>x.trim()).filter(Boolean);
+    if(!combos.length) return;
+    let odds=null; try{ const sel=brcOddsSelection(); odds=sel?.key?(__brcOddsLocal?.[sel.key]?.odds||null):null; }catch(_e){}
+    const vals=[];
+    combos.forEach(c=>{
+      let v=null; try{v=brcOddsValue(odds,c);}catch(_e){}
+      if(v!==null) vals.push(v);
+      const el=picksBox.querySelector(`[data-brc-refmon-odds="${c}"]`); if(el) el.textContent=v===null?'―':`${v.toFixed(1)}倍`;
+    });
+    let comp=null; if(vals.length===combos.length){ try{comp=brcOddsBuilderComposite(vals.map(v=>({odds:v})));}catch(_e){} }
+    const ce=picksBox.querySelector('[data-brc-refmon-composite]'); if(ce) ce.textContent=Number.isFinite(comp)?`${comp.toFixed(1)}倍`:'―';
+  }
+  window.brcRefreshReferenceMonitorOdds=refreshOdds;
+
+  function openDb(){
+    return new Promise((resolve,reject)=>{
+      const req=indexedDB.open(DB_NAME,1);
+      req.onupgradeneeded=()=>{ const db=req.result; if(!db.objectStoreNames.contains(DB_STORE)) db.createObjectStore(DB_STORE,{keyPath:'id'}); };
+      req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error);
+    });
+  }
+  async function dbGetAll(){ const db=await openDb(); try{return await new Promise((res,rej)=>{const tx=db.transaction(DB_STORE,'readonly');const q=tx.objectStore(DB_STORE).getAll();q.onsuccess=()=>res(Array.isArray(q.result)?q.result:[]);q.onerror=()=>rej(q.error);});}finally{db.close();} }
+  async function dbPut(row){ const db=await openDb(); try{return await new Promise((res,rej)=>{const tx=db.transaction(DB_STORE,'readwrite');const q=tx.objectStore(DB_STORE).put(row);q.onsuccess=()=>res(true);q.onerror=()=>rej(q.error);});}finally{db.close();} }
+
+  function deadlineText(sel){ try{return String(RACE_INFO_TODAY?.[sel.venue]?.deadlines?.[String(sel.raceNo)]||'');}catch(_e){return '';} }
+  function beforeDeadline(sel){ try{return !!sel?.key&&!brcOddsDeadlinePassed(sel);}catch(_e){return false;} }
+  async function saveOne(data,sel,phase){
+    if(!data||!beforeDeadline(sel)) return false;
+    const oddsRec=sel?.key?__brcOddsLocal?.[sel.key]:null;
+    const row={
+      id:`${VERSION}|${sel.date}|${sel.venue}|${sel.raceNo}|${phase}`,
+      version:VERSION,date:sel.date,venue:sel.venue,venueCode:sel.code,raceNo:sel.raceNo,deadline:deadlineText(sel),phase,
+      capturedAt:new Date().toISOString(),inReliability:data.inReliability,inPct:data.inPct,decision:data.decision,reason:data.reason,
+      mode:data.mode,heads:data.heads,pointCount:data.pointCount,formation:data.formation,picks:data.picks,variants:data.variants,marks:data.marks,
+      compositeOdds:data.compositeOdds,oddsCapturedAt:String(oddsRec?.capturedAt||oddsRec?.updatedAt||''),exhibitionApplied:phase==='exhibition'
+    };
+    await dbPut(row); return true;
+  }
+  async function saveCurrent(boats,workerPrediction,localInReliability,exhibitionApplied){
+    if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return false;
+    let sel=null; try{sel=brcOddsSelection();}catch(_e){}
+    if(!beforeDeadline(sel)) return false;
+    const pre=buildData(boats,workerPrediction,localInReliability,'pre');
+    await saveOne(pre,sel,'pre');
+    if(exhibitionApplied){ const ex=buildData(boats,workerPrediction,localInReliability,'current'); await saveOne(ex,sel,'exhibition'); }
+    await refreshStatus(); return true;
+  }
+
+  function csvEsc(v){ const s=String(v??''); return /[",\r\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s; }
+  async function exportCsv(){
+    const rows=(await dbGetAll()).sort((a,b)=>String(a.date).localeCompare(String(b.date))||String(a.venue).localeCompare(String(b.venue))||num(a.raceNo)-num(b.raceNo)||String(a.phase).localeCompare(String(b.phase)));
+    if(!rows.length) throw new Error('参考買い目監視ログはまだありません');
+    const cols=['date','venue','venue_code','race_no','deadline','phase','captured_at','version','in_reliability','in_pct','decision','reason','mode','heads','point_count','formation','picks','composite_odds','variants_json','marks_json'];
+    const lines=[cols.join(',')];
+    for(const r of rows){
+      const o={date:r.date,venue:r.venue,venue_code:r.venueCode,race_no:r.raceNo,deadline:r.deadline,phase:r.phase,captured_at:r.capturedAt,version:r.version,in_reliability:r.inReliability,in_pct:r.inPct,decision:r.decision,reason:r.reason,mode:r.mode,heads:(r.heads||[]).join(''),point_count:r.pointCount,formation:r.formation,picks:(r.picks||[]).map(x=>x.combo).join(';'),composite_odds:r.compositeOdds,variants_json:JSON.stringify(r.variants||{}),marks_json:JSON.stringify(r.marks||[])};
+      lines.push(cols.map(k=>csvEsc(o[k])).join(','));
+    }
+    const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}); const url=URL.createObjectURL(blob); const a=document.createElement('a');
+    a.href=url; a.download=`BRC_REFERENCE_MONITOR_${String(rows.at(-1)?.date||'').replace(/-/g,'')}.csv`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),2000);
+  }
+  async function refreshStatus(){
+    const el=document.getElementById('brcRefMonitorLogStatus'); if(!el) return;
+    if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)){el.textContent='';return;}
+    try{ const rows=await dbGetAll(); const races=new Set(rows.map(r=>`${r.date}|${r.venue}|${r.raceNo}`)); const pre=rows.filter(r=>r.phase==='pre').length; const ex=rows.filter(r=>r.phase==='exhibition').length; el.textContent=`参考買い目監視 ${races.size}R / 事前${pre}・展示${ex}`; }catch(_e){el.textContent='監視ログ確認エラー';}
+  }
+  function initExportUi(){
+    const host=document.getElementById('brcOosAdminTools'); if(!host||document.getElementById('brcRefMonitorExportBtn')) return;
+    const sep=document.createElement('span'); sep.style.cssText='width:1px;height:22px;background:rgba(10,31,51,.12);';
+    const btn=document.createElement('button'); btn.type='button'; btn.id='brcRefMonitorExportBtn'; btn.textContent='参考買い目監視CSV'; btn.style.cssText='appearance:none;border:1px solid rgba(124,58,237,.25);border-radius:8px;background:rgba(124,58,237,.055);color:#6d28d9;padding:7px 10px;font:inherit;font-size:11px;font-weight:900;cursor:pointer;';
+    const status=document.createElement('span'); status.id='brcRefMonitorLogStatus'; status.style.cssText='font-size:10.5px;color:var(--ink-soft);'; status.textContent='参考買い目Shadowを自動保存';
+    btn.addEventListener('click',async()=>{const old=btn.textContent;btn.disabled=true;btn.textContent='書き出し中…';try{await exportCsv();await refreshStatus();}catch(err){status.textContent=err?.message||String(err);}finally{btn.disabled=false;btn.textContent=old;}});
+    host.appendChild(sep);host.appendChild(btn);host.appendChild(status); refreshStatus();
+  }
+
+  const originalSet=window.brcSetAiAdminSubTab;
+  window.brcSetAiAdminSubTab=function(key){
+    if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return;
+    const valid=['marks','monitor','nige']; const k=valid.includes(key)?key:'marks'; window.__brcAiAdminSubTabCurrent=k;
+    document.querySelectorAll('#predictAiResult [data-brc-ai-admin-tab]').forEach(btn=>{const on=btn.dataset.brcAiAdminTab===k;btn.classList.toggle('active',on);btn.setAttribute('aria-selected',on?'true':'false');});
+    valid.forEach(x=>{const p=document.getElementById(`brcAiAdminPanel-${x}`);if(p)p.classList.toggle('active',x===k);});
+    if(k==='nige') setTimeout(()=>{try{brcEnsureAiReferenceOddsAfterDeadline();}catch(_e){}},0);
+    if(k==='monitor') setTimeout(refreshOdds,0);
+  };
+
+  const originalRender=window.renderPredictAiPanel;
+  if(typeof originalRender==='function'){
+    window.renderPredictAiPanel=function(boats,workerPrediction,localInReliability,exhibitionApplied){
+      const out=originalRender.apply(this,arguments);
+      try{injectMonitor(boats,workerPrediction,localInReliability,exhibitionApplied);}catch(err){console.warn('BRC reference monitor render failed:',err);}
+      return out;
+    };
+  }
+
+  const originalRefresh=window.brcRefreshNigeReferenceOdds;
+  if(typeof originalRefresh==='function'){
+    window.brcRefreshNigeReferenceOdds=function(){ const out=originalRefresh.apply(this,arguments); try{refreshOdds();}catch(_e){} return out; };
+  }
+
+  function init(){ initExportUi(); setTimeout(initExportUi,500); setTimeout(initExportUi,1800); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true}); else init();
+})();
+
 </script>
 
 </body>
