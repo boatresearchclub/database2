@@ -1318,6 +1318,19 @@
     .brc-nige-order-legend{font-size:8.5px;}
   }
 
+  /* ---- BRC_AI_PREDICT_HIT_MARK_V2_HIT_ONLY_20260910 ---- */
+  .brc-nige-order-pick.brc-ai-pick-hit,.brc-nonin-ref-pick.brc-ai-pick-hit{
+    border-color:rgba(47,143,91,.34);background:rgba(47,143,91,.065);
+  }
+  .brc-ai-pick-hit-badge{
+    flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;margin-left:6px;padding:2px 6px;
+    border-radius:999px;background:rgba(47,143,91,.11);border:1px solid rgba(47,143,91,.24);
+    color:#217247;font-size:9px;font-weight:950;line-height:1.15;white-space:nowrap;
+  }
+  @media(max-width:420px){
+    .brc-ai-pick-hit-badge{margin-left:4px;padding:2px 5px;font-size:8.5px;}
+  }
+
   /* ---- 展開シナリオ：標本信頼度S-E＋スマホ幅最適化 ---- */
   .scenario-head-short{display:none;}
   .scenario-grade-badge{
@@ -8928,6 +8941,7 @@ function brcRenderRaceResultConfirmed(result){
   // 確定後は通常の『レース結果を見る』表示へ切り替える。スタート隊形は取得できた場合だけ追加する。
   brcSetRaceResultTitle('レース結果を見る');
   brcSetRaceResultVisibility(true);
+  try{ brcApplyAiOutcomeMark(result); }catch(_e){}
   try{
     if(typeof brcInvApplyOfficialResult==='function' && __brcRaceResultActive){
       brcInvApplyOfficialResult(__brcRaceResultActive,result);
@@ -10082,6 +10096,62 @@ function brcRefreshNigeReferenceOdds(){
   try{ brcInvAutoCaptureAiPrediction(window.__currentLocalInReliability||null); }catch(_e){}
 }
 
+// BRC_AI_PREDICT_HIT_MARK_V2_HIT_ONLY_20260910
+// 公式確定結果と、現在表示中のAI参考買い目を照合し、当たった買い目の行だけに「的中」を表示する。
+// 外れた買い目には何も表示しない。AI予測・TimeX・展開ロジック・買い目生成には一切影響しない。
+function brcNormalizeAiOutcomeCombo(v){
+  const nums=String(v||'').match(/[1-6]/g)||[];
+  return nums.length>=3?nums.slice(0,3).join('-'):'';
+}
+function brcCurrentConfirmedAiResult(){
+  try{
+    const sel=brcOddsSelection();
+    if(!sel?.key) return null;
+    const spec=brcRaceResultSpec(sel.venue,sel.raceNo);
+    if(!spec) return null;
+    const cached=__brcRaceResultCache?.get?.(spec.key);
+    return cached?.confirmed&&cached?.result?cached.result:null;
+  }catch(_e){return null;}
+}
+function brcClearAiOutcomeMarks(){
+  document.querySelectorAll('#predictAiResult .brc-ai-pick-hit-badge').forEach(el=>el.remove());
+  document.querySelectorAll('#predictAiResult .brc-ai-pick-hit').forEach(el=>el.classList.remove('brc-ai-pick-hit'));
+}
+function brcApplyAiOutcomeMark(result=null){
+  try{
+    const official=result||brcCurrentConfirmedAiResult();
+    const combo=brcNormalizeAiOutcomeCombo(official?.combination);
+    brcClearAiOutcomeMarks();
+    if(!combo) return false;
+
+    const apply=(box,rawCombos,rowSelector,attrName,comboSelector)=>{
+      if(!box) return;
+      const combos=String(rawCombos||'').split(',').map(brcNormalizeAiOutcomeCombo).filter(Boolean);
+      if(!combos.includes(combo)) return;
+      box.querySelectorAll(rowSelector).forEach(row=>{
+        const rowCombo=brcNormalizeAiOutcomeCombo(row.getAttribute(attrName));
+        if(rowCombo!==combo) return;
+        row.classList.add('brc-ai-pick-hit');
+        const anchor=row.querySelector(comboSelector)||row.firstElementChild;
+        const badge=document.createElement('span');
+        badge.className='brc-ai-pick-hit-badge';
+        badge.textContent='✓ 的中';
+        badge.title=`確定結果 ${combo}`;
+        if(anchor) anchor.insertAdjacentElement('afterend',badge);
+        else row.appendChild(badge);
+      });
+    };
+
+    document.querySelectorAll('#predictAiResult .brc-nige-order-picks[data-brc-ref-picks]').forEach(box=>{
+      apply(box,box.dataset.brcRefPicks,'[data-brc-ref-combo]','data-brc-ref-combo','.brc-nige-order-pick-combo');
+    });
+    document.querySelectorAll('#predictAiResult .brc-nonin-ref-picks[data-brc-nonin-ref-picks]').forEach(box=>{
+      apply(box,box.dataset.brcNoninRefPicks,'[data-brc-nonin-ref-combo]','data-brc-nonin-ref-combo','.brc-nonin-ref-pick-combo');
+    });
+    return true;
+  }catch(_e){return false;}
+}
+
 function brcOpenOddsFromReferencePicks(ev,text=''){
   try{ ev?.stopPropagation?.(); }catch(_e){}
   const combos=String(text||'').trim().split(/\s+/).filter(Boolean);
@@ -10482,7 +10552,7 @@ function brcBuildAdminNonInReferenceHtml(boats,workerPrediction,localInReliabili
   }
   const oddsInfo=brcNonInRefOddsInfo(main.tickets||[]);
   const oddsMap=new Map(oddsInfo.rows.map(x=>[x.combo,x.odds]));
-  const pickRows=(main.tickets||[]).map(combo=>`<div class="brc-nonin-ref-pick"><span class="brc-nonin-ref-pick-combo">${combo}</span><span class="brc-nonin-ref-pick-odds" data-brc-nonin-ref-odds="${combo}">${oddsMap.get(combo)==null?'―':Number(oddsMap.get(combo)).toFixed(1)+'倍'}</span></div>`).join('');
+  const pickRows=(main.tickets||[]).map(combo=>`<div class="brc-nonin-ref-pick" data-brc-nonin-ref-combo="${combo}"><span class="brc-nonin-ref-pick-combo">${combo}</span><span class="brc-nonin-ref-pick-odds" data-brc-nonin-ref-odds="${combo}">${oddsMap.get(combo)==null?'―':Number(oddsMap.get(combo)).toFixed(1)+'倍'}</span></div>`).join('');
   const scenarioDetail=support.map(x=>`${x.head}頭：${x.supported?'一致':((x.playerAvailable||x.venueAvailable)?'不一致':'データ不足')}`).join(' / ');
   return `<div class="brc-nonin-ref-card"><div class="brc-nonin-ref-head"><div><div class="brc-nonin-ref-title">BRC参考買い目 β</div><div class="brc-nonin-ref-sub">非イン参考買い目・管理者Shadow</div></div><div class="brc-nonin-ref-badges"><span class="brc-nonin-ref-badge">${phaseLabel}</span><span class="brc-nonin-ref-badge good">${headText}</span><span class="brc-nonin-ref-badge ${supportClass}">${supportText}</span></div></div><div class="brc-nonin-ref-heads">${rankHtml}</div>${metricHtml}<div class="brc-nonin-ref-status"><strong>頭候補 ${(main.heads||[]).join('・')}</strong><br>${scenarioDetail||'展開傾向データなし'}。展開傾向は着率・順位へ再加点せず、2着候補との整合確認だけに使用。</div><div class="brc-nonin-ref-picks" data-brc-nonin-ref-picks="${(main.tickets||[]).join(',')}"><div class="brc-nonin-ref-picks-label">BRC参考買い目</div>${main.formation?`<div class="brc-nonin-ref-formation"><span class="brc-nonin-ref-formation-value">${main.formation}</span><span class="brc-nonin-ref-formation-points">${main.defaultPoints}点</span></div>`:''}<div class="brc-nonin-ref-pick-list">${pickRows}</div><div class="brc-nonin-ref-composite"><span class="brc-nonin-ref-composite-label">合成オッズ</span><span class="brc-nonin-ref-composite-value" data-brc-nonin-ref-composite>${oddsInfo.composite==null?'―':Number(oddsInfo.composite).toFixed(1)+'倍'}</span></div></div><div class="brc-nonin-ref-note"><strong>検証中：</strong>1頭は4/5/6点、2頭は6/7/8点を裏で同時保存。画面は基準案の1頭6点 / 2頭8点を表示します。オッズで買い目自体は変更しません。</div></div>`;
 }
@@ -10503,7 +10573,10 @@ function brcRefreshNonInReferenceOdds(){
 function brcRenderAdminNonInReferencePanel(boats,workerPrediction,localInReliability=null,exhibitionApplied=false){
   if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return;
   const panel=document.getElementById('brcAiAdminPanel-ref');
-  if(panel) panel.innerHTML=brcBuildAdminNonInReferenceHtml(boats,workerPrediction,localInReliability,exhibitionApplied);
+  if(panel){
+    panel.innerHTML=brcBuildAdminNonInReferenceHtml(boats,workerPrediction,localInReliability,exhibitionApplied);
+    setTimeout(()=>{ try{ brcApplyAiOutcomeMark(); }catch(_e){} },0);
+  }
 }
 
 function brcSetAiAdminSubTab(key){
@@ -10575,6 +10648,7 @@ function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhib
   recommendationCards.forEach((card,index)=>{ if(index>0) card.remove(); });
   // AI予測を再描画した直後にも、締切済みなら最終オッズを自動反映。
   setTimeout(()=>brcEnsureAiReferenceOddsAfterDeadline(),0);
+  setTimeout(()=>{ try{ brcApplyAiOutcomeMark(); }catch(_e){} },0);
   setTimeout(()=>{ try{ brcInvAutoCaptureAiPrediction(localInReliability); }catch(_e){} },0);
 }
 
