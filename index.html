@@ -10096,9 +10096,12 @@ function brcRefreshNigeReferenceOdds(){
   try{ brcInvAutoCaptureAiPrediction(window.__currentLocalInReliability||null); }catch(_e){}
 }
 
-// BRC_AI_PREDICT_HIT_MARK_V2_HIT_ONLY_20260910
+// BRC_AI_PREDICT_HIT_MARK_V3_STABLE_20260910
 // 公式確定結果と、現在表示中のAI参考買い目を照合し、当たった買い目の行だけに「的中」を表示する。
+// 同一レースでは一度確認した確定出目をメモリ保持し、AI欄の再描画やオッズ更新で結果キャッシュが一時的に
+// 参照できない瞬間があっても的中表示を消さない。レースが変わった時だけ表示中マークをリセットする。
 // 外れた買い目には何も表示しない。AI予測・TimeX・展開ロジック・買い目生成には一切影響しない。
+const __brcAiOutcomeState={activeKey:'',confirmedByRace:new Map()};
 function brcNormalizeAiOutcomeCombo(v){
   const nums=String(v||'').match(/[1-6]/g)||[];
   return nums.length>=3?nums.slice(0,3).join('-'):'';
@@ -10117,11 +10120,45 @@ function brcClearAiOutcomeMarks(){
   document.querySelectorAll('#predictAiResult .brc-ai-pick-hit-badge').forEach(el=>el.remove());
   document.querySelectorAll('#predictAiResult .brc-ai-pick-hit').forEach(el=>el.classList.remove('brc-ai-pick-hit'));
 }
+function brcAiOutcomeCurrentKey(){
+  try{return brcOddsSelection()?.key||'';}catch(_e){return '';}
+}
+function brcRememberAiOutcome(key,combo){
+  const k=String(key||'');
+  const c=brcNormalizeAiOutcomeCombo(combo);
+  if(!k||!c) return '';
+  __brcAiOutcomeState.confirmedByRace.set(k,c);
+  return c;
+}
 function brcApplyAiOutcomeMark(result=null){
   try{
-    const official=result||brcCurrentConfirmedAiResult();
-    const combo=brcNormalizeAiOutcomeCombo(official?.combination);
-    brcClearAiOutcomeMarks();
+    const raceKey=brcAiOutcomeCurrentKey();
+    if(!raceKey) return false;
+
+    // 別レースへ移動した時だけ、前レースのDOM上の的中表示を消す。
+    if(__brcAiOutcomeState.activeKey!==raceKey){
+      brcClearAiOutcomeMarks();
+      __brcAiOutcomeState.activeKey=raceKey;
+    }
+
+    // 優先順位：今回渡された確定結果 → 同一レースで保持済みの確定出目 → 公式結果キャッシュ。
+    let combo='';
+    if(result){
+      combo=brcNormalizeAiOutcomeCombo(result?.combination);
+      if(combo){
+        const prev=__brcAiOutcomeState.confirmedByRace.get(raceKey)||'';
+        if(prev && prev!==combo) brcClearAiOutcomeMarks();
+        brcRememberAiOutcome(raceKey,combo);
+      }
+    }
+    if(!combo) combo=__brcAiOutcomeState.confirmedByRace.get(raceKey)||'';
+    if(!combo){
+      const official=brcCurrentConfirmedAiResult();
+      combo=brcNormalizeAiOutcomeCombo(official?.combination);
+      if(combo) brcRememberAiOutcome(raceKey,combo);
+    }
+
+    // 結果未取得の瞬間でも、既存の的中表示は消さない。
     if(!combo) return false;
 
     const apply=(box,rawCombos,rowSelector,attrName,comboSelector)=>{
@@ -10132,6 +10169,8 @@ function brcApplyAiOutcomeMark(result=null){
         const rowCombo=brcNormalizeAiOutcomeCombo(row.getAttribute(attrName));
         if(rowCombo!==combo) return;
         row.classList.add('brc-ai-pick-hit');
+        // 再描画を伴わない複数回呼び出しでもバッジを重複生成しない。
+        if(row.querySelector('.brc-ai-pick-hit-badge')) return;
         const anchor=row.querySelector(comboSelector)||row.firstElementChild;
         const badge=document.createElement('span');
         badge.className='brc-ai-pick-hit-badge';
