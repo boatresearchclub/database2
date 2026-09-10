@@ -3,6 +3,7 @@
 <!-- BRC_ADMIN_MATRIX_NAME_LAYOUT_FIX_20260910 -->
 <!-- BRC_ADMIN_NONIN_REFERENCE_BETA_V0_20260910 -->
 <!-- BRC_ADMIN_REFERENCE_INLINE_V3_20260911 -->
+<!-- BRC_ADMIN_INVESTMENT_VALIDATION_V1_20260911 -->
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V1 -->
@@ -3580,6 +3581,37 @@ table.brc-mark-table td:first-child{text-align:left;padding-left:7px;}
   .brc-refmon-formation{font-size:12px;}
 }
 
+</style>
+
+<style id="brc-investment-validation-style-20260911">
+/* BRC_ADMIN_INVESTMENT_VALIDATION_V1_20260911 */
+.brc-val-section{border-color:rgba(124,58,237,.18)!important;background:linear-gradient(160deg,rgba(124,58,237,.035),rgba(255,255,255,.9))!important;}
+.brc-val-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+.brc-val-title{font-size:13px;font-weight:950;color:var(--navy);}
+.brc-val-rule{font-size:9px;line-height:1.55;color:var(--ink-soft);font-weight:750;}
+.brc-val-rule strong{color:#6d28d9;}
+.brc-val-block{margin-top:9px;padding:9px;border:1px solid rgba(10,31,51,.08);border-radius:9px;background:#fff;}
+.brc-val-block:first-of-type{margin-top:0;}
+.brc-val-block-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:7px;}
+.brc-val-block-title{font-size:11.5px;font-weight:950;color:var(--navy);}
+.brc-val-chip{display:inline-flex;align-items:center;padding:3px 7px;border-radius:999px;font-size:8.5px;font-weight:950;white-space:nowrap;background:rgba(124,58,237,.08);color:#6d28d9;}
+.brc-val-chip.live{background:rgba(47,143,91,.09);color:#217247;}
+.brc-val-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table.brc-val-table{width:100%;min-width:660px;border-collapse:collapse;table-layout:auto;font-size:9.5px;}
+table.brc-val-table th{padding:6px 5px;font-size:8.5px;text-align:right;white-space:nowrap;background:rgba(10,31,51,.025);}
+table.brc-val-table th:first-child,table.brc-val-table td:first-child{text-align:left;}
+table.brc-val-table td{padding:7px 5px;text-align:right;font-weight:850;white-space:nowrap;font-variant-numeric:tabular-nums;}
+table.brc-val-table td.band{font-weight:950;color:var(--navy);}
+table.brc-val-table td.positive{color:var(--trend-up);}
+table.brc-val-table td.negative{color:var(--trend-down);}
+table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
+.brc-val-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:7px;}
+.brc-val-btn{appearance:none;border:1px solid rgba(124,58,237,.24);border-radius:7px;background:rgba(124,58,237,.055);color:#6d28d9;padding:6px 9px;font:inherit;font-size:9px;font-weight:900;cursor:pointer;}
+.brc-val-btn:disabled{opacity:.5;cursor:wait;}
+.brc-val-status{flex:1 1 220px;font-size:8.5px;line-height:1.5;color:var(--ink-soft);font-weight:750;}
+.brc-val-note{margin-top:7px;padding-top:6px;border-top:1px dashed rgba(10,31,51,.10);font-size:8.5px;line-height:1.55;color:var(--ink-soft);}
+.brc-val-live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--trend-up);margin-right:5px;box-shadow:0 0 0 3px rgba(var(--trend-up-rgb),.10);vertical-align:0;}
+@media(max-width:640px){.brc-val-block{padding:8px 6px}.brc-val-rule,.brc-val-note{font-size:8px}.brc-val-status{font-size:8px}table.brc-val-table{font-size:9px}}
 </style>
 
 </head>
@@ -17687,6 +17719,286 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true}); else init();
 })();
 </script>
+
+<!-- BRC_ADMIN_INVESTMENT_VALIDATION_V1_20260911 -->
+<script id="brc-admin-investment-validation-v1">
+(function(){
+  'use strict';
+
+  const V='BRC_INVESTMENT_VALIDATION_V1_20260911';
+  const SIM_START='2026-09-01';
+  const LIVE_START='2026-09-11';
+  const UNIT=100;
+  const MIN_ODDS=2.25;
+  const CORE_MAX=2.50;
+  const SNAP_MIN_SEC=30;
+  const SNAP_MAX_SEC=90;
+  const LIVE_TICK_MIN_SEC=45;
+  const LIVE_TICK_MAX_SEC=75;
+
+  // 過去SIMとLIVE-OOSはDB・store・metaキーを完全分離する。
+  const SIM_DB='brc_admin_investment_validation_sim_v1';
+  const SIM_STORE='sim_records';
+  const SIM_META_KEY='brc_admin_investment_validation_sim_meta_v1';
+  const LIVE_DB='brc_admin_investment_validation_live_oos_v1';
+  const LIVE_STORE='live_oos_records';
+  const LIVE_GUARD_STORE='live_oos_capture_guard';
+  const LIVE_META_KEY='brc_admin_investment_validation_live_meta_v1';
+
+  let simBusy=false, liveTickBusy=false, liveSweepBusy=false, simAutoStarted=false;
+  let liveTimer=null, liveSweepTimer=null;
+  const liveAttemptAt=new Map();
+
+  const isAdmin=()=>typeof BRC_ADMIN_ACTIVE!=='undefined'&&!!BRC_ADMIN_ACTIVE;
+  const today=()=>{try{return typeof getJstDateLabel==='function'?String(getJstDateLabel()):new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Tokyo'}).format(new Date());}catch(_e){return ''}};
+  const esc=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const num=v=>{const n=Number(v);return Number.isFinite(n)?n:null;};
+  const money=v=>`${Math.round(Number(v)||0).toLocaleString('ja-JP')}円`;
+  const pct=v=>Number.isFinite(Number(v))?`${Number(v).toFixed(1)}%`:'―';
+  const raceKey=(date,code,raceNo)=>`${date}:${String(code||'').padStart(2,'0')}:${String(Number(raceNo)||0).padStart(2,'0')}`;
+
+  function metaRead(key,base){try{const x=JSON.parse(localStorage.getItem(key)||'null');return x&&typeof x==='object'?{...base,...x}:{...base};}catch(_e){return {...base};}}
+  function metaWrite(key,x){try{localStorage.setItem(key,JSON.stringify(x));}catch(_e){}}
+  function simMeta(){return metaRead(SIM_META_KEY,{version:V,startDate:SIM_START,endDate:'',status:'idle',startedAt:'',completedAt:'',scanned:0,candidateSA:0,finalS:0,entryOk:0,snapshotOk:0,eligible:0,settled:0,skippedNoExhibition:0,skippedNoOdds:0,error:''});}
+  function liveMeta(){return metaRead(LIVE_META_KEY,{version:V,startDate:LIVE_START,createdAt:'',lastCaptureAt:'',lastSweepAt:'',lastError:''});}
+  function ensureLiveMeta(){const m=liveMeta();if(!m.createdAt){m.createdAt=new Date().toISOString();m.startDate=LIVE_START;metaWrite(LIVE_META_KEY,m);}return m;}
+
+  function openDb(name,stores){return new Promise((resolve,reject)=>{try{if(!('indexedDB' in window))throw new Error('indexeddb_unavailable');const q=indexedDB.open(name,1);q.onupgradeneeded=()=>{const db=q.result;for(const s of stores)if(!db.objectStoreNames.contains(s))db.createObjectStore(s,{keyPath:'key'});};q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error||new Error('indexeddb_open_failed'));}catch(e){reject(e);}});}
+  async function dbAll(name,stores,store){const db=await openDb(name,stores);try{return await new Promise((res,rej)=>{const tx=db.transaction(store,'readonly'),q=tx.objectStore(store).getAll();q.onsuccess=()=>res(Array.isArray(q.result)?q.result:[]);q.onerror=()=>rej(q.error);});}finally{db.close();}}
+  async function dbGet(name,stores,store,key){const db=await openDb(name,stores);try{return await new Promise((res,rej)=>{const tx=db.transaction(store,'readonly'),q=tx.objectStore(store).get(key);q.onsuccess=()=>res(q.result||null);q.onerror=()=>rej(q.error);});}finally{db.close();}}
+  async function dbPut(name,stores,store,row,addOnly=false){const db=await openDb(name,stores);try{return await new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite'),q=(addOnly?tx.objectStore(store).add(row):tx.objectStore(store).put(row));q.onsuccess=()=>res(true);q.onerror=(ev)=>{if(addOnly&&q.error?.name==='ConstraintError'){try{ev.preventDefault();ev.stopPropagation();}catch(_e){}res(false);}else rej(q.error);};});}finally{db.close();}}
+  async function dbClear(name,stores,store){const db=await openDb(name,stores);try{await new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite'),q=tx.objectStore(store).clear();q.onsuccess=()=>res();q.onerror=()=>rej(q.error);});}finally{db.close();}}
+  const simAll=()=>dbAll(SIM_DB,[SIM_STORE],SIM_STORE);
+  const simPut=row=>dbPut(SIM_DB,[SIM_STORE],SIM_STORE,row,false);
+  const liveAll=()=>dbAll(LIVE_DB,[LIVE_STORE,LIVE_GUARD_STORE],LIVE_STORE);
+  const liveGet=key=>dbGet(LIVE_DB,[LIVE_STORE,LIVE_GUARD_STORE],LIVE_STORE,key);
+  const livePut=(row,addOnly=false)=>dbPut(LIVE_DB,[LIVE_STORE,LIVE_GUARD_STORE],LIVE_STORE,row,addOnly);
+  const guardGet=key=>dbGet(LIVE_DB,[LIVE_STORE,LIVE_GUARD_STORE],LIVE_GUARD_STORE,key);
+  const guardAdd=row=>dbPut(LIVE_DB,[LIVE_STORE,LIVE_GUARD_STORE],LIVE_GUARD_STORE,row,true);
+
+  function deadlineMs(date,hhmm){const m=String(hhmm||'').match(/^(\d{1,2}):(\d{2})/);if(!m||!/^\d{4}-\d{2}-\d{2}$/.test(String(date||'')))return null;const x=Date.parse(`${date}T${m[1].padStart(2,'0')}:${m[2]}:00+09:00`);return Number.isFinite(x)?x:null;}
+  function captureMs(date,v){const s=String(v||'').trim();if(!s)return null;let x=Date.parse(s);if(Number.isFinite(x)&&/[zZ]|[+-]\d{2}:?\d{2}$/.test(s))return x;const tm=s.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);if(!tm)return null;x=Date.parse(`${date}T${tm[1].padStart(2,'0')}:${tm[2]}:${String(tm[3]||'00').padStart(2,'0')}+09:00`);return Number.isFinite(x)?x:null;}
+  function secondsBefore(date,deadline,captured){const d=deadlineMs(date,deadline),c=captureMs(date,captured);return d!==null&&c!==null?(d-c)/1000:null;}
+  function validPreclose(date,deadline,captured){const sec=secondsBefore(date,deadline,captured);return Number.isFinite(sec)&&sec>=SNAP_MIN_SEC&&sec<=SNAP_MAX_SEC?sec:null;}
+  function deadlineFor(sel){try{return String(RACE_INFO_TODAY?.[sel?.venue]?.deadlines?.[String(sel?.raceNo)]||'');}catch(_e){return '';}}
+
+  function entryNoChange(live){
+    const boats=Array.isArray(live?.boats)?live.boats:[];
+    if(boats.length!==6)return false;
+    const fixed=live?.fixed_course===true||String(live?.fixed_course).toLowerCase()==='true'||String(live?.fixed_course)==='1';
+    if(!fixed)return false;
+    const rows=boats.map(x=>({boat:Number(x?.boat_no),course:Number(x?.entry_course)}));
+    if(rows.some(x=>!Number.isInteger(x.boat)||!Number.isInteger(x.course)||x.boat!==x.course))return false;
+    try{if(typeof brcCollectConfirmedAbsentBoats==='function'&&brcCollectConfirmedAbsentBoats(live).size>0)return false;}catch(_e){}
+    return true;
+  }
+  function resultEntryNoChange(result){
+    try{const rows=typeof brcNormalizeRaceStartFormation==='function'?brcNormalizeRaceStartFormation(result):[];if(rows.length!==6)return null;return rows.every(x=>Number(x.boat)===Number(x.course));}catch(_e){return null;}
+  }
+
+  function compositeFor(combos,odds){
+    const rows=(combos||[]).map(combo=>({combo,odds:typeof brcOddsValue==='function'?brcOddsValue(odds,combo):num(odds?.[combo])}));
+    if(!rows.length||rows.some(x=>!(Number(x.odds)>0)))return {rows,composite:null};
+    const c=typeof brcOddsBuilderComposite==='function'?brcOddsBuilderComposite(rows):1/rows.reduce((s,x)=>s+1/x.odds,0);
+    return {rows,composite:Number.isFinite(Number(c))?Number(c):null};
+  }
+  function bandOf(v){const n=Number(v);return n>=CORE_MAX?'HIGH':n>=MIN_ODDS?'CORE':'';}
+
+  function aggregate(rows,band){
+    const src=(rows||[]).filter(r=>{const o=Number(r.compositeOdds);if(!(o>=MIN_ODDS))return false;if(band==='CORE')return o<CORE_MAX;if(band==='HIGH')return o>=CORE_MAX;return true;});
+    const races=src.length,hits=src.filter(r=>r.hit===true).length,stake=src.reduce((s,r)=>s+(Number(r.stakeYen)||0),0),ret=src.reduce((s,r)=>s+(Number(r.returnYen)||0),0);
+    return {races,hits,hitRate:races?hits/races*100:null,stake,ret,roi:stake?ret/stake*100:null,pl:ret-stake,pending:src.filter(r=>!r.settledAt).length};
+  }
+  function scoreTable(rows){
+    const bands=[['TOTAL','2.25以上'],['CORE','2.25〜2.49'],['HIGH','2.50以上']];
+    const body=bands.map(([k,label])=>{const a=aggregate(rows,k),pl=a.pl;return `<tr><td class="band">${k}<span style="display:block;font-size:7px;color:var(--ink-soft);font-weight:700">${label}</span></td><td>${a.races}${a.pending?`<span style="display:block;font-size:7px;color:#8a5a00">結果待ち${a.pending}</span>`:''}</td><td>${a.hits}</td><td>${pct(a.hitRate)}</td><td>${money(a.stake)}</td><td>${money(a.ret)}</td><td class="accent">${pct(a.roi)}</td><td class="${pl>0?'positive':pl<0?'negative':''}">${pl>0?'+':''}${money(pl)}</td></tr>`;}).join('');
+    return `<div class="brc-val-table-wrap"><table class="brc-val-table"><thead><tr><th>区分</th><th>参戦R</th><th>的中</th><th>的中率</th><th>投資</th><th>回収</th><th>回収率</th><th>収支</th></tr></thead><tbody>${body}</tbody></table></div>`;
+  }
+
+  async function fetchOddsSnapshot(date,venueCode,raceNo,deadline,isHistorical){
+    if(!BRC_LIVE_EXHIBITION_API_URL)return null;
+    const qs=new URLSearchParams({date,venue_code:String(venueCode).padStart(2,'0'),race_no:String(raceNo),_:String(Date.now())});
+    if(isHistorical)qs.set('final','1');
+    const res=await fetch(`${BRC_LIVE_EXHIBITION_API_URL}/live-odds?${qs.toString()}`,{method:'GET',cache:'no-store',headers:{Accept:'application/json'}});
+    let obj=null;try{obj=await res.json();}catch(_e){}
+    if(!res.ok||!obj||obj.ok!==true||!obj.odds)return null;
+    const sec=validPreclose(date,deadline,obj.captured_at_jst||'');
+    if(sec===null)return null;
+    return {odds:obj.odds,capturedAtJst:String(obj.captured_at_jst||''),secondsBeforeDeadline:sec,cacheHit:!!obj.cache_hit,stale:!!obj.stale,final:!!obj.final};
+  }
+  async function fetchExhibition(date,venueCode,raceNo){
+    if(!BRC_LIVE_EXHIBITION_API_URL)return null;
+    const qs=new URLSearchParams({date,venue_code:String(venueCode).padStart(2,'0'),race_no:String(raceNo),_:String(Date.now())});
+    try{const res=await fetch(`${BRC_LIVE_EXHIBITION_API_URL}/live-exhibition?${qs.toString()}`,{method:'GET',cache:'no-store',headers:{Accept:'application/json'}});if(!res.ok)return null;const obj=await res.json();if(!obj||obj.ok!==true||!obj.race||!Array.isArray(obj.race.boats))return null;if(String(obj.race.date)!==String(date)||String(obj.race.venue_code).padStart(2,'0')!==String(venueCode).padStart(2,'0')||Number(obj.race.race_no)!==Number(raceNo))return null;return obj.race;}catch(_e){return null;}
+  }
+
+  function buildBoats(spec,prediction,live){
+    const byLive=new Map((Array.isArray(live?.boats)?live.boats:[]).map(x=>[Number(x.boat_no),x]));
+    const boats=[];
+    for(let c=1;c<=6;c++){
+      const api=(spec?.apiBoats||[]).find(x=>Number(x.course)===c),p=api?PLAYERS?.[String(api.reg)]:null;if(!p)return null;
+      const ww=prediction?.wins?.find(x=>Number(x.course)===c&&String(x.reg)===String(p.reg));
+      const tw=prediction?.top3s?.find(x=>Number(x.course)===c&&String(x.reg)===String(p.reg));
+      const bw=prediction?.baselines?.find(x=>Number(x.course)===c&&String(x.reg)===String(p.reg));
+      const sw=prediction?.seconds?.find(x=>Number(x.course)===c&&String(x.reg)===String(p.reg));
+      const win=Number(ww?.pctFloat),top3=Number(tw?.pctFloat),vavg=Number(bw?.venueAvgWin),second=Number(sw?.pct);
+      if(![win,top3,vavg,second].every(Number.isFinite))return null;
+      const lane=p.lane_excl?.[String(c)]||{n:0};
+      boats.push({course:c,player:p,pctFloat:win,pct:Number.isFinite(Number(ww?.pct))?Number(ww.pct):Math.round(win),pctRaw:win,pctCal:win,winWfApplied:true,attack17Applied:false,pct3Float:top3,pct3:Number.isFinite(Number(tw?.pct))?Number(tw.pct):Math.round(top3),basePctFloat:win,basePct3Float:top3,basePct2:second,playerSource:'validation-replay',venueBaseSource:'protected-server-model',laneN:Number(lane.n)||0,venueN:Number(bw?.venueN)||0,venueAvgWin:vavg,pct2:second,motor2:num(api?.motor2),motorNo:null,racerClass:String(api?.racerClass||''),exhibition:byLive.get(c)||null});
+    }
+    return boats;
+  }
+  function finalReliability(spec,prediction,boats){
+    const p1=boats?.find(b=>Number(b.course)===1);if(!p1)return null;
+    try{return classifyInReliabilityByWinPct(p1.pctFloat,spec.grade,(spec.apiBoats||[]).map(b=>b.reg),prediction.inReliability);}catch(_e){return null;}
+  }
+  function referenceData(boats,prediction,rel){
+    try{if(typeof window.brcBuildReferenceMonitorData==='function')return window.brcBuildReferenceMonitorData(boats,prediction,rel,'current');}catch(_e){}
+    return null;
+  }
+
+  async function settleLiveWithResult(key,result){
+    if(!key||!result)return false;const rec=await liveGet(key);if(!rec||rec.settledAt)return false;
+    const combo=String(result?.combination||'').trim(),payout=Number(result?.payout_yen);if(!combo||!Number.isFinite(payout))return false;
+    const hit=(rec.picks||[]).some(x=>String(x?.combo)===combo),stake=(rec.picks||[]).length*UNIT,ret=hit?payout:0;
+    rec.resultCombo=combo;rec.resultPayoutYen=payout;rec.hit=hit;rec.stakeYen=stake;rec.returnYen=ret;rec.roi=stake?ret/stake*100:null;rec.settledAt=new Date().toISOString();rec.updatedAt=rec.settledAt;
+    await livePut(rec,false);return true;
+  }
+
+  function todayNearDeadlineSpecs(){
+    const date=today(),out=[];
+    if(!date||String(typeof TODAY_LABEL!=='undefined'?TODAY_LABEL:'')!==date)return out;
+    if(typeof buildTodayRaceSpec!=='function'||!RACE_CARDS_TODAY)return out;
+    for(const venue of Object.keys(RACE_CARDS_TODAY||{})){
+      const races=RACE_CARDS_TODAY?.[venue]||{};
+      for(const raceNo of Object.keys(races).map(Number)){
+        const spec=buildTodayRaceSpec(venue,raceNo);if(!spec)continue;
+        const d=deadlineMs(date,spec.deadline),sec=d===null?null:(d-Date.now())/1000;
+        if(Number.isFinite(sec)&&sec>=LIVE_TICK_MIN_SEC&&sec<=LIVE_TICK_MAX_SEC)out.push({...spec,date,secondsToDeadline:sec});
+      }
+    }
+    return out;
+  }
+
+  async function liveEvaluateSpec(spec){
+    const date=String(spec?.date||today()),key=raceKey(date,spec?.venueCode,spec?.raceNo);if(!key)return false;
+    if(await guardGet(key)||await liveGet(key))return false;
+    const last=Number(liveAttemptAt.get(key)||0);if(Date.now()-last<12000)return false;liveAttemptAt.set(key,Date.now());
+    const detail=await brcInvFetchDetailedPrediction(spec);
+    const live=await fetchExhibition(date,spec.venueCode,spec.raceNo);if(!live)return false;
+    const boats=buildBoats(spec,detail.result,live);if(!boats)return false;
+    const oldEngine=window.__brcTimeXEngineCurrent;
+    const applied=typeof brcApplyExhibitionAdjustmentsToBoats==='function'?brcApplyExhibitionAdjustmentsToBoats(boats,live):false;
+    window.__brcTimeXEngineCurrent=oldEngine;
+    if(!applied)return false;
+    const rel=finalReliability(spec,detail.result,boats);if(!rel)return false;
+    const rank=String(rel?.rank||'');
+    if(rank!=='S'){
+      await guardAdd({key,version:V,date,venue:spec.venue,venueCode:String(spec.venueCode).padStart(2,'0'),raceNo:spec.raceNo,deadline:spec.deadline,evaluatedAt:new Date().toISOString(),inRank:rank||'',entryChanged:!entryNoChange(live),qualified:false,reason:'IN_RANK_NOT_S'});
+      return true;
+    }
+    if(!entryNoChange(live)){
+      await guardAdd({key,version:V,date,venue:spec.venue,venueCode:String(spec.venueCode).padStart(2,'0'),raceNo:spec.raceNo,deadline:spec.deadline,evaluatedAt:new Date().toISOString(),inRank:'S',entryChanged:true,qualified:false,reason:'ENTRY_CHANGED'});
+      return true;
+    }
+    const ref=referenceData(boats,detail.result,rel),combos=(ref?.picks||[]).map(x=>String(x?.combo||'')).filter(x=>/^[1-6]-[1-6]-[1-6]$/.test(x));if(!combos.length)return false;
+    const snap=await fetchOddsSnapshot(date,spec.venueCode,spec.raceNo,spec.deadline,false);if(!snap)return false;
+    const o=compositeFor(combos,snap.odds);if(!Number.isFinite(o.composite))return false;
+    const guard={key,version:V,date,venue:spec.venue,venueCode:String(spec.venueCode).padStart(2,'0'),raceNo:spec.raceNo,deadline:spec.deadline,evaluatedAt:new Date().toISOString(),oddsCapturedAtJst:snap.capturedAtJst,secondsBeforeDeadline:snap.secondsBeforeDeadline,inRank:'S',entryChanged:false,pointCount:combos.length,compositeOdds:o.composite,qualified:o.composite>=MIN_ODDS,reason:o.composite>=MIN_ODDS?'QUALIFIED':'ODDS_BELOW_2_25'};
+    const first=await guardAdd(guard);if(!first)return false;
+    if(o.composite<MIN_ODDS)return true;
+    const row={key,version:V,kind:'LIVE-OOS',startDate:LIVE_START,date,venue:spec.venue,venueCode:String(spec.venueCode).padStart(2,'0'),raceNo:spec.raceNo,deadline:spec.deadline,inRank:'S',inPct:num(rel?.pct),entryChanged:false,entrySequence:[1,2,3,4,5,6],snapshotCapturedAt:new Date().toISOString(),oddsCapturedAtJst:snap.capturedAtJst,secondsBeforeDeadline:snap.secondsBeforeDeadline,picks:o.rows.map(x=>({combo:x.combo,odds:Number(x.odds)})),pointCount:o.rows.length,unitStakeYen:UNIT,stakeYen:o.rows.length*UNIT,compositeOdds:o.composite,band:bandOf(o.composite),resultCombo:'',resultPayoutYen:null,hit:null,returnYen:0,roi:null,settledAt:'',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+    await livePut(row,true);
+    const m=liveMeta();m.lastCaptureAt=new Date().toISOString();m.lastError='';metaWrite(LIVE_META_KEY,m);
+    return true;
+  }
+
+  async function liveCaptureCurrent(){
+    if(liveTickBusy||!isAdmin())return false;
+    if(typeof BRC_MEMBER_ACTIVE!=='undefined'&&!BRC_MEMBER_ACTIVE)return false;
+    if(today()<LIVE_START)return false;
+    liveTickBusy=true;
+    try{
+      ensureLiveMeta();
+      const specs=todayNearDeadlineSpecs();if(!specs.length)return false;
+      await mapLimit(specs,2,async spec=>{try{return await liveEvaluateSpec(spec);}catch(err){const m=liveMeta();m.lastError=String(err?.message||err);metaWrite(LIVE_META_KEY,m);return false;}});
+      render();return true;
+    }finally{liveTickBusy=false;}
+  }
+
+  async function liveSweep(force=false){
+    if(liveSweepBusy||!isAdmin())return false;liveSweepBusy=true;
+    try{const rows=(await liveAll()).filter(r=>!r.settledAt).slice(0,force?50:12);for(const rec of rows){const d=deadlineMs(rec.date,rec.deadline);if(d!==null&&Date.now()<d+15000)continue;try{const spec={key:rec.key,date:rec.date,venue:rec.venue,venueCode:rec.venueCode,raceNo:rec.raceNo,deadline:rec.deadline};const obj=await brcFetchRaceResult(spec);if(obj?.confirmed===true&&obj?.result)await settleLiveWithResult(rec.key,obj.result);}catch(_e){}}const m=liveMeta();m.lastSweepAt=new Date().toISOString();metaWrite(LIVE_META_KEY,m);render();return true;}finally{liveSweepBusy=false;}
+  }
+
+  function dateRange(start,end){const out=[];let d=Date.parse(`${start}T00:00:00+09:00`),e=Date.parse(`${end}T00:00:00+09:00`);while(Number.isFinite(d)&&d<=e){const x=new Date(d+9*3600*1000).toISOString().slice(0,10);out.push(x);d+=86400000;}return out;}
+
+  async function simOne(spec,date,detail){
+    const prediction=detail?.result;if(!prediction)return {status:'detail'};
+    const live=await fetchExhibition(date,spec.venueCode,spec.raceNo);if(!live)return {status:'noex'};
+    if(!entryNoChange(live))return {status:'entry'};
+    const boats=buildBoats(spec,prediction,live);if(!boats)return {status:'boats'};
+    const oldEngine=window.__brcTimeXEngineCurrent;
+    const applied=typeof brcApplyExhibitionAdjustmentsToBoats==='function'?brcApplyExhibitionAdjustmentsToBoats(boats,live):false;
+    window.__brcTimeXEngineCurrent=oldEngine;
+    if(!applied)return {status:'noex'};
+    const rel=finalReliability(spec,prediction,boats);if(String(rel?.rank||'')!=='S')return {status:'notS'};
+    const ref=referenceData(boats,prediction,rel),combos=(ref?.picks||[]).map(x=>String(x?.combo||'')).filter(x=>/^[1-6]-[1-6]-[1-6]$/.test(x));if(!combos.length)return {status:'picks'};
+    const snap=await fetchOddsSnapshot(date,spec.venueCode,spec.raceNo,spec.deadline,true);if(!snap)return {status:'noodds'};
+    const o=compositeFor(combos,snap.odds);if(!Number.isFinite(o.composite)||o.composite<MIN_ODDS)return {status:'low'};
+    const obj=await brcInvBackfillFetchResult({...spec,date});const result=obj?.confirmed===true?obj.result:null;if(!result)return {status:'pending'};
+    const startOk=resultEntryNoChange(result);if(startOk===false)return {status:'entry'};
+    const combo=String(result?.combination||''),payout=Number(result?.payout_yen),hit=o.rows.some(x=>x.combo===combo),stake=o.rows.length*UNIT,ret=hit&&Number.isFinite(payout)?payout:0,key=raceKey(date,spec.venueCode,spec.raceNo);
+    return {status:'ok',row:{key,version:V,kind:'PAST-SIM',periodStart:SIM_START,date,venue:spec.venue,venueCode:String(spec.venueCode).padStart(2,'0'),raceNo:spec.raceNo,deadline:spec.deadline,inRank:'S',inPct:num(rel?.pct),entryChanged:false,snapshotCapturedAtJst:snap.capturedAtJst,secondsBeforeDeadline:snap.secondsBeforeDeadline,picks:o.rows.map(x=>({combo:x.combo,odds:Number(x.odds)})),pointCount:o.rows.length,unitStakeYen:UNIT,stakeYen:stake,compositeOdds:o.composite,band:bandOf(o.composite),resultCombo:combo,resultPayoutYen:Number.isFinite(payout)?payout:null,hit,returnYen:ret,roi:stake?ret/stake*100:null,settledAt:new Date().toISOString(),createdAt:new Date().toISOString()}};
+  }
+
+  async function mapLimit(items,limit,fn){const out=new Array(items.length);let i=0;async function w(){while(i<items.length){const n=i++;try{out[n]=await fn(items[n],n);}catch(e){out[n]={status:'error',error:e};}}}await Promise.all(Array.from({length:Math.min(limit,Math.max(1,items.length))},()=>w()));return out;}
+
+  async function recalcSim(){
+    if(simBusy||!isAdmin())return false;simBusy=true;
+    const end=today(),m=simMeta();Object.assign(m,{status:'running',startDate:SIM_START,endDate:end,startedAt:new Date().toISOString(),completedAt:'',scanned:0,candidateSA:0,finalS:0,entryOk:0,snapshotOk:0,eligible:0,settled:0,skippedNoExhibition:0,skippedNoOdds:0,error:''});metaWrite(SIM_META_KEY,m);await dbClear(SIM_DB,[SIM_STORE],SIM_STORE);render();
+    try{
+      for(const date of dateRange(SIM_START,end)){
+        const payload=await brcInvBackfillFetchRaceCard(date),specs=brcInvBackfillBuildSpecs(payload,date);m.scanned+=specs.length;metaWrite(SIM_META_KEY,m);renderStatusOnly();if(!specs.length)continue;
+        const api=await brcPredictBatchApi({races:specs.map(x=>({id:x.id,venue:x.venue,grade:x.grade,boats:x.apiBoats}))});if(!api||api.prediction_api!==true||!Array.isArray(api.races))continue;
+        const byId=new Map(api.races.map(r=>[String(r.id),r])),targets=[];
+        for(const spec of specs){const r=byId.get(String(spec.id));if(!r)continue;const w1=r?.wins?.find(w=>Number(w.course)===1),p=Number(w1?.pctFloat);let ir=null;try{ir=classifyInReliabilityByWinPct(p,spec.grade,spec.apiBoats.map(b=>b.reg),r.inReliability);}catch(_e){}const rank=String(ir?.rank||'');if(rank==='S'||rank==='A'){targets.push({spec});m.candidateSA++;}}
+        const details=await brcInvMapDetailedPredictions(targets,3);
+        const work=details.filter(x=>!x?.error).map(x=>({spec:x.item.spec,detail:x}));
+        const results=await mapLimit(work,3,x=>simOne(x.spec,date,x.detail));
+        for(const r of results){if(r?.status==='notS')continue;if(r?.status==='noex'){m.skippedNoExhibition++;continue;}if(r?.status==='entry')continue;if(r?.status==='noodds'){m.finalS++;m.entryOk++;m.skippedNoOdds++;continue;}if(r?.status==='low'){m.finalS++;m.entryOk++;m.snapshotOk++;continue;}if(r?.status==='ok'&&r.row){m.finalS++;m.entryOk++;m.snapshotOk++;m.eligible++;m.settled++;await simPut(r.row);}}
+        metaWrite(SIM_META_KEY,m);render();
+      }
+      m.status='ok';m.completedAt=new Date().toISOString();metaWrite(SIM_META_KEY,m);render();return true;
+    }catch(err){m.status='error';m.error=String(err?.message||err);m.completedAt=new Date().toISOString();metaWrite(SIM_META_KEY,m);render();return false;}finally{simBusy=false;}
+  }
+
+  function statusText(m){if(m.status==='running')return `再計算中｜走査 ${m.scanned||0}R / S・A候補 ${m.candidateSA||0}R / 条件成立 ${m.eligible||0}R`;if(m.status==='error')return `再計算エラー：${esc(m.error||'不明')}`;if(m.status==='ok')return `最終更新 ${String(m.completedAt||'').replace('T',' ').slice(0,16)}｜走査 ${m.scanned||0}R / 条件成立 ${m.eligible||0}R`;return '未計算';}
+  function renderStatusOnly(){const el=document.getElementById('brcValSimStatus');if(el)el.textContent=statusText(simMeta());}
+
+  async function render(){
+    const host=document.getElementById('brcInvestmentManager');if(!host||!isAdmin())return;
+    let root=document.getElementById('brcInvestmentValidation');
+    if(!root){const anchor=host.querySelector('.brc-invest-auto-status')||host.querySelector('.brc-invest-top');if(!anchor)return;anchor.insertAdjacentHTML('afterend','<div id="brcInvestmentValidation" class="brc-invest-section brc-val-section"></div>');root=document.getElementById('brcInvestmentValidation');}
+    const [srows,lrows]=await Promise.all([simAll().catch(()=>[]),liveAll().catch(()=>[])]),sm=simMeta(),lm=ensureLiveMeta();
+    root.innerHTML=`<div class="brc-val-head"><div><div class="brc-val-title">投資検証成績</div><div class="brc-val-rule"><strong>固定条件：</strong>イン信頼度S × 進入変更なし × 締切約1分前（保存時刻が締切30〜90秒前）の合成オッズ2.25以上 × AI参考買い目を1点100円</div></div><span class="brc-invest-admin-badge">管理者専用</span></div>
+      <div class="brc-val-block"><div class="brc-val-block-head"><div class="brc-val-block-title">① 過去適用シミュレーション</div><span class="brc-val-chip">${SIM_START}〜${esc(sm.endDate||today())}</span></div>${scoreTable(srows)}<div class="brc-val-actions"><button type="button" class="brc-val-btn" id="brcValSimRecalc" ${simBusy?'disabled':''}>${simBusy?'再計算中…':'過去SIMを再計算'}</button><span class="brc-val-status" id="brcValSimStatus">${statusText(sm)}</span></div><div class="brc-val-note">過去SIM専用DBのみを消去・再構築します。LIVE-OOS DBには触れません。過去の展示データと、締切前30〜90秒に保存されたオッズ時刻を確認できたレースだけ採用し、締切後オッズは採用しません。展示不足 ${sm.skippedNoExhibition||0}R / 1分前オッズ不足 ${sm.skippedNoOdds||0}R。</div></div>
+      <div class="brc-val-block"><div class="brc-val-block-head"><div class="brc-val-block-title"><span class="brc-val-live-dot"></span>② LIVE-OOS成績</div><span class="brc-val-chip live">${esc(lm.startDate||LIVE_START)}開始・過去補完なし</span></div>${scoreTable(lrows)}<div class="brc-val-actions"><button type="button" class="brc-val-btn" id="brcValLiveSettle">結果を再確認</button><span class="brc-val-status">導入前データはバックフィルしません。締切約1分前に固定保存したスナップショットだけで判定。</span></div><div class="brc-val-note">LIVE-OOSの買い目・オッズ・合成オッズは最初の有効スナップショットで固定し、結果確定後は結果項目だけ追記します。過去SIMを再計算してもLIVE-OOSのレコード・集計は変化しません。</div></div>`;
+    document.getElementById('brcValSimRecalc')?.addEventListener('click',recalcSim,{once:true});
+    document.getElementById('brcValLiveSettle')?.addEventListener('click',()=>liveSweep(true),{once:true});
+    if(!simAutoStarted&&sm.status==='idle'){simAutoStarted=true;setTimeout(()=>recalcSim(),250);}
+  }
+
+  function installHooks(){
+    const oldRender=window.brcRenderInvestmentManager;if(typeof oldRender==='function'&&!oldRender.__brcValidationWrapped){const wrapped=function(){const out=oldRender.apply(this,arguments);Promise.resolve().then(render).catch(()=>{});return out;};wrapped.__brcValidationWrapped=true;window.brcRenderInvestmentManager=wrapped;}
+    const oldApply=window.brcInvApplyOfficialResult;if(typeof oldApply==='function'&&!oldApply.__brcValidationWrapped){const wrapped=function(spec,result){const out=oldApply.apply(this,arguments);try{const key=spec?.key||raceKey(spec?.date,spec?.venueCode,spec?.raceNo);Promise.resolve(settleLiveWithResult(key,result)).then(()=>render()).catch(()=>{});}catch(_e){}return out;};wrapped.__brcValidationWrapped=true;window.brcInvApplyOfficialResult=wrapped;}
+  }
+  function start(){installHooks();ensureLiveMeta();if(!liveTimer)liveTimer=setInterval(()=>liveCaptureCurrent(),5000);if(!liveSweepTimer)liveSweepTimer=setInterval(()=>liveSweep(false),90000);setTimeout(()=>liveCaptureCurrent(),800);setTimeout(()=>liveSweep(false),2500);setTimeout(()=>render(),400);}
+  installHooks();
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
+</script>
+
 
 </body>
 </html>
