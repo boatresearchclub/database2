@@ -14441,6 +14441,10 @@ function loadTodaysRace(venue, raceNo){
     return;
   }
 
+  // レースを押した瞬間に前レースの予測DOMを退避し、先行中の旧通信も無効化する。
+  // これにより「✓ 的中」や前レースAIが切替中に残る残像を防ぐ。
+  try{ brcPreparePredictRaceSwitch(venue,Number(raceNo)); }catch(_e){}
+
   // 先に「選択中の会場・R番号」を同期する。
   // runPredict() 内のレース見出しは predictRaceDay / predictRaceNo を参照するため、
   // ここが後回しだと「まもなく締切」カードの初回タップ時だけ前レースの見出しが残り、
@@ -16085,10 +16089,61 @@ function buildRecommendedBetsHtmlFromServer(workerPrediction, localInReliability
 // ===== BRC protected server =====
 // 正式な予想値・買い目は /predict のWorker応答を使用し、イン信頼度ランクだけINDEX確定閾値で判定する。
 
+// BRC_PREDICT_RACE_SWITCH_GUARD_V1_20260910
+// レース切替時の前レース残像と、遅れて返った旧リクエストによる上書きを防ぐ。
+// seq は runPredict を開始するたびに更新し、最後に開始した処理だけがDOMを書き換えられる。
+const __brcPredictRaceSwitchState={seq:0,activeKey:''};
+function brcPredictRaceSwitchKey(venue,raceNo){
+  const v=String(venue||'').trim();
+  const r=Number(raceNo||0);
+  return (v&&r)?`${v}:${r}`:'';
+}
+function brcCurrentPredictRaceSwitchKey(){
+  const venue=document.getElementById('predictRaceDay')?.value || document.getElementById('predictVenue')?.value || '';
+  const raceNo=Number(document.getElementById('predictRaceNo')?.value||0);
+  return brcPredictRaceSwitchKey(venue,raceNo);
+}
+function brcPreparePredictRaceSwitch(venue,raceNo){
+  const key=brcPredictRaceSwitchKey(venue,raceNo);
+  if(!key) return;
+  const changed=__brcPredictRaceSwitchState.activeKey!==key;
+  // 先行中の旧レース予測を、この時点で無効化する。
+  __brcPredictRaceSwitchState.seq+=1;
+  __brcPredictRaceSwitchState.activeKey=key;
+  if(!changed) return;
+
+  // レースを押した瞬間に前レースの表示を消す。通信完了待ちの間も旧的中表示を見せない。
+  try{ brcClearAiOutcomeMarks(); }catch(_e){}
+  const dataBox=document.getElementById('predictResult');
+  const aiBox=document.getElementById('predictAiResult');
+  const raceLabel=`${String(venue||'')} ${Number(raceNo)}R`;
+  if(dataBox) dataBox.innerHTML=`<div class="trend-note" style="padding:18px 4px;text-align:center;"><strong>${raceLabel}</strong><br>出走データを更新中…</div>`;
+  if(aiBox) aiBox.innerHTML=`<div class="predict-unified-empty"><strong>${raceLabel}</strong><br>AI予測を更新中…</div>`;
+
+  // 前レースの計算済みオブジェクトを切替中に参照させない。
+  window.__predictBoatsCurrent=null;
+  window.__predictWorkerCurrent=null;
+  window.__predictApiBoatsCurrent=null;
+  window.__currentLocalInReliability=null;
+  window.__currentLiveExhibition=null;
+}
+function brcBeginPredictRequest(venue,raceNo){
+  const key=brcPredictRaceSwitchKey(venue,raceNo);
+  const token=++__brcPredictRaceSwitchState.seq;
+  if(key) __brcPredictRaceSwitchState.activeKey=key;
+  return {key,token};
+}
+function brcPredictRequestIsCurrent(ctx){
+  if(!ctx||ctx.token!==__brcPredictRaceSwitchState.seq) return false;
+  const currentKey=brcCurrentPredictRaceSwitchKey();
+  return !!ctx.key && ctx.key===currentKey && ctx.key===__brcPredictRaceSwitchState.activeKey;
+}
+
 async function runPredict(){
   const venue = document.getElementById('predictVenue').value;
   const grade = document.getElementById('predictGrade').value;
   const raceNoLive = Number(document.getElementById('predictRaceNo')?.value || 0);
+  const requestCtx=brcBeginPredictRequest(venue,raceNoLive);
   const liveExhibitionPromise = raceNoLive ? brcFetchLiveExhibition(venue, raceNoLive) : Promise.resolve(null);
 
   // 会員限定Workerへ会場・グレード・6艇登録番号に加え、イン逃げV2に必要な現在級別・モーター2連率を送り、
@@ -16105,7 +16160,7 @@ async function runPredict(){
   }
   const preBox = document.getElementById('predictResult');
   if(apiMissing.length){
-    preBox.innerHTML = `<div style="color:#e5484d; font-size:14.5px;">コース ${apiMissing.join('、')} の選手が見つかりませんでした。名前を選び直してください（入力候補から選択してください）。</div>`;
+    if(brcPredictRequestIsCurrent(requestCtx)) preBox.innerHTML = `<div style="color:#e5484d; font-size:14.5px;">コース ${apiMissing.join('、')} の選手が見つかりませんでした。名前を選び直してください（入力候補から選択してください）。</div>`;
     return;
   }
 
@@ -16123,6 +16178,7 @@ async function runPredict(){
       const deadline=RACE_INFO_TODAY?.[venue]?.deadlines?.[String(raceNoLive)]||'';
       if(brcIsPostRaceUnlocked(deadline)){
         apiResult=await brcPostRacePreviewApi({date:TODAY_LABEL,venue,raceNo:raceNoLive,grade,boats:apiBoats});
+        if(!brcPredictRequestIsCurrent(requestCtx)) return;
         brcRenderPostRaceMode({venue,raceNo:raceNoLive,deadline,id:currentId});
       }else{
         brcRenderPublicBrowser(`${venue}${raceNoLive}Rは締切前のため会員限定です。締切後に無料公開されます。`);
@@ -16131,12 +16187,16 @@ async function runPredict(){
       }
     }else{
       apiResult = await brcPredictApi({venue, grade, boats:apiBoats});
+      if(!brcPredictRequestIsCurrent(requestCtx)) return;
     }
+    if(!brcPredictRequestIsCurrent(requestCtx)) return;
     if(!apiResult || apiResult.prediction_api !== true || !Array.isArray(apiResult.wins) || !Array.isArray(apiResult.top3s) || !Array.isArray(apiResult.baselines) || !Array.isArray(apiResult.seconds) || !apiResult.inReliability || (!apiResult.recommendation && !brcGetAiModePayload(apiResult))){
       throw new Error('prediction_api_not_ready');
     }
     workerPrediction = apiResult;
   }catch(err){
+    // 切替前レースの通信エラーは、現在表示中のレースへ出さない。
+    if(!brcPredictRequestIsCurrent(requestCtx)) return;
     console.warn('BRC /predict failed:', err);
     if(err && err.status === 401){
       brcClearSession();
@@ -16163,6 +16223,8 @@ async function runPredict(){
 
 
   const liveExhibitionRace = await liveExhibitionPromise;
+  // APIより展示通信が遅く返る場合も、旧レースの応答はここで破棄する。
+  if(!brcPredictRequestIsCurrent(requestCtx)) return;
   const liveExhibitionByBoat = new Map(
     Array.isArray(liveExhibitionRace?.boats)
       ? liveExhibitionRace.boats.map(x => [Number(x.boat_no), x])
@@ -16187,7 +16249,7 @@ async function runPredict(){
     const pct2Server = Number(sw?.pct);
     const venueNServer = Number(bw?.venueN)||0;
     if(!Number.isFinite(pctFloat) || !Number.isFinite(pct3Float) || !Number.isFinite(venueAvgWinNow) || !Number.isFinite(pct2Server)){
-      preBox.innerHTML='<div style="color:#e5484d; font-size:14.5px;">Workerから予想確率を取得できませんでした。</div>';
+      if(brcPredictRequestIsCurrent(requestCtx)) preBox.innerHTML='<div style="color:#e5484d; font-size:14.5px;">Workerから予想確率を取得できませんでした。</div>';
       return;
     }
 
@@ -16208,9 +16270,10 @@ async function runPredict(){
 
   const box = document.getElementById('predictResult');
   if(boats.length!==6){
-    box.innerHTML = '<div style="color:#e5484d; font-size:14.5px;">6艇分の選手データを作成できませんでした。</div>';
+    if(brcPredictRequestIsCurrent(requestCtx)) box.innerHTML = '<div style="color:#e5484d; font-size:14.5px;">6艇分の選手データを作成できませんでした。</div>';
     return;
   }
+  if(!brcPredictRequestIsCurrent(requestCtx)) return;
   const exhibitionApplied = brcApplyExhibitionAdjustmentsToBoats(boats, liveExhibitionRace);
   window.__predictBoatsCurrent = boats;
   window.__predictWorkerCurrent = workerPrediction;
@@ -16250,6 +16313,7 @@ async function runPredict(){
 
   // 2着率・3着率はWorker事前値を基準に、展示取得後はBRCタイムXを数値反映する。
 
+  if(!brcPredictRequestIsCurrent(requestCtx)) return;
   box.innerHTML = `
     ${buildCurrentRaceSummaryHtml(venue)}
     ${buildInReliabilityCardHtmlFromServer(localInReliability)}
