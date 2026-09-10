@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <!-- BRC_TOP_BANNER_REPLACE_20260909 -->
 <!-- BRC_ADMIN_MATRIX_NAME_LAYOUT_FIX_20260910 -->
+<!-- BRC_ADMIN_NONIN_REFERENCE_BETA_V0_20260910 -->
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V1 -->
@@ -3349,7 +3350,7 @@ body.brc-legal-lock{overflow:hidden;}
 <style id="brc-admin-scenario-mark-style">
 /* BRC_ADMIN_SCENARIO_MARK_MATRIX_V1_20260909 */
 .brc-ai-admin-tabs{
-  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;
   margin:0 0 11px;padding:4px;border:1px solid rgba(10,31,51,.10);
   border-radius:11px;background:rgba(10,31,51,.035);
 }
@@ -3414,6 +3415,54 @@ table.brc-mark-table td:first-child{text-align:left;padding-left:7px;}
   margin:8px 2px 0;font-size:9px;line-height:1.55;color:var(--ink-soft);
 }
 .brc-mark-note strong{color:var(--navy);}
+
+/* BRC_ADMIN_NONIN_REFERENCE_BETA_V0_20260910 */
+.brc-nonin-ref-card{
+  margin:0;padding:11px;border:1px solid rgba(124,58,237,.18);border-radius:12px;
+  background:linear-gradient(160deg,rgba(124,58,237,.045),rgba(255,255,255,.97));
+}
+.brc-nonin-ref-card.pass{border-color:rgba(209,55,63,.22);background:linear-gradient(160deg,rgba(209,55,63,.04),rgba(255,255,255,.97));}
+.brc-nonin-ref-card.outside{border-color:rgba(100,116,139,.18);background:rgba(100,116,139,.025);}
+.brc-nonin-ref-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:9px;}
+.brc-nonin-ref-title{font-size:13px;font-weight:950;color:var(--navy);}
+.brc-nonin-ref-sub{margin-top:2px;font-size:9.5px;line-height:1.5;color:var(--ink-soft);}
+.brc-nonin-ref-badges{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;}
+.brc-nonin-ref-badge{display:inline-flex;align-items:center;justify-content:center;padding:3px 7px;border-radius:999px;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.16);color:#6d28d9;font-size:8.5px;font-weight:950;white-space:nowrap;}
+.brc-nonin-ref-badge.good{background:rgba(47,143,91,.08);border-color:rgba(47,143,91,.18);color:#217247;}
+.brc-nonin-ref-badge.warn{background:rgba(217,119,6,.08);border-color:rgba(217,119,6,.20);color:#8a5a00;}
+.brc-nonin-ref-badge.bad{background:rgba(209,55,63,.08);border-color:rgba(209,55,63,.20);color:#b4232c;}
+.brc-nonin-ref-heads{display:flex;gap:5px;flex-wrap:wrap;margin:0 0 8px;}
+.brc-nonin-ref-headchip{display:inline-flex;align-items:center;gap:4px;padding:5px 7px;border:1px solid rgba(10,31,51,.09);border-radius:8px;background:#fff;font-size:10px;font-weight:900;color:var(--navy);}
+.brc-nonin-ref-headchip strong{font-size:12px;font-weight:950;}
+.brc-nonin-ref-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-bottom:8px;}
+.brc-nonin-ref-metric{padding:7px 4px;border:1px solid rgba(10,31,51,.07);border-radius:8px;background:rgba(255,255,255,.82);text-align:center;min-width:0;}
+.brc-nonin-ref-metric .k{font-size:7.5px;font-weight:850;color:var(--ink-soft);white-space:nowrap;}
+.brc-nonin-ref-metric .v{margin-top:2px;font-size:12px;font-weight:950;color:var(--navy);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.brc-nonin-ref-status{margin:0 0 8px;padding:8px 9px;border-radius:9px;border:1px solid rgba(10,31,51,.08);background:#fff;font-size:10px;line-height:1.55;color:var(--ink-soft);}
+.brc-nonin-ref-status strong{color:var(--navy);font-weight:950;}
+.brc-nonin-ref-picks{margin-top:8px;padding-top:8px;border-top:1px dashed rgba(124,58,237,.18);}
+.brc-nonin-ref-picks-label{font-size:11.5px;font-weight:950;color:var(--navy);margin-bottom:6px;}
+.brc-nonin-ref-formation{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 6px;padding:7px 8px;border-radius:8px;background:rgba(10,31,51,.028);border:1px solid rgba(10,31,51,.08);}
+.brc-nonin-ref-formation-value{min-width:0;font-size:14px;font-weight:950;color:var(--navy);letter-spacing:.01em;overflow-wrap:anywhere;}
+.brc-nonin-ref-formation-points{flex:0 0 auto;font-size:12px;font-weight:950;color:#6d28d9;white-space:nowrap;}
+.brc-nonin-ref-pick-list{display:grid;gap:4px;}
+.brc-nonin-ref-pick{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:5px 8px;border-radius:7px;background:#fff;border:1px solid rgba(10,31,51,.08);font-size:11px;white-space:nowrap;}
+.brc-nonin-ref-pick-combo{font-weight:950;color:var(--navy);}
+.brc-nonin-ref-pick-odds{font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums;}
+.brc-nonin-ref-composite{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:6px;padding:7px 8px;border-radius:8px;background:rgba(124,58,237,.05);border:1px solid rgba(124,58,237,.12);}
+.brc-nonin-ref-composite-label{font-size:10.5px;font-weight:900;color:var(--ink-soft);}
+.brc-nonin-ref-composite-value{font-size:15px;font-weight:950;color:#6d28d9;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.brc-nonin-ref-note{margin-top:7px;font-size:9px;line-height:1.55;color:var(--ink-soft);}
+.brc-nonin-ref-note strong{color:var(--navy);}
+@media(max-width:420px){
+  .brc-nonin-ref-card{padding:9px 7px;}
+  .brc-nonin-ref-title{font-size:12px;}
+  .brc-nonin-ref-sub{font-size:9px;}
+  .brc-nonin-ref-metric .k{font-size:7px;}
+  .brc-nonin-ref-metric .v{font-size:11.5px;}
+  .brc-nonin-ref-formation-value{font-size:13px;}
+}
+
 @media(max-width:420px){
   .brc-ai-admin-tab{padding:8px 4px;font-size:11px;}
   .brc-mark-card{padding:9px 7px;}
@@ -8554,12 +8603,14 @@ function brcEnsureAiReferenceOddsAfterDeadline(){
     if(!sel?.key) return;
     // すでにローカルへ入っているオッズは即反映。
     brcRefreshNigeReferenceOdds();
+    try{ brcRefreshNonInReferenceOdds(); }catch(_e){}
     // 自動外部取得は当日の締切済みレースだけ。締切前の取得方針は従来どおり手動。
     if(String(sel.date)!==String(getJstDateLabel())) return;
     if(!brcOddsDeadlinePassed(sel)) return;
     const rec=__brcOddsLocal[sel.key]||null;
     if(rec?.final && rec?.odds){
       brcRefreshNigeReferenceOdds();
+      try{ brcRefreshNonInReferenceOdds(); }catch(_e){}
       return;
     }
     if(typeof brcEnsureFinalOdds==='function') brcEnsureFinalOdds(sel);
@@ -9583,6 +9634,7 @@ function brcRenderOddsPanel(message='',isError=false){
     setTimeout(()=>brcEnsureFinalOdds(sel),0);
   }
   try{ brcRefreshNigeReferenceOdds(); }catch(_e){}
+  try{ brcRefreshNonInReferenceOdds(); }catch(_e){}
   try{
     if(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE&&window.__predictMainTabCurrent==='invest'&&typeof brcRenderInvestmentManager==='function'){
       brcRenderInvestmentManager();
@@ -10179,9 +10231,211 @@ function brcBuildScenarioMarkMatrixHtml(boats,localInReliability=null){
     <div class="brc-mark-note"><strong>1着：</strong>1号艇はイン信頼度帯、2〜6号艇は1号艇の強さとの関係を含めて判定。<br><strong>2着・3着・3連対：</strong>着率と6艇内順位を使用。本人傾向は参考表示のみで印へ再加点しません。穴・妙味はオッズ取得後の別評価です。</div>
   </div>`;
 }
+
+// BRC_ADMIN_NONIN_REFERENCE_BETA_V0_20260910
+// 管理者Shadow専用。一般会員には表示しない。
+// 2026完全OOSを守るため、閾値はV0の比較候補として固定保存し、公開ロジックとは扱わない。
+const BRC_NONIN_REF_SHADOW_VERSION='BRC_NONIN_REF_SHADOW_V0_20260910';
+const BRC_NONIN_REF_RULES=[
+  {key:'loose',label:'緩め',oneShare:42,d12:6,twoShare:62,d23:4},
+  {key:'base',label:'基準',oneShare:45,d12:8,twoShare:65,d23:6},
+  {key:'strict',label:'厳しめ',oneShare:48,d12:12,twoShare:70,d23:8}
+];
+function brcNonInRefRates(b,phase='exhibition'){
+  if(phase==='pre'){
+    const win=brcMarkClamp(Number.isFinite(Number(b?.basePctFloat))?b.basePctFloat:b?.pctFloat);
+    const top3=brcMarkClamp(Number.isFinite(Number(b?.basePct3Float))?b.basePct3Float:b?.pct3Float);
+    const second=brcMarkClamp(Number.isFinite(Number(b?.basePct2))?b.basePct2:(Number.isFinite(Number(b?.pct2))?b.pct2:0));
+    return {win,second,third:brcMarkClamp(Math.max(0,top3-win-second)),top3};
+  }
+  return brcMarkFinalRates(b);
+}
+function brcNonInRefCore(boats,phase='exhibition'){
+  const src=(Array.isArray(boats)?boats:[]).filter(Boolean).slice().sort((a,b)=>Number(a.course)-Number(b.course));
+  if(src.length!==6) return null;
+  const rates={};
+  src.forEach(b=>{rates[Number(b.course)]=brcNonInRefRates(b,phase);});
+  const outer=src.filter(b=>Number(b.course)>=2&&Number(b.course)<=6).map(b=>({boat:Number(b.course),win:Number(rates[Number(b.course)]?.win)||0}));
+  const total=outer.reduce((s,x)=>s+x.win,0);
+  if(!(total>0)) return null;
+  outer.forEach(x=>{x.share=x.win/total*100;});
+  outer.sort((a,b)=>b.share-a.share||a.boat-b.boat);
+  const q1=Number(outer[0]?.share)||0,q2=Number(outer[1]?.share)||0,q3=Number(outer[2]?.share)||0;
+  return {phase,rates,ranking:outer,q1,q2,q3,d12:q1-q2,d23:q2-q3,s2:q1+q2};
+}
+function brcNonInRefClassify(core,rule){
+  if(!core||!rule) return {type:'PASS',heads:[],reason:'NO_DATA'};
+  if(core.q1>=rule.oneShare && core.d12>=rule.d12) return {type:'ONE',heads:[core.ranking[0].boat],reason:'HEAD_ONE'};
+  if(core.s2>=rule.twoShare && core.d23>=rule.d23) return {type:'TWO',heads:[core.ranking[0].boat,core.ranking[1].boat],reason:'HEAD_TWO'};
+  return {type:'PASS',heads:[],reason:'PASS_HEAD_NOT_CONCENTRATED'};
+}
+function brcNonInRefEntryChanged(phase='exhibition'){
+  if(phase==='pre') return false;
+  try{
+    const html=typeof brcBuildExhibitionRaceNoticeHtml==='function'?brcBuildExhibitionRaceNoticeHtml(window.__currentLiveExhibition||null):'';
+    const domText=String(document.getElementById('exhibitionRaceNotice')?.innerText||'');
+    return /進入変更/.test(String(html||'')+' '+domText);
+  }catch(_e){return false;}
+}
+function brcNonInRefTop2Key(rows){
+  return (Array.isArray(rows)?rows:[]).slice(0,2).map(x=>Number(x.boat)).filter(Number.isFinite).sort((a,b)=>a-b).join('-');
+}
+function brcNonInRefBrcSecondTop2(boats,head,phase='exhibition'){
+  return (Array.isArray(boats)?boats:[]).filter(b=>Number(b.course)!==Number(head)).map(b=>({boat:Number(b.course),v:Number(brcNonInRefRates(b,phase).second)||0})).sort((a,b)=>b.v-a.v||a.boat-b.boat).slice(0,2);
+}
+function brcNonInRefPlayerSecondTop2(boats,head){
+  const rows=[];
+  (Array.isArray(boats)?boats:[]).forEach(b=>{
+    const c=Number(b.course); if(c===Number(head)) return;
+    const reg=String(Number(b?.player?.reg));
+    const src=(typeof SCENARIO_DATA!=='undefined'&&SCENARIO_DATA?.[reg])?SCENARIO_DATA[reg]:[];
+    const target=src.filter(r=>Number(r.sc)===c&&Number(r.wc)===Number(head));
+    const agg=typeof brcAggregatePredictScenarioRows==='function'?brcAggregatePredictScenarioRows(target):null;
+    if(agg&&Number.isFinite(Number(agg.t2))) rows.push({boat:c,v:Number(agg.t2),n:Number(agg.n)||0});
+  });
+  rows.sort((a,b)=>b.v-a.v||b.n-a.n||a.boat-b.boat);
+  return rows.length>=2?rows.slice(0,2):[];
+}
+function brcNonInRefVenueSecondTop2(venue,head){
+  try{
+    const byHead=(typeof CK_DATA!=='undefined'&&CK_DATA?.[String(venue||'')])?CK_DATA[String(venue||'')][String(Number(head))]:null;
+    if(!byHead) return [];
+    const acc={};
+    Object.values(byHead).forEach(k=>{
+      const n=Math.max(0,Number(k?.n)||0); if(!(n>0)||!k?.opp) return;
+      Object.entries(k.opp).forEach(([boat,o])=>{
+        const c=Number(boat),v=Number(o?.top2); if(!Number.isFinite(c)||!Number.isFinite(v)) return;
+        if(!acc[c]) acc[c]={sum:0,n:0};
+        acc[c].sum+=v*n; acc[c].n+=n;
+      });
+    });
+    return Object.entries(acc).map(([boat,a])=>({boat:Number(boat),v:a.n>0?a.sum/a.n:0,n:a.n})).sort((a,b)=>b.v-a.v||b.n-a.n||a.boat-b.boat).slice(0,2);
+  }catch(_e){return [];}
+}
+function brcNonInRefScenarioSupport(boats,heads,phase='exhibition'){
+  const venue=String(document.getElementById('predictVenue')?.value||'').trim();
+  return (Array.isArray(heads)?heads:[]).map(head=>{
+    const brc=brcNonInRefBrcSecondTop2(boats,head,phase);
+    const player=brcNonInRefPlayerSecondTop2(boats,head);
+    const venueRows=brcNonInRefVenueSecondTop2(venue,head);
+    const bk=brcNonInRefTop2Key(brc),pk=brcNonInRefTop2Key(player),vk=brcNonInRefTop2Key(venueRows);
+    const playerAvailable=!!pk,venueAvailable=!!vk;
+    const playerMatch=playerAvailable&&bk===pk,venueMatch=venueAvailable&&bk===vk;
+    return {head,brc:brc.map(x=>x.boat),player:player.map(x=>x.boat),venue:venueRows.map(x=>x.boat),playerAvailable,venueAvailable,playerMatch,venueMatch,supported:playerMatch||venueMatch};
+  });
+}
+function brcNonInRefJoint(core,heads){
+  if(!core||!Array.isArray(heads)||!heads.length) return [];
+  const rows=[];
+  heads.forEach(head=>{
+    const h=core.ranking.find(x=>Number(x.boat)===Number(head));
+    const headWeight=Math.max(.0001,(Number(h?.share)||0)/100);
+    const seconds=[1,2,3,4,5,6].filter(c=>c!==Number(head)).map(c=>({boat:c,v:Math.max(.001,Number(core.rates[c]?.second)||0)}));
+    const z2=seconds.reduce((s,x)=>s+x.v,0); if(!(z2>0)) return;
+    seconds.forEach(s=>{
+      const thirds=[1,2,3,4,5,6].filter(c=>c!==Number(head)&&c!==s.boat).map(c=>({boat:c,v:Math.max(.001,Number(core.rates[c]?.third)||0)}));
+      const z3=thirds.reduce((sum,x)=>sum+x.v,0); if(!(z3>0)) return;
+      thirds.forEach(t=>rows.push({combo:`${head}-${s.boat}-${t.boat}`,head:Number(head),second:s.boat,third:t.boat,p:headWeight*(s.v/z2)*(t.v/z3)}));
+    });
+  });
+  return rows.sort((a,b)=>b.p-a.p||a.combo.localeCompare(b.combo));
+}
+function brcBuildNonInFormationLabel(picks){
+  const rows=(Array.isArray(picks)?picks:[]).map(x=>({combo:String(x?.combo||x||'')})).filter(x=>/^[1-6]-[1-6]-[1-6]$/.test(x.combo));
+  const heads=Array.from(new Set(rows.map(x=>Number(x.combo.split('-')[0])))).sort((a,b)=>a-b);
+  if(!heads.length) return '';
+  return heads.map(h=>{
+    const part=rows.filter(x=>Number(x.combo.split('-')[0])===h);
+    return brcBuildNigeFormationLabel(part)||part.map(x=>x.combo).join(' ');
+  }).join(' / ');
+}
+function brcNonInRefOddsInfo(picks){
+  const sel=typeof brcOddsSelection==='function'?brcOddsSelection():null;
+  const rec=sel?.key&&typeof __brcOddsLocal!=='undefined'?__brcOddsLocal[sel.key]:null;
+  const odds=rec?.odds||null;
+  const rows=(Array.isArray(picks)?picks:[]).map(x=>({combo:String(x?.combo||x||''),odds:typeof brcOddsValue==='function'?brcOddsValue(odds,String(x?.combo||x||'')):null}));
+  const available=rows.filter(x=>x.odds!==null);
+  const composite=available.length===rows.length&&rows.length&&typeof brcOddsBuilderComposite==='function'?brcOddsBuilderComposite(rows.map(x=>({odds:x.odds}))):null;
+  return {capturedAtJst:String(rec?.captured_at_jst||''),final:!!rec?.final,rows,composite};
+}
+function brcBuildNonInReferenceShadow(boats,workerPrediction,phase='exhibition'){
+  const core=brcNonInRefCore(boats,phase);
+  const eligible=!!workerPrediction?.inReliability?.todayReject;
+  if(!core) return {version:BRC_NONIN_REF_SHADOW_VERSION,phase,eligible,status:'NO_DATA'};
+  const entryChanged=brcNonInRefEntryChanged(phase);
+  const variants=BRC_NONIN_REF_RULES.map(rule=>{
+    let cls=brcNonInRefClassify(core,rule);
+    if(entryChanged) cls={type:'PASS',heads:[],reason:'PASS_ENTRY_CHANGE'};
+    const joint=cls.heads.length?brcNonInRefJoint(core,cls.heads):[];
+    const pointOptions=cls.type==='ONE'?[4,5,6]:(cls.type==='TWO'?[6,7,8]:[]);
+    const ticketSets={};
+    pointOptions.forEach(n=>{ticketSets[String(n)]=joint.slice(0,n).map(x=>x.combo);});
+    const defaultPoints=cls.type==='ONE'?6:(cls.type==='TWO'?8:0);
+    const tickets=defaultPoints?joint.slice(0,defaultPoints):[];
+    const support=cls.heads.length?brcNonInRefScenarioSupport(boats,cls.heads,phase):[];
+    return {rule:{...rule},type:cls.type,reason:cls.reason,heads:cls.heads,defaultPoints,ticketSets,tickets:tickets.map(x=>x.combo),formation:brcBuildNonInFormationLabel(tickets),scenarioSupport:support};
+  });
+  const main=variants.find(v=>v.rule.key==='base')||variants[0];
+  const oddsInfo=main?.tickets?.length?brcNonInRefOddsInfo(main.tickets):{capturedAtJst:'',final:false,rows:[],composite:null};
+  return {
+    version:BRC_NONIN_REF_SHADOW_VERSION,phase,eligible,todayReject:eligible,entryChanged,
+    status:!eligible?'OUTSIDE_NONIN':(main?.type==='PASS'?'PASS':'REFERENCE'),reason:!eligible?'NOT_TODAY_REJECT':main?.reason,
+    metrics:{q1:core.q1,q2:core.q2,q3:core.q3,d12:core.d12,d23:core.d23,s2:core.s2},
+    ranking:core.ranking.map(x=>({boat:x.boat,win:x.win,share:x.share})),variants,mainRule:'base',main,
+    odds:{capturedAtJst:oddsInfo.capturedAtJst,final:oddsInfo.final,rows:oddsInfo.rows,composite:oddsInfo.composite}
+  };
+}
+function brcBuildAdminNonInReferenceHtml(boats,workerPrediction,localInReliability=null,exhibitionApplied=false){
+  const phase=exhibitionApplied?'exhibition':'pre';
+  const shadow=brcBuildNonInReferenceShadow(boats,workerPrediction,phase);
+  if(!shadow||shadow.status==='NO_DATA') return `<div class="brc-nonin-ref-card outside"><div class="brc-nonin-ref-title">BRC参考買い目 β</div><div class="brc-nonin-ref-note">6艇分の最終評価が揃っていません。</div></div>`;
+  const phaseLabel=phase==='exhibition'?'TimeX反映済':'展示前';
+  const rankHtml=(shadow.ranking||[]).slice(0,3).map((x,i)=>`<span class="brc-nonin-ref-headchip">${scenarioLaneBadge(x.boat)} <strong>${x.share.toFixed(1)}%</strong>${i<2?'':' <span style="color:var(--ink-soft);font-size:8px;">第3候補</span>'}</span>`).join('');
+  const m=shadow.metrics||{};
+  const metricHtml=`<div class="brc-nonin-ref-metrics"><div class="brc-nonin-ref-metric"><div class="k">1位-2位</div><div class="v">${Number(m.d12||0).toFixed(1)}pt</div></div><div class="brc-nonin-ref-metric"><div class="k">2位-3位</div><div class="v">${Number(m.d23||0).toFixed(1)}pt</div></div><div class="brc-nonin-ref-metric"><div class="k">上位2艇</div><div class="v">${Number(m.s2||0).toFixed(1)}%</div></div></div>`;
+  if(!shadow.eligible){
+    return `<div class="brc-nonin-ref-card outside"><div class="brc-nonin-ref-head"><div><div class="brc-nonin-ref-title">BRC参考買い目 β</div><div class="brc-nonin-ref-sub">非イン参考買い目・管理者Shadow</div></div><div class="brc-nonin-ref-badges"><span class="brc-nonin-ref-badge">${phaseLabel}</span><span class="brc-nonin-ref-badge">対象外</span></div></div><div class="brc-nonin-ref-heads">${rankHtml}</div>${metricHtml}<div class="brc-nonin-ref-status"><strong>イン否定対象外</strong><br>BRC Server の todayReject が false のため、非イン参考買い目は生成しません。</div><div class="brc-nonin-ref-note">イン逃げ側は既存の「イン逃げ予測」を使用します。</div></div>`;
+  }
+  const main=shadow.main||{};
+  const support=Array.isArray(main.scenarioSupport)?main.scenarioSupport:[];
+  const available=support.filter(x=>x.playerAvailable||x.venueAvailable).length;
+  const supported=support.filter(x=>x.supported).length;
+  const supportClass=available===0?'warn':(supported===support.length&&support.length?'good':(supported===0?'bad':'warn'));
+  const supportText=available===0?'展開整合 未判定':`2着展開整合 ${supported}/${support.length}`;
+  const headText=main.type==='ONE'?`1頭型 ${scenarioLaneBadge(main.heads?.[0])}`:(main.type==='TWO'?`2頭型 ${(main.heads||[]).map(scenarioLaneBadge).join('')}`:'見送り');
+  if(main.type==='PASS'){
+    const reason=main.reason==='PASS_ENTRY_CHANGE'?'展示進入変更のため見送り':'頭を2艇以内へ十分に収束できないため見送り';
+    return `<div class="brc-nonin-ref-card pass"><div class="brc-nonin-ref-head"><div><div class="brc-nonin-ref-title">BRC参考買い目 β</div><div class="brc-nonin-ref-sub">非イン参考買い目・管理者Shadow</div></div><div class="brc-nonin-ref-badges"><span class="brc-nonin-ref-badge">${phaseLabel}</span><span class="brc-nonin-ref-badge bad">見送り</span></div></div><div class="brc-nonin-ref-heads">${rankHtml}</div>${metricHtml}<div class="brc-nonin-ref-status"><strong>${reason}</strong><br>3頭目へ広げず、参考買い目は出しません。</div><div class="brc-nonin-ref-note"><strong>Shadow基準V0：</strong>1頭 Q1≥45%かつ差≥8pt / 2頭 上位2艇≥65%かつ2位-3位差≥6pt。緩め・基準・厳しめの3条件をOOSへ同時保存します。</div></div>`;
+  }
+  const oddsInfo=brcNonInRefOddsInfo(main.tickets||[]);
+  const oddsMap=new Map(oddsInfo.rows.map(x=>[x.combo,x.odds]));
+  const pickRows=(main.tickets||[]).map(combo=>`<div class="brc-nonin-ref-pick"><span class="brc-nonin-ref-pick-combo">${combo}</span><span class="brc-nonin-ref-pick-odds" data-brc-nonin-ref-odds="${combo}">${oddsMap.get(combo)==null?'―':Number(oddsMap.get(combo)).toFixed(1)+'倍'}</span></div>`).join('');
+  const scenarioDetail=support.map(x=>`${x.head}頭：${x.supported?'一致':((x.playerAvailable||x.venueAvailable)?'不一致':'データ不足')}`).join(' / ');
+  return `<div class="brc-nonin-ref-card"><div class="brc-nonin-ref-head"><div><div class="brc-nonin-ref-title">BRC参考買い目 β</div><div class="brc-nonin-ref-sub">非イン参考買い目・管理者Shadow</div></div><div class="brc-nonin-ref-badges"><span class="brc-nonin-ref-badge">${phaseLabel}</span><span class="brc-nonin-ref-badge good">${headText}</span><span class="brc-nonin-ref-badge ${supportClass}">${supportText}</span></div></div><div class="brc-nonin-ref-heads">${rankHtml}</div>${metricHtml}<div class="brc-nonin-ref-status"><strong>頭候補 ${(main.heads||[]).join('・')}</strong><br>${scenarioDetail||'展開傾向データなし'}。展開傾向は着率・順位へ再加点せず、2着候補との整合確認だけに使用。</div><div class="brc-nonin-ref-picks" data-brc-nonin-ref-picks="${(main.tickets||[]).join(',')}"><div class="brc-nonin-ref-picks-label">BRC参考買い目</div>${main.formation?`<div class="brc-nonin-ref-formation"><span class="brc-nonin-ref-formation-value">${main.formation}</span><span class="brc-nonin-ref-formation-points">${main.defaultPoints}点</span></div>`:''}<div class="brc-nonin-ref-pick-list">${pickRows}</div><div class="brc-nonin-ref-composite"><span class="brc-nonin-ref-composite-label">合成オッズ</span><span class="brc-nonin-ref-composite-value" data-brc-nonin-ref-composite>${oddsInfo.composite==null?'―':Number(oddsInfo.composite).toFixed(1)+'倍'}</span></div></div><div class="brc-nonin-ref-note"><strong>検証中：</strong>1頭は4/5/6点、2頭は6/7/8点を裏で同時保存。画面は基準案の1頭6点 / 2頭8点を表示します。オッズで買い目自体は変更しません。</div></div>`;
+}
+function brcRefreshNonInReferenceOdds(){
+  const box=document.querySelector('.brc-nonin-ref-picks[data-brc-nonin-ref-picks]');
+  if(!box) return;
+  const combos=String(box.dataset.brcNoninRefPicks||'').split(',').map(x=>x.trim()).filter(Boolean);
+  if(!combos.length) return;
+  const info=brcNonInRefOddsInfo(combos);
+  const map=new Map(info.rows.map(x=>[x.combo,x.odds]));
+  combos.forEach(combo=>{
+    const el=box.querySelector(`[data-brc-nonin-ref-odds="${combo}"]`);
+    const v=map.get(combo); if(el) el.textContent=v==null?'―':`${Number(v).toFixed(1)}倍`;
+  });
+  const cel=box.querySelector('[data-brc-nonin-ref-composite]');
+  if(cel) cel.textContent=info.composite==null?'―':`${Number(info.composite).toFixed(1)}倍`;
+}
+function brcRenderAdminNonInReferencePanel(boats,workerPrediction,localInReliability=null,exhibitionApplied=false){
+  if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return;
+  const panel=document.getElementById('brcAiAdminPanel-ref');
+  if(panel) panel.innerHTML=brcBuildAdminNonInReferenceHtml(boats,workerPrediction,localInReliability,exhibitionApplied);
+}
+
 function brcSetAiAdminSubTab(key){
   if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return;
-  const valid=['marks','nige'];
+  const valid=['marks','ref','nige'];
   const k=valid.includes(key)?key:'marks';
   window.__brcAiAdminSubTabCurrent=k;
   document.querySelectorAll('#predictAiResult [data-brc-ai-admin-tab]').forEach(btn=>{
@@ -10193,7 +10447,7 @@ function brcSetAiAdminSubTab(key){
     const panel=document.getElementById(`brcAiAdminPanel-${x}`);
     if(panel) panel.classList.toggle('active',x===k);
   });
-  if(k==='nige') setTimeout(()=>brcEnsureAiReferenceOddsAfterDeadline(),0);
+  if(k==='nige'||k==='ref') setTimeout(()=>brcEnsureAiReferenceOddsAfterDeadline(),0);
 }
 function brcBindAiAdminSubTabs(){
   document.querySelectorAll('#predictAiResult [data-brc-ai-admin-tab]').forEach(btn=>{
@@ -10215,6 +10469,7 @@ function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhib
   const isAdmin=!!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE);
   if(isAdmin){
     const marksHtml=brcBuildScenarioMarkMatrixHtml(boats,localInReliability);
+    const refHtml=brcBuildAdminNonInReferenceHtml(boats,workerPrediction,localInReliability,exhibitionApplied);
     box.innerHTML=`
       ${buildCurrentRaceSummaryHtml(venue)}
       <div class="predict-ai-head">
@@ -10223,9 +10478,11 @@ function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhib
       </div>
       <div class="brc-ai-admin-tabs" role="tablist" aria-label="AI予測の管理者表示切り替え">
         <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="marks">展開印</button>
+        <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="ref">参考買い目β</button>
         <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="nige">イン逃げ予測</button>
       </div>
       <div id="brcAiAdminPanel-marks" class="brc-ai-admin-panel">${marksHtml}</div>
+      <div id="brcAiAdminPanel-ref" class="brc-ai-admin-panel">${refHtml}</div>
       <div id="brcAiAdminPanel-nige" class="brc-ai-admin-panel">${nigeHtml}</div>
     `;
     brcBindAiAdminSubTabs();
@@ -12278,6 +12535,8 @@ function brcRefreshExhibitionAdjustedDom(liveRace,venue,raceNo){
     const wrap=document.createElement('div'); wrap.innerHTML=buildRecommendedBetsHtmlFromServer(worker,local,applied).trim();
     if(wrap.firstElementChild) rec.replaceWith(wrap.firstElementChild);
   }
+  try{ brcRenderAdminNonInReferencePanel(boats,worker,local,applied); }catch(_e){}
+  try{ brcRefreshNonInReferenceOdds(); }catch(_e){}
 
   // 詳細モーダルを開いたままTimeXが更新された場合も、展開タブの表示だけを現在値へ再接続する。
   // 2着率・3着率・3連対率は既存の一般TimeX補正をそのまま再描画し、本人傾向は参考表示のみ。
@@ -16195,7 +16454,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   const BRC_SNAPSHOT_STORE='race_snapshots';
   const BRC_SNAPSHOT_DB_VERSION=1;
   // 条件・計算ロジックを変更した時はこの値を必ず更新する。
-  const BRC_SNAPSHOT_LOGIC_VERSION='BRC_VISIBLE_OOS_V1_20260906';
+  const BRC_SNAPSHOT_LOGIC_VERSION='BRC_VISIBLE_OOS_V2_NONIN_REF_20260910';
 
   function brcSnapNum(v){
     const n=Number(v);
@@ -16498,6 +16757,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       slitText,noticeText,highTilts:brcSnapClone(highTilts),
       weather,
       recommendation:brcSnapRecommendation(worker),
+      nonInReference:brcSnapClone(typeof brcBuildNonInReferenceShadow==='function'?brcBuildNonInReferenceShadow(boats,worker,phase):null),
       scenarioAssist:brcSnapClone(worker?.scenarioAssist||null),
       workerInReliability:brcSnapClone(worker?.inReliability||null),
       boats:boats.slice().sort((a,b)=>Number(a.course)-Number(b.course)).map(b=>brcSnapBoat(b,phase))
@@ -16563,7 +16823,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       'entry_changed','entry_sequence','fixed_course','absent_boats',
       'in_reliability','in_pct','venue_base_diff','reliability_rule','women','sg','strong','today_reject',
       'slit_text','notice_text','high_tilts','wind_direction','wind_speed_m','wind_quality','wave_cm','weather_observed_at',
-      'recommendation_json','scenario_assist_json','worker_in_reliability_json'
+      'recommendation_json','nonin_reference_json','scenario_assist_json','worker_in_reliability_json'
     ];
     const per=[
       'reg','name','class','win','second','third','top3','base_win','base_second','base_third','base_top3',
@@ -16591,7 +16851,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       women:row.women,sg:row.sg,strong:row.strong,today_reject:row.todayReject,
       slit_text:row.slitText,notice_text:row.noticeText,high_tilts:brcSnapJson(row.highTilts),
       wind_direction:row.weather?.direction,wind_speed_m:row.weather?.speedM,wind_quality:row.weather?.quality,wave_cm:row.weather?.waveCm,weather_observed_at:row.weather?.observedAt,
-      recommendation_json:brcSnapJson(row.recommendation),scenario_assist_json:brcSnapJson(row.scenarioAssist),worker_in_reliability_json:brcSnapJson(row.workerInReliability)
+      recommendation_json:brcSnapJson(row.recommendation),nonin_reference_json:brcSnapJson(row.nonInReference),scenario_assist_json:brcSnapJson(row.scenarioAssist),worker_in_reliability_json:brcSnapJson(row.workerInReliability)
     };
     for(let c=1;c<=6;c++){
       const b=brcSnapFlatBoat(row,c), p=b.personal||{}, st=b.st||{};
