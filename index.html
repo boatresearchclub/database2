@@ -12,6 +12,7 @@
 <!-- BRC_TIMEX_SIMPLE_READ_INTEGER_V1_20260910 -->
 <!-- BRC_SCENARIO_PERSONAL_TREND_RECONNECT_20260909 -->
 <!-- BRC_RACEDATA_PERSONAL_TREND_20260910 -->
+<!-- BRC_RACEDATA_PERSONAL_NOTICE_PRIORITY_20260910 -->
 <!-- BRC_TIMEX_MODAL_PERSONAL_ONLY_20260910 -->
 <!-- BRC_DEADLINE_T16_CANCEL_SYNC_20260909 -->
 <!-- BRC_1DAY_JST_SESSION_EXPIRY_20260909 -->
@@ -12386,13 +12387,31 @@ function brcBuildPlayerTimeXTendencyBadgeHtml(b){
   const title=easy?`${courseLabel}でタイムを出しやすい傾向。タップで詳細`:`${courseLabel}でタイムを出しにくい傾向。タップで詳細`;
   return `<button type="button" class="brc-player-tendency-badge ${cls}" onclick="event.stopPropagation();brcShowPlayerTimeXTendencyForCourse(${Number(b?.course)||0})" title="${title}">注意</button>`;
 }
+// 出走データの選手名下表示は、今回帯の本人傾向を最優先で判定する。
+// 本人傾向 = 選手×コース×今回のTimeX差帯が一致し、N=12以上。
+// ここでは表示と詳細導線だけを変更し、着率・TimeX補正・AI予測へは再加算しない。
+function brcFindPredictNamePersonalTrendRow(b){
+  if(!b?.exhibitionApplied) return null;
+  const selected=brcFindExhibitionPlayerAlert(b);
+  return selected && Number(selected.N)>=12 ? selected : null;
+}
 function brcBuildPredictExhibitionLabelHtml(b){
   const base=`<span class="predict-exhibition-base"><span class="brc">BRC</span><span>タイムX</span></span>`;
+
+  // 1) 今回帯の本人傾向が成立していれば、基礎特性の有無に関係なく注意表示。
+  //    タップ時も本人傾向詳細を優先する。
+  const personal=brcFindPredictNamePersonalTrendRow(b);
+  if(personal){
+    const payload=encodeURIComponent(JSON.stringify(brcAlertPayload(personal,b)));
+    const meta=brcGetExhibitionAlertMeta(personal);
+    return `<span class="predict-exhibition-inline"><button type="button" class="predict-exhibition-alert ${meta.cls}" onclick="event.stopPropagation();brcShowPredictNamePersonalTrend(decodeURIComponent('${payload}'))" title="今回の本人傾向あり。タップで詳細">BRCタイムX 注意</button></span>`;
+  }
+
+  // 2) 本人傾向がない場合は、従来の出しやすい／出しにくい基礎特性へフォールバック。
   const tendency=brcFindPlayerTimeXTendency(b);
   if(!tendency) return `<span class="predict-exhibition-inline">${base}</span>`;
-  const detailRow=brcFindPlayerTimeXTendencyDetailRow(b,tendency);
   const payloadObj={...tendency,
-    detail:detailRow?brcAlertPayload(detailRow,b):null,
+    detail:null,
     current:brcAlertPayload({},b)
   };
   const payload=encodeURIComponent(JSON.stringify(payloadObj));
@@ -12420,6 +12439,20 @@ function brcAlertPersonalTrendRow(label,a,kind){
   const text=Number.isFinite(diff) ? `通常より ${brcSignedPt(diff)}` : '―';
   return `<div class="brc-ex-personal-row"><span class="label">${label}</span><span class="arrow brc-ex-metric-${cls}">${arrow}</span><span class="diff brc-ex-metric-${cls}">${text}</span></div>`;
 }
+function brcShowPredictNamePersonalTrend(raw){
+  let a; try{a=JSON.parse(raw)}catch(e){return}
+  document.getElementById('brcExAlertPop')?.remove();
+  const pop=document.createElement('div'); pop.id='brcExAlertPop'; pop.className='brc-ex-alert-pop';
+  pop.onclick=e=>{if(e.target===pop)pop.remove();};
+  const confidence=brcPersonalConfidence(a?.N);
+  const isWatch=a?.['採用区分']==='監視';
+  const allRows=[
+    ['1着','win'],['2着','second'],['3着','third'],['3連対','top3']
+  ].map(([label,kind])=>brcAlertPersonalTrendRow(label,a,kind)).join('');
+  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a?.['選手名']||''}　本人傾向</div><div class="brc-ex-alert-meta">${a?.['コース']||''}コース ／ タイムX差 ${a?.['平均差帯']||''}秒 ／ N=${a?.N??'―'} ／ 参考度 ${confidence}${isWatch?' ／ 監視':''}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-ex-alert-forecast-label">選手 × コース × 今回のTimeX帯</div><div class="brc-ex-personal-box">${allRows}</div><div class="brc-ex-alert-note">本人傾向は参考表示のみです。表示中の着率、BRCタイムX補正、AI予測、展開ロジックへ再加算しません。</div><div class="brc-ex-alert-scale">BRCタイムX共通：0.0pt → ／ 0.1〜4.9pt ↗↘ ／ 5.0〜9.9pt ↑↓ ／ 10.0〜14.9pt ↑↑↓↓ ／ 15.0pt以上 ↑↑↑↓↓↓</div></div>`;
+  document.body.appendChild(pop);
+}
+
 function brcShowExhibitionPlayerAlert(raw){
   let a; try{a=JSON.parse(raw)}catch(e){return}
   document.getElementById('brcExAlertPop')?.remove();
