@@ -10,6 +10,7 @@
 <!-- BRC_TIMEX_SIMPLE_READ_INTEGER_V1_20260910 -->
 <!-- BRC_SCENARIO_PERSONAL_TREND_RECONNECT_20260909 -->
 <!-- BRC_RACEDATA_PERSONAL_TREND_20260910 -->
+<!-- BRC_TIMEX_MODAL_PERSONAL_ONLY_20260910 -->
 <!-- BRC_DEADLINE_T16_CANCEL_SYNC_20260909 -->
 <!-- BRC_1DAY_JST_SESSION_EXPIRY_20260909 -->
 
@@ -2462,6 +2463,12 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
   .brc-timex-focus-value.up{color:var(--trend-up);}
   .brc-timex-focus-value.down{color:var(--trend-down);}
   .brc-timex-focus-value.flat{color:var(--ink-soft);}
+  .brc-timex-focus-empty{
+    padding:18px 14px; text-align:center; font-size:14px; font-weight:800; line-height:1.6; color:#475467;
+  }
+  .brc-timex-focus-empty span{
+    display:block; margin-top:2px; font-size:12px; font-weight:700; color:#667085;
+  }
   .brc-timex-focus-row.personal .brc-timex-focus-label{color:var(--ink-soft);font-size:10.5px;}
   .brc-timex-focus-row.personal{background:#fbfcfe;}
   .brc-timex-secondary{margin-top:8px;border:1px solid rgba(10,31,51,.09);border-radius:9px;overflow:hidden;background:#fff;}
@@ -11712,13 +11719,13 @@ function brcTimeXSimpleReading(a,grade,direction){
   return result;
 }
 function brcBuildTimeXSimpleFocus(a){
-  const rows=[
-    brcTimeXFocusRow('1着',a?.__currentWinPct,a?.__currentWinDeltaPt,false),
-    brcTimeXFocusRow('3連対',a?.__currentTop3Pct,a?.__currentTop3DeltaPt,false)
-  ];
+  const rows=[];
   const pWin=brcPersonalEffectDiff(a,'win'), pTop3=brcPersonalEffectDiff(a,'top3');
   if(Number.isFinite(Number(pWin))) rows.push(brcTimeXFocusRow('本人1着傾向',NaN,pWin,true));
   if(Number.isFinite(Number(pTop3))) rows.push(brcTimeXFocusRow('本人3連対傾向',NaN,pTop3,true));
+  if(!rows.length){
+    rows.push('<div class="brc-timex-focus-empty">今回のTimeX帯は本人傾向の参考表示なし<br><span>N不足または該当条件なし</span></div>');
+  }
   return `<div class="brc-timex-focus">${rows.join('')}</div>`;
 }
 function brcBuildTimeXSecondaryDetails(a){
