@@ -9,6 +9,7 @@
 <!-- BRC_TIMEX_COMPACT_DECISION_UI_20260908 -->
 <!-- BRC_TIMEX_SIMPLE_READ_INTEGER_V1_20260910 -->
 <!-- BRC_SCENARIO_PERSONAL_TREND_RECONNECT_20260909 -->
+<!-- BRC_RACEDATA_PERSONAL_TREND_20260910 -->
 <!-- BRC_DEADLINE_T16_CANCEL_SYNC_20260909 -->
 <!-- BRC_1DAY_JST_SESSION_EXPIRY_20260909 -->
 
@@ -2505,6 +2506,16 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
     color:var(--ink-soft); font-size:16px; font-weight:700; line-height:1;
   }
   #predictResult .prob-eval-row .exhibition-arrow-icon{ width:17px; height:17px; }
+  /* ---- 2026-09-10: 出走データ 本人傾向（展開傾向と同一判定・参考表示のみ） ---- */
+  #predictResult .prob-personal-row{
+    display:flex; align-items:center; justify-content:center;
+    min-height:0; margin-top:2px; line-height:1;
+  }
+  #predictResult .prob-personal-row:empty{display:none;}
+  #predictResult .prob-personal-row .scenario-personal-trend{
+    min-height:14px; margin-top:0; font-size:8.5px;
+  }
+
   @media (max-width:640px){
     /* スマホ：出走表AIの左右余白を少し詰め、選手列を確保する。 */
     #page-predict > #brcPredictProtected > section.card{ padding-left:8px; padding-right:8px; }
@@ -2530,6 +2541,9 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
     }
     #predictResult .prob-eval-row{ min-height:19px; margin-top:3px; }
     #predictResult .prob-eval-row .exhibition-arrow-icon{ width:16px; height:16px; }
+    #predictResult .prob-personal-row{margin-top:2px;}
+    #predictResult .prob-personal-row .scenario-personal-trend{min-height:13px;font-size:8px;}
+
     #predictResult .prob-eval-hyphen{ font-size:15px; }
   }
 
@@ -11569,23 +11583,26 @@ function brcBuildExhibitionProbabilityArrowIcon(deltaPt,threshold){
   const icon=repeated || brcBuildBakedArrowSvg(label);
   return `<span aria-label="BRCタイムX ${label}" title="BRCタイムX ${label}" style="display:inline-flex;align-items:center;justify-content:center;color:${color};line-height:1;flex:0 0 auto;">${icon}</span>`;
 }
-function brcBuildProbabilityCell(value,arrowHtml){
+function brcBuildProbabilityCell(value,arrowHtml,personalHtml=''){
   const evalHtml=arrowHtml || '<span class="prob-eval-hyphen" aria-label="展示未反映">−</span>';
-  return `<div class="prob-cell-stack"><div class="prob-value">${value}<span class="predict-unit">%</span></div><div class="prob-eval-row">${evalHtml}</div></div>`;
+  const personalLine=personalHtml ? `<div class="prob-personal-row">${personalHtml}</div>` : '';
+  return `<div class="prob-cell-stack"><div class="prob-value">${value}<span class="predict-unit">%</span></div><div class="prob-eval-row">${evalHtml}</div>${personalLine}</div>`;
 }
 function brcBuildWinCellInner(b,venue){
-  // 1着率はTimeX v2の正式補正値。矢印も常にTimeX本体を表示し、本人傾向で上書きしない。
+  // 1着率はTimeX v2の正式補正値。本人傾向は展開タブと同一判定で参考表示し、数値へ再加算しない。
   const arrow=b?.exhibitionApplied
     ? brcBuildExhibitionProbabilityArrowIcon(Number(b?.exhibitionWinDeltaPt),0.75)
     : '';
-  return brcBuildProbabilityCell(b.pct,arrow);
+  const personal=brcBuildScenarioPersonalTrendHtml(b,'win',Number(b?.pct));
+  return brcBuildProbabilityCell(b.pct,arrow,personal);
 }
 function brcBuildTop3CellInner(b){
-  // 3連対率もTimeX v2の正式補正値。本人傾向は参考・数値未反映。
+  // 3連対率もTimeX v2の正式補正値。本人傾向は展開タブと同一判定で参考表示し、数値へ再加算しない。
   const arrow=b?.exhibitionApplied
     ? brcBuildExhibitionProbabilityArrowIcon(Number(b?.exhibitionTop3DeltaPt),2.0)
     : '';
-  return brcBuildProbabilityCell(b.pct3,arrow);
+  const personal=brcBuildScenarioPersonalTrendHtml(b,'top3',Number(b?.pct3));
+  return brcBuildProbabilityCell(b.pct3,arrow,personal);
 }
 
 // ---- BRCタイムX：選手別個人化データ（6方向盲点再検証 / 2024-2025作成 → 2026完全OOS） ----
