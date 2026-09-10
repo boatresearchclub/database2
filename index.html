@@ -2,7 +2,7 @@
 <!-- BRC_TOP_BANNER_REPLACE_20260909 -->
 <!-- BRC_ADMIN_MATRIX_NAME_LAYOUT_FIX_20260910 -->
 <!-- BRC_ADMIN_NONIN_REFERENCE_BETA_V0_20260910 -->
-<!-- BRC_ADMIN_REFERENCE_MONITOR_V2_20260911 -->
+<!-- BRC_ADMIN_REFERENCE_INLINE_V3_20260911 -->
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V1 -->
@@ -3365,7 +3365,7 @@ body.brc-legal-lock{overflow:hidden;}
 <style id="brc-admin-scenario-mark-style">
 /* BRC_ADMIN_SCENARIO_MARK_MATRIX_V1_20260909 */
 .brc-ai-admin-tabs{
-  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;
   margin:0 0 11px;padding:4px;border:1px solid rgba(10,31,51,.10);
   border-radius:11px;background:rgba(10,31,51,.035);
 }
@@ -3498,10 +3498,10 @@ table.brc-mark-table td:first-child{text-align:left;padding-left:7px;}
 
 
 <style id="brc-admin-reference-monitor-v2-style">
-/* BRC_ADMIN_REFERENCE_MONITOR_V2_20260911 */
+/* BRC_ADMIN_REFERENCE_INLINE_V3_20260911 */
 /* BRC_ADMIN_REFERENCE_MONITOR_UI_V2_20260910: pick marks hidden + typography aligned with イン逃げ予測 */
 .brc-ai-admin-tabs.brc-refmon-enabled{grid-template-columns:repeat(3,minmax(0,1fr));}
-.brc-refmon-card{margin:0;padding:11px;border:1px solid rgba(124,58,237,.18);border-radius:12px;background:linear-gradient(160deg,rgba(124,58,237,.045),rgba(255,255,255,.97));}
+.brc-refmon-card{margin:10px 0 0;padding:11px;border:1px solid rgba(124,58,237,.18);border-radius:12px;background:linear-gradient(160deg,rgba(124,58,237,.045),rgba(255,255,255,.97));}
 .brc-refmon-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:9px;}
 .brc-refmon-title{font-size:13px;font-weight:950;color:var(--navy);}
 .brc-refmon-sub{margin-top:2px;font-size:10.5px;line-height:1.45;color:var(--ink-soft);}
@@ -10420,7 +10420,7 @@ function brcBuildScenarioMarkMatrixHtml(boats,localInReliability=null){
   const relRank=String(localInReliability?.rank||'').trim();
   return `<div class="brc-mark-card">
     <div class="brc-mark-head">
-      <div><div class="brc-mark-title">展開印マトリックス</div><div class="brc-mark-sub">最終着率を◎○△×へ翻訳。買い目・オッズ評価とは分離。</div></div>
+      <div><div class="brc-mark-title">展開マトリックス</div><div class="brc-mark-sub">最終着率を◎○△×へ翻訳。買い目・オッズ評価とは分離。</div></div>
       <div class="brc-mark-head-right"><span class="brc-mark-badge">管理者β</span><span class="brc-mark-badge phase">${phase?'TimeX反映済':'展示前'}</span>${relRank?`<span class="brc-mark-badge">イン ${relRank}</span>`:''}</div>
     </div>
     <div class="brc-mark-table-wrap">
@@ -10639,8 +10639,9 @@ function brcRenderAdminNonInReferencePanel(boats,workerPrediction,localInReliabi
 
 function brcSetAiAdminSubTab(key){
   if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return;
-  const valid=['marks','ref','nige'];
-  const k=valid.includes(key)?key:'marks';
+  const valid=['marks','nige'];
+  const requested=(key==='ref'||key==='monitor')?'marks':key;
+  const k=valid.includes(requested)?requested:'marks';
   window.__brcAiAdminSubTabCurrent=k;
   document.querySelectorAll('#predictAiResult [data-brc-ai-admin-tab]').forEach(btn=>{
     const on=btn.dataset.brcAiAdminTab===k;
@@ -10651,7 +10652,7 @@ function brcSetAiAdminSubTab(key){
     const panel=document.getElementById(`brcAiAdminPanel-${x}`);
     if(panel) panel.classList.toggle('active',x===k);
   });
-  if(k==='nige'||k==='ref') setTimeout(()=>brcEnsureAiReferenceOddsAfterDeadline(),0);
+  if(k==='nige') setTimeout(()=>brcEnsureAiReferenceOddsAfterDeadline(),0);
 }
 function brcBindAiAdminSubTabs(){
   document.querySelectorAll('#predictAiResult [data-brc-ai-admin-tab]').forEach(btn=>{
@@ -10673,7 +10674,6 @@ function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhib
   const isAdmin=!!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE);
   if(isAdmin){
     const marksHtml=brcBuildScenarioMarkMatrixHtml(boats,localInReliability);
-    const refHtml=brcBuildAdminNonInReferenceHtml(boats,workerPrediction,localInReliability,exhibitionApplied);
     box.innerHTML=`
       ${buildCurrentRaceSummaryHtml(venue)}
       <div class="predict-ai-head">
@@ -10681,12 +10681,10 @@ function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhib
         ${reliability}
       </div>
       <div class="brc-ai-admin-tabs" role="tablist" aria-label="AI予測の管理者表示切り替え">
-        <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="marks">展開印</button>
-        <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="ref">参考買い目β</button>
+        <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="marks">展開マトリックス</button>
         <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="nige">イン逃げ予測</button>
       </div>
       <div id="brcAiAdminPanel-marks" class="brc-ai-admin-panel">${marksHtml}</div>
-      <div id="brcAiAdminPanel-ref" class="brc-ai-admin-panel">${refHtml}</div>
       <div id="brcAiAdminPanel-nige" class="brc-ai-admin-panel">${nigeHtml}</div>
     `;
     brcBindAiAdminSubTabs();
@@ -17275,7 +17273,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 <script id="brc-admin-reference-monitor-v2">
 (function(){
   'use strict';
-  const VERSION='BRC_ADMIN_REFERENCE_MONITOR_V2_20260911';
+  const VERSION='BRC_ADMIN_REFERENCE_INLINE_V3_20260911';
   const DB_NAME='brc_admin_reference_monitor_v2';
   const DB_STORE='snapshots';
   // 2024探索データの3分位。V2では表示/Shadow分類専用で、買い目の採否には使わない。
@@ -17560,32 +17558,41 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     const legacy=data.variants?.legacyV1||{};
     const changed=JSON.stringify(legacy.heads||[])!==JSON.stringify(data.heads||[])||legacy.decision!==data.decision;
     return `<div class="brc-refmon-card" data-brc-refmon-root>
-      <div class="brc-refmon-head"><div><div class="brc-refmon-title">参考買い目監視 V2</div><div class="brc-refmon-sub">イン信頼度＋展開印 → 頭最大2艇 → 条件付き3連単を共通順位化</div></div><div class="brc-refmon-badges"><span>管理者のみ</span><span>Shadow</span><span>${esc(data.phaseLabel)}</span><span>信頼度 ${esc(data.inReliability||'―')}</span></div></div>
+      <div class="brc-refmon-head"><div><div class="brc-refmon-title">BRC参考買い目</div><div class="brc-refmon-sub">展開マトリックスから頭最大2艇を選び、条件付き3連単を共通順位化</div></div><div class="brc-refmon-badges"><span>管理者のみ</span><span>${esc(data.phaseLabel)}</span><span>信頼度 ${esc(data.inReliability||'―')}</span></div></div>
       <div class="brc-refmon-status ${statusClass}"><div><span class="k">判定</span><strong>${esc(status)}</strong><small>${esc(modeLabel)}</small></div><div class="brc-refmon-heads">${headChips(data)||'<span class="muted">頭候補なし</span>'}</div></div>
       ${qualityHtml(data)}
-      <details class="brc-refmon-detail"><summary>判定詳細</summary><div class="brc-refmon-mark-grid">${markRows}</div><div class="brc-refmon-rule">${esc(decisionRuleText(data))}</div><div class="brc-refmon-rule">HC=選択した頭の絶対1着率合計。OC=頭候補が勝つ世界の中で、採用6/8点へ相手評価がどれだけ集中したか。強/標準/弱は2024探索境界を固定した監視表示で、現時点では買い目の採否へ使いません。</div></details>
+      <details class="brc-refmon-detail"><summary>判定詳細</summary><div class="brc-refmon-rule">${esc(decisionRuleText(data))}</div><div class="brc-refmon-rule">HC=選択した頭の絶対1着率合計。OC=頭候補が勝つ世界の中で、採用6/8点へ相手評価がどれだけ集中したか。強/標準/弱は2024探索境界を固定した管理者向け確認表示で、現時点では買い目の採否へ使いません。</div></details>
       ${body}
       ${changed?`<div class="brc-refmon-shadowline">旧V1比較：${esc(legacy.decision||'―')} / 頭 ${esc((legacy.heads||[]).join('・')||'なし')} → V2 ${esc(data.decision)} / 頭 ${esc((data.heads||[]).join('・')||'なし')}</div>`:''}
-      <div class="brc-refmon-note">管理者専用V2です。一般会員表示・既存AI予測・TimeX・本人傾向・投資判断は変更しません。会場/本人展開は数値へ再加算せず、相手整合の研究材料として分離します。</div>
+      <div class="brc-refmon-note">参考買い目は現在管理者のみ表示。一般会員表示・既存AI予測・TimeX・本人傾向・投資判断は変更しません。会場/本人展開は数値へ再加算しません。</div>
     </div>`;
   }
 
   function injectMonitor(boats,workerPrediction,localInReliability,exhibitionApplied){
     if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return;
-    const box=document.getElementById('predictAiResult'), tabs=box?.querySelector('.brc-ai-admin-tabs'); if(!tabs) return;
-    const legacyRefBtn=tabs.querySelector('[data-brc-ai-admin-tab="ref"]'); if(legacyRefBtn) legacyRefBtn.remove();
-    const legacyRefPanel=document.getElementById('brcAiAdminPanel-ref'); if(legacyRefPanel) legacyRefPanel.remove();
-    tabs.classList.add('brc-refmon-enabled');
-    let btn=tabs.querySelector('[data-brc-ai-admin-tab="monitor"]');
-    if(!btn){ btn=document.createElement('button'); btn.type='button'; btn.className='brc-ai-admin-tab'; btn.dataset.brcAiAdminTab='monitor'; btn.textContent='参考買い目監視V2'; const nigeBtn=tabs.querySelector('[data-brc-ai-admin-tab="nige"]'); tabs.insertBefore(btn,nigeBtn||null); btn.addEventListener('click',()=>window.brcSetAiAdminSubTab?.('monitor')); }
-    else btn.textContent='参考買い目監視V2';
-    let panel=document.getElementById('brcAiAdminPanel-monitor');
-    if(!panel){ panel=document.createElement('div'); panel.id='brcAiAdminPanel-monitor'; panel.className='brc-ai-admin-panel'; const marksPanel=document.getElementById('brcAiAdminPanel-marks'); marksPanel?.insertAdjacentElement('afterend',panel); }
-    panel.innerHTML=buildHtml(boats,workerPrediction,localInReliability,exhibitionApplied);
+    const box=document.getElementById('predictAiResult');
+    const tabs=box?.querySelector('.brc-ai-admin-tabs');
+    const marksPanel=document.getElementById('brcAiAdminPanel-marks');
+    if(!box||!tabs||!marksPanel) return;
+
+    // 旧「参考買い目β」「参考買い目監視」タブは表示しない。
+    tabs.querySelectorAll('[data-brc-ai-admin-tab="ref"],[data-brc-ai-admin-tab="monitor"]').forEach(el=>el.remove());
+    document.getElementById('brcAiAdminPanel-ref')?.remove();
+    document.getElementById('brcAiAdminPanel-monitor')?.remove();
+    tabs.classList.remove('brc-refmon-enabled');
+
+    const marksBtn=tabs.querySelector('[data-brc-ai-admin-tab="marks"]');
+    if(marksBtn) marksBtn.textContent='展開マトリックス';
+
+    // 展開マトリックスの直下へ、管理者専用のBRC参考買い目を一体表示する。
+    marksPanel.querySelector('[data-brc-refmon-root]')?.remove();
+    marksPanel.insertAdjacentHTML('beforeend',buildHtml(boats,workerPrediction,localInReliability,exhibitionApplied));
+
     try{brcApplyAiOutcomeMark();}catch(_e){}
     try{window.brcSetAiAdminSubTab?.(window.__brcAiAdminSubTabCurrent||'marks');}catch(_e){}
     Promise.resolve().then(()=>saveCurrent(boats,workerPrediction,localInReliability,exhibitionApplied)).catch(()=>{});
   }
+
 
   function refreshOdds(){
     const root=document.querySelector('[data-brc-refmon-root]'), picksBox=root?.querySelector('[data-brc-ref-monitor-picks]'); if(!picksBox) return;
@@ -17623,7 +17630,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   function csvEsc(v){ const s=String(v??''); return /[",\r\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s; }
   async function exportCsv(){
     const rows=(await dbGetAll()).sort((a,b)=>String(a.date).localeCompare(String(b.date))||String(a.venue).localeCompare(String(b.venue))||num(a.raceNo)-num(b.raceNo)||String(a.phase).localeCompare(String(b.phase)));
-    if(!rows.length) throw new Error('参考買い目監視V2ログはまだありません');
+    if(!rows.length) throw new Error('参考買い目V2ログはまだありません');
     const cols=['date','venue','venue_code','race_no','deadline','phase','captured_at','version','in_reliability','in_pct','today_reject','decision','reason','mode','heads','head_cover_hc','head_band','opponent_cover_oc','opponent_band','boundary_ratio','point_count','formation','picks','composite_odds','legacy_v1_json','variants_json','marks_json'];
     const lines=[cols.join(',')];
     for(const r of rows){
@@ -17636,26 +17643,37 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   async function refreshStatus(){
     const el=document.getElementById('brcRefMonitorLogStatus'); if(!el) return;
     if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)){el.textContent='';return;}
-    try{ const rows=await dbGetAll(), races=new Set(rows.map(r=>`${r.date}|${r.venue}|${r.raceNo}`)), pre=rows.filter(r=>r.phase==='pre').length, ex=rows.filter(r=>r.phase==='exhibition').length; el.textContent=`参考買い目V2 ${races.size}R / 事前${pre}・展示${ex}`; }catch(_e){el.textContent='V2監視ログ確認エラー';}
+    try{ const rows=await dbGetAll(), races=new Set(rows.map(r=>`${r.date}|${r.venue}|${r.raceNo}`)), pre=rows.filter(r=>r.phase==='pre').length, ex=rows.filter(r=>r.phase==='exhibition').length; el.textContent=`参考買い目V2 ${races.size}R / 事前${pre}・展示${ex}`; }catch(_e){el.textContent='V2ログ確認エラー';}
   }
   function initExportUi(){
     const host=document.getElementById('brcOosAdminTools'); if(!host) return;
     const old=document.getElementById('brcRefMonitorExportBtn'); if(old){ old.textContent='参考買い目V2 CSV'; return refreshStatus(); }
     const sep=document.createElement('span'); sep.style.cssText='width:1px;height:22px;background:rgba(10,31,51,.12);';
     const btn=document.createElement('button'); btn.type='button'; btn.id='brcRefMonitorExportBtn'; btn.textContent='参考買い目V2 CSV'; btn.style.cssText='appearance:none;border:1px solid rgba(124,58,237,.25);border-radius:8px;background:rgba(124,58,237,.055);color:#6d28d9;padding:7px 10px;font:inherit;font-size:11px;font-weight:900;cursor:pointer;';
-    const status=document.createElement('span'); status.id='brcRefMonitorLogStatus'; status.style.cssText='font-size:10.5px;color:var(--ink-soft);'; status.textContent='参考買い目V2 Shadowを自動保存';
+    const status=document.createElement('span'); status.id='brcRefMonitorLogStatus'; status.style.cssText='font-size:10.5px;color:var(--ink-soft);'; status.textContent='参考買い目V2を自動保存';
     btn.addEventListener('click',async()=>{const oldText=btn.textContent;btn.disabled=true;btn.textContent='書き出し中…';try{await exportCsv();await refreshStatus();}catch(err){status.textContent=err?.message||String(err);}finally{btn.disabled=false;btn.textContent=oldText;}});
     host.appendChild(sep);host.appendChild(btn);host.appendChild(status);refreshStatus();
   }
 
   window.brcSetAiAdminSubTab=function(key){
     if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return;
-    const valid=['marks','monitor','nige'], k=valid.includes(key)?key:'marks'; window.__brcAiAdminSubTabCurrent=k;
-    document.querySelectorAll('#predictAiResult [data-brc-ai-admin-tab]').forEach(btn=>{const on=btn.dataset.brcAiAdminTab===k;btn.classList.toggle('active',on);btn.setAttribute('aria-selected',on?'true':'false');});
-    valid.forEach(x=>{const p=document.getElementById(`brcAiAdminPanel-${x}`);if(p)p.classList.toggle('active',x===k);});
+    const valid=['marks','nige'];
+    const requested=(key==='ref'||key==='monitor')?'marks':key;
+    const k=valid.includes(requested)?requested:'marks';
+    window.__brcAiAdminSubTabCurrent=k;
+    document.querySelectorAll('#predictAiResult [data-brc-ai-admin-tab]').forEach(btn=>{
+      const on=btn.dataset.brcAiAdminTab===k;
+      btn.classList.toggle('active',on);
+      btn.setAttribute('aria-selected',on?'true':'false');
+    });
+    valid.forEach(x=>{
+      const p=document.getElementById(`brcAiAdminPanel-${x}`);
+      if(p) p.classList.toggle('active',x===k);
+    });
     if(k==='nige') setTimeout(()=>{try{brcEnsureAiReferenceOddsAfterDeadline();}catch(_e){}},0);
-    if(k==='monitor') setTimeout(refreshOdds,0);
+    if(k==='marks') setTimeout(refreshOdds,0);
   };
+
 
   const originalRender=window.renderPredictAiPanel;
   if(typeof originalRender==='function'){
