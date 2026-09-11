@@ -12225,12 +12225,13 @@ function brcBuildWinCellInner(b,venue){
   return brcBuildProbabilityCell(b.pct,arrow,'');
 }
 function brcBuildTop3CellInner(b){
-  // 3連対率もTimeX v2の正式補正値。本人傾向は展開タブと同一判定で参考表示し、数値へ再加算しない。
+  // 3連対率もTimeX v2の正式補正値。
+  // 本人傾向は選手名下の「BRCタイムX 注意」から確認できるため、一覧の重複表示はしない。
+  // 表示整理のみで、本人傾向データ・TimeX補正・着率計算は変更しない。
   const arrow=b?.exhibitionApplied
     ? brcBuildExhibitionProbabilityArrowIcon(Number(b?.exhibitionTop3DeltaPt),2.0)
     : '';
-  const personal=brcBuildScenarioPersonalTrendHtml(b,'top3',Number(b?.pct3));
-  return brcBuildProbabilityCell(b.pct3,arrow,personal);
+  return brcBuildProbabilityCell(b.pct3,arrow,'');
 }
 
 // ---- BRCタイムX：選手別個人化データ（6方向盲点再検証 / 2024-2025作成 → 2026完全OOS） ----
