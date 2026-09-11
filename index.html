@@ -12,6 +12,7 @@
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V1 -->
 <!-- BRC_PREDICT_TIMEX_TRAIT_LABEL_RESTORE_20260910 -->
+<!-- BRC_PERSONAL_TREND_INTEGER_DISPLAY_20260911 -->
 
 <!-- BRC_TIMEX_COMPACT_DECISION_UI_20260908 -->
 <!-- BRC_TIMEX_SIMPLE_READ_INTEGER_V1_20260910 -->
@@ -12263,7 +12264,8 @@ function brcFindExhibitionPlayerAlert(b){
   const rank={'S':4,'A':3,'B':2,'監視':1,'S候補':4,'A候補':3,'B候補':2};
   return hits.sort((a,z)=>(rank[z['評価']]||0)-(rank[a['評価']]||0) || Number(z.N||0)-Number(a.N||0))[0]||null;
 }
-function brcSignedPt(v){ const n=Number(v); return Number.isFinite(n)?`${n>0?'+':''}${n.toFixed(1)}pt`:'―'; }
+// 本人傾向のpt表示は見やすさ優先で整数四捨五入。判定・計算には元の小数値をそのまま使用する。
+function brcSignedPt(v){ return brcSignedIntPt(v); }
 
 // 選手特性モーダル専用：整数の四捨五入表示（負数の.5も絶対値側へ丸める）。
 function brcRoundIntHalfAway(v){
