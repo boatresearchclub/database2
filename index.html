@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_ADMIN_TOKUYAMA_MOTOR_TRAIT_PILOT_V1_20260912 -->
 <!-- BRC_PREDICT_RACE_SWITCH_DELAYED_LOADING_V1_20260912 -->
 <!-- BRC_TOP_BANNER_REPLACE_20260909 -->
 <!-- BRC_ADMIN_MATRIX_NAME_LAYOUT_FIX_20260910 -->
@@ -7093,7 +7094,8 @@ function renderPredictUnifiedMotor(course,target){
   const md=motorDetailData(); const venueMeta=md.venues?.[venue]||{};
   const gcol=MOTOR_GRADE_COLOR[b.motorGrade]||'var(--ink-soft)';
   if(!d){
-    target.innerHTML=`<div class="motor-detail-topstats"><div class="motor-detail-stat"><b style="color:${gcol};">${escMotor(b.motorGrade||'―')}</b><span>相対評価</span></div><div class="motor-detail-stat"><b>${Number.isFinite(Number(b.motor2))?Math.round(Number(b.motor2))+'%':'―'}</b><span>2連対率</span></div><div class="motor-detail-stat"><b>${escMotor(b.motorNo)}</b><span>号機</span></div><div class="motor-detail-stat"><b>―</b><span>履歴N</span></div></div><div class="predict-unified-empty">このモーターの機歴データはありません。</div>`;
+    const adminTraitHtml=brcBuildAdminTokuyamaMotorTraitHtml(venue,b.motorNo);
+    target.innerHTML=`<div class="motor-detail-topstats"><div class="motor-detail-stat"><b style="color:${gcol};">${escMotor(b.motorGrade||'―')}</b><span>相対評価</span></div><div class="motor-detail-stat"><b>${Number.isFinite(Number(b.motor2))?Math.round(Number(b.motor2))+'%':'―'}</b><span>2連対率</span></div><div class="motor-detail-stat"><b>${escMotor(b.motorNo)}</b><span>号機</span></div><div class="motor-detail-stat"><b>―</b><span>履歴N</span></div></div>${adminTraitHtml}<div class="predict-unified-empty">このモーターの機歴データはありません。</div>`;
     return;
   }
   const prev=d.previous;
@@ -7102,8 +7104,10 @@ function renderPredictUnifiedMotor(course,target){
   const prevRanks=prev?.ranks?.length?prev.ranks.map(r=>r==='1'?'<b>1</b>':escMotor(r)).join('・'):'';
   const finals=(d.finals||[]).slice().reverse();
   const finalHtml=finals.length?finals.map(f=>`<div class="motor-final-row"><span class="motor-final-date">${fmtMotorDate(f.date)}</span><span class="motor-final-grade">${escMotor(f.grade||'')}</span><span class="motor-final-name">${escMotor(f.name)}</span><span class="motor-final-rank ${String(f.rank)==='1'?'win':''}">${String(f.rank)==='1'?'🏆 1着':escMotor(f.rank)+'着'}</span></div>`).join(''):'<div class="motor-detail-empty">優勝戦出場歴なし</div>';
+  const adminTraitHtml=brcBuildAdminTokuyamaMotorTraitHtml(venue,b.motorNo);
   target.innerHTML=`
     <div class="motor-detail-topstats"><div class="motor-detail-stat"><b style="color:${gcol};">${escMotor(b.motorGrade||'―')}</b><span>相対評価</span></div><div class="motor-detail-stat"><b>${Math.round(Number(b.motor2))}%</b><span>2連対率</span></div><div class="motor-detail-stat"><b>${Number(d.finals_count||0)}</b><span>優出</span></div><div class="motor-detail-stat"><b>${Number(d.wins_count||0)}</b><span>優勝</span></div></div>
+    ${adminTraitHtml}
     <div class="motor-detail-section"><h4>${escMotor(venue)} ${escMotor(b.motorNo)}号機</h4><div class="motor-detail-sub">使用開始 ${escMotor(venueMeta.cycle_start||'―')} / N=${Number(d.n)||0}</div></div>
     <div class="motor-detail-section"><h4>前回使用者</h4><div><span class="motor-prev-name">${prevUsers}</span>${prevPeriod?`<span class="motor-prev-period">${prevPeriod}</span>`:''}</div>${prevRanks?`<div class="motor-prev-ranks">${prevRanks}</div>`:''}</div>
     <div class="motor-detail-section"><h4>優勝戦出場歴</h4><div class="motor-final-list">${finalHtml}</div></div>
@@ -16879,6 +16883,25 @@ window.__playersRendered = true;
 .motor-detail-section{border-top:1px solid rgba(10,31,51,.10);padding-top:12px;margin-top:12px;}.motor-detail-section h4{font-size:12px;color:var(--ink-soft);margin:0 0 7px;font-weight:800;}.motor-prev-name{font-size:16px;font-weight:850;color:var(--navy);}.motor-prev-period{font-size:11px;color:var(--ink-soft);margin-left:5px;}.motor-prev-ranks{font-size:13px;color:var(--ink);margin-top:5px;line-height:1.5;word-break:break-all;}
 .motor-final-list{display:grid;gap:6px}.motor-final-row{display:grid;grid-template-columns:72px 38px 1fr auto;gap:6px;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px solid rgba(10,31,51,.055)}.motor-final-row:last-child{border-bottom:0}.motor-final-date,.motor-final-grade{color:var(--ink-soft)}.motor-final-name{font-weight:700;color:var(--navy)}.motor-final-rank{font-weight:900;white-space:nowrap}.motor-final-rank.win{color:#b47a00}.motor-detail-empty{font-size:12px;color:var(--ink-soft);padding:4px 0}.motor-detail-note{font-size:10.5px;color:var(--ink-soft);margin-top:10px;line-height:1.45}
 @media(max-width:640px){.motor-detail-backdrop{padding:0}.motor-detail-sheet{width:100%;max-height:82vh;border-radius:18px 18px 0 0;padding:16px 16px 18px}.motor-detail-topstats{gap:5px}.motor-detail-stat b{font-size:15px}.motor-final-row{grid-template-columns:66px 34px 1fr auto;gap:4px;font-size:11.5px}}
+
+/* BRC_ADMIN_TOKUYAMA_MOTOR_TRAIT_PILOT_V1_20260912 */
+.brc-admin-motor-trait{margin:12px 0 2px;padding:11px;border:1px solid rgba(124,58,237,.20);border-radius:12px;background:linear-gradient(160deg,rgba(124,58,237,.055),rgba(255,255,255,.98));}
+.brc-admin-motor-trait-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px;}
+.brc-admin-motor-trait-title{font-size:12.5px;font-weight:950;color:var(--navy);}
+.brc-admin-motor-trait-badge{display:inline-flex;align-items:center;padding:3px 7px;border-radius:999px;background:rgba(124,58,237,.10);color:var(--grade-s);font-size:9px;font-weight:950;white-space:nowrap;}
+.brc-admin-motor-trait-main{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:9px 10px;border:1px solid rgba(10,31,51,.07);border-radius:9px;background:#fff;}
+.brc-admin-motor-trait-label{font-size:10px;font-weight:850;color:var(--ink-soft);}
+.brc-admin-motor-trait-value{font-size:17px;font-weight:950;color:var(--navy);text-align:right;}
+.brc-admin-motor-trait-value.stretch{color:#2563eb;}
+.brc-admin-motor-trait-value.turn{color:#b36a00;}
+.brc-admin-motor-trait-value.balance{color:#64748b;}
+.brc-admin-motor-trait-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:7px;}
+.brc-admin-motor-trait-metric{min-width:0;padding:7px 4px;border:1px solid rgba(10,31,51,.07);border-radius:8px;background:rgba(255,255,255,.78);text-align:center;}
+.brc-admin-motor-trait-metric .k{font-size:8px;font-weight:850;color:var(--ink-soft);white-space:nowrap;}
+.brc-admin-motor-trait-metric .v{margin-top:2px;font-size:11.5px;font-weight:950;color:var(--navy);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.brc-admin-motor-trait-note{margin-top:7px;font-size:9px;line-height:1.55;color:var(--ink-soft);}
+.brc-admin-motor-trait-note strong{color:var(--navy);}
+@media(max-width:420px){.brc-admin-motor-trait{padding:9px 8px}.brc-admin-motor-trait-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.brc-admin-motor-trait-value{font-size:15px;}}
 .predict-detail-backdrop{z-index:10060;}
 .predict-detail-backdrop .motor-detail-sheet{width:min(620px,100%);height:min(84vh,760px);max-height:min(84vh,760px);overflow:auto;}
 .predict-detail-content{min-width:0;}
@@ -16916,6 +16939,52 @@ window.__playersRendered = true;
   </div>
 </div>
 <script id="brc-motor-detail-js">
+
+// BRC_ADMIN_TOKUYAMA_MOTOR_TRAIT_PILOT_V1_20260912
+// 管理者専用の検証表示。2026-04-20〜2026-08-27の徳山蓄積データを固定スナップショットとして使用。
+// AI予測・展開マトリックス・参考買い目へは再加点しない。
+const BRC_ADMIN_TOKUYAMA_MOTOR_TRAITS={"11":{"n":100,"stretch":0.0064,"turn":-0.2166,"typeScore":0.223,"overall":-0.1423,"first":"2026-04-20","last":"2026-08-27"},"12":{"n":94,"stretch":0.3022,"turn":0.2421,"typeScore":0.0602,"overall":0.2621,"first":"2026-04-20","last":"2026-08-27"},"13":{"n":84,"stretch":0.2326,"turn":0.1074,"typeScore":0.1252,"overall":0.1492,"first":"2026-04-20","last":"2026-08-27"},"14":{"n":85,"stretch":0.2024,"turn":-0.0727,"typeScore":0.2752,"overall":0.019,"first":"2026-04-20","last":"2026-08-27"},"15":{"n":85,"stretch":0.6189,"turn":0.0308,"typeScore":0.5882,"overall":0.2268,"first":"2026-04-20","last":"2026-08-27"},"16":{"n":84,"stretch":-0.3125,"turn":0.0934,"typeScore":-0.406,"overall":-0.0419,"first":"2026-04-20","last":"2026-08-27"},"17":{"n":85,"stretch":0.0826,"turn":-0.0876,"typeScore":0.1702,"overall":-0.0309,"first":"2026-04-20","last":"2026-08-27"},"18":{"n":83,"stretch":-0.4621,"turn":0.2577,"typeScore":-0.7198,"overall":0.0172,"first":"2026-04-20","last":"2026-08-27"},"19":{"n":89,"stretch":0.0466,"turn":0.1137,"typeScore":-0.067,"overall":0.0913,"first":"2026-04-20","last":"2026-08-27"},"20":{"n":77,"stretch":-0.6582,"turn":0.0281,"typeScore":-0.6863,"overall":-0.2007,"first":"2026-04-20","last":"2026-08-20"},"21":{"n":70,"stretch":-0.1864,"turn":0.058,"typeScore":-0.2444,"overall":-0.0235,"first":"2026-04-20","last":"2026-08-27"},"22":{"n":80,"stretch":0.0834,"turn":0.5014,"typeScore":-0.4181,"overall":0.3562,"first":"2026-04-20","last":"2026-08-27"},"23":{"n":95,"stretch":0.1161,"turn":0.1319,"typeScore":-0.0158,"overall":0.1266,"first":"2026-04-20","last":"2026-08-20"},"24":{"n":86,"stretch":-0.3043,"turn":-0.0501,"typeScore":-0.2542,"overall":-0.1348,"first":"2026-04-20","last":"2026-08-25"},"25":{"n":84,"stretch":-0.1978,"turn":-0.2531,"typeScore":0.0553,"overall":-0.2347,"first":"2026-04-20","last":"2026-08-27"},"26":{"n":89,"stretch":0.501,"turn":0.0572,"typeScore":0.4438,"overall":0.2051,"first":"2026-04-20","last":"2026-08-27"},"27":{"n":77,"stretch":0.2563,"turn":0.2972,"typeScore":-0.0409,"overall":0.2836,"first":"2026-04-20","last":"2026-08-27"},"28":{"n":93,"stretch":-0.5528,"turn":-0.2401,"typeScore":-0.3127,"overall":-0.3443,"first":"2026-04-20","last":"2026-08-20"},"29":{"n":97,"stretch":0.2997,"turn":-0.1113,"typeScore":0.4111,"overall":0.0257,"first":"2026-04-20","last":"2026-08-20"},"30":{"n":94,"stretch":0.391,"turn":0.1691,"typeScore":0.2219,"overall":0.2419,"first":"2026-04-20","last":"2026-08-20"},"31":{"n":90,"stretch":-0.3028,"turn":-0.053,"typeScore":-0.2498,"overall":-0.1362,"first":"2026-04-20","last":"2026-08-27"},"32":{"n":86,"stretch":-0.2546,"turn":-0.1769,"typeScore":-0.0777,"overall":-0.2028,"first":"2026-04-20","last":"2026-08-27"},"33":{"n":99,"stretch":0.5652,"turn":0.2747,"typeScore":0.2905,"overall":0.3715,"first":"2026-04-20","last":"2026-08-27"},"34":{"n":105,"stretch":0.1384,"turn":0.1942,"typeScore":-0.0558,"overall":0.1756,"first":"2026-04-20","last":"2026-08-20"},"35":{"n":92,"stretch":0.4809,"turn":-0.1062,"typeScore":0.5871,"overall":0.0895,"first":"2026-04-20","last":"2026-08-20"},"36":{"n":102,"stretch":0.5919,"turn":0.1922,"typeScore":0.3998,"overall":0.3254,"first":"2026-04-20","last":"2026-08-20"},"37":{"n":80,"stretch":-0.2819,"turn":-0.1941,"typeScore":-0.0878,"overall":-0.2234,"first":"2026-04-20","last":"2026-08-27"},"38":{"n":93,"stretch":0.2787,"turn":-0.2924,"typeScore":0.571,"overall":-0.102,"first":"2026-04-20","last":"2026-08-20"},"39":{"n":84,"stretch":-0.0259,"turn":-0.1696,"typeScore":0.1438,"overall":-0.1217,"first":"2026-04-20","last":"2026-08-11"},"40":{"n":84,"stretch":-0.42,"turn":-0.26,"typeScore":-0.16,"overall":-0.3133,"first":"2026-04-20","last":"2026-08-11"},"41":{"n":99,"stretch":0.0481,"turn":-0.0565,"typeScore":0.1045,"overall":-0.0216,"first":"2026-04-20","last":"2026-08-20"},"42":{"n":90,"stretch":-0.2024,"turn":-0.1596,"typeScore":-0.0428,"overall":-0.1739,"first":"2026-04-20","last":"2026-08-20"},"43":{"n":83,"stretch":0.3541,"turn":-0.2629,"typeScore":0.6171,"overall":-0.0564,"first":"2026-04-20","last":"2026-08-20"},"44":{"n":94,"stretch":-0.2051,"turn":-0.0676,"typeScore":-0.1375,"overall":-0.1134,"first":"2026-04-20","last":"2026-08-20"},"45":{"n":75,"stretch":-0.4316,"turn":-0.0068,"typeScore":-0.4248,"overall":-0.1484,"first":"2026-04-20","last":"2026-08-27"},"46":{"n":92,"stretch":-0.3275,"turn":0.1332,"typeScore":-0.4607,"overall":-0.0185,"first":"2026-04-20","last":"2026-08-20"},"47":{"n":95,"stretch":-0.3136,"turn":-0.0067,"typeScore":-0.3069,"overall":-0.109,"first":"2026-04-20","last":"2026-08-20"},"48":{"n":97,"stretch":0.0067,"turn":0.2158,"typeScore":-0.2091,"overall":0.1461,"first":"2026-04-20","last":"2026-08-20"},"49":{"n":91,"stretch":-0.1459,"turn":-0.0692,"typeScore":-0.0767,"overall":-0.0906,"first":"2026-04-20","last":"2026-08-24"},"50":{"n":95,"stretch":0.0214,"turn":0.167,"typeScore":-0.1455,"overall":0.1185,"first":"2026-04-20","last":"2026-08-27"},"51":{"n":92,"stretch":-0.1865,"turn":-0.1105,"typeScore":-0.076,"overall":-0.1359,"first":"2026-04-20","last":"2026-08-27"},"52":{"n":93,"stretch":-0.4556,"turn":-0.1361,"typeScore":-0.3196,"overall":-0.2426,"first":"2026-04-20","last":"2026-08-27"},"53":{"n":102,"stretch":0.3611,"turn":-0.0189,"typeScore":0.38,"overall":0.1077,"first":"2026-04-20","last":"2026-08-27"},"54":{"n":100,"stretch":0.248,"turn":0.2195,"typeScore":0.0285,"overall":0.229,"first":"2026-04-20","last":"2026-08-25"},"55":{"n":99,"stretch":-0.5505,"turn":-0.1092,"typeScore":-0.4413,"overall":-0.2563,"first":"2026-04-20","last":"2026-08-27"},"56":{"n":96,"stretch":0.4377,"turn":0.3398,"typeScore":0.0979,"overall":0.3724,"first":"2026-04-27","last":"2026-08-27"},"57":{"n":72,"stretch":-0.3177,"turn":-0.181,"typeScore":-0.1367,"overall":-0.2265,"first":"2026-04-27","last":"2026-08-27"},"58":{"n":84,"stretch":-0.1691,"turn":0.177,"typeScore":-0.346,"overall":0.0616,"first":"2026-04-27","last":"2026-08-27"},"59":{"n":83,"stretch":-0.2152,"turn":-0.1573,"typeScore":-0.0579,"overall":-0.1766,"first":"2026-04-27","last":"2026-08-27"},"60":{"n":89,"stretch":-0.1577,"turn":-0.1918,"typeScore":0.0341,"overall":-0.1804,"first":"2026-04-27","last":"2026-08-27"},"61":{"n":80,"stretch":0.3442,"turn":0.1126,"typeScore":0.2315,"overall":0.1898,"first":"2026-04-27","last":"2026-08-27"},"62":{"n":74,"stretch":0.0736,"turn":-0.1542,"typeScore":0.2278,"overall":-0.0783,"first":"2026-04-27","last":"2026-08-27"},"63":{"n":90,"stretch":-0.4229,"turn":-0.0533,"typeScore":-0.3696,"overall":-0.1765,"first":"2026-04-27","last":"2026-08-27"},"64":{"n":89,"stretch":0.3159,"turn":0.0932,"typeScore":0.2226,"overall":0.1674,"first":"2026-04-27","last":"2026-08-27"},"65":{"n":75,"stretch":-0.6095,"turn":-0.5012,"typeScore":-0.1083,"overall":-0.5373,"first":"2026-04-27","last":"2026-08-27"},"66":{"n":83,"stretch":-0.1344,"turn":-0.1599,"typeScore":0.0254,"overall":-0.1514,"first":"2026-04-27","last":"2026-08-27"},"67":{"n":93,"stretch":-0.2998,"turn":0.0668,"typeScore":-0.3666,"overall":-0.0554,"first":"2026-04-27","last":"2026-08-27"},"68":{"n":85,"stretch":-0.0866,"turn":0.0725,"typeScore":-0.1591,"overall":0.0195,"first":"2026-04-27","last":"2026-08-27"},"69":{"n":86,"stretch":0.0268,"turn":0.2341,"typeScore":-0.2073,"overall":0.165,"first":"2026-04-27","last":"2026-08-23"},"70":{"n":78,"stretch":0.422,"turn":-0.388,"typeScore":0.81,"overall":-0.118,"first":"2026-04-27","last":"2026-08-27"},"71":{"n":87,"stretch":0.0244,"turn":0.0055,"typeScore":0.0189,"overall":0.0118,"first":"2026-04-27","last":"2026-08-27"},"72":{"n":98,"stretch":0.6443,"turn":0.2416,"typeScore":0.4026,"overall":0.3758,"first":"2026-04-27","last":"2026-08-27"},"73":{"n":82,"stretch":0.4783,"turn":-0.0077,"typeScore":0.486,"overall":0.1543,"first":"2026-04-27","last":"2026-08-27"},"74":{"n":82,"stretch":0.1373,"turn":0.006,"typeScore":0.1313,"overall":0.0497,"first":"2026-04-27","last":"2026-08-26"},"75":{"n":90,"stretch":-0.4783,"turn":-0.0199,"typeScore":-0.4584,"overall":-0.1727,"first":"2026-04-27","last":"2026-08-27"}};
+function brcMotorTraitSigned(v){
+  const n=Number(v);
+  if(!Number.isFinite(n)) return '―';
+  return `${n>0?'+':''}${n.toFixed(2)}`;
+}
+function brcMotorTraitBand(v){
+  const n=Number(v);
+  if(!Number.isFinite(n)) return {label:'判定保留',cls:'balance',strength:'―'};
+  if(n>=0.35) return {label:'伸び寄り ↑↑',cls:'stretch',strength:'強'};
+  if(n>=0.20) return {label:'伸び寄り ↑',cls:'stretch',strength:'中'};
+  if(n<=-0.35) return {label:'出足・回り足寄り ↑↑',cls:'turn',strength:'強'};
+  if(n<=-0.20) return {label:'出足・回り足寄り ↑',cls:'turn',strength:'中'};
+  return {label:'バランス',cls:'balance',strength:'標準'};
+}
+function brcMotorTraitOverall(v){
+  const n=Number(v);
+  if(!Number.isFinite(n)) return '―';
+  if(n>=0.35) return '強め';
+  if(n>=0.10) return 'やや強め';
+  if(n<=-0.35) return '弱め';
+  if(n<=-0.10) return 'やや弱め';
+  return '標準';
+}
+function brcBuildAdminTokuyamaMotorTraitHtml(venue,motorNo){
+  if(!(typeof BRC_ADMIN_ACTIVE!=='undefined' && BRC_ADMIN_ACTIVE)) return '';
+  if(String(venue||'')!=='徳山') return '';
+  const t=BRC_ADMIN_TOKUYAMA_MOTOR_TRAITS[String(motorNo)];
+  if(!t) return `<div class="brc-admin-motor-trait"><div class="brc-admin-motor-trait-head"><div class="brc-admin-motor-trait-title">BRC足タイプ検証</div><span class="brc-admin-motor-trait-badge">管理者専用</span></div><div class="brc-admin-motor-trait-note">この号機は検証スナップショットにありません。</div></div>`;
+  const band=brcMotorTraitBand(t.typeScore);
+  return `<div class="brc-admin-motor-trait">
+    <div class="brc-admin-motor-trait-head"><div class="brc-admin-motor-trait-title">BRC足タイプ検証</div><span class="brc-admin-motor-trait-badge">管理者専用・徳山β</span></div>
+    <div class="brc-admin-motor-trait-main"><span class="brc-admin-motor-trait-label">4/20〜蓄積の足タイプ</span><strong class="brc-admin-motor-trait-value ${band.cls}">${band.label}</strong></div>
+    <div class="brc-admin-motor-trait-grid">
+      <div class="brc-admin-motor-trait-metric"><div class="k">伸び傾向</div><div class="v">${brcMotorTraitSigned(t.stretch)}</div></div>
+      <div class="brc-admin-motor-trait-metric"><div class="k">出足・回り足</div><div class="v">${brcMotorTraitSigned(t.turn)}</div></div>
+      <div class="brc-admin-motor-trait-metric"><div class="k">タイプ差</div><div class="v">${brcMotorTraitSigned(t.typeScore)}</div></div>
+      <div class="brc-admin-motor-trait-metric"><div class="k">総合傾向</div><div class="v">${brcMotorTraitOverall(t.overall)}</div></div>
+    </div>
+    <div class="brc-admin-motor-trait-note"><strong>N=${Number(t.n)||0}</strong> / ${fmtMotorDate(t.first)}〜${fmtMotorDate(t.last)}。伸び＝展示タイム、出足・回り足＝一周＋まわり足を同レース6艇内で相対化して蓄積。タイプ差は両者の差。暫定基準は |差|0.20未満＝バランス、0.20以上＝寄り、0.35以上＝↑↑。<strong>検証表示のみで予測・展開・買い目へ未反映。</strong></div>
+  </div>`;
+}
 let __motorDetailCache = null;
 let __motorDetailLiveLoaded = false;
 let __motorDetailLivePromise = null;
@@ -16994,6 +17063,7 @@ function openMotorDetailLegacy(course){
   document.getElementById('motorDetailBody').innerHTML=`
     <div class="motor-detail-head"><div><div id="motorDetailTitle" class="motor-detail-title">${escMotor(venue)} ${b.motorNo}号機 <span style="color:${gcol};">${escMotor(b.motorGrade)}</span></div><div class="motor-detail-sub">使用開始 ${escMotor(venueMeta.cycle_start||'―')}</div></div><button class="motor-detail-close" type="button" onclick="closeMotorDetail()" aria-label="閉じる">×</button></div>
     <div class="motor-detail-topstats"><div class="motor-detail-stat"><b>${Math.round(Number(b.motor2))}%</b><span>2連対率</span></div><div class="motor-detail-stat"><b>${Number(d.n)}</b><span>N</span></div><div class="motor-detail-stat"><b>${Number(d.finals_count||0)}</b><span>優出</span></div><div class="motor-detail-stat"><b>${Number(d.wins_count||0)}</b><span>優勝</span></div></div>
+    ${brcBuildAdminTokuyamaMotorTraitHtml(venue,b.motorNo)}
     <div class="motor-detail-section"><h4>前回使用者</h4><div><span class="motor-prev-name">${prevUsers}</span>${prevPeriod?`<span class="motor-prev-period">${prevPeriod}</span>`:''}</div>${prevRanks?`<div class="motor-prev-ranks">${prevRanks}</div>`:''}</div>
     <div class="motor-detail-section"><h4>優勝戦出場歴</h4><div class="motor-final-list">${finalHtml}</div></div>
     <div class="motor-detail-note">N・優出・優勝・履歴は現在のモーター使用開始日以降、今節開始前までの公式結果から集計。</div>`;
