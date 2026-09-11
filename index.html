@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_PREDICT_RACE_SWITCH_DELAYED_LOADING_V1_20260912 -->
 <!-- BRC_TOP_BANNER_REPLACE_20260909 -->
 <!-- BRC_ADMIN_MATRIX_NAME_LAYOUT_FIX_20260910 -->
 <!-- BRC_ADMIN_NONIN_REFERENCE_BETA_V0_20260910 -->
@@ -16428,6 +16429,39 @@ function buildRecommendedBetsHtmlFromServer(workerPrediction, localInReliability
 // レース切替時の前レース残像と、遅れて返った旧リクエストによる上書きを防ぐ。
 // seq は runPredict を開始するたびに更新し、最後に開始した処理だけがDOMを書き換えられる。
 const __brcPredictRaceSwitchState={seq:0,activeKey:''};
+// BRC_PREDICT_RACE_SWITCH_DELAYED_LOADING_V1_20260912
+// 短時間のレース切替ではローディング文言を出さず、待ち時間が長引いた時だけ表示する。
+// 旧レースのDOMは即時クリアするため、前レースの的中表示や予測が残る挙動は維持しない。
+const __brcPredictRaceSwitchLoadingState={timer:null,key:''};
+const BRC_PREDICT_RACE_SWITCH_LOADING_DELAY_MS=1200;
+function brcCancelPredictRaceSwitchLoading(){
+  if(__brcPredictRaceSwitchLoadingState.timer){
+    clearTimeout(__brcPredictRaceSwitchLoadingState.timer);
+    __brcPredictRaceSwitchLoadingState.timer=null;
+  }
+  __brcPredictRaceSwitchLoadingState.key='';
+}
+function brcSchedulePredictRaceSwitchLoading(venue,raceNo){
+  brcCancelPredictRaceSwitchLoading();
+  const key=brcPredictRaceSwitchKey(venue,raceNo);
+  if(!key) return;
+  __brcPredictRaceSwitchLoadingState.key=key;
+  __brcPredictRaceSwitchLoadingState.timer=setTimeout(()=>{
+    __brcPredictRaceSwitchLoadingState.timer=null;
+    if(__brcPredictRaceSwitchLoadingState.key!==key) return;
+    if(__brcPredictRaceSwitchState.activeKey!==key) return;
+    if(brcCurrentPredictRaceSwitchKey()!==key) return;
+
+    const dataBox=document.getElementById('predictResult');
+    const aiBox=document.getElementById('predictAiResult');
+    // すでに結果・エラー・公開案内などが描画済みなら、遅れてローディングを上書きしない。
+    if((dataBox && dataBox.innerHTML.trim()) || (aiBox && aiBox.innerHTML.trim())) return;
+
+    const raceLabel=`${String(venue||'')} ${Number(raceNo)}R`;
+    if(dataBox) dataBox.innerHTML=`<div class="trend-note" style="padding:18px 4px;text-align:center;"><strong>${raceLabel}</strong><br>出走データを更新中…</div>`;
+    if(aiBox) aiBox.innerHTML=`<div class="predict-unified-empty"><strong>${raceLabel}</strong><br>AI予測を更新中…</div>`;
+  },BRC_PREDICT_RACE_SWITCH_LOADING_DELAY_MS);
+}
 function brcPredictRaceSwitchKey(venue,raceNo){
   const v=String(venue||'').trim();
   const r=Number(raceNo||0);
@@ -16451,9 +16485,11 @@ function brcPreparePredictRaceSwitch(venue,raceNo){
   try{ brcClearAiOutcomeMarks(); }catch(_e){}
   const dataBox=document.getElementById('predictResult');
   const aiBox=document.getElementById('predictAiResult');
-  const raceLabel=`${String(venue||'')} ${Number(raceNo)}R`;
-  if(dataBox) dataBox.innerHTML=`<div class="trend-note" style="padding:18px 4px;text-align:center;"><strong>${raceLabel}</strong><br>出走データを更新中…</div>`;
-  if(aiBox) aiBox.innerHTML=`<div class="predict-unified-empty"><strong>${raceLabel}</strong><br>AI予測を更新中…</div>`;
+  // 旧レースの表示は即時に消すが、短い切替では「更新中」を見せない。
+  // 1.2秒を超えて待つ場合だけ、現在選択中レースであることを確認して遅延表示する。
+  if(dataBox) dataBox.innerHTML='';
+  if(aiBox) aiBox.innerHTML='';
+  brcSchedulePredictRaceSwitchLoading(venue,raceNo);
 
   // 前レースの計算済みオブジェクトを切替中に参照させない。
   window.__predictBoatsCurrent=null;
