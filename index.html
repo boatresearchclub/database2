@@ -9,6 +9,7 @@
 <!-- BRC_ADMIN_REFERENCE_UX_V4_20260911 -->
 <!-- BRC_NIGE_REFERENCE_UX_DETAIL_V1_20260911 -->
 <!-- BRC_RACESEARCH_GUIDE_UI_CLEANUP_20260911 -->
+<!-- BRC_RACE_SEARCH_ADMIN_UX_COMPACT_V2_20260911 -->
 <!-- BRC_ADMIN_INVESTMENT_VALIDATION_V3_RAW_OD3_20260911 -->
 <html lang="ja">
 <head>
@@ -1779,6 +1780,42 @@
     .scenario-search-metrics{gap:4px;}
     .scenario-search-metric{padding:6px 3px;}
     .scenario-search-metric .v{font-size:12px;}
+  }
+
+  /* ---- BRC_RACE_SEARCH_ADMIN_UX_COMPACT_V2_20260911 ---- */
+  .race-search-head{align-items:center;margin-bottom:10px;}
+  .race-search-date{padding-top:0;}
+  .race-search-dev{padding:24px 14px;}
+  .race-search-dev-mark{margin-bottom:7px;}
+  .race-search-dev-title{margin-top:0;margin-bottom:7px;font-size:17px;}
+  .scenario-search-admin-head{align-items:center;margin-bottom:8px;}
+  .scenario-search-form{gap:7px;padding:10px;}
+  .scenario-search-label{font-size:10px;line-height:1.25;}
+  .scenario-search-select,.scenario-search-input{height:40px;font-size:13px;}
+  .scenario-search-action{margin-top:1px;}
+  .scenario-search-btn{min-height:40px;padding:9px 12px;font-size:13px;}
+  .scenario-search-btn.secondary{padding-left:12px;padding-right:12px;}
+  .scenario-search-summary{margin:12px 1px 7px;align-items:center;flex-wrap:nowrap;}
+  .scenario-search-summary-title{display:flex;align-items:baseline;gap:6px;min-width:0;}
+  .scenario-search-summary-count{font-size:10px;}
+  .scenario-search-sort{flex:0 0 auto;}
+  .scenario-search-result{padding:10px;}
+  .scenario-search-result-top{align-items:baseline;}
+  .scenario-search-target{display:flex;align-items:center;gap:6px;margin-top:5px;min-width:0;}
+  .scenario-search-target-badge{display:inline-flex;align-items:center;justify-content:center;padding:3px 7px;border-radius:999px;background:rgba(0,87,219,.08);color:var(--wave);font-size:10.5px;font-weight:950;white-space:nowrap;}
+  .scenario-search-target-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10.5px;font-weight:800;color:var(--ink-soft);}
+  .scenario-search-metrics{margin-top:7px;}
+  .scenario-search-metric .k{font-size:9px;}
+  .scenario-search-metric .v{font-size:14px;}
+  .scenario-search-metric .n{margin-top:1px;font-size:8.5px;font-weight:800;color:var(--ink-soft);white-space:nowrap;}
+  .scenario-search-empty{padding:18px 10px;}
+  @media(max-width:520px){
+    .scenario-search-form{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:9px;}
+    .scenario-search-field.full,.scenario-search-action{grid-column:1/-1;}
+    .scenario-search-summary{align-items:center;}
+    .scenario-search-metric .k{font-size:8.5px;}
+    .scenario-search-metric .v{font-size:12.5px;}
+    .scenario-search-target-name{font-size:10px;}
   }
 
 
@@ -4287,10 +4324,7 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
   <div id="page-today" style="display:none;">
     <section class="card today-picks-card">
       <div class="race-search-head">
-        <div>
-          <h2 class="race-search-title">レース検索</h2>
-          <div class="race-search-sub">今日のレースから、BRCの条件に合うレースを探します。</div>
-        </div>
+        <h2 class="race-search-title">レース検索</h2>
         <div class="race-search-date"><strong id="todayPicksDate">-</strong></div>
       </div>
 
@@ -4324,15 +4358,13 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
       <div id="raceSearchPanelScenario" class="race-search-panel">
         <div id="raceSearchScenarioPublic" class="race-search-dev">
           <div class="race-search-dev-mark">⌕</div>
-          <span class="race-search-dev-badge">NEW FEATURE</span>
-          <div class="race-search-dev-title">新機能開発中</div>
-          <div class="race-search-dev-copy">決まり手・ST・展開相性から、狙いたいレースを探せる「展開検索」を開発しています。</div>
-          <div class="race-search-dev-tags"><span class="race-search-dev-tag">決まり手</span><span class="race-search-dev-tag">ST順位</span><span class="race-search-dev-tag">展開相性</span></div>
+          <div class="race-search-dev-title">展開検索</div>
+          <span class="race-search-dev-badge">開発中</span>
         </div>
 
         <div id="raceSearchScenarioAdmin" class="scenario-search-admin" aria-hidden="true">
           <div class="scenario-search-admin-head">
-            <div><div class="scenario-search-admin-title">展開検索</div><div class="scenario-search-admin-sub">1号艇の被決まり手 × 攻め艇の決まり手 × ST順位で、本日の該当レースを抽出します。</div></div>
+            <div class="scenario-search-admin-title">展開検索</div>
             <span class="scenario-search-admin-badge">管理者β</span>
           </div>
           <div class="scenario-search-form">
@@ -4343,45 +4375,40 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
               </select>
             </div>
             <div class="scenario-search-field">
-              <label class="scenario-search-label" for="scenarioSearchKimarite">狙う決まり手</label>
+              <label class="scenario-search-label" for="scenarioSearchKimarite">決まり手</label>
               <select id="scenarioSearchKimarite" class="scenario-search-select">
                 <option value="sashi">差し</option><option value="makuri">まくり</option><option value="makurizashi">まくり差し</option>
               </select>
             </div>
             <div class="scenario-search-field full">
-              <span class="scenario-search-label">最低条件</span>
               <div class="scenario-search-thresholds">
-                <div><div class="scenario-search-label">1号艇被決まり手</div><div class="scenario-search-unit"><input id="scenarioSearchInMin" class="scenario-search-input" type="number" inputmode="decimal" min="0" max="100" step="1" value="10"><span>%</span></div></div>
-                <div><div class="scenario-search-label">攻め艇決まり手</div><div class="scenario-search-unit"><input id="scenarioSearchAttackMin" class="scenario-search-input" type="number" inputmode="decimal" min="0" max="100" step="1" value="15"><span>%</span></div></div>
-                <div><div class="scenario-search-label">最低N数</div><div class="scenario-search-unit"><input id="scenarioSearchNMin" class="scenario-search-input" type="number" inputmode="numeric" min="1" max="999" step="1" value="10"><span>N</span></div></div>
+                <div><label id="scenarioSearchInMinLabel" class="scenario-search-label" for="scenarioSearchInMin">①被差し率</label><div class="scenario-search-unit"><input id="scenarioSearchInMin" class="scenario-search-input" type="number" inputmode="decimal" min="0" max="100" step="1" value="10"><span>%</span></div></div>
+                <div><label id="scenarioSearchAttackMinLabel" class="scenario-search-label" for="scenarioSearchAttackMin">②差し率</label><div class="scenario-search-unit"><input id="scenarioSearchAttackMin" class="scenario-search-input" type="number" inputmode="decimal" min="0" max="100" step="1" value="15"><span>%</span></div></div>
+                <div><label class="scenario-search-label" for="scenarioSearchNMin">N数</label><div class="scenario-search-unit"><input id="scenarioSearchNMin" class="scenario-search-input" type="number" inputmode="numeric" min="1" max="999" step="1" value="10"><span>N</span></div></div>
               </div>
             </div>
             <div class="scenario-search-field full">
-              <label class="scenario-search-label" for="scenarioSearchSt">ST順位条件</label>
+              <label class="scenario-search-label" for="scenarioSearchSt">ST条件</label>
               <select id="scenarioSearchSt" class="scenario-search-select">
                 <option value="none">指定なし</option>
-                <option value="vs1">攻め艇が1号艇より早い</option>
-                <option value="inner">攻め艇が内隣艇より早い</option>
-                <option value="avg">攻め艇が6艇平均より早い</option>
+                <option value="vs1">1号艇より早い</option>
+                <option value="inner">内隣艇より早い</option>
+                <option value="avg">6艇平均より早い</option>
               </select>
             </div>
             <div class="scenario-search-action">
-              <button type="button" id="scenarioSearchRun" class="scenario-search-btn">この条件で検索</button>
-              <button type="button" id="scenarioSearchReset" class="scenario-search-btn secondary">初期化</button>
+              <button type="button" id="scenarioSearchRun" class="scenario-search-btn">検索</button>
+              <button type="button" id="scenarioSearchReset" class="scenario-search-btn secondary">リセット</button>
             </div>
-            <div class="scenario-search-note">決まり手は直近1年の選手×コース実績、STは選手×今回コースの平均ST順位を使用。検索結果は予測確率ではなく、指定条件への該当レースです。</div>
           </div>
           <div class="scenario-search-summary">
-            <div class="scenario-search-summary-title">検索結果</div>
-            <div class="scenario-search-summary-right">
-              <div class="scenario-search-sort" role="group" aria-label="検索結果の並び順">
-                <button type="button" class="scenario-search-sort-btn active" data-scenario-sort="deadline">締切順</button>
-                <button type="button" class="scenario-search-sort-btn" data-scenario-sort="venue">会場順</button>
-              </div>
-              <div id="scenarioSearchCount" class="scenario-search-summary-count">条件を指定して検索</div>
+            <div class="scenario-search-summary-title">検索結果 <span id="scenarioSearchCount" class="scenario-search-summary-count">未検索</span></div>
+            <div class="scenario-search-sort" role="group" aria-label="検索結果の並び順">
+              <button type="button" class="scenario-search-sort-btn active" data-scenario-sort="deadline">締切</button>
+              <button type="button" class="scenario-search-sort-btn" data-scenario-sort="venue">会場</button>
             </div>
           </div>
-          <div id="scenarioSearchResults" class="scenario-search-results"><div class="scenario-search-empty">条件を設定して「この条件で検索」を押してください。</div></div>
+          <div id="scenarioSearchResults" class="scenario-search-results"><div class="scenario-search-empty">条件を選んで検索</div></div>
         </div>
       </div>
     </section>
@@ -15952,9 +15979,18 @@ let SCENARIO_SEARCH_SORT='deadline';
 let SCENARIO_SEARCH_HAS_RUN=false;
 
 function brcScenarioMetricKeys(kind){
-  if(kind==='makuri') return {inKey:'mr',attackKey:'mr',inLabel:'まくられ率',attackLabel:'まくり率'};
-  if(kind==='makurizashi') return {inKey:'msr',attackKey:'msr',inLabel:'まくり差され率',attackLabel:'まくり差し率'};
-  return {inKey:'sr',attackKey:'sr',inLabel:'差され率',attackLabel:'差し率'};
+  if(kind==='makuri') return {inKey:'mr',attackKey:'mr',inLabel:'被まくり率',attackLabel:'まくり率',kindLabel:'まくり'};
+  if(kind==='makurizashi') return {inKey:'msr',attackKey:'msr',inLabel:'被まくり差し率',attackLabel:'まくり差し率',kindLabel:'まくり差し'};
+  return {inKey:'sr',attackKey:'sr',inLabel:'被差し率',attackLabel:'差し率',kindLabel:'差し'};
+}
+function brcSyncScenarioSearchLabels(){
+  const course=Number(document.getElementById('scenarioSearchCourse')?.value||2);
+  const kind=document.getElementById('scenarioSearchKimarite')?.value||'sashi';
+  const keys=brcScenarioMetricKeys(kind);
+  const inLabel=document.getElementById('scenarioSearchInMinLabel');
+  const attackLabel=document.getElementById('scenarioSearchAttackMinLabel');
+  if(inLabel) inLabel.textContent=`①${keys.inLabel}`;
+  if(attackLabel) attackLabel.textContent=`${course}号艇 ${keys.attackLabel}`;
 }
 function brcScenarioStData(reg,course){
   const d=ST_COURSE?.[String(reg)]?.[String(course)];
@@ -16054,20 +16090,20 @@ function brcRenderScenarioSearch(){
   const q=brcBuildScenarioSearchRows();
   if(count) count.textContent=`該当 ${q.rows.length}レース`;
   if(!q.rows.length){
-    box.innerHTML='<div class="scenario-search-empty">この条件に該当するレースはありません。条件を少し緩めて再検索してください。</div>';
+    box.innerHTML='<div class="scenario-search-empty">該当レースなし</div>';
     return;
   }
   box.innerHTML=q.rows.map(r=>{
     const passed=isRaceDeadlinePassed(r.deadline);
-    const stValue=r.st?.attack?`${r.st.attack.avg.toFixed(1)}位`:'指定なし';
+    const stValue=r.st?.attack?`${r.st.attack.avg.toFixed(1)}位`:'―';
     return `<div class="scenario-search-result${passed?' passed':''}" data-scenario-venue="${r.venue}" data-scenario-race="${r.raceNo}" tabindex="0" role="button">
-      <div class="scenario-search-result-top"><div class="scenario-search-race">${r.venue}${r.raceNo}R · ${r.course}号艇 ${r.attackName}</div><div class="scenario-search-deadline">${r.deadline?`締切 ${r.deadline}`:'締切 ―'}</div></div>
+      <div class="scenario-search-result-top"><div class="scenario-search-race">${r.venue}${r.raceNo}R</div><div class="scenario-search-deadline">${r.deadline?`締切 ${r.deadline}`:'締切 ―'}</div></div>
+      <div class="scenario-search-target"><span class="scenario-search-target-badge">${r.course}号艇 ${r.keys.kindLabel}</span><span class="scenario-search-target-name">${r.attackName}</span></div>
       <div class="scenario-search-metrics">
-        <div class="scenario-search-metric"><div class="k">1号艇 ${r.keys.inLabel}</div><div class="v">${r.inPct.toFixed(1)}%</div></div>
-        <div class="scenario-search-metric"><div class="k">${r.course}号艇 ${r.keys.attackLabel}</div><div class="v">${r.attackPct.toFixed(1)}%</div></div>
-        <div class="scenario-search-metric"><div class="k">平均ST順位</div><div class="v">${stValue}</div></div>
+        <div class="scenario-search-metric"><div class="k">①${r.keys.inLabel}</div><div class="v">${r.inPct.toFixed(1)}%</div><div class="n">N=${r.inN}</div></div>
+        <div class="scenario-search-metric"><div class="k">${r.course}号艇 ${r.keys.attackLabel}</div><div class="v">${r.attackPct.toFixed(1)}%</div><div class="n">N=${r.attackN}</div></div>
+        <div class="scenario-search-metric"><div class="k">ST順位</div><div class="v">${stValue}</div><div class="n">${r.st?.attack?.n?`N=${r.st.attack.n}`:'&nbsp;'}</div></div>
       </div>
-      <div class="scenario-search-detail">1号艇 ${r.inName} N=${r.inN} / ${r.course}号艇決まり手 N=${r.attackN}${r.st?.text?` / ${r.st.text}`:''}</div>
     </div>`;
   }).join('');
   box.querySelectorAll('[data-scenario-venue]').forEach(el=>{
@@ -16082,8 +16118,9 @@ function brcResetScenarioSearch(){
   SCENARIO_SEARCH_SORT='deadline';
   SCENARIO_SEARCH_HAS_RUN=false;
   brcSyncScenarioSortButtons();
-  const c=document.getElementById('scenarioSearchCount');if(c)c.textContent='条件を指定して検索';
-  const r=document.getElementById('scenarioSearchResults');if(r)r.innerHTML='<div class="scenario-search-empty">条件を設定して「この条件で検索」を押してください。</div>';
+  brcSyncScenarioSearchLabels();
+  const c=document.getElementById('scenarioSearchCount');if(c)c.textContent='未検索';
+  const r=document.getElementById('scenarioSearchResults');if(r)r.innerHTML='<div class="scenario-search-empty">条件を選んで検索</div>';
 }
 function brcSyncRaceSearchAccess(){
   const publicBox=document.getElementById('raceSearchScenarioPublic');
@@ -16109,7 +16146,11 @@ function initTodayPicksPage(){
     document.querySelectorAll('.race-search-tab').forEach(btn=>btn.addEventListener('click',()=>brcSetRaceSearchMode(btn.dataset.raceSearchMode)));
     document.getElementById('scenarioSearchRun')?.addEventListener('click',brcRenderScenarioSearch);
     document.getElementById('scenarioSearchReset')?.addEventListener('click',brcResetScenarioSearch);
+    document.getElementById('scenarioSearchCourse')?.addEventListener('change',brcSyncScenarioSearchLabels);
+    document.getElementById('scenarioSearchKimarite')?.addEventListener('change',brcSyncScenarioSearchLabels);
+    ['scenarioSearchInMin','scenarioSearchAttackMin','scenarioSearchNMin'].forEach(id=>document.getElementById(id)?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();brcRenderScenarioSearch();}}));
     document.querySelectorAll('[data-scenario-sort]').forEach(btn=>btn.addEventListener('click',()=>brcSetScenarioSearchSort(btn.dataset.scenarioSort)));
+    brcSyncScenarioSearchLabels();
     brcSyncScenarioSortButtons();
     window.__raceSearchRendered=true;
   }
