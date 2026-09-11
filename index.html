@@ -3,6 +3,7 @@
 <!-- BRC_ADMIN_MATRIX_NAME_LAYOUT_FIX_20260910 -->
 <!-- BRC_ADMIN_NONIN_REFERENCE_BETA_V0_20260910 -->
 <!-- BRC_ADMIN_REFERENCE_INLINE_V3_20260911 -->
+<!-- BRC_WIN_PERSONAL_DEDUP_MATRIX_ATTENTION_SYNC_20260911 -->
 <!-- BRC_REFMON_PICK_INDEX_REMOVED_20260911 -->
 <!-- BRC_ADMIN_REFERENCE_UX_V4_20260911 -->
 <!-- BRC_NIGE_REFERENCE_UX_DETAIL_V1_20260911 -->
@@ -3449,6 +3450,15 @@ table.brc-mark-table td:first-child{text-align:left;padding-left:7px;}
 }
 .brc-mark-boat .brc-player-tendency-badge.hard{
   color:var(--trend-down);border:1px solid rgba(var(--trend-down-rgb),.32);background:rgba(var(--trend-down-rgb),.08);
+}
+.brc-mark-boat .brc-player-tendency-badge.personal-up{
+  color:var(--trend-up);border:1px solid rgba(var(--trend-up-rgb),.32);background:rgba(var(--trend-up-rgb),.08);
+}
+.brc-mark-boat .brc-player-tendency-badge.personal-down{
+  color:var(--trend-down);border:1px solid rgba(var(--trend-down-rgb),.32);background:rgba(var(--trend-down-rgb),.08);
+}
+.brc-mark-boat .brc-player-tendency-badge.personal-flat{
+  color:#667085;border:1px solid rgba(100,116,139,.28);background:rgba(100,116,139,.07);
 }
 .brc-mark-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:37px;line-height:1;}
 .brc-mark-symbol{font-size:19px;font-weight:950;line-height:1;}
@@ -10551,7 +10561,7 @@ function brcBuildScenarioMarkMatrixHtml(boats,localInReliability=null){
     const nameHtml=tendency
       ? `<button type="button" class="brc-mark-name brc-mark-name-btn" onclick="event.stopPropagation();brcShowPlayerTimeXTendencyForCourse(${c})" title="タイムX選手特性の詳細を表示">${name}</button>`
       : `<span class="brc-mark-name">${name}</span>`;
-    const tendencyBadge=tendency?brcBuildPlayerTimeXTendencyBadgeHtml(b):'';
+    const tendencyBadge=brcBuildScenarioMarkAttentionBadgeHtml(b);
     const headMeta='';
     const headTitle=c===1
       ? `1号艇1着率 ${r.win.toFixed(1)}%`
@@ -12206,12 +12216,13 @@ function brcBuildProbabilityCell(value,arrowHtml,personalHtml=''){
   return `<div class="prob-cell-stack"><div class="prob-value">${value}<span class="predict-unit">%</span></div><div class="prob-eval-row">${evalHtml}</div>${personalLine}</div>`;
 }
 function brcBuildWinCellInner(b,venue){
-  // 1着率はTimeX v2の正式補正値。本人傾向は展開タブと同一判定で参考表示し、数値へ再加算しない。
+  // 1着率はTimeX v2の正式補正値。
+  // 本人傾向は選手名下の「BRCタイムX 注意」から確認できるため、一覧の重複表示はしない。
+  // 表示整理のみで、本人傾向データ・TimeX補正・着率計算は変更しない。
   const arrow=b?.exhibitionApplied
     ? brcBuildExhibitionProbabilityArrowIcon(Number(b?.exhibitionWinDeltaPt),0.75)
     : '';
-  const personal=brcBuildScenarioPersonalTrendHtml(b,'win',Number(b?.pct));
-  return brcBuildProbabilityCell(b.pct,arrow,personal);
+  return brcBuildProbabilityCell(b.pct,arrow,'');
 }
 function brcBuildTop3CellInner(b){
   // 3連対率もTimeX v2の正式補正値。本人傾向は展開タブと同一判定で参考表示し、数値へ再加算しない。
@@ -12667,6 +12678,19 @@ function brcBuildPlayerTimeXTendencyBadgeHtml(b){
   const courseLabel=Number.isFinite(Number(tendency.course))?`${Number(tendency.course)}コース`:'現在コース';
   const title=easy?`${courseLabel}でタイムを出しやすい傾向。タップで詳細`:`${courseLabel}でタイムを出しにくい傾向。タップで詳細`;
   return `<button type="button" class="brc-player-tendency-badge ${cls}" onclick="event.stopPropagation();brcShowPlayerTimeXTendencyForCourse(${Number(b?.course)||0})" title="${title}">注意</button>`;
+}
+// 展開マトリックスの「注意」は出走データ側と同じ優先順位に統一する。
+// 1) 今回のTimeX帯の本人傾向（N>=12） 2) 基礎特性（出しやすい／出しにくい）。
+// 表示導線だけの統一で、マトリックス印・着率・TimeXロジックには影響しない。
+function brcBuildScenarioMarkAttentionBadgeHtml(b){
+  const personal=brcFindPredictNamePersonalTrendRow(b);
+  if(personal){
+    const payload=encodeURIComponent(JSON.stringify(brcAlertPayload(personal,b)));
+    const decision=brcAlertDecision(personal);
+    const cls=decision.cls==='up'?'personal-up':decision.cls==='down'?'personal-down':'personal-flat';
+    return `<button type="button" class="brc-player-tendency-badge ${cls}" onclick="event.stopPropagation();brcShowPredictNamePersonalTrend(decodeURIComponent('${payload}'))" title="今回の本人傾向あり。タップで詳細">注意</button>`;
+  }
+  return brcBuildPlayerTimeXTendencyBadgeHtml(b);
 }
 // 出走データの選手名下表示は、今回帯の本人傾向を最優先で判定する。
 // 本人傾向 = 選手×コース×今回のTimeX差帯が一致し、N=12以上。
