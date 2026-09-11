@@ -3,6 +3,7 @@
 <!-- BRC_ADMIN_MATRIX_NAME_LAYOUT_FIX_20260910 -->
 <!-- BRC_ADMIN_NONIN_REFERENCE_BETA_V0_20260910 -->
 <!-- BRC_ADMIN_REFERENCE_INLINE_V3_20260911 -->
+<!-- BRC_REFERENCE_PERSONAL_WARNING_V1_20260911 -->
 <!-- BRC_WIN_PERSONAL_DEDUP_MATRIX_ATTENTION_SYNC_20260911 -->
 <!-- BRC_REFMON_PICK_INDEX_REMOVED_20260911 -->
 <!-- BRC_ADMIN_REFERENCE_UX_V4_20260911 -->
@@ -3593,6 +3594,37 @@ table.brc-mark-table td:first-child{text-align:left;padding-left:7px;}
   .brc-nonin-ref-title{font-size:12px;}
   .brc-nige-order-formation-value,
   .brc-nonin-ref-formation-value{font-size:13px;}
+}
+</style>
+
+<style id="brc-reference-personal-warning-style-20260911">
+/* BRC_REFERENCE_PERSONAL_WARNING_V1_20260911
+   本人傾向は買い目生成へ再加算せず、参考買い目に関係する艇に着率加減値がある時だけ注意導線を出す。 */
+.brc-reference-warning-badge{
+  appearance:none;border:1px solid rgba(209,55,63,.34);background:#fff5f5;color:#c92f38;
+  border-radius:999px;padding:2px 7px;margin-left:6px;font:inherit;font-size:9px!important;font-weight:950!important;
+  line-height:1.25;white-space:nowrap;cursor:pointer;vertical-align:middle;
+}
+.brc-reference-warning-badge:hover{background:#ffebed;}
+.brc-nige-order-picks-label{display:flex;align-items:center;gap:0;flex-wrap:wrap;}
+.brc-refmon-picks-title{display:inline-flex!important;align-items:center;gap:0;min-width:0;}
+.brc-nonin-ref-picks-label{display:flex;align-items:center;gap:0;flex-wrap:wrap;}
+.brc-reference-warning-intro{margin:0 0 10px;padding:9px 10px;border-radius:9px;background:#fff7f7;border:1px solid rgba(209,55,63,.18);font-size:11px;line-height:1.6;color:var(--ink-soft);}
+.brc-reference-warning-intro strong{color:#b4232c;}
+.brc-reference-warning-list{border:1px solid rgba(10,31,51,.08);border-radius:10px;overflow:hidden;background:#fff;}
+.brc-reference-warning-row{padding:10px 11px;border-top:1px solid rgba(10,31,51,.07);}
+.brc-reference-warning-row:first-child{border-top:0;}
+.brc-reference-warning-player{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:950;color:var(--navy);}
+.brc-reference-warning-meta{margin:3px 0 6px;font-size:9.5px;color:var(--ink-soft);}
+.brc-reference-warning-metrics{display:flex;gap:5px;flex-wrap:wrap;}
+.brc-reference-warning-metric{display:inline-flex;align-items:center;gap:4px;padding:4px 7px;border-radius:999px;border:1px solid rgba(10,31,51,.08);background:#f8fafc;font-size:10px;font-weight:900;white-space:nowrap;}
+.brc-reference-warning-metric.up{color:var(--trend-up);background:rgba(var(--trend-up-rgb),.055);border-color:rgba(var(--trend-up-rgb),.15);}
+.brc-reference-warning-metric.down{color:var(--trend-down);background:rgba(var(--trend-down-rgb),.055);border-color:rgba(var(--trend-down-rgb),.15);}
+.brc-reference-warning-foot{margin-top:9px;font-size:9.5px;line-height:1.55;color:var(--ink-soft);}
+@media(max-width:420px){
+  .brc-reference-warning-badge{font-size:8.5px!important;padding:2px 6px;}
+  .brc-reference-warning-player{font-size:12px;}
+  .brc-reference-warning-metric{font-size:9.5px;padding:4px 6px;}
 }
 </style>
 
@@ -10237,7 +10269,7 @@ function brcBuildNigeReferencePicksHtml(pred,target=0.70){
   const composite=(available.length===picks.length)?brcOddsBuilderComposite(picks.map((x,i)=>({odds:available[i]}))):null;
   const formation=brcBuildNigeFormationLabel(picks);
   return `<div class="brc-nige-order-picks" data-brc-ref-picks="${picks.map(x=>x.combo).join(',')}">
-    <div class="brc-nige-order-picks-label">BRC参考買い目</div>
+    <div class="brc-nige-order-picks-label"><span>BRC参考買い目</span>${brcBuildReferencePersonalWarningBadgeHtml(picks.map(x=>x.combo))}</div>
     ${formation?`<div class="brc-nige-order-formation"><span class="brc-nige-order-formation-value">${formation}</span><span class="brc-nige-order-formation-points">${picks.length}点</span></div>`:''}
     <div class="brc-nige-order-pick-list">${pickRows}</div>
     <div class="brc-nige-order-composite"><span class="brc-nige-order-composite-label">合成オッズ</span><span class="brc-nige-order-composite-value" data-brc-ref-composite>${composite===null?'―':composite.toFixed(1)+'倍'}</span></div>
@@ -10766,7 +10798,7 @@ function brcBuildAdminNonInReferenceHtml(boats,workerPrediction,localInReliabili
   const oddsMap=new Map(oddsInfo.rows.map(x=>[x.combo,x.odds]));
   const pickRows=(main.tickets||[]).map(combo=>`<div class="brc-nonin-ref-pick" data-brc-nonin-ref-combo="${combo}"><span class="brc-nonin-ref-pick-combo">${combo}</span><span class="brc-nonin-ref-pick-odds" data-brc-nonin-ref-odds="${combo}">${oddsMap.get(combo)==null?'―':Number(oddsMap.get(combo)).toFixed(1)+'倍'}</span></div>`).join('');
   const scenarioDetail=support.map(x=>`${x.head}頭：${x.supported?'一致':((x.playerAvailable||x.venueAvailable)?'不一致':'データ不足')}`).join(' / ');
-  return `<div class="brc-nonin-ref-card"><div class="brc-nonin-ref-head"><div><div class="brc-nonin-ref-title">BRC参考買い目 β</div><div class="brc-nonin-ref-sub">非イン参考買い目・管理者Shadow</div></div><div class="brc-nonin-ref-badges"><span class="brc-nonin-ref-badge">${phaseLabel}</span><span class="brc-nonin-ref-badge good">${headText}</span><span class="brc-nonin-ref-badge ${supportClass}">${supportText}</span></div></div><div class="brc-nonin-ref-heads">${rankHtml}</div>${metricHtml}<div class="brc-nonin-ref-status"><strong>頭候補 ${(main.heads||[]).join('・')}</strong><br>${scenarioDetail||'展開傾向データなし'}。展開傾向は着率・順位へ再加点せず、2着候補との整合確認だけに使用。</div><div class="brc-nonin-ref-picks" data-brc-nonin-ref-picks="${(main.tickets||[]).join(',')}"><div class="brc-nonin-ref-picks-label">BRC参考買い目</div>${main.formation?`<div class="brc-nonin-ref-formation"><span class="brc-nonin-ref-formation-value">${main.formation}</span><span class="brc-nonin-ref-formation-points">${main.defaultPoints}点</span></div>`:''}<div class="brc-nonin-ref-pick-list">${pickRows}</div><div class="brc-nonin-ref-composite"><span class="brc-nonin-ref-composite-label">合成オッズ</span><span class="brc-nonin-ref-composite-value" data-brc-nonin-ref-composite>${oddsInfo.composite==null?'―':Number(oddsInfo.composite).toFixed(1)+'倍'}</span></div></div><div class="brc-nonin-ref-note"><strong>検証中：</strong>1頭は4/5/6点、2頭は6/7/8点を裏で同時保存。画面は基準案の1頭6点 / 2頭8点を表示します。オッズで買い目自体は変更しません。</div></div>`;
+  return `<div class="brc-nonin-ref-card"><div class="brc-nonin-ref-head"><div><div class="brc-nonin-ref-title">BRC参考買い目 β</div><div class="brc-nonin-ref-sub">非イン参考買い目・管理者Shadow</div></div><div class="brc-nonin-ref-badges"><span class="brc-nonin-ref-badge">${phaseLabel}</span><span class="brc-nonin-ref-badge good">${headText}</span><span class="brc-nonin-ref-badge ${supportClass}">${supportText}</span></div></div><div class="brc-nonin-ref-heads">${rankHtml}</div>${metricHtml}<div class="brc-nonin-ref-status"><strong>頭候補 ${(main.heads||[]).join('・')}</strong><br>${scenarioDetail||'展開傾向データなし'}。展開傾向は着率・順位へ再加点せず、2着候補との整合確認だけに使用。</div><div class="brc-nonin-ref-picks" data-brc-nonin-ref-picks="${(main.tickets||[]).join(',')}"><div class="brc-nonin-ref-picks-label"><span>BRC参考買い目</span>${brcBuildReferencePersonalWarningBadgeHtml(main.tickets||[])}</div>${main.formation?`<div class="brc-nonin-ref-formation"><span class="brc-nonin-ref-formation-value">${main.formation}</span><span class="brc-nonin-ref-formation-points">${main.defaultPoints}点</span></div>`:''}<div class="brc-nonin-ref-pick-list">${pickRows}</div><div class="brc-nonin-ref-composite"><span class="brc-nonin-ref-composite-label">合成オッズ</span><span class="brc-nonin-ref-composite-value" data-brc-nonin-ref-composite>${oddsInfo.composite==null?'―':Number(oddsInfo.composite).toFixed(1)+'倍'}</span></div></div><div class="brc-nonin-ref-note"><strong>検証中：</strong>1頭は4/5/6点、2頭は6/7/8点を裏で同時保存。画面は基準案の1頭6点 / 2頭8点を表示します。オッズで買い目自体は変更しません。</div></div>`;
 }
 function brcRefreshNonInReferenceOdds(){
   const box=document.querySelector('.brc-nonin-ref-picks[data-brc-nonin-ref-picks]');
@@ -12386,6 +12418,80 @@ function brcPersonalEffectDiff(a,kind){
 }
 function brcPersonalTrendArrow(v){
   return brcProbabilityArrow(v,0);
+}
+
+// BRC_REFERENCE_PERSONAL_WARNING_V1_20260911
+// 参考買い目に実際に含まれる艇だけを対象に、今回帯の本人傾向（N>=12）の着率差を注意表示する。
+// 本人傾向は買い目生成・着率・展開印へ再加算しない。表示上の警告だけ。
+function brcReferencePersonalWarningData(combos){
+  const src=(Array.isArray(combos)?combos:String(combos||'').split(','))
+    .map(x=>String(x||'').trim()).filter(x=>/^[1-6]-[1-6]-[1-6]$/.test(x));
+  if(!src.length) return [];
+  const usage=new Map();
+  const kinds=['win','second','third'];
+  src.forEach(combo=>{
+    combo.split('-').map(Number).forEach((course,idx)=>{
+      if(!usage.has(course)) usage.set(course,new Set());
+      usage.get(course).add(kinds[idx]);
+    });
+  });
+  const boats=Array.isArray(window.__predictBoatsCurrent)?window.__predictBoatsCurrent:[];
+  const labels={win:'1着',second:'2着',third:'3着',top3:'3連対'};
+  const out=[];
+  Array.from(usage.keys()).sort((a,b)=>a-b).forEach(course=>{
+    const b=boats.find(x=>Number(x?.course)===Number(course));
+    if(!b) return;
+    const row=typeof brcFindPredictNamePersonalTrendRow==='function'?brcFindPredictNamePersonalTrendRow(b):null;
+    if(!row) return;
+    const targetKinds=Array.from(usage.get(course)||[]);
+    // 3連対はその艇が買い目に含まれる時の総合的な残りやすさとして併記する。
+    if(!targetKinds.includes('top3')) targetKinds.push('top3');
+    const metrics=[];
+    targetKinds.forEach(kind=>{
+      const diff=typeof brcPersonalEffectDiff==='function'?brcPersonalEffectDiff(row,kind):NaN;
+      const rounded=typeof brcTimeXArrowRoundedPt==='function'?brcTimeXArrowRoundedPt(diff):Number(diff);
+      if(!Number.isFinite(rounded)||rounded===0) return;
+      metrics.push({kind,label:labels[kind]||kind,diff:Number(diff),arrow:typeof brcPersonalTrendArrow==='function'?brcPersonalTrendArrow(diff):''});
+    });
+    if(!metrics.length) return;
+    out.push({
+      course:Number(course),
+      name:String(b?.player?.name||row?.['選手名']||''),
+      n:Number(row?.N||0),
+      band:String(row?.['平均差帯']||''),
+      evaluation:String(row?.['評価']||''),
+      metrics
+    });
+  });
+  return out;
+}
+function brcBuildReferencePersonalWarningBadgeHtml(combos){
+  const src=(Array.isArray(combos)?combos:String(combos||'').split(',')).map(x=>String(x||'').trim()).filter(Boolean);
+  if(!brcReferencePersonalWarningData(src).length) return '';
+  const payload=encodeURIComponent(JSON.stringify(src));
+  return `<button type="button" class="brc-reference-warning-badge" onclick="event.stopPropagation();brcShowReferencePersonalWarning(decodeURIComponent('${payload}'))" title="本人傾向の着率差あり。タップで参考買い目の注意点を確認">注意</button>`;
+}
+function brcShowReferencePersonalWarning(raw){
+  let combos=[];
+  try{ combos=JSON.parse(raw); }catch(_e){ combos=String(raw||'').split(',').filter(Boolean); }
+  const data=brcReferencePersonalWarningData(combos);
+  if(!data.length) return;
+  document.getElementById('brcExAlertPop')?.remove();
+  const rows=data.map(x=>{
+    const metricHtml=x.metrics.map(m=>{
+      const cls=Number(m.diff)>0?'up':'down';
+      const value=typeof brcSignedPt==='function'?brcSignedPt(m.diff):`${Number(m.diff)>0?'+':''}${Math.round(Number(m.diff))}pt`;
+      return `<span class="brc-reference-warning-metric ${cls}">${m.label} ${m.arrow||''} ${value}</span>`;
+    }).join('');
+    const boat=typeof scenarioLaneBadge==='function'?scenarioLaneBadge(x.course):`${x.course}号艇`;
+    const meta=[x.band?`TimeX差 ${x.band}秒`:'',Number.isFinite(x.n)&&x.n>0?`N=${Math.round(x.n)}`:'',x.evaluation?`参考度 ${x.evaluation}`:''].filter(Boolean).join(' ／ ');
+    return `<div class="brc-reference-warning-row"><div class="brc-reference-warning-player">${boat}<span>${x.name}</span></div>${meta?`<div class="brc-reference-warning-meta">${meta}</div>`:''}<div class="brc-reference-warning-metrics">${metricHtml}</div></div>`;
+  }).join('');
+  const pop=document.createElement('div');
+  pop.id='brcExAlertPop'; pop.className='brc-ex-alert-pop';
+  pop.onclick=e=>{if(e.target===pop)pop.remove();};
+  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">BRC参考買い目　注意</div><div class="brc-ex-alert-meta">買い目に含まれる艇の本人傾向</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-reference-warning-intro"><strong>本人傾向の着率差があります。</strong><br>この本人傾向は現在の参考買い目生成には直接反映していません。買い目を確認する時の補足材料として見てください。</div><div class="brc-reference-warning-list">${rows}</div><div class="brc-reference-warning-foot">※対象は現在の参考買い目に含まれる艇のみ。本人傾向は「選手 × 現在コース × 今回のTimeX帯」の参考値で、表示着率・AI予測・展開マトリックス・参考買い目へ再加算していません。</div></div>`;
+  document.body.appendChild(pop);
 }
 function brcMetricClass(v){
   const n=brcTimeXArrowRoundedPt(v);
@@ -17680,7 +17786,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     }else{
       const list=(data.picks||[]).map(x=>`<div class="brc-refmon-pick" data-brc-refmon-combo="${esc(x.combo)}"><strong>${esc(x.combo)}</strong><span class="odds" data-brc-refmon-odds="${esc(x.combo)}">${Number.isFinite(Number(x.odds))?Number(x.odds).toFixed(1)+'倍':'―'}</span></div>`).join('');
       body=`<div class="brc-refmon-picks" data-brc-ref-monitor-picks="${esc((data.picks||[]).map(x=>x.combo).join(','))}">
-        <div class="brc-refmon-picks-head"><span>BRC参考買い目</span><strong>${data.pointCount}点</strong></div>
+        <div class="brc-refmon-picks-head"><span class="brc-refmon-picks-title">BRC参考買い目${brcBuildReferencePersonalWarningBadgeHtml((data.picks||[]).map(x=>x.combo))}</span><strong>${data.pointCount}点</strong></div>
         ${data.formation?`<div class="brc-refmon-formation">${esc(data.formation)}</div>`:''}
         <div class="brc-refmon-pick-list">${list}</div>
         <div class="brc-refmon-composite"><span>合成オッズ</span><strong data-brc-refmon-composite>${Number.isFinite(Number(data.compositeOdds))?Number(data.compositeOdds).toFixed(1)+'倍':'―'}</strong></div>
