@@ -3,7 +3,7 @@
 <!-- BRC_ADMIN_MATRIX_NAME_LAYOUT_FIX_20260910 -->
 <!-- BRC_ADMIN_NONIN_REFERENCE_BETA_V0_20260910 -->
 <!-- BRC_ADMIN_REFERENCE_INLINE_V3_20260911 -->
-<!-- BRC_ADMIN_REFERENCE_INLINE_V4_NIGE_UNIFIED_20260911 -->
+<!-- BRC_REFMON_PICK_INDEX_REMOVED_20260911 -->
 <!-- BRC_ADMIN_REFERENCE_UX_V4_20260911 -->
 <!-- BRC_NIGE_REFERENCE_UX_DETAIL_V1_20260911 -->
 <!-- BRC_RACESEARCH_GUIDE_UI_CLEANUP_20260911 -->
@@ -3629,12 +3629,12 @@ table.brc-mark-table td:first-child{text-align:left;padding-left:7px;}
 .brc-refmon-picks-head strong{font-size:12px;font-weight:950;color:var(--wave);}
 .brc-refmon-formation{padding:8px 9px;border-bottom:1px solid rgba(10,31,51,.06);font-size:13px;font-weight:950;color:var(--navy);overflow-wrap:anywhere;}
 .brc-refmon-pick-list{display:grid;}
-.brc-refmon-pick{display:grid;grid-template-columns:28px minmax(0,1fr) auto 62px;align-items:center;gap:7px;padding:8px 9px;border-top:1px solid rgba(10,31,51,.055);font-size:11px;}
+.brc-refmon-pick{display:grid;grid-template-columns:minmax(0,1fr) auto 62px;align-items:center;gap:7px;padding:8px 9px;border-top:1px solid rgba(10,31,51,.055);font-size:11px;}
 .brc-refmon-pick:first-child{border-top:0;}
-.brc-refmon-pick .idx{grid-column:1;color:var(--ink-soft);font-weight:850;text-align:center;}
-.brc-refmon-pick strong{grid-column:2;font-size:12px;font-weight:950;color:var(--navy);}
-.brc-refmon-pick > .brc-ai-pick-hit-badge{grid-column:3;margin-left:0;}
-.brc-refmon-pick .odds{grid-column:4;}
+
+.brc-refmon-pick strong{grid-column:1;font-size:12px;font-weight:950;color:var(--navy);}
+.brc-refmon-pick > .brc-ai-pick-hit-badge{grid-column:2;margin-left:0;}
+.brc-refmon-pick .odds{grid-column:3;}
 .brc-refmon-pick .marks{color:var(--ink-soft);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .brc-refmon-pick .odds{text-align:right;font-size:11px;font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums;white-space:nowrap;}
 .brc-refmon-composite{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:7px 9px;background:rgba(124,58,237,.035);border-top:1px solid rgba(124,58,237,.10);}
@@ -3673,7 +3673,7 @@ table.brc-mark-table td:first-child{text-align:left;padding-left:7px;}
   .brc-refmon-head-chip{padding:3px 5px;}
   .brc-refmon-mark-row{font-size:8px;}
   .brc-refmon-mark-row .mk{font-size:15px;}
-  .brc-refmon-pick{grid-template-columns:24px minmax(0,1fr) auto 56px;padding:8px 7px;gap:5px;font-size:10.5px;}
+  .brc-refmon-pick{grid-template-columns:minmax(0,1fr) auto 56px;padding:8px 7px;gap:5px;font-size:10.5px;}
   .brc-refmon-pick strong{font-size:11.5px;}
   .brc-refmon-formation{font-size:12px;}
 }
@@ -17376,7 +17376,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 <script id="brc-admin-reference-monitor-v2">
 (function(){
   'use strict';
-  const VERSION='BRC_ADMIN_REFERENCE_INLINE_V4_NIGE_UNIFIED_20260911';
+  const VERSION='BRC_ADMIN_REFERENCE_INLINE_V3_20260911';
   const DB_NAME='brc_admin_reference_monitor_v2';
   const DB_STORE='snapshots';
   // 2024探索データの3分位。V2では表示/Shadow分類専用で、買い目の採否には使わない。
@@ -17497,25 +17497,12 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     return rows.map(x=>({...x,condP:x.condP/z}));
   }
 
-  // ①頭はイン逃げ専用モデルを最優先する。
-  // 1) Server NIGE V2 → 2) 専用ローカルNIGEモデル → 3) mixed時だけ従来generic fallback。
-  // ①単独頭ではgenericへ落とさず、イン逃げ予測画面と同じ系統の買い目を使う。
-  function nigeConditional(workerPrediction,boats,phase,allowGenericFallback=true){
+  function nigeConditional(workerPrediction,boats,phase){
     try{
       const pred=brcFinalizeServerNigePrediction(workerPrediction,boats,phase!=='pre'&&!!boats?.some?.(b=>b?.exhibitionApplied));
       const rows=(Array.isArray(pred?.joint)?pred.joint:[]).map(x=>({combo:String(x.combo||''),head:1,second:Number(x.second),third:Number(x.third),condP:num(x.p,0),source:'NIGE_V2'})).filter(x=>/^1-[2-6]-[2-6]$/.test(x.combo)&&x.condP>0);
       if(rows.length===20){ const z=rows.reduce((s,x)=>s+x.condP,0)||1; return rows.map(x=>({...x,condP:x.condP/z})); }
     }catch(_e){}
-    // ①単独頭だけ、イン逃げ予測画面と同じ専用ローカルモデルまで使用する。
-    // mixed時は既存V2の挙動を維持し、従来どおりgeneric fallbackへ進む。
-    if(!allowGenericFallback){
-      try{
-        const local=(typeof brcComputeNigeOrderPrediction==='function')?brcComputeNigeOrderPrediction(boats):null;
-        const rows=(Array.isArray(local?.joint)?local.joint:[]).map(x=>({combo:String(x.combo||''),head:1,second:Number(x.second),third:Number(x.third),condP:num(x.p,0),source:'NIGE_LOCAL'})).filter(x=>/^1-[2-6]-[2-6]$/.test(x.combo)&&x.condP>0);
-        if(rows.length===20){ const z=rows.reduce((s,x)=>s+x.condP,0)||1; return rows.map(x=>({...x,condP:x.condP/z})); }
-      }catch(_e){}
-      return [];
-    }
     return genericConditionalForHead(1,buildMarks(boats,phase)||[]);
   }
 
@@ -17581,15 +17568,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     let ranked=[], allRanked=[];
 
     if(hd.mode==='nige'){
-      // ①単独頭はイン逃げ専用モデルだけを採用。汎用着率ロジックへはフォールバックしない。
-      const cond=nigeConditional(workerPrediction,boats,phase,false);
-      if(cond.length!==20){
-        base.decision='pass';
-        base.reason='NIGE_MODEL_NOT_READY';
-        base.mode='nige';
-        base.variants={...base.variants,qualityScheme:'NIGE_MODEL_REQUIRED',nigeModelRequired:true};
-        return base;
-      }
+      const cond=nigeConditional(workerPrediction,boats,phase);
       const chosen=nigeCumulative70(cond);
       ranked=chosen.rows.map(x=>({...x,p:x.condP,headWeight:1}));
       allRanked=cond.slice().sort((a,b)=>b.condP-a.condP||a.combo.localeCompare(b.combo)).map(x=>({...x,p:x.condP,headWeight:1}));
@@ -17633,7 +17612,6 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     if(data.reason==='REJECT_OUTER_WEAK') return '強イン否定だが、②〜⑥の頭印が△以下。外頭を絞れないため見送り。';
     if(data.reason==='REJECT_HEAD_3PLUS') return '強イン否定で外頭が3艇以上並び。2艇以内に絞れないため見送り。';
     if(data.reason==='DATA_NOT_READY') return '6艇分の予測データが揃っていません。';
-    if(data.reason==='NIGE_MODEL_NOT_READY') return '①単独頭ですが、イン逃げ専用モデルを算出できません。精度優先のため汎用ロジックへ切り替えず、参考買い目は表示しません。';
     return '頭候補を2艇以内に確定できないため見送り。';
   }
 
@@ -17644,7 +17622,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 
   function decisionRuleText(data){
     const r=String(data.inReliability||'');
-    if(r==='S'||r==='A') return 'S/Aは①固定。①単独頭の買い目はイン逃げ専用モデル（Server NIGE V2優先）へ一本化し、汎用ロジックへは切り替えません。';
+    if(r==='S'||r==='A') return 'S/Aは①固定。①頭の買い目は既存イン逃げ予測をそのまま使用します。';
     if(r==='B'||r==='C') return 'B/Cは①を基本。外艇が展開印で①と同格まで上がる時だけ①＋外の2頭型。3頭へは広げません。';
     if(r==='D') return 'Dは①固定を解除しつつ①を残します。外○以上があれば、絶対1着率トップの外艇1艇だけを追加します。';
     if(r==='E') return 'Eは①を自動消ししません。外○以上が1艇に明確なら①＋外、外が弱い/同格複数なら見送りです。';
@@ -17673,7 +17651,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     if(data.decision==='pass'){
       body=`<div class="brc-refmon-picks"><div class="brc-refmon-picks-head"><span>BRC参考買い目</span><strong>見送り</strong></div><div class="brc-refmon-pass"><strong>${esc(status)}</strong><span>${esc(reasonText(data))}</span></div></div>`;
     }else{
-      const list=(data.picks||[]).map((x,i)=>`<div class="brc-refmon-pick" data-brc-refmon-combo="${esc(x.combo)}"><span class="idx">${i+1}</span><strong>${esc(x.combo)}</strong><span class="odds" data-brc-refmon-odds="${esc(x.combo)}">${Number.isFinite(Number(x.odds))?Number(x.odds).toFixed(1)+'倍':'―'}</span></div>`).join('');
+      const list=(data.picks||[]).map(x=>`<div class="brc-refmon-pick" data-brc-refmon-combo="${esc(x.combo)}"><strong>${esc(x.combo)}</strong><span class="odds" data-brc-refmon-odds="${esc(x.combo)}">${Number.isFinite(Number(x.odds))?Number(x.odds).toFixed(1)+'倍':'―'}</span></div>`).join('');
       body=`<div class="brc-refmon-picks" data-brc-ref-monitor-picks="${esc((data.picks||[]).map(x=>x.combo).join(','))}">
         <div class="brc-refmon-picks-head"><span>BRC参考買い目</span><strong>${data.pointCount}点</strong></div>
         ${data.formation?`<div class="brc-refmon-formation">${esc(data.formation)}</div>`:''}
