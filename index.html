@@ -3,7 +3,7 @@
 <!-- BRC_ADMIN_MATRIX_NAME_LAYOUT_FIX_20260910 -->
 <!-- BRC_ADMIN_NONIN_REFERENCE_BETA_V0_20260910 -->
 <!-- BRC_ADMIN_REFERENCE_INLINE_V3_20260911 -->
-<!-- BRC_ADMIN_INVESTMENT_VALIDATION_V1_20260911 -->
+<!-- BRC_ADMIN_INVESTMENT_VALIDATION_V2_20260911 -->
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V1 -->
@@ -3584,7 +3584,7 @@ table.brc-mark-table td:first-child{text-align:left;padding-left:7px;}
 </style>
 
 <style id="brc-investment-validation-style-20260911">
-/* BRC_ADMIN_INVESTMENT_VALIDATION_V1_20260911 */
+/* BRC_ADMIN_INVESTMENT_VALIDATION_V2_20260911 */
 .brc-val-section{border-color:rgba(124,58,237,.18)!important;background:linear-gradient(160deg,rgba(124,58,237,.035),rgba(255,255,255,.9))!important;}
 .brc-val-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
 .brc-val-title{font-size:13px;font-weight:950;color:var(--navy);}
@@ -3610,6 +3610,9 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
 .brc-val-btn:disabled{opacity:.5;cursor:wait;}
 .brc-val-status{flex:1 1 220px;font-size:8.5px;line-height:1.5;color:var(--ink-soft);font-weight:750;}
 .brc-val-note{margin-top:7px;padding-top:6px;border-top:1px dashed rgba(10,31,51,.10);font-size:8.5px;line-height:1.55;color:var(--ink-soft);}
+.brc-val-funnel{display:flex;align-items:center;gap:3px;overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:7px;padding:6px;border-radius:8px;background:rgba(124,58,237,.035);border:1px solid rgba(124,58,237,.10);}
+.brc-val-funnel-item{flex:0 0 auto;display:flex;flex-direction:column;gap:1px;min-width:54px;text-align:center;font-size:7px;color:var(--ink-soft);}
+.brc-val-funnel-item b{font-weight:800;white-space:nowrap}.brc-val-funnel-item strong{font-size:10px;color:var(--navy);font-variant-numeric:tabular-nums}.brc-val-funnel-arrow{flex:0 0 auto;color:#8b5cf6;font-weight:950}.brc-val-reasons{margin-top:4px;font-size:7.5px;line-height:1.5;color:var(--ink-soft);}
 .brc-val-live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--trend-up);margin-right:5px;box-shadow:0 0 0 3px rgba(var(--trend-up-rgb),.10);vertical-align:0;}
 @media(max-width:640px){.brc-val-block{padding:8px 6px}.brc-val-rule,.brc-val-note{font-size:8px}.brc-val-status{font-size:8px}table.brc-val-table{font-size:9px}}
 </style>
@@ -17720,12 +17723,12 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 })();
 </script>
 
-<!-- BRC_ADMIN_INVESTMENT_VALIDATION_V1_20260911 -->
-<script id="brc-admin-investment-validation-v1">
+<!-- BRC_ADMIN_INVESTMENT_VALIDATION_V2_20260911 -->
+<script id="brc-admin-investment-validation-v2">
 (function(){
   'use strict';
 
-  const V='BRC_INVESTMENT_VALIDATION_V1_20260911';
+  const V='BRC_INVESTMENT_VALIDATION_V2_20260911';
   const SIM_START='2026-09-01';
   const LIVE_START='2026-09-11';
   const UNIT=100;
@@ -17739,7 +17742,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   // 過去SIMとLIVE-OOSはDB・store・metaキーを完全分離する。
   const SIM_DB='brc_admin_investment_validation_sim_v1';
   const SIM_STORE='sim_records';
-  const SIM_META_KEY='brc_admin_investment_validation_sim_meta_v1';
+  const SIM_META_KEY='brc_admin_investment_validation_sim_meta_v2';
   const LIVE_DB='brc_admin_investment_validation_live_oos_v1';
   const LIVE_STORE='live_oos_records';
   const LIVE_GUARD_STORE='live_oos_capture_guard';
@@ -17751,6 +17754,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 
   const isAdmin=()=>typeof BRC_ADMIN_ACTIVE!=='undefined'&&!!BRC_ADMIN_ACTIVE;
   const today=()=>{try{return typeof getJstDateLabel==='function'?String(getJstDateLabel()):new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Tokyo'}).format(new Date());}catch(_e){return ''}};
+  const fmtJst=v=>{try{const d=v?new Date(v):null;if(!d||!Number.isFinite(d.getTime()))return '';const parts=new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(d);const o={};parts.forEach(x=>o[x.type]=x.value);return `${o.year}-${o.month}-${o.day} ${o.hour}:${o.minute}`;}catch(_e){return String(v||'').replace('T',' ').slice(0,16);}};
   const esc=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const num=v=>{const n=Number(v);return Number.isFinite(n)?n:null;};
   const money=v=>`${Math.round(Number(v)||0).toLocaleString('ja-JP')}円`;
@@ -17759,7 +17763,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 
   function metaRead(key,base){try{const x=JSON.parse(localStorage.getItem(key)||'null');return x&&typeof x==='object'?{...base,...x}:{...base};}catch(_e){return {...base};}}
   function metaWrite(key,x){try{localStorage.setItem(key,JSON.stringify(x));}catch(_e){}}
-  function simMeta(){return metaRead(SIM_META_KEY,{version:V,startDate:SIM_START,endDate:'',status:'idle',startedAt:'',completedAt:'',scanned:0,candidateSA:0,finalS:0,entryOk:0,snapshotOk:0,eligible:0,settled:0,skippedNoExhibition:0,skippedNoOdds:0,error:''});}
+  function simMeta(){return metaRead(SIM_META_KEY,{version:V,startDate:SIM_START,endDate:'',status:'idle',startedAt:'',completedAt:'',scanned:0,batchReady:0,exhibitionReady:0,skippedNoExhibition:0,entryOk:0,skippedEntryChanged:0,finalS:0,detailRequested:0,detailOk:0,detailErrors:0,picksOk:0,skippedNoPicks:0,snapshotOk:0,skippedNoOdds:0,skippedLowOdds:0,eligible:0,settled:0,pendingResult:0,error:''});}
   function liveMeta(){return metaRead(LIVE_META_KEY,{version:V,startDate:LIVE_START,createdAt:'',lastCaptureAt:'',lastSweepAt:'',lastError:''});}
   function ensureLiveMeta(){const m=liveMeta();if(!m.createdAt){m.createdAt=new Date().toISOString();m.startDate=LIVE_START;metaWrite(LIVE_META_KEY,m);}return m;}
 
@@ -17852,6 +17856,27 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     const p1=boats?.find(b=>Number(b.course)===1);if(!p1)return null;
     try{return classifyInReliabilityByWinPct(p1.pctFloat,spec.grade,(spec.apiBoats||[]).map(b=>b.reg),prediction.inReliability);}catch(_e){return null;}
   }
+  // /predict-batch の6艇1着率へ、画面本体と同じTimeXの1着率補正だけを先に適用する。
+  // これにより「展示前S/Aだけを詳細APIへ送る」取りこぼしをなくし、展示後にSへ上がるレースも拾う。
+  function batchFinalReliability(spec,prediction,live){
+    try{
+      if(!prediction||!Array.isArray(prediction.wins)||!live||!brcLiveExhibitionEligible(live))return null;
+      const base=[];
+      for(let c=1;c<=6;c++){const w=prediction.wins.find(x=>Number(x?.course)===c);const n=Number(w?.pctFloat);if(!Number.isFinite(n))return null;base.push(n/100);}
+      const byBoat=new Map((Array.isArray(live.boats)?live.boats:[]).map(x=>[Number(x?.boat_no),x]));
+      const engine=typeof brcTimeXEngineMode==='function'?brcTimeXEngineMode():'v2';
+      let adjusted=null;
+      if(engine==='v2'){
+        const pre=base.map((v,i)=>{const raw=Number(byBoat.get(i+1)?.relative_diff_capped??byBoat.get(i+1)?.relative_diff);const cell=brcExhibitionV2Cell(i+1,raw,live?.venue_code);if(!cell)throw new Error('timex_cell_missing');return brcClamp(v+(Number(cell.r1pp)||0)/100,1e-7,1-1e-7);});
+        adjusted=brcConstrainLogitProbabilities(pre,base.reduce((a,v)=>a+v,0));
+      }else{
+        const pre=base.map((v,i)=>{const raw=Number(byBoat.get(i+1)?.relative_diff_capped??byBoat.get(i+1)?.relative_diff);const bucket=brcExhibitionDiffBucket(raw);const cell=brcExhibitionMatrixCell(i+1,bucket,live?.venue_code);if(!cell)throw new Error('timex_cell_missing');return brcSigmoid(brcLogit(v)+Number(cell.win));});
+        adjusted=brcConstrainLogitProbabilities(pre,base.reduce((a,v)=>a+v,0));
+      }
+      const p1=Number(adjusted?.[0])*100;if(!Number.isFinite(p1))return null;
+      return classifyInReliabilityByWinPct(p1,spec.grade,(spec.apiBoats||[]).map(b=>b.reg),prediction.inReliability);
+    }catch(_e){return null;}
+  }
   function referenceData(boats,prediction,rel){
     try{if(typeof window.brcBuildReferenceMonitorData==='function')return window.brcBuildReferenceMonitorData(boats,prediction,rel,'current');}catch(_e){}
     return null;
@@ -17933,9 +17958,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 
   function dateRange(start,end){const out=[];let d=Date.parse(`${start}T00:00:00+09:00`),e=Date.parse(`${end}T00:00:00+09:00`);while(Number.isFinite(d)&&d<=e){const x=new Date(d+9*3600*1000).toISOString().slice(0,10);out.push(x);d+=86400000;}return out;}
 
-  async function simOne(spec,date,detail){
+  async function simOne(spec,date,detail,live){
     const prediction=detail?.result;if(!prediction)return {status:'detail'};
-    const live=await fetchExhibition(date,spec.venueCode,spec.raceNo);if(!live)return {status:'noex'};
+    if(!live)return {status:'noex'};
     if(!entryNoChange(live))return {status:'entry'};
     const boats=buildBoats(spec,prediction,live);if(!boats)return {status:'boats'};
     const oldEngine=window.__brcTimeXEngineCurrent;
@@ -17945,35 +17970,72 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     const rel=finalReliability(spec,prediction,boats);if(String(rel?.rank||'')!=='S')return {status:'notS'};
     const ref=referenceData(boats,prediction,rel),combos=(ref?.picks||[]).map(x=>String(x?.combo||'')).filter(x=>/^[1-6]-[1-6]-[1-6]$/.test(x));if(!combos.length)return {status:'picks'};
     const snap=await fetchOddsSnapshot(date,spec.venueCode,spec.raceNo,spec.deadline,true);if(!snap)return {status:'noodds'};
-    const o=compositeFor(combos,snap.odds);if(!Number.isFinite(o.composite)||o.composite<MIN_ODDS)return {status:'low'};
-    const obj=await brcInvBackfillFetchResult({...spec,date});const result=obj?.confirmed===true?obj.result:null;if(!result)return {status:'pending'};
+    const o=compositeFor(combos,snap.odds);if(!Number.isFinite(o.composite)||o.composite<MIN_ODDS)return {status:'low',compositeOdds:o.composite};
+    const stake=o.rows.length*UNIT,key=raceKey(date,spec.venueCode,spec.raceNo),createdAt=new Date().toISOString();
+    const baseRow={key,version:V,kind:'PAST-SIM',periodStart:SIM_START,date,venue:spec.venue,venueCode:String(spec.venueCode).padStart(2,'0'),raceNo:spec.raceNo,deadline:spec.deadline,inRank:'S',inPct:num(rel?.pct),entryChanged:false,snapshotCapturedAtJst:snap.capturedAtJst,secondsBeforeDeadline:snap.secondsBeforeDeadline,picks:o.rows.map(x=>({combo:x.combo,odds:Number(x.odds)})),pointCount:o.rows.length,unitStakeYen:UNIT,stakeYen:stake,compositeOdds:o.composite,band:bandOf(o.composite),resultCombo:'',resultPayoutYen:null,hit:null,returnYen:0,roi:null,settledAt:'',createdAt};
+    const obj=await brcInvBackfillFetchResult({...spec,date});const result=obj?.confirmed===true?obj.result:null;if(!result)return {status:'pending',row:baseRow};
     const startOk=resultEntryNoChange(result);if(startOk===false)return {status:'entry'};
-    const combo=String(result?.combination||''),payout=Number(result?.payout_yen),hit=o.rows.some(x=>x.combo===combo),stake=o.rows.length*UNIT,ret=hit&&Number.isFinite(payout)?payout:0,key=raceKey(date,spec.venueCode,spec.raceNo);
-    return {status:'ok',row:{key,version:V,kind:'PAST-SIM',periodStart:SIM_START,date,venue:spec.venue,venueCode:String(spec.venueCode).padStart(2,'0'),raceNo:spec.raceNo,deadline:spec.deadline,inRank:'S',inPct:num(rel?.pct),entryChanged:false,snapshotCapturedAtJst:snap.capturedAtJst,secondsBeforeDeadline:snap.secondsBeforeDeadline,picks:o.rows.map(x=>({combo:x.combo,odds:Number(x.odds)})),pointCount:o.rows.length,unitStakeYen:UNIT,stakeYen:stake,compositeOdds:o.composite,band:bandOf(o.composite),resultCombo:combo,resultPayoutYen:Number.isFinite(payout)?payout:null,hit,returnYen:ret,roi:stake?ret/stake*100:null,settledAt:new Date().toISOString(),createdAt:new Date().toISOString()}};
+    const combo=String(result?.combination||''),payout=Number(result?.payout_yen),hit=o.rows.some(x=>x.combo===combo),ret=hit&&Number.isFinite(payout)?payout:0;
+    return {status:'ok',row:{...baseRow,resultCombo:combo,resultPayoutYen:Number.isFinite(payout)?payout:null,hit,returnYen:ret,roi:stake?ret/stake*100:null,settledAt:new Date().toISOString()}};
   }
 
   async function mapLimit(items,limit,fn){const out=new Array(items.length);let i=0;async function w(){while(i<items.length){const n=i++;try{out[n]=await fn(items[n],n);}catch(e){out[n]={status:'error',error:e};}}}await Promise.all(Array.from({length:Math.min(limit,Math.max(1,items.length))},()=>w()));return out;}
 
   async function recalcSim(){
     if(simBusy||!isAdmin())return false;simBusy=true;
-    const end=today(),m=simMeta();Object.assign(m,{status:'running',startDate:SIM_START,endDate:end,startedAt:new Date().toISOString(),completedAt:'',scanned:0,candidateSA:0,finalS:0,entryOk:0,snapshotOk:0,eligible:0,settled:0,skippedNoExhibition:0,skippedNoOdds:0,error:''});metaWrite(SIM_META_KEY,m);await dbClear(SIM_DB,[SIM_STORE],SIM_STORE);render();
+    const end=today(),m=simMeta();
+    Object.assign(m,{version:V,status:'running',startDate:SIM_START,endDate:end,startedAt:new Date().toISOString(),completedAt:'',scanned:0,batchReady:0,exhibitionReady:0,skippedNoExhibition:0,entryOk:0,skippedEntryChanged:0,finalS:0,detailRequested:0,detailOk:0,detailErrors:0,picksOk:0,skippedNoPicks:0,snapshotOk:0,skippedNoOdds:0,skippedLowOdds:0,eligible:0,settled:0,pendingResult:0,error:''});
+    metaWrite(SIM_META_KEY,m);render();
     try{
+      // 認証切れで既存SIMを消してしまわないよう、最初にセッションを確認する。
+      if(typeof brcEnsureFreshSession==='function'){const session=await brcEnsureFreshSession();if(!session?.access_token)throw new Error('ログイン認証を確認できません。再ログイン後に再計算してください');}
+      await dbClear(SIM_DB,[SIM_STORE],SIM_STORE);
       for(const date of dateRange(SIM_START,end)){
         const payload=await brcInvBackfillFetchRaceCard(date),specs=brcInvBackfillBuildSpecs(payload,date);m.scanned+=specs.length;metaWrite(SIM_META_KEY,m);renderStatusOnly();if(!specs.length)continue;
-        const api=await brcPredictBatchApi({races:specs.map(x=>({id:x.id,venue:x.venue,grade:x.grade,boats:x.apiBoats}))});if(!api||api.prediction_api!==true||!Array.isArray(api.races))continue;
-        const byId=new Map(api.races.map(r=>[String(r.id),r])),targets=[];
-        for(const spec of specs){const r=byId.get(String(spec.id));if(!r)continue;const w1=r?.wins?.find(w=>Number(w.course)===1),p=Number(w1?.pctFloat);let ir=null;try{ir=classifyInReliabilityByWinPct(p,spec.grade,spec.apiBoats.map(b=>b.reg),r.inReliability);}catch(_e){}const rank=String(ir?.rank||'');if(rank==='S'||rank==='A'){targets.push({spec});m.candidateSA++;}}
-        const details=await brcInvMapDetailedPredictions(targets,3);
-        const work=details.filter(x=>!x?.error).map(x=>({spec:x.item.spec,detail:x}));
-        const results=await mapLimit(work,3,x=>simOne(x.spec,date,x.detail));
-        for(const r of results){if(r?.status==='notS')continue;if(r?.status==='noex'){m.skippedNoExhibition++;continue;}if(r?.status==='entry')continue;if(r?.status==='noodds'){m.finalS++;m.entryOk++;m.skippedNoOdds++;continue;}if(r?.status==='low'){m.finalS++;m.entryOk++;m.snapshotOk++;continue;}if(r?.status==='ok'&&r.row){m.finalS++;m.entryOk++;m.snapshotOk++;m.eligible++;m.settled++;await simPut(r.row);}}
+        const api=await brcPredictBatchApi({races:specs.map(x=>({id:x.id,venue:x.venue,grade:x.grade,boats:x.apiBoats}))});
+        if(!api||api.prediction_api!==true||!Array.isArray(api.races))continue;
+        const byId=new Map(api.races.map(r=>[String(r.id),r]));
+        const batchRows=specs.map(spec=>({spec,prediction:byId.get(String(spec.id))})).filter(x=>x.prediction);m.batchReady+=batchRows.length;
+
+        // 展示前S/Aで先に絞らない。保存済み展示を使って「TimeX反映後S」を先に判定する。
+        const exRows=await mapLimit(batchRows,6,async x=>({ ...x, live:await fetchExhibition(date,x.spec.venueCode,x.spec.raceNo) }));
+        const finalTargets=[];
+        for(const x of exRows){
+          const live=x?.live;if(!live||!brcLiveExhibitionEligible(live)){m.skippedNoExhibition++;continue;}
+          m.exhibitionReady++;
+          if(!entryNoChange(live)){m.skippedEntryChanged++;continue;}
+          m.entryOk++;
+          const ir=batchFinalReliability(x.spec,x.prediction,live);
+          if(String(ir?.rank||'')!=='S')continue;
+          m.finalS++;finalTargets.push({spec:x.spec,live,batchResult:x.prediction,batchIr:ir});
+        }
+        m.detailRequested+=finalTargets.length;metaWrite(SIM_META_KEY,m);renderStatusOnly();
+
+        const details=await brcInvMapDetailedPredictions(finalTargets,3);
+        const work=[];
+        for(const d of details){if(d?.error){m.detailErrors++;continue;}m.detailOk++;work.push({spec:d.item.spec,live:d.item.live,detail:d});}
+        const results=await mapLimit(work,3,x=>simOne(x.spec,date,x.detail,x.live));
+        for(const r of results){
+          if(r?.status==='notS')continue;
+          if(r?.status==='noex'){m.skippedNoExhibition++;continue;}
+          if(r?.status==='entry'){m.skippedEntryChanged++;continue;}
+          if(r?.status==='picks'){m.skippedNoPicks++;continue;}
+          if(r?.status==='noodds'){m.picksOk++;m.skippedNoOdds++;continue;}
+          if(r?.status==='low'){m.picksOk++;m.snapshotOk++;m.skippedLowOdds++;continue;}
+          if(r?.status==='pending'&&r.row){m.picksOk++;m.snapshotOk++;m.eligible++;m.pendingResult++;await simPut(r.row);continue;}
+          if(r?.status==='ok'&&r.row){m.picksOk++;m.snapshotOk++;m.eligible++;m.settled++;await simPut(r.row);}
+        }
         metaWrite(SIM_META_KEY,m);render();
       }
       m.status='ok';m.completedAt=new Date().toISOString();metaWrite(SIM_META_KEY,m);render();return true;
     }catch(err){m.status='error';m.error=String(err?.message||err);m.completedAt=new Date().toISOString();metaWrite(SIM_META_KEY,m);render();return false;}finally{simBusy=false;}
   }
 
-  function statusText(m){if(m.status==='running')return `再計算中｜走査 ${m.scanned||0}R / S・A候補 ${m.candidateSA||0}R / 条件成立 ${m.eligible||0}R`;if(m.status==='error')return `再計算エラー：${esc(m.error||'不明')}`;if(m.status==='ok')return `最終更新 ${String(m.completedAt||'').replace('T',' ').slice(0,16)}｜走査 ${m.scanned||0}R / 条件成立 ${m.eligible||0}R`;return '未計算';}
+  function statusText(m){if(m.status==='running')return `再計算中｜走査 ${m.scanned||0}R / 最終S ${m.finalS||0}R / 2.25以上 ${m.eligible||0}R`;if(m.status==='error')return `再計算エラー：${esc(m.error||'不明')}`;if(m.status==='ok')return `最終更新 ${fmtJst(m.completedAt)} JST｜走査 ${m.scanned||0}R / 条件成立 ${m.eligible||0}R`;return '未計算';}
+  function funnelHtml(m){
+    const items=[['走査',m.scanned],['展示取得',m.exhibitionReady],['進入変更なし',m.entryOk],['最終S',m.finalS],['詳細AI',m.detailOk],['買い目生成',m.picksOk],['1分前オッズ',m.snapshotOk],['2.25以上',m.eligible],['結果確定',m.settled]];
+    return `<div class="brc-val-funnel">${items.map(([k,v],i)=>`<span class="brc-val-funnel-item"><b>${esc(k)}</b><strong>${Number(v)||0}R</strong></span>${i<items.length-1?'<span class="brc-val-funnel-arrow">›</span>':''}`).join('')}</div><div class="brc-val-reasons">除外内訳：展示不足 ${m.skippedNoExhibition||0}R / 進入変更 ${m.skippedEntryChanged||0}R / 詳細AI失敗 ${m.detailErrors||0}R / 買い目なし ${m.skippedNoPicks||0}R / 1分前オッズなし ${m.skippedNoOdds||0}R / 合成2.25未満 ${m.skippedLowOdds||0}R / 結果待ち ${m.pendingResult||0}R</div>`;
+  }
   function renderStatusOnly(){const el=document.getElementById('brcValSimStatus');if(el)el.textContent=statusText(simMeta());}
 
   async function render(){
@@ -17982,11 +18044,11 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     if(!root){const anchor=host.querySelector('.brc-invest-auto-status')||host.querySelector('.brc-invest-top');if(!anchor)return;anchor.insertAdjacentHTML('afterend','<div id="brcInvestmentValidation" class="brc-invest-section brc-val-section"></div>');root=document.getElementById('brcInvestmentValidation');}
     const [srows,lrows]=await Promise.all([simAll().catch(()=>[]),liveAll().catch(()=>[])]),sm=simMeta(),lm=ensureLiveMeta();
     root.innerHTML=`<div class="brc-val-head"><div><div class="brc-val-title">投資検証成績</div><div class="brc-val-rule"><strong>固定条件：</strong>イン信頼度S × 進入変更なし × 締切約1分前（保存時刻が締切30〜90秒前）の合成オッズ2.25以上 × AI参考買い目を1点100円</div></div><span class="brc-invest-admin-badge">管理者専用</span></div>
-      <div class="brc-val-block"><div class="brc-val-block-head"><div class="brc-val-block-title">① 過去適用シミュレーション</div><span class="brc-val-chip">${SIM_START}〜${esc(sm.endDate||today())}</span></div>${scoreTable(srows)}<div class="brc-val-actions"><button type="button" class="brc-val-btn" id="brcValSimRecalc" ${simBusy?'disabled':''}>${simBusy?'再計算中…':'過去SIMを再計算'}</button><span class="brc-val-status" id="brcValSimStatus">${statusText(sm)}</span></div><div class="brc-val-note">過去SIM専用DBのみを消去・再構築します。LIVE-OOS DBには触れません。過去の展示データと、締切前30〜90秒に保存されたオッズ時刻を確認できたレースだけ採用し、締切後オッズは採用しません。展示不足 ${sm.skippedNoExhibition||0}R / 1分前オッズ不足 ${sm.skippedNoOdds||0}R。</div></div>
+      <div class="brc-val-block"><div class="brc-val-block-head"><div class="brc-val-block-title">① 過去適用シミュレーション</div><span class="brc-val-chip">${SIM_START}〜${esc(sm.endDate||today())}</span></div>${scoreTable(srows)}${funnelHtml(sm)}<div class="brc-val-actions"><button type="button" class="brc-val-btn" id="brcValSimRecalc" ${simBusy?'disabled':''}>${simBusy?'再計算中…':'過去SIMを再計算'}</button><span class="brc-val-status" id="brcValSimStatus">${statusText(sm)}</span></div><div class="brc-val-note">過去SIM専用DBのみを消去・再構築します。LIVE-OOS DBには触れません。展示前のS/Aだけで先に絞らず、保存済み展示からTimeX反映後のイン信頼度Sを判定してからAI参考買い目を生成します。締切30〜90秒前として確認できた保存オッズだけを採用し、締切後オッズは使いません。</div></div>
       <div class="brc-val-block"><div class="brc-val-block-head"><div class="brc-val-block-title"><span class="brc-val-live-dot"></span>② LIVE-OOS成績</div><span class="brc-val-chip live">${esc(lm.startDate||LIVE_START)}開始・過去補完なし</span></div>${scoreTable(lrows)}<div class="brc-val-actions"><button type="button" class="brc-val-btn" id="brcValLiveSettle">結果を再確認</button><span class="brc-val-status">導入前データはバックフィルしません。締切約1分前に固定保存したスナップショットだけで判定。</span></div><div class="brc-val-note">LIVE-OOSの買い目・オッズ・合成オッズは最初の有効スナップショットで固定し、結果確定後は結果項目だけ追記します。過去SIMを再計算してもLIVE-OOSのレコード・集計は変化しません。</div></div>`;
     document.getElementById('brcValSimRecalc')?.addEventListener('click',recalcSim,{once:true});
     document.getElementById('brcValLiveSettle')?.addEventListener('click',()=>liveSweep(true),{once:true});
-    if(!simAutoStarted&&sm.status==='idle'){simAutoStarted=true;setTimeout(()=>recalcSim(),250);}
+    if(!simAutoStarted&&sm.status==='idle'){simAutoStarted=true;}
   }
 
   function installHooks(){
