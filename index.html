@@ -3526,6 +3526,63 @@ table.brc-mark-table td:first-child{text-align:left;padding-left:7px;}
 }
 </style>
 
+<style id="brc-reference-ui-fontfix-20260911">
+/* BRC_REFERENCE_UI_FONTFIX_20260911 */
+/* イン逃げ予測 / 展開マトリックスの参考買い目表示を同じ文字設計に統一し、
+   フォーメーションの不自然な途中改行を防ぐ。ロジックは変更しない。 */
+.brc-nige-order-picks-label,
+.brc-nonin-ref-title{
+  font-size:13px;
+  font-weight:950;
+  line-height:1.35;
+}
+.brc-nige-order-formation,
+.brc-nonin-ref-formation{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:start;
+  column-gap:10px;
+  row-gap:4px;
+}
+.brc-nige-order-formation-value,
+.brc-nonin-ref-formation-value{
+  display:block;
+  min-width:0;
+  font-size:14px;
+  font-weight:950;
+  color:var(--navy);
+  line-height:1.35;
+  letter-spacing:0;
+  white-space:normal;
+  word-break:keep-all;
+  overflow-wrap:normal;
+  hyphens:none;
+}
+.brc-nige-order-formation-points,
+.brc-nonin-ref-formation-points{
+  flex:0 0 auto;
+  align-self:center;
+  font-size:12px;
+  font-weight:950;
+  white-space:nowrap;
+}
+.brc-nige-order-pick,
+.brc-nonin-ref-pick{
+  font-size:11px;
+}
+.brc-nige-order-pick-combo,
+.brc-nonin-ref-pick-combo,
+.brc-nige-order-pick-odds,
+.brc-nonin-ref-pick-odds{
+  line-height:1.25;
+}
+@media(max-width:420px){
+  .brc-nige-order-picks-label,
+  .brc-nonin-ref-title{font-size:12px;}
+  .brc-nige-order-formation-value,
+  .brc-nonin-ref-formation-value{font-size:13px;}
+}
+</style>
 
 <style id="brc-admin-reference-monitor-v2-style">
 /* BRC_ADMIN_REFERENCE_INLINE_V3_20260911 */
@@ -10168,7 +10225,7 @@ function brcBuildNigeReferencePicksHtml(pred,target=0.70){
   const composite=(available.length===picks.length)?brcOddsBuilderComposite(picks.map((x,i)=>({odds:available[i]}))):null;
   const formation=brcBuildNigeFormationLabel(picks);
   return `<div class="brc-nige-order-picks" data-brc-ref-picks="${picks.map(x=>x.combo).join(',')}">
-    <div class="brc-nige-order-picks-label">参考買い目</div>
+    <div class="brc-nige-order-picks-label">BRC参考買い目</div>
     ${formation?`<div class="brc-nige-order-formation"><span class="brc-nige-order-formation-value">${formation}</span><span class="brc-nige-order-formation-points">${picks.length}点</span></div>`:''}
     <div class="brc-nige-order-pick-list">${pickRows}</div>
     <div class="brc-nige-order-composite"><span class="brc-nige-order-composite-label">合成オッズ</span><span class="brc-nige-order-composite-value" data-brc-ref-composite>${composite===null?'―':composite.toFixed(1)+'倍'}</span></div>
