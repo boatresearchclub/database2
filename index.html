@@ -15554,7 +15554,9 @@ function buildTodayRaceSpec(venue, raceNo){
 
 function buildFreePreviewRacePool(){
   const rows=[];
+  const excludedFreePreviewVenues=new Set(['桐生','江戸川']);
   for(const venue of sortVenuesNorthToSouth(Object.keys(RACE_CARDS_TODAY||{}))){
+    if(excludedFreePreviewVenues.has(String(venue||'').trim())) continue;
     const races=RACE_CARDS_TODAY[venue]||{};
     for(const raceNo of Object.keys(races).map(Number).sort((a,b)=>a-b)){
       const spec=buildTodayRaceSpec(venue,raceNo);
