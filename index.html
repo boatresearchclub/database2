@@ -11,6 +11,7 @@
 <!-- BRC_RACESEARCH_GUIDE_UI_CLEANUP_20260911 -->
 <!-- BRC_RACE_SEARCH_ADMIN_UX_COMPACT_V2_20260911 -->
 <!-- BRC_ADMIN_INVESTMENT_VALIDATION_V3_RAW_OD3_20260911 -->
+<!-- BRC_SCENARIO_SEARCH_PUBLIC_V1_20260911 -->
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V1 -->
@@ -4330,7 +4331,7 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
 
       <div class="race-search-tabs" role="tablist" aria-label="レース検索の切り替え">
         <button type="button" class="race-search-tab active" data-race-search-mode="picks">本日厳選</button>
-        <button type="button" class="race-search-tab" data-race-search-mode="scenario">展開検索 <span id="raceSearchDevBadge" class="race-search-tab-badge">開発中</span></button>
+        <button type="button" class="race-search-tab" data-race-search-mode="scenario">展開検索 <span id="raceSearchDevBadge" class="race-search-tab-badge">β</span></button>
       </div>
 
       <div id="raceSearchPanelPicks" class="race-search-panel active">
@@ -4365,7 +4366,7 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
         <div id="raceSearchScenarioAdmin" class="scenario-search-admin" aria-hidden="true">
           <div class="scenario-search-admin-head">
             <div class="scenario-search-admin-title">展開検索</div>
-            <span class="scenario-search-admin-badge">管理者β</span>
+            <span class="scenario-search-admin-badge">β</span>
           </div>
           <div class="scenario-search-admin-sub">狙いたい展開が起こりそうなレースを、本日の開催から探します。</div>
           <div class="scenario-search-form">
@@ -16087,7 +16088,7 @@ function brcSetScenarioSearchSort(mode){
 }
 function brcRenderScenarioSearch(){
   const box=document.getElementById('scenarioSearchResults'), count=document.getElementById('scenarioSearchCount');
-  if(!box || !BRC_ADMIN_ACTIVE) return;
+  if(!box) return;
   SCENARIO_SEARCH_HAS_RUN=true;
   brcSyncScenarioSortButtons();
   const q=brcBuildScenarioSearchRows();
@@ -16129,9 +16130,9 @@ function brcSyncRaceSearchAccess(){
   const publicBox=document.getElementById('raceSearchScenarioPublic');
   const adminBox=document.getElementById('raceSearchScenarioAdmin');
   const badge=document.getElementById('raceSearchDevBadge');
-  if(publicBox) publicBox.style.display=BRC_ADMIN_ACTIVE?'none':'';
-  if(adminBox){adminBox.classList.toggle('is-visible',BRC_ADMIN_ACTIVE);adminBox.setAttribute('aria-hidden',BRC_ADMIN_ACTIVE?'false':'true');}
-  if(badge){badge.textContent=BRC_ADMIN_ACTIVE?'管理者β':'開発中';badge.style.background=BRC_ADMIN_ACTIVE?'rgba(227,178,60,.16)':'rgba(227,178,60,.16)';}
+  if(publicBox) publicBox.style.display='none';
+  if(adminBox){adminBox.classList.add('is-visible');adminBox.setAttribute('aria-hidden','false');}
+  if(badge){badge.textContent='β';badge.style.background='rgba(227,178,60,.16)';}
 }
 function brcSetRaceSearchMode(mode){
   RACE_SEARCH_MODE=mode==='scenario'?'scenario':'picks';
