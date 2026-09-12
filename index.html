@@ -13031,14 +13031,25 @@ function brcFindPredictNamePersonalTrendRow(b){
 }
 function brcBuildPredictExhibitionLabelHtml(b){
   // 選手名下は「個人傾向」がある場合だけ表示する。
-  // BRCタイムXは着率ヘッダー側で示し、ここでは重複表示しない。
-  // 着率・TimeX補正・AI予測の計算ロジックは変更しない。
+  // 1) 展示後：今回のTimeX差帯に一致する本人傾向（N>=12）を最優先。
+  // 2) 展示前/帯一致なし：選手×現在コースの基礎的なTimeX選手特性を表示。
+  // これによりAI予測の「注意」対象を出走データ側でも展示前から確認できる。
+  // 表示導線のみの変更で、着率・TimeX補正・AI予測の計算ロジックは変更しない。
   const personal=brcFindPredictNamePersonalTrendRow(b);
   if(personal){
     const payload=encodeURIComponent(JSON.stringify(brcAlertPayload(personal,b)));
     const decision=brcAlertDecision(personal);
     const cls=decision.cls==='up'?'personal-up':decision.cls==='down'?'personal-down':'personal-flat';
     return `<button type="button" class="predict-personal-inline ${cls}" onclick="event.stopPropagation();brcShowPredictNamePersonalTrend(decodeURIComponent('${payload}'))" title="個人傾向をタップして内容を確認">個人傾向</button>`;
+  }
+  const tendency=brcFindPlayerTimeXTendency(b);
+  if(tendency){
+    const cls=tendency.direction==='easy'?'personal-up':tendency.direction==='hard'?'personal-down':'personal-flat';
+    const course=Number(b?.course)||0;
+    const title=tendency.direction==='easy'
+      ? 'このコースでタイムを出しやすい個人傾向。タップで確認'
+      : 'このコースでタイムを出しにくい個人傾向。タップで確認';
+    return `<button type="button" class="predict-personal-inline ${cls}" onclick="event.stopPropagation();brcShowPlayerTimeXTendencyForCourse(${course})" title="${title}">個人傾向</button>`;
   }
   return '';
 }
