@@ -11067,7 +11067,7 @@ function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhib
   if(isAdmin){
     const marksHtml=brcBuildScenarioMarkMatrixHtml(boats,localInReliability);
     box.innerHTML=`
-      ${buildCurrentRaceSummaryHtml(venue)}
+      ${buildCurrentRaceSummaryHtml(venue, boats.some(b=>b?.exhibitionApplied))}
       <div class="predict-ai-head">
         <div><div class="predict-ai-title">AI予測</div><div class="predict-ai-sub">管理者β</div></div>
         ${reliability}
@@ -16389,7 +16389,7 @@ function enforceSemifinalDayUi(){
   }
 }
 
-function buildCurrentRaceSummaryHtml(venue){
+function buildCurrentRaceSummaryHtml(venue, exhibitionApplied=false){
   const daySel = document.getElementById('predictRaceDay');
   const raceSel = document.getElementById('predictRaceNo');
   const selectedVenue = (daySel && daySel.value) || venue || '';
@@ -16404,8 +16404,8 @@ function buildCurrentRaceSummaryHtml(venue){
   return `
     <div class="race-summary-compact">
       <div class="race-summary-top">
-        <span>${selectedVenue || venue || ''}</span>
-        ${dayLabel ? `<span class="rs-day">${dayLabel}</span>` : ''}
+        <div class="race-summary-top-left"><span>${selectedVenue || venue || ''}</span>${dayLabel ? `<span class="rs-day">${dayLabel}</span>` : ''}</div>
+        ${exhibitionApplied ? `<span class="race-exhibition-applied">展示反映済</span>` : ''}
       </div>
       ${raceNo ? `<div class="race-summary-bottom">
         <span class="rs-race">${raceNo}R</span>
@@ -16861,7 +16861,6 @@ async function runPredict(){
   if(!brcPredictRequestIsCurrent(requestCtx)) return;
   box.innerHTML = `
     ${buildCurrentRaceSummaryHtml(venue)}
-    ${brcBuildTimeXFinalPredictionHtml(boats)}
     ${buildInReliabilityCardHtmlFromServer(localInReliability)}
     ${brcBuildSlitEvaluationHtml(boats, liveExhibitionRace, localInReliability)}
     ${brcBuildRaceResultFoldHtml()}
@@ -16872,7 +16871,7 @@ async function runPredict(){
         <th>枠</th><th>選手</th>
         <th class="num"><span class="predict-head-main">最終1着率</span><span class="predict-head-sub">（展示評価）</span></th>
         <th class="num"><span class="predict-head-main">3連対率</span><span class="predict-head-sub">（展示評価）</span></th>
-        <th class="num">ST順位</th><th class="num">モーター</th><th class="predict-col-opt">備考</th>
+        <th class="num"><span class="predict-head-main">ST順位</span><span class="predict-head-sub">（S安定）</span></th><th class="num"><span class="predict-head-main">モーター</span><span class="predict-head-sub">（2連）</span></th><th class="predict-col-opt">備考</th>
       </tr></thead>
       <tbody>
         ${boats.map(b=>{
@@ -17226,6 +17225,11 @@ window.__playersRendered = true;
   .brc-motor-one-section-title{font-size:10.5px;}
 }
 
+
+  /* 2026-09-13 出走データUI整理：最終予測バナーを廃止し、展示反映状態をレース情報右上へ */
+  .race-summary-top{justify-content:space-between;align-items:center;flex-wrap:nowrap;}
+  .race-summary-top-left{display:flex;align-items:baseline;gap:8px;min-width:0;flex-wrap:wrap;}
+  .race-exhibition-applied{flex:0 0 auto;display:inline-flex;align-items:center;padding:4px 9px;border-radius:999px;border:1px solid rgba(20,145,91,.20);background:rgba(20,145,91,.08);color:#168a59;font-size:10.5px;font-weight:850;white-space:nowrap;}
 </style>
 <!-- BRC_MOTOR_HISTORY_24VENUE_20260824 -->
 <!-- BRC_MOTOR_HISTORY_DAILY_LIVE_20260906 -->
