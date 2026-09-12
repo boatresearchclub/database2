@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <!-- BRC_TIMEX_FINAL_PREDICTION_SUMMARY_V1_20260913 -->
 <!-- BRC_PREDICT_TIMEX_ORIGINAL_TABLE_UI_V2_20260913 -->
+<!-- BRC_PREDICT_PERSONAL_WORD_MODAL_AND_TOP3_EXHIBITION_LABEL_V1_20260913 -->
 <!-- BRC_MOTOR_STRENGTH_TYPE_CLARITY_V1_20260913 -->
 <!-- BRC_ADMIN_TOKUYAMA_MOTOR_ANALYSIS_UI_V3_20260912 -->
 <!-- BRC_PREDICT_RACE_SWITCH_DELAYED_LOADING_V1_20260912 -->
@@ -13032,7 +13033,7 @@ function brcBuildPredictExhibitionLabelHtml(b){
     const payload=encodeURIComponent(JSON.stringify(brcAlertPayload(personal,b)));
     const decision=brcAlertDecision(personal);
     const cls=decision.cls==='up'?'personal-up':decision.cls==='down'?'personal-down':'personal-flat';
-    return `<span class="predict-exhibition-inline predict-exhibition-stack">${base}<button type="button" class="predict-personal-inline ${cls}" onclick="event.stopPropagation();brcShowPredictNamePersonalTrend(decodeURIComponent('${payload}'))" title="今回の個人傾向あり。タップで詳細">個人傾向あり</button></span>`;
+    return `<span class="predict-exhibition-inline predict-exhibition-stack">${base}<button type="button" class="predict-personal-inline ${cls}" onclick="event.stopPropagation();brcShowPredictNamePersonalTrend(decodeURIComponent('${payload}'))" title="個人傾向をタップして内容を確認">個人傾向</button></span>`;
   }
 
   // 個人傾向がない場合はBRCタイムXだけを表示。基礎特性は詳細画面側で確認する。
@@ -13061,12 +13062,9 @@ function brcShowPredictNamePersonalTrend(raw){
   document.getElementById('brcExAlertPop')?.remove();
   const pop=document.createElement('div'); pop.id='brcExAlertPop'; pop.className='brc-ex-alert-pop';
   pop.onclick=e=>{if(e.target===pop)pop.remove();};
-  const confidence=brcPersonalConfidence(a?.N);
+  const decision=brcAlertDecision(a);
   const isWatch=a?.['採用区分']==='監視';
-  const allRows=[
-    ['1着','win'],['2着','second'],['3着','third'],['3連対','top3']
-  ].map(([label,kind])=>brcAlertPersonalTrendRow(label,a,kind)).join('');
-  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a?.['選手名']||''}　本人傾向</div><div class="brc-ex-alert-meta">${a?.['コース']||''}コース ／ タイムX差 ${a?.['平均差帯']||''}秒 ／ N=${a?.N??'―'} ／ 参考度 ${confidence}${isWatch?' ／ 監視':''}</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-ex-alert-forecast-label">選手 × コース × 今回のTimeX帯</div><div class="brc-ex-personal-box">${allRows}</div><div class="brc-ex-alert-note">本人傾向は参考表示のみです。表示中の着率、BRCタイムX補正、AI予測、展開ロジックへ再加算しません。</div><div class="brc-ex-alert-scale">BRCタイムX共通：0.0pt → ／ 0.1〜4.9pt ↗↘ ／ 5.0〜9.9pt ↑↓ ／ 10.0〜14.9pt ↑↑↓↓ ／ 15.0pt以上 ↑↑↑↓↓↓</div></div>`;
+  pop.innerHTML=`<div class="brc-ex-alert-card"><div class="brc-ex-alert-head"><div><div class="brc-ex-alert-title">${a?.['選手名']||''}　個人傾向</div></div><button class="brc-ex-alert-close" onclick="this.closest('.brc-ex-alert-pop').remove()">×</button></div><div class="brc-ex-alert-direction ${decision.cls}" style="margin-top:10px;">${decision.title}</div><div class="brc-ex-alert-note" style="margin-top:8px;">${decision.body}</div>${isWatch?'<div class="brc-ex-alert-note" style="margin-top:6px;">※この傾向は参考扱いです。</div>':''}<div class="brc-ex-alert-note" style="margin-top:8px;">※個人傾向は参考表示のみ。表示中の着率やBRCタイムXへ再加算しません。</div></div>`;
   document.body.appendChild(pop);
 }
 
@@ -13838,7 +13836,7 @@ function initPredictPage(){
           <th>選手名</th>
           <th>登録番号</th>
           <th class="num">コース別勝率</th>
-          <th class="num">3連対率</th>
+          <th class="num"><span class="predict-head-main">3連対率</span><span class="predict-head-sub">（展示評価）</span></th>
           <th class="num">平均ST順</th>
         </tr>
       </thead>
