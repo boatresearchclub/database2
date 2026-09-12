@@ -3277,21 +3277,36 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
   }
 }
 
-/* ---- BRC_PREDICT_DETAIL_TABS_STICKY_20260913 ----
-   選手詳細モーダル内をスクロールしても「選手 / 展開 / ST / モーター」を上端に固定する。 */
-.predict-detail-backdrop .predict-unified-tabs{
+/* ---- BRC_PREDICT_DETAIL_STICKY_HEAD_20260913 ----
+   選手詳細モーダル内をスクロールしても「枠番＋選手名」と
+   「選手 / 展開 / ST / モーター」の切替タブを上端に固定する。 */
+.predict-detail-backdrop .predict-unified-sticky{
   position:sticky;
   top:0;
   z-index:40;
-  background:rgba(255,255,255,.97);
+  margin:-2px -2px 12px;
+  padding:2px 2px 8px;
+  background:rgba(255,255,255,.985);
   backdrop-filter:blur(10px);
   -webkit-backdrop-filter:blur(10px);
-  box-shadow:0 8px 14px -14px rgba(10,31,51,.55);
+  box-shadow:0 10px 16px -16px rgba(10,31,51,.55);
+}
+.predict-detail-backdrop .predict-unified-sticky .predict-unified-head{
+  margin-bottom:8px;
+}
+.predict-detail-backdrop .predict-unified-sticky .predict-unified-tabs{
+  position:static;
+  top:auto;
+  z-index:auto;
+  margin:0;
+  box-shadow:none;
 }
 @media(max-width:640px){
-  .predict-detail-backdrop .predict-unified-tabs{
+  .predict-detail-backdrop .predict-unified-sticky{
     top:0;
     z-index:40;
+    margin:-2px -2px 10px;
+    padding:2px 2px 7px;
   }
 }
 
@@ -7038,16 +7053,18 @@ function openPredictUnifiedDetail(course, initialTab='player'){
   const name=b.player?.name||PLAYERS[reg]?.name||reg||`コース${course}`;
   const venue=document.getElementById('predictVenue')?.value||'';
   body.innerHTML=`<div class="predict-unified-shell">
-    <div class="motor-detail-head predict-unified-head">
-      <div><div id="predictDetailTitle" class="motor-detail-title" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${scenarioLaneBadge(course)} ${name}</div>
-      <div class="motor-detail-sub">${venue?`${venue} ${course}コース`:`${course}コース`}</div></div>
-      <button class="motor-detail-close" type="button" onclick="closePredictDetail()" aria-label="閉じる">×</button>
-    </div>
-    <div class="predict-unified-tabs" role="tablist" aria-label="選手詳細の切り替え">
-      <button type="button" class="predict-unified-tab" data-predict-unified-tab="player">選手</button>
-      <button type="button" class="predict-unified-tab" data-predict-unified-tab="scenario">展開</button>
-      <button type="button" class="predict-unified-tab" data-predict-unified-tab="st">ST</button>
-      <button type="button" class="predict-unified-tab" data-predict-unified-tab="motor">モーター</button>
+    <div class="predict-unified-sticky">
+      <div class="motor-detail-head predict-unified-head">
+        <div><div id="predictDetailTitle" class="motor-detail-title" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${scenarioLaneBadge(course)} ${name}</div>
+        <div class="motor-detail-sub">${venue?`${venue} ${course}コース`:`${course}コース`}</div></div>
+        <button class="motor-detail-close" type="button" onclick="closePredictDetail()" aria-label="閉じる">×</button>
+      </div>
+      <div class="predict-unified-tabs" role="tablist" aria-label="選手詳細の切り替え">
+        <button type="button" class="predict-unified-tab" data-predict-unified-tab="player">選手</button>
+        <button type="button" class="predict-unified-tab" data-predict-unified-tab="scenario">展開</button>
+        <button type="button" class="predict-unified-tab" data-predict-unified-tab="st">ST</button>
+        <button type="button" class="predict-unified-tab" data-predict-unified-tab="motor">モーター</button>
+      </div>
     </div>
     <div class="predict-unified-panel" data-predict-unified-panel="player"><div id="predict-pl-box-${course}" class="predict-detail-content"></div></div>
     <div class="predict-unified-panel" data-predict-unified-panel="scenario"><div id="predict-sc-box-${course}" class="predict-detail-content"></div></div>
