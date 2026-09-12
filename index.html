@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- BRC_ADMIN_TOKUYAMA_MOTOR_TRAIT_PILOT_V1_20260912 -->
+<!-- BRC_ADMIN_TOKUYAMA_MOTOR_ANALYSIS_V2_20260912 -->
 <!-- BRC_PREDICT_RACE_SWITCH_DELAYED_LOADING_V1_20260912 -->
 <!-- BRC_TOP_BANNER_REPLACE_20260909 -->
 <!-- BRC_ADMIN_MATRIX_NAME_LAYOUT_FIX_20260910 -->
@@ -13099,6 +13099,7 @@ function brcRefreshExhibitionAdjustedDom(liveRace,venue,raceNo){
 }
 
 function brcUpdateLiveExhibitionDom(liveRace,venue,raceNo){
+  try{ if(typeof brcTokuyamaCaptureLiveRace==='function') brcTokuyamaCaptureLiveRace(liveRace,venue,raceNo); }catch(_e){}
   const card=document.getElementById('liveExhibitionCard');
   if(card){
     const wrap=document.createElement('div'); wrap.innerHTML=buildLiveExhibitionStatusHtml(liveRace,venue,raceNo).trim();
@@ -16884,24 +16885,34 @@ window.__playersRendered = true;
 .motor-final-list{display:grid;gap:6px}.motor-final-row{display:grid;grid-template-columns:72px 38px 1fr auto;gap:6px;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px solid rgba(10,31,51,.055)}.motor-final-row:last-child{border-bottom:0}.motor-final-date,.motor-final-grade{color:var(--ink-soft)}.motor-final-name{font-weight:700;color:var(--navy)}.motor-final-rank{font-weight:900;white-space:nowrap}.motor-final-rank.win{color:#b47a00}.motor-detail-empty{font-size:12px;color:var(--ink-soft);padding:4px 0}.motor-detail-note{font-size:10.5px;color:var(--ink-soft);margin-top:10px;line-height:1.45}
 @media(max-width:640px){.motor-detail-backdrop{padding:0}.motor-detail-sheet{width:100%;max-height:82vh;border-radius:18px 18px 0 0;padding:16px 16px 18px}.motor-detail-topstats{gap:5px}.motor-detail-stat b{font-size:15px}.motor-final-row{grid-template-columns:66px 34px 1fr auto;gap:4px;font-size:11.5px}}
 
-/* BRC_ADMIN_TOKUYAMA_MOTOR_TRAIT_PILOT_V1_20260912 */
+/* BRC_ADMIN_TOKUYAMA_MOTOR_ANALYSIS_V2_20260912 */
 .brc-admin-motor-trait{margin:12px 0 2px;padding:11px;border:1px solid rgba(124,58,237,.20);border-radius:12px;background:linear-gradient(160deg,rgba(124,58,237,.055),rgba(255,255,255,.98));}
 .brc-admin-motor-trait-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px;}
 .brc-admin-motor-trait-title{font-size:12.5px;font-weight:950;color:var(--navy);}
+.brc-admin-motor-trait-badges{display:flex;align-items:center;justify-content:flex-end;gap:5px;flex-wrap:wrap;}
 .brc-admin-motor-trait-badge{display:inline-flex;align-items:center;padding:3px 7px;border-radius:999px;background:rgba(124,58,237,.10);color:var(--grade-s);font-size:9px;font-weight:950;white-space:nowrap;}
+.brc-admin-motor-trait-badge.legacy{background:rgba(10,31,51,.06);color:var(--ink-soft);}
 .brc-admin-motor-trait-main{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:9px 10px;border:1px solid rgba(10,31,51,.07);border-radius:9px;background:#fff;}
+.brc-admin-motor-trait-main + .brc-admin-motor-trait-main{margin-top:6px;}
 .brc-admin-motor-trait-label{font-size:10px;font-weight:850;color:var(--ink-soft);}
 .brc-admin-motor-trait-value{font-size:17px;font-weight:950;color:var(--navy);text-align:right;}
-.brc-admin-motor-trait-value.stretch{color:#2563eb;}
-.brc-admin-motor-trait-value.turn{color:#b36a00;}
-.brc-admin-motor-trait-value.balance{color:#64748b;}
-.brc-admin-motor-trait-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:7px;}
+.brc-admin-motor-trait-value.stretch,.brc-admin-motor-trait-metric .v.stretch{color:#2563eb;}
+.brc-admin-motor-trait-value.turn,.brc-admin-motor-trait-metric .v.turn{color:#b36a00;}
+.brc-admin-motor-trait-value.balance,.brc-admin-motor-trait-metric .v.balance{color:#64748b;}
+.brc-admin-motor-trait-value.good,.brc-admin-motor-trait-metric .v.good{color:var(--trend-up);}
+.brc-admin-motor-trait-value.bad,.brc-admin-motor-trait-metric .v.bad{color:var(--trend-down);}
+.brc-admin-motor-trait-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:7px;}
+.brc-admin-motor-trait-grid.current{grid-template-columns:repeat(4,minmax(0,1fr));}
 .brc-admin-motor-trait-metric{min-width:0;padding:7px 4px;border:1px solid rgba(10,31,51,.07);border-radius:8px;background:rgba(255,255,255,.78);text-align:center;}
 .brc-admin-motor-trait-metric .k{font-size:8px;font-weight:850;color:var(--ink-soft);white-space:nowrap;}
-.brc-admin-motor-trait-metric .v{margin-top:2px;font-size:11.5px;font-weight:950;color:var(--navy);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.brc-admin-motor-trait-metric .v{margin-top:2px;font-size:11.5px;font-weight:950;color:var(--navy);font-variant-numeric:tabular-nums;white-space:normal;line-height:1.25;}
+.brc-admin-motor-trait-metric .sub{margin-top:2px;font-size:8.5px;font-weight:750;color:var(--ink-soft);line-height:1.3;white-space:normal;}
+.brc-admin-motor-trait-current{margin-top:8px;padding-top:8px;border-top:1px dashed rgba(124,58,237,.18);}
+.brc-admin-motor-trait-current-status{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 1px 5px;font-size:9px;color:var(--ink-soft);font-weight:800;}
+.brc-admin-motor-trait-chip{display:inline-flex;align-items:center;padding:3px 7px;border-radius:999px;background:rgba(47,143,91,.09);border:1px solid rgba(47,143,91,.18);color:#217247;font-size:8.5px;font-weight:950;white-space:nowrap;}
 .brc-admin-motor-trait-note{margin-top:7px;font-size:9px;line-height:1.55;color:var(--ink-soft);}
 .brc-admin-motor-trait-note strong{color:var(--navy);}
-@media(max-width:420px){.brc-admin-motor-trait{padding:9px 8px}.brc-admin-motor-trait-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.brc-admin-motor-trait-value{font-size:15px;}}
+@media(max-width:420px){.brc-admin-motor-trait{padding:9px 8px}.brc-admin-motor-trait-grid,.brc-admin-motor-trait-grid.current{grid-template-columns:repeat(2,minmax(0,1fr));}.brc-admin-motor-trait-value{font-size:15px;}.brc-admin-motor-trait-head{align-items:flex-start}.brc-admin-motor-trait-badges{max-width:52%;}}
 .predict-detail-backdrop{z-index:10060;}
 .predict-detail-backdrop .motor-detail-sheet{width:min(620px,100%);height:min(84vh,760px);max-height:min(84vh,760px);overflow:auto;}
 .predict-detail-content{min-width:0;}
@@ -16940,50 +16951,224 @@ window.__playersRendered = true;
 </div>
 <script id="brc-motor-detail-js">
 
-// BRC_ADMIN_TOKUYAMA_MOTOR_TRAIT_PILOT_V1_20260912
-// 管理者専用の検証表示。2026-04-20〜2026-08-27の徳山蓄積データを固定スナップショットとして使用。
-// AI予測・展開マトリックス・参考買い目へは再加点しない。
-const BRC_ADMIN_TOKUYAMA_MOTOR_TRAITS={"11":{"n":100,"stretch":0.0064,"turn":-0.2166,"typeScore":0.223,"overall":-0.1423,"first":"2026-04-20","last":"2026-08-27"},"12":{"n":94,"stretch":0.3022,"turn":0.2421,"typeScore":0.0602,"overall":0.2621,"first":"2026-04-20","last":"2026-08-27"},"13":{"n":84,"stretch":0.2326,"turn":0.1074,"typeScore":0.1252,"overall":0.1492,"first":"2026-04-20","last":"2026-08-27"},"14":{"n":85,"stretch":0.2024,"turn":-0.0727,"typeScore":0.2752,"overall":0.019,"first":"2026-04-20","last":"2026-08-27"},"15":{"n":85,"stretch":0.6189,"turn":0.0308,"typeScore":0.5882,"overall":0.2268,"first":"2026-04-20","last":"2026-08-27"},"16":{"n":84,"stretch":-0.3125,"turn":0.0934,"typeScore":-0.406,"overall":-0.0419,"first":"2026-04-20","last":"2026-08-27"},"17":{"n":85,"stretch":0.0826,"turn":-0.0876,"typeScore":0.1702,"overall":-0.0309,"first":"2026-04-20","last":"2026-08-27"},"18":{"n":83,"stretch":-0.4621,"turn":0.2577,"typeScore":-0.7198,"overall":0.0172,"first":"2026-04-20","last":"2026-08-27"},"19":{"n":89,"stretch":0.0466,"turn":0.1137,"typeScore":-0.067,"overall":0.0913,"first":"2026-04-20","last":"2026-08-27"},"20":{"n":77,"stretch":-0.6582,"turn":0.0281,"typeScore":-0.6863,"overall":-0.2007,"first":"2026-04-20","last":"2026-08-20"},"21":{"n":70,"stretch":-0.1864,"turn":0.058,"typeScore":-0.2444,"overall":-0.0235,"first":"2026-04-20","last":"2026-08-27"},"22":{"n":80,"stretch":0.0834,"turn":0.5014,"typeScore":-0.4181,"overall":0.3562,"first":"2026-04-20","last":"2026-08-27"},"23":{"n":95,"stretch":0.1161,"turn":0.1319,"typeScore":-0.0158,"overall":0.1266,"first":"2026-04-20","last":"2026-08-20"},"24":{"n":86,"stretch":-0.3043,"turn":-0.0501,"typeScore":-0.2542,"overall":-0.1348,"first":"2026-04-20","last":"2026-08-25"},"25":{"n":84,"stretch":-0.1978,"turn":-0.2531,"typeScore":0.0553,"overall":-0.2347,"first":"2026-04-20","last":"2026-08-27"},"26":{"n":89,"stretch":0.501,"turn":0.0572,"typeScore":0.4438,"overall":0.2051,"first":"2026-04-20","last":"2026-08-27"},"27":{"n":77,"stretch":0.2563,"turn":0.2972,"typeScore":-0.0409,"overall":0.2836,"first":"2026-04-20","last":"2026-08-27"},"28":{"n":93,"stretch":-0.5528,"turn":-0.2401,"typeScore":-0.3127,"overall":-0.3443,"first":"2026-04-20","last":"2026-08-20"},"29":{"n":97,"stretch":0.2997,"turn":-0.1113,"typeScore":0.4111,"overall":0.0257,"first":"2026-04-20","last":"2026-08-20"},"30":{"n":94,"stretch":0.391,"turn":0.1691,"typeScore":0.2219,"overall":0.2419,"first":"2026-04-20","last":"2026-08-20"},"31":{"n":90,"stretch":-0.3028,"turn":-0.053,"typeScore":-0.2498,"overall":-0.1362,"first":"2026-04-20","last":"2026-08-27"},"32":{"n":86,"stretch":-0.2546,"turn":-0.1769,"typeScore":-0.0777,"overall":-0.2028,"first":"2026-04-20","last":"2026-08-27"},"33":{"n":99,"stretch":0.5652,"turn":0.2747,"typeScore":0.2905,"overall":0.3715,"first":"2026-04-20","last":"2026-08-27"},"34":{"n":105,"stretch":0.1384,"turn":0.1942,"typeScore":-0.0558,"overall":0.1756,"first":"2026-04-20","last":"2026-08-20"},"35":{"n":92,"stretch":0.4809,"turn":-0.1062,"typeScore":0.5871,"overall":0.0895,"first":"2026-04-20","last":"2026-08-20"},"36":{"n":102,"stretch":0.5919,"turn":0.1922,"typeScore":0.3998,"overall":0.3254,"first":"2026-04-20","last":"2026-08-20"},"37":{"n":80,"stretch":-0.2819,"turn":-0.1941,"typeScore":-0.0878,"overall":-0.2234,"first":"2026-04-20","last":"2026-08-27"},"38":{"n":93,"stretch":0.2787,"turn":-0.2924,"typeScore":0.571,"overall":-0.102,"first":"2026-04-20","last":"2026-08-20"},"39":{"n":84,"stretch":-0.0259,"turn":-0.1696,"typeScore":0.1438,"overall":-0.1217,"first":"2026-04-20","last":"2026-08-11"},"40":{"n":84,"stretch":-0.42,"turn":-0.26,"typeScore":-0.16,"overall":-0.3133,"first":"2026-04-20","last":"2026-08-11"},"41":{"n":99,"stretch":0.0481,"turn":-0.0565,"typeScore":0.1045,"overall":-0.0216,"first":"2026-04-20","last":"2026-08-20"},"42":{"n":90,"stretch":-0.2024,"turn":-0.1596,"typeScore":-0.0428,"overall":-0.1739,"first":"2026-04-20","last":"2026-08-20"},"43":{"n":83,"stretch":0.3541,"turn":-0.2629,"typeScore":0.6171,"overall":-0.0564,"first":"2026-04-20","last":"2026-08-20"},"44":{"n":94,"stretch":-0.2051,"turn":-0.0676,"typeScore":-0.1375,"overall":-0.1134,"first":"2026-04-20","last":"2026-08-20"},"45":{"n":75,"stretch":-0.4316,"turn":-0.0068,"typeScore":-0.4248,"overall":-0.1484,"first":"2026-04-20","last":"2026-08-27"},"46":{"n":92,"stretch":-0.3275,"turn":0.1332,"typeScore":-0.4607,"overall":-0.0185,"first":"2026-04-20","last":"2026-08-20"},"47":{"n":95,"stretch":-0.3136,"turn":-0.0067,"typeScore":-0.3069,"overall":-0.109,"first":"2026-04-20","last":"2026-08-20"},"48":{"n":97,"stretch":0.0067,"turn":0.2158,"typeScore":-0.2091,"overall":0.1461,"first":"2026-04-20","last":"2026-08-20"},"49":{"n":91,"stretch":-0.1459,"turn":-0.0692,"typeScore":-0.0767,"overall":-0.0906,"first":"2026-04-20","last":"2026-08-24"},"50":{"n":95,"stretch":0.0214,"turn":0.167,"typeScore":-0.1455,"overall":0.1185,"first":"2026-04-20","last":"2026-08-27"},"51":{"n":92,"stretch":-0.1865,"turn":-0.1105,"typeScore":-0.076,"overall":-0.1359,"first":"2026-04-20","last":"2026-08-27"},"52":{"n":93,"stretch":-0.4556,"turn":-0.1361,"typeScore":-0.3196,"overall":-0.2426,"first":"2026-04-20","last":"2026-08-27"},"53":{"n":102,"stretch":0.3611,"turn":-0.0189,"typeScore":0.38,"overall":0.1077,"first":"2026-04-20","last":"2026-08-27"},"54":{"n":100,"stretch":0.248,"turn":0.2195,"typeScore":0.0285,"overall":0.229,"first":"2026-04-20","last":"2026-08-25"},"55":{"n":99,"stretch":-0.5505,"turn":-0.1092,"typeScore":-0.4413,"overall":-0.2563,"first":"2026-04-20","last":"2026-08-27"},"56":{"n":96,"stretch":0.4377,"turn":0.3398,"typeScore":0.0979,"overall":0.3724,"first":"2026-04-27","last":"2026-08-27"},"57":{"n":72,"stretch":-0.3177,"turn":-0.181,"typeScore":-0.1367,"overall":-0.2265,"first":"2026-04-27","last":"2026-08-27"},"58":{"n":84,"stretch":-0.1691,"turn":0.177,"typeScore":-0.346,"overall":0.0616,"first":"2026-04-27","last":"2026-08-27"},"59":{"n":83,"stretch":-0.2152,"turn":-0.1573,"typeScore":-0.0579,"overall":-0.1766,"first":"2026-04-27","last":"2026-08-27"},"60":{"n":89,"stretch":-0.1577,"turn":-0.1918,"typeScore":0.0341,"overall":-0.1804,"first":"2026-04-27","last":"2026-08-27"},"61":{"n":80,"stretch":0.3442,"turn":0.1126,"typeScore":0.2315,"overall":0.1898,"first":"2026-04-27","last":"2026-08-27"},"62":{"n":74,"stretch":0.0736,"turn":-0.1542,"typeScore":0.2278,"overall":-0.0783,"first":"2026-04-27","last":"2026-08-27"},"63":{"n":90,"stretch":-0.4229,"turn":-0.0533,"typeScore":-0.3696,"overall":-0.1765,"first":"2026-04-27","last":"2026-08-27"},"64":{"n":89,"stretch":0.3159,"turn":0.0932,"typeScore":0.2226,"overall":0.1674,"first":"2026-04-27","last":"2026-08-27"},"65":{"n":75,"stretch":-0.6095,"turn":-0.5012,"typeScore":-0.1083,"overall":-0.5373,"first":"2026-04-27","last":"2026-08-27"},"66":{"n":83,"stretch":-0.1344,"turn":-0.1599,"typeScore":0.0254,"overall":-0.1514,"first":"2026-04-27","last":"2026-08-27"},"67":{"n":93,"stretch":-0.2998,"turn":0.0668,"typeScore":-0.3666,"overall":-0.0554,"first":"2026-04-27","last":"2026-08-27"},"68":{"n":85,"stretch":-0.0866,"turn":0.0725,"typeScore":-0.1591,"overall":0.0195,"first":"2026-04-27","last":"2026-08-27"},"69":{"n":86,"stretch":0.0268,"turn":0.2341,"typeScore":-0.2073,"overall":0.165,"first":"2026-04-27","last":"2026-08-23"},"70":{"n":78,"stretch":0.422,"turn":-0.388,"typeScore":0.81,"overall":-0.118,"first":"2026-04-27","last":"2026-08-27"},"71":{"n":87,"stretch":0.0244,"turn":0.0055,"typeScore":0.0189,"overall":0.0118,"first":"2026-04-27","last":"2026-08-27"},"72":{"n":98,"stretch":0.6443,"turn":0.2416,"typeScore":0.4026,"overall":0.3758,"first":"2026-04-27","last":"2026-08-27"},"73":{"n":82,"stretch":0.4783,"turn":-0.0077,"typeScore":0.486,"overall":0.1543,"first":"2026-04-27","last":"2026-08-27"},"74":{"n":82,"stretch":0.1373,"turn":0.006,"typeScore":0.1313,"overall":0.0497,"first":"2026-04-27","last":"2026-08-26"},"75":{"n":90,"stretch":-0.4783,"turn":-0.0199,"typeScore":-0.4584,"overall":-0.1727,"first":"2026-04-27","last":"2026-08-27"}};
+// BRC_ADMIN_TOKUYAMA_MOTOR_ANALYSIS_V2_20260912
+// 管理者専用。開催前情報（長期・直近・前回）と今節LIVE実測を分離する。
+// 予測・展開マトリックス・買い目・確率へは一切再加点しない。
+const BRC_ADMIN_TOKUYAMA_MOTOR_BASE={"11":{"n":100,"longStretch":0.0069,"recent10":0.0565,"recent20":0.0293,"first":"2026-04-20","last":"2026-08-27","prevType":"伸び型","prevN":9,"prevStart":"2026-08-23","prevEnd":"2026-08-27","prevStretch":0.1681,"prevTurn":-1.1944},"12":{"n":94,"longStretch":0.3311,"recent10":0.4443,"recent20":0.4443,"first":"2026-04-20","last":"2026-08-27","prevType":"伸び型","prevN":8,"prevStart":"2026-08-23","prevEnd":"2026-08-27","prevStretch":0.4076,"prevTurn":-0.3122},"13":{"n":84,"longStretch":0.2548,"recent10":-0.548,"recent20":0.0152,"first":"2026-04-20","last":"2026-08-27","prevType":"出足・回り足型","prevN":7,"prevStart":"2026-08-23","prevEnd":"2026-08-27","prevStretch":-1.0942,"prevTurn":-0.6982},"14":{"n":85,"longStretch":0.2218,"recent10":0.4796,"recent20":0.1786,"first":"2026-04-20","last":"2026-08-27","prevType":"伸び型","prevN":8,"prevStart":"2026-08-23","prevEnd":"2026-08-27","prevStretch":0.6107,"prevTurn":-0.1196},"15":{"n":85,"longStretch":0.678,"recent10":1.2378,"recent20":0.6805,"first":"2026-04-20","last":"2026-08-27","prevType":"伸び型","prevN":8,"prevStart":"2026-08-23","prevEnd":"2026-08-27","prevStretch":1.3998,"prevTurn":-0.8936},"16":{"n":92,"longStretch":-0.3865,"recent10":-0.9025,"recent20":-0.7839,"first":"2026-04-20","last":"2026-09-05","prevType":"出足・回り足型","prevN":8,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":-0.8531,"prevTurn":-0.0321},"17":{"n":85,"longStretch":0.0905,"recent10":-0.6165,"recent20":-0.4468,"first":"2026-04-20","last":"2026-08-27","prevType":"バランス型","prevN":7,"prevStart":"2026-08-23","prevEnd":"2026-08-27","prevStretch":-0.8154,"prevTurn":-0.9501},"18":{"n":94,"longStretch":-0.6051,"recent10":-1.3056,"recent20":-0.927,"first":"2026-04-20","last":"2026-09-05","prevType":"出足・回り足型","prevN":11,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":-1.3511,"prevTurn":0.4421},"19":{"n":89,"longStretch":0.0511,"recent10":0.5825,"recent20":0.0658,"first":"2026-04-20","last":"2026-08-27","prevType":"伸び型","prevN":2,"prevStart":"2026-08-23","prevEnd":"2026-08-27","prevStretch":0.9953,"prevTurn":0.4198},"20":{"n":88,"longStretch":-0.604,"recent10":0.3575,"recent20":-0.5729,"first":"2026-04-20","last":"2026-09-05","prevType":"伸び型","prevN":11,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":0.2156,"prevTurn":-0.3367},"21":{"n":79,"longStretch":-0.1316,"recent10":0.3575,"recent20":0.6157,"first":"2026-04-20","last":"2026-09-05","prevType":"伸び型","prevN":9,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":0.4337,"prevTurn":0.0359},"22":{"n":90,"longStretch":0.1392,"recent10":0.5209,"recent20":0.4678,"first":"2026-04-20","last":"2026-09-05","prevType":"出足・回り足型","prevN":10,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":0.5209,"prevTurn":1.1554},"23":{"n":106,"longStretch":0.0945,"recent10":-0.2441,"recent20":0.2788,"first":"2026-04-20","last":"2026-09-05","prevType":"バランス型","prevN":11,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":-0.1875,"prevTurn":-0.0602},"24":{"n":90,"longStretch":-0.3909,"recent10":-1.3002,"recent20":-1.0018,"first":"2026-04-20","last":"2026-09-02","prevType":"出足・回り足型","prevN":4,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":-1.6282,"prevTurn":-0.887},"25":{"n":93,"longStretch":-0.337,"recent10":-1.3136,"recent20":-0.9341,"first":"2026-04-20","last":"2026-09-05","prevType":"出足・回り足型","prevN":9,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":-1.4595,"prevTurn":-0.7962},"26":{"n":89,"longStretch":0.5488,"recent10":0.293,"recent20":0.3692,"first":"2026-04-20","last":"2026-08-27","prevType":"伸び型","prevN":2,"prevStart":"2026-08-23","prevEnd":"2026-08-27","prevStretch":1.6771,"prevTurn":0.7324},"27":{"n":77,"longStretch":0.2808,"recent10":-0.16,"recent20":-0.0249,"first":"2026-04-20","last":"2026-08-27","prevType":"伸び型","prevN":1,"prevStart":"2026-08-23","prevEnd":"2026-08-27","prevStretch":1.3395,"prevTurn":-0.0766},"28":{"n":102,"longStretch":-0.6503,"recent10":-1.0936,"recent20":-0.758,"first":"2026-04-20","last":"2026-09-05","prevType":"出足・回り足型","prevN":9,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":-1.1121,"prevTurn":0.8993},"29":{"n":106,"longStretch":0.3832,"recent10":0.893,"recent20":0.3806,"first":"2026-04-20","last":"2026-09-05","prevType":"伸び型","prevN":9,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":0.9775,"prevTurn":-0.0345},"30":{"n":103,"longStretch":0.5097,"recent10":1.1886,"recent20":0.6706,"first":"2026-04-20","last":"2026-09-05","prevType":"伸び型","prevN":9,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":1.3571,"prevTurn":0.4495},"31":{"n":99,"longStretch":-0.2323,"recent10":0.5621,"recent20":-0.182,"first":"2026-04-20","last":"2026-09-05","prevType":"バランス型","prevN":9,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":0.7596,"prevTurn":0.5941},"32":{"n":94,"longStretch":-0.3544,"recent10":-1.1518,"recent20":-1.1997,"first":"2026-04-20","last":"2026-09-05","prevType":"出足・回り足型","prevN":8,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":-1.1606,"prevTurn":-0.3381},"33":{"n":99,"longStretch":0.6191,"recent10":1.4302,"recent20":1.4697,"first":"2026-04-20","last":"2026-08-27","prevType":"伸び型","prevN":8,"prevStart":"2026-08-23","prevEnd":"2026-08-27","prevStretch":1.3046,"prevTurn":0.5381},"34":{"n":116,"longStretch":0.1565,"recent10":0.2238,"recent20":0.0772,"first":"2026-04-20","last":"2026-09-05","prevType":"出足・回り足型","prevN":11,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":0.2035,"prevTurn":0.591},"35":{"n":101,"longStretch":0.4657,"recent10":-0.143,"recent20":0.1839,"first":"2026-04-20","last":"2026-09-05","prevType":"バランス型","prevN":9,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":-0.1588,"prevTurn":0.1453},"36":{"n":110,"longStretch":0.6425,"recent10":0.5953,"recent20":0.6401,"first":"2026-04-20","last":"2026-09-05","prevType":"伸び型","prevN":8,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":0.5648,"prevTurn":-0.5278},"37":{"n":90,"longStretch":-0.2446,"recent10":0.2694,"recent20":0.3472,"first":"2026-04-20","last":"2026-09-05","prevType":"出足・回り足型","prevN":10,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":0.2694,"prevTurn":0.6421},"38":{"n":102,"longStretch":0.3049,"recent10":0.3383,"recent20":0.5902,"first":"2026-04-20","last":"2026-09-05","prevType":"伸び型","prevN":9,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":0.3018,"prevTurn":-0.9272},"39":{"n":95,"longStretch":-0.0135,"recent10":0.0409,"recent20":0.5481,"first":"2026-04-20","last":"2026-09-05","prevType":"バランス型","prevN":11,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":0.1,"prevTurn":0.262},"40":{"n":93,"longStretch":-0.4879,"recent10":-0.7537,"recent20":-0.5378,"first":"2026-04-20","last":"2026-09-05","prevType":"出足・回り足型","prevN":9,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":-0.7473,"prevTurn":-0.3095},"41":{"n":108,"longStretch":-0.0078,"recent10":-0.6787,"recent20":-0.4934,"first":"2026-04-20","last":"2026-09-05","prevType":"バランス型","prevN":9,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":-0.6726,"prevTurn":-0.6688},"42":{"n":100,"longStretch":-0.2645,"recent10":-0.6498,"recent20":-0.8625,"first":"2026-04-20","last":"2026-09-05","prevType":"バランス型","prevN":10,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":-0.6498,"prevTurn":-0.6805},"43":{"n":94,"longStretch":0.4215,"recent10":0.5996,"recent20":0.5207,"first":"2026-04-20","last":"2026-09-05","prevType":"伸び型","prevN":11,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":0.6743,"prevTurn":-1.1796},"44":{"n":103,"longStretch":-0.216,"recent10":-0.1266,"recent20":0.2238,"first":"2026-04-20","last":"2026-09-05","prevType":"バランス型","prevN":9,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":-0.1259,"prevTurn":-0.1378},"45":{"n":85,"longStretch":-0.3034,"recent10":0.9673,"recent20":0.6893,"first":"2026-04-20","last":"2026-09-05","prevType":"伸び型","prevN":10,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":0.9673,"prevTurn":0.3768},"46":{"n":101,"longStretch":-0.3254,"recent10":0.1035,"recent20":-0.2234,"first":"2026-04-20","last":"2026-09-05","prevType":"バランス型","prevN":9,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":0.0182,"prevTurn":-0.06},"47":{"n":105,"longStretch":-0.3985,"recent10":-0.9204,"recent20":-1.3393,"first":"2026-04-20","last":"2026-09-05","prevType":"出足・回り足型","prevN":10,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":-0.9204,"prevTurn":-0.4644},"48":{"n":108,"longStretch":-0.0094,"recent10":-0.2392,"recent20":-0.3923,"first":"2026-04-20","last":"2026-09-05","prevType":"バランス型","prevN":11,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":-0.1566,"prevTurn":0.0285},"49":{"n":102,"longStretch":-0.0919,"recent10":0.4672,"recent20":-0.1246,"first":"2026-04-20","last":"2026-09-05","prevType":"伸び型","prevN":11,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":0.4701,"prevTurn":-0.8418},"50":{"n":104,"longStretch":0.0831,"recent10":0.5587,"recent20":0.2409,"first":"2026-04-20","last":"2026-09-05","prevType":"バランス型","prevN":9,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":0.7118,"prevTurn":0.6096},"51":{"n":101,"longStretch":-0.273,"recent10":-0.9535,"recent20":-1.0452,"first":"2026-04-20","last":"2026-09-05","prevType":"出足・回り足型","prevN":9,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":-0.9729,"prevTurn":0.2731},"52":{"n":102,"longStretch":-0.471,"recent10":-0.2872,"recent20":-0.6914,"first":"2026-04-20","last":"2026-09-05","prevType":"伸び型","prevN":9,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":-0.1808,"prevTurn":-0.6524},"53":{"n":102,"longStretch":0.3952,"recent10":0.2576,"recent20":-0.1951,"first":"2026-04-20","last":"2026-08-27","prevType":"バランス型","prevN":9,"prevStart":"2026-08-23","prevEnd":"2026-08-27","prevStretch":0.3824,"prevTurn":0.1652},"54":{"n":111,"longStretch":0.2762,"recent10":0.2048,"recent20":0.4538,"first":"2026-04-20","last":"2026-09-05","prevType":"出足・回り足型","prevN":11,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":0.3154,"prevTurn":1.0044},"55":{"n":99,"longStretch":-0.6029,"recent10":-1.2081,"recent20":-1.2716,"first":"2026-04-20","last":"2026-08-27","prevType":"出足・回り足型","prevN":9,"prevStart":"2026-08-23","prevEnd":"2026-08-27","prevStretch":-1.2384,"prevTurn":-0.1877},"56":{"n":96,"longStretch":0.4794,"recent10":0.7249,"recent20":0.9707,"first":"2026-04-27","last":"2026-08-27","prevType":"伸び型","prevN":9,"prevStart":"2026-08-23","prevEnd":"2026-08-27","prevStretch":0.7684,"prevTurn":0.2547},"57":{"n":77,"longStretch":-0.3546,"recent10":0.1076,"recent20":-0.0841,"first":"2026-04-27","last":"2026-09-03","prevType":"伸び型","prevN":5,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":-0.4504,"prevTurn":-0.9056},"58":{"n":95,"longStretch":-0.1837,"recent10":-0.0772,"recent20":-0.6562,"first":"2026-04-27","last":"2026-09-05","prevType":"出足・回り足型","prevN":11,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":-0.1724,"prevTurn":0.5592},"59":{"n":83,"longStretch":-0.2358,"recent10":0.0415,"recent20":-0.1612,"first":"2026-04-27","last":"2026-08-27","prevType":"バランス型","prevN":8,"prevStart":"2026-08-23","prevEnd":"2026-08-27","prevStretch":-0.0302,"prevTurn":0.1558},"60":{"n":98,"longStretch":-0.1271,"recent10":0.2565,"recent20":0.1224,"first":"2026-04-27","last":"2026-09-05","prevType":"出足・回り足型","prevN":9,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":0.3287,"prevTurn":0.7195},"61":{"n":80,"longStretch":0.377,"recent10":0.8713,"recent20":0.9415,"first":"2026-04-27","last":"2026-08-27","prevType":"バランス型","prevN":9,"prevStart":"2026-08-23","prevEnd":"2026-08-27","prevStretch":0.7925,"prevTurn":0.5506},"62":{"n":85,"longStretch":0.0379,"recent10":-0.354,"recent20":-0.2018,"first":"2026-04-27","last":"2026-09-05","prevType":"バランス型","prevN":11,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":-0.2501,"prevTurn":-0.0271},"63":{"n":99,"longStretch":-0.4371,"recent10":-0.2639,"recent20":-0.5216,"first":"2026-04-27","last":"2026-09-05","prevType":"伸び型","prevN":9,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":-0.1749,"prevTurn":-0.6643},"64":{"n":89,"longStretch":0.3458,"recent10":0.7214,"recent20":0.5553,"first":"2026-04-27","last":"2026-08-27","prevType":"バランス型","prevN":9,"prevStart":"2026-08-23","prevEnd":"2026-08-27","prevStretch":0.7497,"prevTurn":0.7368},"65":{"n":85,"longStretch":-0.6617,"recent10":-0.6135,"recent20":-0.5692,"first":"2026-04-27","last":"2026-09-05","prevType":"伸び型","prevN":10,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":-0.6135,"prevTurn":-1.1686},"66":{"n":83,"longStretch":-0.1476,"recent10":0.5838,"recent20":0.4324,"first":"2026-04-27","last":"2026-08-27","prevType":"伸び型","prevN":7,"prevStart":"2026-08-23","prevEnd":"2026-08-27","prevStretch":0.2332,"prevTurn":-0.5137},"67":{"n":104,"longStretch":-0.4014,"recent10":-0.9495,"recent20":-0.6914,"first":"2026-04-27","last":"2026-09-05","prevType":"出足・回り足型","prevN":11,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":-1.0195,"prevTurn":0.5426},"68":{"n":85,"longStretch":-0.095,"recent10":-0.4186,"recent20":-0.1109,"first":"2026-04-28","last":"2026-08-27","prevType":"出足・回り足型","prevN":9,"prevStart":"2026-08-23","prevEnd":"2026-08-27","prevStretch":-0.317,"prevTurn":0.3832},"69":{"n":95,"longStretch":0.0995,"recent10":0.7618,"recent20":0.1763,"first":"2026-04-27","last":"2026-09-05","prevType":"伸び型","prevN":9,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":0.7708,"prevTurn":-0.0648},"70":{"n":87,"longStretch":0.4549,"recent10":0.4198,"recent20":0.6579,"first":"2026-04-28","last":"2026-09-05","prevType":"バランス型","prevN":9,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":0.3852,"prevTurn":0.5088},"71":{"n":98,"longStretch":0.1358,"recent10":1.1804,"recent20":0.5515,"first":"2026-04-27","last":"2026-09-05","prevType":"伸び型","prevN":11,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":0.996,"prevTurn":0.126},"72":{"n":98,"longStretch":0.7061,"recent10":0.7528,"recent20":0.753,"first":"2026-04-27","last":"2026-08-27","prevType":"出足・回り足型","prevN":8,"prevStart":"2026-08-23","prevEnd":"2026-08-27","prevStretch":0.7311,"prevTurn":1.3086},"73":{"n":92,"longStretch":0.6579,"recent10":1.7506,"recent20":1.3299,"first":"2026-04-28","last":"2026-09-05","prevType":"伸び型","prevN":10,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":1.7506,"prevTurn":-0.1418},"74":{"n":82,"longStretch":0.1505,"recent10":0.7452,"recent20":0.6247,"first":"2026-04-27","last":"2026-08-26","prevType":"伸び型","prevN":8,"prevStart":"2026-08-23","prevEnd":"2026-08-27","prevStretch":0.6971,"prevTurn":0.0996},"75":{"n":99,"longStretch":-0.4267,"recent10":0.3912,"recent20":0.2369,"first":"2026-04-27","last":"2026-09-05","prevType":"バランス型","prevN":9,"prevStart":"2026-08-31","prevEnd":"2026-09-05","prevStretch":0.5487,"prevTurn":0.7311}};
+const BRC_TOKUYAMA_MOTOR_SAMPLE_STORAGE='brc_tokuyama_motor_meet_samples_v2';
+const __brcTokuyamaRaceCardCache=new Map();
+const __brcTokuyamaSyncPromise=new Map();
+
 function brcMotorTraitSigned(v){
   const n=Number(v);
   if(!Number.isFinite(n)) return '―';
   return `${n>0?'+':''}${n.toFixed(2)}`;
 }
-function brcMotorTraitBand(v){
+function brcMotorStretchBand(v){
   const n=Number(v);
-  if(!Number.isFinite(n)) return {label:'判定保留',cls:'balance',strength:'―'};
-  if(n>=0.35) return {label:'伸び寄り ↑↑',cls:'stretch',strength:'強'};
-  if(n>=0.20) return {label:'伸び寄り ↑',cls:'stretch',strength:'中'};
-  if(n<=-0.35) return {label:'出足・回り足寄り ↑↑',cls:'turn',strength:'強'};
-  if(n<=-0.20) return {label:'出足・回り足寄り ↑',cls:'turn',strength:'中'};
-  return {label:'バランス',cls:'balance',strength:'標準'};
+  if(!Number.isFinite(n)) return {label:'判定不能',cls:'balance'};
+  if(n>=0.50) return {label:'強い ↑↑',cls:'stretch'};
+  if(n>=0.25) return {label:'やや強い ↑',cls:'stretch'};
+  if(n<=-0.50) return {label:'弱い ↓↓',cls:'bad'};
+  if(n<=-0.25) return {label:'やや弱い ↓',cls:'bad'};
+  return {label:'標準',cls:'balance'};
 }
-function brcMotorTraitOverall(v){
+function brcMotorCurrentGrade(v){
   const n=Number(v);
-  if(!Number.isFinite(n)) return '―';
-  if(n>=0.35) return '強め';
-  if(n>=0.10) return 'やや強め';
-  if(n<=-0.35) return '弱め';
-  if(n<=-0.10) return 'やや弱め';
-  return '標準';
+  if(!Number.isFinite(n)) return '判定前';
+  if(n>=0.60) return 'A';
+  if(n>=0.20) return 'B';
+  if(n>-0.20) return 'C';
+  if(n>-0.60) return 'D';
+  return 'E';
+}
+function brcMotorCurrentGradeClass(g){ return g==='A'||g==='B'?'good':g==='D'||g==='E'?'bad':'balance'; }
+function brcTokuyamaLegacyGrade(motorNo){
+  const boats=window.__predictBoatsCurrent||[];
+  const b=boats.find(x=>Number(x?.motorNo)===Number(motorNo));
+  return b?.motorGrade||'―';
+}
+function brcTokuyamaDateAdd(dateStr,delta){
+  const m=String(dateStr||'').match(/^(\d{4})-(\d{2})-(\d{2})$/); if(!m) return '';
+  return new Date(Date.UTC(Number(m[1]),Number(m[2])-1,Number(m[3])+Number(delta||0))).toISOString().slice(0,10);
+}
+function brcTokuyamaNormalizeTitle(v){ return String(v||'').replace(/[\s　]+/g,''); }
+function brcTokuyamaCurrentPayload(){
+  return {date:String(typeof TODAY_LABEL!=='undefined'?TODAY_LABEL:''),info:(typeof RACE_INFO_TODAY!=='undefined'?RACE_INFO_TODAY:{}),motorNo:(typeof RACE_MOTOR_NO_TODAY!=='undefined'?RACE_MOTOR_NO_TODAY:{})};
+}
+async function brcTokuyamaFetchRaceCard(date){
+  const key=String(date||'');
+  if(__brcTokuyamaRaceCardCache.has(key)) return __brcTokuyamaRaceCardCache.get(key);
+  const p=(async()=>{
+    const cur=brcTokuyamaCurrentPayload();
+    if(key && key===cur.date && cur.info?.['徳山']) return cur;
+    const yymmdd=key.replace(/-/g,'').slice(2), source=`B${yymmdd}.TXT`, stamp=Date.now();
+    const urls=[`/racecards/history/${source}?v=${stamp}`,`racecards/history/${source}?v=${stamp}`,`/racecards/${source}?v=${stamp}`,`racecards/${source}?v=${stamp}`];
+    for(const url of urls){
+      try{
+        const res=await fetch(url,{cache:'no-store'}); if(!res.ok) continue;
+        const buf=await res.arrayBuffer(); let txt;
+        try{txt=new TextDecoder('shift_jis').decode(buf);}catch(_e){txt=new TextDecoder('utf-8').decode(buf);}
+        const parsed=parseOfficialRaceCardText(txt);
+        if(parsed?.date && String(parsed.date)!==key) continue;
+        return parsed;
+      }catch(_e){}
+    }
+    return null;
+  })();
+  __brcTokuyamaRaceCardCache.set(key,p); return p;
+}
+async function brcTokuyamaMeetDates(){
+  const cur=brcTokuyamaCurrentPayload();
+  const baseDate=cur.date; if(!/^\d{4}-\d{2}-\d{2}$/.test(baseDate)) return [];
+  const currentInfo=cur.info?.['徳山']; if(!currentInfo) return [];
+  const title=brcTokuyamaNormalizeTitle(currentInfo.title||'');
+  const dates=[];
+  for(let off=0;off>=-6;off--){
+    const d=brcTokuyamaDateAdd(baseDate,off); const rc=off===0?cur:await brcTokuyamaFetchRaceCard(d);
+    const vi=rc?.info?.['徳山'];
+    if(!vi){ if(off<0) break; else continue; }
+    const t=brcTokuyamaNormalizeTitle(vi.title||'');
+    if(off<0 && title && t && t!==title) break;
+    dates.push(d);
+  }
+  return dates.reverse();
+}
+function brcTokuyamaReadStoredSamples(){
+  try{ const a=JSON.parse(localStorage.getItem(BRC_TOKUYAMA_MOTOR_SAMPLE_STORAGE)||'[]'); return Array.isArray(a)?a:[]; }catch(_e){ return []; }
+}
+function brcTokuyamaStoreSamples(samples){
+  try{
+    const map=new Map();
+    for(const s of brcTokuyamaReadStoredSamples()){ if(s?.date&&s?.raceNo&&s?.motorNo) map.set(`${s.date}:${s.raceNo}:${s.motorNo}`,s); }
+    for(const s of samples||[]){ if(s?.date&&s?.raceNo&&s?.motorNo) map.set(`${s.date}:${s.raceNo}:${s.motorNo}`,s); }
+    const cutoff=brcTokuyamaDateAdd((typeof TODAY_LABEL!=='undefined'?TODAY_LABEL:''),-14);
+    const out=[...map.values()].filter(s=>!cutoff||String(s.date)>=cutoff).sort((a,b)=>String(a.date).localeCompare(String(b.date))||Number(a.raceNo)-Number(b.raceNo));
+    localStorage.setItem(BRC_TOKUYAMA_MOTOR_SAMPLE_STORAGE,JSON.stringify(out)); return out;
+  }catch(_e){ return samples||[]; }
+}
+function brcTokuyamaRaceRelativeSamples(liveRace,motorNos){
+  const boats=Array.isArray(liveRace?.boats)?liveRace.boats:[];
+  if(boats.length!==6 || !Array.isArray(motorNos) || motorNos.length<6) return [];
+  const byNo=[...boats].sort((a,b)=>Number(a.boat_no)-Number(b.boat_no));
+  if(byNo.some((b,i)=>Number(b.boat_no)!==i+1)) return [];
+  const z=(key)=>{
+    const vals=byNo.map(b=>Number(b?.[key])); if(vals.some(v=>!Number.isFinite(v))) return null;
+    const mean=vals.reduce((a,b)=>a+b,0)/vals.length;
+    const sd=Math.sqrt(vals.reduce((s,v)=>s+(v-mean)*(v-mean),0)/vals.length); if(!(sd>0)) return null;
+    return vals.map(v=>-(v-mean)/sd);
+  };
+  const stretch=z('exhibition_time'), lap=z('lap_time'), turn=z('turn_time');
+  if(!stretch||!lap||!turn) return [];
+  return byNo.map((b,i)=>({
+    date:String(liveRace.date||''),raceNo:Number(liveRace.race_no)||0,motorNo:Number(motorNos[i]),boatNo:i+1,
+    stretch:Number(stretch[i]),turn:(Number(lap[i])+Number(turn[i]))/2,overall:(Number(stretch[i])+Number(lap[i])+Number(turn[i]))/3
+  })).filter(s=>Number.isFinite(s.motorNo)&&Number.isFinite(s.stretch)&&Number.isFinite(s.turn)&&Number.isFinite(s.overall));
+}
+async function brcTokuyamaFetchLiveByDate(date,raceNo){
+  if(!BRC_LIVE_EXHIBITION_API_URL) return null;
+  if(String(date)===String(typeof TODAY_LABEL!=='undefined'?TODAY_LABEL:'') && Number(window.__currentLiveExhibition?.race_no)===Number(raceNo) && String(window.__currentLiveExhibition?.venue_code||'').padStart(2,'0')==='18') return window.__currentLiveExhibition;
+  const qs=new URLSearchParams({date:String(date),venue_code:'18',race_no:String(Number(raceNo))}); qs.set('_',String(Date.now()));
+  try{
+    const res=await fetch(`${BRC_LIVE_EXHIBITION_API_URL}/live-exhibition?${qs.toString()}`,{method:'GET',cache:'no-store',headers:{Accept:'application/json'}});
+    if(!res.ok) return null; const obj=await res.json();
+    if(obj?.ok!==true||!obj?.race||!Array.isArray(obj.race.boats)) return null;
+    return obj.race;
+  }catch(_e){ return null; }
+}
+function brcTokuyamaPayloadMotorRaces(payload,motorNo){
+  const out=[]; const map=payload?.motorNo?.['徳山']||{};
+  for(const [raceNo,arr] of Object.entries(map)){
+    if(!Array.isArray(arr)) continue;
+    const idx=arr.findIndex(x=>Number(x)===Number(motorNo));
+    if(idx>=0) out.push({raceNo:Number(raceNo),motorNos:arr.map(x=>Number(x)),boatNo:idx+1});
+  }
+  return out.sort((a,b)=>a.raceNo-b.raceNo);
+}
+async function brcTokuyamaSyncMotorSamples(motorNo){
+  const k=`${typeof TODAY_LABEL!=='undefined'?TODAY_LABEL:''}:${Number(motorNo)}`;
+  if(__brcTokuyamaSyncPromise.has(k)) return __brcTokuyamaSyncPromise.get(k);
+  const p=(async()=>{
+    const dates=await brcTokuyamaMeetDates();
+    if(!dates.length) return [];
+    let stored=brcTokuyamaReadStoredSamples();
+    for(const date of dates){
+      const payload=(date===String(typeof TODAY_LABEL!=='undefined'?TODAY_LABEL:''))?brcTokuyamaCurrentPayload():await brcTokuyamaFetchRaceCard(date);
+      if(!payload?.info?.['徳山']) continue;
+      const targets=brcTokuyamaPayloadMotorRaces(payload,motorNo);
+      for(const target of targets){
+        const already=stored.some(s=>String(s.date)===String(date)&&Number(s.raceNo)===target.raceNo&&Number(s.motorNo)===Number(motorNo));
+        if(already) continue;
+        const live=await brcTokuyamaFetchLiveByDate(date,target.raceNo); if(!live) continue;
+        const samples=brcTokuyamaRaceRelativeSamples(live,target.motorNos); if(!samples.length) continue;
+        stored=brcTokuyamaStoreSamples(samples);
+      }
+    }
+    const set=new Set(dates);
+    return stored.filter(s=>set.has(String(s.date))&&Number(s.motorNo)===Number(motorNo)).sort((a,b)=>String(a.date).localeCompare(String(b.date))||Number(a.raceNo)-Number(b.raceNo));
+  })().finally(()=>__brcTokuyamaSyncPromise.delete(k));
+  __brcTokuyamaSyncPromise.set(k,p); return p;
+}
+function brcTokuyamaCaptureLiveRace(liveRace,venue,raceNo){
+  if(String(venue||'')!=='徳山'||!liveRace) return;
+  const map=(typeof RACE_MOTOR_NO_TODAY!=='undefined'?RACE_MOTOR_NO_TODAY?.['徳山']?.[String(Number(raceNo))]:null);
+  if(!Array.isArray(map)) return;
+  const samples=brcTokuyamaRaceRelativeSamples(liveRace,map.map(x=>Number(x))); if(!samples.length) return;
+  brcTokuyamaStoreSamples(samples);
+  const motors=[...new Set(samples.map(s=>Number(s.motorNo)))];
+  motors.forEach(m=>{ const el=document.getElementById(`brc-admin-motor-current-${m}`); if(el) brcRefreshAdminTokuyamaMotorTrait('徳山',m).catch(()=>{}); });
+}
+function brcTokuyamaMean(a,key){ const v=(a||[]).map(x=>Number(x?.[key])).filter(Number.isFinite); return v.length?v.reduce((s,x)=>s+x,0)/v.length:null; }
+function brcTokuyamaConfidence(absDiff,n){
+  if(n>=3){ if(absDiff>=1) return 'A+'; if(absDiff>=.75) return 'A'; if(absDiff>=.50) return 'B+'; if(absDiff>=.35) return 'B'; return '―'; }
+  if(n===2){ if(absDiff>=1) return 'A'; if(absDiff>=.75) return 'B+'; if(absDiff>=.50) return 'B'; if(absDiff>=.35) return 'C'; return '―'; }
+  return '―';
+}
+function brcTokuyamaCurrentSummary(samples,base){
+  const all=(samples||[]).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date))||Number(a.raceNo)-Number(b.raceNo));
+  const used=all.slice(0,Math.min(3,all.length)); const n=used.length;
+  if(n<2) return {n,allN:all.length,ready:false};
+  const stretch=brcTokuyamaMean(used,'stretch'), turn=brcTokuyamaMean(used,'turn'), overall=brcTokuyamaMean(used,'overall');
+  const diff=Number(stretch)-Number(turn), ad=Math.abs(diff); let type='特徴未確定',cls='balance',dir=0;
+  if(Number(stretch)>0 && diff>=.35){ type=`伸び寄り ${ad>=.75?'↑↑':'↑'}`; cls='stretch'; dir=1; }
+  else if(Number(turn)>0 && diff<=-.35){ type=`出足・回り足寄り ${ad>=.75?'↑↑':'↑'}`; cls='turn'; dir=-1; }
+  const conf=dir?brcTokuyamaConfidence(ad,n):'―';
+  const long=Number(base?.longStretch), recent=Number(base?.recent10);
+  const sgn=v=>v>=.25?1:v<=-.25?-1:0; const ld=sgn(long),rd=sgn(recent);
+  let consistency='―';
+  if(dir){ if(ld===dir&&rd===dir) consistency='あり'; else if(ld===dir||rd===dir) consistency='一部'; else if(ld!==0&&rd!==0) consistency='なし'; }
+  const bothGood=Number(stretch)>=.35&&Number(turn)>=.35&&ad<.50;
+  return {n,allN:all.length,ready:true,stretch,turn,overall,diff,type,cls,dir,conf,consistency,bothGood,grade:brcMotorCurrentGrade(overall)};
+}
+function brcBuildAdminTokuyamaCurrentHtml(motorNo,summary){
+  if(!summary?.ready){
+    const n=Number(summary?.n)||0;
+    return `<div class="brc-admin-motor-trait-current-status"><span>今節実測 ${n}走取得</span><span>${n<2?'2走から本判定':'判定準備中'}</span></div><div class="brc-admin-motor-trait-main"><span class="brc-admin-motor-trait-label">今節機力評価 β</span><strong class="brc-admin-motor-trait-value balance">判定前</strong></div><div class="brc-admin-motor-trait-grid current"><div class="brc-admin-motor-trait-metric"><div class="k">今節足タイプ</div><div class="v balance">特徴未確定</div></div><div class="brc-admin-motor-trait-metric"><div class="k">今節信頼度</div><div class="v">―</div></div><div class="brc-admin-motor-trait-metric"><div class="k">伸び / 出足</div><div class="v">―</div></div><div class="brc-admin-motor-trait-metric"><div class="k">長期・直近一致</div><div class="v">―</div></div></div>`;
+  }
+  const usedLabel=summary.n>=3?'最初3走で固定':'最初2走';
+  return `<div class="brc-admin-motor-trait-current-status"><span>今節実測 ${summary.allN}走取得 / ${usedLabel}で判定</span>${summary.bothGood?'<span class="brc-admin-motor-trait-chip">両足良好</span>':''}</div><div class="brc-admin-motor-trait-main"><span class="brc-admin-motor-trait-label">今節機力評価 β</span><strong class="brc-admin-motor-trait-value ${brcMotorCurrentGradeClass(summary.grade)}">${summary.grade}</strong></div><div class="brc-admin-motor-trait-grid current"><div class="brc-admin-motor-trait-metric"><div class="k">今節足タイプ</div><div class="v ${summary.cls}">${summary.type}</div><div class="sub">差 ${brcMotorTraitSigned(summary.diff)}</div></div><div class="brc-admin-motor-trait-metric"><div class="k">今節信頼度</div><div class="v">${summary.conf}</div><div class="sub">走数＋タイプ差</div></div><div class="brc-admin-motor-trait-metric"><div class="k">伸び / 出足</div><div class="v">${brcMotorTraitSigned(summary.stretch)} / ${brcMotorTraitSigned(summary.turn)}</div><div class="sub">同レース内相対</div></div><div class="brc-admin-motor-trait-metric"><div class="k">長期・直近一致</div><div class="v">${summary.consistency}</div><div class="sub">補助情報のみ</div></div></div>`;
+}
+async function brcRefreshAdminTokuyamaMotorTrait(venue,motorNo){
+  if(String(venue||'')!=='徳山') return;
+  const el=document.getElementById(`brc-admin-motor-current-${Number(motorNo)}`); if(!el) return;
+  const base=BRC_ADMIN_TOKUYAMA_MOTOR_BASE[String(Number(motorNo))];
+  try{
+    const samples=await brcTokuyamaSyncMotorSamples(Number(motorNo));
+    if(!el.isConnected) return;
+    el.innerHTML=brcBuildAdminTokuyamaCurrentHtml(Number(motorNo),brcTokuyamaCurrentSummary(samples,base));
+  }catch(_e){
+    if(el.isConnected) el.innerHTML=brcBuildAdminTokuyamaCurrentHtml(Number(motorNo),{n:0,ready:false});
+  }
 }
 function brcBuildAdminTokuyamaMotorTraitHtml(venue,motorNo){
   if(!(typeof BRC_ADMIN_ACTIVE!=='undefined' && BRC_ADMIN_ACTIVE)) return '';
   if(String(venue||'')!=='徳山') return '';
-  const t=BRC_ADMIN_TOKUYAMA_MOTOR_TRAITS[String(motorNo)];
-  if(!t) return `<div class="brc-admin-motor-trait"><div class="brc-admin-motor-trait-head"><div class="brc-admin-motor-trait-title">BRC足タイプ検証</div><span class="brc-admin-motor-trait-badge">管理者専用</span></div><div class="brc-admin-motor-trait-note">この号機は検証スナップショットにありません。</div></div>`;
-  const band=brcMotorTraitBand(t.typeScore);
-  return `<div class="brc-admin-motor-trait">
-    <div class="brc-admin-motor-trait-head"><div class="brc-admin-motor-trait-title">BRC足タイプ検証</div><span class="brc-admin-motor-trait-badge">管理者専用・徳山β</span></div>
-    <div class="brc-admin-motor-trait-main"><span class="brc-admin-motor-trait-label">4/20〜蓄積の足タイプ</span><strong class="brc-admin-motor-trait-value ${band.cls}">${band.label}</strong></div>
-    <div class="brc-admin-motor-trait-grid">
-      <div class="brc-admin-motor-trait-metric"><div class="k">伸び傾向</div><div class="v">${brcMotorTraitSigned(t.stretch)}</div></div>
-      <div class="brc-admin-motor-trait-metric"><div class="k">出足・回り足</div><div class="v">${brcMotorTraitSigned(t.turn)}</div></div>
-      <div class="brc-admin-motor-trait-metric"><div class="k">タイプ差</div><div class="v">${brcMotorTraitSigned(t.typeScore)}</div></div>
-      <div class="brc-admin-motor-trait-metric"><div class="k">総合傾向</div><div class="v">${brcMotorTraitOverall(t.overall)}</div></div>
-    </div>
-    <div class="brc-admin-motor-trait-note"><strong>N=${Number(t.n)||0}</strong> / ${fmtMotorDate(t.first)}〜${fmtMotorDate(t.last)}。伸び＝展示タイム、出足・回り足＝一周＋まわり足を同レース6艇内で相対化して蓄積。タイプ差は両者の差。暫定基準は |差|0.20未満＝バランス、0.20以上＝寄り、0.35以上＝↑↑。<strong>検証表示のみで予測・展開・買い目へ未反映。</strong></div>
-  </div>`;
+  const no=Number(motorNo),t=BRC_ADMIN_TOKUYAMA_MOTOR_BASE[String(no)];
+  if(!t) return `<div class="brc-admin-motor-trait"><div class="brc-admin-motor-trait-head"><div class="brc-admin-motor-trait-title">BRCモーター分析</div><span class="brc-admin-motor-trait-badge">管理者専用</span></div><div class="brc-admin-motor-trait-note">この号機は開催前スナップショットにありません。<strong>データ不足として扱い、低評価にはしません。</strong></div></div>`;
+  const long=brcMotorStretchBand(t.longStretch),recent=brcMotorStretchBand(t.recent10),legacy=brcTokuyamaLegacyGrade(no);
+  const prevPeriod=t.prevStart&&t.prevEnd?`${fmtMotorDate(t.prevStart)}〜${fmtMotorDate(t.prevEnd)}`:'―';
+  setTimeout(()=>brcRefreshAdminTokuyamaMotorTrait('徳山',no).catch(()=>{}),0);
+  return `<div class="brc-admin-motor-trait"><div class="brc-admin-motor-trait-head"><div class="brc-admin-motor-trait-title">BRCモーター分析</div><div class="brc-admin-motor-trait-badges"><span class="brc-admin-motor-trait-badge">管理者専用・徳山</span><span class="brc-admin-motor-trait-badge legacy">2連率評価 ${legacy}</span></div></div><div class="brc-admin-motor-trait-grid"><div class="brc-admin-motor-trait-metric"><div class="k">長期伸び素性</div><div class="v ${long.cls}">${long.label}</div><div class="sub">${brcMotorTraitSigned(t.longStretch)} / N=${Number(t.n)||0}</div></div><div class="brc-admin-motor-trait-metric"><div class="k">直近10走の伸び</div><div class="v ${recent.cls}">${recent.label}</div><div class="sub">${brcMotorTraitSigned(t.recent10)}</div></div><div class="brc-admin-motor-trait-metric"><div class="k">前回使用時</div><div class="v">${t.prevType||'判定不能'}</div><div class="sub">${prevPeriod} / N=${Number(t.prevN)||0}</div></div></div><div id="brc-admin-motor-current-${no}" class="brc-admin-motor-trait-current">${brcBuildAdminTokuyamaCurrentHtml(no,{n:0,ready:false})}</div><div class="brc-admin-motor-trait-note">開催前情報は<strong>${fmtMotorDate(t.first)}〜${fmtMotorDate(t.last)}</strong>の確定済み実測から作成。長期伸びは ±0.25 / ±0.50、同レース6艇内の母標準偏差（ddof=0）で評価。前回使用時は履歴表示。今節は最初2〜3走の展示・1周・まわり足だけで判定し、差0.35未満は<strong>特徴未確定</strong>。<strong>AI予測・展開・買い目へ未反映。</strong></div></div>`;
 }
 let __motorDetailCache = null;
 let __motorDetailLiveLoaded = false;
