@@ -3163,6 +3163,8 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
   #predictResult .predict-head-main{display:block;font-weight:900;color:#536176;white-space:nowrap;}
   #predictResult .predict-head-sub{display:block;margin-top:1px;font-size:8.5px;font-weight:750;color:var(--ink-soft);white-space:nowrap;}
   #predictResult .predict-timex-common-row th.predict-timex-common{font-size:8.5px;font-weight:750;color:var(--ink-soft);letter-spacing:0;line-height:1.1;padding-top:0 !important;padding-bottom:6px !important;}
+  #predictResult .predict-table thead tr:first-child th{padding-bottom:2px !important;vertical-align:bottom;}
+  #predictResult .predict-table thead tr.predict-timex-common-row th{padding-top:0 !important;vertical-align:top;}
   #predictResult .predict-table thead tr:first-child th:nth-child(3),
   #predictResult .predict-table thead tr:first-child th:nth-child(4){border-bottom:none;}
   #predictResult .predict-exhibition-label{min-height:auto;align-items:flex-start;justify-content:center;margin-top:3px;}
@@ -16873,12 +16875,14 @@ async function runPredict(){
           <th rowspan="2">枠</th><th rowspan="2">選手</th>
           <th class="num"><span class="predict-head-main">1着率</span></th>
           <th class="num"><span class="predict-head-main">3連対率</span></th>
-          <th class="num" rowspan="2"><span class="predict-head-main">ST順位</span><span class="predict-head-sub">（S安定）</span></th>
-          <th class="num" rowspan="2"><span class="predict-head-main">モーター</span><span class="predict-head-sub">（2連）</span></th>
+          <th class="num"><span class="predict-head-main">ST順位</span></th>
+          <th class="num"><span class="predict-head-main">モーター</span></th>
           <th class="predict-col-opt" rowspan="2">備考</th>
         </tr>
         <tr class="predict-timex-common-row">
           <th class="num predict-timex-common" colspan="2">（BRCタイムX）</th>
+          <th class="num predict-timex-common">（S安定）</th>
+          <th class="num predict-timex-common">（2連）</th>
         </tr>
       </thead>
       <tbody>
