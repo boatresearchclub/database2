@@ -16864,12 +16864,19 @@ async function runPredict(){
     ${brcBuildExhibitionRaceNoticeHtml(liveExhibitionRace)}
     <div id="predictTableWrap" style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
     <table class="predict-table">
-      <thead><tr>
-        <th>枠</th><th>選手</th>
-        <th class="num"><span class="predict-head-main">1着率</span><span class="predict-head-sub">（BRCタイムX）</span></th>
-        <th class="num"><span class="predict-head-main">3連対率</span><span class="predict-head-sub">（BRCタイムX）</span></th>
-        <th class="num"><span class="predict-head-main">ST順位</span><span class="predict-head-sub">（S安定）</span></th><th class="num"><span class="predict-head-main">モーター</span><span class="predict-head-sub">（2連）</span></th><th class="predict-col-opt">備考</th>
-      </tr></thead>
+      <thead>
+        <tr>
+          <th rowspan="2">枠</th><th rowspan="2">選手</th>
+          <th class="num"><span class="predict-head-main">1着率</span></th>
+          <th class="num"><span class="predict-head-main">3連対率</span></th>
+          <th class="num" rowspan="2"><span class="predict-head-main">ST順位</span><span class="predict-head-sub">（S安定）</span></th>
+          <th class="num" rowspan="2"><span class="predict-head-main">モーター</span><span class="predict-head-sub">（2連）</span></th>
+          <th class="predict-col-opt" rowspan="2">備考</th>
+        </tr>
+        <tr class="predict-timex-common-row">
+          <th class="num predict-timex-common" colspan="2">（BRCタイムX）</th>
+        </tr>
+      </thead>
       <tbody>
         ${boats.map(b=>{
           const col = LANE_COLORS[b.course];
