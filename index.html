@@ -15129,7 +15129,7 @@ function getSTStability(reg,course){
 function buildSTStabilitySub(reg,course){
   const x=getSTStability(reg,course); const g=x.data?.grade || '-';
   const cls='st-stability-'+(g==='-'?'none':g);
-  return `<span class="st-stability-sub ${cls}"><span class="st-stability-label">安定</span><span class="st-stability-grade">${g}</span></span>`;
+  return `<span class="st-stability-sub ${cls}"><span class="st-stability-grade">${g}</span></span>`;
 }
 function escST(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
 function openSTStabilityDetailLegacy(reg,course){
