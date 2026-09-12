@@ -3284,12 +3284,12 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
   position:sticky;
   top:0;
   z-index:40;
-  margin:-2px -2px 12px;
-  padding:2px 2px 8px;
-  background:rgba(255,255,255,.985);
-  backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px);
-  box-shadow:0 10px 16px -16px rgba(10,31,51,.55);
+  /* モーダル上端のpaddingまで固定ヘッダーで覆い、スクロール内容の覗きを防止 */
+  margin:-18px -18px 12px;
+  padding:18px 18px 9px;
+  background:#fff;
+  box-shadow:0 10px 18px -16px rgba(10,31,51,.55);
+  isolation:isolate;
 }
 .predict-detail-backdrop .predict-unified-sticky .predict-unified-head{
   margin-bottom:8px;
@@ -3305,8 +3305,10 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
   .predict-detail-backdrop .predict-unified-sticky{
     top:0;
     z-index:40;
-    margin:-2px -2px 10px;
-    padding:2px 2px 7px;
+    /* mobile sheet: padding 16px 14px */
+    margin:-16px -14px 10px;
+    padding:16px 14px 8px;
+    background:#fff;
   }
 }
 
