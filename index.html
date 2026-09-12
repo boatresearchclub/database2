@@ -7188,7 +7188,11 @@ function renderPredictUnifiedMotor(course,target){
   if(!d){
     const publicInfo={grade:b.motorGrade,gradeColor:gcol,motor2:b.motor2,motorNo:b.motorNo,finalsCount:null,winsCount:null,n:null,cycleStart:venueMeta.cycle_start};
     const adminTraitHtml=brcBuildAdminTokuyamaMotorTraitHtml(venue,b.motorNo,publicInfo);
-    target.innerHTML=`<div class="motor-detail-topstats"><div class="motor-detail-stat"><b style="color:${gcol};">${escMotor(b.motorGrade||'―')}</b><span>相対評価</span></div><div class="motor-detail-stat"><b>${Number.isFinite(Number(b.motor2))?Math.round(Number(b.motor2))+'%':'―'}</b><span>2連対率</span></div><div class="motor-detail-stat"><b>${escMotor(b.motorNo)}</b><span>号機</span></div><div class="motor-detail-stat"><b>―</b><span>履歴N</span></div></div>${adminTraitHtml}<div class="predict-unified-empty">このモーターの機歴データはありません。</div>`;
+    if(String(venue||'')==='徳山'){
+      target.innerHTML=adminTraitHtml||'<div class="predict-unified-empty">BRCモーター分析データがありません。</div>';
+      return;
+    }
+    target.innerHTML=`<div class="motor-detail-topstats"><div class="motor-detail-stat"><b style="color:${gcol};">${escMotor(b.motorGrade||'―')}</b><span>相対評価</span></div><div class="motor-detail-stat"><b>${Number.isFinite(Number(b.motor2))?Math.round(Number(b.motor2))+'%':'―'}</b><span>2連対率</span></div><div class="motor-detail-stat"><b>${escMotor(b.motorNo)}</b><span>号機</span></div><div class="motor-detail-stat"><b>―</b><span>履歴N</span></div></div><div class="predict-unified-empty">このモーターの機歴データはありません。</div>`;
     return;
   }
   const prev=d.previous;
@@ -7199,9 +7203,14 @@ function renderPredictUnifiedMotor(course,target){
   const finalHtml=finals.length?finals.map(f=>`<div class="motor-final-row"><span class="motor-final-date">${fmtMotorDate(f.date)}</span><span class="motor-final-grade">${escMotor(f.grade||'')}</span><span class="motor-final-name">${escMotor(f.name)}</span><span class="motor-final-rank ${String(f.rank)==='1'?'win':''}">${String(f.rank)==='1'?'🏆 1着':escMotor(f.rank)+'着'}</span></div>`).join(''):'<div class="motor-detail-empty">優勝戦出場歴なし</div>';
   const publicInfo={grade:b.motorGrade,gradeColor:gcol,motor2:b.motor2,motorNo:b.motorNo,finalsCount:Number(d.finals_count||0),winsCount:Number(d.wins_count||0),n:Number(d.n)||0,cycleStart:venueMeta.cycle_start,prevUsers:prev?.users?.map(u=>u.name)||[],prevStart:prev?.start||'',prevEnd:prev?.end||'',prevRanks:prev?.ranks||[],finals};
   const adminTraitHtml=brcBuildAdminTokuyamaMotorTraitHtml(venue,b.motorNo,publicInfo);
+  if(String(venue||'')==='徳山'){
+    // 徳山は新BRCモーター分析へ一本化。旧モーター詳細は重複するため表示しない。
+    target.innerHTML=adminTraitHtml||'<div class="predict-unified-empty">BRCモーター分析データがありません。</div>';
+    return;
+  }
+  // 徳山以外は従来表示を維持。
   target.innerHTML=`
     <div class="motor-detail-topstats"><div class="motor-detail-stat"><b style="color:${gcol};">${escMotor(b.motorGrade||'―')}</b><span>相対評価</span></div><div class="motor-detail-stat"><b>${Math.round(Number(b.motor2))}%</b><span>2連対率</span></div><div class="motor-detail-stat"><b>${Number(d.finals_count||0)}</b><span>優出</span></div><div class="motor-detail-stat"><b>${Number(d.wins_count||0)}</b><span>優勝</span></div></div>
-    ${adminTraitHtml}
     <div class="motor-detail-section"><h4>${escMotor(venue)} ${escMotor(b.motorNo)}号機</h4><div class="motor-detail-sub">使用開始 ${escMotor(venueMeta.cycle_start||'―')} / N=${Number(d.n)||0}</div></div>
     <div class="motor-detail-section"><h4>前回使用者</h4><div><span class="motor-prev-name">${prevUsers}</span>${prevPeriod?`<span class="motor-prev-period">${prevPeriod}</span>`:''}</div>${prevRanks?`<div class="motor-prev-ranks">${prevRanks}</div>`:''}</div>
     <div class="motor-detail-section"><h4>優勝戦出場歴</h4><div class="motor-final-list">${finalHtml}</div></div>
@@ -16960,6 +16969,7 @@ renderPlayers();
 window.__playersRendered = true;
 </script>
 
+/* BRC_TOKUYAMA_MOTOR_PUBLIC_V1_20260913: 徳山だけ新BRCモーター分析を公開。徳山旧表示は非表示、他場は従来表示。 */
 <style id="brc-motor-detail-style">
 .motor-cell-btn{appearance:none;-webkit-appearance:none;border:0;background:transparent;padding:0 3px;margin:0;min-width:44px;cursor:pointer;font:inherit;line-height:1;text-align:center;border-radius:8px;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;vertical-align:middle;}
 .motor-cell-btn:active{background:rgba(10,31,51,.06);}
@@ -17496,7 +17506,8 @@ function brcMotorLabSetTab(btn,tab){
   root.querySelectorAll('.brc-motor-lab-panel').forEach(x=>x.classList.toggle('active',x.dataset.panel===tab));
 }
 function brcBuildAdminTokuyamaMotorTraitHtml(venue,motorNo,publicInfo=null){
-  if(!(typeof BRC_ADMIN_ACTIVE!=='undefined' && BRC_ADMIN_ACTIVE)) return '';
+  // 徳山だけ新BRCモーター分析を全ユーザーへ公開。
+  // 管理者向けの生指数・検証条件は各内部ブロックで BRC_ADMIN_ACTIVE を再判定する。
   if(String(venue||'')!=='徳山') return '';
   const no=Number(motorNo),t=BRC_ADMIN_TOKUYAMA_MOTOR_BASE[String(no)];
   const overviewHtml=brcBuildMotorPublicOverviewHtml(publicInfo);
@@ -17510,7 +17521,8 @@ function brcBuildAdminTokuyamaMotorTraitHtml(venue,motorNo,publicInfo=null){
   const recentText=recent.label;
   const prevRuns=Number(t.prevN)||0;
   const historyComment=brcMotorHistoryPlainComment(t,long,recent);
-  const verifyHtml=`<details class="brc-motor-admin-verify"><summary>管理者向け検証データ</summary><div class="brc-motor-admin-verify-body"><div class="brc-motor-verify-grid"><div class="brc-motor-verify-card"><div class="k">長期伸び指数</div><div class="v">${brcMotorTraitSigned(t.longStretch)}</div><div class="sub">N=${Number(t.n)||0}</div></div><div class="brc-motor-verify-card"><div class="k">直近10走指数</div><div class="v">${brcMotorTraitSigned(t.recent10)}</div><div class="sub">最近の伸び状態</div></div><div class="brc-motor-verify-card"><div class="k">前回使用期間</div><div class="v">${prevPeriod}</div><div class="sub">${prevRuns?`${prevRuns}走`:'データなし'}</div></div><div class="brc-motor-verify-card"><div class="k">開催前データ</div><div class="v">${fmtMotorDate(t.first)}〜${fmtMotorDate(t.last)}</div><div class="sub">確定済み履歴</div></div></div><div class="brc-motor-rule-box"><strong>判定ルール：</strong> 長期伸びは ±0.25 / ±0.50、同レース6艇内の母標準偏差（ddof=0）。今節は最初2〜3走の展示・1周・まわり足で判定し、タイプ差0.35未満は特徴未確定。今節機力A〜Eはβ。<br><strong>予測への扱い：</strong> AI予測・展開・買い目へは未反映。表示・OOS検証専用。</div></div></details>`;
+  const isAdmin=(typeof BRC_ADMIN_ACTIVE!=='undefined' && BRC_ADMIN_ACTIVE);
+  const verifyHtml=isAdmin?`<details class="brc-motor-admin-verify"><summary>管理者向け検証データ</summary><div class="brc-motor-admin-verify-body"><div class="brc-motor-verify-grid"><div class="brc-motor-verify-card"><div class="k">長期伸び指数</div><div class="v">${brcMotorTraitSigned(t.longStretch)}</div><div class="sub">N=${Number(t.n)||0}</div></div><div class="brc-motor-verify-card"><div class="k">直近10走指数</div><div class="v">${brcMotorTraitSigned(t.recent10)}</div><div class="sub">最近の伸び状態</div></div><div class="brc-motor-verify-card"><div class="k">前回使用期間</div><div class="v">${prevPeriod}</div><div class="sub">${prevRuns?`${prevRuns}走`:'データなし'}</div></div><div class="brc-motor-verify-card"><div class="k">開催前データ</div><div class="v">${fmtMotorDate(t.first)}〜${fmtMotorDate(t.last)}</div><div class="sub">確定済み履歴</div></div></div><div class="brc-motor-rule-box"><strong>判定ルール：</strong> 長期伸びは ±0.25 / ±0.50、同レース6艇内の母標準偏差（ddof=0）。今節は最初2〜3走の展示・1周・まわり足で判定し、タイプ差0.35未満は特徴未確定。今節機力A〜Eはβ。<br><strong>予測への扱い：</strong> AI予測・展開・買い目へは未反映。表示・OOS検証専用。</div></div></details>`:'';
   setTimeout(()=>brcRefreshAdminTokuyamaMotorTrait('徳山',no).catch(()=>{}),0);
   return `<div class="brc-admin-motor-trait"><div class="brc-motor-lab-head"><div class="brc-motor-lab-head-top"><div class="brc-motor-lab-brand"><div class="brc-admin-motor-trait-title">BRCモーター分析</div></div>${headerMetaHtml}</div></div><div class="brc-motor-lab-body"><section class="brc-motor-one-section"><div class="brc-motor-one-section-head"><div class="brc-motor-one-section-title">今節の状態</div></div><div id="brc-admin-motor-current-${no}" class="brc-admin-motor-trait-current">${brcBuildAdminTokuyamaCurrentHtml(no,{n:0,ready:false},t)}</div></section><section class="brc-motor-insight-section"><div class="brc-motor-one-section-head"><div class="brc-motor-one-section-title">BRC 足傾向</div><span class="brc-motor-insight-badge">BRC独自分析</span></div><div class="brc-motor-history-flow"><div class="brc-motor-history-row"><div class="role">長期の伸び傾向</div><div class="value ${long.cls}">${longText}</div><div class="meta">${Number(t.n)||0}走</div></div><div class="brc-motor-history-row"><div class="role">最近の足傾向</div><div class="value ${recent.cls}">${recentText}</div><div class="meta">直近10走</div></div><div class="brc-motor-history-row"><div class="role">前回の足色</div><div class="value">${t.prevType||'判定不能'}</div><div class="meta">${prevPeriod}${prevRuns?`（${prevRuns}走）`:''}</div></div></div><div class="brc-motor-history-comment">${historyComment}</div>${integratedOfficialHtml}</section>${verifyHtml}</div></div>`;
 }
