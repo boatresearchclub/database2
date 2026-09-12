@@ -7094,7 +7094,8 @@ function renderPredictUnifiedMotor(course,target){
   const md=motorDetailData(); const venueMeta=md.venues?.[venue]||{};
   const gcol=MOTOR_GRADE_COLOR[b.motorGrade]||'var(--ink-soft)';
   if(!d){
-    const adminTraitHtml=brcBuildAdminTokuyamaMotorTraitHtml(venue,b.motorNo);
+    const publicInfo={grade:b.motorGrade,gradeColor:gcol,motor2:b.motor2,motorNo:b.motorNo,finalsCount:null,winsCount:null,n:null,cycleStart:venueMeta.cycle_start};
+    const adminTraitHtml=brcBuildAdminTokuyamaMotorTraitHtml(venue,b.motorNo,publicInfo);
     target.innerHTML=`<div class="motor-detail-topstats"><div class="motor-detail-stat"><b style="color:${gcol};">${escMotor(b.motorGrade||'―')}</b><span>相対評価</span></div><div class="motor-detail-stat"><b>${Number.isFinite(Number(b.motor2))?Math.round(Number(b.motor2))+'%':'―'}</b><span>2連対率</span></div><div class="motor-detail-stat"><b>${escMotor(b.motorNo)}</b><span>号機</span></div><div class="motor-detail-stat"><b>―</b><span>履歴N</span></div></div>${adminTraitHtml}<div class="predict-unified-empty">このモーターの機歴データはありません。</div>`;
     return;
   }
@@ -7104,7 +7105,8 @@ function renderPredictUnifiedMotor(course,target){
   const prevRanks=prev?.ranks?.length?prev.ranks.map(r=>r==='1'?'<b>1</b>':escMotor(r)).join('・'):'';
   const finals=(d.finals||[]).slice().reverse();
   const finalHtml=finals.length?finals.map(f=>`<div class="motor-final-row"><span class="motor-final-date">${fmtMotorDate(f.date)}</span><span class="motor-final-grade">${escMotor(f.grade||'')}</span><span class="motor-final-name">${escMotor(f.name)}</span><span class="motor-final-rank ${String(f.rank)==='1'?'win':''}">${String(f.rank)==='1'?'🏆 1着':escMotor(f.rank)+'着'}</span></div>`).join(''):'<div class="motor-detail-empty">優勝戦出場歴なし</div>';
-  const adminTraitHtml=brcBuildAdminTokuyamaMotorTraitHtml(venue,b.motorNo);
+  const publicInfo={grade:b.motorGrade,gradeColor:gcol,motor2:b.motor2,motorNo:b.motorNo,finalsCount:Number(d.finals_count||0),winsCount:Number(d.wins_count||0),n:Number(d.n)||0,cycleStart:venueMeta.cycle_start,prevUsers:prev?.users?.map(u=>u.name)||[],prevStart:prev?.start||'',prevEnd:prev?.end||'',prevRanks:prev?.ranks||[],finals};
+  const adminTraitHtml=brcBuildAdminTokuyamaMotorTraitHtml(venue,b.motorNo,publicInfo);
   target.innerHTML=`
     <div class="motor-detail-topstats"><div class="motor-detail-stat"><b style="color:${gcol};">${escMotor(b.motorGrade||'―')}</b><span>相対評価</span></div><div class="motor-detail-stat"><b>${Math.round(Number(b.motor2))}%</b><span>2連対率</span></div><div class="motor-detail-stat"><b>${Number(d.finals_count||0)}</b><span>優出</span></div><div class="motor-detail-stat"><b>${Number(d.wins_count||0)}</b><span>優勝</span></div></div>
     ${adminTraitHtml}
@@ -16885,8 +16887,8 @@ window.__playersRendered = true;
 .motor-final-list{display:grid;gap:6px}.motor-final-row{display:grid;grid-template-columns:72px 38px 1fr auto;gap:6px;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px solid rgba(10,31,51,.055)}.motor-final-row:last-child{border-bottom:0}.motor-final-date,.motor-final-grade{color:var(--ink-soft)}.motor-final-name{font-weight:700;color:var(--navy)}.motor-final-rank{font-weight:900;white-space:nowrap}.motor-final-rank.win{color:#b47a00}.motor-detail-empty{font-size:12px;color:var(--ink-soft);padding:4px 0}.motor-detail-note{font-size:10.5px;color:var(--ink-soft);margin-top:10px;line-height:1.45}
 @media(max-width:640px){.motor-detail-backdrop{padding:0}.motor-detail-sheet{width:100%;max-height:82vh;border-radius:18px 18px 0 0;padding:16px 16px 18px}.motor-detail-topstats{gap:5px}.motor-detail-stat b{font-size:15px}.motor-final-row{grid-template-columns:66px 34px 1fr auto;gap:4px;font-size:11.5px}}
 
-/* BRC_ADMIN_TOKUYAMA_MOTOR_LAB_UI_V4_20260912 */
-/* 管理者専用ブロックのみ刷新。公開中のモーター表示・履歴は変更しない。 */
+/* BRC_ADMIN_TOKUYAMA_MOTOR_LAB_UI_V5_PUBLIC_INFO_INTEGRATED_20260912 */
+/* 管理者専用LABへ既存公開モーター情報も統合準備。公開中の既存表示は変更しない。 */
 .brc-admin-motor-trait{
   margin:12px 0 2px;padding:0;overflow:hidden;
   border:1px solid rgba(37,99,235,.18);border-radius:16px;
@@ -16905,6 +16907,31 @@ window.__playersRendered = true;
 .brc-motor-lab-tab{appearance:none;border:0;border-radius:8px;background:transparent;color:var(--ink-soft);height:34px;font:inherit;font-size:10.5px;font-weight:900;cursor:pointer;}
 .brc-motor-lab-tab.active{background:#fff;color:var(--wave);box-shadow:0 1px 5px rgba(10,31,51,.09);}
 .brc-motor-lab-body{padding:11px 12px 12px;}
+
+.brc-motor-public-overview{margin:0 0 10px;padding:10px;border:1px solid rgba(10,31,51,.075);border-radius:12px;background:rgba(255,255,255,.82);}
+.brc-motor-public-overview-title{margin:0 1px 7px;font-size:9px;font-weight:950;color:var(--ink-soft);letter-spacing:.02em;}
+.brc-motor-public-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;}
+.brc-motor-public-stat{min-width:0;padding:8px 4px;border:1px solid rgba(10,31,51,.065);border-radius:10px;background:#fff;text-align:center;}
+.brc-motor-public-stat .v{font-size:18px;font-weight:950;line-height:1.05;color:var(--navy);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.brc-motor-public-stat .k{margin-top:4px;font-size:8px;font-weight:850;color:var(--ink-soft);white-space:nowrap;}
+.brc-motor-public-history{margin-bottom:10px;}
+.brc-motor-public-cycle{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:7px;padding:9px 10px;border:1px solid rgba(10,31,51,.07);border-radius:10px;background:#fff;}
+.brc-motor-public-cycle .main{font-size:11px;font-weight:950;color:var(--navy);}
+.brc-motor-public-cycle .sub{font-size:8px;font-weight:800;color:var(--ink-soft);white-space:nowrap;}
+.brc-motor-public-history-card{padding:9px 10px;border:1px solid rgba(10,31,51,.07);border-radius:10px;background:#fff;margin-top:7px;}
+.brc-motor-public-history-card .title{font-size:8.5px;font-weight:950;color:var(--ink-soft);margin-bottom:5px;}
+.brc-motor-public-history-card .prev-line{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;}
+.brc-motor-public-history-card .prev-name{font-size:13px;font-weight:950;color:var(--navy);}
+.brc-motor-public-history-card .prev-period{font-size:8.5px;font-weight:800;color:var(--ink-soft);}
+.brc-motor-public-history-card .prev-ranks{margin-top:4px;font-size:10.5px;font-weight:850;color:var(--navy);word-break:break-all;}
+.brc-motor-public-finals{display:grid;gap:0;}
+.brc-motor-public-final{display:grid;grid-template-columns:46px 30px minmax(0,1fr) auto;gap:5px;align-items:center;padding:6px 0;border-top:1px solid rgba(10,31,51,.055);font-size:9px;}
+.brc-motor-public-final:first-child{border-top:0;}
+.brc-motor-public-final .date,.brc-motor-public-final .grade{color:var(--ink-soft);}
+.brc-motor-public-final .name{font-weight:850;color:var(--navy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.brc-motor-public-final .rank{font-weight:950;color:var(--navy);white-space:nowrap;}
+.brc-motor-public-final .rank.win{color:#b47a00;}
+.brc-motor-public-note{margin-top:7px;font-size:8px;line-height:1.5;color:var(--ink-soft);}
 .brc-motor-lab-panel{display:none;}
 .brc-motor-lab-panel.active{display:block;}
 .brc-admin-motor-trait-current{margin:0;padding:0;border:0;}
@@ -16955,6 +16982,8 @@ window.__playersRendered = true;
   .brc-motor-lab-current-hero{grid-template-columns:1fr}.brc-motor-lab-statuses{grid-template-columns:1fr 1fr;grid-template-rows:auto}.brc-motor-lab-grade{min-height:78px}.brc-motor-lab-grade .g{font-size:28px}
   .brc-motor-history-row{grid-template-columns:60px minmax(0,1fr) auto;gap:5px;padding:8px}.brc-motor-history-row .value{font-size:11px}.brc-motor-history-row .meta{font-size:7.5px}
   .brc-motor-balance{padding-left:8px;padding-right:8px}.brc-motor-verify-grid{gap:5px}
+  .brc-motor-public-overview{padding:8px}.brc-motor-public-stats{gap:5px}.brc-motor-public-stat{padding:7px 2px}.brc-motor-public-stat .v{font-size:16px}.brc-motor-public-stat .k{font-size:7.5px}
+  .brc-motor-public-cycle,.brc-motor-public-history-card{padding:8px}.brc-motor-public-final{grid-template-columns:43px 28px minmax(0,1fr) auto;gap:4px;font-size:8.5px}
 }
 .predict-detail-backdrop{z-index:10060;}
 .predict-detail-backdrop .motor-detail-sheet{width:min(620px,100%);height:min(84vh,760px);max-height:min(84vh,760px);overflow:auto;}
@@ -17010,10 +17039,10 @@ function brcMotorTraitSigned(v){
 function brcMotorStretchBand(v){
   const n=Number(v);
   if(!Number.isFinite(n)) return {label:'判定不能',cls:'balance'};
-  if(n>=0.50) return {label:'強い ↑↑',cls:'stretch'};
-  if(n>=0.25) return {label:'やや強い ↑',cls:'stretch'};
-  if(n<=-0.50) return {label:'弱い ↓↓',cls:'bad'};
-  if(n<=-0.25) return {label:'やや弱い ↓',cls:'bad'};
+  if(n>=0.50) return {label:'伸びがかなり強い',cls:'stretch'};
+  if(n>=0.25) return {label:'伸びがやや強い',cls:'stretch'};
+  if(n<=-0.50) return {label:'伸びがかなり弱い',cls:'bad'};
+  if(n<=-0.25) return {label:'伸びがやや弱い',cls:'bad'};
   return {label:'標準',cls:'balance'};
 }
 function brcMotorCurrentGrade(v){
@@ -17229,24 +17258,49 @@ function brcMotorHistoryPlainComment(t,long,recent){
   if(lv<=-.25 && rv>.25) return '長期は弱めですが、最近は伸び方向へ上向き。状態変化が続くかがポイントです。';
   return '長期と最近で強い方向はまだ一致していません。今節実測を優先して判断します。';
 }
+function brcBuildMotorPublicOverviewHtml(info){
+  if(!info) return '';
+  const grade=info.grade!=null?escMotor(info.grade):'―';
+  const gradeColor=info.gradeColor||'var(--navy)';
+  const motor2=Number.isFinite(Number(info.motor2))?`${Math.round(Number(info.motor2))}%`:'―';
+  const finals=Number.isFinite(Number(info.finalsCount))?Number(info.finalsCount):'―';
+  const wins=Number.isFinite(Number(info.winsCount))?Number(info.winsCount):'―';
+  return `<div class="brc-motor-public-overview"><div class="brc-motor-public-overview-title">モーター基本情報</div><div class="brc-motor-public-stats"><div class="brc-motor-public-stat"><div class="v" style="color:${gradeColor};">${grade}</div><div class="k">相対評価</div></div><div class="brc-motor-public-stat"><div class="v">${motor2}</div><div class="k">2連対率</div></div><div class="brc-motor-public-stat"><div class="v">${finals}</div><div class="k">優出</div></div><div class="brc-motor-public-stat"><div class="v">${wins}</div><div class="k">優勝</div></div></div></div>`;
+}
+function brcBuildMotorPublicHistoryHtml(info){
+  if(!info) return '';
+  const motorNo=info.motorNo!=null?`${escMotor(info.motorNo)}号機`:'モーター';
+  const cycle=info.cycleStart?escMotor(info.cycleStart):'―';
+  const n=Number.isFinite(Number(info.n))?Number(info.n):0;
+  const users=Array.isArray(info.prevUsers)&&info.prevUsers.length?info.prevUsers.map(escMotor).join('・'):'履歴なし';
+  const pstart=info.prevStart?fmtMotorDate(info.prevStart):'';
+  const pend=info.prevEnd?fmtMotorDate(info.prevEnd):'';
+  const period=pstart&&pend?`${pstart}〜${pend}`:'';
+  const ranks=Array.isArray(info.prevRanks)&&info.prevRanks.length?info.prevRanks.map(r=>String(r)==='1'?'<b>1</b>':escMotor(r)).join('・'):'';
+  const finals=Array.isArray(info.finals)?info.finals:[];
+  const finalHtml=finals.length?finals.map(f=>`<div class="brc-motor-public-final"><span class="date">${fmtMotorDate(f.date)}</span><span class="grade">${escMotor(f.grade||'')}</span><span class="name">${escMotor(f.name||'')}</span><span class="rank ${String(f.rank)==='1'?'win':''}">${String(f.rank)==='1'?'🏆 1着':escMotor(f.rank)+'着'}</span></div>`).join(''):'<div class="motor-detail-empty">優勝戦出場歴なし</div>';
+  return `<div class="brc-motor-public-history"><div class="brc-motor-lab-section-title">現在のモーター履歴</div><div class="brc-motor-public-cycle"><div class="main">${motorNo}</div><div class="sub">使用開始 ${cycle} / N=${n}</div></div><div class="brc-motor-public-history-card"><div class="title">前回使用者</div><div class="prev-line"><span class="prev-name">${users}</span>${period?`<span class="prev-period">${period}</span>`:''}</div>${ranks?`<div class="prev-ranks">${ranks}</div>`:''}</div><div class="brc-motor-public-history-card"><div class="title">優勝戦出場歴</div><div class="brc-motor-public-finals">${finalHtml}</div></div><div class="brc-motor-public-note">N・優出・優勝・履歴は現在のモーター使用開始日以降、今節開始前までの公式結果から集計。</div></div>`;
+}
 function brcMotorLabSetTab(btn,tab){
   const root=btn?.closest?.('.brc-admin-motor-trait'); if(!root) return;
   root.querySelectorAll('.brc-motor-lab-tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));
   root.querySelectorAll('.brc-motor-lab-panel').forEach(x=>x.classList.toggle('active',x.dataset.panel===tab));
 }
-function brcBuildAdminTokuyamaMotorTraitHtml(venue,motorNo){
+function brcBuildAdminTokuyamaMotorTraitHtml(venue,motorNo,publicInfo=null){
   if(!(typeof BRC_ADMIN_ACTIVE!=='undefined' && BRC_ADMIN_ACTIVE)) return '';
   if(String(venue||'')!=='徳山') return '';
   const no=Number(motorNo),t=BRC_ADMIN_TOKUYAMA_MOTOR_BASE[String(no)];
-  if(!t) return `<div class="brc-admin-motor-trait"><div class="brc-motor-lab-head"><div class="brc-motor-lab-head-top"><div class="brc-motor-lab-brand"><div class="brc-admin-motor-trait-title">BRC MOTOR LAB</div><div class="brc-motor-lab-sub">管理者専用モーター分析</div></div><span class="brc-admin-motor-trait-badge">管理者専用</span></div></div><div class="brc-motor-lab-body"><div class="brc-admin-motor-trait-note">この号機は開催前スナップショットにありません。<strong>データ不足として扱い、低評価にはしません。</strong></div></div></div>`;
-  const long=brcMotorStretchBand(t.longStretch),recent=brcMotorStretchBand(t.recent10),legacy=brcTokuyamaLegacyGrade(no);
+  const overviewHtml=brcBuildMotorPublicOverviewHtml(publicInfo);
+  const publicHistoryHtml=brcBuildMotorPublicHistoryHtml(publicInfo);
+  if(!t) return `<div class="brc-admin-motor-trait"><div class="brc-motor-lab-head"><div class="brc-motor-lab-head-top"><div class="brc-motor-lab-brand"><div class="brc-admin-motor-trait-title">BRC MOTOR LAB</div><div class="brc-motor-lab-sub">モーター情報を1か所で確認</div></div><span class="brc-admin-motor-trait-badge">管理者専用</span></div></div><div class="brc-motor-lab-body">${overviewHtml}<div class="brc-admin-motor-trait-note">この号機は開催前スナップショットにありません。<strong>データ不足として扱い、低評価にはしません。</strong></div>${publicHistoryHtml}</div></div>`;
+  const long=brcMotorStretchBand(t.longStretch),recent=brcMotorStretchBand(t.recent10);
   const prevPeriod=t.prevStart&&t.prevEnd?`${fmtMotorDate(t.prevStart)}〜${fmtMotorDate(t.prevEnd)}`:'―';
-  const longText=long.label==='標準'?'標準':long.label;
-  const recentText=recent.label==='標準'?'標準':recent.label;
+  const longText=long.label;
+  const recentText=recent.label;
   const prevRuns=Number(t.prevN)||0;
   const historyComment=brcMotorHistoryPlainComment(t,long,recent);
   setTimeout(()=>brcRefreshAdminTokuyamaMotorTrait('徳山',no).catch(()=>{}),0);
-  return `<div class="brc-admin-motor-trait"><div class="brc-motor-lab-head"><div class="brc-motor-lab-head-top"><div class="brc-motor-lab-brand"><div class="brc-admin-motor-trait-title">BRC MOTOR LAB</div><div class="brc-motor-lab-sub">今節・履歴・検証値を分けて確認</div></div><div class="brc-admin-motor-trait-badges"><span class="brc-admin-motor-trait-badge">管理者専用・徳山</span><span class="brc-admin-motor-trait-badge legacy">公開2連率評価 ${legacy}</span></div></div><div class="brc-motor-lab-tabs"><button type="button" class="brc-motor-lab-tab active" data-tab="current" onclick="brcMotorLabSetTab(this,'current')">今節</button><button type="button" class="brc-motor-lab-tab" data-tab="history" onclick="brcMotorLabSetTab(this,'history')">履歴</button><button type="button" class="brc-motor-lab-tab" data-tab="verify" onclick="brcMotorLabSetTab(this,'verify')">検証</button></div></div><div class="brc-motor-lab-body"><div class="brc-motor-lab-panel active" data-panel="current"><div id="brc-admin-motor-current-${no}" class="brc-admin-motor-trait-current">${brcBuildAdminTokuyamaCurrentHtml(no,{n:0,ready:false})}</div></div><div class="brc-motor-lab-panel" data-panel="history"><div class="brc-motor-lab-section-title">過去 → 最近 → 前回使用時</div><div class="brc-motor-history-flow"><div class="brc-motor-history-row"><div class="role">基本傾向</div><div class="value ${long.cls}">${longText}</div><div class="meta">長期 N=${Number(t.n)||0}</div></div><div class="brc-motor-history-row"><div class="role">最近の状態</div><div class="value ${recent.cls}">${recentText}</div><div class="meta">直近10走</div></div><div class="brc-motor-history-row"><div class="role">前回の足色</div><div class="value">${t.prevType||'判定不能'}</div><div class="meta">${prevPeriod}${prevRuns?`（${prevRuns}走）`:''}</div></div></div><div class="brc-motor-history-comment">${historyComment}</div></div><div class="brc-motor-lab-panel" data-panel="verify"><div class="brc-motor-lab-section-title">生データ・判定条件</div><div class="brc-motor-verify-grid"><div class="brc-motor-verify-card"><div class="k">長期伸び指数</div><div class="v">${brcMotorTraitSigned(t.longStretch)}</div><div class="sub">N=${Number(t.n)||0}</div></div><div class="brc-motor-verify-card"><div class="k">直近10走指数</div><div class="v">${brcMotorTraitSigned(t.recent10)}</div><div class="sub">最近の伸び状態</div></div><div class="brc-motor-verify-card"><div class="k">前回使用期間</div><div class="v">${prevPeriod}</div><div class="sub">${prevRuns?`${prevRuns}走`:'データなし'}</div></div><div class="brc-motor-verify-card"><div class="k">開催前データ</div><div class="v">${fmtMotorDate(t.first)}〜${fmtMotorDate(t.last)}</div><div class="sub">確定済み履歴</div></div></div><div class="brc-motor-rule-box"><strong>判定ルール：</strong> 長期伸びは ±0.25 / ±0.50、同レース6艇内の母標準偏差（ddof=0）。今節は最初2〜3走の展示・1周・まわり足で判定し、タイプ差0.35未満は特徴未確定。今節機力A〜Eはβ。<br><strong>予測への扱い：</strong> AI予測・展開・買い目へは未反映。表示・OOS検証専用。</div></div></div></div>`;
+  return `<div class="brc-admin-motor-trait"><div class="brc-motor-lab-head"><div class="brc-motor-lab-head-top"><div class="brc-motor-lab-brand"><div class="brc-admin-motor-trait-title">BRC MOTOR LAB</div><div class="brc-motor-lab-sub">基本情報・今節・履歴をまとめて確認</div></div><div class="brc-admin-motor-trait-badges"><span class="brc-admin-motor-trait-badge">管理者専用・徳山</span></div></div><div class="brc-motor-lab-tabs"><button type="button" class="brc-motor-lab-tab active" data-tab="current" onclick="brcMotorLabSetTab(this,'current')">今節</button><button type="button" class="brc-motor-lab-tab" data-tab="history" onclick="brcMotorLabSetTab(this,'history')">履歴</button><button type="button" class="brc-motor-lab-tab" data-tab="verify" onclick="brcMotorLabSetTab(this,'verify')">検証</button></div></div><div class="brc-motor-lab-body"><div class="brc-motor-lab-panel active" data-panel="current">${overviewHtml}<div class="brc-motor-lab-section-title">BRC 今節分析</div><div id="brc-admin-motor-current-${no}" class="brc-admin-motor-trait-current">${brcBuildAdminTokuyamaCurrentHtml(no,{n:0,ready:false})}</div></div><div class="brc-motor-lab-panel" data-panel="history">${publicHistoryHtml}<div class="brc-motor-lab-section-title">BRC 機力傾向</div><div class="brc-motor-history-flow"><div class="brc-motor-history-row"><div class="role">基本の伸び傾向</div><div class="value ${long.cls}">${longText}</div><div class="meta">長期 N=${Number(t.n)||0}</div></div><div class="brc-motor-history-row"><div class="role">最近の伸び傾向</div><div class="value ${recent.cls}">${recentText}</div><div class="meta">直近10走</div></div><div class="brc-motor-history-row"><div class="role">前回の足色</div><div class="value">${t.prevType||'判定不能'}</div><div class="meta">${prevPeriod}${prevRuns?`（${prevRuns}走）`:''}</div></div></div><div class="brc-motor-history-comment">${historyComment}</div></div><div class="brc-motor-lab-panel" data-panel="verify"><div class="brc-motor-lab-section-title">生データ・判定条件</div><div class="brc-motor-verify-grid"><div class="brc-motor-verify-card"><div class="k">長期伸び指数</div><div class="v">${brcMotorTraitSigned(t.longStretch)}</div><div class="sub">N=${Number(t.n)||0}</div></div><div class="brc-motor-verify-card"><div class="k">直近10走指数</div><div class="v">${brcMotorTraitSigned(t.recent10)}</div><div class="sub">最近の伸び状態</div></div><div class="brc-motor-verify-card"><div class="k">前回使用期間</div><div class="v">${prevPeriod}</div><div class="sub">${prevRuns?`${prevRuns}走`:'データなし'}</div></div><div class="brc-motor-verify-card"><div class="k">開催前データ</div><div class="v">${fmtMotorDate(t.first)}〜${fmtMotorDate(t.last)}</div><div class="sub">確定済み履歴</div></div></div><div class="brc-motor-rule-box"><strong>判定ルール：</strong> 長期伸びは ±0.25 / ±0.50、同レース6艇内の母標準偏差（ddof=0）。今節は最初2〜3走の展示・1周・まわり足で判定し、タイプ差0.35未満は特徴未確定。今節機力A〜Eはβ。<br><strong>予測への扱い：</strong> AI予測・展開・買い目へは未反映。表示・OOS検証専用。</div></div></div></div>`;
 }
 let __motorDetailCache = null;
 let __motorDetailLiveLoaded = false;
@@ -17323,10 +17377,11 @@ function openMotorDetailLegacy(course){
   const finals=(d.finals||[]).slice().reverse();
   const finalHtml=finals.length ? finals.map(f=>`<div class="motor-final-row"><span class="motor-final-date">${fmtMotorDate(f.date)}</span><span class="motor-final-grade">${escMotor(f.grade||'')}</span><span class="motor-final-name">${escMotor(f.name)}</span><span class="motor-final-rank ${String(f.rank)==='1'?'win':''}">${String(f.rank)==='1'?'🏆 1着':escMotor(f.rank)+'着'}</span></div>`).join('') : '<div class="motor-detail-empty">優勝戦出場歴なし</div>';
   const gcol=MOTOR_GRADE_COLOR[b.motorGrade]||'var(--ink-soft)';
+  const publicInfo={grade:b.motorGrade,gradeColor:gcol,motor2:b.motor2,motorNo:b.motorNo,finalsCount:Number(d.finals_count||0),winsCount:Number(d.wins_count||0),n:Number(d.n)||0,cycleStart:venueMeta.cycle_start,prevUsers:prev?.users?.map(u=>u.name)||[],prevStart:prev?.start||'',prevEnd:prev?.end||'',prevRanks:prev?.ranks||[],finals};
   document.getElementById('motorDetailBody').innerHTML=`
     <div class="motor-detail-head"><div><div id="motorDetailTitle" class="motor-detail-title">${escMotor(venue)} ${b.motorNo}号機 <span style="color:${gcol};">${escMotor(b.motorGrade)}</span></div><div class="motor-detail-sub">使用開始 ${escMotor(venueMeta.cycle_start||'―')}</div></div><button class="motor-detail-close" type="button" onclick="closeMotorDetail()" aria-label="閉じる">×</button></div>
     <div class="motor-detail-topstats"><div class="motor-detail-stat"><b>${Math.round(Number(b.motor2))}%</b><span>2連対率</span></div><div class="motor-detail-stat"><b>${Number(d.n)}</b><span>N</span></div><div class="motor-detail-stat"><b>${Number(d.finals_count||0)}</b><span>優出</span></div><div class="motor-detail-stat"><b>${Number(d.wins_count||0)}</b><span>優勝</span></div></div>
-    ${brcBuildAdminTokuyamaMotorTraitHtml(venue,b.motorNo)}
+    ${brcBuildAdminTokuyamaMotorTraitHtml(venue,b.motorNo,publicInfo)}
     <div class="motor-detail-section"><h4>前回使用者</h4><div><span class="motor-prev-name">${prevUsers}</span>${prevPeriod?`<span class="motor-prev-period">${prevPeriod}</span>`:''}</div>${prevRanks?`<div class="motor-prev-ranks">${prevRanks}</div>`:''}</div>
     <div class="motor-detail-section"><h4>優勝戦出場歴</h4><div class="motor-final-list">${finalHtml}</div></div>
     <div class="motor-detail-note">N・優出・優勝・履歴は現在のモーター使用開始日以降、今節開始前までの公式結果から集計。</div>`;
