@@ -3276,6 +3276,25 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
     text-align:center;
   }
 }
+
+/* ---- BRC_PREDICT_DETAIL_TABS_STICKY_20260913 ----
+   選手詳細モーダル内をスクロールしても「選手 / 展開 / ST / モーター」を上端に固定する。 */
+.predict-detail-backdrop .predict-unified-tabs{
+  position:sticky;
+  top:0;
+  z-index:40;
+  background:rgba(255,255,255,.97);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  box-shadow:0 8px 14px -14px rgba(10,31,51,.55);
+}
+@media(max-width:640px){
+  .predict-detail-backdrop .predict-unified-tabs{
+    top:0;
+    z-index:40;
+  }
+}
+
 </style>
 
 <style id="brc-three-stage-sticky-fix">
