@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_TIMEX_FINAL_PREDICTION_SUMMARY_V1_20260913 -->
 <!-- BRC_MOTOR_STRENGTH_TYPE_CLARITY_V1_20260913 -->
 <!-- BRC_ADMIN_TOKUYAMA_MOTOR_ANALYSIS_UI_V3_20260912 -->
 <!-- BRC_PREDICT_RACE_SWITCH_DELAYED_LOADING_V1_20260912 -->
@@ -2576,6 +2577,39 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
     .brc-ex-alert-card{padding:14px;}
     .brc-ex-alert-ratehead,.brc-ex-alert-raterow{grid-template-columns:1fr 64px 64px 58px;padding-left:8px;padding-right:8px;}
     .brc-ex-alert-forecast-item .v{font-size:20px;}
+  }
+
+
+  /* ---- BRCタイムX 最終予測：出走データ上部の6艇サマリー ---- */
+  .brc-timex-final{margin:0 0 14px;padding:12px;border:1px solid rgba(0,87,219,.16);border-radius:12px;background:linear-gradient(160deg,rgba(0,87,219,.055),rgba(255,255,255,.96));}
+  .brc-timex-final-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:9px;}
+  .brc-timex-final-title{font-size:14px;font-weight:950;color:var(--navy);}
+  .brc-timex-final-sub{font-size:9.5px;font-weight:750;color:var(--ink-soft);}
+  .brc-timex-final-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;}
+  .brc-timex-final-boat{min-width:0;padding:8px 5px 7px;border:1px solid rgba(10,31,51,.09);border-radius:9px;background:#fff;text-align:center;}
+  .brc-timex-final-player{display:flex;align-items:center;justify-content:center;gap:4px;min-width:0;margin-bottom:4px;}
+  .brc-timex-final-player .num-badge{flex:0 0 auto;}
+  .brc-timex-final-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:900;color:var(--navy);}
+  .brc-timex-final-rate{font-size:18px;font-weight:950;line-height:1.1;font-variant-numeric:tabular-nums;color:var(--navy);}
+  .brc-timex-final-rate small{font-size:9px;margin-left:1px;}
+  .brc-timex-final-x{min-height:22px;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:3px;font-size:8.5px;font-weight:850;color:var(--ink-soft);}
+  .brc-timex-final-x .exhibition-arrow-icon{width:16px;height:16px;}
+  .brc-timex-final-personal{min-height:13px;margin-top:2px;font-size:8px;font-weight:900;line-height:1.2;}
+  .brc-timex-final-personal.up{color:var(--trend-up);}.brc-timex-final-personal.down{color:var(--trend-down);}.brc-timex-final-personal.flat{color:var(--ink-soft);}
+  @media(max-width:640px){
+    .brc-timex-final{padding:9px 7px;margin-bottom:10px;}
+    .brc-timex-final-head{margin-bottom:7px;}
+    .brc-timex-final-title{font-size:12.5px}.brc-timex-final-sub{font-size:8px;}
+    .brc-timex-final-grid{gap:3px;}
+    .brc-timex-final-boat{padding:6px 2px 5px;border-radius:7px;}
+    .brc-timex-final-player{gap:2px;margin-bottom:3px;}
+    .brc-timex-final-player .num-badge{width:17px !important;height:17px !important;font-size:9px !important;}
+    .brc-timex-final-name{font-size:8.5px;}
+    .brc-timex-final-rate{font-size:15px;}
+    .brc-timex-final-rate small{font-size:7.5px;}
+    .brc-timex-final-x{min-height:19px;font-size:7px;gap:1px;}
+    .brc-timex-final-x .exhibition-arrow-icon{width:14px;height:14px;}
+    .brc-timex-final-personal{min-height:11px;font-size:6.8px;}
   }
 
   /* ---- 出走表AI：確率のBRCタイムXを2段目に揃えて表示 ---- */
@@ -12384,6 +12418,30 @@ function brcBuildProbabilityCell(value,arrowHtml,personalHtml=''){
   const personalLine=personalHtml ? `<div class="prob-personal-row">${personalHtml}</div>` : '';
   return `<div class="prob-cell-stack"><div class="prob-value">${value}<span class="predict-unit">%</span></div><div class="prob-eval-row">${evalHtml}</div>${personalLine}</div>`;
 }
+
+function brcBuildTimeXFinalPredictionHtml(boats){
+  if(!Array.isArray(boats)||!boats.length) return '';
+  const cards=boats.map(b=>{
+    const col=LANE_COLORS[b.course]||{bg:'#fff',text:'#0a1f33'};
+    const arrow=b?.exhibitionApplied ? brcBuildExhibitionProbabilityArrowIcon(Number(b?.exhibitionWinDeltaPt),0.75) : '';
+    const personal=brcFindPredictNamePersonalTrendRow(b);
+    let personalHtml='';
+    if(personal){
+      const d=brcAlertDecision(personal);
+      personalHtml=`<div class="brc-timex-final-personal ${d.cls}">個人傾向あり</div>`;
+    }else{
+      personalHtml='<div class="brc-timex-final-personal">&nbsp;</div>';
+    }
+    const xHtml=b?.exhibitionApplied ? `<span>BRCタイムX</span>${arrow}` : '<span>BRCタイムX 展示待ち</span>';
+    return `<div class="brc-timex-final-boat">
+      <div class="brc-timex-final-player"><span class="num-badge" style="width:20px;height:20px;font-size:10.5px;background:${col.bg};color:${col.text};${b.course===1?'border:1px solid rgba(10,31,51,.35);':''}display:inline-flex;align-items:center;justify-content:center;border-radius:50%;">${b.course}</span><span class="brc-timex-final-name" title="${b.player.name}">${b.player.name}</span></div>
+      <div class="brc-timex-final-rate">${b.pct}<small>%</small></div>
+      <div class="brc-timex-final-x">${xHtml}</div>${personalHtml}
+    </div>`;
+  }).join('');
+  return `<section class="brc-timex-final" aria-label="BRCタイムX 最終予測"><div class="brc-timex-final-head"><div class="brc-timex-final-title">BRCタイムX 最終予測</div><div class="brc-timex-final-sub">最終1着率 × 展示評価</div></div><div class="brc-timex-final-grid">${cards}</div></section>`;
+}
+
 function brcBuildWinCellInner(b,venue){
   // 1着率はTimeX v2の正式補正値。
   // 本人傾向は選手名下の「BRCタイムX 注意」から確認できるため、一覧の重複表示はしない。
@@ -16795,6 +16853,7 @@ async function runPredict(){
   if(!brcPredictRequestIsCurrent(requestCtx)) return;
   box.innerHTML = `
     ${buildCurrentRaceSummaryHtml(venue)}
+    ${brcBuildTimeXFinalPredictionHtml(boats)}
     ${buildInReliabilityCardHtmlFromServer(localInReliability)}
     ${brcBuildSlitEvaluationHtml(boats, liveExhibitionRace, localInReliability)}
     ${brcBuildRaceResultFoldHtml()}
