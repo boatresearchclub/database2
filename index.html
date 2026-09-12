@@ -11083,7 +11083,7 @@ function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhib
   }else{
     // 会員側は従来UIのまま。管理者βが公開画面へ漏れないよう分岐する。
     box.innerHTML=`
-      ${buildCurrentRaceSummaryHtml(venue)}
+      ${buildCurrentRaceSummaryHtml(venue, exhibitionApplied)}
       <div class="predict-ai-head">
         <div><div class="predict-ai-title">イン逃げ時予測</div></div>
         ${reliability}
@@ -13024,20 +13024,17 @@ function brcFindPredictNamePersonalTrendRow(b){
   return selected && Number(selected.N)>=12 ? selected : null;
 }
 function brcBuildPredictExhibitionLabelHtml(b){
-  const base=`<span class="predict-exhibition-base"><span class="brc">BRC</span><span>タイムX</span></span>`;
-
-  // 出走データは「BRCタイムX」と「個人傾向」を分けて表示する。
+  // 選手名下は「個人傾向」がある場合だけ表示する。
+  // BRCタイムXは着率ヘッダー側で示し、ここでは重複表示しない。
   // 着率・TimeX補正・AI予測の計算ロジックは変更しない。
   const personal=brcFindPredictNamePersonalTrendRow(b);
   if(personal){
     const payload=encodeURIComponent(JSON.stringify(brcAlertPayload(personal,b)));
     const decision=brcAlertDecision(personal);
     const cls=decision.cls==='up'?'personal-up':decision.cls==='down'?'personal-down':'personal-flat';
-    return `<span class="predict-exhibition-inline predict-exhibition-stack">${base}<button type="button" class="predict-personal-inline ${cls}" onclick="event.stopPropagation();brcShowPredictNamePersonalTrend(decodeURIComponent('${payload}'))" title="個人傾向をタップして内容を確認">個人傾向</button></span>`;
+    return `<button type="button" class="predict-personal-inline ${cls}" onclick="event.stopPropagation();brcShowPredictNamePersonalTrend(decodeURIComponent('${payload}'))" title="個人傾向をタップして内容を確認">個人傾向</button>`;
   }
-
-  // 個人傾向がない場合はBRCタイムXだけを表示。基礎特性は詳細画面側で確認する。
-  return `<span class="predict-exhibition-inline predict-exhibition-stack">${base}</span>`;
+  return '';
 }
 function brcAlertPct(v){
   const n=Number(v); return Number.isFinite(n)?`${n.toFixed(1)}%`:'―';
@@ -16860,7 +16857,7 @@ async function runPredict(){
 
   if(!brcPredictRequestIsCurrent(requestCtx)) return;
   box.innerHTML = `
-    ${buildCurrentRaceSummaryHtml(venue)}
+    ${buildCurrentRaceSummaryHtml(venue, exhibitionApplied)}
     ${buildInReliabilityCardHtmlFromServer(localInReliability)}
     ${brcBuildSlitEvaluationHtml(boats, liveExhibitionRace, localInReliability)}
     ${brcBuildRaceResultFoldHtml()}
@@ -16869,8 +16866,8 @@ async function runPredict(){
     <table class="predict-table">
       <thead><tr>
         <th>枠</th><th>選手</th>
-        <th class="num"><span class="predict-head-main">最終1着率</span><span class="predict-head-sub">（展示評価）</span></th>
-        <th class="num"><span class="predict-head-main">3連対率</span><span class="predict-head-sub">（展示評価）</span></th>
+        <th class="num"><span class="predict-head-main">1着率</span><span class="predict-head-sub">（BRCタイムX）</span></th>
+        <th class="num"><span class="predict-head-main">3連対率</span><span class="predict-head-sub">（BRCタイムX）</span></th>
         <th class="num"><span class="predict-head-main">ST順位</span><span class="predict-head-sub">（S安定）</span></th><th class="num"><span class="predict-head-main">モーター</span><span class="predict-head-sub">（2連）</span></th><th class="predict-col-opt">備考</th>
       </tr></thead>
       <tbody>
