@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <!-- BRC_TIMEX_FINAL_PREDICTION_SUMMARY_V1_20260913 -->
+<!-- BRC_PREDICT_TIMEX_ORIGINAL_TABLE_UI_V2_20260913 -->
 <!-- BRC_MOTOR_STRENGTH_TYPE_CLARITY_V1_20260913 -->
 <!-- BRC_ADMIN_TOKUYAMA_MOTOR_ANALYSIS_UI_V3_20260912 -->
 <!-- BRC_PREDICT_RACE_SWITCH_DELAYED_LOADING_V1_20260912 -->
@@ -3146,6 +3147,38 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
 .brc-motor-finals-fold[open]>summary::after{content:'−';}
 .brc-motor-finals-fold .brc-motor-public-finals{padding:0 10px 9px;}
 
+
+  /* ---- BRC_PREDICT_TIMEX_ORIGINAL_TABLE_UI_V2_20260913 ---- */
+  .brc-timex-final.brc-timex-final-banner{
+    margin:0 0 12px;padding:11px 13px;border:1px solid rgba(0,87,219,.18);border-radius:12px;
+    background:linear-gradient(160deg,rgba(0,87,219,.065),rgba(255,255,255,.98));text-align:left;
+  }
+  .brc-timex-final-banner-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .brc-timex-final-banner .brc-timex-final-title{font-size:14px;font-weight:950;color:var(--navy);}
+  .brc-timex-final-status{display:inline-flex;align-items:center;padding:3px 7px;border-radius:999px;font-size:9px;font-weight:900;white-space:nowrap;}
+  .brc-timex-final-status.applied{color:#217247;background:rgba(47,143,91,.10);border:1px solid rgba(47,143,91,.18);}
+  .brc-timex-final-status.waiting{color:#8a5a00;background:rgba(217,119,6,.09);border:1px solid rgba(217,119,6,.18);}
+  .brc-timex-final-banner-sub{margin-top:3px;font-size:9.5px;font-weight:700;color:var(--ink-soft);line-height:1.45;}
+  #predictResult .predict-head-main{display:block;font-weight:900;color:#536176;white-space:nowrap;}
+  #predictResult .predict-head-sub{display:block;margin-top:1px;font-size:8.5px;font-weight:750;color:var(--ink-soft);white-space:nowrap;}
+  #predictResult .predict-exhibition-label{min-height:auto;align-items:flex-start;justify-content:center;margin-top:3px;}
+  #predictResult .predict-exhibition-stack{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:100%;}
+  #predictResult .predict-personal-inline{
+    appearance:none;border:0;border-radius:999px;padding:2px 6px;margin:0;background:rgba(10,31,51,.06);
+    color:var(--ink-soft);font:inherit;font-size:8px;font-weight:900;line-height:1.15;white-space:nowrap;cursor:pointer;
+  }
+  #predictResult .predict-personal-inline.personal-up{color:#217247;background:rgba(47,143,91,.10);}
+  #predictResult .predict-personal-inline.personal-down{color:#b4232c;background:rgba(209,55,63,.09);}
+  #predictResult .predict-personal-inline.personal-flat{color:#667085;background:rgba(61,74,99,.08);}
+  @media(max-width:640px){
+    .brc-timex-final.brc-timex-final-banner{padding:9px 10px;margin-bottom:10px;}
+    .brc-timex-final-banner .brc-timex-final-title{font-size:12.5px;}
+    .brc-timex-final-banner-sub{font-size:8.5px;}
+    #predictResult .predict-head-main{font-size:10px;}
+    #predictResult .predict-head-sub{font-size:7.5px;}
+    #predictResult .predict-exhibition-base{font-size:10px !important;}
+    #predictResult .predict-personal-inline{font-size:7.5px;padding:2px 5px;}
+  }
 </style>
 
 <style id="brc-predict-guide-style">
@@ -12421,25 +12454,12 @@ function brcBuildProbabilityCell(value,arrowHtml,personalHtml=''){
 
 function brcBuildTimeXFinalPredictionHtml(boats){
   if(!Array.isArray(boats)||!boats.length) return '';
-  const cards=boats.map(b=>{
-    const col=LANE_COLORS[b.course]||{bg:'#fff',text:'#0a1f33'};
-    const arrow=b?.exhibitionApplied ? brcBuildExhibitionProbabilityArrowIcon(Number(b?.exhibitionWinDeltaPt),0.75) : '';
-    const personal=brcFindPredictNamePersonalTrendRow(b);
-    let personalHtml='';
-    if(personal){
-      const d=brcAlertDecision(personal);
-      personalHtml=`<div class="brc-timex-final-personal ${d.cls}">個人傾向あり</div>`;
-    }else{
-      personalHtml='<div class="brc-timex-final-personal">&nbsp;</div>';
-    }
-    const xHtml=b?.exhibitionApplied ? `<span>BRCタイムX</span>${arrow}` : '<span>BRCタイムX 展示待ち</span>';
-    return `<div class="brc-timex-final-boat">
-      <div class="brc-timex-final-player"><span class="num-badge" style="width:20px;height:20px;font-size:10.5px;background:${col.bg};color:${col.text};${b.course===1?'border:1px solid rgba(10,31,51,.35);':''}display:inline-flex;align-items:center;justify-content:center;border-radius:50%;">${b.course}</span><span class="brc-timex-final-name" title="${b.player.name}">${b.player.name}</span></div>
-      <div class="brc-timex-final-rate">${b.pct}<small>%</small></div>
-      <div class="brc-timex-final-x">${xHtml}</div>${personalHtml}
-    </div>`;
-  }).join('');
-  return `<section class="brc-timex-final" aria-label="BRCタイムX 最終予測"><div class="brc-timex-final-head"><div class="brc-timex-final-title">BRCタイムX 最終予測</div><div class="brc-timex-final-sub">最終1着率 × 展示評価</div></div><div class="brc-timex-final-grid">${cards}</div></section>`;
+  const exhibitionApplied=boats.some(b=>b?.exhibitionApplied);
+  const status=exhibitionApplied ? '<span class="brc-timex-final-status applied">展示反映済</span>' : '<span class="brc-timex-final-status waiting">展示待ち</span>';
+  const sub=exhibitionApplied
+    ? '表示中の着率はBRCタイムX・展示情報を反映した最終予測です'
+    : '展示取得後にBRCタイムXを反映して最終予測へ更新します';
+  return `<section class="brc-timex-final brc-timex-final-banner" aria-label="BRCタイムX 最終予測"><div class="brc-timex-final-banner-top"><div class="brc-timex-final-title">BRCタイムX 最終予測</div>${status}</div><div class="brc-timex-final-banner-sub">${sub}</div></section>`;
 }
 
 function brcBuildWinCellInner(b,venue){
@@ -13005,28 +13025,18 @@ function brcFindPredictNamePersonalTrendRow(b){
 function brcBuildPredictExhibitionLabelHtml(b){
   const base=`<span class="predict-exhibition-base"><span class="brc">BRC</span><span>タイムX</span></span>`;
 
-  // 1) 今回帯の本人傾向が成立していれば、基礎特性の有無に関係なく注意表示。
-  //    タップ時も本人傾向詳細を優先する。
+  // 出走データは「BRCタイムX」と「個人傾向」を分けて表示する。
+  // 着率・TimeX補正・AI予測の計算ロジックは変更しない。
   const personal=brcFindPredictNamePersonalTrendRow(b);
   if(personal){
     const payload=encodeURIComponent(JSON.stringify(brcAlertPayload(personal,b)));
-    const meta=brcGetExhibitionAlertMeta(personal);
-    return `<span class="predict-exhibition-inline"><button type="button" class="predict-exhibition-alert ${meta.cls}" onclick="event.stopPropagation();brcShowPredictNamePersonalTrend(decodeURIComponent('${payload}'))" title="今回の本人傾向あり。タップで詳細">BRCタイムX 注意</button></span>`;
+    const decision=brcAlertDecision(personal);
+    const cls=decision.cls==='up'?'personal-up':decision.cls==='down'?'personal-down':'personal-flat';
+    return `<span class="predict-exhibition-inline predict-exhibition-stack">${base}<button type="button" class="predict-personal-inline ${cls}" onclick="event.stopPropagation();brcShowPredictNamePersonalTrend(decodeURIComponent('${payload}'))" title="今回の個人傾向あり。タップで詳細">個人傾向あり</button></span>`;
   }
 
-  // 2) 本人傾向がない場合は、従来の出しやすい／出しにくい基礎特性へフォールバック。
-  const tendency=brcFindPlayerTimeXTendency(b);
-  if(!tendency) return `<span class="predict-exhibition-inline">${base}</span>`;
-  const payloadObj={...tendency,
-    detail:null,
-    current:brcAlertPayload({},b)
-  };
-  const payload=encodeURIComponent(JSON.stringify(payloadObj));
-  const easy=tendency.direction==='easy';
-  const cls=easy?'brc-ex-alert-up':'brc-ex-alert-down';
-  const courseLabel=Number.isFinite(Number(tendency.course))?`${Number(tendency.course)}コース`:'現在コース';
-  const title=easy?`${courseLabel}で出しやすい傾向。タップで詳細`:`${courseLabel}で出しにくい傾向。タップで詳細`;
-  return `<span class="predict-exhibition-inline"><button type="button" class="predict-exhibition-alert ${cls}" onclick="event.stopPropagation();brcShowPlayerTimeXTendency(decodeURIComponent('${payload}'))" title="${title}">BRCタイムX 注意</button></span>`;
+  // 個人傾向がない場合はBRCタイムXだけを表示。基礎特性は詳細画面側で確認する。
+  return `<span class="predict-exhibition-inline predict-exhibition-stack">${base}</span>`;
 }
 function brcAlertPct(v){
   const n=Number(v); return Number.isFinite(n)?`${n.toFixed(1)}%`:'―';
@@ -16862,7 +16872,7 @@ async function runPredict(){
     <table class="predict-table">
       <thead><tr>
         <th>枠</th><th>選手</th>
-        <th class="num">1着率</th>
+        <th class="num"><span class="predict-head-main">最終1着率</span><span class="predict-head-sub">（展示評価）</span></th>
         <th class="num">3連対率</th>
         <th class="num">ST順位</th><th class="num">モーター</th><th class="predict-col-opt">備考</th>
       </tr></thead>
