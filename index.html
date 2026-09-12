@@ -3312,6 +3312,50 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
   }
 }
 
+
+/* ---- BRC_PREDICT_DETAIL_STICKY_NO_GAP_20260913 ----
+   iOS Safariでスクロール内容が固定ヘッダー上に覗く問題を根本修正。
+   スクロールコンテナ側のpaddingをなくし、固定ヘッダーと各パネル側へ余白を移す。 */
+.predict-detail-backdrop .motor-detail-sheet{
+  padding:0 !important;
+}
+.predict-detail-backdrop #predictDetailBody,
+.predict-detail-backdrop .predict-unified-shell{
+  min-width:0;
+}
+.predict-detail-backdrop .predict-unified-sticky{
+  position:sticky;
+  top:0;
+  z-index:60;
+  width:100%;
+  box-sizing:border-box;
+  margin:0 0 12px !important;
+  padding:18px 18px 9px !important;
+  background:#fff !important;
+  box-shadow:0 10px 18px -16px rgba(10,31,51,.55);
+}
+.predict-detail-backdrop .predict-unified-panel{
+  padding-left:18px;
+  padding-right:18px;
+  box-sizing:border-box;
+}
+.predict-detail-backdrop .predict-unified-shell{
+  padding-bottom:16px;
+}
+@media(max-width:640px){
+  .predict-detail-backdrop .predict-unified-sticky{
+    padding:16px 14px 8px !important;
+    margin:0 0 10px !important;
+  }
+  .predict-detail-backdrop .predict-unified-panel{
+    padding-left:14px;
+    padding-right:14px;
+  }
+  .predict-detail-backdrop .predict-unified-shell{
+    padding-bottom:18px;
+  }
+}
+
 </style>
 
 <style id="brc-three-stage-sticky-fix">
