@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- BRC_ADMIN_TOKUYAMA_MOTOR_ANALYSIS_V2_20260912 -->
+<!-- BRC_ADMIN_TOKUYAMA_MOTOR_ANALYSIS_UI_V3_20260912 -->
 <!-- BRC_PREDICT_RACE_SWITCH_DELAYED_LOADING_V1_20260912 -->
 <!-- BRC_TOP_BANNER_REPLACE_20260909 -->
 <!-- BRC_ADMIN_MATRIX_NAME_LAYOUT_FIX_20260910 -->
@@ -16885,34 +16885,50 @@ window.__playersRendered = true;
 .motor-final-list{display:grid;gap:6px}.motor-final-row{display:grid;grid-template-columns:72px 38px 1fr auto;gap:6px;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px solid rgba(10,31,51,.055)}.motor-final-row:last-child{border-bottom:0}.motor-final-date,.motor-final-grade{color:var(--ink-soft)}.motor-final-name{font-weight:700;color:var(--navy)}.motor-final-rank{font-weight:900;white-space:nowrap}.motor-final-rank.win{color:#b47a00}.motor-detail-empty{font-size:12px;color:var(--ink-soft);padding:4px 0}.motor-detail-note{font-size:10.5px;color:var(--ink-soft);margin-top:10px;line-height:1.45}
 @media(max-width:640px){.motor-detail-backdrop{padding:0}.motor-detail-sheet{width:100%;max-height:82vh;border-radius:18px 18px 0 0;padding:16px 16px 18px}.motor-detail-topstats{gap:5px}.motor-detail-stat b{font-size:15px}.motor-final-row{grid-template-columns:66px 34px 1fr auto;gap:4px;font-size:11.5px}}
 
-/* BRC_ADMIN_TOKUYAMA_MOTOR_ANALYSIS_V2_20260912 */
-.brc-admin-motor-trait{margin:12px 0 2px;padding:11px;border:1px solid rgba(124,58,237,.20);border-radius:12px;background:linear-gradient(160deg,rgba(124,58,237,.055),rgba(255,255,255,.98));}
-.brc-admin-motor-trait-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px;}
-.brc-admin-motor-trait-title{font-size:12.5px;font-weight:950;color:var(--navy);}
+/* BRC_ADMIN_TOKUYAMA_MOTOR_ANALYSIS_UI_V3_20260912 */
+.brc-admin-motor-trait{margin:12px 0 2px;padding:12px;border:1px solid rgba(124,58,237,.20);border-radius:14px;background:linear-gradient(160deg,rgba(124,58,237,.055),rgba(255,255,255,.98));}
+.brc-admin-motor-trait-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;}
+.brc-admin-motor-trait-title{font-size:13.5px;font-weight:950;color:var(--navy);}
 .brc-admin-motor-trait-badges{display:flex;align-items:center;justify-content:flex-end;gap:5px;flex-wrap:wrap;}
 .brc-admin-motor-trait-badge{display:inline-flex;align-items:center;padding:3px 7px;border-radius:999px;background:rgba(124,58,237,.10);color:var(--grade-s);font-size:9px;font-weight:950;white-space:nowrap;}
 .brc-admin-motor-trait-badge.legacy{background:rgba(10,31,51,.06);color:var(--ink-soft);}
-.brc-admin-motor-trait-main{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:9px 10px;border:1px solid rgba(10,31,51,.07);border-radius:9px;background:#fff;}
-.brc-admin-motor-trait-main + .brc-admin-motor-trait-main{margin-top:6px;}
-.brc-admin-motor-trait-label{font-size:10px;font-weight:850;color:var(--ink-soft);}
-.brc-admin-motor-trait-value{font-size:17px;font-weight:950;color:var(--navy);text-align:right;}
-.brc-admin-motor-trait-value.stretch,.brc-admin-motor-trait-metric .v.stretch{color:#2563eb;}
-.brc-admin-motor-trait-value.turn,.brc-admin-motor-trait-metric .v.turn{color:#b36a00;}
-.brc-admin-motor-trait-value.balance,.brc-admin-motor-trait-metric .v.balance{color:#64748b;}
-.brc-admin-motor-trait-value.good,.brc-admin-motor-trait-metric .v.good{color:var(--trend-up);}
-.brc-admin-motor-trait-value.bad,.brc-admin-motor-trait-metric .v.bad{color:var(--trend-down);}
-.brc-admin-motor-trait-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:7px;}
-.brc-admin-motor-trait-grid.current{grid-template-columns:repeat(4,minmax(0,1fr));}
-.brc-admin-motor-trait-metric{min-width:0;padding:7px 4px;border:1px solid rgba(10,31,51,.07);border-radius:8px;background:rgba(255,255,255,.78);text-align:center;}
-.brc-admin-motor-trait-metric .k{font-size:8px;font-weight:850;color:var(--ink-soft);white-space:nowrap;}
-.brc-admin-motor-trait-metric .v{margin-top:2px;font-size:11.5px;font-weight:950;color:var(--navy);font-variant-numeric:tabular-nums;white-space:normal;line-height:1.25;}
-.brc-admin-motor-trait-metric .sub{margin-top:2px;font-size:8.5px;font-weight:750;color:var(--ink-soft);line-height:1.3;white-space:normal;}
-.brc-admin-motor-trait-current{margin-top:8px;padding-top:8px;border-top:1px dashed rgba(124,58,237,.18);}
-.brc-admin-motor-trait-current-status{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 1px 5px;font-size:9px;color:var(--ink-soft);font-weight:800;}
+.brc-motor-summary{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:7px;}
+.brc-motor-summary-main{min-width:0;padding:11px 12px;border:1px solid rgba(10,31,51,.08);border-radius:11px;background:#fff;}
+.brc-motor-summary-label{font-size:9px;font-weight:900;color:var(--ink-soft);letter-spacing:.02em;}
+.brc-motor-summary-value{display:flex;align-items:baseline;gap:7px;margin-top:2px;min-width:0;}
+.brc-motor-summary-grade{font-size:24px;font-weight:950;line-height:1;color:var(--navy);}
+.brc-motor-summary-grade.good{color:var(--trend-up);}.brc-motor-summary-grade.bad{color:var(--trend-down);}.brc-motor-summary-grade.balance{color:var(--grade-c);}
+.brc-motor-summary-grade-text{font-size:11px;font-weight:850;color:var(--ink-soft);white-space:nowrap;}
+.brc-motor-summary-side{display:grid;grid-template-rows:1fr 1fr;gap:7px;}
+.brc-motor-summary-item{min-width:0;padding:9px 10px;border:1px solid rgba(10,31,51,.08);border-radius:11px;background:#fff;}
+.brc-motor-summary-item .k{font-size:8.5px;font-weight:900;color:var(--ink-soft);}
+.brc-motor-summary-item .v{margin-top:1px;font-size:12.5px;font-weight:950;color:var(--navy);line-height:1.3;overflow-wrap:anywhere;}
+.brc-motor-summary-item .v.stretch{color:#2563eb}.brc-motor-summary-item .v.turn{color:#b36a00}.brc-motor-summary-item .v.balance{color:#64748b}
+.brc-motor-summary-item .sub{margin-top:2px;font-size:8.5px;font-weight:750;color:var(--ink-soft);line-height:1.35;}
+.brc-motor-plain-comment{margin:8px 0 0;padding:9px 10px;border:1px solid rgba(0,87,219,.12);border-radius:10px;background:rgba(0,87,219,.035);font-size:10.5px;font-weight:800;line-height:1.55;color:var(--navy);}
+.brc-motor-ref-title{margin:10px 1px 5px;font-size:9px;font-weight:900;color:var(--ink-soft);}
+.brc-motor-ref-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
+.brc-motor-ref-card{min-width:0;padding:8px 6px;border:1px solid rgba(10,31,51,.07);border-radius:9px;background:rgba(255,255,255,.76);text-align:center;}
+.brc-motor-ref-card .k{font-size:8px;font-weight:850;color:var(--ink-soft);white-space:nowrap;}
+.brc-motor-ref-card .v{margin-top:2px;font-size:11.5px;font-weight:950;color:var(--navy);line-height:1.25;}
+.brc-motor-ref-card .v.stretch{color:#2563eb}.brc-motor-ref-card .v.turn{color:#b36a00}.brc-motor-ref-card .v.balance{color:#64748b}
+.brc-motor-detail-fold{margin-top:9px;border-top:1px dashed rgba(124,58,237,.16);padding-top:7px;}
+.brc-motor-detail-fold>summary{list-style:none;cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 1px;font-size:9.5px;font-weight:900;color:var(--wave);}
+.brc-motor-detail-fold>summary::-webkit-details-marker{display:none}.brc-motor-detail-fold>summary::after{content:'＋';font-size:12px;color:var(--ink-soft)}.brc-motor-detail-fold[open]>summary::after{content:'−'}
+.brc-motor-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:6px;}
+.brc-motor-detail-metric{min-width:0;padding:7px 6px;border:1px solid rgba(10,31,51,.07);border-radius:8px;background:#fff;text-align:center;}
+.brc-motor-detail-metric .k{font-size:8px;font-weight:850;color:var(--ink-soft)}
+.brc-motor-detail-metric .v{margin-top:2px;font-size:11px;font-weight:950;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.25;overflow-wrap:anywhere}
+.brc-motor-detail-metric .sub{margin-top:2px;font-size:8px;color:var(--ink-soft);line-height:1.35}
+.brc-admin-motor-trait-current{margin-top:9px;padding-top:9px;border-top:1px solid rgba(124,58,237,.13);}
+.brc-admin-motor-trait-current-status{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 1px 6px;font-size:9px;color:var(--ink-soft);font-weight:800;}
 .brc-admin-motor-trait-chip{display:inline-flex;align-items:center;padding:3px 7px;border-radius:999px;background:rgba(47,143,91,.09);border:1px solid rgba(47,143,91,.18);color:#217247;font-size:8.5px;font-weight:950;white-space:nowrap;}
-.brc-admin-motor-trait-note{margin-top:7px;font-size:9px;line-height:1.55;color:var(--ink-soft);}
-.brc-admin-motor-trait-note strong{color:var(--navy);}
-@media(max-width:420px){.brc-admin-motor-trait{padding:9px 8px}.brc-admin-motor-trait-grid,.brc-admin-motor-trait-grid.current{grid-template-columns:repeat(2,minmax(0,1fr));}.brc-admin-motor-trait-value{font-size:15px;}.brc-admin-motor-trait-head{align-items:flex-start}.brc-admin-motor-trait-badges{max-width:52%;}}
+.brc-admin-motor-trait-note{margin-top:7px;font-size:8.7px;line-height:1.55;color:var(--ink-soft);}.brc-admin-motor-trait-note strong{color:var(--navy);}
+@media(max-width:420px){
+  .brc-admin-motor-trait{padding:10px 9px}.brc-admin-motor-trait-head{align-items:flex-start}.brc-admin-motor-trait-badges{max-width:55%}
+  .brc-motor-summary{grid-template-columns:1fr}.brc-motor-summary-side{grid-template-columns:1fr 1fr;grid-template-rows:auto}.brc-motor-summary-grade{font-size:22px}
+  .brc-motor-ref-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.brc-motor-ref-card{padding:7px 3px}.brc-motor-ref-card .k{font-size:7.5px}.brc-motor-ref-card .v{font-size:10.5px}
+}
 .predict-detail-backdrop{z-index:10060;}
 .predict-detail-backdrop .motor-detail-sheet{width:min(620px,100%);height:min(84vh,760px);max-height:min(84vh,760px);overflow:auto;}
 .predict-detail-content{min-width:0;}
@@ -17140,13 +17156,24 @@ function brcTokuyamaCurrentSummary(samples,base){
   const bothGood=Number(stretch)>=.35&&Number(turn)>=.35&&ad<.50;
   return {n,allN:all.length,ready:true,stretch,turn,overall,diff,type,cls,dir,conf,consistency,bothGood,grade:brcMotorCurrentGrade(overall)};
 }
+function brcMotorGradePlainText(g){ return g==='A'?'かなり良い':g==='B'?'良い':g==='C'?'標準':g==='D'?'やや弱い':g==='E'?'弱い':'判定前'; }
+function brcMotorConfidencePlainText(c){ return c==='A+'?'かなり高い':c==='A'?'高い':c==='B+'?'やや高い':c==='B'?'参考になる':c==='C'?'参考程度':'まだ判定できない'; }
+function brcMotorCurrentPlainComment(summary){
+  if(!summary?.ready){ const n=Number(summary?.n)||0; return n===0?'今節の実測データはまだありません。2走そろうと足色の判定を開始します。':'まだ'+n+'走分です。もう少しデータがそろってから足色を判定します。'; }
+  const g=brcMotorGradePlainText(summary.grade);
+  if(summary.type==='特徴未確定') return `今節の機力は${g}水準。伸びと出足の差がまだ小さく、足色は断定しません。${summary.bothGood?'ただし両方の足は良好です。':''}`;
+  const side=summary.dir>0?'伸び':'出足・回り足';
+  return `今節の機力は${g}水準。現時点では${side}が優勢です。判定の確かさは「${brcMotorConfidencePlainText(summary.conf)}」です。`;
+}
 function brcBuildAdminTokuyamaCurrentHtml(motorNo,summary){
   if(!summary?.ready){
     const n=Number(summary?.n)||0;
-    return `<div class="brc-admin-motor-trait-current-status"><span>今節実測 ${n}走取得</span><span>${n<2?'2走から本判定':'判定準備中'}</span></div><div class="brc-admin-motor-trait-main"><span class="brc-admin-motor-trait-label">今節機力評価 β</span><strong class="brc-admin-motor-trait-value balance">判定前</strong></div><div class="brc-admin-motor-trait-grid current"><div class="brc-admin-motor-trait-metric"><div class="k">今節足タイプ</div><div class="v balance">特徴未確定</div></div><div class="brc-admin-motor-trait-metric"><div class="k">今節信頼度</div><div class="v">―</div></div><div class="brc-admin-motor-trait-metric"><div class="k">伸び / 出足</div><div class="v">―</div></div><div class="brc-admin-motor-trait-metric"><div class="k">長期・直近一致</div><div class="v">―</div></div></div>`;
+    return `<div class="brc-admin-motor-trait-current-status"><span>今節 ${n}走取得</span><span>${n<2?'2走から判定':'判定準備中'}</span></div><div class="brc-motor-summary"><div class="brc-motor-summary-main"><div class="brc-motor-summary-label">今節の機力</div><div class="brc-motor-summary-value"><strong class="brc-motor-summary-grade balance">―</strong><span class="brc-motor-summary-grade-text">判定前</span></div></div><div class="brc-motor-summary-side"><div class="brc-motor-summary-item"><div class="k">今の足色</div><div class="v balance">判定前</div><div class="sub">2走から判定</div></div><div class="brc-motor-summary-item"><div class="k">判定の確かさ</div><div class="v">―</div><div class="sub">データ待ち</div></div></div></div><div class="brc-motor-plain-comment">${brcMotorCurrentPlainComment(summary)}</div><details class="brc-motor-detail-fold"><summary>詳しい数値を見る</summary><div class="brc-motor-detail-grid"><div class="brc-motor-detail-metric"><div class="k">伸び / 出足</div><div class="v">―</div></div><div class="brc-motor-detail-metric"><div class="k">過去傾向との一致</div><div class="v">―</div></div></div></details>`;
   }
   const usedLabel=summary.n>=3?'最初3走で固定':'最初2走';
-  return `<div class="brc-admin-motor-trait-current-status"><span>今節実測 ${summary.allN}走取得 / ${usedLabel}で判定</span>${summary.bothGood?'<span class="brc-admin-motor-trait-chip">両足良好</span>':''}</div><div class="brc-admin-motor-trait-main"><span class="brc-admin-motor-trait-label">今節機力評価 β</span><strong class="brc-admin-motor-trait-value ${brcMotorCurrentGradeClass(summary.grade)}">${summary.grade}</strong></div><div class="brc-admin-motor-trait-grid current"><div class="brc-admin-motor-trait-metric"><div class="k">今節足タイプ</div><div class="v ${summary.cls}">${summary.type}</div><div class="sub">差 ${brcMotorTraitSigned(summary.diff)}</div></div><div class="brc-admin-motor-trait-metric"><div class="k">今節信頼度</div><div class="v">${summary.conf}</div><div class="sub">走数＋タイプ差</div></div><div class="brc-admin-motor-trait-metric"><div class="k">伸び / 出足</div><div class="v">${brcMotorTraitSigned(summary.stretch)} / ${brcMotorTraitSigned(summary.turn)}</div><div class="sub">同レース内相対</div></div><div class="brc-admin-motor-trait-metric"><div class="k">長期・直近一致</div><div class="v">${summary.consistency}</div><div class="sub">補助情報のみ</div></div></div>`;
+  const gradeText=brcMotorGradePlainText(summary.grade);
+  const footSub=summary.type==='特徴未確定'?'差が小さく断定せず':(summary.dir>0?'伸びが優勢':'出足・回り足が優勢');
+  return `<div class="brc-admin-motor-trait-current-status"><span>今節 ${summary.allN}走取得 / ${usedLabel}</span>${summary.bothGood?'<span class="brc-admin-motor-trait-chip">両足良好</span>':''}</div><div class="brc-motor-summary"><div class="brc-motor-summary-main"><div class="brc-motor-summary-label">今節の機力</div><div class="brc-motor-summary-value"><strong class="brc-motor-summary-grade ${brcMotorCurrentGradeClass(summary.grade)}">${summary.grade}</strong><span class="brc-motor-summary-grade-text">${gradeText}</span></div></div><div class="brc-motor-summary-side"><div class="brc-motor-summary-item"><div class="k">今の足色</div><div class="v ${summary.cls}">${summary.type}</div><div class="sub">${footSub}</div></div><div class="brc-motor-summary-item"><div class="k">判定の確かさ</div><div class="v">${brcMotorConfidencePlainText(summary.conf)}</div><div class="sub">${summary.conf==='―'?'まだ未確定':`データ判定 ${summary.conf}`}</div></div></div></div><div class="brc-motor-plain-comment">${brcMotorCurrentPlainComment(summary)}</div><details class="brc-motor-detail-fold"><summary>詳しい数値を見る</summary><div class="brc-motor-detail-grid"><div class="brc-motor-detail-metric"><div class="k">伸び / 出足</div><div class="v">${brcMotorTraitSigned(summary.stretch)} / ${brcMotorTraitSigned(summary.turn)}</div><div class="sub">同レース内相対</div></div><div class="brc-motor-detail-metric"><div class="k">タイプ差</div><div class="v">${brcMotorTraitSigned(summary.diff)}</div><div class="sub">0.35未満は特徴未確定</div></div><div class="brc-motor-detail-metric"><div class="k">過去傾向との一致</div><div class="v">${summary.consistency}</div><div class="sub">補助情報のみ</div></div><div class="brc-motor-detail-metric"><div class="k">機力評価β</div><div class="v">${summary.grade}</div><div class="sub">暫定境界で評価</div></div></div></details>`;
 }
 async function brcRefreshAdminTokuyamaMotorTrait(venue,motorNo){
   if(String(venue||'')!=='徳山') return;
@@ -17167,8 +17194,10 @@ function brcBuildAdminTokuyamaMotorTraitHtml(venue,motorNo){
   if(!t) return `<div class="brc-admin-motor-trait"><div class="brc-admin-motor-trait-head"><div class="brc-admin-motor-trait-title">BRCモーター分析</div><span class="brc-admin-motor-trait-badge">管理者専用</span></div><div class="brc-admin-motor-trait-note">この号機は開催前スナップショットにありません。<strong>データ不足として扱い、低評価にはしません。</strong></div></div>`;
   const long=brcMotorStretchBand(t.longStretch),recent=brcMotorStretchBand(t.recent10),legacy=brcTokuyamaLegacyGrade(no);
   const prevPeriod=t.prevStart&&t.prevEnd?`${fmtMotorDate(t.prevStart)}〜${fmtMotorDate(t.prevEnd)}`:'―';
+  const longText=long.label==='標準'?'標準':long.label;
+  const recentText=recent.label==='標準'?'標準':recent.label;
   setTimeout(()=>brcRefreshAdminTokuyamaMotorTrait('徳山',no).catch(()=>{}),0);
-  return `<div class="brc-admin-motor-trait"><div class="brc-admin-motor-trait-head"><div class="brc-admin-motor-trait-title">BRCモーター分析</div><div class="brc-admin-motor-trait-badges"><span class="brc-admin-motor-trait-badge">管理者専用・徳山</span><span class="brc-admin-motor-trait-badge legacy">2連率評価 ${legacy}</span></div></div><div class="brc-admin-motor-trait-grid"><div class="brc-admin-motor-trait-metric"><div class="k">長期伸び素性</div><div class="v ${long.cls}">${long.label}</div><div class="sub">${brcMotorTraitSigned(t.longStretch)} / N=${Number(t.n)||0}</div></div><div class="brc-admin-motor-trait-metric"><div class="k">直近10走の伸び</div><div class="v ${recent.cls}">${recent.label}</div><div class="sub">${brcMotorTraitSigned(t.recent10)}</div></div><div class="brc-admin-motor-trait-metric"><div class="k">前回使用時</div><div class="v">${t.prevType||'判定不能'}</div><div class="sub">${prevPeriod} / N=${Number(t.prevN)||0}</div></div></div><div id="brc-admin-motor-current-${no}" class="brc-admin-motor-trait-current">${brcBuildAdminTokuyamaCurrentHtml(no,{n:0,ready:false})}</div><div class="brc-admin-motor-trait-note">開催前情報は<strong>${fmtMotorDate(t.first)}〜${fmtMotorDate(t.last)}</strong>の確定済み実測から作成。長期伸びは ±0.25 / ±0.50、同レース6艇内の母標準偏差（ddof=0）で評価。前回使用時は履歴表示。今節は最初2〜3走の展示・1周・まわり足だけで判定し、差0.35未満は<strong>特徴未確定</strong>。<strong>AI予測・展開・買い目へ未反映。</strong></div></div>`;
+  return `<div class="brc-admin-motor-trait"><div class="brc-admin-motor-trait-head"><div class="brc-admin-motor-trait-title">BRCモーター分析</div><div class="brc-admin-motor-trait-badges"><span class="brc-admin-motor-trait-badge">管理者専用・徳山</span><span class="brc-admin-motor-trait-badge legacy">2連率評価 ${legacy}</span></div></div><div id="brc-admin-motor-current-${no}" class="brc-admin-motor-trait-current" style="margin-top:0;padding-top:0;border-top:0">${brcBuildAdminTokuyamaCurrentHtml(no,{n:0,ready:false})}</div><div class="brc-motor-ref-title">参考になる過去傾向</div><div class="brc-motor-ref-grid"><div class="brc-motor-ref-card"><div class="k">基本の伸び傾向</div><div class="v ${long.cls}">${longText}</div></div><div class="brc-motor-ref-card"><div class="k">最近の伸び傾向</div><div class="v ${recent.cls}">${recentText}</div></div><div class="brc-motor-ref-card"><div class="k">前回の足色</div><div class="v">${t.prevType||'判定不能'}</div></div></div><details class="brc-motor-detail-fold"><summary>過去データの詳細を見る</summary><div class="brc-motor-detail-grid"><div class="brc-motor-detail-metric"><div class="k">長期伸び指数</div><div class="v">${brcMotorTraitSigned(t.longStretch)}</div><div class="sub">N=${Number(t.n)||0}</div></div><div class="brc-motor-detail-metric"><div class="k">直近10走指数</div><div class="v">${brcMotorTraitSigned(t.recent10)}</div></div><div class="brc-motor-detail-metric"><div class="k">前回使用期間</div><div class="v">${prevPeriod}</div><div class="sub">N=${Number(t.prevN)||0}</div></div><div class="brc-motor-detail-metric"><div class="k">開催前データ</div><div class="v">${fmtMotorDate(t.first)}〜${fmtMotorDate(t.last)}</div></div></div><div class="brc-admin-motor-trait-note">長期伸びは ±0.25 / ±0.50、同レース6艇内の母標準偏差（ddof=0）で評価。前回使用時は履歴表示。今節は最初2〜3走の展示・1周・まわり足だけで判定し、差0.35未満は<strong>特徴未確定</strong>。<strong>AI予測・展開・買い目へ未反映。</strong></div></details></div>`;
 }
 let __motorDetailCache = null;
 let __motorDetailLiveLoaded = false;
