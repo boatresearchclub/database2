@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_REFERENCE_PARITY_GUARD_V1_20260914 -->
 <!-- BRC_ADMIN_REFERENCE_2026_PERIOD_BACKTEST_V1_20260914 -->
 <!-- BRC_TYPOGRAPHY_READABILITY_V1_20260914 -->
 <!-- BRC_ADMIN_REFERENCE_DEDICATED_TAB_V1_20260914 -->
@@ -4076,6 +4077,8 @@ table.brc-ai-ref-odds-table .brc-ai-pick-hit-badge{vertical-align:middle;}
 .brc-refmode-pass span{display:block;margin-top:3px;font-size:9px;line-height:1.5;color:var(--ink-soft);}
 .brc-refmode-shadow-note{margin-top:6px;font-size:8.5px;line-height:1.45;color:#8a5a00;font-weight:800;}
 .brc-refmode-quality{font-variant-numeric:tabular-nums;}
+.brc-refmode-parity-note{margin:0 0 8px;padding:7px 8px;border:1px solid rgba(217,119,6,.18);border-radius:8px;background:rgba(217,119,6,.045);color:#8a5a00;font-size:9px;font-weight:800;line-height:1.5;}
+.brc-refmode-parity-note strong{font-weight:950;color:#7a4a00;}
 @media(max-width:420px){
   .brc-refmode-tabs{gap:3px;padding:3px;}
   .brc-refmode-tab{padding:8px 1px;font-size:9.5px;letter-spacing:-.03em;}
@@ -19117,28 +19120,28 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   ];
   const BRC_REFERENCE_MODE_META={
     hit:{label:'的中型',icon:'🎯',points:10,hit:'40〜45%',roi:'105%以上',status:'本番',statusClass:'good',desc:'確率上位を広めに押さえ、的中を優先。',performance:{
-      month:{title:'今月検証実績',period:'2026/9/1〜9/11',races:41,hits:21,hitRate:51.22,roi:126.10,pl:10700,source:'締切約1分前スナップショットで検証'},
+      month:{title:'今月検証実績',period:'2026/9/1〜9/11',races:41,hits:21,hitRate:51.22,roi:126.10,pl:10700,source:'研究モデル固定ルールを締切前オッズ照合可能レースで検証'},
       d30:{title:'30日バックテスト',period:'2026/8/15〜9/13',races:127,hits:56,hitRate:44.0945,roi:101.0787,pl:1370,source:'2026固定モデルを直近30日で再集計（研究用バックテスト）'},
       half:{title:'半年バックテスト',period:'2026/3/14〜9/13',races:858,hits:377,hitRate:43.9394,roi:102.1189,pl:18180,source:'2026固定モデルを直近6か月で再集計（研究用バックテスト）'},
       year:{title:'1年参考実績',period:'2025通年 locked OOS',races:1716,hits:775,hitRate:45.1632,roi:111.5420,pl:198060,source:'直近12か月運用ではなく、2025年の完全OOSバックテスト'},
       all:{title:'長期検証累計',period:'2024〜2025 固定検証',races:3208,hits:1456,hitRate:45.3865,roi:110.7173,pl:343810,source:'2024 locked + 2025 OOS の検証累計'}
     }},
     balance:{label:'バランス型',icon:'⚖️',points:6,hit:'28〜35%',roi:'110%以上',status:'本番β',statusClass:'good',desc:'確率と配当のバランスを取り、6点へ絞る。',performance:{
-      month:{title:'今月検証実績',period:'2026/9/1〜9/11',races:39,hits:12,hitRate:30.77,roi:85.85,pl:-3310,source:'締切約1分前スナップショットで検証'},
+      month:{title:'今月検証実績',period:'2026/9/1〜9/11',races:39,hits:12,hitRate:30.77,roi:85.85,pl:-3310,source:'研究モデル固定ルールを締切前オッズ照合可能レースで検証'},
       d30:{title:'30日バックテスト',period:'2026/8/15〜9/13',races:137,hits:34,hitRate:24.8175,roi:77.1898,pl:-18750,source:'2026固定モデルを直近30日で再集計（研究用バックテスト）'},
       half:{title:'半年バックテスト',period:'2026/3/14〜9/13',races:825,hits:272,hitRate:32.9697,roi:106.7859,pl:33590,source:'2026固定モデルを直近6か月で再集計（研究用バックテスト）'},
       year:{title:'1年参考実績',period:'2025通年 locked OOS',races:1600,hits:514,hitRate:32.1250,roi:110.1740,pl:97670,source:'直近12か月運用ではなく、2025年の完全OOSバックテスト'},
       all:{title:'長期検証累計',period:'2024〜2025 固定検証',races:3056,hits:978,hitRate:32.0026,roi:111.0782,pl:203130,source:'2024 locked + 2025 OOS の検証累計'}
     }},
     return:{label:'回収型',icon:'🔥',points:6,hit:'15〜25%',roi:'120%以上',status:'Shadow',statusClass:'shadow',desc:'10倍以上を対象に、市場確率とBRC確率を混ぜたEVで6点を選ぶ。',performance:{
-      month:{title:'今月検証実績',period:'2026/9/1〜9/11',races:91,hits:20,hitRate:21.98,roi:127.82,pl:15190,source:'購入可能な締切約1分前オッズで検証'},
+      month:{title:'今月検証実績',period:'2026/9/1〜9/11',races:91,hits:20,hitRate:21.98,roi:127.82,pl:15190,source:'研究モデルP＋購入可能な締切約1分前オッズで検証'},
       d30:{available:false,period:'30日データ不足',reason:'回収型は締切前オッズ必須。直近30日を同一条件で検証できる購入可能オッズがまだ不足しています。'},
       half:{available:false,period:'半年データ不足',reason:'回収型は締切前オッズ必須。半年を同一条件で検証できる購入可能オッズ履歴がありません。'},
       year:{available:false,period:'1年ログ蓄積中',reason:'finalオッズを長期実績へ流用せず、購入可能時点のオッズだけを蓄積します。'},
       all:{title:'有効ログ累計',period:'2026/9/1〜9/11',races:91,hits:20,hitRate:21.98,roi:127.82,pl:15190,source:'現時点で検証に使える締切前オッズの全期間'}
     }},
     high:{label:'高配当型',icon:'💰',points:18,hit:'8〜15%',roi:'130%以上',status:'Shadow',statusClass:'shadow',desc:'50倍以上を対象に、BRC確率×オッズで高配当側を18点まで広く拾う。',performance:{
-      month:{title:'今月検証実績',period:'2026/9/1〜9/11',races:39,hits:7,hitRate:17.95,roi:96.30,pl:-2600,source:'購入可能な締切約1分前オッズで検証'},
+      month:{title:'今月検証実績',period:'2026/9/1〜9/11',races:39,hits:7,hitRate:17.95,roi:96.30,pl:-2600,source:'研究モデルP＋購入可能な締切約1分前オッズで検証'},
       d30:{available:false,period:'30日データ不足',reason:'高配当型は締切前オッズ必須。直近30日を同一条件で検証できる購入可能オッズがまだ不足しています。'},
       half:{available:false,period:'半年データ不足',reason:'高配当型は締切前オッズ必須。半年を同一条件で検証できる購入可能オッズ履歴がありません。'},
       year:{available:false,period:'1年ログ蓄積中',reason:'finalオッズを長期実績へ流用せず、購入可能時点のオッズだけを蓄積します。'},
@@ -19265,7 +19268,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     window.__brcReferenceModeCurrent=current;
     const tabs=modes.map(k=>{const m=BRC_REFERENCE_MODE_META[k];return `<button type="button" class="brc-refmode-tab ${k===current?'active':''}" data-brc-refmode-tab="${k}" aria-selected="${k===current?'true':'false'}">${esc(m.icon+m.label)}</button>`;}).join('');
     const panels=modes.map(k=>`<div class="brc-refmode-panel ${k===current?'active':''}" data-brc-refmode-panel="${k}">${brcRefModePanelHtml(results[k])}</div>`).join('');
-    return `<div class="brc-refmode-shell" data-brc-ref-modes-host><div class="brc-refmode-head"><div class="brc-refmode-head-title">BRC参考買い目</div><div class="brc-refmode-head-note">管理者専用・目的別4モード</div></div><div class="brc-refmode-tabs" role="tablist" aria-label="BRC参考買い目モード">${tabs}</div>${panels}</div>`;
+    return `<div class="brc-refmode-shell" data-brc-ref-modes-host><div class="brc-refmode-head"><div class="brc-refmode-head-title">BRC参考買い目</div><div class="brc-refmode-head-note">管理者専用・目的別4モード</div></div><div class="brc-refmode-parity-note"><strong>一致監査中</strong>｜下の実績は研究モデルの検証値です。現画面の120通りPとは完全同期前のため、画面表示買い目そのものの実績とはまだ扱いません。</div><div class="brc-refmode-tabs" role="tablist" aria-label="BRC参考買い目モード">${tabs}</div>${panels}</div>`;
   }
   function brcRefModeSnapshot(boats,workerPrediction,data,phase,oddsOverride=null){
     try{
