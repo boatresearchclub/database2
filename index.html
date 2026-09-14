@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_ADMIN_REFERENCE_4MODE_TABS_V1_20260914 -->
 <!-- BRC_HIDE_REFERENCE_PERSONAL_TREND_V1_20260914 -->
 <!-- BRC_OPERATION_TIMING_120SEC_V2_20260914 -->
 <!-- BRC_TIMEX_FINAL_PREDICTION_SUMMARY_V1_20260913 -->
@@ -3915,6 +3916,40 @@ table.brc-mark-table td:first-child{text-align:left;padding-left:7px;}
 .brc-refmon-detail .brc-refmon-shadowline{margin:7px 9px 0;}
 .brc-refmon-detail .brc-refmon-note{margin:7px 9px 9px;}
 .brc-refmon-performance-slot[hidden]{display:none!important;}
+
+/* BRC_ADMIN_REFERENCE_4MODE_TABS_V1_20260914 */
+.brc-refmode-shell{margin-top:0;}
+.brc-refmode-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px;}
+.brc-refmode-head-title{font-size:12px;font-weight:950;color:var(--navy);}
+.brc-refmode-head-note{font-size:8.5px;font-weight:800;color:var(--ink-soft);white-space:nowrap;}
+.brc-refmode-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:4px;margin-bottom:8px;border:1px solid rgba(10,31,51,.09);border-radius:11px;background:rgba(10,31,51,.035);}
+.brc-refmode-tab{appearance:none;border:0;border-radius:8px;background:transparent;color:var(--ink-soft);min-width:0;padding:8px 3px;font:inherit;font-size:10.5px;font-weight:950;line-height:1.15;cursor:pointer;white-space:nowrap;}
+.brc-refmode-tab.active{background:#fff;color:var(--wave);box-shadow:0 1px 5px rgba(10,31,51,.09);}
+.brc-refmode-tab[data-brc-refmode-tab="return"]::after,.brc-refmode-tab[data-brc-refmode-tab="high"]::after{content:'S';display:inline-flex;align-items:center;justify-content:center;margin-left:3px;width:13px;height:13px;border-radius:50%;background:rgba(217,119,6,.12);color:#9a5d00;font-size:7px;font-weight:950;vertical-align:1px;}
+.brc-refmode-panel{display:none;}
+.brc-refmode-panel.active{display:block;}
+.brc-refmode-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-bottom:7px;}
+.brc-refmode-kpi{min-width:0;padding:6px 3px;border:1px solid rgba(10,31,51,.07);border-radius:8px;background:#f8fafc;text-align:center;}
+.brc-refmode-kpi .k{font-size:7px;font-weight:850;color:var(--ink-soft);white-space:nowrap;}
+.brc-refmode-kpi .v{margin-top:1px;font-size:10.5px;font-weight:950;color:var(--navy);white-space:nowrap;}
+.brc-refmode-kpi .v.good{color:var(--trend-up);}.brc-refmode-kpi .v.shadow{color:#9a5d00;}
+.brc-refmode-desc{margin:0 0 7px;padding:7px 8px;border-radius:8px;border:1px solid rgba(10,31,51,.07);background:rgba(10,31,51,.02);font-size:9px;line-height:1.5;color:var(--ink-soft);}
+.brc-refmode-desc strong{color:var(--navy);}
+.brc-refmode-pass{padding:12px 10px;border:1px solid rgba(209,55,63,.16);border-radius:9px;background:rgba(209,55,63,.035);text-align:center;}
+.brc-refmode-pass strong{display:block;color:#b4232c;font-size:12px;font-weight:950;}
+.brc-refmode-pass span{display:block;margin-top:3px;font-size:9px;line-height:1.5;color:var(--ink-soft);}
+.brc-refmode-shadow-note{margin-top:6px;font-size:8.5px;line-height:1.45;color:#8a5a00;font-weight:800;}
+.brc-refmode-quality{font-variant-numeric:tabular-nums;}
+@media(max-width:420px){
+  .brc-refmode-tabs{gap:3px;padding:3px;}
+  .brc-refmode-tab{padding:8px 1px;font-size:9.5px;letter-spacing:-.03em;}
+  .brc-refmode-head-note{display:none;}
+  .brc-refmode-kpis{gap:4px;}
+  .brc-refmode-kpi{padding:5px 2px;}
+  .brc-refmode-kpi .k{font-size:6.5px;}
+  .brc-refmode-kpi .v{font-size:9.5px;}
+}
+
 @media(max-width:420px){
   .brc-ai-admin-tabs.brc-refmon-enabled{gap:3px;padding:3px;}
   .brc-ai-admin-tabs.brc-refmon-enabled .brc-ai-admin-tab{font-size:11px;padding:8px 3px;letter-spacing:-.02em;}
@@ -18677,24 +18712,147 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     </div>`;
   }
 
+
+  // BRC_ADMIN_REFERENCE_4MODE_TABS_V1_20260914
+  // 管理者専用。現行BRCの最終着率・条件付き着順確率から120通りを構成し、目的別に候補を切り替える。
+  // 回収型 / 高配当型はオッズ依存のShadow。一般会員表示や既存予測値へは再加算しない。
+  const BRC_REFERENCE_MODE_META={
+    hit:{label:'的中型',icon:'🎯',points:10,hit:'40〜45%',roi:'105%以上',status:'本番',statusClass:'good',desc:'確率上位を広めに押さえ、的中を優先。'},
+    balance:{label:'バランス型',icon:'⚖️',points:6,hit:'28〜35%',roi:'110%以上',status:'本番β',statusClass:'good',desc:'確率と配当のバランスを取り、6点へ絞る。'},
+    return:{label:'回収型',icon:'🔥',points:6,hit:'15〜25%',roi:'120%以上',status:'Shadow',statusClass:'shadow',desc:'10倍以上を対象に、市場確率とBRC確率を混ぜたEVで6点を選ぶ。'},
+    high:{label:'高配当型',icon:'💰',points:18,hit:'8〜15%',roi:'130%以上',status:'Shadow',statusClass:'shadow',desc:'50倍以上を対象に、BRC確率×オッズで高配当側を18点まで広く拾う。'}
+  };
+  let brcRefModeContext=null;
+
+  function brcRefModeOddsObject(){
+    try{ const sel=brcOddsSelection(); return sel?.key?(__brcOddsLocal?.[sel.key]?.odds||null):null; }catch(_e){ return null; }
+  }
+  function brcRefModeOddsValue(odds,combo){ try{ const v=brcOddsValue(odds,combo); return Number.isFinite(Number(v))&&Number(v)>0?Number(v):null; }catch(_e){ return null; } }
+  function brcRefModeNormalize(rows,key='p'){
+    const src=(Array.isArray(rows)?rows:[]).map(x=>({...x,[key]:Math.max(1e-12,num(x[key],0))}));
+    const z=src.reduce((s,x)=>s+x[key],0)||1;
+    return src.map(x=>({...x,[key]:x[key]/z}));
+  }
+  function brcBuildFull120(boats,workerPrediction,phase){
+    const marks=buildMarks(boats,phase); if(!Array.isArray(marks)||marks.length!==6) return [];
+    const heads=brcRefModeNormalize(marks.map(m=>({head:m.course,p:Math.max(.05,num(m.rates?.win,0))})),'p');
+    const hp=new Map(heads.map(x=>[x.head,x.p]));
+    const rows=[];
+    for(let h=1;h<=6;h++){
+      const cond=h===1?nigeConditional(workerPrediction,boats,phase):genericConditionalForHead(h,marks);
+      for(const x of cond){ rows.push({...x,p:(hp.get(h)||0)*num(x.condP,0)}); }
+    }
+    return brcRefModeNormalize(rows,'p').sort((a,b)=>b.p-a.p||a.combo.localeCompare(b.combo));
+  }
+  function brcRefModeComposite(rows){
+    const vals=(rows||[]).map(x=>Number(x.odds)).filter(v=>Number.isFinite(v)&&v>0);
+    if(vals.length!==(rows||[]).length||!vals.length) return null;
+    try{return brcOddsBuilderComposite(vals.map(v=>({odds:v})));}catch(_e){const z=vals.reduce((s,v)=>s+1/v,0);return z>0?1/z:null;}
+  }
+  function brcRefModeFormation(rows){ return formationLabel((rows||[]).map(x=>({combo:x.combo}))); }
+  function brcRefModeAttachOdds(rows,odds){ return (rows||[]).map(x=>({...x,odds:brcRefModeOddsValue(odds,x.combo)})); }
+  function brcRefModeTop(rows,k,scoreFn,filterFn){
+    const src=(rows||[]).filter(x=>!filterFn||filterFn(x)).map(x=>({...x,__score:num(scoreFn?scoreFn(x):x.p,-1e30)})).filter(x=>Number.isFinite(x.__score));
+    src.sort((a,b)=>b.__score-a.__score||b.p-a.p||a.combo.localeCompare(b.combo));
+    return src.slice(0,k).map(({__score,...x})=>x);
+  }
+  function brcRefModeResult(mode,data,full120,odds){
+    const meta=BRC_REFERENCE_MODE_META[mode];
+    if(!meta) return null;
+    if(data?.decision==='pass') return {mode,meta,participate:false,reason:reasonText(data),picks:[],quality:null};
+    const withOdds=brcRefModeAttachOdds(full120,odds);
+    if(mode==='hit'){
+      const picks=brcRefModeTop(withOdds,10,x=>x.p);
+      return {mode,meta,participate:picks.length===10,reason:picks.length===10?'条件成立':'120通り確率が不足',picks,quality:picks.reduce((s,x)=>s+x.p,0)};
+    }
+    if(mode==='balance'){
+      const haveOdds=withOdds.filter(x=>Number.isFinite(x.odds)).length===withOdds.length;
+      const eligible=haveOdds?withOdds.filter(x=>x.odds>=10):withOdds;
+      if(eligible.length<6) return {mode,meta,participate:false,reason:'10倍以上の候補が6点未満',picks:[],quality:null};
+      const picks=brcRefModeTop(eligible,6,x=>haveOdds?x.p*Math.pow(Math.max(x.odds,1),.15):x.p);
+      return {mode,meta,participate:true,reason:haveOdds?'確率×配当バランス':'オッズ未取得のため確率順位で暫定表示',picks,quality:picks.reduce((s,x)=>s+x.p,0),provisional:!haveOdds};
+    }
+    const allOddsReady=withOdds.length===120&&withOdds.every(x=>Number.isFinite(x.odds)&&x.odds>0);
+    if(!allOddsReady) return {mode,meta,participate:false,reason:'3連単オッズ120通りが未取得',picks:[],quality:null,oddsRequired:true};
+    if(mode==='return'){
+      const pSharp=brcRefModeNormalize(withOdds.map(x=>({...x,pSharp:Math.pow(Math.max(x.p,1e-12),2.5)})),'pSharp');
+      const market=brcRefModeNormalize(pSharp.map(x=>({...x,q:1/Math.max(x.odds,1e-9)})),'q');
+      const blended=market.map(x=>({...x,bRaw:Math.exp(.4*Math.log(Math.max(x.pSharp,1e-12))+.6*Math.log(Math.max(x.q,1e-12)))}));
+      const bnorm=brcRefModeNormalize(blended,'bRaw').map(x=>({...x,b:x.bRaw}));
+      if(bnorm.filter(x=>x.odds>=10).length<6) return {mode,meta,participate:false,reason:'10倍以上の候補が6点未満',picks:[],quality:null};
+      const picks=brcRefModeTop(bnorm,6,x=>x.b*x.odds,x=>x.odds>=10);
+      const cov=picks.reduce((s,x)=>s+x.b,0), meanEv=picks.reduce((s,x)=>s+x.b*x.odds,0)/Math.max(1,picks.length), quality=meanEv*Math.sqrt(Math.max(cov,1e-12));
+      const ok=quality>=1.2504463195800781;
+      return {mode,meta,participate:ok,reason:ok?'Shadow条件成立':'Shadow基準未満',picks:ok?picks:[],quality};
+    }
+    if(mode==='high'){
+      if(withOdds.filter(x=>x.odds>=50).length<18) return {mode,meta,participate:false,reason:'50倍以上の候補が18点未満',picks:[],quality:null};
+      const picks=brcRefModeTop(withOdds,18,x=>x.p*x.odds,x=>x.odds>=50);
+      const cov=picks.reduce((s,x)=>s+x.p,0), meanEv=picks.reduce((s,x)=>s+x.p*x.odds,0)/Math.max(1,picks.length), quality=meanEv*Math.sqrt(Math.max(cov,1e-12));
+      const ok=quality>=1.546547;
+      return {mode,meta,participate:ok,reason:ok?'Shadow条件成立':'Shadow基準未満',picks:ok?picks:[],quality};
+    }
+    return {mode,meta,participate:false,reason:'未定義',picks:[],quality:null};
+  }
+  function brcRefModePanelHtml(res){
+    const m=res.meta, picks=res.picks||[];
+    const comp=brcRefModeComposite(picks), formation=brcRefModeFormation(picks);
+    const kpis=`<div class="brc-refmode-kpis">
+      <div class="brc-refmode-kpi"><div class="k">目標的中率</div><div class="v">${esc(m.hit)}</div></div>
+      <div class="brc-refmode-kpi"><div class="k">目標回収率</div><div class="v">${esc(m.roi)}</div></div>
+      <div class="brc-refmode-kpi"><div class="k">基準点数</div><div class="v">${m.points}点</div></div>
+      <div class="brc-refmode-kpi"><div class="k">運用</div><div class="v ${esc(m.statusClass)}">${esc(m.status)}</div></div>
+    </div>`;
+    const desc=`<div class="brc-refmode-desc"><strong>${esc(m.icon+' '+m.label)}</strong>｜${esc(m.desc)}${Number.isFinite(res.quality)?` <span class="brc-refmode-quality">判定値 ${Number(res.quality).toFixed(3)}</span>`:''}</div>`;
+    if(!res.participate){
+      return `${kpis}${desc}<div class="brc-refmode-pass"><strong>見送り</strong><span>${esc(res.reason||'条件未達')}</span></div>${(res.mode==='return'||res.mode==='high')?'<div class="brc-refmode-shadow-note">※オッズ依存モードは管理者Shadow。基準を満たした時だけ候補を表示します。</div>':''}`;
+    }
+    const list=picks.map(x=>`<div class="brc-refmon-pick" data-brc-refmon-combo="${esc(x.combo)}"><strong>${esc(x.combo)}</strong><span class="odds">${Number.isFinite(Number(x.odds))?Number(x.odds).toFixed(1)+'倍':'―'}</span></div>`).join('');
+    return `${kpis}${desc}<div class="brc-refmon-picks" data-brc-ref-monitor-picks="${esc(picks.map(x=>x.combo).join(','))}">
+      <div class="brc-refmon-picks-head"><span class="brc-refmon-picks-title">${esc(m.icon+' '+m.label)}${brcBuildReferencePersonalWarningBadgeHtml(picks.map(x=>x.combo))}</span><strong>${picks.length}点</strong></div>
+      ${formation?`<div class="brc-refmon-formation">${esc(formation)}</div>`:''}
+      <div class="brc-refmon-pick-list">${list}</div>
+      <div class="brc-refmon-composite"><span>合成オッズ</span><strong>${Number.isFinite(comp)?Number(comp).toFixed(1)+'倍':'―'}</strong></div>
+    </div>${res.provisional?'<div class="brc-refmode-shadow-note">※オッズ未取得時は確率順位の暫定表示です。</div>':''}`;
+  }
+  function brcBuildReferenceModesHtml(boats,workerPrediction,data,phase){
+    const full120=brcBuildFull120(boats,workerPrediction,phase), odds=brcRefModeOddsObject();
+    const modes=['hit','balance','return','high'];
+    const results=Object.fromEntries(modes.map(k=>[k,brcRefModeResult(k,data,full120,odds)]));
+    const current=window.__brcReferenceModeCurrent&&modes.includes(window.__brcReferenceModeCurrent)?window.__brcReferenceModeCurrent:'balance';
+    window.__brcReferenceModeCurrent=current;
+    const tabs=modes.map(k=>{const m=BRC_REFERENCE_MODE_META[k];return `<button type="button" class="brc-refmode-tab ${k===current?'active':''}" data-brc-refmode-tab="${k}" aria-selected="${k===current?'true':'false'}">${esc(m.icon+m.label)}</button>`;}).join('');
+    const panels=modes.map(k=>`<div class="brc-refmode-panel ${k===current?'active':''}" data-brc-refmode-panel="${k}">${brcRefModePanelHtml(results[k])}</div>`).join('');
+    return `<div class="brc-refmode-shell" data-brc-ref-modes-host><div class="brc-refmode-head"><div class="brc-refmode-head-title">BRC参考買い目</div><div class="brc-refmode-head-note">管理者専用・目的別4モード</div></div><div class="brc-refmode-tabs" role="tablist" aria-label="BRC参考買い目モード">${tabs}</div>${panels}</div>`;
+  }
+  function brcBindReferenceModeTabs(root=document){
+    root.querySelectorAll?.('[data-brc-refmode-tab]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const k=btn.dataset.brcRefmodeTab; window.__brcReferenceModeCurrent=k;
+        root.querySelectorAll('[data-brc-refmode-tab]').forEach(b=>{const on=b.dataset.brcRefmodeTab===k;b.classList.toggle('active',on);b.setAttribute('aria-selected',on?'true':'false');});
+        root.querySelectorAll('[data-brc-refmode-panel]').forEach(p=>p.classList.toggle('active',p.dataset.brcRefmodePanel===k));
+        try{brcApplyAiOutcomeMark();}catch(_e){}
+      });
+    });
+  }
+  function brcRefreshReferenceModes(){
+    const root=document.querySelector('[data-brc-refmon-root]'), host=root?.querySelector('[data-brc-ref-modes-host]');
+    if(!root||!host||!brcRefModeContext) return;
+    const {boats,workerPrediction,localInReliability,exhibitionApplied}=brcRefModeContext;
+    const phase=exhibitionApplied?'current':'pre', data=buildData(boats,workerPrediction,localInReliability,phase);
+    const tmp=document.createElement('div'); tmp.innerHTML=brcBuildReferenceModesHtml(boats,workerPrediction,data,phase);
+    const fresh=tmp.firstElementChild; if(!fresh) return;
+    host.replaceWith(fresh); brcBindReferenceModeTabs(root);
+    try{brcApplyAiOutcomeMark();}catch(_e){}
+  }
+
   function buildHtml(boats,workerPrediction,localInReliability,exhibitionApplied){
     const phase=exhibitionApplied?'current':'pre', data=buildData(boats,workerPrediction,localInReliability,phase);
     const status=data.decision==='pass'?'見送り':(data.decision==='one'?'1頭型':'2頭型');
     const statusClass=data.decision==='pass'?'skip':(data.decision==='one'?'one':'two');
     const modeLabel=data.mode==='nige'?'イン逃げ':data.mode==='mixed'?'①＋外艇':data.mode==='nonin'?'外艇頭':'—';
     const markRows=(data.marks||[]).map(x=>`<div class="brc-refmon-mark-row"><span>${typeof scenarioLaneBadge==='function'?scenarioLaneBadge(x.course):x.course}</span><span class="mk ${esc(typeof brcMarkSymbolClass==='function'?brcMarkSymbolClass(x.head):'')}">${esc(x.head)}</span><span>${Math.round(x.rates.win)}%</span></div>`).join('');
-    let body='';
-    if(data.decision==='pass'){
-      body=`<div class="brc-refmon-picks"><div class="brc-refmon-picks-head"><span>BRC参考買い目</span><strong>見送り</strong></div><div class="brc-refmon-pass"><strong>${esc(status)}</strong><span>${esc(reasonText(data))}</span></div></div>`;
-    }else{
-      const list=(data.picks||[]).map(x=>`<div class="brc-refmon-pick" data-brc-refmon-combo="${esc(x.combo)}"><strong>${esc(x.combo)}</strong><span class="odds" data-brc-refmon-odds="${esc(x.combo)}">${Number.isFinite(Number(x.odds))?Number(x.odds).toFixed(1)+'倍':'―'}</span></div>`).join('');
-      body=`<div class="brc-refmon-picks" data-brc-ref-monitor-picks="${esc((data.picks||[]).map(x=>x.combo).join(','))}">
-        <div class="brc-refmon-picks-head"><span class="brc-refmon-picks-title">BRC参考買い目${brcBuildReferencePersonalWarningBadgeHtml((data.picks||[]).map(x=>x.combo))}</span><strong>${data.pointCount}点</strong></div>
-        ${data.formation?`<div class="brc-refmon-formation">${esc(data.formation)}</div>`:''}
-        <div class="brc-refmon-pick-list">${list}</div>
-        <div class="brc-refmon-composite"><span>合成オッズ</span><strong data-brc-refmon-composite>${Number.isFinite(Number(data.compositeOdds))?Number(data.compositeOdds).toFixed(1)+'倍':'―'}</strong></div>
-      </div>`;
-    }
+    const body=brcBuildReferenceModesHtml(boats,workerPrediction,data,phase);
     const legacy=data.variants?.legacyV1||{};
     const changed=JSON.stringify(legacy.heads||[])!==JSON.stringify(data.heads||[])||legacy.decision!==data.decision;
     const decisionReason=data.decision==='pass'?reasonText(data):decisionRuleText(data);
@@ -18711,7 +18869,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
         <div class="brc-refmon-rule"><strong>展開マトリックス判定：</strong>1着は1号艇＝イン信頼度帯、2〜6号艇＝1号艇の強さとの関係を含めて判定。2着・3着・3連対は着率と6艇内順位を使用。本人傾向は参考表示のみで印へ再加点しません。穴・妙味はオッズ取得後の別評価です。</div>
         <div class="brc-refmon-rule"><strong>ロジック情報：</strong>HC=選択した頭の絶対1着率合計。OC=頭候補が勝つ世界の中で、採用6/8点へ相手評価がどれだけ集中したか。強/標準/弱は2024探索境界を固定した管理者向け確認表示で、現時点では買い目の採否へ使いません。</div>
         ${changed?`<div class="brc-refmon-shadowline"><strong>Shadow / 旧V1比較：</strong>${esc(legacy.decision||'―')} / 頭 ${esc((legacy.heads||[]).join('・')||'なし')} → V2 ${esc(data.decision)} / 頭 ${esc((data.heads||[]).join('・')||'なし')}</div>`:''}
-        <div class="brc-refmon-note">展開マトリックスから頭最大2艇を選び、条件付き3連単を共通順位化。参考買い目は現在管理者のみ表示。一般会員表示・既存AI予測・TimeX・本人傾向・投資判断は変更しません。会場/本人展開は数値へ再加算しません。</div>
+        <div class="brc-refmon-note">展開マトリックスの着率・条件付き着順確率を120通りへ展開し、管理者専用で的中型・バランス型・回収型・高配当型を切替表示。回収型・高配当型はオッズ条件付きShadowです。一般会員表示・既存AI予測・TimeX・本人傾向・投資判断は変更しません。</div>
       </details>
     </div>`;
   }
@@ -18734,7 +18892,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 
     // 展開マトリックスの直下へ、管理者専用のBRC参考買い目を一体表示する。
     marksPanel.querySelector('[data-brc-refmon-root]')?.remove();
+    brcRefModeContext={boats,workerPrediction,localInReliability,exhibitionApplied};
     marksPanel.insertAdjacentHTML('beforeend',buildHtml(boats,workerPrediction,localInReliability,exhibitionApplied));
+    brcBindReferenceModeTabs(marksPanel);
 
     try{brcApplyAiOutcomeMark();}catch(_e){}
     try{window.brcSetAiAdminSubTab?.(window.__brcAiAdminSubTabCurrent||'marks');}catch(_e){}
@@ -18743,13 +18903,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 
 
   function refreshOdds(){
-    const root=document.querySelector('[data-brc-refmon-root]'), picksBox=root?.querySelector('[data-brc-ref-monitor-picks]'); if(!picksBox) return;
-    const combos=String(picksBox.dataset.brcRefMonitorPicks||'').split(',').map(x=>x.trim()).filter(Boolean); if(!combos.length) return;
-    let odds=null; try{ const sel=brcOddsSelection(); odds=sel?.key?(__brcOddsLocal?.[sel.key]?.odds||null):null; }catch(_e){}
-    const vals=[];
-    combos.forEach(c=>{ let v=null; try{v=brcOddsValue(odds,c);}catch(_e){} if(v!==null) vals.push(v); const el=picksBox.querySelector(`[data-brc-refmon-odds="${c}"]`); if(el) el.textContent=v===null?'―':`${v.toFixed(1)}倍`; });
-    let comp=null; if(vals.length===combos.length){ try{comp=brcOddsBuilderComposite(vals.map(v=>({odds:v})));}catch(_e){} }
-    const ce=picksBox.querySelector('[data-brc-refmon-composite]'); if(ce) ce.textContent=Number.isFinite(comp)?`${comp.toFixed(1)}倍`:'―';
+    // 4モードはオッズ更新で回収型/高配当型の採否自体が変わるため、カードを再計算する。
+    try{brcRefreshReferenceModes();}catch(_e){}
   }
   window.brcRefreshReferenceMonitorOdds=refreshOdds;
 
