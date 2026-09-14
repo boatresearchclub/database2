@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_UI_MODAL_TALL_HITCARDS_2COL_V6_20260914 -->
 <!-- BRC_TODAY_HITS_SCROLL_NAV_AI_ODDS_UI_V5_20260914 -->
 <!-- BRC_TODAY_HITS_PUBLIC_AUTO_V3_20260914 -->
 <!-- BRC_TODAY_HITS_PUBLIC_CAROUSEL_V2_20260914 -->
@@ -4196,6 +4197,46 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
 }
 </style>
 
+
+<style id="brc-ui-modal-tall-hitcards-2col-v6-20260914">
+/* BRC_UI_MODAL_TALL_HITCARDS_2COL_V6_20260914
+   1) 出走データの選手詳細はスマホで画面上端近くまで拡張。
+   2) 本日の的中実績はスマホで常に2カードを欠けずに表示。 */
+@media (max-width:640px){
+  .predict-detail-backdrop{
+    padding:calc(env(safe-area-inset-top, 0px) + 8px) 0 0 !important;
+    align-items:flex-end !important;
+  }
+  .predict-detail-backdrop .motor-detail-sheet{
+    width:100% !important;
+    height:calc(100dvh - env(safe-area-inset-top, 0px) - 8px) !important;
+    max-height:calc(100dvh - env(safe-area-inset-top, 0px) - 8px) !important;
+    border-radius:18px 18px 0 0 !important;
+    overflow:auto !important;
+  }
+}
+@supports not (height:100dvh){
+  @media (max-width:640px){
+    .predict-detail-backdrop .motor-detail-sheet{
+      height:calc(100vh - env(safe-area-inset-top, 0px) - 8px) !important;
+      max-height:calc(100vh - env(safe-area-inset-top, 0px) - 8px) !important;
+    }
+  }
+}
+@media (max-width:520px){
+  .brc-admin-hit-scroll{
+    gap:7px !important;
+    margin-right:0 !important;
+    padding-left:1px !important;
+    padding-right:1px !important;
+    scroll-padding-left:1px;
+  }
+  .brc-admin-hit-card{
+    flex:0 0 calc((100% - 7px)/2) !important;
+    min-width:0 !important;
+  }
+}
+</style>
 </head>
 <body>
 <div class="wrap">
