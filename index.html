@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_TYPOGRAPHY_READABILITY_V1_20260914 -->
 <!-- BRC_ADMIN_REFERENCE_DEDICATED_TAB_V1_20260914 -->
 <!-- BRC_UI_MODAL_TALL_HITCARDS_2COL_V6_20260914 -->
 <!-- BRC_TODAY_HITS_SCROLL_NAV_AI_ODDS_UI_V5_20260914 -->
@@ -4238,6 +4239,185 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
   }
 }
 </style>
+
+<style id="brc-typography-readability-v1-20260914">
+/* BRC_TYPOGRAPHY_READABILITY_V1_20260914
+   目的: 情報量は維持しつつ、スマホで長時間見ても疲れにくい文字階層へ整理。
+   レイアウト・ロジック・管理者表示条件は変更しない。 */
+
+/* 共通: 太字を必要箇所へ絞り、補助文の行間を少し広げる */
+.predict-ai-title,
+.brc-mark-title,
+.brc-nonin-ref-title,
+.brc-refmon-title,
+.brc-refmode-head-title,
+.brc-admin-today-hits-title{
+  font-weight:900 !important;
+}
+.predict-ai-sub,
+.brc-mark-sub,
+.brc-nonin-ref-sub,
+.brc-refmon-sub,
+.brc-refmode-desc,
+.brc-refmode-shadow-note,
+.brc-admin-today-hits-sub{
+  line-height:1.62 !important;
+}
+
+/* AI予測: 管理者3タブの文字階層 */
+.brc-ai-admin-tab{
+  font-size:12px !important;
+  font-weight:820 !important;
+  line-height:1.2 !important;
+}
+.brc-mark-title,.brc-nonin-ref-title,.brc-refmon-title{font-size:13.5px !important;}
+.brc-mark-sub,.brc-nonin-ref-sub{font-size:10px !important;}
+.brc-mark-badge{font-size:9px !important;font-weight:850 !important;}
+.brc-mark-meta{font-size:8.5px !important;font-weight:750 !important;}
+.brc-nonin-ref-metric .k{font-size:8.8px !important;font-weight:750 !important;}
+.brc-nonin-ref-metric .v{font-size:12.5px !important;font-weight:900 !important;}
+.brc-nonin-ref-note{font-size:9.8px !important;line-height:1.6 !important;}
+
+/* イン逃げ予測: 小さすぎる補足を底上げ */
+.brc-nige-order-title{font-size:13.5px !important;font-weight:900 !important;}
+.brc-nige-order-sub{font-size:10.5px !important;line-height:1.6 !important;}
+.brc-nige-order-legend{font-size:9.5px !important;line-height:1.62 !important;}
+.brc-nige-order-note{font-size:9.8px !important;line-height:1.62 !important;}
+
+/* BRC参考買い目: 4モード */
+.brc-refmode-head-title{font-size:13px !important;}
+.brc-refmode-head-note{font-size:9.5px !important;font-weight:700 !important;}
+.brc-refmode-tab{
+  font-size:10.8px !important;
+  font-weight:850 !important;
+  line-height:1.2 !important;
+}
+.brc-refmode-kpi{padding:7px 3px !important;}
+.brc-refmode-kpi .k{font-size:8.8px !important;font-weight:750 !important;}
+.brc-refmode-kpi .v{font-size:11.8px !important;font-weight:900 !important;}
+.brc-refmode-desc{font-size:10.3px !important;font-weight:600 !important;}
+.brc-refmode-pass strong{font-size:12.5px !important;font-weight:900 !important;}
+.brc-refmode-pass span{font-size:9.8px !important;}
+.brc-refmode-shadow-note{font-size:9.5px !important;font-weight:700 !important;}
+
+/* BRC参考買い目: 実績ブロック。6〜8px台を廃止して読む情報へ格上げ */
+.brc-refmode-performance{padding:8px 9px !important;}
+.brc-refmode-performance-head{margin-bottom:7px !important;}
+.brc-refmode-performance-title{font-size:10.5px !important;font-weight:900 !important;}
+.brc-refmode-performance-period{font-size:9.2px !important;font-weight:650 !important;}
+.brc-refmode-performance-period-tabs{gap:4px !important;margin-bottom:7px !important;}
+.brc-refmode-performance-period-tab{
+  padding:5px 8px !important;
+  font-size:9.2px !important;
+  font-weight:800 !important;
+  line-height:1.15 !important;
+}
+.brc-refmode-performance-grid{gap:5px !important;}
+.brc-refmode-performance-item{padding:7px 2px !important;}
+.brc-refmode-performance-item .k{font-size:9px !important;font-weight:700 !important;}
+.brc-refmode-performance-item .v{font-size:12.2px !important;font-weight:900 !important;}
+.brc-refmode-performance-source{font-size:9px !important;line-height:1.55 !important;}
+.brc-refmode-performance-empty strong{font-size:10.5px !important;font-weight:900 !important;}
+.brc-refmode-performance-empty span{font-size:9px !important;line-height:1.55 !important;}
+
+/* 参考買い目の詳細: 研究用補足も読める最小サイズへ */
+.brc-refmon-mark-row{font-size:9.2px !important;}
+.brc-refmon-mark-row .mk{font-size:16px !important;}
+.brc-refmon-rule,.brc-refmon-shadowline{font-size:9.5px !important;line-height:1.6 !important;}
+.brc-refmon-detail-label{font-size:9.8px !important;font-weight:850 !important;}
+.brc-refmon-note{font-size:9.8px !important;line-height:1.62 !important;}
+.brc-refmon-quality-item .k{font-size:9.5px !important;font-weight:750 !important;}
+.brc-refmon-quality-item .v{font-size:14px !important;font-weight:900 !important;}
+.brc-refmon-quality-item .n{font-size:9.2px !important;font-weight:700 !important;}
+
+/* 本日の的中実績: 2枚表示を維持しつつ補助文字の読みにくさを解消 */
+.brc-admin-today-hits-title{font-size:16px !important;}
+.brc-admin-today-hits-admin{font-size:9.5px !important;font-weight:850 !important;}
+.brc-admin-today-hits-sub{font-size:10px !important;}
+.brc-admin-today-hits-summary{font-size:10px !important;line-height:1.5 !important;}
+.brc-admin-today-hits-summary strong{font-size:11.5px !important;font-weight:900 !important;}
+.brc-admin-hit-race{font-size:14.5px !important;font-weight:900 !important;}
+.brc-admin-hit-mode{font-size:9.2px !important;font-weight:850 !important;}
+.brc-admin-hit-k{font-size:9.2px !important;font-weight:700 !important;}
+.brc-admin-hit-payout .v{font-weight:900 !important;}
+.brc-admin-hit-foot,.brc-admin-hit-refresh{font-size:9.2px !important;}
+
+/* 選手詳細モーダル: 広げた高さを活かして主要値を読みやすく */
+.predict-detail-backdrop .motor-detail-title{font-weight:900 !important;}
+.predict-detail-backdrop .motor-detail-stat b{font-weight:900 !important;}
+.predict-detail-backdrop .motor-detail-stat span{font-weight:600 !important;}
+.predict-detail-section-title{font-size:12.8px !important;font-weight:800 !important;}
+.predict-detail-note{font-size:11.5px !important;line-height:1.68 !important;}
+.predict-detail-more{font-size:12.5px !important;font-weight:800 !important;}
+
+/* モバイルの主要ナビ。大きくし過ぎず、11px台から一段だけ底上げ */
+@media(max-width:640px){
+  .page-tabs > .page-tab{
+    font-size:12px !important;
+    font-weight:800 !important;
+    line-height:1.15 !important;
+  }
+  .predict-main-tab{
+    font-size:12px !important;
+    font-weight:800 !important;
+    line-height:1.2 !important;
+  }
+  .brc-ai-admin-tabs.brc-refmon-enabled .brc-ai-admin-tab{
+    font-size:11.5px !important;
+    font-weight:820 !important;
+    padding:9px 3px !important;
+  }
+  .predict-ai-title{font-size:15.5px !important;}
+  .predict-ai-sub{font-size:10.8px !important;}
+
+  /* 出走データの表は列幅を壊さず補助文字だけ微増 */
+  table.predict-table{font-size:12.2px !important;}
+  table.predict-table td > div{font-size:10px !important;line-height:1.32 !important;}
+  table.predict-table .motor-rate-sub{font-size:10.2px !important;}
+
+  /* 選手詳細 */
+  .predict-detail-backdrop .predict-unified-sticky .motor-detail-title{font-size:20px !important;}
+  .predict-detail-backdrop .predict-unified-tab{font-size:12px !important;font-weight:800 !important;}
+  .predict-detail-backdrop .motor-detail-stat{padding:9px 3px !important;}
+  .predict-detail-backdrop .motor-detail-stat b{font-size:16px !important;}
+  .predict-detail-backdrop .motor-detail-stat span{font-size:10.3px !important;}
+
+  /* 参考買い目: 4列を維持できる範囲で可読性を上げる */
+  .brc-refmode-tab{font-size:10.3px !important;padding:9px 1px !important;letter-spacing:-.02em !important;}
+  .brc-refmode-kpi .k{font-size:8.5px !important;}
+  .brc-refmode-kpi .v{font-size:11.2px !important;}
+  .brc-refmode-performance{padding:8px 7px !important;}
+  .brc-refmode-performance-period-tab{font-size:9px !important;padding:5px 7px !important;}
+  .brc-refmode-performance-item{padding:7px 1px !important;}
+  .brc-refmode-performance-item .k{font-size:8.8px !important;}
+  .brc-refmode-performance-item .v{font-size:11.8px !important;}
+  .brc-refmode-performance-source{font-size:8.8px !important;}
+
+  /* 展開マトリックスの最低可読サイズ */
+  .brc-mark-title{font-size:13px !important;}
+  .brc-mark-sub{font-size:9.8px !important;}
+  table.brc-mark-table th{font-size:9px !important;}
+  .brc-mark-name{font-size:10px !important;}
+  .brc-mark-pct{font-size:8.8px !important;}
+  .brc-mark-meta{font-size:8.3px !important;}
+
+  /* 本日の的中実績。2枚横並びは維持 */
+  .brc-admin-today-hits-title{font-size:16px !important;}
+  .brc-admin-today-hits-sub{font-size:10px !important;}
+  .brc-admin-hit-race{font-size:14.5px !important;}
+  .brc-admin-hit-mode{font-size:9px !important;}
+  .brc-admin-hit-k{font-size:9px !important;}
+}
+
+@media(max-width:390px){
+  /* 最小幅端末でも文字を潰さず、主要タブだけわずかに詰める */
+  .page-tabs > .page-tab{font-size:11.6px !important;}
+  .predict-main-tab{font-size:11.7px !important;}
+  .brc-ai-admin-tabs.brc-refmon-enabled .brc-ai-admin-tab{font-size:11.1px !important;}
+  .brc-refmode-performance-period-tab{font-size:8.7px !important;padding-left:6px !important;padding-right:6px !important;}
+}
+</style>
+
 </head>
 <body>
 <div class="wrap">
