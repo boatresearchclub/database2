@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_OPERATION_TIMING_120SEC_V2_20260914 -->
 <!-- BRC_TIMEX_FINAL_PREDICTION_SUMMARY_V1_20260913 -->
 <!-- BRC_PREDICT_TIMEX_ORIGINAL_TABLE_UI_V2_20260913 -->
 <!-- BRC_PREDICT_PERSONAL_WORD_MODAL_AND_TOP3_EXHIBITION_LABEL_V1_20260913 -->
@@ -18831,14 +18832,19 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 
   const V='BRC_INVESTMENT_VALIDATION_V3_RAW_OD3_20260911';
   const SIM_START='2026-09-01';
-  const LIVE_START='2026-09-11';
+  const LIVE_START='2026-09-14';
   const UNIT=100;
   const MIN_ODDS=2.25;
   const CORE_MAX=2.50;
+  // 過去SIMは従来どおり締切30〜90秒前・60秒付近を使用。
   const SNAP_MIN_SEC=30;
   const SNAP_MAX_SEC=90;
-  const LIVE_TICK_MIN_SEC=45;
-  const LIVE_TICK_MAX_SEC=75;
+  // 正式運用LIVE-OOS V2：購入時間を確保するため締切90〜150秒前で固定。
+  // 実運用の中心は約120秒前。
+  const LIVE_SNAP_MIN_SEC=90;
+  const LIVE_SNAP_MAX_SEC=150;
+  const LIVE_TICK_MIN_SEC=90;
+  const LIVE_TICK_MAX_SEC=150;
 
   // 2026-09-11: BRC収集raw/od3から、締切30〜90秒前だけを抽出。各レースは60秒前に最も近い1スナップショットに固定。
   const HIST_OD3_RAW_COUNT=1467;
@@ -18851,10 +18857,11 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   const SIM_DB='brc_admin_investment_validation_sim_v1';
   const SIM_STORE='sim_records';
   const SIM_META_KEY='brc_admin_investment_validation_sim_meta_v2';
-  const LIVE_DB='brc_admin_investment_validation_live_oos_v1';
+  // 45〜75秒前の旧LIVE-OOSとは混ぜず、2分前運用を新DBで前向き評価する。
+  const LIVE_DB='brc_admin_investment_validation_live_oos_v2_120sec';
   const LIVE_STORE='live_oos_records';
   const LIVE_GUARD_STORE='live_oos_capture_guard';
-  const LIVE_META_KEY='brc_admin_investment_validation_live_meta_v1';
+  const LIVE_META_KEY='brc_admin_investment_validation_live_meta_v2_120sec';
 
   let simBusy=false, liveTickBusy=false, liveSweepBusy=false, simAutoStarted=false;
   let liveTimer=null, liveSweepTimer=null;
@@ -18892,6 +18899,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   function captureMs(date,v){const s=String(v||'').trim();if(!s)return null;let x=Date.parse(s);if(Number.isFinite(x)&&/[zZ]|[+-]\d{2}:?\d{2}$/.test(s))return x;const tm=s.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);if(!tm)return null;x=Date.parse(`${date}T${tm[1].padStart(2,'0')}:${tm[2]}:${String(tm[3]||'00').padStart(2,'0')}+09:00`);return Number.isFinite(x)?x:null;}
   function secondsBefore(date,deadline,captured){const d=deadlineMs(date,deadline),c=captureMs(date,captured);return d!==null&&c!==null?(d-c)/1000:null;}
   function validPreclose(date,deadline,captured){const sec=secondsBefore(date,deadline,captured);return Number.isFinite(sec)&&sec>=SNAP_MIN_SEC&&sec<=SNAP_MAX_SEC?sec:null;}
+  function validLivePreclose(date,deadline,captured){const sec=secondsBefore(date,deadline,captured);return Number.isFinite(sec)&&sec>=LIVE_SNAP_MIN_SEC&&sec<=LIVE_SNAP_MAX_SEC?sec:null;}
   function deadlineFor(sel){try{return String(RACE_INFO_TODAY?.[sel?.venue]?.deadlines?.[String(sel?.raceNo)]||'');}catch(_e){return '';}}
 
   function entryNoChange(live){
@@ -18954,7 +18962,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     const res=await fetch(`${BRC_LIVE_EXHIBITION_API_URL}/live-odds?${qs.toString()}`,{method:'GET',cache:'no-store',headers:{Accept:'application/json'}});
     let obj=null;try{obj=await res.json();}catch(_e){}
     if(!res.ok||!obj||obj.ok!==true||!obj.odds)return null;
-    const sec=validPreclose(date,deadline,obj.captured_at_jst||'');
+    const sec=isHistorical
+      ? validPreclose(date,deadline,obj.captured_at_jst||'')
+      : validLivePreclose(date,deadline,obj.captured_at_jst||'');
     if(sec===null)return null;
     return {odds:obj.odds,capturedAtJst:String(obj.captured_at_jst||''),secondsBeforeDeadline:sec,cacheHit:!!obj.cache_hit,stale:!!obj.stale,final:!!obj.final,source:'worker_live_odds'};
   }
@@ -19173,7 +19183,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     const [srows,lrows]=await Promise.all([simAll().catch(()=>[]),liveAll().catch(()=>[])]),sm=simMeta(),lm=ensureLiveMeta();
     root.innerHTML=`<div class="brc-val-head"><div><div class="brc-val-title">投資検証成績</div><div class="brc-val-rule"><strong>固定条件：</strong>イン信頼度S × 進入変更なし × 締切約1分前（保存時刻が締切30〜90秒前）の合成オッズ2.25以上 × AI参考買い目を1点100円</div></div><span class="brc-invest-admin-badge">管理者専用</span></div>
       <div class="brc-val-block"><div class="brc-val-block-head"><div class="brc-val-block-title">① 過去適用シミュレーション</div><span class="brc-val-chip">${SIM_START}〜${esc(sm.endDate||today())}</span></div>${scoreTable(srows)}${funnelHtml(sm)}<div class="brc-val-actions"><button type="button" class="brc-val-btn" id="brcValSimRecalc" ${simBusy?'disabled':''}>${simBusy?'再計算中…':'過去SIMを再計算'}</button><span class="brc-val-status" id="brcValSimStatus">${statusText(sm)}</span></div><div class="brc-val-note">過去SIM専用DBのみを消去・再構築します。LIVE-OOS DBには触れません。展示前のS/Aだけで先に絞らず、保存済み展示からTimeX反映後のイン信頼度Sを判定してからAI参考買い目を生成します。締切30〜90秒前として確認できた保存オッズだけを採用し、締切後オッズは使いません。BRC raw/od3から検証済み締切前スナップショット 1467R（09/01 08:31〜09/11 09:23 JST）を内蔵し、各レースは60秒前に最も近い1件へ固定しています。</div></div>
-      <div class="brc-val-block"><div class="brc-val-block-head"><div class="brc-val-block-title"><span class="brc-val-live-dot"></span>② LIVE-OOS成績</div><span class="brc-val-chip live">${esc(lm.startDate||LIVE_START)}開始・過去補完なし</span></div>${scoreTable(lrows)}<div class="brc-val-actions"><button type="button" class="brc-val-btn" id="brcValLiveSettle">結果を再確認</button><span class="brc-val-status">導入前データはバックフィルしません。締切約1分前に固定保存したスナップショットだけで判定。</span></div><div class="brc-val-note">LIVE-OOSの買い目・オッズ・合成オッズは最初の有効スナップショットで固定し、結果確定後は結果項目だけ追記します。過去SIMを再計算してもLIVE-OOSのレコード・集計は変化しません。</div></div>`;
+      <div class="brc-val-block"><div class="brc-val-block-head"><div class="brc-val-block-title"><span class="brc-val-live-dot"></span>② LIVE-OOS成績</div><span class="brc-val-chip live">${esc(lm.startDate||LIVE_START)}開始・過去補完なし</span></div>${scoreTable(lrows)}<div class="brc-val-actions"><button type="button" class="brc-val-btn" id="brcValLiveSettle">結果を再確認</button><span class="brc-val-status">導入前データはバックフィルしません。締切約2分前（90〜150秒前）に固定保存したスナップショットだけで判定。</span></div><div class="brc-val-note">LIVE-OOSの買い目・オッズ・合成オッズは90〜150秒前の最初の有効スナップショットで固定し、結果確定後は結果項目だけ追記します。過去SIMを再計算してもLIVE-OOSのレコード・集計は変化しません。</div></div>`;
     document.getElementById('brcValSimRecalc')?.addEventListener('click',recalcSim,{once:true});
     document.getElementById('brcValLiveSettle')?.addEventListener('click',()=>liveSweep(true),{once:true});
     if(!simAutoStarted&&sm.status==='idle'){simAutoStarted=true;}
@@ -19195,8 +19205,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 (function(){
   'use strict';
 
-  const VERSION='BRC_OFFICIAL_OPERATION_IN_INVEST_TAB_V1_20260914';
-  const DB='brc_admin_investment_validation_live_oos_v1';
+  const VERSION='BRC_OFFICIAL_OPERATION_IN_INVEST_TAB_V2_120SEC_20260914';
+  const DB='brc_admin_investment_validation_live_oos_v2_120sec';
   const LIVE='live_oos_records';
   const GUARD='live_oos_capture_guard';
   const MIN_ODDS=2.25;
@@ -19337,15 +19347,15 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
         if(sec<=0){
           cls='skip';decision='締切済';
           reason='このレースには正式なLIVE-OOS判定記録がありません。';
-        }else if(sec>75){
+        }else if(sec>150){
           cls='wait';decision='待機';
-          reason=`正式判定は締切45〜75秒前。現在 約${Math.ceil(sec)}秒前です。`;
-        }else if(sec>=45){
+          reason=`正式判定は締切90〜150秒前（目安120秒前）。現在 約${Math.ceil(sec)}秒前です。`;
+        }else if(sec>=90){
           cls='wait';decision='判定中';
-          reason='LIVE-OOSが締切約1分前の固定判定を取得中です。';
+          reason='LIVE-OOSが締切約2分前の固定判定を取得中です。';
         }else{
           cls='skip';decision='新規見送り';
-          reason='正式判定記録がないまま45秒を切ったため、追いかけて参加しません。';
+          reason='正式判定記録がないまま90秒を切ったため、追いかけて参加しません。';
         }
       }else{
         cls='wait';decision='判定待ち';
@@ -19402,8 +19412,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
           </div>
 
           <div class="brc-opv1-rule">
-            正式条件：TimeX反映後イン信頼度S × 進入変更なし × 締切約1分前LIVE-OOS固定判定 × 合成オッズ2.25以上。
-            CORE=2.25〜2.49 / HIGH=2.50以上。100件確定までは金額を増やしません。
+            正式条件：TimeX反映後イン信頼度S × 進入変更なし × 締切90〜150秒前（目安120秒前）LIVE-OOS固定判定 × 合成オッズ2.25以上。
+            CORE=2.25〜2.49 / HIGH=2.50以上。判定後に購入時間を確保し、90秒を切って未判定なら見送り。100件確定までは金額を増やしません。
           </div>
 
           <div class="brc-opv1-stats">${
