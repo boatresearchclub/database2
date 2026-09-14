@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_TODAY_HITS_SCROLL_NAV_AI_ODDS_UI_V5_20260914 -->
 <!-- BRC_TODAY_HITS_PUBLIC_AUTO_V3_20260914 -->
 <!-- BRC_TODAY_HITS_PUBLIC_CAROUSEL_V2_20260914 -->
 <!-- BRC_ADMIN_REFERENCE_4MODE_TABS_V1_20260914 -->
@@ -2183,14 +2184,14 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
   .brc-admin-hit-card{
     flex:0 0 214px;scroll-snap-align:start;position:relative;min-width:0;padding:10px 11px 11px;
     border:1px solid rgba(10,31,51,.10);border-radius:11px;background:#fff;
-    box-shadow:0 2px 8px rgba(10,31,51,.045);
+    box-shadow:0 2px 8px rgba(10,31,51,.045);cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
   }
+  .brc-admin-hit-card:hover{border-color:rgba(0,87,219,.28);background:rgba(0,87,219,.018);}
+  .brc-admin-hit-card:focus-visible{outline:2px solid rgba(0,87,219,.48);outline-offset:2px;}
   .brc-admin-hit-card.latest{border-color:rgba(0,87,219,.38);box-shadow:0 3px 12px rgba(0,87,219,.10);}
-  .brc-admin-hit-latest{
-    position:absolute;top:-1px;left:-1px;padding:3px 8px;border-radius:11px 0 9px 0;
-    background:var(--wave);color:#fff;font-size:8px;font-weight:950;letter-spacing:.03em;
-  }
-  .brc-admin-hit-card.latest .brc-admin-hit-top{padding-top:13px;}
+  .brc-admin-hit-latest{display:none!important;}
+  .brc-admin-hit-card.latest .brc-admin-hit-top{padding-top:0;}
   .brc-admin-hit-top{display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0;}
   .brc-admin-hit-race{font-size:15px;font-weight:950;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .brc-admin-hit-mode{display:inline-flex;align-items:center;justify-content:center;padding:3px 7px;border-radius:999px;font-size:9px;font-weight:950;white-space:nowrap;border:1px solid transparent;}
@@ -3825,6 +3826,37 @@ table.brc-mark-table td:first-child{text-align:left;padding-left:7px;}
   .brc-mark-symbol{font-size:18px;}
   .brc-mark-pct{font-size:8px;}
   .brc-mark-meta{font-size:7px;}
+}
+</style>
+
+<style id="brc-ai-reference-odds-ui-v5-20260914">
+/* AI予測の参考買い目を、オッズタブの買い目一覧と同じ表現へ統一 */
+.brc-ai-ref-odds-table-wrap{
+  display:block!important;width:100%;overflow:hidden;border:1px solid rgba(10,31,51,.10);
+  border-radius:10px;background:#fff;
+}
+table.brc-ai-ref-odds-table{width:100%;table-layout:fixed;border-collapse:collapse;font-variant-numeric:tabular-nums;}
+table.brc-ai-ref-odds-table th{
+  padding:6px 5px;background:var(--bg3);font-size:10px;color:var(--ink-soft);
+  text-align:center;cursor:default;font-weight:900;white-space:nowrap;
+}
+table.brc-ai-ref-odds-table td{padding:7px 5px;border-top:1px solid rgba(10,31,51,.07);font-size:11px;text-align:center;white-space:nowrap;}
+table.brc-ai-ref-odds-table td.idx{width:38px;color:var(--ink-soft);font-weight:900;}
+table.brc-ai-ref-odds-table td.combo{font-weight:900;}
+table.brc-ai-ref-odds-table td.val{width:72px;text-align:right;font-weight:900;color:var(--navy);}
+table.brc-ai-ref-odds-table tr.brc-nige-order-pick,
+table.brc-ai-ref-odds-table tr.brc-nonin-ref-pick,
+table.brc-ai-ref-odds-table tr.brc-refmon-pick{display:table-row;padding:0;border-radius:0;background:transparent;border:0;}
+table.brc-ai-ref-odds-table tr.brc-ai-pick-hit td{background:rgba(47,143,91,.065);}
+table.brc-ai-ref-odds-table .brc-nige-order-pick-combo,
+table.brc-ai-ref-odds-table .brc-nonin-ref-pick-combo,
+table.brc-ai-ref-odds-table .brc-refmon-pick-combo{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;}
+table.brc-ai-ref-odds-table .brc-ai-pick-hit-badge{vertical-align:middle;}
+@media(max-width:420px){
+  table.brc-ai-ref-odds-table th{font-size:9.5px;padding:6px 4px;}
+  table.brc-ai-ref-odds-table td{font-size:10.5px;padding:6px 4px;}
+  table.brc-ai-ref-odds-table td.idx{width:34px;}
+  table.brc-ai-ref-odds-table td.val{width:66px;}
 }
 </style>
 
@@ -9744,6 +9776,13 @@ function brcOddsBoatNames(sel){
 function brcOddsLaneHtml(n){
   return `<span class="brc-odds-combo-boat brc-odds-lane${n}">${n}</span>`;
 }
+function brcReferenceComboChipHtml(combo){
+  const b=String(combo||'').split('-').map(Number);
+  if(b.length!==3 || b.some(n=>!Number.isInteger(n)||n<1||n>6)){
+    return String(combo||'').replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+  }
+  return `<span class="brc-odds-combo-chip">${brcOddsLaneHtml(b[0])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(b[1])}<span class="brc-odds-combo-sep">-</span>${brcOddsLaneHtml(b[2])}</span>`;
+}
 
 function brcOddsViewTabs(){
   return `<div class="brc-odds-view-tabs" role="tablist" aria-label="オッズ表示切り替え">
@@ -10684,9 +10723,9 @@ function brcBuildNigeReferencePicksHtml(pred,target=0.70){
 
   const sel=brcOddsSelection();
   const odds=sel?.key ? (__brcOddsLocal[sel.key]?.odds||null) : null;
-  const pickRows=picks.map(x=>{
+  const pickRows=picks.map((x,i)=>{
     const v=brcOddsValue(odds,x.combo);
-    return `<div class="brc-nige-order-pick" data-brc-ref-combo="${x.combo}"><span class="brc-nige-order-pick-combo">${x.combo}</span><span class="brc-nige-order-pick-odds" data-brc-ref-odds="${x.combo}">${v===null?'―':v.toFixed(1)+'倍'}</span></div>`;
+    return `<tr class="brc-nige-order-pick" data-brc-ref-combo="${x.combo}"><td class="idx">${i+1}</td><td class="combo"><span class="brc-nige-order-pick-combo">${brcReferenceComboChipHtml(x.combo)}</span></td><td class="val brc-nige-order-pick-odds" data-brc-ref-odds="${x.combo}">${v===null?'―':v.toFixed(1)+'倍'}</td></tr>`;
   }).join('');
   const available=picks.map(x=>brcOddsValue(odds,x.combo)).filter(v=>v!==null);
   const composite=(available.length===picks.length)?brcOddsBuilderComposite(picks.map((x,i)=>({odds:available[i]}))):null;
@@ -10694,7 +10733,7 @@ function brcBuildNigeReferencePicksHtml(pred,target=0.70){
   return `<div class="brc-nige-order-picks" data-brc-ref-picks="${picks.map(x=>x.combo).join(',')}">
     <div class="brc-nige-order-picks-label"><span>BRC参考買い目</span>${brcBuildReferencePersonalWarningBadgeHtml(picks.map(x=>x.combo))}</div>
     ${formation?`<div class="brc-nige-order-formation"><span class="brc-nige-order-formation-value">${formation}</span><span class="brc-nige-order-formation-points">${picks.length}点</span></div>`:''}
-    <div class="brc-nige-order-pick-list">${pickRows}</div>
+    <div class="brc-nige-order-pick-list brc-ai-ref-odds-table-wrap"><table class="brc-odds-builder-table brc-ai-ref-odds-table"><thead><tr><th style="width:38px">#</th><th>買い目</th><th style="width:72px">オッズ</th></tr></thead><tbody>${pickRows}</tbody></table></div>
     <div class="brc-nige-order-composite"><span class="brc-nige-order-composite-label">合成オッズ</span><span class="brc-nige-order-composite-value" data-brc-ref-composite>${composite===null?'―':composite.toFixed(1)+'倍'}</span></div>
   </div>`;
 }
@@ -11219,9 +11258,9 @@ function brcBuildAdminNonInReferenceHtml(boats,workerPrediction,localInReliabili
   }
   const oddsInfo=brcNonInRefOddsInfo(main.tickets||[]);
   const oddsMap=new Map(oddsInfo.rows.map(x=>[x.combo,x.odds]));
-  const pickRows=(main.tickets||[]).map(combo=>`<div class="brc-nonin-ref-pick" data-brc-nonin-ref-combo="${combo}"><span class="brc-nonin-ref-pick-combo">${combo}</span><span class="brc-nonin-ref-pick-odds" data-brc-nonin-ref-odds="${combo}">${oddsMap.get(combo)==null?'―':Number(oddsMap.get(combo)).toFixed(1)+'倍'}</span></div>`).join('');
+  const pickRows=(main.tickets||[]).map((combo,i)=>`<tr class="brc-nonin-ref-pick" data-brc-nonin-ref-combo="${combo}"><td class="idx">${i+1}</td><td class="combo"><span class="brc-nonin-ref-pick-combo">${brcReferenceComboChipHtml(combo)}</span></td><td class="val brc-nonin-ref-pick-odds" data-brc-nonin-ref-odds="${combo}">${oddsMap.get(combo)==null?'―':Number(oddsMap.get(combo)).toFixed(1)+'倍'}</td></tr>`).join('');
   const scenarioDetail=support.map(x=>`${x.head}頭：${x.supported?'一致':((x.playerAvailable||x.venueAvailable)?'不一致':'データ不足')}`).join(' / ');
-  return `<div class="brc-nonin-ref-card"><div class="brc-nonin-ref-head"><div><div class="brc-nonin-ref-title">BRC参考買い目 β</div><div class="brc-nonin-ref-sub">非イン参考買い目・管理者Shadow</div></div><div class="brc-nonin-ref-badges"><span class="brc-nonin-ref-badge">${phaseLabel}</span><span class="brc-nonin-ref-badge good">${headText}</span><span class="brc-nonin-ref-badge ${supportClass}">${supportText}</span></div></div><div class="brc-nonin-ref-heads">${rankHtml}</div>${metricHtml}<div class="brc-nonin-ref-status"><strong>頭候補 ${(main.heads||[]).join('・')}</strong><br>${scenarioDetail||'展開傾向データなし'}。展開傾向は着率・順位へ再加点せず、2着候補との整合確認だけに使用。</div><div class="brc-nonin-ref-picks" data-brc-nonin-ref-picks="${(main.tickets||[]).join(',')}"><div class="brc-nonin-ref-picks-label"><span>BRC参考買い目</span>${brcBuildReferencePersonalWarningBadgeHtml(main.tickets||[])}</div>${main.formation?`<div class="brc-nonin-ref-formation"><span class="brc-nonin-ref-formation-value">${main.formation}</span><span class="brc-nonin-ref-formation-points">${main.defaultPoints}点</span></div>`:''}<div class="brc-nonin-ref-pick-list">${pickRows}</div><div class="brc-nonin-ref-composite"><span class="brc-nonin-ref-composite-label">合成オッズ</span><span class="brc-nonin-ref-composite-value" data-brc-nonin-ref-composite>${oddsInfo.composite==null?'―':Number(oddsInfo.composite).toFixed(1)+'倍'}</span></div></div><div class="brc-nonin-ref-note"><strong>検証中：</strong>1頭は4/5/6点、2頭は6/7/8点を裏で同時保存。画面は基準案の1頭6点 / 2頭8点を表示します。オッズで買い目自体は変更しません。</div></div>`;
+  return `<div class="brc-nonin-ref-card"><div class="brc-nonin-ref-head"><div><div class="brc-nonin-ref-title">BRC参考買い目 β</div><div class="brc-nonin-ref-sub">非イン参考買い目・管理者Shadow</div></div><div class="brc-nonin-ref-badges"><span class="brc-nonin-ref-badge">${phaseLabel}</span><span class="brc-nonin-ref-badge good">${headText}</span><span class="brc-nonin-ref-badge ${supportClass}">${supportText}</span></div></div><div class="brc-nonin-ref-heads">${rankHtml}</div>${metricHtml}<div class="brc-nonin-ref-status"><strong>頭候補 ${(main.heads||[]).join('・')}</strong><br>${scenarioDetail||'展開傾向データなし'}。展開傾向は着率・順位へ再加点せず、2着候補との整合確認だけに使用。</div><div class="brc-nonin-ref-picks" data-brc-nonin-ref-picks="${(main.tickets||[]).join(',')}"><div class="brc-nonin-ref-picks-label"><span>BRC参考買い目</span>${brcBuildReferencePersonalWarningBadgeHtml(main.tickets||[])}</div>${main.formation?`<div class="brc-nonin-ref-formation"><span class="brc-nonin-ref-formation-value">${main.formation}</span><span class="brc-nonin-ref-formation-points">${main.defaultPoints}点</span></div>`:''}<div class="brc-nonin-ref-pick-list brc-ai-ref-odds-table-wrap"><table class="brc-odds-builder-table brc-ai-ref-odds-table"><thead><tr><th style="width:38px">#</th><th>買い目</th><th style="width:72px">オッズ</th></tr></thead><tbody>${pickRows}</tbody></table></div><div class="brc-nonin-ref-composite"><span class="brc-nonin-ref-composite-label">合成オッズ</span><span class="brc-nonin-ref-composite-value" data-brc-nonin-ref-composite>${oddsInfo.composite==null?'―':Number(oddsInfo.composite).toFixed(1)+'倍'}</span></div></div><div class="brc-nonin-ref-note"><strong>検証中：</strong>1頭は4/5/6点、2頭は6/7/8点を裏で同時保存。画面は基準案の1頭6点 / 2頭8点を表示します。オッズで買い目自体は変更しません。</div></div>`;
 }
 function brcRefreshNonInReferenceOdds(){
   const box=document.querySelector('.brc-nonin-ref-picks[data-brc-nonin-ref-picks]');
@@ -18928,11 +18967,11 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     if(!res.participate){
       return `${kpis}${performance}${desc}<div class="brc-refmode-pass"><strong>見送り</strong><span>${esc(res.reason||'条件未達')}</span></div>${(res.mode==='return'||res.mode==='high')?'<div class="brc-refmode-shadow-note">※オッズ依存モードは管理者Shadow。基準を満たした時だけ候補を表示します。</div>':''}`;
     }
-    const list=picks.map(x=>`<div class="brc-refmon-pick" data-brc-refmon-combo="${esc(x.combo)}"><strong>${esc(x.combo)}</strong><span class="odds">${Number.isFinite(Number(x.odds))?Number(x.odds).toFixed(1)+'倍':'―'}</span></div>`).join('');
+    const list=picks.map((x,i)=>`<tr class="brc-refmon-pick" data-brc-refmon-combo="${esc(x.combo)}"><td class="idx">${i+1}</td><td class="combo"><strong class="brc-refmon-pick-combo">${brcReferenceComboChipHtml(x.combo)}</strong></td><td class="val odds">${Number.isFinite(Number(x.odds))?Number(x.odds).toFixed(1)+'倍':'―'}</td></tr>`).join('');
     return `${kpis}${performance}${desc}<div class="brc-refmon-picks" data-brc-ref-monitor-picks="${esc(picks.map(x=>x.combo).join(','))}">
       <div class="brc-refmon-picks-head"><span class="brc-refmon-picks-title">${esc(m.icon+' '+m.label)}${brcBuildReferencePersonalWarningBadgeHtml(picks.map(x=>x.combo))}</span><strong>${picks.length}点</strong></div>
       ${formation?`<div class="brc-refmon-formation">${esc(formation)}</div>`:''}
-      <div class="brc-refmon-pick-list">${list}</div>
+      <div class="brc-refmon-pick-list brc-ai-ref-odds-table-wrap"><table class="brc-odds-builder-table brc-ai-ref-odds-table"><thead><tr><th style="width:38px">#</th><th>買い目</th><th style="width:72px">オッズ</th></tr></thead><tbody>${list}</tbody></table></div>
       <div class="brc-refmon-composite"><span>合成オッズ</span><strong>${Number.isFinite(comp)?Number(comp).toFixed(1)+'倍':'―'}</strong></div>
     </div>${res.provisional?'<div class="brc-refmode-shadow-note">※オッズ未取得時は確率順位の暫定表示です。</div>':''}`;
   }
@@ -19169,7 +19208,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   function snapshotId(date,code,raceNo){return raceKey(date,code,raceNo);}
   function comboHtml(combo){const a=String(combo||'').split('-').map(Number);if(a.length!==3||a.some(n=>n<1||n>6))return esc(combo);return a.map((n,i)=>`${i?'<span class="brc-admin-hit-sep">-</span>':''}<span class="brc-admin-hit-boat lane${n}">${n}</span>`).join('');}
   function raceLabel(r){return `${String(r.venue||'')}${Number(r.raceNo)||''}R`;}
-  function cardHtml(x,i){const m=MODE_META[x.mode]||{label:x.label||x.mode,cls:'hit'};const mult=Number(x.payoutYen)/100;return `<article class="brc-admin-hit-card${i===0?' latest':''}">${i===0?'<span class="brc-admin-hit-latest">最新</span>':''}<div class="brc-admin-hit-top"><div class="brc-admin-hit-race">${esc(raceLabel(x))}</div><span class="brc-admin-hit-mode ${esc(m.cls)}">${esc(m.label)}</span></div><div class="brc-admin-hit-body"><div class="brc-admin-hit-combo-wrap"><div class="brc-admin-hit-k">的中結果</div><div class="brc-admin-hit-combo">${comboHtml(x.combo)}</div></div><div class="brc-admin-hit-payout"><div class="brc-admin-hit-k">払戻オッズ</div><div class="v">${Number.isFinite(mult)?mult.toFixed(1):'―'}<small>倍</small></div></div></div></article>`;}
+  function cardHtml(x,i){const m=MODE_META[x.mode]||{label:x.label||x.mode,cls:'hit'};const mult=Number(x.payoutYen)/100;return `<article class="brc-admin-hit-card${i===0?' latest':''}" role="button" tabindex="0" data-hit-venue="${esc(x.venue||'')}" data-hit-race="${Number(x.raceNo)||0}" aria-label="${esc(raceLabel(x))}の出走データを開く"><div class="brc-admin-hit-top"><div class="brc-admin-hit-race">${esc(raceLabel(x))}</div><span class="brc-admin-hit-mode ${esc(m.cls)}">${esc(m.label)}</span></div><div class="brc-admin-hit-body"><div class="brc-admin-hit-combo-wrap"><div class="brc-admin-hit-k">的中結果</div><div class="brc-admin-hit-combo">${comboHtml(x.combo)}</div></div><div class="brc-admin-hit-payout"><div class="brc-admin-hit-k">払戻オッズ</div><div class="v">${Number.isFinite(mult)?mult.toFixed(1):'―'}<small>倍</small></div></div></div></article>`;}
   function setAdminBadge(){const badge=document.querySelector('#brcAdminTodayHits .brc-admin-today-hits-admin');if(!badge)return;badge.classList.add('is-admin');badge.textContent='管理者専用';}
   function render(hits,statusText=''){
     const host=document.getElementById('brcAdminTodayHits'),body=document.getElementById('brcAdminTodayHitsBody'),sum=document.getElementById('brcAdminTodayHitsSummary');
@@ -19180,7 +19219,29 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     if(!rows.length){body.innerHTML=`<div class="brc-admin-hit-empty">${esc(statusText||'本日の的中実績はまだありません。結果確定後、的中分だけここへ追加されます。')}</div>`;sum.innerHTML='<strong>0的中</strong>最高 ―';return;}
     const best=Math.max(...rows.map(x=>Number(x.payoutYen)||0))/100;
     sum.innerHTML=`<strong>${rows.length}的中</strong>最高 ${Number.isFinite(best)?best.toFixed(1):'―'}倍`;
-    body.innerHTML=rows.map(cardHtml).join('');body.scrollLeft=0;
+    const sig=rows.map(x=>[x.date,x.venue,x.raceNo,x.mode,x.combo,x.payoutYen,x.sortMs].join('|')).join('||');
+    if(body.dataset.renderSig===sig) return;
+    const oldLeft=body.scrollLeft, oldWidth=body.scrollWidth, keepStart=oldLeft<=8;
+    body.innerHTML=rows.map(cardHtml).join('');
+    body.dataset.renderSig=sig;
+    requestAnimationFrame(()=>{
+      if(keepStart){body.scrollLeft=0;return;}
+      const delta=Math.max(0,body.scrollWidth-oldWidth);
+      body.scrollLeft=Math.max(0,oldLeft+delta);
+    });
+  }
+
+  let lastHitStripScrollAt=0;
+  function openHitRace(card){
+    if(!card||!isAdmin())return;
+    const venue=String(card.dataset.hitVenue||'').trim(),raceNo=Number(card.dataset.hitRace);
+    if(!venue||!Number.isFinite(raceNo)||raceNo<1)return;
+    try{if(typeof setPredictMainTab==='function')setPredictMainTab('data');}catch(_e){}
+    try{if(typeof loadTodaysRace==='function')loadTodaysRace(venue,String(raceNo));}catch(_e){}
+    setTimeout(()=>{
+      try{if(typeof scrollPredictMainTabsToFixedPosition==='function')scrollPredictMainTabsToFixedPosition('smooth');
+      else document.querySelector('#page-predict .predict-main-tabs')?.scrollIntoView({behavior:'smooth',block:'start'});}catch(_e){}
+    },40);
   }
 
   function openDb(){return new Promise((resolve,reject)=>{try{const q=indexedDB.open(DB_NAME,1);q.onupgradeneeded=()=>{const db=q.result;if(!db.objectStoreNames.contains(DB_STORE))db.createObjectStore(DB_STORE,{keyPath:'id'});};q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error||new Error('indexeddb_open_failed'));}catch(e){reject(e);}});}
@@ -19346,6 +19407,20 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   window.brcEnsureTodayHitsVisible=()=>{setUi(isAdmin());};
   function init(){
     setAdminBadge();
+    const hitBody=document.getElementById('brcAdminTodayHitsBody');
+    if(hitBody){
+      hitBody.addEventListener('scroll',()=>{lastHitStripScrollAt=Date.now();},{passive:true});
+      hitBody.addEventListener('click',ev=>{
+        const card=ev.target?.closest?.('.brc-admin-hit-card');
+        if(!card||Date.now()-lastHitStripScrollAt<180)return;
+        openHitRace(card);
+      });
+      hitBody.addEventListener('keydown',ev=>{
+        if(ev.key!=='Enter'&&ev.key!==' ')return;
+        const card=ev.target?.closest?.('.brc-admin-hit-card');if(!card)return;
+        ev.preventDefault();openHitRace(card);
+      });
+    }
     document.getElementById('brcAdminTodayHitsRefresh')?.addEventListener('click',()=>{if(isAdmin())refresh(true);});
     document.addEventListener('visibilitychange',()=>{if(isAdmin()&&document.visibilityState==='visible'){captureDueAuto().catch(()=>{});refresh(false).catch(()=>{});}});
     window.addEventListener('focus',()=>{if(isAdmin())refresh(false).catch(()=>{});});
