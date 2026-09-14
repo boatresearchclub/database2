@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<!-- BRC_ADMIN_TODAY_HITS_CAROUSEL_V1_20260914 -->
+<!-- BRC_TODAY_HITS_PUBLIC_AUTO_V3_20260914 -->
+<!-- BRC_TODAY_HITS_PUBLIC_CAROUSEL_V2_20260914 -->
 <!-- BRC_ADMIN_REFERENCE_4MODE_TABS_V1_20260914 -->
 <!-- BRC_ADMIN_REFERENCE_4MODE_PERFORMANCE_V1_20260914 -->
 <!-- BRC_HIDE_REFERENCE_PERSONAL_TREND_V1_20260914 -->
@@ -2153,7 +2154,7 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
 
   /* ---- BRC_ADMIN_TODAY_HITS_CAROUSEL_V1_20260914 ---- */
   .brc-admin-today-hits{
-    display:none; margin:0 0 16px; padding:15px 14px 13px;
+    display:block; margin:0 0 16px; padding:15px 14px 13px;
     border:1px solid rgba(0,87,219,.16); border-radius:14px;
     background:linear-gradient(160deg,rgba(0,87,219,.05),rgba(255,255,255,.98));
     box-shadow:0 7px 22px rgba(10,31,51,.055); overflow:hidden;
@@ -2164,8 +2165,11 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
   .brc-admin-today-hits-title{font-size:17px;font-weight:950;color:var(--navy);line-height:1.2;}
   .brc-admin-today-hits-admin{
     display:inline-flex;align-items:center;justify-content:center;padding:3px 7px;border-radius:999px;
-    background:rgba(0,87,219,.09);color:var(--wave);font-size:9px;font-weight:950;white-space:nowrap;
+    background:rgba(47,143,91,.10);color:#217247;font-size:9px;font-weight:950;white-space:nowrap;
   }
+  .brc-admin-today-hits-admin.is-admin{background:rgba(0,87,219,.09);color:var(--wave);}
+  /* ログイン状態に関係なく、出走表AIトップでは必ず表示する */
+  #page-predict #brcAdminTodayHits{display:block !important;visibility:visible !important;opacity:1 !important;}
   .brc-admin-today-hits-sub{margin-top:4px;font-size:10.5px;line-height:1.45;color:var(--ink-soft);}
   .brc-admin-today-hits-summary{flex:0 0 auto;text-align:right;font-size:9.5px;line-height:1.45;color:var(--ink-soft);white-space:nowrap;}
   .brc-admin-today-hits-summary strong{display:block;color:var(--navy);font-size:11px;font-weight:950;}
@@ -4417,18 +4421,18 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
   </div><!-- /page-database -->
 
   <div id="page-predict">
-    <section id="brcAdminTodayHits" class="brc-admin-today-hits" aria-hidden="true">
+    <section id="brcAdminTodayHits" class="brc-admin-today-hits is-visible" aria-hidden="false">
       <div class="brc-admin-today-hits-head">
         <div>
           <div class="brc-admin-today-hits-title-row">
             <div class="brc-admin-today-hits-title">🎯 本日の的中実績</div>
-            <span class="brc-admin-today-hits-admin">管理者専用</span>
+            <span class="brc-admin-today-hits-admin">公開中</span>
           </div>
           <div class="brc-admin-today-hits-sub">BRC参考買い目4モードの本日的中分を、最新順で表示します。</div>
         </div>
         <div id="brcAdminTodayHitsSummary" class="brc-admin-today-hits-summary"><strong>0的中</strong>最高 ―</div>
       </div>
-      <div id="brcAdminTodayHitsBody" class="brc-admin-hit-scroll"><div class="brc-admin-hit-empty">本日の的中実績を確認中...</div></div>
+      <div id="brcAdminTodayHitsBody" class="brc-admin-hit-scroll"><div class="brc-admin-hit-empty">本日の的中実績を集計中...</div></div>
       <div class="brc-admin-hit-foot"><span>← 横にスクロールできます</span><button type="button" id="brcAdminTodayHitsRefresh" class="brc-admin-hit-refresh">更新</button></div>
     </section>
     <div id="brcPredictGate" class="brc-auth-gate">
@@ -6113,6 +6117,7 @@ function brcSetAuthMessage(message='', tone='error'){
   el.style.color = tone==='ok' ? '#217247' : (tone==='info' ? 'var(--ink-soft)' : '#b42318');
 }
 function brcRenderGate(state='login', user=null){
+  try{ if(typeof window.brcEnsureTodayHitsVisible==='function') window.brcEnsureTodayHitsVisible(); }catch(_e){}
   BRC_MEMBER_ACTIVE = false;
   try{ brcSetAdminSocialUi(null); }catch(_e){}
   BRC_FREE_PREVIEW_ACTIVE = null;
@@ -6145,6 +6150,7 @@ function brcRenderGate(state='login', user=null){
   }
 }
 function brcRenderMember(user){
+  try{ if(typeof window.brcEnsureTodayHitsVisible==='function') window.brcEnsureTodayHitsVisible(); }catch(_e){}
   BRC_FREE_PREVIEW_ACTIVE = null;
   BRC_POST_RACE_ACTIVE = null;
   BRC_MEMBER_ACTIVE = true;
@@ -6164,6 +6170,7 @@ function brcRenderMember(user){
 }
 
 function brcRenderFreePreviewMode(item){
+  try{ if(typeof window.brcEnsureTodayHitsVisible==='function') window.brcEnsureTodayHitsVisible(); }catch(_e){}
   BRC_MEMBER_ACTIVE=false;
   try{ brcSetAdminSocialUi(null); }catch(_e){}
   BRC_FREE_PREVIEW_ACTIVE=item||null;
@@ -6182,6 +6189,7 @@ function brcRenderFreePreviewMode(item){
 }
 
 function brcRenderPostRaceMode(item){
+  try{ if(typeof window.brcEnsureTodayHitsVisible==='function') window.brcEnsureTodayHitsVisible(); }catch(_e){}
   BRC_MEMBER_ACTIVE=false;
   BRC_FREE_PREVIEW_ACTIVE=null;
   BRC_POST_RACE_ACTIVE=item||null;
@@ -6201,6 +6209,7 @@ function brcRenderPostRaceMode(item){
 }
 
 function brcRenderPublicBrowser(message=''){
+  try{ if(typeof window.brcEnsureTodayHitsVisible==='function') window.brcEnsureTodayHitsVisible(); }catch(_e){}
   BRC_MEMBER_ACTIVE=false;
   BRC_MEMBER_CHECKED_AT=0;
   BRC_FREE_PREVIEW_ACTIVE=null;
@@ -18937,9 +18946,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     const panels=modes.map(k=>`<div class="brc-refmode-panel ${k===current?'active':''}" data-brc-refmode-panel="${k}">${brcRefModePanelHtml(results[k])}</div>`).join('');
     return `<div class="brc-refmode-shell" data-brc-ref-modes-host><div class="brc-refmode-head"><div class="brc-refmode-head-title">BRC参考買い目</div><div class="brc-refmode-head-note">管理者専用・目的別4モード</div></div><div class="brc-refmode-tabs" role="tablist" aria-label="BRC参考買い目モード">${tabs}</div>${panels}</div>`;
   }
-  function brcRefModeSnapshot(boats,workerPrediction,data,phase){
+  function brcRefModeSnapshot(boats,workerPrediction,data,phase,oddsOverride=null){
     try{
-      const full120=brcBuildFull120(boats,workerPrediction,phase), odds=brcRefModeOddsObject();
+      const full120=brcBuildFull120(boats,workerPrediction,phase), odds=oddsOverride||brcRefModeOddsObject();
       const out={};
       for(const mode of ['hit','balance','return','high']){
         const r=brcRefModeResult(mode,data,full120,odds);
@@ -18955,6 +18964,10 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       return out;
     }catch(_e){ return null; }
   }
+
+  window.brcBuildReferenceModeSnapshotWithOdds=function(boats,workerPrediction,data,phase='current',odds=null){
+    return brcRefModeSnapshot(boats,workerPrediction,data,phase,odds);
+  };
 
   function brcBindReferenceModeTabs(root=document){
     root.querySelectorAll?.('[data-brc-refmode-tab]').forEach(btn=>{
@@ -19130,113 +19143,202 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 })();
 </script>
 
-<!-- BRC_ADMIN_TODAY_HITS_CAROUSEL_V1_20260914 -->
-<script id="brc-admin-today-hits-carousel-v1">
+<!-- BRC_TODAY_HITS_PUBLIC_AUTO_V2_20260914 -->
+<script id="brc-today-hits-public-auto-v3">
 (function(){
   'use strict';
-  const REF_DB='brc_admin_reference_monitor_v2';
-  const REF_STORE='snapshots';
-  const RESULT_CACHE_KEY='brc_admin_today_hits_result_cache_v1';
+  const DB_NAME='brc_today_hits_auto_v3';
+  const DB_STORE='race_snapshots';
+  const CACHE_PREFIX='brc_today_hits_public_v3_';
   const MODE_META={
     hit:{label:'的中型',cls:'hit'},
     balance:{label:'バランス型',cls:'balance'},
     return:{label:'回収型',cls:'return'},
     high:{label:'高配当型',cls:'high'}
   };
-  let timer=null,busy=false,lastRenderAt=0;
+  const AUTO_MIN_SEC=90;
+  const AUTO_MAX_SEC=150;
+  let autoTimer=null,refreshTimer=null,collectorBusy=false,refreshBusy=false,lastRenderAt=0;
 
   function isAdmin(){return typeof BRC_ADMIN_ACTIVE!=='undefined'&&!!BRC_ADMIN_ACTIVE;}
   function today(){try{return typeof getJstDateLabel==='function'?String(getJstDateLabel()):new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Tokyo'}).format(new Date());}catch(_e){return '';}}
   function esc(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
   function deadlineMs(date,hhmm){const m=String(hhmm||'').match(/^(\d{1,2}):(\d{2})/);if(!m||!/^\d{4}-\d{2}-\d{2}$/.test(String(date||'')))return null;const x=Date.parse(`${date}T${m[1].padStart(2,'0')}:${m[2]}:00+09:00`);return Number.isFinite(x)?x:null;}
-  function resultKey(r){return `${r.date}|${String(r.venueCode||'').padStart(2,'0')}|${Number(r.raceNo)||0}`;}
-  function cacheRead(){try{const x=JSON.parse(localStorage.getItem(RESULT_CACHE_KEY)||'{}');return x&&typeof x==='object'?x:{};}catch(_e){return {};}}
-  function cacheWrite(x){try{localStorage.setItem(RESULT_CACHE_KEY,JSON.stringify(x));}catch(_e){}}
-  function openDb(){return new Promise((resolve,reject)=>{try{const q=indexedDB.open(REF_DB,1);q.onupgradeneeded=()=>{const db=q.result;if(!db.objectStoreNames.contains(REF_STORE))db.createObjectStore(REF_STORE,{keyPath:'id'});};q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error||new Error('indexeddb_open_failed'));}catch(e){reject(e);}});}
-  async function readRows(){const db=await openDb();try{return await new Promise((res,rej)=>{const tx=db.transaction(REF_STORE,'readonly'),q=tx.objectStore(REF_STORE).getAll();q.onsuccess=()=>res(Array.isArray(q.result)?q.result:[]);q.onerror=()=>rej(q.error);});}finally{db.close();}}
+  function raceKey(date,code,raceNo){return `${date}|${String(code||'').padStart(2,'0')}|${Number(raceNo)||0}`;}
+  function snapshotId(date,code,raceNo){return raceKey(date,code,raceNo);}
   function comboHtml(combo){const a=String(combo||'').split('-').map(Number);if(a.length!==3||a.some(n=>n<1||n>6))return esc(combo);return a.map((n,i)=>`${i?'<span class="brc-admin-hit-sep">-</span>':''}<span class="brc-admin-hit-boat lane${n}">${n}</span>`).join('');}
   function raceLabel(r){return `${String(r.venue||'')}${Number(r.raceNo)||''}R`;}
   function cardHtml(x,i){const m=MODE_META[x.mode]||{label:x.label||x.mode,cls:'hit'};const mult=Number(x.payoutYen)/100;return `<article class="brc-admin-hit-card${i===0?' latest':''}">${i===0?'<span class="brc-admin-hit-latest">最新</span>':''}<div class="brc-admin-hit-top"><div class="brc-admin-hit-race">${esc(raceLabel(x))}</div><span class="brc-admin-hit-mode ${esc(m.cls)}">${esc(m.label)}</span></div><div class="brc-admin-hit-body"><div class="brc-admin-hit-combo-wrap"><div class="brc-admin-hit-k">的中結果</div><div class="brc-admin-hit-combo">${comboHtml(x.combo)}</div></div><div class="brc-admin-hit-payout"><div class="brc-admin-hit-k">払戻オッズ</div><div class="v">${Number.isFinite(mult)?mult.toFixed(1):'―'}<small>倍</small></div></div></div></article>`;}
-  function render(hits){
+  function setAdminBadge(){const badge=document.querySelector('#brcAdminTodayHits .brc-admin-today-hits-admin');if(!badge)return;const admin=isAdmin();badge.classList.toggle('is-admin',admin);badge.textContent=admin?'管理者確認':'公開中';}
+  function render(hits,statusText=''){
     const host=document.getElementById('brcAdminTodayHits'),body=document.getElementById('brcAdminTodayHitsBody'),sum=document.getElementById('brcAdminTodayHitsSummary');
     if(!host||!body||!sum)return;
-    if(!isAdmin()){host.classList.remove('is-visible');host.setAttribute('aria-hidden','true');return;}
-    host.classList.add('is-visible');host.setAttribute('aria-hidden','false');
-    const rows=Array.isArray(hits)?hits:[];
-    if(!rows.length){body.innerHTML='<div class="brc-admin-hit-empty">本日の的中実績はまだありません。レース結果確定後、的中分だけここへ追加されます。</div>';sum.innerHTML='<strong>0的中</strong>最高 ―';return;}
+    host.classList.add('is-visible');host.setAttribute('aria-hidden','false');setAdminBadge();
+    const rows=(Array.isArray(hits)?hits:[]).slice().sort((a,b)=>(Number(b.sortMs)||0)-(Number(a.sortMs)||0)||(Number(b.raceNo)||0)-(Number(a.raceNo)||0));
+    if(!rows.length){body.innerHTML=`<div class="brc-admin-hit-empty">${esc(statusText||'本日の的中実績はまだありません。結果確定後、的中分だけここへ追加されます。')}</div>`;sum.innerHTML='<strong>0的中</strong>最高 ―';return;}
     const best=Math.max(...rows.map(x=>Number(x.payoutYen)||0))/100;
     sum.innerHTML=`<strong>${rows.length}的中</strong>最高 ${Number.isFinite(best)?best.toFixed(1):'―'}倍`;
-    body.innerHTML=rows.map(cardHtml).join('');
-    body.scrollLeft=0;
+    body.innerHTML=rows.map(cardHtml).join('');body.scrollLeft=0;
   }
-  async function getResult(row,cache){
-    const key=resultKey(row),cached=cache[key];
-    if(cached?.confirmed&&cached?.result?.combination)return cached.result;
-    const d=deadlineMs(row.date,row.deadline);if(d!==null&&Date.now()<d+15000)return null;
+
+  function openDb(){return new Promise((resolve,reject)=>{try{const q=indexedDB.open(DB_NAME,1);q.onupgradeneeded=()=>{const db=q.result;if(!db.objectStoreNames.contains(DB_STORE))db.createObjectStore(DB_STORE,{keyPath:'id'});};q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error||new Error('indexeddb_open_failed'));}catch(e){reject(e);}});}
+  async function dbGet(id){const db=await openDb();try{return await new Promise((res,rej)=>{const q=db.transaction(DB_STORE,'readonly').objectStore(DB_STORE).get(id);q.onsuccess=()=>res(q.result||null);q.onerror=()=>rej(q.error);});}finally{db.close();}}
+  async function dbPut(row){const db=await openDb();try{return await new Promise((res,rej)=>{const q=db.transaction(DB_STORE,'readwrite').objectStore(DB_STORE).put(row);q.onsuccess=()=>res(true);q.onerror=()=>rej(q.error);});}finally{db.close();}}
+  async function dbAll(){const db=await openDb();try{return await new Promise((res,rej)=>{const q=db.transaction(DB_STORE,'readonly').objectStore(DB_STORE).getAll();q.onsuccess=()=>res(Array.isArray(q.result)?q.result:[]);q.onerror=()=>rej(q.error);});}finally{db.close();}}
+
+  function cacheKey(){return CACHE_PREFIX+today();}
+  function cacheRead(){try{const x=JSON.parse(localStorage.getItem(cacheKey())||'{}');return x&&typeof x==='object'?x:{races:{}};}catch(_e){return {races:{}};}}
+  function cacheWrite(x){try{localStorage.setItem(cacheKey(),JSON.stringify(x));}catch(_e){}}
+  function cacheHits(cache){const out=[];for(const rec of Object.values(cache?.races||{})){if(Array.isArray(rec?.hits))out.push(...rec.hits);}return out;}
+
+  function specFor(venue,raceNo){
     try{
-      if(typeof brcFetchRaceResult!=='function')return null;
-      const obj=await brcFetchRaceResult({key:`${row.date}:${String(row.venueCode||'').padStart(2,'0')}:${String(Number(row.raceNo)||0).padStart(2,'0')}`,date:row.date,venue:row.venue,venueCode:String(row.venueCode||'').padStart(2,'0'),raceNo:Number(row.raceNo),deadline:row.deadline||''});
-      if(obj?.confirmed===true&&obj?.result?.combination){cache[key]={confirmed:true,result:obj.result,updatedAt:new Date().toISOString()};return obj.result;}
-    }catch(_e){}
-    return null;
+      const base=typeof buildTodayRaceSpec==='function'?buildTodayRaceSpec(venue,raceNo):null;if(!base)return null;
+      const code=typeof brcVenueCodeFromName==='function'?brcVenueCodeFromName(venue):'';if(!code)return null;
+      return {...base,date:today(),venueCode:String(code).padStart(2,'0')};
+    }catch(_e){return null;}
   }
-  async function refresh(force=false){
-    if(!isAdmin()||busy)return false;
-    if(!force&&Date.now()-lastRenderAt<8000)return false;
-    busy=true;
-    try{
-      const d=today(); if(!d)return false;
-      const all=await readRows();
-      const byRace=new Map();
-      for(const r of all){
-        if(String(r?.date)!==d||!r?.referenceModes)continue;
-        const k=`${r.venue}|${r.raceNo}`;
-        const prev=byRace.get(k);
-        const rank=r.phase==='exhibition'?2:1,prevRank=prev?.phase==='exhibition'?2:1;
-        if(!prev||rank>prevRank||(rank===prevRank&&String(r.capturedAt||'')>String(prev.capturedAt||'')))byRace.set(k,r);
+  function allTodaySpecs(){
+    const out=[];if(typeof RACE_CARDS_TODAY==='undefined'||!RACE_CARDS_TODAY)return out;
+    for(const venue of Object.keys(RACE_CARDS_TODAY||{})){
+      for(const rn of Object.keys(RACE_CARDS_TODAY?.[venue]||{}).map(Number)){
+        try{if(typeof brcRaceCancelled==='function'&&brcRaceCancelled(venue,rn))continue;}catch(_e){}
+        const s=specFor(venue,rn);if(s)out.push(s);
       }
-      const cache=cacheRead();
-      for(const k of Object.keys(cache)){if(!k.startsWith(d+'|'))delete cache[k];}
-      const hits=[];
-      const races=[...byRace.values()];
-      for(let i=0;i<races.length;i+=4){
-        const batch=races.slice(i,i+4);
-        const settled=await Promise.all(batch.map(async r=>({r,result:await getResult(r,cache)})));
-        for(const {r,result} of settled){
-          if(!result)continue;
-          const combo=String(result.combination||'').trim(),payout=Number(result.payout_yen);
-          if(!combo||!Number.isFinite(payout))continue;
-          for(const mode of ['hit','balance','return','high']){
-            const m=r.referenceModes?.[mode];
-            if(!m?.participate||m?.provisional===true)continue;
-            const picks=Array.isArray(m.picks)?m.picks:[];
-            if(picks.some(x=>String(x?.combo||'')===combo)){
-              hits.push({date:r.date,venue:r.venue,venueCode:r.venueCode,raceNo:Number(r.raceNo),deadline:r.deadline||'',mode,label:m.label||MODE_META[mode]?.label||mode,combo,payoutYen:payout,sortMs:deadlineMs(r.date,r.deadline)||0});
-            }
-          }
+    }
+    return out;
+  }
+  function secondsToDeadline(spec){const d=deadlineMs(spec.date,spec.deadline);return d===null?null:(d-Date.now())/1000;}
+  function isCompleted(spec){const d=deadlineMs(spec.date,spec.deadline);return d!==null&&Date.now()>=d+15000;}
+
+  async function fetchExhibition(spec){
+    if(!BRC_LIVE_EXHIBITION_API_URL)return null;
+    const qs=new URLSearchParams({date:spec.date,venue_code:spec.venueCode,race_no:String(spec.raceNo),_:String(Date.now())});
+    try{const res=await fetch(`${BRC_LIVE_EXHIBITION_API_URL}/live-exhibition?${qs}`,{cache:'no-store',headers:{Accept:'application/json'}});if(!res.ok)return null;const obj=await res.json();return obj?.ok===true&&obj?.race?obj.race:null;}catch(_e){return null;}
+  }
+  function captureMs(date,v){const s=String(v||'').trim();if(!s)return null;let x=Date.parse(s);if(Number.isFinite(x)&&/[zZ]|[+-]\d{2}:?\d{2}$/.test(s))return x;const tm=s.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);if(!tm)return null;x=Date.parse(`${date}T${tm[1].padStart(2,'0')}:${tm[2]}:${String(tm[3]||'00').padStart(2,'0')}+09:00`);return Number.isFinite(x)?x:null;}
+  async function fetchOdds(spec,final=false,requireT120=false){
+    if(!BRC_LIVE_EXHIBITION_API_URL)return null;
+    const qs=new URLSearchParams({date:spec.date,venue_code:spec.venueCode,race_no:String(spec.raceNo),_:String(Date.now())});if(final)qs.set('final','1');
+    try{const res=await fetch(`${BRC_LIVE_EXHIBITION_API_URL}/live-odds?${qs}`,{cache:'no-store',headers:{Accept:'application/json'}});if(!res.ok)return null;const obj=await res.json();if(obj?.ok!==true||!obj?.odds)return null;
+      if(requireT120){const d=deadlineMs(spec.date,spec.deadline),c=captureMs(spec.date,obj.captured_at_jst);const sec=(d!==null&&c!==null)?(d-c)/1000:null;if(!Number.isFinite(sec)||sec<AUTO_MIN_SEC||sec>AUTO_MAX_SEC)return null;}
+      return {odds:obj.odds,capturedAtJst:String(obj.captured_at_jst||''),final:!!obj.final};
+    }catch(_e){return null;}
+  }
+  async function fetchResult(spec){
+    try{if(typeof brcFetchRaceResult!=='function')return null;const obj=await brcFetchRaceResult({key:`${spec.date}:${spec.venueCode}:${String(spec.raceNo).padStart(2,'0')}`,date:spec.date,venue:spec.venue,venueCode:spec.venueCode,raceNo:spec.raceNo,deadline:spec.deadline||''});return obj?.confirmed===true&&obj?.result?.combination?obj.result:null;}catch(_e){return null;}
+  }
+
+  function buildBoats(spec,prediction,live){
+    const byLive=new Map((Array.isArray(live?.boats)?live.boats:[]).map(x=>[Number(x?.boat_no),x]));const boats=[];
+    for(let c=1;c<=6;c++){
+      const api=(spec.apiBoats||[]).find(x=>Number(x.course)===c),p=api?PLAYERS?.[String(api.reg)]:null;if(!p)return null;
+      const ww=prediction?.wins?.find(x=>Number(x.course)===c&&String(x.reg)===String(p.reg));
+      const tw=prediction?.top3s?.find(x=>Number(x.course)===c&&String(x.reg)===String(p.reg));
+      const bw=prediction?.baselines?.find(x=>Number(x.course)===c&&String(x.reg)===String(p.reg));
+      const sw=prediction?.seconds?.find(x=>Number(x.course)===c&&String(x.reg)===String(p.reg));
+      const win=Number(ww?.pctFloat),top3=Number(tw?.pctFloat),vavg=Number(bw?.venueAvgWin),second=Number(sw?.pct);if(![win,top3,vavg,second].every(Number.isFinite))return null;
+      const lane=p.lane_excl?.[String(c)]||{n:0};
+      boats.push({course:c,player:p,pctFloat:win,pct:Number.isFinite(Number(ww?.pct))?Number(ww.pct):Math.round(win),pctRaw:win,pctCal:win,winWfApplied:true,attack17Applied:false,pct3Float:top3,pct3:Number.isFinite(Number(tw?.pct))?Number(tw.pct):Math.round(top3),basePctFloat:win,basePct3Float:top3,basePct2:second,playerSource:'today-hits-auto',venueBaseSource:'protected-server-model',laneN:Number(lane.n)||0,venueN:Number(bw?.venueN)||0,venueAvgWin:vavg,pct2:second,motor2:Number.isFinite(Number(api?.motor2))?Number(api.motor2):null,motorNo:null,racerClass:String(api?.racerClass||''),exhibition:byLive.get(c)||null});
+    }
+    return boats;
+  }
+  function reliability(spec,prediction,boats){const p1=boats?.find(b=>Number(b.course)===1);if(!p1)return null;try{const r=classifyInReliabilityByWinPct(p1.pctFloat,spec.grade,(spec.apiBoats||[]).map(b=>b.reg),prediction.inReliability);if(r&&Number.isFinite(Number(p1.venueAvgWin)))r.venueBaseDiff=Number(p1.pctFloat)-Number(p1.venueAvgWin);return r;}catch(_e){return null;}}
+  function buildModes(spec,prediction,live,odds){
+    try{
+      const boats=buildBoats(spec,prediction,live);if(!boats)return null;
+      let applied=false;try{applied=typeof brcApplyExhibitionAdjustmentsToBoats==='function'&&brcApplyExhibitionAdjustmentsToBoats(boats,live);}catch(_e){}
+      const phase=applied?'current':'pre';const rel=reliability(spec,prediction,boats);
+      const data=typeof window.brcBuildReferenceMonitorData==='function'?window.brcBuildReferenceMonitorData(boats,prediction,rel,phase):null;if(!data)return null;
+      return typeof window.brcBuildReferenceModeSnapshotWithOdds==='function'?window.brcBuildReferenceModeSnapshotWithOdds(boats,prediction,data,phase,odds):null;
+    }catch(_e){return null;}
+  }
+  function hitsFromModes(spec,modes,result,source){
+    const combo=String(result?.combination||'').trim(),payout=Number(result?.payout_yen);if(!combo||!Number.isFinite(payout)||!modes)return [];
+    const sortMs=deadlineMs(spec.date,spec.deadline)||0,out=[];
+    for(const mode of ['hit','balance','return','high']){const m=modes?.[mode];if(!m?.participate||m?.provisional===true)continue;const picks=Array.isArray(m.picks)?m.picks:[];if(picks.some(x=>String(x?.combo||'')===combo))out.push({date:spec.date,venue:spec.venue,venueCode:spec.venueCode,raceNo:spec.raceNo,deadline:spec.deadline,mode,label:m.label||MODE_META[mode]?.label||mode,combo,payoutYen:payout,sortMs,source});}
+    return out;
+  }
+
+  async function captureDueAuto(){
+    if(collectorBusy)return false;collectorBusy=true;
+    try{
+      const due=[];for(const spec of allTodaySpecs()){const sec=secondsToDeadline(spec);if(!Number.isFinite(sec)||sec<AUTO_MIN_SEC||sec>AUTO_MAX_SEC)continue;if(await dbGet(snapshotId(spec.date,spec.venueCode,spec.raceNo)))continue;due.push(spec);}
+      if(!due.length)return false;
+      const byId=new Map();
+      // 会員/管理者セッションがある場合は保護されたバッチ予測を優先。
+      try{
+        if(typeof BRC_MEMBER_ACTIVE==='undefined'||BRC_MEMBER_ACTIVE){
+          const batch=await brcPredictBatchApi({races:due.map(s=>({id:s.id,venue:s.venue,grade:s.grade,boats:s.apiBoats}))});
+          (Array.isArray(batch?.races)?batch.races:[]).forEach(x=>byId.set(String(x.id),x));
         }
+      }catch(_e){}
+      // ログアウト中でも公開APIが締切前取得を許可している環境ではT-120保存を継続する。
+      // 公開API側で締切前が拒否される場合は、終了後の再構築へ自動フォールバックする。
+      for(const spec of due){
+        let pred=byId.get(String(spec.id))||null;
+        if(!pred){
+          try{pred=await brcPostRacePreviewApi({date:spec.date,venue:spec.venue,raceNo:spec.raceNo,grade:spec.grade,boats:spec.apiBoats});}catch(_e){pred=null;}
+        }
+        if(!pred)continue;
+        const [live,oddsRec]=await Promise.all([fetchExhibition(spec),fetchOdds(spec,false,true)]);if(!live||!oddsRec?.odds)continue;
+        const modes=buildModes(spec,pred,live,oddsRec.odds);if(!modes)continue;
+        await dbPut({id:snapshotId(spec.date,spec.venueCode,spec.raceNo),date:spec.date,venue:spec.venue,venueCode:spec.venueCode,raceNo:spec.raceNo,deadline:spec.deadline,capturedAt:new Date().toISOString(),oddsCapturedAtJst:oddsRec.capturedAtJst,source:'T120',referenceModes:modes});
       }
-      cacheWrite(cache);
-      hits.sort((a,b)=>b.sortMs-a.sortMs||b.raceNo-a.raceNo||['high','return','balance','hit'].indexOf(a.mode)-['high','return','balance','hit'].indexOf(b.mode));
-      render(hits);lastRenderAt=Date.now();return true;
-    }catch(err){
-      console.warn('BRC today hits refresh failed:',err);
-      const body=document.getElementById('brcAdminTodayHitsBody');if(body&&isAdmin())body.innerHTML='<div class="brc-admin-hit-empty">本日の的中実績を確認できませんでした。「更新」で再確認できます。</div>';
-      return false;
-    }finally{busy=false;}
+      return true;
+    }finally{collectorBusy=false;}
   }
-  function setUi(active){
-    const host=document.getElementById('brcAdminTodayHits');if(!host)return;
-    const on=!!active;host.classList.toggle('is-visible',on);host.setAttribute('aria-hidden',on?'false':'true');
-    if(on){refresh(true);if(!timer)timer=setInterval(()=>{if(document.visibilityState==='visible')refresh(false);},60000);}else if(timer){clearInterval(timer);timer=null;}
+
+  async function settleSnapshotsToCache(cache){
+    const rows=(await dbAll()).filter(r=>String(r?.date)===today());let changed=false;
+    for(const row of rows){const key=raceKey(row.date,row.venueCode,row.raceNo);if(cache.races?.[key]?.source==='T120')continue;const spec={date:row.date,venue:row.venue,venueCode:row.venueCode,raceNo:Number(row.raceNo),deadline:row.deadline};if(!isCompleted(spec))continue;const result=await fetchResult(spec);if(!result)continue;cache.races=cache.races||{};cache.races[key]={source:'T120',updatedAt:new Date().toISOString(),hits:hitsFromModes(spec,row.referenceModes,result,'T120')};changed=true;}
+    return changed;
   }
+
+  async function reconstructOne(spec){
+    const result=await fetchResult(spec);if(!result)return {ok:false,retry:true};
+    let pred=null;try{pred=await brcPostRacePreviewApi({date:spec.date,venue:spec.venue,raceNo:spec.raceNo,grade:spec.grade,boats:spec.apiBoats});}catch(_e){return {ok:false,retry:true};}
+    const [live,oddsRec]=await Promise.all([fetchExhibition(spec),fetchOdds(spec,true,false)]);if(!live||!oddsRec?.odds)return {ok:false,retry:true};
+    const modes=buildModes(spec,pred,live,oddsRec.odds);if(!modes)return {ok:false,retry:true};
+    return {ok:true,hits:hitsFromModes(spec,modes,result,'REBUILD')};
+  }
+  async function mapLimit(items,limit,fn){const out=new Array(items.length);let i=0;async function w(){while(i<items.length){const n=i++;try{out[n]=await fn(items[n],n);}catch(e){out[n]={ok:false,retry:true};}}}await Promise.all(Array.from({length:Math.min(limit,Math.max(1,items.length))},()=>w()));return out;}
+
+  async function refresh(force=false){
+    if(refreshBusy)return false;if(!force&&Date.now()-lastRenderAt<5000)return false;refreshBusy=true;
+    try{
+      const cache=cacheRead();cache.races=cache.races||{};
+      await settleSnapshotsToCache(cache);
+      let hits=cacheHits(cache);render(hits,hits.length?'':'本日の結果を集計中です…');
+      const targets=[];
+      for(const spec of allTodaySpecs()){
+        if(!isCompleted(spec))continue;const key=raceKey(spec.date,spec.venueCode,spec.raceNo);const rec=cache.races[key];
+        if(rec?.source==='T120')continue;
+        if(rec?.done===true)continue;
+        targets.push(spec);
+      }
+      if(targets.length){
+        const results=await mapLimit(targets,3,reconstructOne);
+        results.forEach((r,i)=>{const spec=targets[i],key=raceKey(spec.date,spec.venueCode,spec.raceNo);if(r?.ok)cache.races[key]={source:'REBUILD',done:true,updatedAt:new Date().toISOString(),hits:r.hits||[]};});
+      }
+      cacheWrite(cache);hits=cacheHits(cache);render(hits,hits.length?'':'本日の的中実績はまだありません。結果確定後、的中分だけここへ追加されます。');lastRenderAt=Date.now();return true;
+    }catch(err){console.warn('BRC today hits v3 refresh failed:',err);render(cacheHits(cacheRead()),'本日の的中実績を確認できませんでした。「更新」で再確認できます。');return false;}finally{refreshBusy=false;}
+  }
+
+  function startAutoTimer(){if(autoTimer)return;autoTimer=setInterval(()=>{if(document.visibilityState==='visible'){captureDueAuto().catch(()=>{});refresh(false).catch(()=>{});}},15000);captureDueAuto().catch(()=>{});}
+  function stopAutoTimer(){if(autoTimer){clearInterval(autoTimer);autoTimer=null;}}
+  function setUi(_active){setAdminBadge();startAutoTimer();refresh(true).catch(()=>{});}
   window.brcSetAdminTodayHitsUi=setUi;
   window.brcRefreshAdminTodayHits=()=>refresh(true);
+  window.brcEnsureTodayHitsVisible=()=>{const host=document.getElementById('brcAdminTodayHits');if(host){host.classList.add('is-visible');host.setAttribute('aria-hidden','false');host.style.display='block';}setAdminBadge();};
   function init(){
-    document.getElementById('brcAdminTodayHitsRefresh')?.addEventListener('click',()=>refresh(true));
-    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&isAdmin())refresh(false);});
-    window.addEventListener('focus',()=>{if(isAdmin())refresh(false);});
-    if(isAdmin())setUi(true);
+    const host=document.getElementById('brcAdminTodayHits');if(host){host.classList.add('is-visible');host.setAttribute('aria-hidden','false');host.style.display='block';}
+    setAdminBadge();document.getElementById('brcAdminTodayHitsRefresh')?.addEventListener('click',()=>refresh(true));
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){captureDueAuto().catch(()=>{});refresh(false).catch(()=>{});}});
+    window.addEventListener('focus',()=>refresh(false).catch(()=>{}));
+    startAutoTimer();
+    refresh(true).catch(()=>{});
+    if(!refreshTimer)refreshTimer=setInterval(()=>{if(document.visibilityState==='visible')refresh(false).catch(()=>{});},60000);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
