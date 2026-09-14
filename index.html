@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_HIDE_REFERENCE_PERSONAL_TREND_V1_20260914 -->
 <!-- BRC_OPERATION_TIMING_120SEC_V2_20260914 -->
 <!-- BRC_TIMEX_FINAL_PREDICTION_SUMMARY_V1_20260913 -->
 <!-- BRC_PREDICT_TIMEX_ORIGINAL_TABLE_UI_V2_20260913 -->
@@ -10450,7 +10451,7 @@ function brcBuildNigeOrderMetricHtml(x,baseText='',baseClass=''){
 }
 function brcBuildNigeOrderPersonalHtml(b,kind,currentRate=NaN){
   const a=brcFindExhibitionPlayerAlert(b);
-  if(!a) return `<span class="brc-nige-order-personal-empty" title="この条件の本人傾向データなし"><span class="brc-nige-order-timex-label">本人</span><span class="brc-nige-order-timex-empty">−</span></span>`;
+  if(!a || !brcIsDisplayablePersonalTrend(a)) return `<span class="brc-nige-order-personal-empty" title="判断材料になる本人傾向なし"><span class="brc-nige-order-timex-label">本人</span><span class="brc-nige-order-timex-empty">−</span></span>`;
   const diff=brcPersonalEffectDiff(a,kind);
   if(!Number.isFinite(diff)) return `<span class="brc-nige-order-personal-empty" title="この条件の本人傾向データなし"><span class="brc-nige-order-timex-label">本人</span><span class="brc-nige-order-timex-empty">−</span></span>`;
   const payload=encodeURIComponent(JSON.stringify(brcAlertPayload(a,b)));
@@ -12726,7 +12727,7 @@ function brcReferencePersonalWarningData(combos){
     const b=boats.find(x=>Number(x?.course)===Number(course));
     if(!b) return;
     const row=typeof brcFindPredictNamePersonalTrendRow==='function'?brcFindPredictNamePersonalTrendRow(b):null;
-    if(!row) return;
+    if(!row || !brcIsDisplayablePersonalTrend(row)) return;
     const targetKinds=Array.from(usage.get(course)||[]);
     // 3連対はその艇が買い目に含まれる時の総合的な残りやすさとして併記する。
     if(!targetKinds.includes('top3')) targetKinds.push('top3');
@@ -12955,7 +12956,7 @@ function brcAlertPayload(a,b){
   return {...a,__currentWinPct:Number(b?.pct),__currentSecondPct:Number(b?.exhibitionApplied?b?.exhibitionSecondPct:b?.basePct2),__currentThirdPct:Number(b?.exhibitionApplied?b?.exhibitionThirdPct:Math.max(0,(Number(b?.basePct3Float)||0)-(Number(b?.basePctFloat)||0)-(Number(b?.basePct2)||0))),__currentTop3Pct:Number(b?.pct3),__currentTimeXDiff:Number(b?.exhibition?.relative_diff_capped??b?.exhibition?.relative_diff),__currentWinDeltaPt:Number(b?.exhibitionWinDeltaPt),__currentSecondDeltaPt:Number(b?.exhibitionSecondDeltaPt),__currentThirdDeltaPt:Number(b?.exhibitionThirdDeltaPt),__currentTop3DeltaPt:Number(b?.exhibitionTop3DeltaPt)};
 }
 function brcBuildExhibitionAlertButton(b){
-  const a=brcFindExhibitionPlayerAlert(b); if(!a) return '';
+  const a=brcFindExhibitionPlayerAlert(b); if(!a || !brcIsDisplayablePersonalTrend(a)) return '';
   const payload=encodeURIComponent(JSON.stringify(brcAlertPayload(a,b)));
   const meta=brcGetExhibitionAlertMeta(a);
   return `<button type="button" class="brc-ex-alert-btn ${meta.cls}" onclick="event.stopPropagation();brcShowExhibitionPlayerAlert(decodeURIComponent('${payload}'))" title="${meta.title}">${meta.buttonText}</button>`;
@@ -13013,8 +13014,9 @@ function brcFindPlayerTimeXTendencyDetailRow(b,tendency){
   // 「出しやすい/出しにくい」の基礎特性と、現在帯の着率本人傾向は別データ。
   // 本人傾向は従来どおり現在コース×現在帯の1157条件から取得する。
   const selected=brcFindExhibitionPlayerAlert(b);
-  // 着順別本人傾向は、現在コース×現在帯でN=12以上ある場合だけ具体表示。
-  return selected && Number(selected.N)>=12 ? selected : null;
+  // 着順別本人傾向は、現在コース×現在帯でN=12以上かつ
+  // 赤/緑の判断材料になる本採用条件だけ具体表示。グレーの監視条件は公開表示しない。
+  return selected && Number(selected.N)>=12 && brcIsDisplayablePersonalTrend(selected) ? selected : null;
 }
 function brcShowPlayerTimeXTendency(raw){
   let info; try{info=JSON.parse(raw)}catch(e){return}
@@ -13075,10 +13077,10 @@ function brcBuildPlayerTimeXTendencyBadgeHtml(b){
 // 表示導線だけの統一で、マトリックス印・着率・TimeXロジックには影響しない。
 function brcBuildScenarioMarkAttentionBadgeHtml(b){
   const personal=brcFindPredictNamePersonalTrendRow(b);
-  if(personal){
+  if(personal && brcIsDisplayablePersonalTrend(personal)){
     const payload=encodeURIComponent(JSON.stringify(brcAlertPayload(personal,b)));
     const decision=brcAlertDecision(personal);
-    const cls=decision.cls==='up'?'personal-up':decision.cls==='down'?'personal-down':'personal-flat';
+    const cls=decision.cls==='up'?'personal-up':'personal-down';
     return `<button type="button" class="brc-player-tendency-badge ${cls}" onclick="event.stopPropagation();brcShowPredictNamePersonalTrend(decodeURIComponent('${payload}'))" title="今回の本人傾向あり。タップで詳細">注意</button>`;
   }
   return brcBuildPlayerTimeXTendencyBadgeHtml(b);
@@ -13098,10 +13100,10 @@ function brcBuildPredictExhibitionLabelHtml(b){
   // これによりAI予測の「注意」対象を出走データ側でも展示前から確認できる。
   // 表示導線のみの変更で、着率・TimeX補正・AI予測の計算ロジックは変更しない。
   const personal=brcFindPredictNamePersonalTrendRow(b);
-  if(personal){
+  if(personal && brcIsDisplayablePersonalTrend(personal)){
     const payload=encodeURIComponent(JSON.stringify(brcAlertPayload(personal,b)));
     const decision=brcAlertDecision(personal);
-    const cls=decision.cls==='up'?'personal-up':decision.cls==='down'?'personal-down':'personal-flat';
+    const cls=decision.cls==='up'?'personal-up':'personal-down';
     return `<button type="button" class="predict-personal-inline ${cls}" onclick="event.stopPropagation();brcShowPredictNamePersonalTrend(decodeURIComponent('${payload}'))" title="個人傾向をタップして内容を確認">個人傾向</button>`;
   }
   const tendency=brcFindPlayerTimeXTendency(b);
@@ -13126,6 +13128,13 @@ function brcAlertDecision(a){
   if(plan==='悪展示でも消し注意') return {cls:'up',title:'悪展示でも消し切らない',body:'通常のタイムX傾向より強く残る個人傾向があります。'};
   return {cls:'flat',title:'個人傾向を確認',body:'通常のタイムX傾向と違う出方が確認されています。'};
 }
+// 公開画面に出す個人傾向は、舟券判断に使える赤/緑だけ。
+// 「監視」「参考扱い」などグレー判定は内部データとして残し、UIには出さない。
+function brcIsDisplayablePersonalTrend(a){
+  if(!a || a?.['採用区分']==='監視') return false;
+  const decision=brcAlertDecision(a);
+  return decision.cls==='up' || decision.cls==='down';
+}
 function brcAlertPersonalTrendRow(label,a,kind){
   const diff=brcPersonalEffectDiff(a,kind);
   const cls=brcMetricClass(diff);
@@ -13135,6 +13144,7 @@ function brcAlertPersonalTrendRow(label,a,kind){
 }
 function brcShowPredictNamePersonalTrend(raw){
   let a; try{a=JSON.parse(raw)}catch(e){return}
+  if(!brcIsDisplayablePersonalTrend(a)) return;
   document.getElementById('brcExAlertPop')?.remove();
   const pop=document.createElement('div'); pop.id='brcExAlertPop'; pop.className='brc-ex-alert-pop';
   pop.onclick=e=>{if(e.target===pop)pop.remove();};
@@ -13166,6 +13176,7 @@ function brcShowExhibitionPlayerAlert(raw){
 
 function brcShowScenarioPersonalAdjustment(raw,kind,currentRate){
   let a; try{a=JSON.parse(raw)}catch(e){return}
+  if(!brcIsDisplayablePersonalTrend(a)) return;
   const kindMap={
     win:{label:'1着',key:'win'},
     second:{label:'2着',key:'second'},
@@ -13214,7 +13225,7 @@ function brcFindScenarioPersonalTrendRow(b){
   // 展開タブの「本人傾向」は、常時表示の「タイムを出しやすい／出しにくい」選手特性とは別系統。
   // 選手×現在コース×今回のTimeX差帯が一致し、既存基準どおりN=12以上の条件だけ参考表示する。
   const selected=brcFindExhibitionPlayerAlert(b);
-  return selected && Number(selected.N)>=12 ? selected : null;
+  return selected && Number(selected.N)>=12 && brcIsDisplayablePersonalTrend(selected) ? selected : null;
 }
 function brcBuildScenarioPersonalTrendHtml(b,kind,currentRate=NaN){
   const a=brcFindScenarioPersonalTrendRow(b);
