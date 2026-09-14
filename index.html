@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <!-- BRC_ADMIN_REFERENCE_4MODE_TABS_V1_20260914 -->
+<!-- BRC_ADMIN_REFERENCE_4MODE_PERFORMANCE_V1_20260914 -->
 <!-- BRC_HIDE_REFERENCE_PERSONAL_TREND_V1_20260914 -->
 <!-- BRC_OPERATION_TIMING_120SEC_V2_20260914 -->
 <!-- BRC_TIMEX_FINAL_PREDICTION_SUMMARY_V1_20260913 -->
@@ -3933,6 +3934,16 @@ table.brc-mark-table td:first-child{text-align:left;padding-left:7px;}
 .brc-refmode-kpi .k{font-size:7px;font-weight:850;color:var(--ink-soft);white-space:nowrap;}
 .brc-refmode-kpi .v{margin-top:1px;font-size:10.5px;font-weight:950;color:var(--navy);white-space:nowrap;}
 .brc-refmode-kpi .v.good{color:var(--trend-up);}.brc-refmode-kpi .v.shadow{color:#9a5d00;}
+.brc-refmode-performance{margin:-1px 0 7px;padding:7px 8px;border:1px solid rgba(0,87,219,.11);border-radius:9px;background:linear-gradient(160deg,rgba(0,87,219,.045),rgba(255,255,255,.96));}
+.brc-refmode-performance-head{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-bottom:5px;}
+.brc-refmode-performance-title{font-size:8.5px;font-weight:950;color:var(--navy);}
+.brc-refmode-performance-period{font-size:7.5px;font-weight:800;color:var(--ink-soft);white-space:nowrap;}
+.brc-refmode-performance-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;}
+.brc-refmode-performance-item{min-width:0;padding:5px 2px;border:1px solid rgba(10,31,51,.06);border-radius:7px;background:rgba(255,255,255,.85);text-align:center;}
+.brc-refmode-performance-item .k{font-size:6.5px;font-weight:850;color:var(--ink-soft);white-space:nowrap;}
+.brc-refmode-performance-item .v{margin-top:1px;font-size:9.5px;font-weight:950;color:var(--navy);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.brc-refmode-performance-item .v.positive{color:var(--trend-up);}
+.brc-refmode-performance-item .v.negative{color:var(--trend-down);}
 .brc-refmode-desc{margin:0 0 7px;padding:7px 8px;border-radius:8px;border:1px solid rgba(10,31,51,.07);background:rgba(10,31,51,.02);font-size:9px;line-height:1.5;color:var(--ink-soft);}
 .brc-refmode-desc strong{color:var(--navy);}
 .brc-refmode-pass{padding:12px 10px;border:1px solid rgba(209,55,63,.16);border-radius:9px;background:rgba(209,55,63,.035);text-align:center;}
@@ -3948,6 +3959,11 @@ table.brc-mark-table td:first-child{text-align:left;padding-left:7px;}
   .brc-refmode-kpi{padding:5px 2px;}
   .brc-refmode-kpi .k{font-size:6.5px;}
   .brc-refmode-kpi .v{font-size:9.5px;}
+  .brc-refmode-performance{padding:6px 6px;}
+  .brc-refmode-performance-grid{gap:3px;}
+  .brc-refmode-performance-item{padding:4px 1px;}
+  .brc-refmode-performance-item .k{font-size:6px;}
+  .brc-refmode-performance-item .v{font-size:8.8px;}
 }
 
 @media(max-width:420px){
@@ -18717,10 +18733,10 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   // 管理者専用。現行BRCの最終着率・条件付き着順確率から120通りを構成し、目的別に候補を切り替える。
   // 回収型 / 高配当型はオッズ依存のShadow。一般会員表示や既存予測値へは再加算しない。
   const BRC_REFERENCE_MODE_META={
-    hit:{label:'的中型',icon:'🎯',points:10,hit:'40〜45%',roi:'105%以上',status:'本番',statusClass:'good',desc:'確率上位を広めに押さえ、的中を優先。'},
-    balance:{label:'バランス型',icon:'⚖️',points:6,hit:'28〜35%',roi:'110%以上',status:'本番β',statusClass:'good',desc:'確率と配当のバランスを取り、6点へ絞る。'},
-    return:{label:'回収型',icon:'🔥',points:6,hit:'15〜25%',roi:'120%以上',status:'Shadow',statusClass:'shadow',desc:'10倍以上を対象に、市場確率とBRC確率を混ぜたEVで6点を選ぶ。'},
-    high:{label:'高配当型',icon:'💰',points:18,hit:'8〜15%',roi:'130%以上',status:'Shadow',statusClass:'shadow',desc:'50倍以上を対象に、BRC確率×オッズで高配当側を18点まで広く拾う。'}
+    hit:{label:'的中型',icon:'🎯',points:10,hit:'40〜45%',roi:'105%以上',status:'本番',statusClass:'good',desc:'確率上位を広めに押さえ、的中を優先。',performance:{period:'2026/9/1〜9/11',races:41,hits:21,hitRate:51.22,roi:126.10,pl:10700}},
+    balance:{label:'バランス型',icon:'⚖️',points:6,hit:'28〜35%',roi:'110%以上',status:'本番β',statusClass:'good',desc:'確率と配当のバランスを取り、6点へ絞る。',performance:{period:'2026/9/1〜9/11',races:39,hits:12,hitRate:30.77,roi:85.85,pl:-3310}},
+    return:{label:'回収型',icon:'🔥',points:6,hit:'15〜25%',roi:'120%以上',status:'Shadow',statusClass:'shadow',desc:'10倍以上を対象に、市場確率とBRC確率を混ぜたEVで6点を選ぶ。',performance:{period:'2026/9/1〜9/11',races:91,hits:20,hitRate:21.98,roi:127.82,pl:15190}},
+    high:{label:'高配当型',icon:'💰',points:18,hit:'8〜15%',roi:'130%以上',status:'Shadow',statusClass:'shadow',desc:'50倍以上を対象に、BRC確率×オッズで高配当側を18点まで広く拾う。',performance:{period:'2026/9/1〜9/11',races:39,hits:7,hitRate:17.95,roi:96.30,pl:-2600}}
   };
   let brcRefModeContext=null;
 
@@ -18794,6 +18810,12 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     }
     return {mode,meta,participate:false,reason:'未定義',picks:[],quality:null};
   }
+  function brcRefModePerformanceHtml(meta){
+    const p=meta?.performance; if(!p) return '';
+    const pl=Number(p.pl)||0, plClass=pl>0?'positive':pl<0?'negative':'';
+    const plText=(pl>0?'+':'')+Math.round(pl).toLocaleString('ja-JP')+'円';
+    return `<div class="brc-refmode-performance"><div class="brc-refmode-performance-head"><div class="brc-refmode-performance-title">9月検証実績</div><div class="brc-refmode-performance-period">${esc(p.period)}</div></div><div class="brc-refmode-performance-grid"><div class="brc-refmode-performance-item"><div class="k">的中率</div><div class="v">${Number(p.hitRate).toFixed(1)}%</div></div><div class="brc-refmode-performance-item"><div class="k">回収率</div><div class="v ${Number(p.roi)>=100?'positive':'negative'}">${Number(p.roi).toFixed(1)}%</div></div><div class="brc-refmode-performance-item"><div class="k">損益</div><div class="v ${plClass}">${esc(plText)}</div></div><div class="brc-refmode-performance-item"><div class="k">対象</div><div class="v">${Math.round(p.races)}R</div></div></div></div>`;
+  }
   function brcRefModePanelHtml(res){
     const m=res.meta, picks=res.picks||[];
     const comp=brcRefModeComposite(picks), formation=brcRefModeFormation(picks);
@@ -18803,12 +18825,13 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       <div class="brc-refmode-kpi"><div class="k">基準点数</div><div class="v">${m.points}点</div></div>
       <div class="brc-refmode-kpi"><div class="k">運用</div><div class="v ${esc(m.statusClass)}">${esc(m.status)}</div></div>
     </div>`;
+    const performance=brcRefModePerformanceHtml(m);
     const desc=`<div class="brc-refmode-desc"><strong>${esc(m.icon+' '+m.label)}</strong>｜${esc(m.desc)}${Number.isFinite(res.quality)?` <span class="brc-refmode-quality">判定値 ${Number(res.quality).toFixed(3)}</span>`:''}</div>`;
     if(!res.participate){
-      return `${kpis}${desc}<div class="brc-refmode-pass"><strong>見送り</strong><span>${esc(res.reason||'条件未達')}</span></div>${(res.mode==='return'||res.mode==='high')?'<div class="brc-refmode-shadow-note">※オッズ依存モードは管理者Shadow。基準を満たした時だけ候補を表示します。</div>':''}`;
+      return `${kpis}${performance}${desc}<div class="brc-refmode-pass"><strong>見送り</strong><span>${esc(res.reason||'条件未達')}</span></div>${(res.mode==='return'||res.mode==='high')?'<div class="brc-refmode-shadow-note">※オッズ依存モードは管理者Shadow。基準を満たした時だけ候補を表示します。</div>':''}`;
     }
     const list=picks.map(x=>`<div class="brc-refmon-pick" data-brc-refmon-combo="${esc(x.combo)}"><strong>${esc(x.combo)}</strong><span class="odds">${Number.isFinite(Number(x.odds))?Number(x.odds).toFixed(1)+'倍':'―'}</span></div>`).join('');
-    return `${kpis}${desc}<div class="brc-refmon-picks" data-brc-ref-monitor-picks="${esc(picks.map(x=>x.combo).join(','))}">
+    return `${kpis}${performance}${desc}<div class="brc-refmon-picks" data-brc-ref-monitor-picks="${esc(picks.map(x=>x.combo).join(','))}">
       <div class="brc-refmon-picks-head"><span class="brc-refmon-picks-title">${esc(m.icon+' '+m.label)}${brcBuildReferencePersonalWarningBadgeHtml(picks.map(x=>x.combo))}</span><strong>${picks.length}点</strong></div>
       ${formation?`<div class="brc-refmon-formation">${esc(formation)}</div>`:''}
       <div class="brc-refmon-pick-list">${list}</div>
