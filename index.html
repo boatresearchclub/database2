@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_ADMIN_REFERENCE_DEDICATED_TAB_V1_20260914 -->
 <!-- BRC_UI_MODAL_TALL_HITCARDS_2COL_V6_20260914 -->
 <!-- BRC_TODAY_HITS_SCROLL_NAV_AI_ODDS_UI_V5_20260914 -->
 <!-- BRC_TODAY_HITS_PUBLIC_AUTO_V3_20260914 -->
@@ -11341,8 +11342,8 @@ function brcRenderAdminNonInReferencePanel(boats,workerPrediction,localInReliabi
 
 function brcSetAiAdminSubTab(key){
   if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return;
-  const valid=['marks','nige'];
-  const requested=(key==='ref'||key==='monitor')?'marks':key;
+  const valid=['marks','nige','tickets'];
+  const requested=(key==='ref'||key==='monitor')?'tickets':key;
   const k=valid.includes(requested)?requested:'marks';
   window.__brcAiAdminSubTabCurrent=k;
   document.querySelectorAll('#predictAiResult [data-brc-ai-admin-tab]').forEach(btn=>{
@@ -11355,6 +11356,7 @@ function brcSetAiAdminSubTab(key){
     if(panel) panel.classList.toggle('active',x===k);
   });
   if(k==='nige') setTimeout(()=>brcEnsureAiReferenceOddsAfterDeadline(),0);
+  if(k==='tickets') setTimeout(()=>{ try{ window.brcRefreshReferenceMonitorOdds?.(); }catch(_e){} },0);
 }
 function brcBindAiAdminSubTabs(){
   document.querySelectorAll('#predictAiResult [data-brc-ai-admin-tab]').forEach(btn=>{
@@ -11383,12 +11385,14 @@ function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhib
         <div><div class="predict-ai-title">AI予測</div><div class="predict-ai-sub">管理者β</div></div>
         ${reliability}
       </div>
-      <div class="brc-ai-admin-tabs" role="tablist" aria-label="AI予測の管理者表示切り替え">
+      <div class="brc-ai-admin-tabs brc-refmon-enabled" role="tablist" aria-label="AI予測の管理者表示切り替え">
         <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="marks">展開マトリックス</button>
         <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="nige">イン逃げ予測</button>
+        <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="tickets">BRC参考買い目</button>
       </div>
       <div id="brcAiAdminPanel-marks" class="brc-ai-admin-panel">${marksHtml}</div>
       <div id="brcAiAdminPanel-nige" class="brc-ai-admin-panel">${nigeHtml}</div>
+      <div id="brcAiAdminPanel-tickets" class="brc-ai-admin-panel"></div>
     `;
     brcBindAiAdminSubTabs();
   }else{
@@ -19176,22 +19180,24 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     const box=document.getElementById('predictAiResult');
     const tabs=box?.querySelector('.brc-ai-admin-tabs');
     const marksPanel=document.getElementById('brcAiAdminPanel-marks');
-    if(!box||!tabs||!marksPanel) return;
+    const ticketsPanel=document.getElementById('brcAiAdminPanel-tickets');
+    if(!box||!tabs||!marksPanel||!ticketsPanel) return;
 
-    // 旧「参考買い目β」「参考買い目監視」タブは表示しない。
+    // 旧「参考買い目β」「参考買い目監視」は廃止。現在のBRC参考買い目は独立タブへ集約する。
     tabs.querySelectorAll('[data-brc-ai-admin-tab="ref"],[data-brc-ai-admin-tab="monitor"]').forEach(el=>el.remove());
     document.getElementById('brcAiAdminPanel-ref')?.remove();
     document.getElementById('brcAiAdminPanel-monitor')?.remove();
-    tabs.classList.remove('brc-refmon-enabled');
+    tabs.classList.add('brc-refmon-enabled');
 
     const marksBtn=tabs.querySelector('[data-brc-ai-admin-tab="marks"]');
     if(marksBtn) marksBtn.textContent='展開マトリックス';
 
-    // 展開マトリックスの直下へ、管理者専用のBRC参考買い目を一体表示する。
+    // 展開マトリックスからBRC参考買い目を分離し、「イン逃げ予測」の右隣タブへ表示する。
     marksPanel.querySelector('[data-brc-refmon-root]')?.remove();
+    ticketsPanel.querySelector('[data-brc-refmon-root]')?.remove();
     brcRefModeContext={boats,workerPrediction,localInReliability,exhibitionApplied};
-    marksPanel.insertAdjacentHTML('beforeend',buildHtml(boats,workerPrediction,localInReliability,exhibitionApplied));
-    brcBindReferenceModeTabs(marksPanel);
+    ticketsPanel.insertAdjacentHTML('beforeend',buildHtml(boats,workerPrediction,localInReliability,exhibitionApplied));
+    brcBindReferenceModeTabs(ticketsPanel);
 
     try{brcApplyAiOutcomeMark();}catch(_e){}
     try{window.brcSetAiAdminSubTab?.(window.__brcAiAdminSubTabCurrent||'marks');}catch(_e){}
@@ -19263,8 +19269,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 
   window.brcSetAiAdminSubTab=function(key){
     if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return;
-    const valid=['marks','nige'];
-    const requested=(key==='ref'||key==='monitor')?'marks':key;
+    const valid=['marks','nige','tickets'];
+    const requested=(key==='ref'||key==='monitor')?'tickets':key;
     const k=valid.includes(requested)?requested:'marks';
     window.__brcAiAdminSubTabCurrent=k;
     document.querySelectorAll('#predictAiResult [data-brc-ai-admin-tab]').forEach(btn=>{
@@ -19277,7 +19283,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       if(p) p.classList.toggle('active',x===k);
     });
     if(k==='nige') setTimeout(()=>{try{brcEnsureAiReferenceOddsAfterDeadline();}catch(_e){}},0);
-    if(k==='marks') setTimeout(refreshOdds,0);
+    if(k==='tickets') setTimeout(refreshOdds,0);
   };
 
 
