@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_ADMIN_REFERENCE_2026_PERIOD_BACKTEST_V1_20260914 -->
 <!-- BRC_TYPOGRAPHY_READABILITY_V1_20260914 -->
 <!-- BRC_ADMIN_REFERENCE_DEDICATED_TAB_V1_20260914 -->
 <!-- BRC_UI_MODAL_TALL_HITCARDS_2COL_V6_20260914 -->
@@ -19117,29 +19118,29 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   const BRC_REFERENCE_MODE_META={
     hit:{label:'的中型',icon:'🎯',points:10,hit:'40〜45%',roi:'105%以上',status:'本番',statusClass:'good',desc:'確率上位を広めに押さえ、的中を優先。',performance:{
       month:{title:'今月検証実績',period:'2026/9/1〜9/11',races:41,hits:21,hitRate:51.22,roi:126.10,pl:10700,source:'締切約1分前スナップショットで検証'},
-      d30:{available:false,period:'30日ログ蓄積中',reason:'締切前オッズの連続30日分がまだ揃っていません。'},
-      half:{available:false,period:'半年ログ蓄積中',reason:'同一運用条件の半年フォワード実績を蓄積中です。'},
+      d30:{title:'30日バックテスト',period:'2026/8/15〜9/13',races:127,hits:56,hitRate:44.0945,roi:101.0787,pl:1370,source:'2026固定モデルを直近30日で再集計（研究用バックテスト）'},
+      half:{title:'半年バックテスト',period:'2026/3/14〜9/13',races:858,hits:377,hitRate:43.9394,roi:102.1189,pl:18180,source:'2026固定モデルを直近6か月で再集計（研究用バックテスト）'},
       year:{title:'1年参考実績',period:'2025通年 locked OOS',races:1716,hits:775,hitRate:45.1632,roi:111.5420,pl:198060,source:'直近12か月運用ではなく、2025年の完全OOSバックテスト'},
       all:{title:'長期検証累計',period:'2024〜2025 固定検証',races:3208,hits:1456,hitRate:45.3865,roi:110.7173,pl:343810,source:'2024 locked + 2025 OOS の検証累計'}
     }},
     balance:{label:'バランス型',icon:'⚖️',points:6,hit:'28〜35%',roi:'110%以上',status:'本番β',statusClass:'good',desc:'確率と配当のバランスを取り、6点へ絞る。',performance:{
       month:{title:'今月検証実績',period:'2026/9/1〜9/11',races:39,hits:12,hitRate:30.77,roi:85.85,pl:-3310,source:'締切約1分前スナップショットで検証'},
-      d30:{available:false,period:'30日ログ蓄積中',reason:'締切前オッズの連続30日分がまだ揃っていません。'},
-      half:{available:false,period:'半年ログ蓄積中',reason:'同一運用条件の半年フォワード実績を蓄積中です。'},
+      d30:{title:'30日バックテスト',period:'2026/8/15〜9/13',races:137,hits:34,hitRate:24.8175,roi:77.1898,pl:-18750,source:'2026固定モデルを直近30日で再集計（研究用バックテスト）'},
+      half:{title:'半年バックテスト',period:'2026/3/14〜9/13',races:825,hits:272,hitRate:32.9697,roi:106.7859,pl:33590,source:'2026固定モデルを直近6か月で再集計（研究用バックテスト）'},
       year:{title:'1年参考実績',period:'2025通年 locked OOS',races:1600,hits:514,hitRate:32.1250,roi:110.1740,pl:97670,source:'直近12か月運用ではなく、2025年の完全OOSバックテスト'},
       all:{title:'長期検証累計',period:'2024〜2025 固定検証',races:3056,hits:978,hitRate:32.0026,roi:111.0782,pl:203130,source:'2024 locked + 2025 OOS の検証累計'}
     }},
     return:{label:'回収型',icon:'🔥',points:6,hit:'15〜25%',roi:'120%以上',status:'Shadow',statusClass:'shadow',desc:'10倍以上を対象に、市場確率とBRC確率を混ぜたEVで6点を選ぶ。',performance:{
       month:{title:'今月検証実績',period:'2026/9/1〜9/11',races:91,hits:20,hitRate:21.98,roi:127.82,pl:15190,source:'購入可能な締切約1分前オッズで検証'},
-      d30:{available:false,period:'30日ログ蓄積中',reason:'回収型は締切前オッズ必須。30日分の購入可能オッズを蓄積中です。'},
-      half:{available:false,period:'半年ログ蓄積中',reason:'回収型は締切前オッズ必須。半年分の購入可能オッズを蓄積中です。'},
+      d30:{available:false,period:'30日データ不足',reason:'回収型は締切前オッズ必須。直近30日を同一条件で検証できる購入可能オッズがまだ不足しています。'},
+      half:{available:false,period:'半年データ不足',reason:'回収型は締切前オッズ必須。半年を同一条件で検証できる購入可能オッズ履歴がありません。'},
       year:{available:false,period:'1年ログ蓄積中',reason:'finalオッズを長期実績へ流用せず、購入可能時点のオッズだけを蓄積します。'},
       all:{title:'有効ログ累計',period:'2026/9/1〜9/11',races:91,hits:20,hitRate:21.98,roi:127.82,pl:15190,source:'現時点で検証に使える締切前オッズの全期間'}
     }},
     high:{label:'高配当型',icon:'💰',points:18,hit:'8〜15%',roi:'130%以上',status:'Shadow',statusClass:'shadow',desc:'50倍以上を対象に、BRC確率×オッズで高配当側を18点まで広く拾う。',performance:{
       month:{title:'今月検証実績',period:'2026/9/1〜9/11',races:39,hits:7,hitRate:17.95,roi:96.30,pl:-2600,source:'購入可能な締切約1分前オッズで検証'},
-      d30:{available:false,period:'30日ログ蓄積中',reason:'高配当型は締切前オッズ必須。30日分の購入可能オッズを蓄積中です。'},
-      half:{available:false,period:'半年ログ蓄積中',reason:'高配当型は締切前オッズ必須。半年分の購入可能オッズを蓄積中です。'},
+      d30:{available:false,period:'30日データ不足',reason:'高配当型は締切前オッズ必須。直近30日を同一条件で検証できる購入可能オッズがまだ不足しています。'},
+      half:{available:false,period:'半年データ不足',reason:'高配当型は締切前オッズ必須。半年を同一条件で検証できる購入可能オッズ履歴がありません。'},
       year:{available:false,period:'1年ログ蓄積中',reason:'finalオッズを長期実績へ流用せず、購入可能時点のオッズだけを蓄積します。'},
       all:{title:'有効ログ累計',period:'2026/9/1〜9/11',races:39,hits:7,hitRate:17.95,roi:96.30,pl:-2600,source:'現時点で検証に使える締切前オッズの全期間'}
     }}
@@ -19229,7 +19230,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     const panels=BRC_REFERENCE_PERFORMANCE_PERIODS.map(x=>{
       const p=perf[x.key]||{available:false,period:'データなし',reason:'この期間の検証データはありません。'};
       const available=p.available!==false && Number.isFinite(Number(p.races)) && Number.isFinite(Number(p.hitRate)) && Number.isFinite(Number(p.roi));
-      const body=available?brcRefModePerformanceMetricsHtml(p):`<div class="brc-refmode-performance-head"><div class="brc-refmode-performance-title">検証実績</div><div class="brc-refmode-performance-period">${esc(p.period||'データ蓄積中')}</div></div><div class="brc-refmode-performance-empty"><strong>データ蓄積中</strong><span>${esc(p.reason||'この期間はまだ十分な検証データがありません。')}</span></div>`;
+      const body=available?brcRefModePerformanceMetricsHtml(p):`<div class="brc-refmode-performance-head"><div class="brc-refmode-performance-title">検証実績</div><div class="brc-refmode-performance-period">${esc(p.period||'データ蓄積中')}</div></div><div class="brc-refmode-performance-empty"><strong>${String(p.period||'').includes('不足')?'データ不足':'データ蓄積中'}</strong><span>${esc(p.reason||'この期間はまだ十分な検証データがありません。')}</span></div>`;
       return `<div class="brc-refmode-performance-panel ${x.key===current?'active':''}" data-brc-refperf-panel="${esc(x.key)}">${body}</div>`;
     }).join('');
     return `<div class="brc-refmode-performance" data-brc-refperf-host><div class="brc-refmode-performance-period-tabs" role="tablist" aria-label="参考買い目実績期間">${tabs}</div>${panels}</div>`;
