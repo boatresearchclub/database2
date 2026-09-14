@@ -4,6 +4,7 @@
 <!-- BRC_TODAY_HITS_PUBLIC_CAROUSEL_V2_20260914 -->
 <!-- BRC_ADMIN_REFERENCE_4MODE_TABS_V1_20260914 -->
 <!-- BRC_ADMIN_REFERENCE_4MODE_PERFORMANCE_V1_20260914 -->
+<!-- BRC_ADMIN_REFERENCE_PERFORMANCE_PERIOD_TABS_V1_20260914 -->
 <!-- BRC_HIDE_REFERENCE_PERSONAL_TREND_V1_20260914 -->
 <!-- BRC_OPERATION_TIMING_120SEC_V2_20260914 -->
 <!-- BRC_TIMEX_FINAL_PREDICTION_SUMMARY_V1_20260913 -->
@@ -4048,6 +4049,16 @@ table.brc-ai-ref-odds-table .brc-ai-pick-hit-badge{vertical-align:middle;}
 .brc-refmode-performance-head{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-bottom:5px;}
 .brc-refmode-performance-title{font-size:8.5px;font-weight:950;color:var(--navy);}
 .brc-refmode-performance-period{font-size:7.5px;font-weight:800;color:var(--ink-soft);white-space:nowrap;}
+.brc-refmode-performance-period-tabs{display:flex;gap:3px;overflow-x:auto;margin:0 0 6px;padding:1px 0 2px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.brc-refmode-performance-period-tabs::-webkit-scrollbar{display:none;}
+.brc-refmode-performance-period-tab{flex:0 0 auto;appearance:none;border:1px solid rgba(10,31,51,.10);border-radius:999px;background:#fff;color:var(--ink-soft);padding:4px 7px;font:inherit;font-size:7px;font-weight:900;line-height:1.1;cursor:pointer;white-space:nowrap;}
+.brc-refmode-performance-period-tab.active{border-color:rgba(0,87,219,.30);background:rgba(0,87,219,.08);color:var(--wave);}
+.brc-refmode-performance-panel{display:none;}
+.brc-refmode-performance-panel.active{display:block;}
+.brc-refmode-performance-empty{padding:8px 7px;border:1px dashed rgba(10,31,51,.13);border-radius:7px;background:rgba(10,31,51,.015);text-align:center;}
+.brc-refmode-performance-empty strong{display:block;font-size:9px;font-weight:950;color:var(--navy);}
+.brc-refmode-performance-empty span{display:block;margin-top:2px;font-size:7.5px;line-height:1.45;color:var(--ink-soft);}
+.brc-refmode-performance-source{margin-top:5px;font-size:6.8px;line-height:1.4;color:var(--ink-soft);}
 .brc-refmode-performance-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;}
 .brc-refmode-performance-item{min-width:0;padding:5px 2px;border:1px solid rgba(10,31,51,.06);border-radius:7px;background:rgba(255,255,255,.85);text-align:center;}
 .brc-refmode-performance-item .k{font-size:6.5px;font-weight:850;color:var(--ink-soft);white-space:nowrap;}
@@ -4074,6 +4085,8 @@ table.brc-ai-ref-odds-table .brc-ai-pick-hit-badge{vertical-align:middle;}
   .brc-refmode-performance-item{padding:4px 1px;}
   .brc-refmode-performance-item .k{font-size:6px;}
   .brc-refmode-performance-item .v{font-size:8.8px;}
+  .brc-refmode-performance-period-tab{padding:4px 6px;font-size:6.7px;}
+  .brc-refmode-performance-empty{padding:7px 5px;}
 }
 
 @media(max-width:420px){
@@ -18869,11 +18882,42 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   // BRC_ADMIN_REFERENCE_4MODE_TABS_V1_20260914
   // 管理者専用。現行BRCの最終着率・条件付き着順確率から120通りを構成し、目的別に候補を切り替える。
   // 回収型 / 高配当型はオッズ依存のShadow。一般会員表示や既存予測値へは再加算しない。
+  const BRC_REFERENCE_PERFORMANCE_PERIODS=[
+    {key:'month',label:'今月'},
+    {key:'d30',label:'30日'},
+    {key:'half',label:'半年'},
+    {key:'year',label:'1年'},
+    {key:'all',label:'累計'}
+  ];
   const BRC_REFERENCE_MODE_META={
-    hit:{label:'的中型',icon:'🎯',points:10,hit:'40〜45%',roi:'105%以上',status:'本番',statusClass:'good',desc:'確率上位を広めに押さえ、的中を優先。',performance:{period:'2026/9/1〜9/11',races:41,hits:21,hitRate:51.22,roi:126.10,pl:10700}},
-    balance:{label:'バランス型',icon:'⚖️',points:6,hit:'28〜35%',roi:'110%以上',status:'本番β',statusClass:'good',desc:'確率と配当のバランスを取り、6点へ絞る。',performance:{period:'2026/9/1〜9/11',races:39,hits:12,hitRate:30.77,roi:85.85,pl:-3310}},
-    return:{label:'回収型',icon:'🔥',points:6,hit:'15〜25%',roi:'120%以上',status:'Shadow',statusClass:'shadow',desc:'10倍以上を対象に、市場確率とBRC確率を混ぜたEVで6点を選ぶ。',performance:{period:'2026/9/1〜9/11',races:91,hits:20,hitRate:21.98,roi:127.82,pl:15190}},
-    high:{label:'高配当型',icon:'💰',points:18,hit:'8〜15%',roi:'130%以上',status:'Shadow',statusClass:'shadow',desc:'50倍以上を対象に、BRC確率×オッズで高配当側を18点まで広く拾う。',performance:{period:'2026/9/1〜9/11',races:39,hits:7,hitRate:17.95,roi:96.30,pl:-2600}}
+    hit:{label:'的中型',icon:'🎯',points:10,hit:'40〜45%',roi:'105%以上',status:'本番',statusClass:'good',desc:'確率上位を広めに押さえ、的中を優先。',performance:{
+      month:{title:'今月検証実績',period:'2026/9/1〜9/11',races:41,hits:21,hitRate:51.22,roi:126.10,pl:10700,source:'締切約1分前スナップショットで検証'},
+      d30:{available:false,period:'30日ログ蓄積中',reason:'締切前オッズの連続30日分がまだ揃っていません。'},
+      half:{available:false,period:'半年ログ蓄積中',reason:'同一運用条件の半年フォワード実績を蓄積中です。'},
+      year:{title:'1年参考実績',period:'2025通年 locked OOS',races:1716,hits:775,hitRate:45.1632,roi:111.5420,pl:198060,source:'直近12か月運用ではなく、2025年の完全OOSバックテスト'},
+      all:{title:'長期検証累計',period:'2024〜2025 固定検証',races:3208,hits:1456,hitRate:45.3865,roi:110.7173,pl:343810,source:'2024 locked + 2025 OOS の検証累計'}
+    }},
+    balance:{label:'バランス型',icon:'⚖️',points:6,hit:'28〜35%',roi:'110%以上',status:'本番β',statusClass:'good',desc:'確率と配当のバランスを取り、6点へ絞る。',performance:{
+      month:{title:'今月検証実績',period:'2026/9/1〜9/11',races:39,hits:12,hitRate:30.77,roi:85.85,pl:-3310,source:'締切約1分前スナップショットで検証'},
+      d30:{available:false,period:'30日ログ蓄積中',reason:'締切前オッズの連続30日分がまだ揃っていません。'},
+      half:{available:false,period:'半年ログ蓄積中',reason:'同一運用条件の半年フォワード実績を蓄積中です。'},
+      year:{title:'1年参考実績',period:'2025通年 locked OOS',races:1600,hits:514,hitRate:32.1250,roi:110.1740,pl:97670,source:'直近12か月運用ではなく、2025年の完全OOSバックテスト'},
+      all:{title:'長期検証累計',period:'2024〜2025 固定検証',races:3056,hits:978,hitRate:32.0026,roi:111.0782,pl:203130,source:'2024 locked + 2025 OOS の検証累計'}
+    }},
+    return:{label:'回収型',icon:'🔥',points:6,hit:'15〜25%',roi:'120%以上',status:'Shadow',statusClass:'shadow',desc:'10倍以上を対象に、市場確率とBRC確率を混ぜたEVで6点を選ぶ。',performance:{
+      month:{title:'今月検証実績',period:'2026/9/1〜9/11',races:91,hits:20,hitRate:21.98,roi:127.82,pl:15190,source:'購入可能な締切約1分前オッズで検証'},
+      d30:{available:false,period:'30日ログ蓄積中',reason:'回収型は締切前オッズ必須。30日分の購入可能オッズを蓄積中です。'},
+      half:{available:false,period:'半年ログ蓄積中',reason:'回収型は締切前オッズ必須。半年分の購入可能オッズを蓄積中です。'},
+      year:{available:false,period:'1年ログ蓄積中',reason:'finalオッズを長期実績へ流用せず、購入可能時点のオッズだけを蓄積します。'},
+      all:{title:'有効ログ累計',period:'2026/9/1〜9/11',races:91,hits:20,hitRate:21.98,roi:127.82,pl:15190,source:'現時点で検証に使える締切前オッズの全期間'}
+    }},
+    high:{label:'高配当型',icon:'💰',points:18,hit:'8〜15%',roi:'130%以上',status:'Shadow',statusClass:'shadow',desc:'50倍以上を対象に、BRC確率×オッズで高配当側を18点まで広く拾う。',performance:{
+      month:{title:'今月検証実績',period:'2026/9/1〜9/11',races:39,hits:7,hitRate:17.95,roi:96.30,pl:-2600,source:'購入可能な締切約1分前オッズで検証'},
+      d30:{available:false,period:'30日ログ蓄積中',reason:'高配当型は締切前オッズ必須。30日分の購入可能オッズを蓄積中です。'},
+      half:{available:false,period:'半年ログ蓄積中',reason:'高配当型は締切前オッズ必須。半年分の購入可能オッズを蓄積中です。'},
+      year:{available:false,period:'1年ログ蓄積中',reason:'finalオッズを長期実績へ流用せず、購入可能時点のオッズだけを蓄積します。'},
+      all:{title:'有効ログ累計',period:'2026/9/1〜9/11',races:39,hits:7,hitRate:17.95,roi:96.30,pl:-2600,source:'現時点で検証に使える締切前オッズの全期間'}
+    }}
   };
   let brcRefModeContext=null;
 
@@ -18947,11 +18991,23 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     }
     return {mode,meta,participate:false,reason:'未定義',picks:[],quality:null};
   }
-  function brcRefModePerformanceHtml(meta){
-    const p=meta?.performance; if(!p) return '';
+  function brcRefModePerformanceMetricsHtml(p){
     const pl=Number(p.pl)||0, plClass=pl>0?'positive':pl<0?'negative':'';
     const plText=(pl>0?'+':'')+Math.round(pl).toLocaleString('ja-JP')+'円';
-    return `<div class="brc-refmode-performance"><div class="brc-refmode-performance-head"><div class="brc-refmode-performance-title">9月検証実績</div><div class="brc-refmode-performance-period">${esc(p.period)}</div></div><div class="brc-refmode-performance-grid"><div class="brc-refmode-performance-item"><div class="k">的中率</div><div class="v">${Number(p.hitRate).toFixed(1)}%</div></div><div class="brc-refmode-performance-item"><div class="k">回収率</div><div class="v ${Number(p.roi)>=100?'positive':'negative'}">${Number(p.roi).toFixed(1)}%</div></div><div class="brc-refmode-performance-item"><div class="k">損益</div><div class="v ${plClass}">${esc(plText)}</div></div><div class="brc-refmode-performance-item"><div class="k">対象</div><div class="v">${Math.round(p.races)}R</div></div></div></div>`;
+    return `<div class="brc-refmode-performance-head"><div class="brc-refmode-performance-title">${esc(p.title||'検証実績')}</div><div class="brc-refmode-performance-period">${esc(p.period||'')}</div></div><div class="brc-refmode-performance-grid"><div class="brc-refmode-performance-item"><div class="k">的中率</div><div class="v">${Number(p.hitRate).toFixed(1)}%</div></div><div class="brc-refmode-performance-item"><div class="k">回収率</div><div class="v ${Number(p.roi)>=100?'positive':'negative'}">${Number(p.roi).toFixed(1)}%</div></div><div class="brc-refmode-performance-item"><div class="k">損益</div><div class="v ${plClass}">${esc(plText)}</div></div><div class="brc-refmode-performance-item"><div class="k">対象</div><div class="v">${Math.round(p.races)}R</div></div></div>${p.source?`<div class="brc-refmode-performance-source">※${esc(p.source)}</div>`:''}`;
+  }
+  function brcRefModePerformanceHtml(meta){
+    const perf=meta?.performance||{};
+    const current=(window.__brcReferencePerformancePeriod&&BRC_REFERENCE_PERFORMANCE_PERIODS.some(x=>x.key===window.__brcReferencePerformancePeriod))?window.__brcReferencePerformancePeriod:'month';
+    window.__brcReferencePerformancePeriod=current;
+    const tabs=BRC_REFERENCE_PERFORMANCE_PERIODS.map(x=>`<button type="button" class="brc-refmode-performance-period-tab ${x.key===current?'active':''}" data-brc-refperf-period="${esc(x.key)}" aria-selected="${x.key===current?'true':'false'}">${esc(x.label)}</button>`).join('');
+    const panels=BRC_REFERENCE_PERFORMANCE_PERIODS.map(x=>{
+      const p=perf[x.key]||{available:false,period:'データなし',reason:'この期間の検証データはありません。'};
+      const available=p.available!==false && Number.isFinite(Number(p.races)) && Number.isFinite(Number(p.hitRate)) && Number.isFinite(Number(p.roi));
+      const body=available?brcRefModePerformanceMetricsHtml(p):`<div class="brc-refmode-performance-head"><div class="brc-refmode-performance-title">検証実績</div><div class="brc-refmode-performance-period">${esc(p.period||'データ蓄積中')}</div></div><div class="brc-refmode-performance-empty"><strong>データ蓄積中</strong><span>${esc(p.reason||'この期間はまだ十分な検証データがありません。')}</span></div>`;
+      return `<div class="brc-refmode-performance-panel ${x.key===current?'active':''}" data-brc-refperf-panel="${esc(x.key)}">${body}</div>`;
+    }).join('');
+    return `<div class="brc-refmode-performance" data-brc-refperf-host><div class="brc-refmode-performance-period-tabs" role="tablist" aria-label="参考買い目実績期間">${tabs}</div>${panels}</div>`;
   }
   function brcRefModePanelHtml(res){
     const m=res.meta, picks=res.picks||[];
@@ -19008,6 +19064,20 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     return brcRefModeSnapshot(boats,workerPrediction,data,phase,odds);
   };
 
+  function brcBindReferencePerformanceTabs(root=document){
+    root.querySelectorAll?.('[data-brc-refperf-period]').forEach(btn=>{
+      btn.addEventListener('click',(ev)=>{
+        ev.stopPropagation();
+        const k=btn.dataset.brcRefperfPeriod;
+        if(!BRC_REFERENCE_PERFORMANCE_PERIODS.some(x=>x.key===k)) return;
+        window.__brcReferencePerformancePeriod=k;
+        const shell=btn.closest('[data-brc-ref-modes-host]')||root;
+        shell.querySelectorAll('[data-brc-refperf-period]').forEach(b=>{const on=b.dataset.brcRefperfPeriod===k;b.classList.toggle('active',on);b.setAttribute('aria-selected',on?'true':'false');});
+        shell.querySelectorAll('[data-brc-refperf-panel]').forEach(p=>p.classList.toggle('active',p.dataset.brcRefperfPanel===k));
+      });
+    });
+  }
+
   function brcBindReferenceModeTabs(root=document){
     root.querySelectorAll?.('[data-brc-refmode-tab]').forEach(btn=>{
       btn.addEventListener('click',()=>{
@@ -19017,6 +19087,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
         try{brcApplyAiOutcomeMark();}catch(_e){}
       });
     });
+    brcBindReferencePerformanceTabs(root);
   }
   function brcRefreshReferenceModes(){
     const root=document.querySelector('[data-brc-refmon-root]'), host=root?.querySelector('[data-brc-ref-modes-host]');
