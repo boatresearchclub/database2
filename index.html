@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_ADMIN_TODAY_HITS_CAROUSEL_V1_20260914 -->
 <!-- BRC_ADMIN_REFERENCE_4MODE_TABS_V1_20260914 -->
 <!-- BRC_ADMIN_REFERENCE_4MODE_PERFORMANCE_V1_20260914 -->
 <!-- BRC_HIDE_REFERENCE_PERSONAL_TREND_V1_20260914 -->
@@ -20,6 +21,7 @@
 <!-- BRC_NIGE_REFERENCE_UX_DETAIL_V1_20260911 -->
 <!-- BRC_RACESEARCH_GUIDE_UI_CLEANUP_20260911 -->
 <!-- BRC_RACE_SEARCH_ADMIN_UX_COMPACT_V2_20260911 -->
+
 <!-- BRC_ADMIN_INVESTMENT_VALIDATION_V3_RAW_OD3_20260911 -->
 <!-- BRC_SCENARIO_SEARCH_PUBLIC_V1_20260911 -->
 <!-- BRC_TOKUYAMA_MOTOR_V1_FINAL_MERGED_20260914 -->
@@ -2148,6 +2150,78 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
   .brc-auth-submit:disabled{opacity:.55; cursor:wait;}
   .brc-auth-message{min-height:21px; margin:11px 0 0; text-align:center; font-size:12.5px; color:#b42318;}
   .brc-auth-help{margin-top:14px; font-size:11.5px; color:var(--ink-soft); text-align:center; line-height:1.65;}
+
+  /* ---- BRC_ADMIN_TODAY_HITS_CAROUSEL_V1_20260914 ---- */
+  .brc-admin-today-hits{
+    display:none; margin:0 0 16px; padding:15px 14px 13px;
+    border:1px solid rgba(0,87,219,.16); border-radius:14px;
+    background:linear-gradient(160deg,rgba(0,87,219,.05),rgba(255,255,255,.98));
+    box-shadow:0 7px 22px rgba(10,31,51,.055); overflow:hidden;
+  }
+  .brc-admin-today-hits.is-visible{display:block;}
+  .brc-admin-today-hits-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;}
+  .brc-admin-today-hits-title-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+  .brc-admin-today-hits-title{font-size:17px;font-weight:950;color:var(--navy);line-height:1.2;}
+  .brc-admin-today-hits-admin{
+    display:inline-flex;align-items:center;justify-content:center;padding:3px 7px;border-radius:999px;
+    background:rgba(0,87,219,.09);color:var(--wave);font-size:9px;font-weight:950;white-space:nowrap;
+  }
+  .brc-admin-today-hits-sub{margin-top:4px;font-size:10.5px;line-height:1.45;color:var(--ink-soft);}
+  .brc-admin-today-hits-summary{flex:0 0 auto;text-align:right;font-size:9.5px;line-height:1.45;color:var(--ink-soft);white-space:nowrap;}
+  .brc-admin-today-hits-summary strong{display:block;color:var(--navy);font-size:11px;font-weight:950;}
+  .brc-admin-hit-scroll{
+    display:flex;gap:9px;overflow-x:auto;overflow-y:hidden;padding:3px 1px 8px;
+    -webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;scrollbar-width:thin;overscroll-behavior-x:contain;
+  }
+  .brc-admin-hit-scroll::-webkit-scrollbar{height:5px;}
+  .brc-admin-hit-scroll::-webkit-scrollbar-thumb{background:rgba(10,31,51,.17);border-radius:999px;}
+  .brc-admin-hit-scroll::-webkit-scrollbar-track{background:transparent;}
+  .brc-admin-hit-card{
+    flex:0 0 214px;scroll-snap-align:start;position:relative;min-width:0;padding:10px 11px 11px;
+    border:1px solid rgba(10,31,51,.10);border-radius:11px;background:#fff;
+    box-shadow:0 2px 8px rgba(10,31,51,.045);
+  }
+  .brc-admin-hit-card.latest{border-color:rgba(0,87,219,.38);box-shadow:0 3px 12px rgba(0,87,219,.10);}
+  .brc-admin-hit-latest{
+    position:absolute;top:-1px;left:-1px;padding:3px 8px;border-radius:11px 0 9px 0;
+    background:var(--wave);color:#fff;font-size:8px;font-weight:950;letter-spacing:.03em;
+  }
+  .brc-admin-hit-card.latest .brc-admin-hit-top{padding-top:13px;}
+  .brc-admin-hit-top{display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0;}
+  .brc-admin-hit-race{font-size:15px;font-weight:950;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .brc-admin-hit-mode{display:inline-flex;align-items:center;justify-content:center;padding:3px 7px;border-radius:999px;font-size:9px;font-weight:950;white-space:nowrap;border:1px solid transparent;}
+  .brc-admin-hit-mode.hit{color:#0057db;background:rgba(0,87,219,.08);border-color:rgba(0,87,219,.18);}
+  .brc-admin-hit-mode.balance{color:#217247;background:rgba(47,143,91,.09);border-color:rgba(47,143,91,.20);}
+  .brc-admin-hit-mode.return{color:#a85e00;background:rgba(217,119,6,.10);border-color:rgba(217,119,6,.20);}
+  .brc-admin-hit-mode.high{color:#6d28d9;background:rgba(124,58,237,.09);border-color:rgba(124,58,237,.20);}
+  .brc-admin-hit-body{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin-top:9px;padding-top:8px;border-top:1px solid rgba(10,31,51,.07);}
+  .brc-admin-hit-combo-wrap{min-width:0;}
+  .brc-admin-hit-k{font-size:8.5px;font-weight:850;color:var(--ink-soft);margin-bottom:4px;}
+  .brc-admin-hit-combo{display:flex;align-items:center;gap:3px;white-space:nowrap;}
+  .brc-admin-hit-boat{display:inline-flex;align-items:center;justify-content:center;width:25px;height:25px;border-radius:6px;border:1px solid rgba(10,31,51,.14);font-size:12px;font-weight:950;line-height:1;}
+  .brc-admin-hit-boat.lane1{background:#fff;color:var(--lane1-text);border-color:#718096;}
+  .brc-admin-hit-boat.lane2{background:var(--lane2);color:var(--lane2-text);border-color:var(--lane2);}
+  .brc-admin-hit-boat.lane3{background:var(--lane3);color:var(--lane3-text);border-color:var(--lane3);}
+  .brc-admin-hit-boat.lane4{background:var(--lane4);color:var(--lane4-text);border-color:var(--lane4);}
+  .brc-admin-hit-boat.lane5{background:var(--lane5);color:var(--lane5-text);border-color:#c4972d;}
+  .brc-admin-hit-boat.lane6{background:var(--lane6);color:var(--lane6-text);border-color:var(--lane6);}
+  .brc-admin-hit-sep{font-size:10px;font-weight:900;color:var(--ink-soft);}
+  .brc-admin-hit-payout{text-align:right;flex:0 0 auto;}
+  .brc-admin-hit-payout .v{font-size:22px;font-weight:950;color:#d1373f;line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums;}
+  .brc-admin-hit-payout .v small{font-size:11px;margin-left:1px;}
+  .brc-admin-hit-empty{flex:1 0 100%;padding:16px 10px;border:1px dashed rgba(10,31,51,.14);border-radius:10px;background:rgba(10,31,51,.012);text-align:center;color:var(--ink-soft);font-size:10.5px;line-height:1.6;}
+  .brc-admin-hit-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:1px;font-size:8.5px;color:var(--ink-soft);}
+  .brc-admin-hit-refresh{appearance:none;border:0;background:transparent;color:var(--wave);padding:2px 0;font:inherit;font-size:8.5px;font-weight:900;cursor:pointer;}
+  @media(max-width:520px){
+    .brc-admin-today-hits{padding:13px 10px 10px;margin-bottom:13px;border-radius:12px;}
+    .brc-admin-today-hits-title{font-size:15.5px;}
+    .brc-admin-today-hits-sub{font-size:9.5px;}
+    .brc-admin-hit-scroll{gap:7px;margin-right:-10px;padding-right:10px;}
+    .brc-admin-hit-card{flex-basis:188px;padding:9px 9px 10px;}
+    .brc-admin-hit-race{font-size:14px;}
+    .brc-admin-hit-mode{font-size:8.5px;padding:3px 6px;}
+    .brc-admin-hit-payout .v{font-size:20px;}
+  }
 
   /* ---- 非ログインTOP：無料公開 → 1DAY PASS / BRC MEMBERS ---- */
   .brc-trial-guide{
@@ -4343,6 +4417,20 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
   </div><!-- /page-database -->
 
   <div id="page-predict">
+    <section id="brcAdminTodayHits" class="brc-admin-today-hits" aria-hidden="true">
+      <div class="brc-admin-today-hits-head">
+        <div>
+          <div class="brc-admin-today-hits-title-row">
+            <div class="brc-admin-today-hits-title">🎯 本日の的中実績</div>
+            <span class="brc-admin-today-hits-admin">管理者専用</span>
+          </div>
+          <div class="brc-admin-today-hits-sub">BRC参考買い目4モードの本日的中分を、最新順で表示します。</div>
+        </div>
+        <div id="brcAdminTodayHitsSummary" class="brc-admin-today-hits-summary"><strong>0的中</strong>最高 ―</div>
+      </div>
+      <div id="brcAdminTodayHitsBody" class="brc-admin-hit-scroll"><div class="brc-admin-hit-empty">本日の的中実績を確認中...</div></div>
+      <div class="brc-admin-hit-foot"><span>← 横にスクロールできます</span><button type="button" id="brcAdminTodayHitsRefresh" class="brc-admin-hit-refresh">更新</button></div>
+    </section>
     <div id="brcPredictGate" class="brc-auth-gate">
       <div class="brc-auth-card">
         <div class="brc-free-preview" id="brcFreePreview">
@@ -5289,6 +5377,7 @@ function brcSetAdminSocialUi(user=null){
   const oosFold=document.getElementById('brcOosAdminFold');
   if(oosFold) oosFold.style.display=BRC_ADMIN_ACTIVE?'':'none';
   brcSetAdminResearchUi(BRC_ADMIN_ACTIVE);
+  try{ if(typeof window.brcSetAdminTodayHitsUi==='function') window.brcSetAdminTodayHitsUi(BRC_ADMIN_ACTIVE); }catch(_e){}
   try{ brcSyncRaceSearchAccess(); }catch(_e){}
   try{ brcSetInvestmentManagerUi(BRC_ADMIN_ACTIVE); }catch(_e){}
   // AI予測の管理者β（展開印）も同じ管理者判定で出し分ける。
@@ -18848,6 +18937,25 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     const panels=modes.map(k=>`<div class="brc-refmode-panel ${k===current?'active':''}" data-brc-refmode-panel="${k}">${brcRefModePanelHtml(results[k])}</div>`).join('');
     return `<div class="brc-refmode-shell" data-brc-ref-modes-host><div class="brc-refmode-head"><div class="brc-refmode-head-title">BRC参考買い目</div><div class="brc-refmode-head-note">管理者専用・目的別4モード</div></div><div class="brc-refmode-tabs" role="tablist" aria-label="BRC参考買い目モード">${tabs}</div>${panels}</div>`;
   }
+  function brcRefModeSnapshot(boats,workerPrediction,data,phase){
+    try{
+      const full120=brcBuildFull120(boats,workerPrediction,phase), odds=brcRefModeOddsObject();
+      const out={};
+      for(const mode of ['hit','balance','return','high']){
+        const r=brcRefModeResult(mode,data,full120,odds);
+        out[mode]={
+          label:String(r?.meta?.label||BRC_REFERENCE_MODE_META?.[mode]?.label||mode),
+          participate:!!r?.participate,
+          provisional:!!r?.provisional,
+          reason:String(r?.reason||''),
+          quality:Number.isFinite(Number(r?.quality))?Number(r.quality):null,
+          picks:(Array.isArray(r?.picks)?r.picks:[]).map(x=>({combo:String(x?.combo||''),odds:Number.isFinite(Number(x?.odds))?Number(x.odds):null}))
+        };
+      }
+      return out;
+    }catch(_e){ return null; }
+  }
+
   function brcBindReferenceModeTabs(root=document){
     root.querySelectorAll?.('[data-brc-refmode-tab]').forEach(btn=>{
       btn.addEventListener('click',()=>{
@@ -18867,6 +18975,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     const fresh=tmp.firstElementChild; if(!fresh) return;
     host.replaceWith(fresh); brcBindReferenceModeTabs(root);
     try{brcApplyAiOutcomeMark();}catch(_e){}
+    // オッズ更新で回収型/高配当型の採否が変わるため、最新4モード状態も締切前ログへ上書き保存する。
+    Promise.resolve().then(()=>saveCurrent(boats,workerPrediction,localInReliability,exhibitionApplied)).catch(()=>{});
   }
 
   function buildHtml(boats,workerPrediction,localInReliability,exhibitionApplied){
@@ -18939,18 +19049,24 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 
   function deadlineText(sel){ try{return String(RACE_INFO_TODAY?.[sel.venue]?.deadlines?.[String(sel.raceNo)]||'');}catch(_e){return '';} }
   function beforeDeadline(sel){ try{return !!sel?.key&&!brcOddsDeadlinePassed(sel);}catch(_e){return false;} }
-  async function saveOne(data,sel,phase){
+  async function saveOne(data,sel,phase,referenceModes=null){
     if(!data||!beforeDeadline(sel)) return false;
     const oddsRec=sel?.key?__brcOddsLocal?.[sel.key]:null;
-    const row={id:`${VERSION}|${sel.date}|${sel.venue}|${sel.raceNo}|${phase}`,version:VERSION,date:sel.date,venue:sel.venue,venueCode:sel.code,raceNo:sel.raceNo,deadline:deadlineText(sel),phase,capturedAt:new Date().toISOString(),inReliability:data.inReliability,inPct:data.inPct,todayReject:data.todayReject,decision:data.decision,reason:data.reason,mode:data.mode,heads:data.heads,pointCount:data.pointCount,formation:data.formation,picks:data.picks,variants:data.variants,marks:data.marks,hc:data.hc,oc:data.oc,boundary:data.boundary,headBand:data.headBand,opponentBand:data.opponentBand,compositeOdds:data.compositeOdds,oddsCapturedAt:String(oddsRec?.capturedAt||oddsRec?.updatedAt||''),exhibitionApplied:phase==='exhibition'};
+    const row={id:`${VERSION}|${sel.date}|${sel.venue}|${sel.raceNo}|${phase}`,version:VERSION,date:sel.date,venue:sel.venue,venueCode:sel.code,raceNo:sel.raceNo,deadline:deadlineText(sel),phase,capturedAt:new Date().toISOString(),inReliability:data.inReliability,inPct:data.inPct,todayReject:data.todayReject,decision:data.decision,reason:data.reason,mode:data.mode,heads:data.heads,pointCount:data.pointCount,formation:data.formation,picks:data.picks,referenceModes:referenceModes||null,variants:data.variants,marks:data.marks,hc:data.hc,oc:data.oc,boundary:data.boundary,headBand:data.headBand,opponentBand:data.opponentBand,compositeOdds:data.compositeOdds,oddsCapturedAt:String(oddsRec?.capturedAt||oddsRec?.updatedAt||''),exhibitionApplied:phase==='exhibition'};
     await dbPut(row); return true;
   }
   async function saveCurrent(boats,workerPrediction,localInReliability,exhibitionApplied){
     if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return false;
     let sel=null; try{sel=brcOddsSelection();}catch(_e){} if(!beforeDeadline(sel)) return false;
-    const pre=buildData(boats,workerPrediction,localInReliability,'pre'); await saveOne(pre,sel,'pre');
-    if(exhibitionApplied){ const ex=buildData(boats,workerPrediction,localInReliability,'current'); await saveOne(ex,sel,'exhibition'); }
-    await refreshStatus(); return true;
+    const pre=buildData(boats,workerPrediction,localInReliability,'pre');
+    await saveOne(pre,sel,'pre',brcRefModeSnapshot(boats,workerPrediction,pre,'pre'));
+    if(exhibitionApplied){
+      const ex=buildData(boats,workerPrediction,localInReliability,'current');
+      await saveOne(ex,sel,'exhibition',brcRefModeSnapshot(boats,workerPrediction,ex,'current'));
+    }
+    await refreshStatus();
+    try{ if(typeof window.brcRefreshAdminTodayHits==='function') window.brcRefreshAdminTodayHits(); }catch(_e){}
+    return true;
   }
 
   function csvEsc(v){ const s=String(v??''); return /[",\r\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s; }
@@ -19011,6 +19127,118 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   }
   function init(){ initExportUi(); setTimeout(initExportUi,500); setTimeout(initExportUi,1800); }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true}); else init();
+})();
+</script>
+
+<!-- BRC_ADMIN_TODAY_HITS_CAROUSEL_V1_20260914 -->
+<script id="brc-admin-today-hits-carousel-v1">
+(function(){
+  'use strict';
+  const REF_DB='brc_admin_reference_monitor_v2';
+  const REF_STORE='snapshots';
+  const RESULT_CACHE_KEY='brc_admin_today_hits_result_cache_v1';
+  const MODE_META={
+    hit:{label:'的中型',cls:'hit'},
+    balance:{label:'バランス型',cls:'balance'},
+    return:{label:'回収型',cls:'return'},
+    high:{label:'高配当型',cls:'high'}
+  };
+  let timer=null,busy=false,lastRenderAt=0;
+
+  function isAdmin(){return typeof BRC_ADMIN_ACTIVE!=='undefined'&&!!BRC_ADMIN_ACTIVE;}
+  function today(){try{return typeof getJstDateLabel==='function'?String(getJstDateLabel()):new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Tokyo'}).format(new Date());}catch(_e){return '';}}
+  function esc(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+  function deadlineMs(date,hhmm){const m=String(hhmm||'').match(/^(\d{1,2}):(\d{2})/);if(!m||!/^\d{4}-\d{2}-\d{2}$/.test(String(date||'')))return null;const x=Date.parse(`${date}T${m[1].padStart(2,'0')}:${m[2]}:00+09:00`);return Number.isFinite(x)?x:null;}
+  function resultKey(r){return `${r.date}|${String(r.venueCode||'').padStart(2,'0')}|${Number(r.raceNo)||0}`;}
+  function cacheRead(){try{const x=JSON.parse(localStorage.getItem(RESULT_CACHE_KEY)||'{}');return x&&typeof x==='object'?x:{};}catch(_e){return {};}}
+  function cacheWrite(x){try{localStorage.setItem(RESULT_CACHE_KEY,JSON.stringify(x));}catch(_e){}}
+  function openDb(){return new Promise((resolve,reject)=>{try{const q=indexedDB.open(REF_DB,1);q.onupgradeneeded=()=>{const db=q.result;if(!db.objectStoreNames.contains(REF_STORE))db.createObjectStore(REF_STORE,{keyPath:'id'});};q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error||new Error('indexeddb_open_failed'));}catch(e){reject(e);}});}
+  async function readRows(){const db=await openDb();try{return await new Promise((res,rej)=>{const tx=db.transaction(REF_STORE,'readonly'),q=tx.objectStore(REF_STORE).getAll();q.onsuccess=()=>res(Array.isArray(q.result)?q.result:[]);q.onerror=()=>rej(q.error);});}finally{db.close();}}
+  function comboHtml(combo){const a=String(combo||'').split('-').map(Number);if(a.length!==3||a.some(n=>n<1||n>6))return esc(combo);return a.map((n,i)=>`${i?'<span class="brc-admin-hit-sep">-</span>':''}<span class="brc-admin-hit-boat lane${n}">${n}</span>`).join('');}
+  function raceLabel(r){return `${String(r.venue||'')}${Number(r.raceNo)||''}R`;}
+  function cardHtml(x,i){const m=MODE_META[x.mode]||{label:x.label||x.mode,cls:'hit'};const mult=Number(x.payoutYen)/100;return `<article class="brc-admin-hit-card${i===0?' latest':''}">${i===0?'<span class="brc-admin-hit-latest">最新</span>':''}<div class="brc-admin-hit-top"><div class="brc-admin-hit-race">${esc(raceLabel(x))}</div><span class="brc-admin-hit-mode ${esc(m.cls)}">${esc(m.label)}</span></div><div class="brc-admin-hit-body"><div class="brc-admin-hit-combo-wrap"><div class="brc-admin-hit-k">的中結果</div><div class="brc-admin-hit-combo">${comboHtml(x.combo)}</div></div><div class="brc-admin-hit-payout"><div class="brc-admin-hit-k">払戻オッズ</div><div class="v">${Number.isFinite(mult)?mult.toFixed(1):'―'}<small>倍</small></div></div></div></article>`;}
+  function render(hits){
+    const host=document.getElementById('brcAdminTodayHits'),body=document.getElementById('brcAdminTodayHitsBody'),sum=document.getElementById('brcAdminTodayHitsSummary');
+    if(!host||!body||!sum)return;
+    if(!isAdmin()){host.classList.remove('is-visible');host.setAttribute('aria-hidden','true');return;}
+    host.classList.add('is-visible');host.setAttribute('aria-hidden','false');
+    const rows=Array.isArray(hits)?hits:[];
+    if(!rows.length){body.innerHTML='<div class="brc-admin-hit-empty">本日の的中実績はまだありません。レース結果確定後、的中分だけここへ追加されます。</div>';sum.innerHTML='<strong>0的中</strong>最高 ―';return;}
+    const best=Math.max(...rows.map(x=>Number(x.payoutYen)||0))/100;
+    sum.innerHTML=`<strong>${rows.length}的中</strong>最高 ${Number.isFinite(best)?best.toFixed(1):'―'}倍`;
+    body.innerHTML=rows.map(cardHtml).join('');
+    body.scrollLeft=0;
+  }
+  async function getResult(row,cache){
+    const key=resultKey(row),cached=cache[key];
+    if(cached?.confirmed&&cached?.result?.combination)return cached.result;
+    const d=deadlineMs(row.date,row.deadline);if(d!==null&&Date.now()<d+15000)return null;
+    try{
+      if(typeof brcFetchRaceResult!=='function')return null;
+      const obj=await brcFetchRaceResult({key:`${row.date}:${String(row.venueCode||'').padStart(2,'0')}:${String(Number(row.raceNo)||0).padStart(2,'0')}`,date:row.date,venue:row.venue,venueCode:String(row.venueCode||'').padStart(2,'0'),raceNo:Number(row.raceNo),deadline:row.deadline||''});
+      if(obj?.confirmed===true&&obj?.result?.combination){cache[key]={confirmed:true,result:obj.result,updatedAt:new Date().toISOString()};return obj.result;}
+    }catch(_e){}
+    return null;
+  }
+  async function refresh(force=false){
+    if(!isAdmin()||busy)return false;
+    if(!force&&Date.now()-lastRenderAt<8000)return false;
+    busy=true;
+    try{
+      const d=today(); if(!d)return false;
+      const all=await readRows();
+      const byRace=new Map();
+      for(const r of all){
+        if(String(r?.date)!==d||!r?.referenceModes)continue;
+        const k=`${r.venue}|${r.raceNo}`;
+        const prev=byRace.get(k);
+        const rank=r.phase==='exhibition'?2:1,prevRank=prev?.phase==='exhibition'?2:1;
+        if(!prev||rank>prevRank||(rank===prevRank&&String(r.capturedAt||'')>String(prev.capturedAt||'')))byRace.set(k,r);
+      }
+      const cache=cacheRead();
+      for(const k of Object.keys(cache)){if(!k.startsWith(d+'|'))delete cache[k];}
+      const hits=[];
+      const races=[...byRace.values()];
+      for(let i=0;i<races.length;i+=4){
+        const batch=races.slice(i,i+4);
+        const settled=await Promise.all(batch.map(async r=>({r,result:await getResult(r,cache)})));
+        for(const {r,result} of settled){
+          if(!result)continue;
+          const combo=String(result.combination||'').trim(),payout=Number(result.payout_yen);
+          if(!combo||!Number.isFinite(payout))continue;
+          for(const mode of ['hit','balance','return','high']){
+            const m=r.referenceModes?.[mode];
+            if(!m?.participate||m?.provisional===true)continue;
+            const picks=Array.isArray(m.picks)?m.picks:[];
+            if(picks.some(x=>String(x?.combo||'')===combo)){
+              hits.push({date:r.date,venue:r.venue,venueCode:r.venueCode,raceNo:Number(r.raceNo),deadline:r.deadline||'',mode,label:m.label||MODE_META[mode]?.label||mode,combo,payoutYen:payout,sortMs:deadlineMs(r.date,r.deadline)||0});
+            }
+          }
+        }
+      }
+      cacheWrite(cache);
+      hits.sort((a,b)=>b.sortMs-a.sortMs||b.raceNo-a.raceNo||['high','return','balance','hit'].indexOf(a.mode)-['high','return','balance','hit'].indexOf(b.mode));
+      render(hits);lastRenderAt=Date.now();return true;
+    }catch(err){
+      console.warn('BRC today hits refresh failed:',err);
+      const body=document.getElementById('brcAdminTodayHitsBody');if(body&&isAdmin())body.innerHTML='<div class="brc-admin-hit-empty">本日の的中実績を確認できませんでした。「更新」で再確認できます。</div>';
+      return false;
+    }finally{busy=false;}
+  }
+  function setUi(active){
+    const host=document.getElementById('brcAdminTodayHits');if(!host)return;
+    const on=!!active;host.classList.toggle('is-visible',on);host.setAttribute('aria-hidden',on?'false':'true');
+    if(on){refresh(true);if(!timer)timer=setInterval(()=>{if(document.visibilityState==='visible')refresh(false);},60000);}else if(timer){clearInterval(timer);timer=null;}
+  }
+  window.brcSetAdminTodayHitsUi=setUi;
+  window.brcRefreshAdminTodayHits=()=>refresh(true);
+  function init(){
+    document.getElementById('brcAdminTodayHitsRefresh')?.addEventListener('click',()=>refresh(true));
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&isAdmin())refresh(false);});
+    window.addEventListener('focus',()=>{if(isAdmin())refresh(false);});
+    if(isAdmin())setUi(true);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
 
