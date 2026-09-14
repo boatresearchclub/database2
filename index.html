@@ -2154,7 +2154,7 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
 
   /* ---- BRC_ADMIN_TODAY_HITS_CAROUSEL_V1_20260914 ---- */
   .brc-admin-today-hits{
-    display:block; margin:0 0 16px; padding:15px 14px 13px;
+    display:none; margin:0 0 16px; padding:15px 14px 13px;
     border:1px solid rgba(0,87,219,.16); border-radius:14px;
     background:linear-gradient(160deg,rgba(0,87,219,.05),rgba(255,255,255,.98));
     box-shadow:0 7px 22px rgba(10,31,51,.055); overflow:hidden;
@@ -2168,8 +2168,7 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
     background:rgba(47,143,91,.10);color:#217247;font-size:9px;font-weight:950;white-space:nowrap;
   }
   .brc-admin-today-hits-admin.is-admin{background:rgba(0,87,219,.09);color:var(--wave);}
-  /* ログイン状態に関係なく、出走表AIトップでは必ず表示する */
-  #page-predict #brcAdminTodayHits{display:block !important;visibility:visible !important;opacity:1 !important;}
+  /* 管理者専用：BRC_ADMIN_ACTIVE=true のときだけ .is-visible を付与して表示する */
   .brc-admin-today-hits-sub{margin-top:4px;font-size:10.5px;line-height:1.45;color:var(--ink-soft);}
   .brc-admin-today-hits-summary{flex:0 0 auto;text-align:right;font-size:9.5px;line-height:1.45;color:var(--ink-soft);white-space:nowrap;}
   .brc-admin-today-hits-summary strong{display:block;color:var(--navy);font-size:11px;font-weight:950;}
@@ -4421,12 +4420,12 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
   </div><!-- /page-database -->
 
   <div id="page-predict">
-    <section id="brcAdminTodayHits" class="brc-admin-today-hits is-visible" aria-hidden="false">
+    <section id="brcAdminTodayHits" class="brc-admin-today-hits" aria-hidden="true">
       <div class="brc-admin-today-hits-head">
         <div>
           <div class="brc-admin-today-hits-title-row">
             <div class="brc-admin-today-hits-title">🎯 本日の的中実績</div>
-            <span class="brc-admin-today-hits-admin">公開中</span>
+            <span class="brc-admin-today-hits-admin is-admin">管理者専用</span>
           </div>
           <div class="brc-admin-today-hits-sub">BRC参考買い目4モードの本日的中分を、最新順で表示します。</div>
         </div>
@@ -19143,8 +19142,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 })();
 </script>
 
+<!-- BRC_ADMIN_TODAY_HITS_ADMIN_ONLY_V4_20260914 -->
 <!-- BRC_TODAY_HITS_PUBLIC_AUTO_V2_20260914 -->
-<script id="brc-today-hits-public-auto-v3">
+<script id="brc-today-hits-admin-only-v4">
 (function(){
   'use strict';
   const DB_NAME='brc_today_hits_auto_v3';
@@ -19169,11 +19169,12 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   function comboHtml(combo){const a=String(combo||'').split('-').map(Number);if(a.length!==3||a.some(n=>n<1||n>6))return esc(combo);return a.map((n,i)=>`${i?'<span class="brc-admin-hit-sep">-</span>':''}<span class="brc-admin-hit-boat lane${n}">${n}</span>`).join('');}
   function raceLabel(r){return `${String(r.venue||'')}${Number(r.raceNo)||''}R`;}
   function cardHtml(x,i){const m=MODE_META[x.mode]||{label:x.label||x.mode,cls:'hit'};const mult=Number(x.payoutYen)/100;return `<article class="brc-admin-hit-card${i===0?' latest':''}">${i===0?'<span class="brc-admin-hit-latest">最新</span>':''}<div class="brc-admin-hit-top"><div class="brc-admin-hit-race">${esc(raceLabel(x))}</div><span class="brc-admin-hit-mode ${esc(m.cls)}">${esc(m.label)}</span></div><div class="brc-admin-hit-body"><div class="brc-admin-hit-combo-wrap"><div class="brc-admin-hit-k">的中結果</div><div class="brc-admin-hit-combo">${comboHtml(x.combo)}</div></div><div class="brc-admin-hit-payout"><div class="brc-admin-hit-k">払戻オッズ</div><div class="v">${Number.isFinite(mult)?mult.toFixed(1):'―'}<small>倍</small></div></div></div></article>`;}
-  function setAdminBadge(){const badge=document.querySelector('#brcAdminTodayHits .brc-admin-today-hits-admin');if(!badge)return;const admin=isAdmin();badge.classList.toggle('is-admin',admin);badge.textContent=admin?'管理者確認':'公開中';}
+  function setAdminBadge(){const badge=document.querySelector('#brcAdminTodayHits .brc-admin-today-hits-admin');if(!badge)return;badge.classList.add('is-admin');badge.textContent='管理者専用';}
   function render(hits,statusText=''){
     const host=document.getElementById('brcAdminTodayHits'),body=document.getElementById('brcAdminTodayHitsBody'),sum=document.getElementById('brcAdminTodayHitsSummary');
     if(!host||!body||!sum)return;
-    host.classList.add('is-visible');host.setAttribute('aria-hidden','false');setAdminBadge();
+    if(!isAdmin()){host.classList.remove('is-visible');host.setAttribute('aria-hidden','true');host.style.display='';return;}
+    host.classList.add('is-visible');host.setAttribute('aria-hidden','false');host.style.display='';setAdminBadge();
     const rows=(Array.isArray(hits)?hits:[]).slice().sort((a,b)=>(Number(b.sortMs)||0)-(Number(a.sortMs)||0)||(Number(b.raceNo)||0)-(Number(a.raceNo)||0));
     if(!rows.length){body.innerHTML=`<div class="brc-admin-hit-empty">${esc(statusText||'本日の的中実績はまだありません。結果確定後、的中分だけここへ追加されます。')}</div>`;sum.innerHTML='<strong>0的中</strong>最高 ―';return;}
     const best=Math.max(...rows.map(x=>Number(x.payoutYen)||0))/100;
@@ -19261,6 +19262,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   }
 
   async function captureDueAuto(){
+    if(!isAdmin())return false;
     if(collectorBusy)return false;collectorBusy=true;
     try{
       const due=[];for(const spec of allTodaySpecs()){const sec=secondsToDeadline(spec);if(!Number.isFinite(sec)||sec<AUTO_MIN_SEC||sec>AUTO_MAX_SEC)continue;if(await dbGet(snapshotId(spec.date,spec.venueCode,spec.raceNo)))continue;due.push(spec);}
@@ -19305,6 +19307,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   async function mapLimit(items,limit,fn){const out=new Array(items.length);let i=0;async function w(){while(i<items.length){const n=i++;try{out[n]=await fn(items[n],n);}catch(e){out[n]={ok:false,retry:true};}}}await Promise.all(Array.from({length:Math.min(limit,Math.max(1,items.length))},()=>w()));return out;}
 
   async function refresh(force=false){
+    if(!isAdmin()){const host=document.getElementById('brcAdminTodayHits');if(host){host.classList.remove('is-visible');host.setAttribute('aria-hidden','true');host.style.display='';}return false;}
     if(refreshBusy)return false;if(!force&&Date.now()-lastRenderAt<5000)return false;refreshBusy=true;
     try{
       const cache=cacheRead();cache.races=cache.races||{};
@@ -19325,20 +19328,27 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     }catch(err){console.warn('BRC today hits v3 refresh failed:',err);render(cacheHits(cacheRead()),'本日の的中実績を確認できませんでした。「更新」で再確認できます。');return false;}finally{refreshBusy=false;}
   }
 
-  function startAutoTimer(){if(autoTimer)return;autoTimer=setInterval(()=>{if(document.visibilityState==='visible'){captureDueAuto().catch(()=>{});refresh(false).catch(()=>{});}},15000);captureDueAuto().catch(()=>{});}
-  function stopAutoTimer(){if(autoTimer){clearInterval(autoTimer);autoTimer=null;}}
-  function setUi(_active){setAdminBadge();startAutoTimer();refresh(true).catch(()=>{});}
-  window.brcSetAdminTodayHitsUi=setUi;
-  window.brcRefreshAdminTodayHits=()=>refresh(true);
-  window.brcEnsureTodayHitsVisible=()=>{const host=document.getElementById('brcAdminTodayHits');if(host){host.classList.add('is-visible');host.setAttribute('aria-hidden','false');host.style.display='block';}setAdminBadge();};
-  function init(){
-    const host=document.getElementById('brcAdminTodayHits');if(host){host.classList.add('is-visible');host.setAttribute('aria-hidden','false');host.style.display='block';}
-    setAdminBadge();document.getElementById('brcAdminTodayHitsRefresh')?.addEventListener('click',()=>refresh(true));
-    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){captureDueAuto().catch(()=>{});refresh(false).catch(()=>{});}});
-    window.addEventListener('focus',()=>refresh(false).catch(()=>{}));
+  function startAutoTimer(){if(!isAdmin())return;if(autoTimer)return;autoTimer=setInterval(()=>{if(isAdmin()&&document.visibilityState==='visible'){captureDueAuto().catch(()=>{});refresh(false).catch(()=>{});}},15000);captureDueAuto().catch(()=>{});}
+  function stopAutoTimer(){if(autoTimer){clearInterval(autoTimer);autoTimer=null;}if(refreshTimer){clearInterval(refreshTimer);refreshTimer=null;}}
+  function setUi(active){
+    const host=document.getElementById('brcAdminTodayHits');
+    const enabled=!!active&&isAdmin();
+    if(host){host.classList.toggle('is-visible',enabled);host.setAttribute('aria-hidden',enabled?'false':'true');host.style.display='';}
+    setAdminBadge();
+    if(!enabled){stopAutoTimer();return;}
     startAutoTimer();
     refresh(true).catch(()=>{});
-    if(!refreshTimer)refreshTimer=setInterval(()=>{if(document.visibilityState==='visible')refresh(false).catch(()=>{});},60000);
+    if(!refreshTimer)refreshTimer=setInterval(()=>{if(isAdmin()&&document.visibilityState==='visible')refresh(false).catch(()=>{});},60000);
+  }
+  window.brcSetAdminTodayHitsUi=setUi;
+  window.brcRefreshAdminTodayHits=()=>isAdmin()?refresh(true):Promise.resolve(false);
+  window.brcEnsureTodayHitsVisible=()=>{setUi(isAdmin());};
+  function init(){
+    setAdminBadge();
+    document.getElementById('brcAdminTodayHitsRefresh')?.addEventListener('click',()=>{if(isAdmin())refresh(true);});
+    document.addEventListener('visibilitychange',()=>{if(isAdmin()&&document.visibilityState==='visible'){captureDueAuto().catch(()=>{});refresh(false).catch(()=>{});}});
+    window.addEventListener('focus',()=>{if(isAdmin())refresh(false).catch(()=>{});});
+    setUi(isAdmin());
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
