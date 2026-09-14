@@ -3964,6 +3964,62 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
 @media(max-width:640px){.brc-val-block{padding:8px 6px}.brc-val-rule,.brc-val-note{font-size:8px}.brc-val-status{font-size:8px}table.brc-val-table{font-size:9px}}
 </style>
 
+
+<style id="brc-official-operation-invest-v1-style">
+#brcOfficialOperationV1{display:none;padding:10px 12px 0;background:#f8fafc;}
+#brcOfficialOperationV1.is-visible{display:block;}
+.brc-opv1-card{
+  border:1px solid rgba(0,87,219,.18);border-radius:13px;background:#fff;
+  overflow:hidden;box-shadow:0 3px 12px rgba(10,31,51,.04);
+}
+.brc-opv1-head{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:9px;
+  padding:11px 12px;border-bottom:1px solid rgba(10,31,51,.08);
+}
+.brc-opv1-kicker{font-size:8.5px;font-weight:950;letter-spacing:.09em;color:var(--wave);}
+.brc-opv1-title{margin-top:2px;font-size:16px;font-weight:950;color:var(--navy);}
+.brc-opv1-race{margin-top:3px;font-size:10px;font-weight:800;color:var(--ink-soft);}
+.brc-opv1-badge{
+  flex:0 0 auto;padding:4px 7px;border-radius:999px;background:rgba(0,87,219,.08);
+  color:var(--wave);font-size:8.5px;font-weight:950;white-space:nowrap;
+}
+.brc-opv1-body{padding:11px 12px 12px;}
+.brc-opv1-decision{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:10px 11px;border:1px solid rgba(10,31,51,.09);border-radius:10px;background:#f8fafc;
+}
+.brc-opv1-decision.go{border-color:rgba(47,143,91,.30);background:rgba(47,143,91,.055);}
+.brc-opv1-decision.skip{border-color:rgba(209,55,63,.28);background:rgba(209,55,63,.045);}
+.brc-opv1-decision.wait{border-color:rgba(217,119,6,.25);background:rgba(217,119,6,.045);}
+.brc-opv1-dk{font-size:9px;font-weight:850;color:var(--ink-soft);}
+.brc-opv1-dv{margin-top:1px;font-size:21px;font-weight:950;line-height:1.05;color:var(--navy);}
+.brc-opv1-decision.go .brc-opv1-dv{color:#217247;}
+.brc-opv1-decision.skip .brc-opv1-dv{color:#b4232c;}
+.brc-opv1-decision.wait .brc-opv1-dv{color:#9a5b08;}
+.brc-opv1-band{
+  flex:0 0 auto;padding:4px 7px;border-radius:999px;background:rgba(10,31,51,.06);
+  color:#536176;font-size:8.5px;font-weight:950;white-space:nowrap;
+}
+.brc-opv1-reason{margin-top:7px;font-size:10.5px;font-weight:800;line-height:1.55;color:#536176;}
+.brc-opv1-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:9px;}
+.brc-opv1-metric{padding:7px 4px;border:1px solid rgba(10,31,51,.07);border-radius:8px;background:#f8fafc;text-align:center;min-width:0;}
+.brc-opv1-metric .k{font-size:7.5px;font-weight:850;color:var(--ink-soft);white-space:nowrap;}
+.brc-opv1-metric .v{margin-top:2px;font-size:12px;font-weight:950;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.brc-opv1-picks{margin-top:9px;padding:8px 9px;border-radius:9px;background:rgba(10,31,51,.028);border:1px solid rgba(10,31,51,.07);}
+.brc-opv1-picks-head{display:flex;justify-content:space-between;gap:7px;font-size:9px;font-weight:900;color:var(--ink-soft);}
+.brc-opv1-picks-list{margin-top:4px;font-size:11px;font-weight:900;line-height:1.6;color:var(--navy);overflow-wrap:anywhere;}
+.brc-opv1-rule{margin-top:8px;font-size:8.8px;line-height:1.55;color:var(--ink-soft);}
+.brc-opv1-stats{margin-top:8px;padding-top:8px;border-top:1px solid rgba(10,31,51,.08);font-size:9px;line-height:1.55;color:#536176;}
+@media(max-width:520px){
+  #brcOfficialOperationV1{padding:8px 7px 0;}
+  .brc-opv1-head{padding:10px;}
+  .brc-opv1-body{padding:9px 10px 10px;}
+  .brc-opv1-title{font-size:15px;}
+  .brc-opv1-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .brc-opv1-dv{font-size:19px;}
+}
+</style>
+
 </head>
 <body>
 <div class="wrap">
@@ -4414,7 +4470,9 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
         <div class="predict-main-panel" id="predictMainPanel-ai">
           <div id="predictAiResult" class="predict-ai-wrap"></div>
         </div>
+        <!-- BRC_OFFICIAL_OPERATION_IN_INVEST_TAB_V1_20260914 -->
         <div class="predict-main-panel" id="predictMainPanel-invest" aria-hidden="true">
+          <div id="brcOfficialOperationV1"></div>
           <div id="brcInvestmentManager" class="brc-invest-wrap"></div>
         </div>
       </div>
@@ -19131,6 +19189,257 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 })();
 </script>
 
+
+
+<script id="brc-official-operation-invest-v1-js">
+(function(){
+  'use strict';
+
+  const VERSION='BRC_OFFICIAL_OPERATION_IN_INVEST_TAB_V1_20260914';
+  const DB='brc_admin_investment_validation_live_oos_v1';
+  const LIVE='live_oos_records';
+  const GUARD='live_oos_capture_guard';
+  const MIN_ODDS=2.25;
+  const HIGH_ODDS=2.50;
+  const UNIT=100;
+
+  const esc=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const money=v=>`${Math.round(Number(v)||0).toLocaleString('ja-JP')}円`;
+  const isAdmin=()=>typeof BRC_ADMIN_ACTIVE!=='undefined'&&!!BRC_ADMIN_ACTIVE;
+
+  function openDb(){
+    return new Promise((resolve,reject)=>{
+      try{
+        const q=indexedDB.open(DB,1);
+        q.onupgradeneeded=()=>{
+          const db=q.result;
+          if(!db.objectStoreNames.contains(LIVE))db.createObjectStore(LIVE,{keyPath:'key'});
+          if(!db.objectStoreNames.contains(GUARD))db.createObjectStore(GUARD,{keyPath:'key'});
+        };
+        q.onsuccess=()=>resolve(q.result);
+        q.onerror=()=>reject(q.error||new Error('indexeddb_open_failed'));
+      }catch(e){reject(e);}
+    });
+  }
+  async function dbGet(store,key){
+    const db=await openDb();
+    try{
+      return await new Promise((res,rej)=>{
+        const q=db.transaction(store,'readonly').objectStore(store).get(key);
+        q.onsuccess=()=>res(q.result||null);
+        q.onerror=()=>rej(q.error);
+      });
+    }finally{db.close();}
+  }
+  async function dbAll(store){
+    const db=await openDb();
+    try{
+      return await new Promise((res,rej)=>{
+        const q=db.transaction(store,'readonly').objectStore(store).getAll();
+        q.onsuccess=()=>res(Array.isArray(q.result)?q.result:[]);
+        q.onerror=()=>rej(q.error);
+      });
+    }finally{db.close();}
+  }
+
+  function selection(){
+    try{
+      if(typeof brcInvCurrentSelection==='function'){
+        const x=brcInvCurrentSelection();
+        if(x&&x.key){
+          let deadline='';
+          try{deadline=typeof brcInvDeadline==='function'?brcInvDeadline(x):'';}catch(_e){}
+          return {...x,deadline};
+        }
+      }
+    }catch(_e){}
+    return {key:'',venue:'',raceNo:0,date:'',code:'',deadline:''};
+  }
+
+  function secondsToDeadline(sel){
+    const m=String(sel?.deadline||'').match(/^(\d{1,2}):(\d{2})/);
+    if(!m||!/^\d{4}-\d{2}-\d{2}$/.test(String(sel?.date||'')))return null;
+    const ms=Date.parse(`${sel.date}T${m[1].padStart(2,'0')}:${m[2]}:00+09:00`);
+    return Number.isFinite(ms)?(ms-Date.now())/1000:null;
+  }
+
+  function reasonText(reason){
+    const map={
+      'IN_RANK_NOT_S':'イン信頼度がSではない',
+      'ENTRY_CHANGED':'進入変更あり',
+      'ODDS_BELOW_2_25':'合成オッズ2.25未満',
+      'QUALIFIED':'正式条件をすべて通過'
+    };
+    return map[String(reason||'')]||String(reason||'判定記録なし');
+  }
+
+  async function aggregate(){
+    try{
+      const [guards,rows]=await Promise.all([dbAll(GUARD),dbAll(LIVE)]);
+      const settled=rows.filter(r=>r&&r.settledAt);
+      const hits=settled.filter(r=>r.hit===true).length;
+      const stake=settled.reduce((a,r)=>a+(Number(r.stakeYen)||0),0);
+      const ret=settled.reduce((a,r)=>a+(Number(r.returnYen)||0),0);
+      return {
+        evaluated:guards.length,
+        qualified:rows.length,
+        settled:settled.length,
+        hits, stake, ret,
+        roi:stake>0?ret/stake*100:null
+      };
+    }catch(_e){return null;}
+  }
+
+  async function render(){
+    const host=document.getElementById('brcOfficialOperationV1');
+    if(!host)return;
+
+    // 投資管理は管理者専用。その他タブには何も追加しない。
+    if(!isAdmin()){
+      host.classList.remove('is-visible');
+      host.innerHTML='';
+      return;
+    }
+    host.classList.add('is-visible');
+
+    const sel=selection();
+    let guard=null,row=null;
+    if(sel.key){
+      try{[guard,row]=await Promise.all([dbGet(GUARD,sel.key),dbGet(LIVE,sel.key)]);}catch(_e){}
+    }
+
+    const sec=secondsToDeadline(sel);
+    let cls='wait',decision='判定待ち',reason='レースを選択してください。';
+    let rank='―',comp=null,points=0,stake=0,picks=[],band='―';
+
+    if(sel.key){
+      rank=String(row?.inRank||guard?.inRank||'―');
+
+      if(row){
+        cls='go';
+        decision=row.settledAt?(row.hit===true?'参加済み・的中':'参加済み・不的中'):'参加';
+        reason='LIVE-OOSで固定保存済み。この判定と買い目を正式運用記録として扱います。';
+        comp=Number(row.compositeOdds);
+        points=Number(row.pointCount||0);
+        stake=Number(row.stakeYen||points*UNIT);
+        picks=Array.isArray(row.picks)?row.picks:[];
+        band=Number.isFinite(comp)?(comp>=HIGH_ODDS?'HIGH':'CORE'):'―';
+      }else if(guard){
+        const qualified=guard.qualified===true;
+        cls=qualified?'go':'skip';
+        decision=qualified?'参加':'見送り';
+        reason=reasonText(guard.reason);
+        comp=Number(guard.compositeOdds);
+        points=Number(guard.pointCount||0);
+        stake=qualified?points*UNIT:0;
+        band=Number.isFinite(comp)?(comp>=HIGH_ODDS?'HIGH':'CORE'):'―';
+      }else if(Number.isFinite(sec)){
+        if(sec<=0){
+          cls='skip';decision='締切済';
+          reason='このレースには正式なLIVE-OOS判定記録がありません。';
+        }else if(sec>75){
+          cls='wait';decision='待機';
+          reason=`正式判定は締切45〜75秒前。現在 約${Math.ceil(sec)}秒前です。`;
+        }else if(sec>=45){
+          cls='wait';decision='判定中';
+          reason='LIVE-OOSが締切約1分前の固定判定を取得中です。';
+        }else{
+          cls='skip';decision='新規見送り';
+          reason='正式判定記録がないまま45秒を切ったため、追いかけて参加しません。';
+        }
+      }else{
+        cls='wait';decision='判定待ち';
+        reason='締切情報を取得後に正式判定します。';
+      }
+    }
+
+    const stats=await aggregate();
+    const pickText=picks.length
+      ? picks.map(p=>{
+          const c=String(p?.combo||'');
+          const o=Number(p?.odds);
+          return `${c}${Number.isFinite(o)?` (${o.toFixed(1)})`:''}`;
+        }).filter(Boolean).join(' / ')
+      : '―';
+
+    const raceLabel=sel.key
+      ? `${esc(sel.venue||'')} ${Number(sel.raceNo)||''}R${sel.deadline?`　締切${esc(sel.deadline)}`:''}`
+      : 'レース未選択';
+
+    const phase=stats&&stats.settled>=100?'100R到達・再審査対象':'Phase 1：100円/点固定';
+
+    host.innerHTML=`
+      <div class="brc-opv1-card">
+        <div class="brc-opv1-head">
+          <div>
+            <div class="brc-opv1-kicker">BRC OFFICIAL OPERATION</div>
+            <div class="brc-opv1-title">正式運用判定 V1</div>
+            <div class="brc-opv1-race">${raceLabel}</div>
+          </div>
+          <div class="brc-opv1-badge">管理者専用</div>
+        </div>
+        <div class="brc-opv1-body">
+          <div class="brc-opv1-decision ${cls}">
+            <div>
+              <div class="brc-opv1-dk">BRC判断</div>
+              <div class="brc-opv1-dv">${esc(decision)}</div>
+            </div>
+            <div class="brc-opv1-band">${esc(band)}</div>
+          </div>
+
+          <div class="brc-opv1-reason">${esc(reason)}</div>
+
+          <div class="brc-opv1-grid">
+            <div class="brc-opv1-metric"><div class="k">イン信頼度</div><div class="v">${esc(rank)}</div></div>
+            <div class="brc-opv1-metric"><div class="k">合成オッズ</div><div class="v">${Number.isFinite(comp)?comp.toFixed(2):'―'}</div></div>
+            <div class="brc-opv1-metric"><div class="k">点数</div><div class="v">${points||'―'}</div></div>
+            <div class="brc-opv1-metric"><div class="k">投資額</div><div class="v">${stake?money(stake):'―'}</div></div>
+          </div>
+
+          <div class="brc-opv1-picks">
+            <div class="brc-opv1-picks-head"><span>固定買い目</span><span>1点 ${UNIT}円</span></div>
+            <div class="brc-opv1-picks-list">${esc(pickText)}</div>
+          </div>
+
+          <div class="brc-opv1-rule">
+            正式条件：TimeX反映後イン信頼度S × 進入変更なし × 締切約1分前LIVE-OOS固定判定 × 合成オッズ2.25以上。
+            CORE=2.25〜2.49 / HIGH=2.50以上。100件確定までは金額を増やしません。
+          </div>
+
+          <div class="brc-opv1-stats">${
+            stats
+              ? `LIVE-OOS：評価 ${stats.evaluated}R / 参加 ${stats.qualified}R / 結果確定 ${stats.settled}R / 的中 ${stats.hits}R / 回収率 ${Number.isFinite(stats.roi)?stats.roi.toFixed(1)+'%':'―'}　｜　${phase}`
+              : 'LIVE-OOS集計を読み込み中'
+          }</div>
+        </div>
+      </div>`;
+  }
+
+  function install(){
+    // 投資管理タブを開いた時だけ即時更新。タブ名や他3タブのDOMは触らない。
+    document.addEventListener('click',e=>{
+      if(e.target.closest('#brcInvestmentTab,.venue-pill,.race-pill')){
+        setTimeout(render,80);
+        setTimeout(render,500);
+      }
+    },true);
+
+    // LIVE-OOSの判定更新を反映
+    setInterval(()=>{
+      const invest=document.getElementById('predictMainPanel-invest');
+      if(isAdmin() && invest?.classList.contains('active'))render();
+    },2000);
+
+    setTimeout(render,500);
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',install,{once:true});
+  }else{
+    install();
+  }
+})();
+</script>
 
 </body>
 </html>
