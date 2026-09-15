@@ -19803,6 +19803,14 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   async function dbPut(row){const db=await openDb();try{return await new Promise((res,rej)=>{const q=db.transaction(DB_STORE,'readwrite').objectStore(DB_STORE).put(row);q.onsuccess=()=>res(true);q.onerror=()=>rej(q.error);});}finally{db.close();}}
   async function dbAll(){const db=await openDb();try{return await new Promise((res,rej)=>{const q=db.transaction(DB_STORE,'readonly').objectStore(DB_STORE).getAll();q.onsuccess=()=>res(Array.isArray(q.result)?q.result:[]);q.onerror=()=>rej(q.error);});}finally{db.close();}}
 
+  // FIX 2026-09-15: 各レース画面で締切前に保存済みの「参考買い目V2」も
+  // 本日の的中実績の正本候補として読む。T-120自動取得が失敗したレースでも、
+  // 実際に画面へ出していた買い目を結果確定後に集計できるようにする。
+  const REF_DB_NAME='brc_admin_reference_monitor_v2';
+  const REF_DB_STORE='snapshots';
+  function openRefDb(){return new Promise((resolve,reject)=>{try{const q=indexedDB.open(REF_DB_NAME);q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error||new Error('reference_db_open_failed'));q.onupgradeneeded=()=>{try{q.transaction.abort();}catch(_e){}};}catch(e){reject(e);}});}
+  async function refDbAll(){let db=null;try{db=await openRefDb();if(!db.objectStoreNames.contains(REF_DB_STORE))return [];return await new Promise((res,rej)=>{const q=db.transaction(REF_DB_STORE,'readonly').objectStore(REF_DB_STORE).getAll();q.onsuccess=()=>res(Array.isArray(q.result)?q.result:[]);q.onerror=()=>rej(q.error);});}catch(_e){return [];}finally{try{db?.close();}catch(_e){}}}
+
   function downloadAuditJson(rows){
     const payload={version:'BRC_REFERENCE_T120_FULL_AUDIT_V1_20260915',exportedAt:new Date().toISOString(),rows};
     const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
@@ -19928,6 +19936,28 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   async function settleSnapshotsToCache(cache){
     const rows=(await dbAll()).filter(r=>String(r?.date)===today());let changed=false;
     for(const row of rows){const key=raceKey(row.date,row.venueCode,row.raceNo);if(cache.races?.[key]?.source==='T120')continue;const spec={date:row.date,venue:row.venue,venueCode:row.venueCode,raceNo:Number(row.raceNo),deadline:row.deadline};if(!isCompleted(spec))continue;const result=await fetchResult(spec);if(!result)continue;cache.races=cache.races||{};cache.races[key]={source:'T120',updatedAt:new Date().toISOString(),hits:hitsFromModes(spec,row.referenceModes,result,'T120')};changed=true;}
+
+    // T-120が無い場合は、各レース画面で締切前に保存された参考買い目V2を採用。
+    // 同一レースにpre/exhibitionがある場合は展示反映済み(exhibition)を優先する。
+    const refRows=(await refDbAll()).filter(r=>String(r?.date)===today()&&r?.referenceModes);
+    const best=new Map();
+    for(const row of refRows){
+      const code=String(row?.venueCode||'').padStart(2,'0');
+      if(!code)continue;
+      const key=raceKey(row.date,code,row.raceNo),cur=best.get(key);
+      const score=(String(row.phase)==='exhibition'?2:1);
+      const curScore=(String(cur?.phase)==='exhibition'?2:cur?1:0);
+      if(!cur||score>curScore||(score===curScore&&String(row.capturedAt||'')>String(cur.capturedAt||'')))best.set(key,row);
+    }
+    for(const [key,row] of best){
+      if(cache.races?.[key]?.source==='T120')continue;
+      const spec={date:row.date,venue:row.venue,venueCode:String(row.venueCode||'').padStart(2,'0'),raceNo:Number(row.raceNo),deadline:row.deadline};
+      if(!isCompleted(spec))continue;
+      const result=await fetchResult(spec);if(!result)continue;
+      const hits=hitsFromModes(spec,row.referenceModes,result,'DISPLAY_SNAPSHOT');
+      // 既存REBUILDより、実際に締切前表示・保存された買い目を優先する。
+      cache.races=cache.races||{};cache.races[key]={source:'DISPLAY_SNAPSHOT',done:true,updatedAt:new Date().toISOString(),hits};changed=true;
+    }
     return changed;
   }
 
