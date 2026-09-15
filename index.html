@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_FREE2R_ST_FILTER_NO_MIN_POOL_V3_20260916 -->
 <!-- BRC_MEMBER_ADMIN_MOBILE_V1_20260916 -->
 <!-- BRC_FREE2R_ST_STABILITY_STRICT_GUARD_V2_20260916 -->
 <!-- BRC_FREE2R_ST_STABILITY_COMPLETE_FILTER_V1_20260916 -->
@@ -16673,8 +16674,19 @@ async function brcLoadFreePreview(force=false){
       await autoLoadHostedRaceCardToday({reason:'free-preview'});
     }
     const races=buildFreePreviewRacePool();
-    if(TODAY_LABEL!==jstToday || races.length<12) throw new Error('free_preview_racecard_not_ready');
-    const requestBase={date:jstToday,races,selectionVersion:'ST_STABILITY_COMPLETE_V2'};
+    // ST安定度「－」除外後の候補数に下限は設けない。
+    // 以前の「12R未満なら準備中」判定だと、正常に絞り込めた日まで無料2R全体が停止してしまうため廃止。
+    if(TODAY_LABEL!==jstToday) throw new Error('free_preview_racecard_date_not_ready');
+    if(!races.length){
+      // 候補が本当に0Rの日だけ、通信エラー扱いにせず「該当なし」として正常表示する。
+      BRC_FREE_PREVIEW_DATA={
+        free_preview:true,date:jstToday,iron:null,reject:null,selectionVersion:'ST_STABILITY_COMPLETE_V3'
+      };
+      brcRenderFreePreviewCards();
+      try{ refreshRaceDeadlineGray(); }catch(_e){}
+      return;
+    }
+    const requestBase={date:jstToday,races,selectionVersion:'ST_STABILITY_COMPLETE_V3'};
     let data=await brcFreePreviewApi(requestBase);
     if(!data || data.free_preview!==true) throw new Error('free_preview_not_ready');
 
