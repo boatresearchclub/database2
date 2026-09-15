@@ -6851,6 +6851,14 @@ async function brcEnsurePredictAccess({silent=false, force=false}={}){
     return false;
   }finally{ BRC_AUTH_BUSY = false; }
 }
+// ---- BRC_MEMBER_PIN4_LOGIN_V1_4_20260916 ----
+function brcMemberPinAuthPassword(identifier,pin){
+  const email=brcMemberIdToEmail(identifier);
+  if(!email) return '';
+  const local=String(email).split('@')[0].toUpperCase();
+  return `BRCMEMBER-${local}-${String(pin||'')}`;
+}
+
 async function brcLogin(identifier,password){
   const submit=document.getElementById('brcLoginSubmit');
   if(submit){submit.disabled=true; submit.textContent='確認中…';}
@@ -6868,13 +6876,29 @@ async function brcLogin(identifier,password){
     if(submit){submit.disabled=false; submit.textContent='ログインして開く';}
     return false;
   }
-  // Supabase Authは4文字パスワードを受け付けないため、BRC1DAYだけ内部で固定接頭辞を付ける。
-  // 当日の4桁PIN自体はINDEXへ保存・埋め込みしない。通常会員のパスワードは一切変換しない。
-  const authPassword = oneDay ? `BRC1DAY-${rawPassword}` : rawPassword;
+  // 1DAY PASSは従来どおり4桁PINを内部パスワードへ変換。
+  // 新規サロン会員は、ユーザーには数字4桁だけを案内し、Supabaseには
+  // BRCMEMBER-<会員ID>-<4桁PIN> を送る。既存会員の通常パスワードはそのまま互換維持。
+  const memberPin4 = !oneDay && /^\d{4}$/.test(rawPassword);
+  const authPassword = oneDay
+    ? `BRC1DAY-${rawPassword}`
+    : (memberPin4 ? brcMemberPinAuthPassword(identifier,rawPassword) : rawPassword);
   try{
-    const data = await brcApi('/auth/v1/token?grant_type=password', {
-      method:'POST', body:JSON.stringify({email,password:authPassword})
-    });
+    let data;
+    try{
+      data = await brcApi('/auth/v1/token?grant_type=password', {
+        method:'POST', body:JSON.stringify({email,password:authPassword})
+      });
+    }catch(primaryErr){
+      // 既存会員に「生の4桁パスワード」がいた場合も壊さないための互換フォールバック。
+      if(memberPin4 && (Number(primaryErr?.status||0)===400 || Number(primaryErr?.status||0)===401)){
+        data = await brcApi('/auth/v1/token?grant_type=password', {
+          method:'POST', body:JSON.stringify({email,password:rawPassword})
+        });
+      }else{
+        throw primaryErr;
+      }
+    }
     brcStoreSession(data,{oneDay});
     const result = await brcCheckMembership(brcGetStoredSession());
     if(!result.ok){
