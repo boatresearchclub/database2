@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_TODAY_HITS_STABLE_SOURCE_OF_TRUTH_V4_20260915 -->
 <!-- BRC_TODAY_HITS_SAME_SOURCE_FIX_V3_20260915 -->
 <!-- BRC_LATEST_MASTER_MERGE_V4_20260915 -->
 <!-- BRC_CURRENT_EXACT_REPLAY_V4_GUARDED_SHADOW_20260915 -->
@@ -19746,7 +19747,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   'use strict';
   const DB_NAME='brc_today_hits_auto_v3';
   const DB_STORE='race_snapshots';
-  const CACHE_PREFIX='brc_today_hits_public_v6_';
+  const CACHE_PREFIX='brc_today_hits_public_v7_';
+  const CACHE_SCHEMA=7;
   const MODE_META={
     hit:{label:'的中型',cls:'hit'},
     balance:{label:'バランス型',cls:'balance'},
@@ -19833,9 +19835,42 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   window.brcExportReferenceT120Audit=exportT120Audit;
 
   function cacheKey(){return CACHE_PREFIX+today();}
-  function cacheRead(){try{const x=JSON.parse(localStorage.getItem(cacheKey())||'{}');return x&&typeof x==='object'?x:{races:{}};}catch(_e){return {races:{}};}}
-  function cacheWrite(x){try{localStorage.setItem(cacheKey(),JSON.stringify(x));}catch(_e){}}
-  function cacheHits(cache){const out=[];for(const rec of Object.values(cache?.races||{})){if(Array.isArray(rec?.hits))out.push(...rec.hits);}return out;}
+  function cacheRead(){
+    try{
+      const x=JSON.parse(localStorage.getItem(cacheKey())||'{}');
+      if(!x||typeof x!=='object'||Number(x.schema)!==CACHE_SCHEMA)return {schema:CACHE_SCHEMA,date:today(),races:{}};
+      if(String(x.date||'')!==today())return {schema:CACHE_SCHEMA,date:today(),races:{}};
+      x.races=x.races&&typeof x.races==='object'?x.races:{};return x;
+    }catch(_e){return {schema:CACHE_SCHEMA,date:today(),races:{}};}
+  }
+  function cacheWrite(x){try{x.schema=CACHE_SCHEMA;x.date=today();localStorage.setItem(cacheKey(),JSON.stringify(x));}catch(_e){}}
+  function cacheHits(cache){
+    const out=[],seen=new Set();
+    for(const rec of Object.values(cache?.races||{})){
+      if(!Array.isArray(rec?.hits))continue;
+      for(const h of rec.hits){
+        const sig=[h?.date,h?.venueCode||h?.venue,h?.raceNo,h?.mode,h?.combo].join('|');
+        if(seen.has(sig))continue;seen.add(sig);out.push(h);
+      }
+    }
+    return out;
+  }
+  function sourcePriority(src){return src==='DISPLAY_SNAPSHOT'?400:src==='T120'?300:String(src||'').startsWith('REBUILD_PRECLOSE')?200:0;}
+  function capturedBeforeDeadline(row){
+    const d=deadlineMs(row?.date,row?.deadline),c=Date.parse(String(row?.capturedAt||''));
+    return d!==null&&Number.isFinite(c)&&c<=d;
+  }
+  function modesUsable(modes){
+    if(!modes||typeof modes!=='object')return false;
+    return ['hit','balance','return','high'].some(k=>{const m=modes[k];return m&&typeof m==='object'&&Array.isArray(m.picks);});
+  }
+  function fingerprint(row){
+    try{
+      const slim={capturedAt:row?.capturedAt||'',phase:row?.phase||'',modes:{}};
+      for(const k of ['hit','balance','return','high']){const m=row?.referenceModes?.[k]||{};slim.modes[k]={participate:!!m.participate,provisional:!!m.provisional,verified:!!m.verified,picks:(m.picks||[]).map(x=>String(x?.combo||''))};}
+      return JSON.stringify(slim);
+    }catch(_e){return '';}
+  }
 
   function specFor(venue,raceNo){
     try{
@@ -19957,29 +19992,44 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   }
 
   async function settleSnapshotsToCache(cache){
-    const rows=(await dbAll()).filter(r=>String(r?.date)===today());let changed=false;
-    for(const row of rows){const key=raceKey(row.date,row.venueCode,row.raceNo);if(cache.races?.[key]?.source==='T120')continue;const spec={date:row.date,venue:row.venue,venueCode:row.venueCode,raceNo:Number(row.raceNo),deadline:row.deadline};if(!isCompleted(spec))continue;const result=await fetchResult(spec);if(!result)continue;cache.races=cache.races||{};cache.races[key]={source:'T120',updatedAt:new Date().toISOString(),hits:hitsFromModes(spec,row.referenceModes,result,'T120',true)};changed=true;}
+    cache.races=cache.races||{};
+    let changed=false;
 
-    // T-120が無い場合は、各レース画面で締切前に保存された参考買い目V2を採用。
-    // 同一レースにpre/exhibitionがある場合は展示反映済み(exhibition)を優先する。
-    const refRows=(await refDbAll()).filter(r=>String(r?.date)===today()&&r?.referenceModes);
+    // 正本は「そのレース画面で締切前に実際に保存されたBRC参考買い目」。
+    // T-120は監査/救済用であり、画面保存が存在するレースでは上書きしない。
+    const refRows=(await refDbAll()).filter(r=>String(r?.date)===today()&&modesUsable(r?.referenceModes)&&capturedBeforeDeadline(r));
     const best=new Map();
     for(const row of refRows){
-      const code=String(row?.venueCode||'').padStart(2,'0');
-      if(!code)continue;
+      const code=String(row?.venueCode||'').padStart(2,'0');if(!code)continue;
       const key=raceKey(row.date,code,row.raceNo),cur=best.get(key);
-      const score=(String(row.phase)==='exhibition'?2:1);
-      const curScore=(String(cur?.phase)==='exhibition'?2:cur?1:0);
-      if(!cur||score>curScore||(score===curScore&&String(row.capturedAt||'')>String(cur.capturedAt||'')))best.set(key,row);
+      // 展示反映済みを優先。同位なら締切に最も近い保存を採用。
+      const score=String(row.phase)==='exhibition'?2:1,curScore=String(cur?.phase)==='exhibition'?2:cur?1:0;
+      const t=Date.parse(String(row.capturedAt||''))||0,ct=Date.parse(String(cur?.capturedAt||''))||0;
+      if(!cur||score>curScore||(score===curScore&&t>ct))best.set(key,row);
     }
     for(const [key,row] of best){
-      if(cache.races?.[key]?.source==='T120')continue;
       const spec={date:row.date,venue:row.venue,venueCode:String(row.venueCode||'').padStart(2,'0'),raceNo:Number(row.raceNo),deadline:row.deadline};
       if(!isCompleted(spec))continue;
       const result=await fetchResult(spec);if(!result)continue;
-      const hits=hitsFromModes(spec,row.referenceModes,result,'DISPLAY_SNAPSHOT',true);
-      // 既存REBUILDより、実際に締切前表示・保存された買い目を優先する。
-      cache.races=cache.races||{};cache.races[key]={source:'DISPLAY_SNAPSHOT',done:true,updatedAt:new Date().toISOString(),hits};changed=true;
+      const fp=fingerprint(row),combo=String(result?.combination||''),payout=Number(result?.payout_yen)||0;
+      const prev=cache.races[key];
+      if(prev?.source==='DISPLAY_SNAPSHOT'&&prev?.fingerprint===fp&&prev?.resultCombo===combo&&Number(prev?.resultPayoutYen)===payout)continue;
+      cache.races[key]={source:'DISPLAY_SNAPSHOT',authoritative:true,fingerprint:fp,snapshotCapturedAt:row.capturedAt||'',snapshotPhase:row.phase||'',resultCombo:combo,resultPayoutYen:payout,updatedAt:new Date().toISOString(),hits:hitsFromModes(spec,row.referenceModes,result,'DISPLAY_SNAPSHOT',true)};
+      changed=true;
+    }
+
+    // 画面保存が無いレースだけT-120を採用。T-120が0的中でも、後から画面保存が見つかれば上の処理が必ず置き換える。
+    const rows=(await dbAll()).filter(r=>String(r?.date)===today()&&modesUsable(r?.referenceModes));
+    for(const row of rows){
+      const key=raceKey(row.date,row.venueCode,row.raceNo);
+      if(cache.races?.[key]?.source==='DISPLAY_SNAPSHOT')continue;
+      const spec={date:row.date,venue:row.venue,venueCode:String(row.venueCode||'').padStart(2,'0'),raceNo:Number(row.raceNo),deadline:row.deadline};
+      if(!isCompleted(spec))continue;
+      const result=await fetchResult(spec);if(!result)continue;
+      const combo=String(result?.combination||''),payout=Number(result?.payout_yen)||0,fp=fingerprint(row),prev=cache.races[key];
+      if(prev?.source==='T120'&&prev?.fingerprint===fp&&prev?.resultCombo===combo&&Number(prev?.resultPayoutYen)===payout)continue;
+      cache.races[key]={source:'T120',authoritative:false,fingerprint:fp,snapshotCapturedAt:row.capturedAt||'',resultCombo:combo,resultPayoutYen:payout,updatedAt:new Date().toISOString(),hits:hitsFromModes(spec,row.referenceModes,result,'T120',true)};
+      changed=true;
     }
     return changed;
   }
@@ -20002,26 +20052,30 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     if(refreshBusy)return false;if(!force&&Date.now()-lastRenderAt<5000)return false;refreshBusy=true;
     try{
       const cache=cacheRead();cache.races=cache.races||{};
-      // 「更新」は保存済みの正本(T120 / DISPLAY_SNAPSHOT)を残し、再構築分だけ再走査する。
-      // 旧ロジックで done=true / 0件になったレースが永久に固定されるのを防ぐ。
+      // 手動更新では再構築キャッシュだけ破棄。締切前に保存した正本は保持し、IndexedDBから再照合する。
       if(force){
         for(const [k,rec] of Object.entries(cache.races)){
-          const src=String(rec?.source||'');
-          if(src!=='T120'&&src!=='DISPLAY_SNAPSHOT') delete cache.races[k];
+          if(sourcePriority(rec?.source)<300) delete cache.races[k];
         }
       }
       await settleSnapshotsToCache(cache);
       let hits=cacheHits(cache);render(hits,hits.length?'':'本日の結果を集計中です…');
       const targets=[];
       for(const spec of allTodaySpecs()){
-        if(!isCompleted(spec))continue;const key=raceKey(spec.date,spec.venueCode,spec.raceNo);const rec=cache.races[key];
-        if(rec?.source==='T120')continue;
-        if(rec?.done===true)continue;
+        if(!isCompleted(spec))continue;
+        const key=raceKey(spec.date,spec.venueCode,spec.raceNo),rec=cache.races[key];
+        // DISPLAY/T120があるレースは正本確定。再構築は「保存が無かったレース」の救済だけ。
+        if(sourcePriority(rec?.source)>=300)continue;
         targets.push(spec);
       }
       if(targets.length){
         const results=await mapLimit(targets,3,reconstructOne);
-        results.forEach((r,i)=>{const spec=targets[i],key=raceKey(spec.date,spec.venueCode,spec.raceNo);if(r?.ok)cache.races[key]={source:r.source||'REBUILD_PRECLOSE',done:true,updatedAt:new Date().toISOString(),hits:r.hits||[]};});
+        results.forEach((r,i)=>{
+          const spec=targets[i],key=raceKey(spec.date,spec.venueCode,spec.raceNo);
+          if(!r?.ok)return;
+          // REBUILDは正本ではない。後からDISPLAY/T120が現れたら settleSnapshotsToCache が必ず置換する。
+          cache.races[key]={source:r.source||'REBUILD_PRECLOSE',authoritative:false,updatedAt:new Date().toISOString(),hits:r.hits||[]};
+        });
       }
       cacheWrite(cache);hits=cacheHits(cache);render(hits,hits.length?'':'本日の的中実績はまだありません。結果確定後、的中分だけここへ追加されます。');lastRenderAt=Date.now();return true;
     }catch(err){console.warn('BRC today hits v3 refresh failed:',err);render(cacheHits(cacheRead()),'本日の的中実績を確認できませんでした。「更新」で再確認できます。');return false;}finally{refreshBusy=false;}
@@ -20041,6 +20095,10 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   }
   window.brcSetAdminTodayHitsUi=setUi;
   window.brcRefreshAdminTodayHits=()=>isAdmin()?refresh(true):Promise.resolve(false);
+  window.brcTodayHitsDebug=async()=>{
+    const cache=cacheRead(),refs=(await refDbAll()).filter(r=>String(r?.date)===today()),t120=(await dbAll()).filter(r=>String(r?.date)===today());
+    return {date:today(),schema:CACHE_SCHEMA,cache:Object.entries(cache.races||{}).map(([key,v])=>({key,source:v?.source,authoritative:!!v?.authoritative,hits:Array.isArray(v?.hits)?v.hits.length:0,snapshotCapturedAt:v?.snapshotCapturedAt||'',updatedAt:v?.updatedAt||''})),displaySnapshots:refs.map(r=>({venue:r.venue,raceNo:r.raceNo,phase:r.phase,capturedAt:r.capturedAt,beforeDeadline:capturedBeforeDeadline(r),usable:modesUsable(r.referenceModes)})),t120Snapshots:t120.map(r=>({venue:r.venue,raceNo:r.raceNo,capturedAt:r.capturedAt,usable:modesUsable(r.referenceModes)}))};
+  };
   window.brcEnsureTodayHitsVisible=()=>{setUi(isAdmin());};
   function init(){
     setAdminBadge();
