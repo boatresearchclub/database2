@@ -19743,7 +19743,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   'use strict';
   const DB_NAME='brc_today_hits_auto_v3';
   const DB_STORE='race_snapshots';
-  const CACHE_PREFIX='brc_today_hits_public_v3_';
+  const CACHE_PREFIX='brc_today_hits_public_v4_';
   const MODE_META={
     hit:{label:'的中型',cls:'hit'},
     balance:{label:'バランス型',cls:'balance'},
@@ -19964,9 +19964,14 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   async function reconstructOne(spec){
     const result=await fetchResult(spec);if(!result)return {ok:false,retry:true};
     let pred=null;try{pred=await brcPostRacePreviewApi({date:spec.date,venue:spec.venue,raceNo:spec.raceNo,grade:spec.grade,boats:spec.apiBoats});}catch(_e){return {ok:false,retry:true};}
-    const [live,oddsRec]=await Promise.all([fetchExhibition(spec),fetchOdds(spec,true,false)]);if(!live||!oddsRec?.odds)return {ok:false,retry:true};
-    const modes=buildModes(spec,pred,live,oddsRec.odds);if(!modes)return {ok:false,retry:true};
-    return {ok:true,hits:hitsFromModes(spec,modes,result,'REBUILD')};
+    const [live,oddsRec]=await Promise.all([fetchExhibition(spec),fetchOdds(spec,true,false)]);
+    // FIX v2: 終了後は live-exhibition が保持されていないレースがある。
+    // その場合でも、各レース画面と同じ保護予測 + 取得可能なオッズから事前(pre)買い目を再構築する。
+    // 締切前に保存済みの T120 / DISPLAY_SNAPSHOT が存在する場合は settleSnapshotsToCache() 側が優先する。
+    if(!oddsRec?.odds)return {ok:false,retry:true,reason:'odds_unavailable'};
+    const liveForBuild=(live&&Array.isArray(live?.boats))?live:{boats:[]};
+    const modes=buildModes(spec,pred,liveForBuild,oddsRec.odds);if(!modes)return {ok:false,retry:true,reason:'mode_rebuild_failed'};
+    return {ok:true,hits:hitsFromModes(spec,modes,result,live?'REBUILD_EXHIBITION':'REBUILD_PRE')};
   }
   async function mapLimit(items,limit,fn){const out=new Array(items.length);let i=0;async function w(){while(i<items.length){const n=i++;try{out[n]=await fn(items[n],n);}catch(e){out[n]={ok:false,retry:true};}}}await Promise.all(Array.from({length:Math.min(limit,Math.max(1,items.length))},()=>w()));return out;}
 
