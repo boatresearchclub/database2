@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_MEMBER_ADMIN_MOBILE_V1_20260916 -->
 <!-- BRC_FREE2R_ST_STABILITY_STRICT_GUARD_V2_20260916 -->
 <!-- BRC_FREE2R_ST_STABILITY_COMPLETE_FILTER_V1_20260916 -->
 <!-- BRC_MEMBER_PRICE_AFTER_DETAIL_V1_20260916 -->
@@ -2521,6 +2522,35 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
     padding:4px 9px; border-radius:999px; border:1px solid rgba(10,31,51,.14); background:#fff; color:var(--ink-soft);
     cursor:pointer; font-size:11.5px;
   }
+
+  /* ---- BRC_MEMBER_ADMIN_MOBILE_V1_20260916 ---- */
+  .brc-member-admin{display:none;margin:10px 0 14px;border:1px solid rgba(0,87,219,.18);border-radius:14px;background:linear-gradient(160deg,rgba(0,87,219,.055),#fff);overflow:hidden;box-shadow:0 4px 18px rgba(10,31,51,.04);}
+  .brc-member-admin.is-visible{display:block;}
+  .brc-member-admin > summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 13px;cursor:pointer;color:var(--navy);font-size:12px;font-weight:950;}
+  .brc-member-admin > summary::-webkit-details-marker{display:none;}
+  .brc-member-admin > summary::after{content:'＋';font-size:18px;line-height:1;color:var(--wave);}
+  .brc-member-admin[open] > summary::after{content:'−';}
+  .brc-member-admin-badge{display:inline-flex;align-items:center;padding:3px 7px;border-radius:999px;background:rgba(0,87,219,.09);color:var(--wave);font-size:9px;font-weight:950;white-space:nowrap;}
+  .brc-member-admin-body{padding:0 13px 13px;}
+  .brc-member-admin-note{font-size:10.5px;line-height:1.6;color:var(--ink-soft);margin:0 0 10px;}
+  .brc-member-admin-label{display:block;margin:0 0 5px;font-size:10.5px;font-weight:900;color:var(--ink-soft);}
+  .brc-member-admin-input{width:100%;box-sizing:border-box;height:44px;border:1px solid rgba(10,31,51,.15);border-radius:10px;background:#fff;padding:0 11px;color:var(--navy);font:inherit;font-size:14px;outline:none;}
+  .brc-member-admin-input:focus{border-color:rgba(0,87,219,.48);box-shadow:0 0 0 3px rgba(0,87,219,.07);}
+  .brc-member-admin-primary{width:100%;min-height:44px;margin-top:9px;border:0;border-radius:10px;background:var(--wave);color:#fff;font:inherit;font-size:13px;font-weight:950;cursor:pointer;}
+  .brc-member-admin-primary:disabled{opacity:.55;cursor:wait;}
+  .brc-member-admin-status{min-height:20px;margin-top:8px;font-size:11px;line-height:1.5;color:var(--ink-soft);}
+  .brc-member-admin-result{display:none;margin-top:10px;padding:11px;border:1px solid rgba(47,143,91,.22);border-radius:11px;background:rgba(47,143,91,.055);}
+  .brc-member-admin-result.is-visible{display:block;}
+  .brc-member-admin-result-title{font-size:12px;font-weight:950;color:#217247;margin-bottom:8px;}
+  .brc-member-admin-cred{display:grid;grid-template-columns:86px 1fr;gap:5px 8px;font-size:12px;line-height:1.5;}
+  .brc-member-admin-cred span{color:var(--ink-soft);font-weight:800;}
+  .brc-member-admin-cred strong{color:var(--navy);font-weight:950;word-break:break-all;}
+  .brc-member-admin-actions{display:grid;grid-template-columns:1fr auto;gap:7px;margin-top:10px;}
+  .brc-member-admin-copy,.brc-member-admin-clear{min-height:40px;border-radius:9px;font:inherit;font-size:11px;font-weight:950;cursor:pointer;}
+  .brc-member-admin-copy{border:0;background:#217247;color:#fff;padding:0 12px;}
+  .brc-member-admin-clear{border:1px solid rgba(10,31,51,.12);background:#fff;color:var(--ink-soft);padding:0 10px;}
+  .brc-member-admin-security{margin-top:9px;font-size:9.5px;line-height:1.55;color:var(--ink-soft);}
+
   @media (max-width:640px){
     .brc-auth-gate{min-height:360px; padding:18px 4px;}
     .brc-auth-card{padding:22px 16px; border-radius:13px;}
@@ -4803,6 +4833,29 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
     </div>
     <div id="brcPredictProtected" style="display:none;">
       <div class="brc-member-bar"><span id="brcMemberBadge" class="brc-member-badge">BRC MEMBER</span><button type="button" class="brc-logout-btn" id="brcLogoutBtn">ログアウト</button></div>
+      <details id="brcMemberAdmin" class="brc-member-admin" aria-hidden="true">
+        <summary><span>新規サロン会員を発行</span><span class="brc-member-admin-badge">管理者専用</span></summary>
+        <div class="brc-member-admin-body">
+          <p class="brc-member-admin-note">YOORで入会確認後、表示名を入力して発行します。会員IDは既存データから次番号を自動採番します。</p>
+          <label class="brc-member-admin-label" for="brcMemberAdminSalonName">サロンメンバー名（YOOR表示名）</label>
+          <input id="brcMemberAdminSalonName" class="brc-member-admin-input" type="text" maxlength="80" autocomplete="off" placeholder="例：ケビン" />
+          <button id="brcMemberAdminIssue" class="brc-member-admin-primary" type="button">ID・パスワードを発行</button>
+          <div id="brcMemberAdminStatus" class="brc-member-admin-status" aria-live="polite"></div>
+          <div id="brcMemberAdminResult" class="brc-member-admin-result" aria-live="polite">
+            <div class="brc-member-admin-result-title">発行完了</div>
+            <div class="brc-member-admin-cred">
+              <span>会員名</span><strong id="brcMemberAdminResultName">-</strong>
+              <span>会員ID</span><strong id="brcMemberAdminResultId">-</strong>
+              <span>パスワード</span><strong id="brcMemberAdminResultPassword">-</strong>
+            </div>
+            <div class="brc-member-admin-actions">
+              <button id="brcMemberAdminCopy" class="brc-member-admin-copy" type="button">LINE送信用にコピー</button>
+              <button id="brcMemberAdminClear" class="brc-member-admin-clear" type="button">表示を消す</button>
+            </div>
+            <div class="brc-member-admin-security">パスワードはこの画面に一時表示するだけで、BRCのHTMLやbrc_membersには保存しません。</div>
+          </div>
+        </div>
+      </details>
       <div id="brcFreePreviewBanner" class="brc-free-result-banner"></div>
     <section class="card">
       <h2>出走表AI</h2>
@@ -5370,6 +5423,8 @@ let currentDatabasePage = 'players';
 const BRC_SUPABASE_URL = 'https://wchvzhftwxraqgihochk.supabase.co';
 const BRC_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_ix5nZCzuhx013fMyAmy5wQ_I_naLXAI';
 const BRC_API_URL = 'https://brc-api.sk48159212.workers.dev';
+// 管理者専用・スマホ会員発行API。Cloudflare Worker名を brc-member-admin に統一。
+const BRC_MEMBER_ADMIN_API_URL = 'https://brc-member-admin.sk48159212.workers.dev';
 // ---- BRC オリジナル展示ライブ連携 Phase 2 ----
 // Cloudflare Live Workerを作成後、このURLだけ実URLへ変更する。
 // 空欄の間は外部通信せず、展示補正は発火しない。
@@ -5756,6 +5811,7 @@ function brcSetAdminSocialUi(user=null){
   const oosFold=document.getElementById('brcOosAdminFold');
   if(oosFold) oosFold.style.display=BRC_ADMIN_ACTIVE?'':'none';
   brcSetAdminResearchUi(BRC_ADMIN_ACTIVE);
+  try{ brcSetMemberAdminUi(BRC_ADMIN_ACTIVE); }catch(_e){}
   try{ if(typeof window.brcSetAdminTodayHitsUi==='function') window.brcSetAdminTodayHitsUi(BRC_ADMIN_ACTIVE); }catch(_e){}
   try{ brcSyncRaceSearchAccess(); }catch(_e){}
   try{ brcSetInvestmentManagerUi(BRC_ADMIN_ACTIVE); }catch(_e){}
@@ -5772,6 +5828,128 @@ function brcSetAdminSocialUi(user=null){
     else brcInvStopBackgroundAutomation();
   }catch(_e){}
 }
+
+// ---- BRC_MEMBER_ADMIN_MOBILE_V1_20260916 ----
+// 表示制御だけでなく、実際の発行権限はCloudflare Worker側で管理者セッションを再検証する。
+let BRC_MEMBER_ADMIN_LAST_ISSUE = null;
+
+function brcSetMemberAdminUi(active){
+  const box=document.getElementById('brcMemberAdmin');
+  if(!box) return;
+  const allowed=!!active;
+  box.classList.toggle('is-visible',allowed);
+  box.setAttribute('aria-hidden',allowed?'false':'true');
+  if(!allowed){
+    box.open=false;
+    BRC_MEMBER_ADMIN_LAST_ISSUE=null;
+    const result=document.getElementById('brcMemberAdminResult');
+    if(result) result.classList.remove('is-visible');
+    const pw=document.getElementById('brcMemberAdminResultPassword'); if(pw) pw.textContent='-';
+    const st=document.getElementById('brcMemberAdminStatus'); if(st) st.textContent='';
+  }
+}
+function brcMemberAdminSetStatus(text='',tone='info'){
+  const el=document.getElementById('brcMemberAdminStatus'); if(!el) return;
+  el.textContent=String(text||'');
+  el.style.color=tone==='ok'?'#217247':(tone==='error'?'#b42318':'var(--ink-soft)');
+}
+function brcMemberAdminErrorText(code,status){
+  const c=String(code||'');
+  if(status===401||c==='missing_session'||c==='invalid_session') return '管理者ログインの有効期限を確認してください。再ログイン後にもう一度お試しください。';
+  if(status===403||c==='admin_only'||c==='admin_inactive') return 'この操作は有効な管理者アカウントだけが実行できます。';
+  if(c==='origin_not_allowed') return '現在のBRC URLからは会員発行できません。Workerの許可URL設定を確認してください。';
+  if(c==='admin_key_not_configured') return '会員発行WorkerのSupabase管理キー設定がまだ完了していません。';
+  if(c==='salon_name_required') return 'サロンメンバー名を入力してください。';
+  if(c==='member_id_read_failed') return '既存会員IDを確認できませんでした。少し待って再実行してください。';
+  if(c==='auth_user_create_failed') return 'Supabase Authへの会員作成に失敗しました。設定を確認してください。';
+  if(c==='member_row_create_failed') return '会員台帳への登録に失敗しました。Auth側は自動で巻き戻します。';
+  return '会員発行に失敗しました。通信状態を確認してもう一度お試しください。';
+}
+function brcMemberAdminClearResult(){
+  BRC_MEMBER_ADMIN_LAST_ISSUE=null;
+  document.getElementById('brcMemberAdminResult')?.classList.remove('is-visible');
+  const id=document.getElementById('brcMemberAdminResultId'); if(id) id.textContent='-';
+  const name=document.getElementById('brcMemberAdminResultName'); if(name) name.textContent='-';
+  const pw=document.getElementById('brcMemberAdminResultPassword'); if(pw) pw.textContent='-';
+}
+async function brcMemberAdminIssue(){
+  if(!BRC_ADMIN_ACTIVE || !BRC_MEMBER_ACTIVE){
+    brcMemberAdminSetStatus('管理者ログイン時のみ操作できます。','error'); return false;
+  }
+  const nameInput=document.getElementById('brcMemberAdminSalonName');
+  const button=document.getElementById('brcMemberAdminIssue');
+  const salonName=String(nameInput?.value||'').trim();
+  if(!salonName){ brcMemberAdminSetStatus('サロンメンバー名を入力してください。','error'); nameInput?.focus(); return false; }
+
+  const session=await brcEnsureFreshSession();
+  if(!session?.access_token){ brcMemberAdminSetStatus('ログイン期限が切れています。再ログインしてください。','error'); return false; }
+
+  brcMemberAdminClearResult();
+  const oldText=button?.textContent||'ID・パスワードを発行';
+  if(button){ button.disabled=true; button.textContent='発行中…'; }
+  brcMemberAdminSetStatus('Supabaseへ安全に登録しています…','info');
+  try{
+    const res=await fetch(BRC_MEMBER_ADMIN_API_URL+'/admin/member/issue',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+session.access_token,'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({salon_name:salonName})
+    });
+    let data=null; try{data=await res.json();}catch(_){data=null;}
+    if(!res.ok || !data?.ok){
+      const err=new Error(brcMemberAdminErrorText(data?.error,res.status)); err.status=res.status; err.code=data?.error; throw err;
+    }
+    BRC_MEMBER_ADMIN_LAST_ISSUE={
+      salon_name:String(data.salon_name||salonName),
+      member_id:String(data.member_id||''),
+      password:String(data.password||'')
+    };
+    document.getElementById('brcMemberAdminResultName').textContent=BRC_MEMBER_ADMIN_LAST_ISSUE.salon_name;
+    document.getElementById('brcMemberAdminResultId').textContent=BRC_MEMBER_ADMIN_LAST_ISSUE.member_id;
+    document.getElementById('brcMemberAdminResultPassword').textContent=BRC_MEMBER_ADMIN_LAST_ISSUE.password;
+    document.getElementById('brcMemberAdminResult')?.classList.add('is-visible');
+    if(nameInput) nameInput.value='';
+    brcMemberAdminSetStatus(`${BRC_MEMBER_ADMIN_LAST_ISSUE.member_id} を発行しました。LINEへ送る前に内容をご確認ください。`,'ok');
+    return true;
+  }catch(err){
+    console.warn('BRC member issue failed:',err);
+    brcMemberAdminSetStatus(err?.message||'会員発行に失敗しました。','error');
+    if(err?.status===401||err?.status===403){ try{await brcEnsurePredictAccess({silent:true,force:true});}catch(_e){} }
+    return false;
+  }finally{
+    if(button){button.disabled=false;button.textContent=oldText;}
+  }
+}
+function brcMemberAdminLineText(issue){
+  const x=issue||BRC_MEMBER_ADMIN_LAST_ISSUE; if(!x) return '';
+  const rawName=String(x.salon_name||'').trim();
+  const greet=rawName ? `${rawName}${/さん$/.test(rawName)?'':'さん'}、ご入会ありがとうございます！` : 'ご入会ありがとうございます！';
+  return `${greet}\nBRC MEMBERSのログイン情報です。\n\n会員ID：${x.member_id}\nパスワード：${x.password}\n\nログインはこちら\nhttps://brcdatabase.pages.dev`;
+}
+async function brcMemberAdminCopyLine(){
+  const text=brcMemberAdminLineText();
+  if(!text){brcMemberAdminSetStatus('先に会員を発行してください。','error');return false;}
+  try{
+    await navigator.clipboard.writeText(text);
+    brcMemberAdminSetStatus('LINE送信用の文章をコピーしました。','ok');
+    return true;
+  }catch(_){
+    const ta=document.createElement('textarea');ta.value=text;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();
+    let ok=false;try{ok=document.execCommand('copy');}catch(_e){}ta.remove();
+    brcMemberAdminSetStatus(ok?'LINE送信用の文章をコピーしました。':'コピーできませんでした。端末のコピー操作をお使いください。',ok?'ok':'error');
+    return ok;
+  }
+}
+function brcBindMemberAdmin(){
+  const issue=document.getElementById('brcMemberAdminIssue');
+  const copy=document.getElementById('brcMemberAdminCopy');
+  const clear=document.getElementById('brcMemberAdminClear');
+  const input=document.getElementById('brcMemberAdminSalonName');
+  if(issue&&!issue.dataset.bound){issue.dataset.bound='1';issue.addEventListener('click',brcMemberAdminIssue);}
+  if(copy&&!copy.dataset.bound){copy.dataset.bound='1';copy.addEventListener('click',brcMemberAdminCopyLine);}
+  if(clear&&!clear.dataset.bound){clear.dataset.bound='1';clear.addEventListener('click',()=>{brcMemberAdminClearResult();brcMemberAdminSetStatus('表示中の発行情報を消しました。','info');});}
+  if(input&&!input.dataset.bound){input.dataset.bound='1';input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();brcMemberAdminIssue();}});}
+}
+
 function brcAdminBoatMark(course){
   return ['','①','②','③','④','⑤','⑥'][Number(course)] || `${course}号艇`;
 }
@@ -6747,6 +6925,7 @@ async function brcExpireOneDaySession(){
 }
 async function brcInitAuthUi(){
   try{ brcBindAdminSocial(); }catch(_e){}
+  try{ brcBindMemberAdmin(); }catch(_e){}
   const form=document.getElementById('brcLoginForm');
   if(form && !form.dataset.bound){
     form.dataset.bound='1';
