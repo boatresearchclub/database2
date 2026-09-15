@@ -1,4 +1,7 @@
 <!DOCTYPE html>
+<!-- BRC_REFERENCE_T120_FULL_AUDIT_V1_20260915 -->
+
+<!-- BRC_REFERENCE_PARITY_CORE_V2_20260914 -->
 <!-- BRC_REFERENCE_PARITY_GUARD_V1_20260914 -->
 <!-- BRC_ADMIN_REFERENCE_2026_PERIOD_BACKTEST_V1_20260914 -->
 <!-- BRC_TYPOGRAPHY_READABILITY_V1_20260914 -->
@@ -19182,43 +19185,109 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     src.sort((a,b)=>b.__score-a.__score||b.p-a.p||a.combo.localeCompare(b.combo));
     return src.slice(0,k).map(({__score,...x})=>x);
   }
-  function brcRefModeResult(mode,data,full120,odds){
+  function brcRefModeCanonicalCombos(){
+    const out=[];
+    for(let a=1;a<=6;a++) for(let b=1;b<=6;b++) if(b!==a) for(let c=1;c<=6;c++) if(c!==a&&c!==b) out.push(`${a}-${b}-${c}`);
+    return out;
+  }
+  function brcRefModeVectorMap(raw,field){
+    const v=raw?.[field];
+    if(!v) return null;
+    if(v && typeof v==='object' && !Array.isArray(v)){
+      const m=new Map();
+      for(const [k,x] of Object.entries(v)){ const n=Number(x); if(/^[1-6]-[1-6]-[1-6]$/.test(k)&&Number.isFinite(n)) m.set(k,n); }
+      return m.size===120?m:null;
+    }
+    if(Array.isArray(v)&&v.length===120){
+      const combos=Array.isArray(raw?.combos)&&raw.combos.length===120?raw.combos:brcRefModeCanonicalCombos();
+      const m=new Map();
+      for(let i=0;i<120;i++){ const n=Number(v[i]), k=String(combos[i]||''); if(/^[1-6]-[1-6]-[1-6]$/.test(k)&&Number.isFinite(n)) m.set(k,n); }
+      return m.size===120?m:null;
+    }
+    return null;
+  }
+  function brcRefModeResearchContext(full120){
+    let raceKey='';
+    try{ raceKey=String(brcOddsSelection()?.key||''); }catch(_e){}
+    let raw=null;
+    try{
+      const bank=window.__BRC_REFERENCE_RESEARCH_INPUTS;
+      raw=(bank&&raceKey&&bank[raceKey])||(bank&&bank.current)||window.__BRC_REFERENCE_RESEARCH_CURRENT||null;
+    }catch(_e){}
+    const pMap=brcRefModeVectorMap(raw,'probabilities');
+    const eMap=brcRefModeVectorMap(raw,'estimatedPayouts')||brcRefModeVectorMap(raw,'estimated_payouts');
+    let rows=(full120||[]).map(x=>({...x}));
+    let probabilitySource='screen_fallback';
+    if(pMap){
+      rows=rows.map(x=>({...x,p:Math.max(1e-12,Number(pMap.get(x.combo))||0)}));
+      rows=brcRefModeNormalize(rows,'p');
+      probabilitySource=String(raw?.probabilitySource||raw?.probability_source||'research_model');
+    }
+    if(eMap) rows=rows.map(x=>({...x,estimatedPayout:Number(eMap.get(x.combo))}));
+    return {
+      raceKey,
+      rows,
+      exactProbability:!!pMap,
+      exactEstimatedPayout:!!eMap,
+      probabilitySource,
+      payoutSource:eMap?String(raw?.payoutSource||raw?.payout_source||'research_estimated_payout'):'unavailable'
+    };
+  }
+  function brcRefModeResult(mode,data,full120,odds,inputCtx=null){
     const meta=BRC_REFERENCE_MODE_META[mode];
     if(!meta) return null;
-    if(data?.decision==='pass') return {mode,meta,participate:false,reason:reasonText(data),picks:[],quality:null};
-    const withOdds=brcRefModeAttachOdds(full120,odds);
+    if(data?.decision==='pass') return {mode,meta,participate:false,reason:reasonText(data),picks:[],quality:null,verified:false};
+    const ctx=inputCtx||brcRefModeResearchContext(full120);
+    const baseRows=Array.isArray(ctx?.rows)?ctx.rows:full120;
+    const withOdds=brcRefModeAttachOdds(baseRows,odds);
+    const exactP=!!ctx?.exactProbability, exactE=!!ctx?.exactEstimatedPayout;
     if(mode==='hit'){
       const picks=brcRefModeTop(withOdds,10,x=>x.p);
-      return {mode,meta,participate:picks.length===10,reason:picks.length===10?'条件成立':'120通り確率が不足',picks,quality:picks.reduce((s,x)=>s+x.p,0)};
+      if(picks.length!==10) return {mode,meta,participate:false,reason:'120通り確率が不足',picks:[],quality:null,verified:false};
+      if(exactE){
+        const quality=picks.reduce((sum,x)=>sum+x.p*Number(x.estimatedPayout||0),0)/(100*10);
+        const ok=quality>=2.337451457977295;
+        return {mode,meta,participate:ok,reason:ok?'条件成立':'期待値品質が基準未満のため見送り',picks:ok?picks:[],quality,verified:exactP&&exactE,provisional:!(exactP&&exactE),inputSource:ctx};
+      }
+      return {mode,meta,participate:true,reason:'暫定表示：研究用推定払戻が未接続',picks,quality:null,verified:false,provisional:true,inputSource:ctx};
     }
     if(mode==='balance'){
-      const haveOdds=withOdds.filter(x=>Number.isFinite(x.odds)).length===withOdds.length;
+      if(exactE){
+        const eligible=withOdds.filter(x=>Number(x.estimatedPayout)>=1000);
+        if(eligible.length<6) return {mode,meta,participate:false,reason:'推定払戻1000円以上の候補不足',picks:[],quality:0,verified:exactP&&exactE,provisional:!(exactP&&exactE),inputSource:ctx};
+        const picks=brcRefModeTop(eligible,6,x=>x.p*Math.pow(Math.max(Number(x.estimatedPayout)/100,1),.15));
+        const quality=picks.reduce((sum,x)=>sum+x.p*Number(x.estimatedPayout||0),0)/(100*6);
+        const ok=quality>=2.9676949977874756;
+        return {mode,meta,participate:ok,reason:ok?'条件成立':'期待値品質が基準未満のため見送り',picks:ok?picks:[],quality,verified:exactP&&exactE,provisional:!(exactP&&exactE),inputSource:ctx};
+      }
+      // 研究用推定払戻が未接続の間だけ、従来画面ロジックを残す。検証実績には紐付けない。
+      const haveOdds=withOdds.length===120&&withOdds.every(x=>Number.isFinite(x.odds)&&x.odds>0);
       const eligible=haveOdds?withOdds.filter(x=>x.odds>=10):withOdds;
-      if(eligible.length<6) return {mode,meta,participate:false,reason:'10倍以上の候補が6点未満',picks:[],quality:null};
+      if(eligible.length<6) return {mode,meta,participate:false,reason:'暫定：10倍以上の候補が6点未満',picks:[],quality:null,verified:false,provisional:true,inputSource:ctx};
       const picks=brcRefModeTop(eligible,6,x=>haveOdds?x.p*Math.pow(Math.max(x.odds,1),.15):x.p);
-      return {mode,meta,participate:true,reason:haveOdds?'確率×配当バランス':'オッズ未取得のため確率順位で暫定表示',picks,quality:picks.reduce((s,x)=>s+x.p,0),provisional:!haveOdds};
+      return {mode,meta,participate:true,reason:haveOdds?'暫定：画面P×実オッズ':'暫定：画面P順位',picks,quality:null,verified:false,provisional:true,inputSource:ctx};
     }
     const allOddsReady=withOdds.length===120&&withOdds.every(x=>Number.isFinite(x.odds)&&x.odds>0);
-    if(!allOddsReady) return {mode,meta,participate:false,reason:'3連単オッズ120通りが未取得',picks:[],quality:null,oddsRequired:true};
+    if(!allOddsReady) return {mode,meta,participate:false,reason:'3連単オッズ120通りが未取得',picks:[],quality:null,oddsRequired:true,verified:false,provisional:!exactP,inputSource:ctx};
     if(mode==='return'){
       const pSharp=brcRefModeNormalize(withOdds.map(x=>({...x,pSharp:Math.pow(Math.max(x.p,1e-12),2.5)})),'pSharp');
       const market=brcRefModeNormalize(pSharp.map(x=>({...x,q:1/Math.max(x.odds,1e-9)})),'q');
       const blended=market.map(x=>({...x,bRaw:Math.exp(.4*Math.log(Math.max(x.pSharp,1e-12))+.6*Math.log(Math.max(x.q,1e-12)))}));
       const bnorm=brcRefModeNormalize(blended,'bRaw').map(x=>({...x,b:x.bRaw}));
-      if(bnorm.filter(x=>x.odds>=10).length<6) return {mode,meta,participate:false,reason:'10倍以上の候補が6点未満',picks:[],quality:null};
+      if(bnorm.filter(x=>x.odds>=10).length<6) return {mode,meta,participate:false,reason:'10倍以上の候補が6点未満',picks:[],quality:null,verified:false,provisional:!exactP,inputSource:ctx};
       const picks=brcRefModeTop(bnorm,6,x=>x.b*x.odds,x=>x.odds>=10);
-      const cov=picks.reduce((s,x)=>s+x.b,0), meanEv=picks.reduce((s,x)=>s+x.b*x.odds,0)/Math.max(1,picks.length), quality=meanEv*Math.sqrt(Math.max(cov,1e-12));
+      const cov=picks.reduce((sum,x)=>sum+x.b,0), meanEv=picks.reduce((sum,x)=>sum+x.b*x.odds,0)/Math.max(1,picks.length), quality=meanEv*Math.sqrt(Math.max(cov,1e-12));
       const ok=quality>=1.2504463195800781;
-      return {mode,meta,participate:ok,reason:ok?'Shadow条件成立':'Shadow基準未満',picks:ok?picks:[],quality};
+      return {mode,meta,participate:ok,reason:ok?(exactP?'Shadow条件成立':'暫定Shadow条件成立'):'Shadow基準未満',picks:ok?picks:[],quality,verified:exactP,provisional:!exactP,inputSource:ctx};
     }
     if(mode==='high'){
-      if(withOdds.filter(x=>x.odds>=50).length<18) return {mode,meta,participate:false,reason:'50倍以上の候補が18点未満',picks:[],quality:null};
+      if(withOdds.filter(x=>x.odds>=50).length<18) return {mode,meta,participate:false,reason:'50倍以上の候補が18点未満',picks:[],quality:null,verified:false,provisional:!exactP,inputSource:ctx};
       const picks=brcRefModeTop(withOdds,18,x=>x.p*x.odds,x=>x.odds>=50);
-      const cov=picks.reduce((s,x)=>s+x.p,0), meanEv=picks.reduce((s,x)=>s+x.p*x.odds,0)/Math.max(1,picks.length), quality=meanEv*Math.sqrt(Math.max(cov,1e-12));
+      const cov=picks.reduce((sum,x)=>sum+x.p,0), meanEv=picks.reduce((sum,x)=>sum+x.p*x.odds,0)/Math.max(1,picks.length), quality=meanEv*Math.sqrt(Math.max(cov,1e-12));
       const ok=quality>=1.546547;
-      return {mode,meta,participate:ok,reason:ok?'Shadow条件成立':'Shadow基準未満',picks:ok?picks:[],quality};
+      return {mode,meta,participate:ok,reason:ok?(exactP?'Shadow条件成立':'暫定Shadow条件成立'):'Shadow基準未満',picks:ok?picks:[],quality,verified:exactP,provisional:!exactP,inputSource:ctx};
     }
-    return {mode,meta,participate:false,reason:'未定義',picks:[],quality:null};
+    return {mode,meta,participate:false,reason:'未定義',picks:[],quality:null,verified:false,inputSource:ctx};
   }
   function brcRefModePerformanceMetricsHtml(p){
     const pl=Number(p.pl)||0, plClass=pl>0?'positive':pl<0?'negative':'';
@@ -19248,7 +19317,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       <div class="brc-refmode-kpi"><div class="k">運用</div><div class="v ${esc(m.statusClass)}">${esc(m.status)}</div></div>
     </div>`;
     const performance=brcRefModePerformanceHtml(m);
-    const desc=`<div class="brc-refmode-desc"><strong>${esc(m.icon+' '+m.label)}</strong>｜${esc(m.desc)}${Number.isFinite(res.quality)?` <span class="brc-refmode-quality">判定値 ${Number(res.quality).toFixed(3)}</span>`:''}</div>`;
+    const sourceTag=res.verified?'完全一致入力':(res.provisional?'暫定入力':'未検証入力');
+    const desc=`<div class="brc-refmode-desc"><strong>${esc(m.icon+' '+m.label)}</strong>｜${esc(m.desc)}${Number.isFinite(res.quality)?` <span class="brc-refmode-quality">判定値 ${Number(res.quality).toFixed(3)}</span>`:''} <span class="brc-refmode-quality">${esc(sourceTag)}</span></div>`;
     if(!res.participate){
       return `${kpis}${performance}${desc}<div class="brc-refmode-pass"><strong>見送り</strong><span>${esc(res.reason||'条件未達')}</span></div>${(res.mode==='return'||res.mode==='high')?'<div class="brc-refmode-shadow-note">※オッズ依存モードは管理者Shadow。基準を満たした時だけ候補を表示します。</div>':''}`;
     }
@@ -19262,32 +19332,71 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   }
   function brcBuildReferenceModesHtml(boats,workerPrediction,data,phase){
     const full120=brcBuildFull120(boats,workerPrediction,phase), odds=brcRefModeOddsObject();
+    const inputCtx=brcRefModeResearchContext(full120);
     const modes=['hit','balance','return','high'];
-    const results=Object.fromEntries(modes.map(k=>[k,brcRefModeResult(k,data,full120,odds)]));
+    const results=Object.fromEntries(modes.map(k=>[k,brcRefModeResult(k,data,full120,odds,inputCtx)]));
+    try{
+      window.__BRC_REFERENCE_PARITY_SNAPSHOT={
+        version:'BRC_REFERENCE_PARITY_CORE_V2_20260914',raceKey:inputCtx.raceKey||'',phase,
+        exactProbability:!!inputCtx.exactProbability,exactEstimatedPayout:!!inputCtx.exactEstimatedPayout,
+        probabilitySource:inputCtx.probabilitySource,payoutSource:inputCtx.payoutSource,
+        inputs:inputCtx.rows.map(x=>({combo:x.combo,p:Number(x.p),estimatedPayout:Number.isFinite(Number(x.estimatedPayout))?Number(x.estimatedPayout):null,odds:brcRefModeOddsValue(odds,x.combo)})),
+        results:Object.fromEntries(modes.map(k=>[k,{participate:!!results[k]?.participate,verified:!!results[k]?.verified,provisional:!!results[k]?.provisional,quality:Number.isFinite(Number(results[k]?.quality))?Number(results[k].quality):null,picks:(results[k]?.picks||[]).map(x=>x.combo),reason:String(results[k]?.reason||'')}]))
+      };
+    }catch(_e){}
     const current=window.__brcReferenceModeCurrent&&modes.includes(window.__brcReferenceModeCurrent)?window.__brcReferenceModeCurrent:'balance';
     window.__brcReferenceModeCurrent=current;
     const tabs=modes.map(k=>{const m=BRC_REFERENCE_MODE_META[k];return `<button type="button" class="brc-refmode-tab ${k===current?'active':''}" data-brc-refmode-tab="${k}" aria-selected="${k===current?'true':'false'}">${esc(m.icon+m.label)}</button>`;}).join('');
     const panels=modes.map(k=>`<div class="brc-refmode-panel ${k===current?'active':''}" data-brc-refmode-panel="${k}">${brcRefModePanelHtml(results[k])}</div>`).join('');
-    return `<div class="brc-refmode-shell" data-brc-ref-modes-host><div class="brc-refmode-head"><div class="brc-refmode-head-title">BRC参考買い目</div><div class="brc-refmode-head-note">管理者専用・目的別4モード</div></div><div class="brc-refmode-parity-note"><strong>一致監査中</strong>｜下の実績は研究モデルの検証値です。現画面の120通りPとは完全同期前のため、画面表示買い目そのものの実績とはまだ扱いません。</div><div class="brc-refmode-tabs" role="tablist" aria-label="BRC参考買い目モード">${tabs}</div>${panels}</div>`;
+    const parityReady=Object.values(results).every(r=>r&&(r.verified||((r.mode==='return'||r.mode==='high')&&!r.participate&&r.oddsRequired&&inputCtx.exactProbability)));
+    const parityMsg=parityReady?'<strong>完全一致コア</strong>｜研究P・推定払戻入力で選定しています。':'<strong>一致コア実装済み</strong>｜4モードの選定式・閾値は研究エンジンと統一。現在は研究用120通りP／推定払戻の本番入力接続待ちのため、暫定入力は検証実績へ紐付けません。';
+    return `<div class="brc-refmode-shell" data-brc-ref-modes-host><div class="brc-refmode-head"><div class="brc-refmode-head-title">BRC参考買い目</div><div class="brc-refmode-head-note">管理者専用・目的別4モード</div></div><div class="brc-refmode-parity-note">${parityMsg}</div><div class="brc-refmode-tabs" role="tablist" aria-label="BRC参考買い目モード">${tabs}</div>${panels}</div>`;
   }
   function brcRefModeSnapshot(boats,workerPrediction,data,phase,oddsOverride=null){
     try{
       const full120=brcBuildFull120(boats,workerPrediction,phase), odds=oddsOverride||brcRefModeOddsObject();
+      const inputCtx=brcRefModeResearchContext(full120);
       const out={};
       for(const mode of ['hit','balance','return','high']){
-        const r=brcRefModeResult(mode,data,full120,odds);
+        const r=brcRefModeResult(mode,data,full120,odds,inputCtx);
         out[mode]={
           label:String(r?.meta?.label||BRC_REFERENCE_MODE_META?.[mode]?.label||mode),
           participate:!!r?.participate,
           provisional:!!r?.provisional,
+          verified:!!r?.verified,
           reason:String(r?.reason||''),
           quality:Number.isFinite(Number(r?.quality))?Number(r.quality):null,
           picks:(Array.isArray(r?.picks)?r.picks:[]).map(x=>({combo:String(x?.combo||''),odds:Number.isFinite(Number(x?.odds))?Number(x.odds):null}))
         };
       }
+      // BRC_REFERENCE_T120_FULL_AUDIT_V1_20260915:
+      // その時点で実際に使った120通りP / 推定払戻 / 実オッズを同じスナップショットへ固定保存する。
+      // 後日のモデル変更やfinalオッズで上書きせず、フォワード検証の原本にする。
+      out.__audit={
+        version:'BRC_REFERENCE_T120_FULL_AUDIT_V1_20260915',
+        raceKey:String(inputCtx?.raceKey||''),phase:String(phase||''),capturedAt:new Date().toISOString(),
+        exactProbability:!!inputCtx?.exactProbability,exactEstimatedPayout:!!inputCtx?.exactEstimatedPayout,
+        probabilitySource:String(inputCtx?.probabilitySource||''),payoutSource:String(inputCtx?.payoutSource||''),
+        inputs:(inputCtx?.rows||[]).map(x=>({
+          combo:String(x?.combo||''),
+          p:Number.isFinite(Number(x?.p))?Number(x.p):null,
+          estimatedPayout:Number.isFinite(Number(x?.estimatedPayout))?Number(x.estimatedPayout):null,
+          odds:brcRefModeOddsValue(odds,x?.combo)
+        }))
+      };
       return out;
     }catch(_e){ return null; }
   }
+
+  window.brcSetReferenceResearchInput=function(payload,raceKey='current'){
+    if(!window.__BRC_REFERENCE_RESEARCH_INPUTS||typeof window.__BRC_REFERENCE_RESEARCH_INPUTS!=='object') window.__BRC_REFERENCE_RESEARCH_INPUTS={};
+    window.__BRC_REFERENCE_RESEARCH_INPUTS[String(raceKey||'current')]=payload||null;
+    try{brcRefreshReferenceModes();}catch(_e){}
+    return true;
+  };
+  window.brcExportReferenceParitySnapshot=function(){
+    try{return JSON.stringify(window.__BRC_REFERENCE_PARITY_SNAPSHOT||null,null,2);}catch(_e){return 'null';}
+  };
 
   window.brcBuildReferenceModeSnapshotWithOdds=function(boats,workerPrediction,data,phase='current',odds=null){
     return brcRefModeSnapshot(boats,workerPrediction,data,phase,odds);
@@ -19427,10 +19536,11 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   async function exportCsv(){
     const rows=(await dbGetAll()).sort((a,b)=>String(a.date).localeCompare(String(b.date))||String(a.venue).localeCompare(String(b.venue))||num(a.raceNo)-num(b.raceNo)||String(a.phase).localeCompare(String(b.phase)));
     if(!rows.length) throw new Error('参考買い目V2ログはまだありません');
-    const cols=['date','venue','venue_code','race_no','deadline','phase','captured_at','version','in_reliability','in_pct','today_reject','decision','reason','mode','heads','head_cover_hc','head_band','opponent_cover_oc','opponent_band','boundary_ratio','point_count','formation','picks','composite_odds','legacy_v1_json','variants_json','marks_json'];
+    const cols=['date','venue','venue_code','race_no','deadline','phase','captured_at','version','in_reliability','in_pct','today_reject','decision','reason','mode','heads','head_cover_hc','head_band','opponent_cover_oc','opponent_band','boundary_ratio','point_count','formation','picks','composite_odds','parity_exact_probability','parity_exact_estimated_payout','probability_source','payout_source','reference_modes_json','reference_inputs_json','legacy_v1_json','variants_json','marks_json'];
     const lines=[cols.join(',')];
     for(const r of rows){
-      const o={date:r.date,venue:r.venue,venue_code:r.venueCode,race_no:r.raceNo,deadline:r.deadline,phase:r.phase,captured_at:r.capturedAt,version:r.version,in_reliability:r.inReliability,in_pct:r.inPct,today_reject:r.todayReject,decision:r.decision,reason:r.reason,mode:r.mode,heads:(r.heads||[]).join(''),head_cover_hc:r.hc,head_band:r.headBand,opponent_cover_oc:r.oc,opponent_band:r.opponentBand,boundary_ratio:r.boundary,point_count:r.pointCount,formation:r.formation,picks:(r.picks||[]).map(x=>x.combo).join(';'),composite_odds:r.compositeOdds,legacy_v1_json:JSON.stringify(r.variants?.legacyV1||{}),variants_json:JSON.stringify(r.variants||{}),marks_json:JSON.stringify(r.marks||[])};
+      const audit=r.referenceModes?.__audit||{};
+      const o={date:r.date,venue:r.venue,venue_code:r.venueCode,race_no:r.raceNo,deadline:r.deadline,phase:r.phase,captured_at:r.capturedAt,version:r.version,in_reliability:r.inReliability,in_pct:r.inPct,today_reject:r.todayReject,decision:r.decision,reason:r.reason,mode:r.mode,heads:(r.heads||[]).join(''),head_cover_hc:r.hc,head_band:r.headBand,opponent_cover_oc:r.oc,opponent_band:r.opponentBand,boundary_ratio:r.boundary,point_count:r.pointCount,formation:r.formation,picks:(r.picks||[]).map(x=>x.combo).join(';'),composite_odds:r.compositeOdds,parity_exact_probability:audit.exactProbability===true?1:0,parity_exact_estimated_payout:audit.exactEstimatedPayout===true?1:0,probability_source:audit.probabilitySource||'',payout_source:audit.payoutSource||'',reference_modes_json:JSON.stringify(r.referenceModes||{}),reference_inputs_json:JSON.stringify(audit.inputs||[]),legacy_v1_json:JSON.stringify(r.variants?.legacyV1||{}),variants_json:JSON.stringify(r.variants||{}),marks_json:JSON.stringify(r.marks||[])};
       lines.push(cols.map(k=>csvEsc(o[k])).join(','));
     }
     const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}), url=URL.createObjectURL(blob), a=document.createElement('a');
@@ -19550,6 +19660,24 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   async function dbGet(id){const db=await openDb();try{return await new Promise((res,rej)=>{const q=db.transaction(DB_STORE,'readonly').objectStore(DB_STORE).get(id);q.onsuccess=()=>res(q.result||null);q.onerror=()=>rej(q.error);});}finally{db.close();}}
   async function dbPut(row){const db=await openDb();try{return await new Promise((res,rej)=>{const q=db.transaction(DB_STORE,'readwrite').objectStore(DB_STORE).put(row);q.onsuccess=()=>res(true);q.onerror=()=>rej(q.error);});}finally{db.close();}}
   async function dbAll(){const db=await openDb();try{return await new Promise((res,rej)=>{const q=db.transaction(DB_STORE,'readonly').objectStore(DB_STORE).getAll();q.onsuccess=()=>res(Array.isArray(q.result)?q.result:[]);q.onerror=()=>rej(q.error);});}finally{db.close();}}
+
+  function downloadAuditJson(rows){
+    const payload={version:'BRC_REFERENCE_T120_FULL_AUDIT_V1_20260915',exportedAt:new Date().toISOString(),rows};
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download=`BRC_REFERENCE_T120_AUDIT_${today().replace(/-/g,'')||'export'}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
+  }
+  async function exportT120Audit(){
+    if(!isAdmin())throw new Error('管理者のみ');
+    const rows=(await dbAll()).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date))||String(a.venueCode).localeCompare(String(b.venueCode))||Number(a.raceNo)-Number(b.raceNo));
+    if(!rows.length)throw new Error('T-120スナップショットはまだありません');
+    downloadAuditJson(rows);return rows.length;
+  }
+  function initT120AuditExportUi(){
+    if(!isAdmin())return;const host=document.getElementById('brcOosAdminTools');if(!host||document.getElementById('brcT120AuditExportBtn'))return;
+    const btn=document.createElement('button');btn.type='button';btn.id='brcT120AuditExportBtn';btn.textContent='T-120監査JSON';btn.style.cssText='appearance:none;border:1px solid rgba(47,143,91,.28);border-radius:8px;background:rgba(47,143,91,.06);color:#217247;padding:7px 10px;font:inherit;font-size:11px;font-weight:900;cursor:pointer;';
+    btn.addEventListener('click',async()=>{const old=btn.textContent;btn.disabled=true;btn.textContent='書き出し中…';try{const n=await exportT120Audit();btn.textContent=`${n}R書出済`;setTimeout(()=>{btn.textContent=old;btn.disabled=false;},1600);}catch(e){btn.textContent=e?.message||'書出失敗';setTimeout(()=>{btn.textContent=old;btn.disabled=false;},1800);}});host.appendChild(btn);
+  }
+  window.brcExportReferenceT120Audit=exportT120Audit;
 
   function cacheKey(){return CACHE_PREFIX+today();}
   function cacheRead(){try{const x=JSON.parse(localStorage.getItem(cacheKey())||'{}');return x&&typeof x==='object'?x:{races:{}};}catch(_e){return {races:{}};}}
@@ -19709,6 +19837,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   window.brcEnsureTodayHitsVisible=()=>{setUi(isAdmin());};
   function init(){
     setAdminBadge();
+    initT120AuditExportUi();
+    setTimeout(initT120AuditExportUi,800);
     const hitBody=document.getElementById('brcAdminTodayHitsBody');
     if(hitBody){
       hitBody.addEventListener('scroll',()=>{lastHitStripScrollAt=Date.now();},{passive:true});
