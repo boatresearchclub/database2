@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_NIGE_REFERENCE_PUBLIC_V1_20260915 -->
 <!-- BRC_NIGE_REFERENCE_PICKS_RESTORE_GUARD_V1_20260915 -->
 <!-- BRC_REFERENCE_T120_FULL_AUDIT_V1_20260915 -->
 
@@ -11136,12 +11137,11 @@ async function brcCopyReferencePicks(ev,text){
   }
 }
 
-// BRC_NIGE_REFERENCE_PICKS_RESTORE_GUARD_V1_20260915
-// 管理者の「イン逃げ予測」内に従来の累積70%参考買い目が必ず残るようにする。
-// 4モードの独立「BRC参考買い目」タブとは別物で、既存ロジック・公開範囲は変更しない。
+// BRC_NIGE_REFERENCE_PICKS_PUBLIC_V1_20260915
+// 「イン逃げ予測」内の累積70%参考買い目は、管理者限定ではなく閲覧ユーザーへ公開する。
+// 4モードの独立「BRC参考買い目」タブは管理者限定のまま変更しない。
 function brcEnsureNigeReferencePicksInAdminPanel(boats,workerPrediction,exhibitionApplied){
   try{
-    if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return;
     const panel=document.getElementById('brcAiAdminPanel-nige');
     const card=panel?.querySelector('#brcNigeOrderPredictionCard')||document.getElementById('brcNigeOrderPredictionCard');
     if(!card || card.querySelector('.brc-nige-order-picks[data-brc-ref-picks]')) return;
@@ -11184,8 +11184,8 @@ function brcBuildServerNigePredictionHtml(boats,workerPrediction,exhibitionAppli
     return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${brcBuildNigeOrderMetricHtml(secondMap.get(boat),diffText,diffClass)}${brcBuildNigeOrderTimexHtml(b,'second',secondMap.get(boat)?.pct)}${brcBuildNigeOrderMetricHtml(thirdMap.get(boat))}${brcBuildNigeOrderTimexHtml(b,'third',thirdMap.get(boat)?.pct)}</div>`;
   }).join('');
   const isAdmin=!!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE);
-  // 参考買い目は現時点では管理者だけに表示。累積70%生成ロジック自体は変更しない。
-  const picks=isAdmin?brcBuildNigeReferencePicksHtml(pred,.70):'';
+  // イン逃げ予測の参考買い目は閲覧ユーザーへ公開。累積70%生成ロジックは変更しない。
+  const picks=brcBuildNigeReferencePicksHtml(pred,.70);
   const legend=`<div class="brc-nige-order-legend">各着率＝BRCタイムX反映済｜本人傾向＝参考・数値未反映</div>`;
   const rank=String(localInReliability?.rank||'―');
   const detail=isAdmin?`<details class="brc-nige-order-detail"><summary>判定詳細</summary><div class="brc-nige-order-detail-badges"><span>管理者のみ</span><span>TimeX状態 ${pred.phaseLabel}</span><span>イン信頼度 ${rank}</span></div>${legend}<div class="brc-nige-order-detail-rule"><strong>参考買い目ロジック：</strong>1号艇が逃げた場合の3連単20通りを予測確率順に積み上げ、累積70%へ到達するまでを表示。既存のAIイン逃げ予測・累積70%参考買い目・TimeX反映ロジックは変更していません。</div></details>`:'';
@@ -11733,7 +11733,8 @@ function brcBuildInlineNigeOrderPredictionHtml(course, boats, localInReliability
     return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${brcBuildNigeOrderMetricHtml(secondMap.get(boat),diffText,diffClass)}${brcBuildNigeOrderTimexHtml(b,'second',secondMap.get(boat)?.pct)}${brcBuildNigeOrderMetricHtml(thirdMap.get(boat))}${brcBuildNigeOrderTimexHtml(b,'third',thirdMap.get(boat)?.pct)}</div>`;
   }).join('');
   const isAdmin=!!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE);
-  const picksHtml=isAdmin?brcBuildNigeReferencePicksHtml(pred,.70):'';
+  // イン逃げ予測の参考買い目は閲覧ユーザーへ公開。
+  const picksHtml=brcBuildNigeReferencePicksHtml(pred,.70);
   const legend=`<div class="brc-nige-order-legend">各着率＝BRCタイムX反映済｜本人傾向＝参考・数値未反映</div>`;
   const rank=String(localInReliability?.rank||'―');
   const phase=(boats||[]).some(b=>!!b?.exhibitionApplied)?'TimeX反映後':'展示前';
@@ -13800,7 +13801,7 @@ function brcRefreshExhibitionAdjustedDom(liveRace,venue,raceNo){
     const wrap=document.createElement('div');
     wrap.innerHTML=brcBuildServerNigePredictionHtml(boats,worker,applied,local).trim();
     if(wrap.firstElementChild) nigeCard.replaceWith(wrap.firstElementChild);
-    // 展示・TimeX更新でカードを差し替えた後も参考買い目を維持する。
+    // 展示・TimeX更新でカードを差し替えた後も、公開参考買い目を維持する。
     brcEnsureNigeReferencePicksInAdminPanel(boats,worker,applied);
   }
   const rec=document.getElementById('recommendedBetsCard');
