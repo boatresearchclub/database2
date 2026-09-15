@@ -1,4 +1,10 @@
 <!DOCTYPE html>
+<!-- BRC_LATEST_MASTER_MERGE_V4_20260915 -->
+<!-- BRC_CURRENT_EXACT_REPLAY_V4_GUARDED_SHADOW_20260915 -->
+<!-- BRC_CURRENT_EXACT_REPLAY_V3_SHADOW_20260915 -->
+<!-- BRC_CURRENT_EXACT_REPLAY_V2_20260915 -->
+<!-- BRC_CURRENT_ACCURACY_AUDIT_V1_20260915 -->
+<!-- BRC_4MODE_TARGET_LOCK_V3_20260915 -->
 <!-- BRC_NIGE_REFERENCE_PUBLIC_V1_20260915 -->
 <!-- BRC_NIGE_REFERENCE_PICKS_RESTORE_GUARD_V1_20260915 -->
 <!-- BRC_REFERENCE_T120_FULL_AUDIT_V1_20260915 -->
@@ -4428,6 +4434,40 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
 }
 </style>
 
+
+
+<style id="brc-current-accuracy-audit-v1-style">
+.brc-accuracy-audit{margin:0 0 10px;padding:11px;border:1px solid rgba(0,87,219,.14);border-radius:12px;background:linear-gradient(160deg,rgba(0,87,219,.035),#fff);}
+.brc-accuracy-audit-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+.brc-accuracy-audit-kicker{font-size:8.5px;font-weight:950;letter-spacing:.08em;color:var(--wave);}
+.brc-accuracy-audit-title{margin-top:2px;font-size:13.5px;font-weight:950;color:var(--navy);}
+.brc-accuracy-audit-badge{flex:0 0 auto;padding:3px 7px;border-radius:999px;background:rgba(47,143,91,.08);border:1px solid rgba(47,143,91,.18);color:#217247;font-size:8.5px;font-weight:950;}
+.brc-accuracy-audit-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:9px;}
+.brc-accuracy-audit-item{padding:7px 5px;border:1px solid rgba(10,31,51,.07);border-radius:9px;background:#fff;text-align:center;min-width:0;}
+.brc-accuracy-audit-item .k{font-size:8px;font-weight:850;color:var(--ink-soft);white-space:nowrap;}
+.brc-accuracy-audit-item .v{margin-top:2px;font-size:11px;font-weight:950;color:var(--trend-up);white-space:nowrap;}
+.brc-accuracy-audit-note{margin-top:8px;font-size:9.5px;line-height:1.55;color:var(--ink-soft);}
+.brc-accuracy-audit details{margin-top:8px;border-top:1px dashed rgba(10,31,51,.10);padding-top:7px;}
+.brc-accuracy-audit summary{cursor:pointer;font-size:9.5px;font-weight:900;color:var(--wave);}
+.brc-accuracy-audit-table{width:100%;margin-top:7px;border-collapse:collapse;font-size:8.5px;}
+.brc-accuracy-audit-table th,.brc-accuracy-audit-table td{padding:5px 4px;border-top:1px solid rgba(10,31,51,.06);text-align:center;}
+.brc-accuracy-audit-table th{color:var(--ink-soft);background:#f8fafc;font-weight:900;}
+.brc-accuracy-audit-research{margin-top:7px;padding:7px 8px;border-radius:8px;background:rgba(227,178,60,.08);border:1px solid rgba(227,178,60,.18);font-size:9px;line-height:1.5;color:#725000;}
+@media(max-width:430px){.brc-accuracy-audit-grid{grid-template-columns:repeat(3,minmax(0,1fr));}.brc-accuracy-audit-item{padding:6px 3px}.brc-accuracy-audit-item .v{font-size:10px}}
+</style>
+
+
+
+<style id="brc-current-exact-replay-v2-style">
+.brc-exact-replay{margin:12px 0 14px;border:1px solid rgba(23,88,136,.20);background:linear-gradient(180deg,#fff,rgba(23,88,136,.025));border-radius:14px;padding:14px;box-shadow:0 6px 18px rgba(10,31,51,.04)}
+.brc-exact-replay-head{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}.brc-exact-replay-kicker{font-size:10px;font-weight:900;letter-spacing:.11em;color:#587084}.brc-exact-replay-title{font-size:16px;font-weight:900;color:var(--navy);margin-top:2px}.brc-exact-replay-badge{font-size:10px;font-weight:900;padding:4px 8px;border-radius:999px;border:1px solid rgba(23,88,136,.24);background:rgba(23,88,136,.06);color:#175888}.brc-exact-replay-note{font-size:11.5px;line-height:1.7;color:var(--ink-soft);margin-top:8px}.brc-exact-replay-note strong{color:var(--navy)}
+.brc-exact-replay-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}.brc-exact-replay-field{display:flex;flex-direction:column;gap:4px}.brc-exact-replay-field label{font-size:10px;font-weight:800;color:var(--ink-soft)}.brc-exact-replay-field input{width:100%;box-sizing:border-box;border:1px solid rgba(10,31,51,.16);border-radius:8px;padding:8px 9px;background:#fff;color:var(--navy);font:inherit;font-size:12px}
+.brc-exact-replay-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.brc-exact-replay-btn{appearance:none;border:1px solid rgba(23,88,136,.25);border-radius:8px;background:#fff;color:#175888;padding:7px 10px;font:inherit;font-size:11px;font-weight:900;cursor:pointer}.brc-exact-replay-btn.primary{background:#175888;color:#fff}.brc-exact-replay-btn.danger{color:#9b2c2c;border-color:rgba(155,44,44,.25)}.brc-exact-replay-btn:disabled{opacity:.45;cursor:default}
+.brc-exact-replay-status{margin-top:9px;padding:9px 10px;border-radius:9px;background:rgba(10,31,51,.035);font-size:11px;line-height:1.6;color:var(--ink-soft)}.brc-exact-replay-status strong{color:var(--navy)}
+.brc-exact-replay-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:10px}.brc-exact-replay-kpi{border:1px solid rgba(10,31,51,.09);border-radius:9px;padding:8px;background:#fff;min-width:0}.brc-exact-replay-kpi .k{font-size:9px;font-weight:800;color:var(--ink-soft)}.brc-exact-replay-kpi .v{margin-top:2px;font-size:14px;font-weight:900;color:var(--navy);white-space:nowrap}.brc-exact-replay-subtitle{font-size:12px;font-weight:900;color:var(--navy);margin:13px 0 6px}.brc-exact-replay-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}.brc-exact-replay-table{width:100%;border-collapse:collapse;font-size:10.5px;min-width:560px}.brc-exact-replay-table th,.brc-exact-replay-table td{padding:6px;border-bottom:1px solid rgba(10,31,51,.08);text-align:right;white-space:nowrap}.brc-exact-replay-table th:first-child,.brc-exact-replay-table td:first-child{text-align:left}.brc-exact-replay-table th{font-size:9.5px;color:var(--ink-soft);font-weight:900}.brc-exact-replay-warning{margin-top:9px;padding:8px 9px;border:1px solid rgba(227,178,60,.28);background:rgba(227,178,60,.06);border-radius:8px;font-size:10.5px;line-height:1.6;color:#6e5719}
+@media(max-width:700px){.brc-exact-replay-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.brc-exact-replay-controls{grid-template-columns:1fr 1fr}}
+</style>
+
 </head>
 <body>
 <div class="wrap">
@@ -4894,6 +4934,54 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
         </div>
         <!-- BRC_OFFICIAL_OPERATION_IN_INVEST_TAB_V1_20260914 -->
         <div class="predict-main-panel" id="predictMainPanel-invest" aria-hidden="true">
+<section class="brc-accuracy-audit" id="brcCurrentAccuracyAuditV1" aria-label="現BRC精度監査">
+            <div class="brc-accuracy-audit-head">
+              <div><div class="brc-accuracy-audit-kicker">CURRENT BRC ACCURACY AUDIT</div><div class="brc-accuracy-audit-title">現BRC 分析データ精度監査 V1</div></div>
+              <span class="brc-accuracy-audit-badge">現行維持</span>
+            </div>
+            <div class="brc-accuracy-audit-grid">
+              <div class="brc-accuracy-audit-item"><div class="k">TimeX V2</div><div class="v">KEEP</div></div>
+              <div class="brc-accuracy-audit-item"><div class="k">ST順位</div><div class="v">KEEP</div></div>
+              <div class="brc-accuracy-audit-item"><div class="k">motor2</div><div class="v">KEEP</div></div>
+            </div>
+            <div class="brc-accuracy-audit-note">2024→2025→2026の時系列監査で、TimeX・ST順位・motor2はいずれも独立した予測シグナルを確認。旧BRCへ戻さず、現BRCを土台に改善します。本番重みは今回変更していません。</div>
+            <details>
+              <summary>監査結果を見る</summary>
+              <table class="brc-accuracy-audit-table">
+                <thead><tr><th>項目</th><th>2026 OOS/holdout</th><th>判断</th></tr></thead>
+                <tbody>
+                  <tr><td>TimeX・1着</td><td>logloss 0.3586 → 0.3497</td><td>維持</td></tr>
+                  <tr><td>TimeX・3連対</td><td>0.6296 → 0.6119</td><td>維持</td></tr>
+                  <tr><td>ST順位・1着</td><td>0.3586 → 0.3509</td><td>維持</td></tr>
+                  <tr><td>motor2・1着</td><td>0.3631 → 0.3610</td><td>維持</td></tr>
+                </tbody>
+              </table>
+              <div class="brc-accuracy-audit-research">TimeX V3の再重み付け候補は2025・2026の両方で改善を確認。ただしProtected Workerのbase確率と同一条件で最終確率までreplayする前は研究候補のまま。本番V2には未適用。</div>
+            </details>
+          </section>
+
+          <section class="brc-exact-replay" id="brcCurrentExactReplayV3" aria-label="現BRC完全リプレイ監査">
+            <div class="brc-exact-replay-head">
+              <div><div class="brc-exact-replay-kicker">CURRENT BRC EXACT REPLAY</div><div class="brc-exact-replay-title">現BRC 完全リプレイ監査 V4</div></div>
+              <span class="brc-exact-replay-badge">監査専用・本番変更なし</span>
+            </div>
+            <div class="brc-exact-replay-note"><strong>現在のProtected Workerを共通土台</strong>に、現行TimeX V2と<strong>TimeX V3 Guarded</strong>を同一レースで並列再生します。120通りP・4モード買い目まで同じ条件で比較し、V3が本当に現BRC全体を改善するかを確認します。<br><span style="font-size:11px;color:var(--ink-soft);">V3 GuardedはShadowのみ。2025でTimeX順位が悪化した福岡と、履歴ラップ不足でV3を検証できない桐生はV2へ自動フォールバック。本番画面・ユーザー表示・現在のV2ロジックは変更しません。</span></div>
+            <div class="brc-exact-replay-controls">
+              <div class="brc-exact-replay-field"><label for="brcExactReplayStart">開始日</label><input type="date" id="brcExactReplayStart"></div>
+              <div class="brc-exact-replay-field"><label for="brcExactReplayEnd">終了日</label><input type="date" id="brcExactReplayEnd"></div>
+            </div>
+            <div class="brc-exact-replay-actions">
+              <button type="button" class="brc-exact-replay-btn primary" id="brcExactReplayRun">監査開始 / 再開</button>
+              <button type="button" class="brc-exact-replay-btn" id="brcExactReplayStop">停止</button>
+              <button type="button" class="brc-exact-replay-btn" id="brcExactReplayCsv">CSV</button>
+              <button type="button" class="brc-exact-replay-btn" id="brcExactReplayJson">JSON</button>
+              <button type="button" class="brc-exact-replay-btn danger" id="brcExactReplayReset">監査データ削除</button>
+            </div>
+            <div id="brcExactReplayStatus" class="brc-exact-replay-status">未実行。ログイン済みの管理者ブラウザで実行します。</div>
+            <div id="brcExactReplaySummary"></div>
+            <div class="brc-exact-replay-warning">この監査は<strong>現在のProtected Workerを過去カードへ再適用する current-model replay</strong>です。V2/V3とも同じWorker出力から比較しますが、Workerの当時版スナップショットではないため、これ単独を完全OOS実績とは呼びません。実運用の最終証拠はT-120 Forwardログを優先します。</div>
+          </section>
+
           <div id="brcOfficialOperationV1"></div>
           <div id="brcInvestmentManager" class="brc-invest-wrap"></div>
         </div>
@@ -19180,12 +19268,12 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       year:{title:'1年参考実績',period:'2025通年 locked OOS',races:1600,hits:514,hitRate:32.1250,roi:110.1740,pl:97670,source:'直近12か月運用ではなく、2025年の完全OOSバックテスト'},
       all:{title:'長期検証累計',period:'2024〜2025 固定検証',races:3056,hits:978,hitRate:32.0026,roi:111.0782,pl:203130,source:'2024 locked + 2025 OOS の検証累計'}
     }},
-    return:{label:'回収型',icon:'🔥',points:6,hit:'15〜25%',roi:'120%以上',status:'Shadow',statusClass:'shadow',desc:'10倍以上を対象に、市場確率とBRC確率を混ぜたEVで6点を選ぶ。',performance:{
-      month:{title:'今月検証実績',period:'2026/9/1〜9/11',races:91,hits:20,hitRate:21.98,roi:127.82,pl:15190,source:'研究モデルP＋購入可能な締切約1分前オッズで検証'},
-      d30:{available:false,period:'30日データ不足',reason:'回収型は締切前オッズ必須。直近30日を同一条件で検証できる購入可能オッズがまだ不足しています。'},
-      half:{available:false,period:'半年データ不足',reason:'回収型は締切前オッズ必須。半年を同一条件で検証できる購入可能オッズ履歴がありません。'},
-      year:{available:false,period:'1年ログ蓄積中',reason:'finalオッズを長期実績へ流用せず、購入可能時点のオッズだけを蓄積します。'},
-      all:{title:'有効ログ累計',period:'2026/9/1〜9/11',races:91,hits:20,hitRate:21.98,roi:127.82,pl:15190,source:'現時点で検証に使える締切前オッズの全期間'}
+    return:{label:'回収型',icon:'🔥',points:6,hit:'15〜25%',roi:'120%以上',status:'Shadow V2',statusClass:'shadow',desc:'市場全体の最低3連単オッズ12.5倍以上を参加条件にし、10倍以上から市場確率とBRC確率を混ぜたEVで6点を選ぶ。',performance:{
+      month:{title:'V2開発検証',period:'2026/9/1〜9/11',races:49,hits:12,hitRate:24.4898,roi:185.4422,pl:25120,source:'既存回収型91Rに「市場最低3連単オッズ12.5倍以上」を追加した開発検証。Forward実績ではありません。'},
+      d30:{available:false,period:'30日データ不足',reason:'V2は2026/9/15に条件固定。ここから購入可能時点オッズでForward実績を蓄積します。'},
+      half:{available:false,period:'半年データ不足',reason:'回収型V2は締切前オッズ必須。半年分の同一条件Forwardログはまだありません。'},
+      year:{available:false,period:'1年ログ蓄積中',reason:'finalオッズを流用せず、V2固定後の購入可能時点オッズだけを正式実績にします。'},
+      all:{title:'V2開発検証累計',period:'2026/9/1〜9/11',races:49,hits:12,hitRate:24.4898,roi:185.4422,pl:25120,source:'開発検証値。後半25Rは5的中・20.0%・ROI120.53%。300選定RまではShadow。'}
     }},
     high:{label:'高配当型',icon:'💰',points:18,hit:'8〜15%',roi:'130%以上',status:'Shadow',statusClass:'shadow',desc:'50倍以上を対象に、BRC確率×オッズで高配当側を18点まで広く拾う。',performance:{
       month:{title:'今月検証実績',period:'2026/9/1〜9/11',races:39,hits:7,hitRate:17.95,roi:96.30,pl:-2600,source:'研究モデルP＋購入可能な締切約1分前オッズで検証'},
@@ -19314,6 +19402,15 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     const allOddsReady=withOdds.length===120&&withOdds.every(x=>Number.isFinite(x.odds)&&x.odds>0);
     if(!allOddsReady) return {mode,meta,participate:false,reason:'3連単オッズ120通りが未取得',picks:[],quality:null,oddsRequired:true,verified:false,provisional:!exactP,inputSource:ctx};
     if(mode==='return'){
+      // BRC_RETURN_V2_MARKET_OPENNESS_FILTER_20260915
+      // 2026/9/1〜9/11の締切前オッズ開発検証で固定した参加条件。
+      // 120通りの最小3連単オッズが12.5倍未満なら、低配当市場として見送る。
+      // 以後は条件を動かさずForwardで評価する。
+      const marketMinOdds=Math.min(...withOdds.map(x=>Number(x.odds)).filter(v=>Number.isFinite(v)&&v>0));
+      if(!Number.isFinite(marketMinOdds)||marketMinOdds<12.5){
+        const shown=Number.isFinite(marketMinOdds)?marketMinOdds.toFixed(1)+'倍':'取得不能';
+        return {mode,meta,participate:false,reason:`回収型V2：市場最低オッズ ${shown}（参加基準12.5倍以上）`,picks:[],quality:null,verified:exactP,provisional:!exactP,inputSource:ctx,marketMinOdds:Number.isFinite(marketMinOdds)?marketMinOdds:null};
+      }
       const pSharp=brcRefModeNormalize(withOdds.map(x=>({...x,pSharp:Math.pow(Math.max(x.p,1e-12),2.5)})),'pSharp');
       const market=brcRefModeNormalize(pSharp.map(x=>({...x,q:1/Math.max(x.odds,1e-9)})),'q');
       const blended=market.map(x=>({...x,bRaw:Math.exp(.4*Math.log(Math.max(x.pSharp,1e-12))+.6*Math.log(Math.max(x.q,1e-12)))}));
@@ -19394,7 +19491,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     const panels=modes.map(k=>`<div class="brc-refmode-panel ${k===current?'active':''}" data-brc-refmode-panel="${k}">${brcRefModePanelHtml(results[k])}</div>`).join('');
     const parityReady=Object.values(results).every(r=>r&&(r.verified||((r.mode==='return'||r.mode==='high')&&!r.participate&&r.oddsRequired&&inputCtx.exactProbability)));
     const parityMsg=parityReady?'<strong>完全一致コア</strong>｜研究P・推定払戻入力で選定しています。':'<strong>一致コア実装済み</strong>｜4モードの選定式・閾値は研究エンジンと統一。現在は研究用120通りP／推定払戻の本番入力接続待ちのため、暫定入力は検証実績へ紐付けません。';
-    return `<div class="brc-refmode-shell" data-brc-ref-modes-host><div class="brc-refmode-head"><div class="brc-refmode-head-title">BRC参考買い目</div><div class="brc-refmode-head-note">管理者専用・目的別4モード</div></div><div class="brc-refmode-parity-note">${parityMsg}</div><div class="brc-refmode-tabs" role="tablist" aria-label="BRC参考買い目モード">${tabs}</div>${panels}</div>`;
+    const targetLockMsg='<strong>目標ロック V3</strong>｜🔥回収型V2は「市場最低オッズ12.5倍以上」を画面ロジックへ反映済み。💰高配当型V3（150〜300倍帯・Formal P）は研究ロック済みですが、Formal Pの本番接続前なので現行画面の高配当型ロジックは変更していません。';
+    return `<div class="brc-refmode-shell" data-brc-ref-modes-host><div class="brc-refmode-head"><div class="brc-refmode-head-title">BRC参考買い目</div><div class="brc-refmode-head-note">管理者専用・目的別4モード</div></div><div class="brc-refmode-parity-note">${parityMsg}</div><div class="brc-refmode-parity-note">${targetLockMsg}</div><div class="brc-refmode-tabs" role="tablist" aria-label="BRC参考買い目モード">${tabs}</div>${panels}</div>`;
   }
   function brcRefModeSnapshot(boats,workerPrediction,data,phase,oddsOverride=null){
     try{
@@ -20529,6 +20627,283 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   }else{
     install();
   }
+})();
+</script>
+
+
+
+<script id="brc-current-exact-replay-v4-js">
+(function(){
+  'use strict';
+  const VERSION='BRC_CURRENT_EXACT_REPLAY_V4_GUARDED_SHADOW_20260915';
+  const DB='brc_current_exact_replay_v4', STORE='records', META='meta';
+  const UNIT=100;
+  let busy=false, stopRequested=false;
+  const $=id=>document.getElementById(id);
+  const num=v=>{const n=Number(v);return Number.isFinite(n)?n:null;};
+  const pct=(v,d=1)=>Number.isFinite(Number(v))?`${Number(v).toFixed(d)}%`:'―';
+  const esc=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const isAdmin=()=>typeof BRC_ADMIN_ACTIVE!=='undefined'&&!!BRC_ADMIN_ACTIVE;
+  function jstToday(){try{return typeof getJstDateLabel==='function'?getJstDateLabel():new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}catch(_e){return new Date().toISOString().slice(0,10);}}
+  function addDays(s,n){const t=Date.parse(`${s}T00:00:00+09:00`);return Number.isFinite(t)?new Date(t+n*86400000).toLocaleDateString('en-CA',{timeZone:'Asia/Tokyo'}):s;}
+  function dates(a,b){const out=[];let x=Date.parse(`${a}T00:00:00+09:00`),e=Date.parse(`${b}T00:00:00+09:00`);while(Number.isFinite(x)&&x<=e){out.push(new Date(x).toLocaleDateString('en-CA',{timeZone:'Asia/Tokyo'}));x+=86400000;}return out;}
+  function raceKey(date,code,raceNo){return `${date}:${String(code).padStart(2,'0')}:${String(raceNo).padStart(2,'0')}`;}
+  function openDb(){return new Promise((resolve,reject)=>{const q=indexedDB.open(DB,1);q.onupgradeneeded=()=>{const db=q.result;if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE,{keyPath:'key'});if(!db.objectStoreNames.contains(META))db.createObjectStore(META,{keyPath:'key'});};q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error||new Error('DB open failed'));});}
+  async function dbPut(store,v){const db=await openDb();return new Promise((resolve,reject)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).put(v);tx.oncomplete=()=>resolve(v);tx.onerror=()=>reject(tx.error);});}
+  async function dbGet(store,key){const db=await openDb();return new Promise((resolve,reject)=>{const tx=db.transaction(store,'readonly'),q=tx.objectStore(store).get(key);q.onsuccess=()=>resolve(q.result||null);q.onerror=()=>reject(q.error);});}
+  async function dbAll(){const db=await openDb();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readonly'),q=tx.objectStore(STORE).getAll();q.onsuccess=()=>resolve(Array.isArray(q.result)?q.result:[]);q.onerror=()=>reject(q.error);});}
+  async function dbClear(){const db=await openDb();return new Promise((resolve,reject)=>{const tx=db.transaction([STORE,META],'readwrite');tx.objectStore(STORE).clear();tx.objectStore(META).clear();tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});}
+  async function metaRead(){return (await dbGet(META,'run'))||{key:'run',version:VERSION,status:'idle',scanned:0,stored:0,skipped:{}};}
+  async function metaWrite(m){m.key='run';m.version=VERSION;m.updatedAt=new Date().toISOString();await dbPut(META,m);return m;}
+  function setStatus(html){const el=$('brcExactReplayStatus');if(el)el.innerHTML=html;}
+  function setRunning(on){['brcExactReplayRun','brcExactReplayReset'].forEach(id=>{const e=$(id);if(e)e.disabled=!!on;});const s=$('brcExactReplayStop');if(s)s.disabled=!on;}
+
+
+  // TimeX V3 Guarded Shadow. V3 Moderateの重みは2025で選択し、2026で未選択確認。
+  // さらに会場ガードは2025だけで決定：福岡(22)はV3でTop1/Top3が悪化したためV2へ戻す。
+  // 桐生(01)は履歴ラップが欠損しV3を十分検証できないため安全側でV2へ戻す。江戸川(03)は従来どおり対象外。
+  // 本番V2の係数・表示は一切変更せず、この監査内だけで並列比較する。
+  const BRC_TIMEX_V3_SHADOW_WEIGHTS={
+    standard:{lap:1,tenji:4,turn:0.8,straight:1.2,label:'V3標準 1,4,0.8,1.2'},
+    special:{lap:1,tenji:6,turn:1,label:'V3特別 1,6,1'},
+    fallbackV2:{lap:1,tenji:1,turn:0.2,straight:0.8,label:'V2 fallback 1,1,0.2,0.8'}
+  };
+  const BRC_TIMEX_V3_GUARD_FALLBACK_CODES=new Set(['01','22']);
+  function cloneBoatsForShadow(boats){
+    return (Array.isArray(boats)?boats:[]).map(b=>({...b,exhibition:b?.exhibition?{...b.exhibition}:b?.exhibition}));
+  }
+  function brcTimeXV3ShadowRawMap(liveRace){
+    const vc=String(liveRace?.venue_code||'').padStart(2,'0');
+    if(vc==='03') return null;
+    const fallbackV2=BRC_TIMEX_V3_GUARD_FALLBACK_CODES.has(vc);
+    const special=!fallbackV2&&['12','13','18'].includes(vc);
+    const w=fallbackV2?BRC_TIMEX_V3_SHADOW_WEIGHTS.fallbackV2:(special?BRC_TIMEX_V3_SHADOW_WEIGHTS.special:BRC_TIMEX_V3_SHADOW_WEIGHTS.standard);
+    const arr=[];
+    for(const ex of (Array.isArray(liveRace?.boats)?liveRace.boats:[])){
+      const boat=Number(ex?.boat_no),lap=num(ex?.lap_time),tenji=num(ex?.exhibition_time),turn=num(ex?.turn_time),straight=num(ex?.straight_time);
+      if(!(boat>=1&&boat<=6)||lap===null||tenji===null||turn===null||(!special&&straight===null)) return null;
+      const comp=special?(w.lap*lap+w.tenji*tenji+w.turn*turn):(w.lap*lap+w.tenji*tenji+w.turn*turn+w.straight*straight);
+      if(!Number.isFinite(comp)) return null;
+      arr.push({boat,comp});
+    }
+    if(arr.length!==6) return null;
+    const mean=arr.reduce((a,x)=>a+x.comp,0)/6,m=new Map();
+    for(const x of arr)m.set(x.boat,Math.max(-1,Math.min(1,mean-x.comp)));
+    return {map:m,scope:fallbackV2?'v2-fallback':(special?'special-v3':'standard-v3'),weights:w.label,fallbackV2};
+  }
+  function brcApplyTimeXV3ShadowToBoats(boats,liveRace){
+    if(!Array.isArray(boats)||boats.length!==6)return null;
+    const byBoat=new Map((Array.isArray(liveRace?.boats)?liveRace.boats:[]).map(x=>[Number(x?.boat_no),x]));
+    boats.forEach(b=>{
+      if(Number.isFinite(Number(b.basePctFloat)))b.pctFloat=Number(b.basePctFloat);
+      if(Number.isFinite(Number(b.basePct3Float)))b.pct3Float=Number(b.basePct3Float);
+      if(Number.isFinite(Number(b.basePct2)))b.pct2=Number(b.basePct2);
+      b.pct=Math.round(Number(b.pctFloat)||0);b.pct3=Math.round(Number(b.pct3Float)||0);
+      b.exhibition=byBoat.get(Number(b.course))||null;b.exhibitionApplied=false;b.exhibitionTimeXEngine='v3-guarded-shadow';
+      b.exhibitionWinDeltaPt=0;b.exhibitionTop3DeltaPt=0;b.exhibitionSecondDeltaPt=0;b.exhibitionThirdDeltaPt=0;
+      b.exhibitionSecondPct=Number.isFinite(Number(b.basePct2))?Number(b.basePct2):0;
+      b.exhibitionThirdPct=Math.max(0,(Number(b.basePct3Float)||0)-(Number(b.basePctFloat)||0)-(Number(b.basePct2)||0));
+    });
+    try{if(typeof brcLiveExhibitionEligible==='function'&&!brcLiveExhibitionEligible(liveRace))return null;}catch(_e){return null;}
+    const rawInfo=brcTimeXV3ShadowRawMap(liveRace);if(!rawInfo)return null;
+    const cells=[];
+    for(const b of boats){
+      const raw=rawInfo.map.get(Number(b.course));if(!Number.isFinite(raw))return null;
+      const cell=typeof brcExhibitionV2Cell==='function'?brcExhibitionV2Cell(b.course,raw,liveRace?.venue_code):null;if(!cell)return null;
+      cells.push({b,raw,cell});
+    }
+    const baseWin=cells.map(x=>Math.max(0,Number(x.b.basePctFloat)||0)/100);
+    const baseTop3=cells.map(x=>Math.max(0,Number(x.b.basePct3Float)||0)/100);
+    const baseSecond=cells.map(x=>{const bw=Math.max(0,Number(x.b.basePctFloat)||0),bt=Math.max(0,Number(x.b.basePct3Float)||0),b2=Math.max(0,Number(x.b.basePct2)||0);return Math.min(b2,Math.max(0,bt-bw))/100;});
+    const baseThird=cells.map((x,i)=>Math.max(0,baseTop3[i]-baseWin[i]-baseSecond[i]));
+    const pre=(base,key)=>cells.map((x,i)=>brcClamp(base[i]+(Number(x.cell[key])||0)/100,1e-7,1-1e-7));
+    const winAdj=brcConstrainLogitProbabilities(pre(baseWin,'r1pp'),baseWin.reduce((a,v)=>a+v,0));
+    const top3Adj=brcConstrainLogitProbabilities(pre(baseTop3,'top3pp'),baseTop3.reduce((a,v)=>a+v,0));
+    const secondAdj=brcConstrainLogitProbabilities(pre(baseSecond,'r2pp'),baseSecond.reduce((a,v)=>a+v,0));
+    const thirdAdj=brcConstrainLogitProbabilities(pre(baseThird,'r3pp'),baseThird.reduce((a,v)=>a+v,0));
+    cells.forEach((x,i)=>{const b=x.b;b.exhibitionDiffBucket=typeof brcExhibitionDiffBucket==='function'?brcExhibitionDiffBucket(x.raw):x.raw;b.exhibitionTimeXBand02=x.cell.band;b.exhibitionTimeXEngine='v3-guarded-shadow';b.pctFloat=winAdj[i]*100;b.pct3Float=top3Adj[i]*100;b.pct=Math.round(b.pctFloat);b.pct3=Math.round(b.pct3Float);b.exhibitionWinDeltaPt=b.pctFloat-Number(b.basePctFloat);b.exhibitionTop3DeltaPt=b.pct3Float-Number(b.basePct3Float);b.exhibitionSecondPct=secondAdj[i]*100;b.exhibitionThirdPct=thirdAdj[i]*100;b.pct2=b.exhibitionSecondPct;b.exhibitionSecondDeltaPt=b.exhibitionSecondPct-baseSecond[i]*100;b.exhibitionThirdDeltaPt=b.exhibitionThirdPct-baseThird[i]*100;b.exhibitionTimeXN=Number(x.cell.n)||0;b.exhibitionTimeXVenueAware=!!x.cell.venueAware;b.exhibitionApplied=true;});
+    return rawInfo;
+  }
+  function modeResultsFromSnapshot(snapshot,combo,payout){
+    const out={};
+    for(const mode of ['hit','balance','return','high']){
+      const m=snapshot?.[mode]||{},picks=Array.isArray(m?.picks)?m.picks.map(x=>String(x?.combo||'')).filter(Boolean):[],participate=!!m?.participate;
+      const hit=participate&&picks.includes(combo),stake=participate?picks.length*UNIT:0,ret=hit&&payout!==null?payout:0;
+      out[mode]={participate,provisional:!!m?.provisional,verified:!!m?.verified,reason:String(m?.reason||''),pointCount:picks.length,picks,hit,stakeYen:stake,returnYen:ret,roi:stake?ret/stake*100:null};
+    }
+    return out;
+  }
+  function metricsFromSnapshot(snapshot,combo,payout){
+    const inputs=Array.isArray(snapshot?.__audit?.inputs)?snapshot.__audit.inputs.filter(x=>x&&/^[1-6]-[1-6]-[1-6]$/.test(String(x.combo))&&Number.isFinite(Number(x.p))):[];
+    if(inputs.length!==120)return null;
+    const sorted=inputs.map(x=>({combo:String(x.combo),p:Number(x.p)})).sort((a,b)=>b.p-a.p||a.combo.localeCompare(b.combo));
+    const idx=sorted.findIndex(x=>x.combo===combo);if(idx<0)return null;
+    const pTrue=Math.max(1e-12,sorted[idx].p),topMass=k=>sorted.slice(0,k).reduce((s,x)=>s+x.p,0);
+    return {pTrue,trueRank:idx+1,logloss:-Math.log(pTrue),pSum:sorted.reduce((s,x)=>s+x.p,0),top1Hit:idx<1,top3Hit:idx<3,top6Hit:idx<6,top10Hit:idx<10,top18Hit:idx<18,top1Mass:topMass(1),top3Mass:topMass(3),top6Mass:topMass(6),top10Mass:topMass(10),top18Mass:topMass(18),probabilities:sorted,modeResults:modeResultsFromSnapshot(snapshot,combo,payout),probabilitySource:String(snapshot?.__audit?.probabilitySource||'')};
+  }
+
+  async function fetchExhibition(date,venueCode,raceNo){
+    if(typeof BRC_LIVE_EXHIBITION_API_URL==='undefined'||!BRC_LIVE_EXHIBITION_API_URL)return null;
+    const qs=new URLSearchParams({date,venue_code:String(venueCode).padStart(2,'0'),race_no:String(raceNo),_:String(Date.now())});
+    try{const r=await fetch(`${BRC_LIVE_EXHIBITION_API_URL}/live-exhibition?${qs}`,{cache:'no-store',headers:{Accept:'application/json'}});if(!r.ok)return null;const o=await r.json();if(o?.ok!==true||!o?.race||!Array.isArray(o.race.boats))return null;return o.race;}catch(_e){return null;}
+  }
+  function liveEntryNoChange(live){
+    const b=Array.isArray(live?.boats)?live.boats:[];if(b.length!==6)return false;
+    const fixed=live?.fixed_course===true||String(live?.fixed_course).toLowerCase()==='true'||String(live?.fixed_course)==='1';if(!fixed)return false;
+    if(b.some(x=>Number(x?.boat_no)!==Number(x?.entry_course)))return false;
+    try{if(typeof brcCollectConfirmedAbsentBoats==='function'&&brcCollectConfirmedAbsentBoats(live).size)return false;}catch(_e){}
+    return true;
+  }
+  function resultEntryNoChange(result){try{const a=typeof brcNormalizeRaceStartFormation==='function'?brcNormalizeRaceStartFormation(result):[];return a.length===6?a.every(x=>Number(x.boat)===Number(x.course)):null;}catch(_e){return null;}}
+  function buildBoats(spec,prediction,live){
+    const byLive=new Map((Array.isArray(live?.boats)?live.boats:[]).map(x=>[Number(x?.boat_no),x])),out=[];
+    for(let c=1;c<=6;c++){
+      const api=(spec.apiBoats||[]).find(x=>Number(x.course)===c),p=api?PLAYERS?.[String(api.reg)]:null;if(!p)return null;
+      const ww=prediction?.wins?.find(x=>Number(x.course)===c&&String(x.reg)===String(p.reg));
+      const tw=prediction?.top3s?.find(x=>Number(x.course)===c&&String(x.reg)===String(p.reg));
+      const bw=prediction?.baselines?.find(x=>Number(x.course)===c&&String(x.reg)===String(p.reg));
+      const sw=prediction?.seconds?.find(x=>Number(x.course)===c&&String(x.reg)===String(p.reg));
+      const win=num(ww?.pctFloat),top3=num(tw?.pctFloat),venueAvg=num(bw?.venueAvgWin),second=num(sw?.pct);if([win,top3,venueAvg,second].some(x=>x===null))return null;
+      const lane=p.lane_excl?.[String(c)]||{n:0};
+      out.push({course:c,player:p,pctFloat:win,pct:num(ww?.pct)??Math.round(win),pctRaw:win,pctCal:win,winWfApplied:true,attack17Applied:false,pct3Float:top3,pct3:num(tw?.pct)??Math.round(top3),basePctFloat:win,basePct3Float:top3,basePct2:second,playerSource:'current-worker-exact-replay',venueBaseSource:'protected-server-model',laneN:Number(lane.n)||0,venueN:Number(bw?.venueN)||0,venueAvgWin:venueAvg,pct2:second,motor2:num(api?.motor2),motorNo:null,racerClass:String(api?.racerClass||''),exhibition:byLive.get(c)||null});
+    }
+    return out.length===6?out:null;
+  }
+  function reliability(spec,prediction,boats){const p1=boats?.find(x=>Number(x.course)===1);if(!p1)return null;try{const r=classifyInReliabilityByWinPct(p1.pctFloat,spec.grade,(spec.apiBoats||[]).map(x=>x.reg),prediction.inReliability);if(r&&Number.isFinite(Number(p1.venueAvgWin)))r.venueBaseDiff=Number(p1.pctFloat)-Number(p1.venueAvgWin);return r;}catch(_e){return null;}}
+  function withCurrentP(fn,spec){
+    const oldBank=window.__BRC_REFERENCE_RESEARCH_INPUTS,oldCur=window.__BRC_REFERENCE_RESEARCH_CURRENT,oldGrade=window.__predictGradeCurrent,oldApi=window.__predictApiBoatsCurrent;
+    try{window.__BRC_REFERENCE_RESEARCH_INPUTS={};window.__BRC_REFERENCE_RESEARCH_CURRENT=null;window.__predictGradeCurrent=spec.grade;window.__predictApiBoatsCurrent=spec.apiBoats;return fn();}
+    finally{window.__BRC_REFERENCE_RESEARCH_INPUTS=oldBank;window.__BRC_REFERENCE_RESEARCH_CURRENT=oldCur;window.__predictGradeCurrent=oldGrade;window.__predictApiBoatsCurrent=oldApi;}
+  }
+  async function verifiedOdds(spec,date){try{return typeof window.__brcFetchVerifiedHistoricalPrecloseOdds==='function'?await window.__brcFetchVerifiedHistoricalPrecloseOdds(date,spec.venueCode,spec.raceNo,spec.deadline):null;}catch(_e){return null;}}
+  async function one(spec,date){
+    const key=raceKey(date,spec.venueCode,spec.raceNo);if(await dbGet(STORE,key))return {status:'cached'};
+    let detail;try{detail=await brcInvFetchDetailedPrediction(spec);}catch(e){return {status:'detail',error:String(e?.message||e)}}
+    const prediction=detail?.result;if(!prediction)return {status:'detail'};
+    const [live,resObj,oddsRec]=await Promise.all([fetchExhibition(date,spec.venueCode,spec.raceNo),brcInvBackfillFetchResult({...spec,date}).catch(()=>null),verifiedOdds(spec,date)]);
+    if(!live)return {status:'noex'};if(!liveEntryNoChange(live))return {status:'entry'};
+    const result=resObj?.confirmed===true?resObj.result:null;if(!result?.combination)return {status:'result'};if(resultEntryNoChange(result)===false)return {status:'entryResult'};
+    const baseBoats=buildBoats(spec,prediction,live);if(!baseBoats)return {status:'boats'};
+    const boats=cloneBoatsForShadow(baseBoats),boatsV3=cloneBoatsForShadow(baseBoats);
+    let applied=false;try{applied=typeof brcApplyExhibitionAdjustmentsToBoats==='function'&&brcApplyExhibitionAdjustmentsToBoats(boats,live);}catch(_e){}if(!applied)return {status:'timex'};
+    const rel=reliability(spec,prediction,boats);if(!rel)return {status:'reliability'};
+    let snapshot=null;
+    try{snapshot=withCurrentP(()=>{const data=window.brcBuildReferenceMonitorData?.(boats,prediction,rel,'current');return data?window.brcBuildReferenceModeSnapshotWithOdds?.(boats,prediction,data,'current',oddsRec?.odds||null):null;},spec);}catch(_e){snapshot=null;}
+    const combo=String(result.combination).trim(),payout=num(result?.payout_yen),v2=metricsFromSnapshot(snapshot,combo,payout);if(!v2)return {status:'p120'};
+
+    // V3は同じProtected Workerのbase確率・同じ展示・同じ結果・同じオッズを使うShadow比較。
+    let v3=null,v3Info=null;
+    try{
+      v3Info=brcApplyTimeXV3ShadowToBoats(boatsV3,live);
+      if(v3Info){
+        const rel3=reliability(spec,prediction,boatsV3);
+        if(rel3){
+          const snap3=withCurrentP(()=>{const data3=window.brcBuildReferenceMonitorData?.(boatsV3,prediction,rel3,'current');return data3?window.brcBuildReferenceModeSnapshotWithOdds?.(boatsV3,prediction,data3,'current',oddsRec?.odds||null):null;},spec);
+          v3=metricsFromSnapshot(snap3,combo,payout);
+          if(v3){v3.inRank=String(rel3?.rank||'');v3.inPct=num(rel3?.pct);v3.scope=v3Info.scope;v3.weights=v3Info.weights;}
+        }
+      }
+    }catch(_e){v3=null;}
+
+    const row={key,version:VERSION,date,venue:String(spec.venue||''),venueCode:String(spec.venueCode).padStart(2,'0'),raceNo:Number(spec.raceNo),deadline:String(spec.deadline||''),grade:String(spec.grade||''),inRank:String(rel?.rank||''),inPct:num(rel?.pct),resultCombo:combo,resultPayoutYen:payout,...v2,oddsAvailable:!!oddsRec?.odds,oddsCapturedAtJst:String(oddsRec?.capturedAtJst||''),oddsSecondsBeforeDeadline:num(oddsRec?.secondsBeforeDeadline),oddsSource:String(oddsRec?.source||''),timeXEngine:String(window.__brcTimeXEngineCurrent||''),v3,createdAt:new Date().toISOString()};
+    await dbPut(STORE,row);return {status:'ok',row};
+  }
+  async function mapLimit(items,limit,fn){const out=new Array(items.length);let i=0;async function w(){while(i<items.length){if(stopRequested)return;const n=i++;try{out[n]=await fn(items[n],n);}catch(e){out[n]={status:'error',error:String(e?.message||e)}}}}await Promise.all(Array.from({length:Math.min(limit,Math.max(1,items.length))},()=>w()));return out;}
+  function aggregate(rows){
+    const n=rows.length;if(!n)return null;const avg=f=>rows.reduce((s,r)=>s+(f(r)||0),0)/n;const hit=k=>rows.filter(r=>r[`top${k}Hit`]===true).length/n*100;
+    return {n,logloss:avg(r=>r.logloss),top1:hit(1),top3:hit(3),top6:hit(6),top10:hit(10),top18:hit(18),m1:avg(r=>r.top1Mass)*100,m3:avg(r=>r.top3Mass)*100,m6:avg(r=>r.top6Mass)*100,m10:avg(r=>r.top10Mass)*100,m18:avg(r=>r.top18Mass)*100};
+  }
+
+  function aggregateV3(rows){
+    const src=rows.filter(r=>r?.v3&&Number.isFinite(Number(r.v3.logloss))),n=src.length;if(!n)return null;
+    const avg=f=>src.reduce((s,r)=>s+(f(r.v3)||0),0)/n,hit=k=>src.filter(r=>r.v3?.[`top${k}Hit`]===true).length/n*100;
+    return {n,logloss:avg(x=>x.logloss),top1:hit(1),top3:hit(3),top6:hit(6),top10:hit(10),top18:hit(18),m1:avg(x=>x.top1Mass)*100,m3:avg(x=>x.top3Mass)*100,m6:avg(x=>x.top6Mass)*100,m10:avg(x=>x.top10Mass)*100,m18:avg(x=>x.top18Mass)*100};
+  }
+  function modeAggVariant(rows,mode,variant='v2'){
+    const src=rows.filter(r=>r.oddsAvailable&&((variant==='v3'?r.v3?.modeResults?.[mode]:r.modeResults?.[mode])?.participate));
+    const races=src.length,hits=src.filter(r=>(variant==='v3'?r.v3?.modeResults?.[mode]:r.modeResults?.[mode])?.hit).length;
+    const stake=src.reduce((s,r)=>s+Number((variant==='v3'?r.v3?.modeResults?.[mode]:r.modeResults?.[mode])?.stakeYen||0),0),ret=src.reduce((s,r)=>s+Number((variant==='v3'?r.v3?.modeResults?.[mode]:r.modeResults?.[mode])?.returnYen||0),0);
+    return {races,hits,hitRate:races?hits/races*100:null,roi:stake?ret/stake*100:null,stake,ret};
+  }
+  function calibrationBinsVariant(rows,variant='v2'){
+    const cuts=[0,.005,.01,.02,.03,.05,.08,.12,.20,1.000001],a=cuts.slice(0,-1).map((lo,i)=>({lo,hi:cuts[i+1],n:0,sum:0,hits:0}));
+    for(const r of rows){const probs=variant==='v3'?r.v3?.probabilities:r.probabilities;if(!Array.isArray(probs))continue;for(const x of probs){const p=Number(x.p),b=a.find(z=>p>=z.lo&&p<z.hi);if(!b)continue;b.n++;b.sum+=p;if(x.combo===r.resultCombo)b.hits++;}}
+    return a.filter(x=>x.n).map(x=>({...x,avgP:x.sum/x.n*100,obs:x.hits/x.n*100}));
+  }
+  function transformedP(p,T,z){return Math.pow(Math.max(1e-12,p),1/T)/z;}
+  function fitTemperature(rows){
+    const src=rows.slice().sort((a,b)=>a.date.localeCompare(b.date)||a.key.localeCompare(b.key));if(src.length<30)return null;const cut=Math.max(15,Math.floor(src.length*.6)),dev=src.slice(0,cut),val=src.slice(cut);
+    const loss=(set,T)=>set.reduce((s,r)=>{const z=(r.probabilities||[]).reduce((a,x)=>a+Math.pow(Math.max(1e-12,Number(x.p)),1/T),0)||1;const p=transformedP(r.pTrue,T,z);return s-Math.log(Math.max(1e-12,p));},0)/Math.max(1,set.length);
+    let best={T:1,loss:loss(dev,1)};for(let i=30;i<=100;i++){const T=i/50,l=loss(dev,T);if(l<best.loss)best={T,loss:l};}
+    return {T:best.T,devN:dev.length,valN:val.length,devRaw:loss(dev,1),devCal:best.loss,valRaw:loss(val,1),valCal:loss(val,best.T)};
+  }
+  function modeAgg(rows,mode){return modeAggVariant(rows,mode,'v2');}
+  function calibrationBins(rows){return calibrationBinsVariant(rows,'v2');}
+  function ece(bins){const N=bins.reduce((s,b)=>s+b.n,0)||1;return bins.reduce((s,b)=>s+b.n/N*Math.abs(b.avgP-b.obs),0);}
+  async function render(){
+    if(!isAdmin())return;const rows=await dbAll(),m=await metaRead(),a=aggregate(rows),a3=aggregateV3(rows),host=$('brcExactReplaySummary');
+    if(!host)return;if(!a){host.innerHTML='';return;}
+    const t=fitTemperature(rows),bins=calibrationBins(rows),bins3=calibrationBinsVariant(rows,'v3'),ma=['hit','balance','return','high'].map(k=>[k,modeAggVariant(rows,k,'v2'),modeAggVariant(rows,k,'v3')]),labels={hit:'🎯 的中型',balance:'⚖️ バランス型',return:'🔥 回収型',high:'💰 高配当型'};
+    const d=(x,y,scale=1)=>Number.isFinite(Number(x))&&Number.isFinite(Number(y))?(Number(y)-Number(x))*scale:null;
+    const deltaText=(v,dig=3,suffix='')=>Number.isFinite(v)?`${v>=0?'+':''}${v.toFixed(dig)}${suffix}`:'―';
+    const llDelta=a3?d(a.logloss,a3.logloss):null,top10Delta=a3?d(a.top10,a3.top10):null,top6Delta=a3?d(a.top6,a3.top6):null,e2=ece(bins),e3=bins3.length?ece(bins3):null;
+    const verdict=a3?(a3.logloss<a.logloss&&a3.top10>=a.top10-1&&(!Number.isFinite(e3)||e3<=e2+0.05)?'V3 Guardedは全体改善寄り。ROIまで確認して昇格判定。':a3.logloss<a.logloss?'V3 Guardedは確率品質改善。ただし順位/ECE/ROIを要確認。':'現時点ではV2維持が安全。'):'V3 Guarded比較データ待ち。';
+    host.innerHTML=`<div class="brc-exact-replay-grid">
+      <div class="brc-exact-replay-kpi"><div class="k">監査R</div><div class="v">${a.n.toLocaleString()}R</div></div>
+      <div class="brc-exact-replay-kpi"><div class="k">V2 Top10</div><div class="v">${pct(a.top10)}</div></div>
+      <div class="brc-exact-replay-kpi"><div class="k">V3 Top10</div><div class="v">${a3?pct(a3.top10):'―'}</div></div>
+      <div class="brc-exact-replay-kpi"><div class="k">Top10差 V3−V2</div><div class="v">${deltaText(top10Delta,1,'pt')}</div></div>
+      <div class="brc-exact-replay-kpi"><div class="k">V2 LogLoss</div><div class="v">${a.logloss.toFixed(4)}</div></div>
+      <div class="brc-exact-replay-kpi"><div class="k">V3 LogLoss</div><div class="v">${a3?a3.logloss.toFixed(4):'―'}</div></div>
+      <div class="brc-exact-replay-kpi"><div class="k">LogLoss差</div><div class="v">${deltaText(llDelta,4)}</div></div>
+      <div class="brc-exact-replay-kpi"><div class="k">事前オッズ有</div><div class="v">${rows.filter(r=>r.oddsAvailable).length}R</div></div>
+    </div>
+    <div class="brc-exact-replay-status"><strong>V2 vs V3 Guarded判定：</strong>${verdict}<br><span style="font-size:11px;">V3標準=${esc(BRC_TIMEX_V3_SHADOW_WEIGHTS.standard.label)} / 住之江・尼崎・徳山=${esc(BRC_TIMEX_V3_SHADOW_WEIGHTS.special.label)} / 桐生・福岡=${esc(BRC_TIMEX_V3_SHADOW_WEIGHTS.fallbackV2.label)}</span></div>
+    <div class="brc-exact-replay-subtitle">V2 / V3 Guarded 同一Worker・同一レース比較</div>
+    <div class="brc-exact-replay-table-wrap"><table class="brc-exact-replay-table"><thead><tr><th>指標</th><th>V2</th><th>V3 Guarded</th><th>差 V3−V2</th></tr></thead><tbody>
+      <tr><td>Top1</td><td>${pct(a.top1)}</td><td>${a3?pct(a3.top1):'―'}</td><td>${a3?deltaText(a3.top1-a.top1,1,'pt'):'―'}</td></tr>
+      <tr><td>Top3</td><td>${pct(a.top3)}</td><td>${a3?pct(a3.top3):'―'}</td><td>${a3?deltaText(a3.top3-a.top3,1,'pt'):'―'}</td></tr>
+      <tr><td>Top6</td><td>${pct(a.top6)}</td><td>${a3?pct(a3.top6):'―'}</td><td>${a3?deltaText(top6Delta,1,'pt'):'―'}</td></tr>
+      <tr><td>Top10</td><td>${pct(a.top10)}</td><td>${a3?pct(a3.top10):'―'}</td><td>${a3?deltaText(top10Delta,1,'pt'):'―'}</td></tr>
+      <tr><td>Top18</td><td>${pct(a.top18)}</td><td>${a3?pct(a3.top18):'―'}</td><td>${a3?deltaText(a3.top18-a.top18,1,'pt'):'―'}</td></tr>
+      <tr><td>120通りLogLoss</td><td>${a.logloss.toFixed(4)}</td><td>${a3?a3.logloss.toFixed(4):'―'}</td><td>${deltaText(llDelta,4)}</td></tr>
+      <tr><td>ECE</td><td>${e2.toFixed(2)}pt</td><td>${Number.isFinite(e3)?e3.toFixed(2)+'pt':'―'}</td><td>${Number.isFinite(e3)?deltaText(e3-e2,2,'pt'):'―'}</td></tr>
+    </tbody></table></div>
+    <div class="brc-exact-replay-subtitle">4モード｜確認済み締切前オッズのみ</div>
+    <div class="brc-exact-replay-table-wrap"><table class="brc-exact-replay-table"><thead><tr><th>モード</th><th>V2 参加/的中/ROI</th><th>V3 参加/的中/ROI</th></tr></thead><tbody>${ma.map(([k,x,y])=>`<tr><td>${labels[k]}</td><td>${x.races}R / ${pct(x.hitRate)} / ${pct(x.roi)}</td><td>${y.races}R / ${pct(y.hitRate)} / ${pct(y.roi)}</td></tr>`).join('')}</tbody></table></div>
+    <div class="brc-exact-replay-subtitle">V2 120通り確率キャリブレーション</div>
+    <div class="brc-exact-replay-table-wrap"><table class="brc-exact-replay-table"><thead><tr><th>P帯</th><th>候補数</th><th>平均P</th><th>実測</th><th>差</th></tr></thead><tbody>${bins.map(b=>`<tr><td>${(b.lo*100).toFixed(b.lo<.01?1:0)}〜${(Math.min(b.hi,1)*100).toFixed(b.hi<=.01?1:0)}%</td><td>${b.n.toLocaleString()}</td><td>${b.avgP.toFixed(2)}%</td><td>${b.obs.toFixed(2)}%</td><td>${(b.obs-b.avgP>=0?'+':'')+(b.obs-b.avgP).toFixed(2)}pt</td></tr>`).join('')}</tbody></table></div>
+    ${t?`<div class="brc-exact-replay-status"><strong>V2温度校正 Shadow：</strong> 前半${t.devN}Rだけで T=${t.T.toFixed(2)} を選択。後半${t.valN}R LogLoss ${t.valRaw.toFixed(4)} → ${t.valCal.toFixed(4)}。${t.valCal<t.valRaw?'確率校正の改善候補。順位は変えません。':'改善なし。本番補正は不要候補。'}</div>`:''}`;
+    const sk=m.skipped||{};setStatus(`<strong>${esc(m.status||'idle')}</strong>｜走査 ${Number(m.scanned||0)}R / 保存 ${rows.length}R / V3比較 ${a3?.n||0}R / 展示なし ${Number(sk.noex||0)} / 進入変更 ${Number(sk.entry||0)+Number(sk.entryResult||0)} / 結果なし ${Number(sk.result||0)} / P120失敗 ${Number(sk.p120||0)}${m.lastDate?`｜最終 ${esc(m.lastDate)}`:''}${m.error?`<br>${esc(m.error)}`:''}`);
+  }
+  async function run(){
+    if(busy||!isAdmin())return;const start=$('brcExactReplayStart')?.value,end=$('brcExactReplayEnd')?.value;if(!start||!end||start>end){setStatus('日付範囲を確認してください。');return;}
+    busy=true;stopRequested=false;setRunning(true);let m=await metaRead();m={...m,status:'running',start,end,error:'',startedAt:m.startedAt||new Date().toISOString(),skipped:m.skipped||{},scanned:Number(m.scanned)||0};await metaWrite(m);
+    try{
+      if(typeof brcEnsureFreshSession==='function'){const s=await brcEnsureFreshSession();if(!s?.access_token)throw new Error('BRC MEMBERSログインを確認できません。再ログインしてください。');}
+      for(const date of dates(start,end)){
+        if(stopRequested)break;m.lastDate=date;await metaWrite(m);setStatus(`<strong>running</strong>｜${date} の番組表を取得中…`);
+        let payload,specs;try{payload=await brcInvBackfillFetchRaceCard(date);specs=brcInvBackfillBuildSpecs(payload,date);}catch(e){m.skipped.racecard=(m.skipped.racecard||0)+1;m.error=`${date}: ${String(e?.message||e)}`;await metaWrite(m);continue;}
+        const results=await mapLimit(specs,3,async spec=>{if(stopRequested)return {status:'stopped'};const r=await one(spec,date);if(r.status!=='cached')m.scanned++;if(r.status!=='ok'&&r.status!=='cached')m.skipped[r.status]=(m.skipped[r.status]||0)+1;if(m.scanned%12===0){await metaWrite(m);setStatus(`<strong>running</strong>｜${date}｜走査 ${m.scanned}R`);}return r;});
+        await metaWrite(m);await render();if(stopRequested)break;
+      }
+      m.status=stopRequested?'stopped':'ok';m.completedAt=new Date().toISOString();await metaWrite(m);
+    }catch(e){m.status='error';m.error=String(e?.message||e);m.completedAt=new Date().toISOString();await metaWrite(m);}finally{busy=false;setRunning(false);await render();}
+  }
+  function csvEscape(v){const s=typeof v==='string'?v:JSON.stringify(v??'');return /[",\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s;}
+  async function exportCsv(){
+    const rows=await dbAll();if(!rows.length)return;
+    const head=['date','venue','raceNo','resultCombo','v2_pTrue','v2_trueRank','v2_logloss','v2_top6Hit','v2_top10Hit','v2_top6Mass','v2_top10Mass','v3_pTrue','v3_trueRank','v3_logloss','v3_top6Hit','v3_top10Hit','v3_top6Mass','v3_top10Mass','v3_scope','v3_weights','oddsAvailable','oddsCapturedAtJst','v2_hit_participate','v2_hit_hit','v2_balance_participate','v2_balance_hit','v2_return_participate','v2_return_hit','v2_high_participate','v2_high_hit','v3_hit_participate','v3_hit_hit','v3_balance_participate','v3_balance_hit','v3_return_participate','v3_return_hit','v3_high_participate','v3_high_hit'];
+    const lines=[head.join(',')];
+    for(const r of rows){const vals=[r.date,r.venue,r.raceNo,r.resultCombo,r.pTrue,r.trueRank,r.logloss,r.top6Hit,r.top10Hit,r.top6Mass,r.top10Mass,r.v3?.pTrue,r.v3?.trueRank,r.v3?.logloss,r.v3?.top6Hit,r.v3?.top10Hit,r.v3?.top6Mass,r.v3?.top10Mass,r.v3?.scope,r.v3?.weights,r.oddsAvailable,r.oddsCapturedAtJst,...['hit','balance','return','high'].flatMap(k=>[r.modeResults?.[k]?.participate,r.modeResults?.[k]?.hit]),...['hit','balance','return','high'].flatMap(k=>[r.v3?.modeResults?.[k]?.participate,r.v3?.modeResults?.[k]?.hit])];lines.push(vals.map(csvEscape).join(','));}
+    download(new Blob(['\ufeff'+lines.join('\n')],{type:'text/csv;charset=utf-8'}),`BRC_CURRENT_EXACT_REPLAY_V4_${jstToday().replace(/-/g,'')}.csv`);
+  }
+  async function exportJson(){const rows=await dbAll(),m=await metaRead();download(new Blob([JSON.stringify({meta:m,records:rows},null,2)],{type:'application/json'}),`BRC_CURRENT_EXACT_REPLAY_V4_${jstToday().replace(/-/g,'')}.json`);}
+  function download(blob,name){const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500);}
+  async function reset(){if(busy)return;if(!confirm('現BRC完全リプレイ監査の保存データだけを削除します。よろしいですか？'))return;await dbClear();await render();}
+  function init(){if(!isAdmin())return;const t=jstToday(),end=addDays(t,-1),start=end<'2026-09-01'?end:(addDays(end,-10)<'2026-09-01'?'2026-09-01':addDays(end,-10));if($('brcExactReplayStart')&&!$('brcExactReplayStart').value)$('brcExactReplayStart').value=start;if($('brcExactReplayEnd')&&!$('brcExactReplayEnd').value)$('brcExactReplayEnd').value=end;$('brcExactReplayRun')?.addEventListener('click',run);$('brcExactReplayStop')?.addEventListener('click',()=>{stopRequested=true;setStatus('<strong>stopping</strong>｜現在の処理が終わり次第停止します。');});$('brcExactReplayCsv')?.addEventListener('click',exportCsv);$('brcExactReplayJson')?.addEventListener('click',exportJson);$('brcExactReplayReset')?.addEventListener('click',reset);setRunning(false);render();}
+  window.brcRunCurrentExactReplayV4=run;window.brcRenderCurrentExactReplayV4=render;window.brcRunCurrentExactReplayV3=run;window.brcRenderCurrentExactReplayV3=render;window.brcRunCurrentExactReplayV2=run;window.brcRenderCurrentExactReplayV2=render;
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(init,400),{once:true});else setTimeout(init,400);
 })();
 </script>
 
