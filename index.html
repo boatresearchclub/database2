@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_NIGE_REFERENCE_PICKS_RESTORE_GUARD_V1_20260915 -->
 <!-- BRC_REFERENCE_T120_FULL_AUDIT_V1_20260915 -->
 
 <!-- BRC_REFERENCE_PARITY_CORE_V2_20260914 -->
@@ -11135,6 +11136,33 @@ async function brcCopyReferencePicks(ev,text){
   }
 }
 
+// BRC_NIGE_REFERENCE_PICKS_RESTORE_GUARD_V1_20260915
+// 管理者の「イン逃げ予測」内に従来の累積70%参考買い目が必ず残るようにする。
+// 4モードの独立「BRC参考買い目」タブとは別物で、既存ロジック・公開範囲は変更しない。
+function brcEnsureNigeReferencePicksInAdminPanel(boats,workerPrediction,exhibitionApplied){
+  try{
+    if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return;
+    const panel=document.getElementById('brcAiAdminPanel-nige');
+    const card=panel?.querySelector('#brcNigeOrderPredictionCard')||document.getElementById('brcNigeOrderPredictionCard');
+    if(!card || card.querySelector('.brc-nige-order-picks[data-brc-ref-picks]')) return;
+
+    let pred=null;
+    try{ pred=brcFinalizeServerNigePrediction(workerPrediction,boats,exhibitionApplied); }catch(_e){}
+    if(!pred){
+      try{ pred=brcComputeNigeOrderPrediction(boats); }catch(_e){}
+    }
+    if(!pred) return;
+
+    const html=brcBuildNigeReferencePicksHtml(pred,.70);
+    if(!html) return;
+    const detail=card.querySelector('.brc-nige-order-detail');
+    if(detail) detail.insertAdjacentHTML('beforebegin',html);
+    else card.insertAdjacentHTML('beforeend',html);
+    try{ brcRefreshNigeReferenceOdds(); }catch(_e){}
+    try{ brcApplyAiOutcomeMark(); }catch(_e){}
+  }catch(_e){}
+}
+
 function brcBuildServerNigePredictionHtml(boats,workerPrediction,exhibitionApplied,localInReliability=null){
   const pred=brcFinalizeServerNigePrediction(workerPrediction,boats,exhibitionApplied);
   if(!pred){
@@ -11583,6 +11611,8 @@ function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhib
       <div id="brcAiAdminPanel-tickets" class="brc-ai-admin-panel"></div>
     `;
     brcBindAiAdminSubTabs();
+    // 改修後の再描画でも、イン逃げ予測内の従来参考買い目を欠落させない。
+    brcEnsureNigeReferencePicksInAdminPanel(boats,workerPrediction,exhibitionApplied);
   }else{
     // 会員側は従来UIのまま。管理者βが公開画面へ漏れないよう分岐する。
     box.innerHTML=`
@@ -13770,6 +13800,8 @@ function brcRefreshExhibitionAdjustedDom(liveRace,venue,raceNo){
     const wrap=document.createElement('div');
     wrap.innerHTML=brcBuildServerNigePredictionHtml(boats,worker,applied,local).trim();
     if(wrap.firstElementChild) nigeCard.replaceWith(wrap.firstElementChild);
+    // 展示・TimeX更新でカードを差し替えた後も参考買い目を維持する。
+    brcEnsureNigeReferencePicksInAdminPanel(boats,worker,applied);
   }
   const rec=document.getElementById('recommendedBetsCard');
   if(rec && worker){
