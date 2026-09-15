@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- BRC_FREE2R_ST_FILTER_NO_MIN_POOL_V3_20260916 -->
+<!-- BRC_FREE2R_ST_API_CONTRACT_V4_20260916 -->
 <!-- BRC_MEMBER_ADMIN_MOBILE_V1_20260916 -->
 <!-- BRC_FREE2R_ST_STABILITY_STRICT_GUARD_V2_20260916 -->
 <!-- BRC_FREE2R_ST_STABILITY_COMPLETE_FILTER_V1_20260916 -->
@@ -5629,14 +5629,13 @@ async function brcCheckMembership(session){
 }
 
 
-async function brcFreePreviewApi(input, options={}){
-  // ST安定度フィルタの仕様更新後に古いedge cacheを拾わないため、選定バージョンをURLにも付与する。
-  // Worker側がqueryを参照しない実装でもpathnameは /free-preview のままなので互換性は維持される。
-  const q=new URLSearchParams({sv:'st-stability-v2'});
-  if(options && options.noCache) q.set('cb',String(Date.now()));
-  const res=await fetch(BRC_API_URL + '/free-preview?' + q.toString(),{
+async function brcFreePreviewApi(input){
+  // Workerの既存 /free-preview 契約を厳守する。
+  // URL・body schemaを変えると既存Worker側で400/選定失敗になる可能性があるため、
+  // 従来どおり POST /free-preview + {date,races} のみを送る。
+  const res=await fetch(BRC_API_URL + '/free-preview',{
     method:'POST',
-    headers:{'Content-Type':'application/json','Accept':'application/json','Cache-Control':'no-cache'},
+    headers:{'Content-Type':'application/json','Accept':'application/json'},
     body:JSON.stringify(input)
   });
   let data=null; try{data=await res.json();}catch(_){data=null;}
@@ -16674,45 +16673,35 @@ async function brcLoadFreePreview(force=false){
       await autoLoadHostedRaceCardToday({reason:'free-preview'});
     }
     const races=buildFreePreviewRacePool();
-    // ST安定度「－」除外後の候補数に下限は設けない。
-    // 以前の「12R未満なら準備中」判定だと、正常に絞り込めた日まで無料2R全体が停止してしまうため廃止。
+
+    // ST安定度「－」を除外した後の候補数に下限は設けない。
+    // 6艇すべてST安定度が判定済みのレースだけをWorkerへ渡す。
     if(TODAY_LABEL!==jstToday) throw new Error('free_preview_racecard_date_not_ready');
     if(!races.length){
-      // 候補が本当に0Rの日だけ、通信エラー扱いにせず「該当なし」として正常表示する。
-      BRC_FREE_PREVIEW_DATA={
-        free_preview:true,date:jstToday,iron:null,reject:null,selectionVersion:'ST_STABILITY_COMPLETE_V3'
-      };
+      BRC_FREE_PREVIEW_DATA={free_preview:true,date:jstToday,iron:null,reject:null};
       brcRenderFreePreviewCards();
       try{ refreshRaceDeadlineGray(); }catch(_e){}
       return;
     }
-    const requestBase={date:jstToday,races,selectionVersion:'ST_STABILITY_COMPLETE_V3'};
-    let data=await brcFreePreviewApi(requestBase);
+
+    // 重要: Workerの既存API契約どおり {date,races} だけを送る。
+    // selectionVersion / forceReselect / excludeIds 等の追加fieldは送らない。
+    const data=await brcFreePreviewApi({date:jstToday,races});
     if(!data || data.free_preview!==true) throw new Error('free_preview_not_ready');
 
-    // Worker/edge側に当日固定の旧選定が残っていても、そのまま採用しない。
-    // 無効レースが返った場合は、そのIDを除外してcache-bust付きで1回だけ再選定を要求する。
-    let checked=brcSanitizeFreePreviewResponse(data,races);
-    if(checked.invalidIds.length){
-      try{
-        const retry=await brcFreePreviewApi(Object.assign({},requestBase,{
-          forceReselect:true,
-          excludeIds:checked.invalidIds,
-          invalidReason:'st_stability_missing'
-        }),{noCache:true});
-        if(retry && retry.free_preview===true) checked=brcSanitizeFreePreviewResponse(retry,races);
-      }catch(retryErr){
-        console.warn('BRC free preview reselection failed:',retryErr);
-      }
-    }
+    // 念のため返却結果も同じST安定度条件で最終検査。
+    // Workerから候補外が返っても「準備中」にはせず、その枠だけ該当なしとして扱う。
+    const checked=brcSanitizeFreePreviewResponse(data,races);
     BRC_FREE_PREVIEW_DATA=checked.data;
     brcRenderFreePreviewCards();
     try{ refreshRaceDeadlineGray(); }catch(_e){}
   }catch(err){
     console.warn('BRC free preview failed:',err);
+    // 番組表/APIの一時的な読込失敗時のみこの表示。STフィルタで候補が減ったこと自体では出さない。
     if(body) body.innerHTML='<div class="brc-free-empty">無料公開レースを準備中です。少し時間をおいて再度開いてください。</div>';
   }finally{BRC_FREE_PREVIEW_LOADING=false;}
 }
+
 async function openBrcFreePreview(kind){
   const item=BRC_FREE_PREVIEW_DATA?.[kind];
   // カード表示だけでなく、直接open経路でもST安定度未判定レースを遮断する。
