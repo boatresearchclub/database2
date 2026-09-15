@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_FREE2R_ST_STABILITY_COMPLETE_FILTER_V1_20260916 -->
 <!-- BRC_MEMBER_PRICE_AFTER_DETAIL_V1_20260916 -->
 <!-- BRC_TODAY_HITS_STABLE_SOURCE_OF_TRUTH_V4_20260915 -->
 <!-- BRC_TODAY_HITS_SAME_SOURCE_FIX_V3_20260915 -->
@@ -16373,6 +16374,20 @@ function buildTodayRaceSpec(venue, raceNo){
   };
 }
 
+// BRC_FREE2R_ST_STABILITY_COMPLETE_FILTER_V1_20260916
+// 本日厳選／無料2Rは、6艇のうち1人でも当該コース側のST安定度が未判定（「-」等）なら候補から除外する。
+function brcRaceHasCompleteSTStability(spec){
+  const boats=Array.isArray(spec?.apiBoats)?spec.apiBoats:[];
+  if(boats.length<6) return false;
+  return boats.every(b=>{
+    const course=Number(b?.course);
+    const reg=String(b?.reg||'');
+    if(!reg || !(course>=1&&course<=6)) return false;
+    let grade='-';
+    try{ grade=String(getSTStability(reg,course)?.data?.grade||'-').trim(); }catch(_e){ grade='-'; }
+    return !!grade && !['-','―','ー','–','—'].includes(grade);
+  });
+}
 
 function buildFreePreviewRacePool(){
   const rows=[];
@@ -16383,6 +16398,8 @@ function buildFreePreviewRacePool(){
     for(const raceNo of Object.keys(races).map(Number).sort((a,b)=>a-b)){
       const spec=buildTodayRaceSpec(venue,raceNo);
       if(!spec) continue;
+      // 無料2Rには、ST安定度が「-」の選手を含むレースを送らない。
+      if(!brcRaceHasCompleteSTStability(spec)) continue;
       rows.push({
         id:spec.id,venue:spec.venue,raceNo:spec.raceNo,grade:spec.grade,deadline:spec.deadline,
         women:brcIsWomenRace(spec.grade,spec.apiBoats.map(b=>b.reg)),
@@ -16620,7 +16637,8 @@ async function buildTodayPicksCache(){
       for(const raceNo of Object.keys(races).map(Number).sort((a,b)=>a-b)){
         try{
           const spec=buildTodayRaceSpec(venue,raceNo);
-          if(spec) specs.push(spec); else skipped++;
+          // 本日厳選も無料2Rと同じ基準に統一：6艇全員のST安定度が判定済みのレースだけ採用。
+          if(spec && brcRaceHasCompleteSTStability(spec)) specs.push(spec); else skipped++;
         }catch(err){ console.warn('本日厳選の入力作成をスキップ:',venue,raceNo,err); skipped++; }
       }
     }
