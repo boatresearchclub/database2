@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_FREE2R_ST_STABILITY_STRICT_GUARD_V2_20260916 -->
 <!-- BRC_FREE2R_ST_STABILITY_COMPLETE_FILTER_V1_20260916 -->
 <!-- BRC_MEMBER_PRICE_AFTER_DETAIL_V1_20260916 -->
 <!-- BRC_TODAY_HITS_STABLE_SOURCE_OF_TRUTH_V4_20260915 -->
@@ -5572,10 +5573,14 @@ async function brcCheckMembership(session){
 }
 
 
-async function brcFreePreviewApi(input){
-  const res=await fetch(BRC_API_URL + '/free-preview',{
+async function brcFreePreviewApi(input, options={}){
+  // ST安定度フィルタの仕様更新後に古いedge cacheを拾わないため、選定バージョンをURLにも付与する。
+  // Worker側がqueryを参照しない実装でもpathnameは /free-preview のままなので互換性は維持される。
+  const q=new URLSearchParams({sv:'st-stability-v2'});
+  if(options && options.noCache) q.set('cb',String(Date.now()));
+  const res=await fetch(BRC_API_URL + '/free-preview?' + q.toString(),{
     method:'POST',
-    headers:{'Content-Type':'application/json','Accept':'application/json'},
+    headers:{'Content-Type':'application/json','Accept':'application/json','Cache-Control':'no-cache'},
     body:JSON.stringify(input)
   });
   let data=null; try{data=await res.json();}catch(_){data=null;}
@@ -16374,19 +16379,60 @@ function buildTodayRaceSpec(venue, raceNo){
   };
 }
 
-// BRC_FREE2R_ST_STABILITY_COMPLETE_FILTER_V1_20260916
-// 本日厳選／無料2Rは、6艇のうち1人でも当該コース側のST安定度が未判定（「-」等）なら候補から除外する。
+// BRC_FREE2R_ST_STABILITY_STRICT_GUARD_V2_20260916
+// 本日厳選／無料2Rは、出走データに表示されるST安定度と同じ getSTStability() を唯一の判定元にする。
+// 6艇のうち1人でも未判定（ASCII/全角を含む各種ハイフン・ダッシュ表示）なら候補から除外する。
+function brcIsMissingSTStabilityGrade(value){
+  const g=String(value??'').trim();
+  if(!g) return true;
+  return /^[-‐‑‒–—―ー−－]+$/u.test(g);
+}
 function brcRaceHasCompleteSTStability(spec){
   const boats=Array.isArray(spec?.apiBoats)?spec.apiBoats:[];
-  if(boats.length<6) return false;
+  if(boats.length!==6) return false;
   return boats.every(b=>{
     const course=Number(b?.course);
-    const reg=String(b?.reg||'');
+    const reg=String(b?.reg||'').trim();
     if(!reg || !(course>=1&&course<=6)) return false;
-    let grade='-';
-    try{ grade=String(getSTStability(reg,course)?.data?.grade||'-').trim(); }catch(_e){ grade='-'; }
-    return !!grade && !['-','―','ー','–','—'].includes(grade);
+    let grade='';
+    try{ grade=getSTStability(reg,course)?.data?.grade; }catch(_e){ grade=''; }
+    return !brcIsMissingSTStabilityGrade(grade);
   });
+}
+function brcFreePreviewRaceId(item){
+  if(!item) return '';
+  const direct=String(item.id||'').trim();
+  if(direct) return direct;
+  const venue=String(item.venue||'').trim();
+  const raceNo=Number(item.raceNo);
+  return venue && Number.isFinite(raceNo) && raceNo>0 ? `${venue}:${raceNo}` : '';
+}
+function brcFreePreviewItemEligibleNow(item, eligibleIds=null){
+  if(!item) return false;
+  const id=brcFreePreviewRaceId(item);
+  if(eligibleIds instanceof Set && (!id || !eligibleIds.has(id))) return false;
+  try{
+    const spec=buildTodayRaceSpec(String(item.venue||''),Number(item.raceNo));
+    return !!spec && brcRaceHasCompleteSTStability(spec);
+  }catch(_e){
+    return false;
+  }
+}
+function brcSanitizeFreePreviewResponse(data,races){
+  if(!data || data.free_preview!==true) return {data,invalidIds:[]};
+  const eligibleIds=new Set((Array.isArray(races)?races:[]).map(r=>String(r?.id||'')).filter(Boolean));
+  const clean=Object.assign({},data);
+  const invalidIds=[];
+  for(const kind of ['iron','reject']){
+    const item=clean[kind];
+    if(item && !brcFreePreviewItemEligibleNow(item,eligibleIds)){
+      const id=brcFreePreviewRaceId(item);
+      if(id) invalidIds.push(id);
+      console.warn(`BRC free preview excluded after response: ${kind}`,id||item);
+      clean[kind]=null;
+    }
+  }
+  return {data:clean,invalidIds:[...new Set(invalidIds)]};
 }
 
 function buildFreePreviewRacePool(){
@@ -16424,7 +16470,10 @@ function brcRenderFreePreviewCards(){
   if(!body) return;
   const d=BRC_FREE_PREVIEW_DATA;
   if(!d || d.free_preview!==true){body.innerHTML='<div class="brc-free-empty">本日の無料レースを取得できませんでした。</div>';return;}
-  body.innerHTML=brcFreeCardHtml(d.iron,'iron')+brcFreeCardHtml(d.reject,'reject');
+  // 最終表示直前にも再検査。古いサーバー選定・既存キャッシュ経由でもST安定度「－」を絶対に表示しない。
+  const iron=brcFreePreviewItemEligibleNow(d.iron)?d.iron:null;
+  const reject=brcFreePreviewItemEligibleNow(d.reject)?d.reject:null;
+  body.innerHTML=brcFreeCardHtml(iron,'iron')+brcFreeCardHtml(reject,'reject');
   body.querySelectorAll('[data-free-kind]').forEach(btn=>btn.addEventListener('click',()=>openBrcFreePreview(btn.dataset.freeKind)));
 }
 async function brcLoadFreePreview(force=false){
@@ -16446,9 +16495,26 @@ async function brcLoadFreePreview(force=false){
     }
     const races=buildFreePreviewRacePool();
     if(TODAY_LABEL!==jstToday || races.length<12) throw new Error('free_preview_racecard_not_ready');
-    const data=await brcFreePreviewApi({date:jstToday,races});
+    const requestBase={date:jstToday,races,selectionVersion:'ST_STABILITY_COMPLETE_V2'};
+    let data=await brcFreePreviewApi(requestBase);
     if(!data || data.free_preview!==true) throw new Error('free_preview_not_ready');
-    BRC_FREE_PREVIEW_DATA=data;
+
+    // Worker/edge側に当日固定の旧選定が残っていても、そのまま採用しない。
+    // 無効レースが返った場合は、そのIDを除外してcache-bust付きで1回だけ再選定を要求する。
+    let checked=brcSanitizeFreePreviewResponse(data,races);
+    if(checked.invalidIds.length){
+      try{
+        const retry=await brcFreePreviewApi(Object.assign({},requestBase,{
+          forceReselect:true,
+          excludeIds:checked.invalidIds,
+          invalidReason:'st_stability_missing'
+        }),{noCache:true});
+        if(retry && retry.free_preview===true) checked=brcSanitizeFreePreviewResponse(retry,races);
+      }catch(retryErr){
+        console.warn('BRC free preview reselection failed:',retryErr);
+      }
+    }
+    BRC_FREE_PREVIEW_DATA=checked.data;
     brcRenderFreePreviewCards();
     try{ refreshRaceDeadlineGray(); }catch(_e){}
   }catch(err){
@@ -16458,7 +16524,8 @@ async function brcLoadFreePreview(force=false){
 }
 async function openBrcFreePreview(kind){
   const item=BRC_FREE_PREVIEW_DATA?.[kind];
-  if(!item || !item.prediction) return;
+  // カード表示だけでなく、直接open経路でもST安定度未判定レースを遮断する。
+  if(!item || !item.prediction || !brcFreePreviewItemEligibleNow(item)) return;
   document.querySelectorAll('.page-tabs > .page-tab').forEach(b=>b.classList.toggle('active',b.dataset.page==='predict'));
   PAGE_IDS.forEach(id=>{const el=document.getElementById('page-'+id);if(el)el.style.display=(id==='predict')?'':'none';});
   if(!window.__predictRendered){initPredictPage();window.__predictRendered=true;}
