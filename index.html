@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_TODAY_HITS_SAME_SOURCE_FIX_V3_20260915 -->
 <!-- BRC_LATEST_MASTER_MERGE_V4_20260915 -->
 <!-- BRC_CURRENT_EXACT_REPLAY_V4_GUARDED_SHADOW_20260915 -->
 <!-- BRC_CURRENT_EXACT_REPLAY_V3_SHADOW_20260915 -->
@@ -4745,7 +4746,7 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
             <div class="brc-admin-today-hits-title">🎯 本日の的中実績</div>
             <span class="brc-admin-today-hits-admin is-admin">管理者専用</span>
           </div>
-          <div class="brc-admin-today-hits-sub">BRC参考買い目4モードの本日的中分を、最新順で表示します。</div>
+          <div class="brc-admin-today-hits-sub">締切前に保存したBRC参考買い目4モードを、確定結果と照合して最新順で表示します。</div>
         </div>
         <div id="brcAdminTodayHitsSummary" class="brc-admin-today-hits-summary"><strong>0的中</strong>最高 ―</div>
       </div>
@@ -19738,12 +19739,12 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 
 <!-- BRC_ADMIN_TODAY_HITS_ADMIN_ONLY_V4_20260914 -->
 <!-- BRC_TODAY_HITS_PUBLIC_AUTO_V2_20260914 -->
-<script id="brc-today-hits-admin-only-v4">
+<script id="brc-today-hits-admin-only-v6">
 (function(){
   'use strict';
   const DB_NAME='brc_today_hits_auto_v3';
   const DB_STORE='race_snapshots';
-  const CACHE_PREFIX='brc_today_hits_public_v4_';
+  const CACHE_PREFIX='brc_today_hits_public_v6_';
   const MODE_META={
     hit:{label:'的中型',cls:'hit'},
     balance:{label:'バランス型',cls:'balance'},
@@ -19868,6 +19869,16 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       return {odds:obj.odds,capturedAtJst:String(obj.captured_at_jst||''),final:!!obj.final};
     }catch(_e){return null;}
   }
+  async function fetchPrecloseOdds(spec){
+    // まず live-odds の通常系から、締切前に取得されたスナップショットだけを採用する。
+    // final=1 の結果確定後オッズは、当日の的中実績再構築には使わない。
+    const rec=await fetchOdds(spec,false,false);
+    if(!rec?.odds)return null;
+    const d=deadlineMs(spec.date,spec.deadline),c=captureMs(spec.date,rec.capturedAtJst);
+    if(d===null||c===null||c>d)return null;
+    return {...rec,preclose:true,secondsBeforeDeadline:(d-c)/1000};
+  }
+
   async function fetchResult(spec){
     try{if(typeof brcFetchRaceResult!=='function')return null;const obj=await brcFetchRaceResult({key:`${spec.date}:${spec.venueCode}:${String(spec.raceNo).padStart(2,'0')}`,date:spec.date,venue:spec.venue,venueCode:spec.venueCode,raceNo:spec.raceNo,deadline:spec.deadline||''});return obj?.confirmed===true&&obj?.result?.combination?obj.result:null;}catch(_e){return null;}
   }
@@ -19896,10 +19907,20 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       return typeof window.brcBuildReferenceModeSnapshotWithOdds==='function'?window.brcBuildReferenceModeSnapshotWithOdds(boats,prediction,data,phase,odds):null;
     }catch(_e){return null;}
   }
-  function hitsFromModes(spec,modes,result,source){
+  // 本日の的中実績は、各レースで締切前に実際に保存された4モード買い目と同じ判定源を使う。
+  // provisional は「研究入力が完全一致ではない」という意味で、画面上は締切前から実際に表示されていた買い目。
+  // そのため T120 / DISPLAY_SNAPSHOT / verified pre-close rebuild では的中表示対象に含める。
+  // 逆に、結果確定後の再計算だけで作った provisional 買い目は後知恵混入を避けるため数えない。
+  function hitsFromModes(spec,modes,result,source,allowProvisional=false){
     const combo=String(result?.combination||'').trim(),payout=Number(result?.payout_yen);if(!combo||!Number.isFinite(payout)||!modes)return [];
     const sortMs=deadlineMs(spec.date,spec.deadline)||0,out=[];
-    for(const mode of ['hit','balance','return','high']){const m=modes?.[mode];if(!m?.participate||m?.provisional===true)continue;const picks=Array.isArray(m.picks)?m.picks:[];if(picks.some(x=>String(x?.combo||'')===combo))out.push({date:spec.date,venue:spec.venue,venueCode:spec.venueCode,raceNo:spec.raceNo,deadline:spec.deadline,mode,label:m.label||MODE_META[mode]?.label||mode,combo,payoutYen:payout,sortMs,source});}
+    for(const mode of ['hit','balance','return','high']){
+      const m=modes?.[mode];
+      if(!m?.participate)continue;
+      if(m?.provisional===true&&!allowProvisional)continue;
+      const picks=Array.isArray(m.picks)?m.picks:[];
+      if(picks.some(x=>String(x?.combo||'')===combo))out.push({date:spec.date,venue:spec.venue,venueCode:spec.venueCode,raceNo:spec.raceNo,deadline:spec.deadline,mode,label:m.label||MODE_META[mode]?.label||mode,combo,payoutYen:payout,sortMs,source,provisional:m?.provisional===true});
+    }
     return out;
   }
 
@@ -19935,7 +19956,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 
   async function settleSnapshotsToCache(cache){
     const rows=(await dbAll()).filter(r=>String(r?.date)===today());let changed=false;
-    for(const row of rows){const key=raceKey(row.date,row.venueCode,row.raceNo);if(cache.races?.[key]?.source==='T120')continue;const spec={date:row.date,venue:row.venue,venueCode:row.venueCode,raceNo:Number(row.raceNo),deadline:row.deadline};if(!isCompleted(spec))continue;const result=await fetchResult(spec);if(!result)continue;cache.races=cache.races||{};cache.races[key]={source:'T120',updatedAt:new Date().toISOString(),hits:hitsFromModes(spec,row.referenceModes,result,'T120')};changed=true;}
+    for(const row of rows){const key=raceKey(row.date,row.venueCode,row.raceNo);if(cache.races?.[key]?.source==='T120')continue;const spec={date:row.date,venue:row.venue,venueCode:row.venueCode,raceNo:Number(row.raceNo),deadline:row.deadline};if(!isCompleted(spec))continue;const result=await fetchResult(spec);if(!result)continue;cache.races=cache.races||{};cache.races[key]={source:'T120',updatedAt:new Date().toISOString(),hits:hitsFromModes(spec,row.referenceModes,result,'T120',true)};changed=true;}
 
     // T-120が無い場合は、各レース画面で締切前に保存された参考買い目V2を採用。
     // 同一レースにpre/exhibitionがある場合は展示反映済み(exhibition)を優先する。
@@ -19954,7 +19975,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       const spec={date:row.date,venue:row.venue,venueCode:String(row.venueCode||'').padStart(2,'0'),raceNo:Number(row.raceNo),deadline:row.deadline};
       if(!isCompleted(spec))continue;
       const result=await fetchResult(spec);if(!result)continue;
-      const hits=hitsFromModes(spec,row.referenceModes,result,'DISPLAY_SNAPSHOT');
+      const hits=hitsFromModes(spec,row.referenceModes,result,'DISPLAY_SNAPSHOT',true);
       // 既存REBUILDより、実際に締切前表示・保存された買い目を優先する。
       cache.races=cache.races||{};cache.races[key]={source:'DISPLAY_SNAPSHOT',done:true,updatedAt:new Date().toISOString(),hits};changed=true;
     }
@@ -19962,16 +19983,15 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   }
 
   async function reconstructOne(spec){
-    const result=await fetchResult(spec);if(!result)return {ok:false,retry:true};
-    let pred=null;try{pred=await brcPostRacePreviewApi({date:spec.date,venue:spec.venue,raceNo:spec.raceNo,grade:spec.grade,boats:spec.apiBoats});}catch(_e){return {ok:false,retry:true};}
-    const [live,oddsRec]=await Promise.all([fetchExhibition(spec),fetchOdds(spec,true,false)]);
-    // FIX v2: 終了後は live-exhibition が保持されていないレースがある。
-    // その場合でも、各レース画面と同じ保護予測 + 取得可能なオッズから事前(pre)買い目を再構築する。
-    // 締切前に保存済みの T120 / DISPLAY_SNAPSHOT が存在する場合は settleSnapshotsToCache() 側が優先する。
-    if(!oddsRec?.odds)return {ok:false,retry:true,reason:'odds_unavailable'};
+    const result=await fetchResult(spec);if(!result)return {ok:false,retry:true,reason:'result_unavailable'};
+    let pred=null;try{pred=await brcPostRacePreviewApi({date:spec.date,venue:spec.venue,raceNo:spec.raceNo,grade:spec.grade,boats:spec.apiBoats});}catch(_e){return {ok:false,retry:true,reason:'prediction_unavailable'};}
+    const [live,oddsRec]=await Promise.all([fetchExhibition(spec),fetchPrecloseOdds(spec)]);
+    // 結果確定後のfinalオッズから買い目を作り直すと、各レースの「的中」が後知恵になる。
+    // 再構築は締切前スナップショットと確認できたオッズだけを使用する。
+    if(!oddsRec?.odds)return {ok:false,retry:true,reason:'preclose_odds_unavailable'};
     const liveForBuild=(live&&Array.isArray(live?.boats))?live:{boats:[]};
     const modes=buildModes(spec,pred,liveForBuild,oddsRec.odds);if(!modes)return {ok:false,retry:true,reason:'mode_rebuild_failed'};
-    return {ok:true,hits:hitsFromModes(spec,modes,result,live?'REBUILD_EXHIBITION':'REBUILD_PRE')};
+    return {ok:true,source:live?'REBUILD_PRECLOSE_EXHIBITION':'REBUILD_PRECLOSE_PRE',hits:hitsFromModes(spec,modes,result,live?'REBUILD_PRECLOSE_EXHIBITION':'REBUILD_PRECLOSE_PRE',true)};
   }
   async function mapLimit(items,limit,fn){const out=new Array(items.length);let i=0;async function w(){while(i<items.length){const n=i++;try{out[n]=await fn(items[n],n);}catch(e){out[n]={ok:false,retry:true};}}}await Promise.all(Array.from({length:Math.min(limit,Math.max(1,items.length))},()=>w()));return out;}
 
@@ -19980,6 +20000,14 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     if(refreshBusy)return false;if(!force&&Date.now()-lastRenderAt<5000)return false;refreshBusy=true;
     try{
       const cache=cacheRead();cache.races=cache.races||{};
+      // 「更新」は保存済みの正本(T120 / DISPLAY_SNAPSHOT)を残し、再構築分だけ再走査する。
+      // 旧ロジックで done=true / 0件になったレースが永久に固定されるのを防ぐ。
+      if(force){
+        for(const [k,rec] of Object.entries(cache.races)){
+          const src=String(rec?.source||'');
+          if(src!=='T120'&&src!=='DISPLAY_SNAPSHOT') delete cache.races[k];
+        }
+      }
       await settleSnapshotsToCache(cache);
       let hits=cacheHits(cache);render(hits,hits.length?'':'本日の結果を集計中です…');
       const targets=[];
@@ -19991,7 +20019,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       }
       if(targets.length){
         const results=await mapLimit(targets,3,reconstructOne);
-        results.forEach((r,i)=>{const spec=targets[i],key=raceKey(spec.date,spec.venueCode,spec.raceNo);if(r?.ok)cache.races[key]={source:'REBUILD',done:true,updatedAt:new Date().toISOString(),hits:r.hits||[]};});
+        results.forEach((r,i)=>{const spec=targets[i],key=raceKey(spec.date,spec.venueCode,spec.raceNo);if(r?.ok)cache.races[key]={source:r.source||'REBUILD_PRECLOSE',done:true,updatedAt:new Date().toISOString(),hits:r.hits||[]};});
       }
       cacheWrite(cache);hits=cacheHits(cache);render(hits,hits.length?'':'本日の的中実績はまだありません。結果確定後、的中分だけここへ追加されます。');lastRenderAt=Date.now();return true;
     }catch(err){console.warn('BRC today hits v3 refresh failed:',err);render(cacheHits(cacheRead()),'本日の的中実績を確認できませんでした。「更新」で再確認できます。');return false;}finally{refreshBusy=false;}
