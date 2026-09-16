@@ -1,4 +1,10 @@
 <!DOCTYPE html>
+<!-- BRC_BOTTOM_RAW_COMMENT_FIX_V1_20260916 -->
+<!-- BRC_MEMBER_ADMIN_MOBILE_RESTORE_V2_20260916 -->
+<!-- BRC_RESTORE_PRICE_DETAIL_AND_4MODE_V1_20260916 -->
+<!-- BRC_MEMBER_PRICE_AFTER_DETAIL_V1_20260916 -->
+<!-- BRC_ADMIN_REFERENCE_4MODE_TABS_V1_20260914_RESTORED_20260916 -->
+<!-- BRC_4MODE_TARGET_LOCK_V3_20260915_RESTORED_20260916 -->
 <!-- BRC_TIMEX_FINAL_PREDICTION_SUMMARY_V1_20260913 -->
 <!-- BRC_PREDICT_TIMEX_ORIGINAL_TABLE_UI_V2_20260913 -->
 <!-- BRC_PREDICT_PERSONAL_WORD_MODAL_AND_TOP3_EXHIBITION_LABEL_V1_20260913 -->
@@ -2413,6 +2419,34 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
     padding:4px 9px; border-radius:999px; border:1px solid rgba(10,31,51,.14); background:#fff; color:var(--ink-soft);
     cursor:pointer; font-size:11.5px;
   }
+
+  /* ---- BRC_MEMBER_ADMIN_MOBILE_RESTORE_V2_20260916 ---- */
+  .brc-member-admin{display:none;margin:10px 0 14px;border:1px solid rgba(0,87,219,.18);border-radius:14px;background:linear-gradient(160deg,rgba(0,87,219,.055),#fff);overflow:hidden;box-shadow:0 4px 18px rgba(10,31,51,.04);}
+  .brc-member-admin.is-visible{display:block;}
+  .brc-member-admin > summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 13px;cursor:pointer;color:var(--navy);font-size:12px;font-weight:950;}
+  .brc-member-admin > summary::-webkit-details-marker{display:none;}
+  .brc-member-admin > summary::after{content:'＋';font-size:18px;line-height:1;color:var(--wave);}
+  .brc-member-admin[open] > summary::after{content:'−';}
+  .brc-member-admin-badge{display:inline-flex;align-items:center;padding:3px 7px;border-radius:999px;background:rgba(0,87,219,.09);color:var(--wave);font-size:9px;font-weight:950;white-space:nowrap;}
+  .brc-member-admin-body{padding:0 13px 13px;}
+  .brc-member-admin-note{font-size:10.5px;line-height:1.6;color:var(--ink-soft);margin:0 0 10px;}
+  .brc-member-admin-label{display:block;margin:0 0 5px;font-size:10.5px;font-weight:900;color:var(--ink-soft);}
+  .brc-member-admin-input{width:100%;box-sizing:border-box;height:44px;border:1px solid rgba(10,31,51,.15);border-radius:10px;background:#fff;padding:0 11px;color:var(--navy);font:inherit;font-size:14px;outline:none;}
+  .brc-member-admin-input:focus{border-color:rgba(0,87,219,.48);box-shadow:0 0 0 3px rgba(0,87,219,.07);}
+  .brc-member-admin-primary{width:100%;min-height:44px;margin-top:9px;border:0;border-radius:10px;background:var(--wave);color:#fff;font:inherit;font-size:13px;font-weight:950;cursor:pointer;}
+  .brc-member-admin-primary:disabled{opacity:.55;cursor:wait;}
+  .brc-member-admin-status{min-height:20px;margin-top:8px;font-size:11px;line-height:1.5;color:var(--ink-soft);}
+  .brc-member-admin-result{display:none;margin-top:10px;padding:11px;border:1px solid rgba(47,143,91,.22);border-radius:11px;background:rgba(47,143,91,.055);}
+  .brc-member-admin-result.is-visible{display:block;}
+  .brc-member-admin-result-title{font-size:12px;font-weight:950;color:#217247;margin-bottom:8px;}
+  .brc-member-admin-cred{display:grid;grid-template-columns:86px 1fr;gap:5px 8px;font-size:12px;line-height:1.5;}
+  .brc-member-admin-cred span{color:var(--ink-soft);font-weight:800;}
+  .brc-member-admin-cred strong{color:var(--navy);font-weight:950;word-break:break-all;}
+  .brc-member-admin-actions{display:grid;grid-template-columns:1fr auto;gap:7px;margin-top:10px;}
+  .brc-member-admin-copy,.brc-member-admin-clear{min-height:40px;border-radius:9px;font:inherit;font-size:11px;font-weight:950;cursor:pointer;}
+  .brc-member-admin-copy{border:0;background:#217247;color:#fff;padding:0 12px;}
+  .brc-member-admin-clear{border:1px solid rgba(10,31,51,.12);background:#fff;color:var(--ink-soft);padding:0 10px;}
+  .brc-member-admin-security{margin-top:9px;font-size:9.5px;line-height:1.55;color:var(--ink-soft);}
   @media (max-width:640px){
     .brc-auth-gate{min-height:360px; padding:18px 4px;}
     .brc-auth-card{padding:22px 16px; border-radius:13px;}
@@ -3929,6 +3963,64 @@ table.brc-mark-table td:first-child{text-align:left;padding-left:7px;}
 
 </style>
 
+<style id="brc-restore-price-4mode-style-20260916">
+/* BRC_RESTORE_PRICE_DETAIL_AND_4MODE_V1_20260916 */
+.brc-entry-option.member .brc-entry-more{
+  color:var(--wave);font-weight:900;letter-spacing:.01em;
+}
+
+/* BRC参考買い目 4モード復元 */
+.brc-refmode-shell{margin-top:0;}
+.brc-refmode-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px;}
+.brc-refmode-head-title{font-size:13px;font-weight:950;color:var(--navy);}
+.brc-refmode-head-note{font-size:9.5px;font-weight:700;color:var(--ink-soft);white-space:nowrap;}
+.brc-refmode-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:4px;margin-bottom:8px;border:1px solid rgba(10,31,51,.09);border-radius:11px;background:rgba(10,31,51,.035);}
+.brc-refmode-tab{appearance:none;border:0;border-radius:8px;background:transparent;color:var(--ink-soft);min-width:0;padding:9px 2px;font:inherit;font-size:10.8px;font-weight:850;line-height:1.2;cursor:pointer;white-space:nowrap;}
+.brc-refmode-tab.active{background:#fff;color:var(--wave);box-shadow:0 1px 5px rgba(10,31,51,.09);}
+.brc-refmode-tab[data-brc-refmode-tab="return"]::after,.brc-refmode-tab[data-brc-refmode-tab="high"]::after{content:'S';display:inline-flex;align-items:center;justify-content:center;margin-left:3px;width:13px;height:13px;border-radius:50%;background:rgba(217,119,6,.12);color:#9a5d00;font-size:7px;font-weight:950;vertical-align:1px;}
+.brc-refmode-panel{display:none;}
+.brc-refmode-panel.active{display:block;}
+.brc-refmode-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-bottom:7px;}
+.brc-refmode-kpi{min-width:0;padding:7px 3px;border:1px solid rgba(10,31,51,.07);border-radius:8px;background:#f8fafc;text-align:center;}
+.brc-refmode-kpi .k{font-size:8.8px;font-weight:750;color:var(--ink-soft);white-space:nowrap;}
+.brc-refmode-kpi .v{margin-top:1px;font-size:11.8px;font-weight:900;color:var(--navy);white-space:nowrap;}
+.brc-refmode-kpi .v.good{color:var(--trend-up);}.brc-refmode-kpi .v.shadow{color:#9a5d00;}
+.brc-refmode-desc{margin:0 0 7px;padding:7px 8px;border-radius:8px;border:1px solid rgba(10,31,51,.07);background:rgba(10,31,51,.02);font-size:10.3px;font-weight:600;line-height:1.5;color:var(--ink-soft);}
+.brc-refmode-desc strong{color:var(--navy);}
+.brc-refmode-pass{padding:12px 10px;border:1px solid rgba(209,55,63,.16);border-radius:9px;background:rgba(209,55,63,.035);text-align:center;}
+.brc-refmode-pass strong{display:block;color:#b4232c;font-size:12.5px;font-weight:900;}
+.brc-refmode-pass span{display:block;margin-top:3px;font-size:9.8px;line-height:1.5;color:var(--ink-soft);}
+.brc-refmode-shadow-note{margin-top:6px;font-size:9.5px;line-height:1.45;color:#8a5a00;font-weight:700;}
+.brc-refmode-parity-note{margin:0 0 8px;padding:7px 8px;border:1px solid rgba(217,119,6,.18);border-radius:8px;background:rgba(217,119,6,.045);color:#8a5a00;font-size:9.5px;font-weight:750;line-height:1.5;}
+.brc-refmode-parity-note strong{font-weight:950;color:#7a4a00;}
+.brc-refmode-performance{margin:-1px 0 7px;padding:8px 9px;border:1px solid rgba(0,87,219,.11);border-radius:9px;background:linear-gradient(160deg,rgba(0,87,219,.045),rgba(255,255,255,.96));}
+.brc-refmode-performance-head{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-bottom:7px;}
+.brc-refmode-performance-title{font-size:10.5px;font-weight:900;color:var(--navy);}
+.brc-refmode-performance-period{font-size:9.2px;font-weight:650;color:var(--ink-soft);white-space:nowrap;}
+.brc-refmode-performance-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;}
+.brc-refmode-performance-item{min-width:0;padding:7px 2px;border:1px solid rgba(10,31,51,.06);border-radius:7px;background:rgba(255,255,255,.85);text-align:center;}
+.brc-refmode-performance-item .k{font-size:9px;font-weight:700;color:var(--ink-soft);white-space:nowrap;}
+.brc-refmode-performance-item .v{margin-top:1px;font-size:12.2px;font-weight:900;color:var(--navy);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.brc-refmode-performance-item .v.positive{color:var(--trend-up);}.brc-refmode-performance-item .v.negative{color:var(--trend-down);}.brc-refmode-performance-item .v.shadow{color:#9a5d00;}
+.brc-refmode-performance-source{margin-top:6px;font-size:9px;line-height:1.55;color:var(--ink-soft);}
+.brc-refmode-panel>.brc-refmon-picks{margin-top:0;}
+@media(max-width:420px){
+  .brc-refmode-tabs{gap:3px;padding:3px;}
+  .brc-refmode-tab{padding:9px 1px;font-size:10.1px;letter-spacing:-.02em;}
+  .brc-refmode-head-note{display:none;}
+  .brc-refmode-kpis{gap:4px;}
+  .brc-refmode-kpi{padding:6px 2px;}
+  .brc-refmode-kpi .k{font-size:8px;}
+  .brc-refmode-kpi .v{font-size:10.8px;}
+  .brc-refmode-performance{padding:7px 6px;}
+  .brc-refmode-performance-grid{gap:3px;}
+  .brc-refmode-performance-item{padding:6px 1px;}
+  .brc-refmode-performance-item .k{font-size:8.1px;}
+  .brc-refmode-performance-item .v{font-size:10.8px;}
+  .brc-refmode-performance-source{font-size:8.5px;}
+}
+</style>
+
 <style id="brc-investment-validation-style-20260911">
 /* BRC_ADMIN_INVESTMENT_VALIDATION_V3_RAW_OD3_20260911 */
 .brc-val-section{border-color:rgba(124,58,237,.18)!important;background:linear-gradient(160deg,rgba(124,58,237,.035),rgba(255,255,255,.9))!important;}
@@ -4256,7 +4348,7 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
             <a class="brc-entry-option member" href="https://share.yoor.jp/door/boatresearchclub" target="_blank" rel="noopener noreferrer">
               <span class="kicker">毎日使いたい</span>
               <strong>BRC MEMBERS</strong>
-              <small>月額 2,980円</small>
+              <small class="brc-entry-more">詳しく見る →</small>
             </a>
           </div>
           <div class="brc-entry-consult">入会前の質問も大丈夫です。<a href="https://lin.ee/7N8eGk6" target="_blank" rel="noopener noreferrer">公式LINE</a>でキーワード <span class="brc-salon-keyword">【サロン】</span> と送ってください。</div>
@@ -4278,6 +4370,29 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
     </div>
     <div id="brcPredictProtected" style="display:none;">
       <div class="brc-member-bar"><span id="brcMemberBadge" class="brc-member-badge">BRC MEMBER</span><button type="button" class="brc-logout-btn" id="brcLogoutBtn">ログアウト</button></div>
+      <details id="brcMemberAdmin" class="brc-member-admin" aria-hidden="true">
+        <summary><span>新規サロン会員を発行</span><span class="brc-member-admin-badge">管理者専用</span></summary>
+        <div class="brc-member-admin-body">
+          <p class="brc-member-admin-note">YOORで入会確認後、表示名を入力して発行します。会員IDは既存データから次番号を自動採番します。</p>
+          <label class="brc-member-admin-label" for="brcMemberAdminSalonName">サロンメンバー名（YOOR表示名）</label>
+          <input id="brcMemberAdminSalonName" class="brc-member-admin-input" type="text" maxlength="80" autocomplete="off" placeholder="例：ケビン" />
+          <button id="brcMemberAdminIssue" class="brc-member-admin-primary" type="button">ID・パスワードを発行</button>
+          <div id="brcMemberAdminStatus" class="brc-member-admin-status" aria-live="polite"></div>
+          <div id="brcMemberAdminResult" class="brc-member-admin-result" aria-live="polite">
+            <div class="brc-member-admin-result-title">発行完了</div>
+            <div class="brc-member-admin-cred">
+              <span>会員名</span><strong id="brcMemberAdminResultName">-</strong>
+              <span>会員ID</span><strong id="brcMemberAdminResultId">-</strong>
+              <span>パスワード</span><strong id="brcMemberAdminResultPassword">-</strong>
+            </div>
+            <div class="brc-member-admin-actions">
+              <button id="brcMemberAdminCopy" class="brc-member-admin-copy" type="button">LINE送信用にコピー</button>
+              <button id="brcMemberAdminClear" class="brc-member-admin-clear" type="button">表示を消す</button>
+            </div>
+            <div class="brc-member-admin-security">パスワードはこの画面に一時表示するだけで、BRCのHTMLやbrc_membersには保存しません。</div>
+          </div>
+        </div>
+      </details>
       <div id="brcFreePreviewBanner" class="brc-free-result-banner"></div>
     <section class="card">
       <h2>出走表AI</h2>
@@ -5134,6 +5249,7 @@ function brcDisplayMemberId(user){
 // 認証本体には介入せず、ログイン済みuser.emailだけで管理者UIを出し分ける。
 const BRC_ADMIN_EMAIL = 'sk48159212@gmail.com';
 const BRC_SOCIAL_AI_URL = 'https://brc-social.sk48159212.workers.dev';
+const BRC_MEMBER_ADMIN_URL = 'https://brc-member-admin.sk48159212.workers.dev';
 let BRC_ADMIN_ACTIVE = false;
 
 function brcAdminNormalizeEmail(value){
@@ -5159,9 +5275,19 @@ function brcSetAdminResearchUi(active){
   if(page && page.style.display!=='none') page.setAttribute('aria-hidden','false');
   requestAnimationFrame(()=>{ try{ syncPageTabsStickyHeight(); }catch(_e){} });
 }
+function brcSetMemberAdminUi(active){
+  const box=document.getElementById('brcMemberAdmin');
+  const on=!!active;
+  if(!box) return;
+  box.classList.toggle('is-visible',on);
+  box.setAttribute('aria-hidden',on?'false':'true');
+  if(!on) box.open=false;
+}
+
 function brcSetAdminSocialUi(user=null){
   const box=document.getElementById('brcAdminSocial');
   BRC_ADMIN_ACTIVE=!!(user && brcIsAdminUser(user) && BRC_MEMBER_ACTIVE);
+  brcSetMemberAdminUi(BRC_ADMIN_ACTIVE);
   if(box){
     box.classList.toggle('is-visible',BRC_ADMIN_ACTIVE);
     box.setAttribute('aria-hidden',BRC_ADMIN_ACTIVE?'false':'true');
@@ -15768,6 +15894,20 @@ function buildTodayRaceSpec(venue, raceNo){
   };
 }
 
+// BRC_ST_STABILITY_COMPLETE_FILTER_V1_20260916
+// 本日の厳選 / 無料2Rだけに適用する。投資管理など buildTodayRaceSpec の他用途へは影響させない。
+// 出走データと同じ getSTStability() を使い、6艇のうち1艇でも表示ランクが「-」相当なら除外する。
+function brcRaceHasCompleteSTStability(venue, raceNo){
+  const regs=RACE_CARDS_TODAY?.[venue]?.[String(raceNo)];
+  if(!Array.isArray(regs) || regs.length<6) return false;
+  for(let c=1;c<=6;c++){
+    const reg=String(regs[c-1]??'').trim();
+    if(!reg) return false;
+    const g=String(getSTStability(reg,c)?.data?.grade||'').trim().toUpperCase();
+    if(!['S','A','B','C','D','E'].includes(g)) return false;
+  }
+  return true;
+}
 
 function buildFreePreviewRacePool(){
   const rows=[];
@@ -15778,6 +15918,7 @@ function buildFreePreviewRacePool(){
     for(const raceNo of Object.keys(races).map(Number).sort((a,b)=>a-b)){
       const spec=buildTodayRaceSpec(venue,raceNo);
       if(!spec) continue;
+      if(!brcRaceHasCompleteSTStability(venue,raceNo)) continue;
       rows.push({
         id:spec.id,venue:spec.venue,raceNo:spec.raceNo,grade:spec.grade,deadline:spec.deadline,
         women:brcIsWomenRace(spec.grade,spec.apiBoats.map(b=>b.reg)),
@@ -15822,8 +15963,12 @@ async function brcLoadFreePreview(force=false){
     if(TODAY_LABEL!==jstToday || !RACE_INFO_TODAY || !Object.keys(RACE_INFO_TODAY).length){
       await autoLoadHostedRaceCardToday({reason:'free-preview'});
     }
+    // 番組表の準備判定は「ST安定度フィルタ前」の総レース数で行う。
+    // フィルタ後が12R未満でも、候補が2R以上あれば無料2Rの選定自体は可能。
+    const rawRaceCount=Object.values(RACE_CARDS_TODAY||{}).reduce((n,races)=>n+Object.keys(races||{}).length,0);
     const races=buildFreePreviewRacePool();
-    if(TODAY_LABEL!==jstToday || races.length<12) throw new Error('free_preview_racecard_not_ready');
+    if(TODAY_LABEL!==jstToday || rawRaceCount<12) throw new Error('free_preview_racecard_not_ready');
+    if(races.length<2) throw new Error('free_preview_no_st_stable_candidates');
     const data=await brcFreePreviewApi({date:jstToday,races});
     if(!data || data.free_preview!==true) throw new Error('free_preview_not_ready');
     BRC_FREE_PREVIEW_DATA=data;
@@ -16015,7 +16160,7 @@ async function buildTodayPicksCache(){
       for(const raceNo of Object.keys(races).map(Number).sort((a,b)=>a-b)){
         try{
           const spec=buildTodayRaceSpec(venue,raceNo);
-          if(spec) specs.push(spec); else skipped++;
+          if(spec && brcRaceHasCompleteSTStability(venue,raceNo)) specs.push(spec); else skipped++;
         }catch(err){ console.warn('本日厳選の入力作成をスキップ:',venue,raceNo,err); skipped++; }
       }
     }
@@ -16150,8 +16295,8 @@ async function renderTodayPicks(force=false){
   if(cr) cr.textContent=(cache.reject||[]).filter(r=>!brcRaceCancelled(r.venue,r.raceNo)).length;
   const rule=document.getElementById('todayPicksRule');
   if(rule) rule.textContent=TODAY_PICKS_MODE==='iron'
-    ? 'イン鉄板 = イン信頼度S'
-    : 'イン否定 = イン場基準差 -10pt未満';
+    ? 'イン鉄板 = イン信頼度S ／ ST安定「－」含むレース除外'
+    : 'イン否定 = イン場基準差 -10pt未満 ／ ST安定「－」含むレース除外';
   renderTodayPicksStats();
 
   const rows=sortTodayPickRows((cache[TODAY_PICKS_MODE]||[]).filter(r=>!brcRaceCancelled(r.venue,r.raceNo)));
@@ -17085,7 +17230,7 @@ renderPlayers();
 window.__playersRendered = true;
 </script>
 
-/* BRC_TOKUYAMA_MOTOR_PUBLIC_V1_20260913: 徳山だけ新BRCモーター分析を公開。徳山旧表示は非表示、他場は従来表示。 */
+<!-- BRC_TOKUYAMA_MOTOR_PUBLIC_V1_20260913: 徳山だけ新BRCモーター分析を公開。徳山旧表示は非表示、他場は従来表示。 -->
 <style id="brc-motor-detail-style">
 .motor-cell-btn{appearance:none;-webkit-appearance:none;border:0;background:transparent;padding:0 3px;margin:0;min-width:44px;cursor:pointer;font:inherit;line-height:1;text-align:center;border-radius:8px;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;vertical-align:middle;}
 .motor-cell-btn:active{background:rgba(10,31,51,.06);}
@@ -18576,6 +18721,162 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   }
   window.brcBuildReferenceMonitorData=buildData;
 
+  // ---- BRC_ADMIN_REFERENCE_4MODE_TABS_V1_20260914 (restored 2026-09-16) ----
+  const BRC_REFMODE_CONFIG={
+    hit:{label:'的中型',limit:10,targetHit:'40〜45%',targetRoi:'105〜110%+',status:'本番',minOdds:null,
+      desc:'展開マトリックスの確率上位を広めに採用し、的中率を優先。',
+      evidence:{period:'2026 完全OOS',races:'1,235R',hit:'43.7%',roi:'105.9%',judge:'PASS'}},
+    balance:{label:'バランス型',limit:6,targetHit:'28〜35%',targetRoi:'110%目標',status:'本番β',minOdds:null,
+      desc:'確率上位を6点へ絞り、的中率と回収率のバランスを取る現行基準。',
+      evidence:{period:'2026 完全OOS',races:'1,171R',hit:'32.5%',roi:'107.6%',judge:'継続検証'}},
+    return:{label:'回収型',limit:6,targetHit:'15〜25%',targetRoi:'120%+',status:'Shadow+',minOdds:10,
+      desc:'現在オッズ10倍以上の候補から期待値（確率×オッズ）上位を最大6点採用。',
+      evidence:{period:'2026/9/1〜11 T-60',races:'91R',hit:'22.0%',roi:'127.8%',judge:'Shadow+'}},
+    high:{label:'高配当型',limit:18,targetHit:'8〜15%',targetRoi:'130%+',status:'Shadow',minOdds:50,
+      desc:'現在オッズ50倍以上の候補から期待値（確率×オッズ）上位を最大18点採用。',
+      evidence:{period:'2026/9/1〜11 T-60',races:'39R',hit:'17.9%',roi:'96.3%',judge:'Shadow'}}
+  };
+  let brcRefModeSelected='balance';
+  let brcRefModeLastArgs=null;
+
+  function buildRefModeCandidatePool(data,boats,workerPrediction,phase){
+    if(!data||data.decision==='pass') return [];
+    const marks=Array.isArray(data.marks)?data.marks:[];
+    let rows=[];
+    if(data.mode==='nige'){
+      rows=nigeConditional(workerPrediction,boats,phase)
+        .slice().sort((a,b)=>b.condP-a.condP||a.combo.localeCompare(b.combo))
+        .map(x=>({...x,p:num(x.condP,0),headWeight:1}));
+    }else{
+      const heads=Array.isArray(data.heads)?data.heads:[];
+      const headWeights=normalizeRows(heads.map(h=>({head:h,w:Math.max(.05,num(marks.find(x=>x.course===h)?.rates?.win,0))})),'w');
+      const headWeightMap=new Map(headWeights.map(x=>[x.head,x.p]));
+      for(const h of heads){
+        const hw=headWeightMap.get(h)||0;
+        const cond=h===1?nigeConditional(workerPrediction,boats,phase):genericConditionalForHead(h,marks);
+        for(const x of cond) rows.push({...x,headWeight:hw,p:hw*num(x.condP,0)});
+      }
+      rows.sort((a,b)=>b.p-a.p||markScore(b.secondMark)-markScore(a.secondMark)||markScore(b.thirdMark)-markScore(a.thirdMark)||a.combo.localeCompare(b.combo));
+    }
+    const withOdds=oddsForPicks(rows);
+    return withOdds.rows.map(x=>({
+      combo:x.combo,p:round(num(x.p,0),8),head:x.head,second:x.second,third:x.third,source:x.source||'',
+      secondMark:x.secondMark||marks.find(m=>m.course===x.second)?.second||'',thirdMark:x.thirdMark||marks.find(m=>m.course===x.third)?.third||'',odds:x.odds
+    }));
+  }
+
+  function buildRefModeData(mode,data,boats,workerPrediction,phase){
+    const cfg=BRC_REFMODE_CONFIG[mode]||BRC_REFMODE_CONFIG.balance;
+    const out={mode,cfg,decision:data?.decision||'pass',reason:data?.reason||'',picks:[],pointCount:0,formation:'',compositeOdds:null,passReason:''};
+    if(!data||data.decision==='pass'){
+      out.decision='pass';
+      out.passReason=reasonText(data||{});
+      return out;
+    }
+    let pool=buildRefModeCandidatePool(data,boats,workerPrediction,phase);
+    if(cfg.minOdds!=null){
+      const hasOdds=pool.some(x=>Number.isFinite(Number(x.odds))&&Number(x.odds)>0);
+      if(!hasOdds){
+        out.decision='pass';
+        out.passReason=`現在オッズ未取得のため${cfg.label}は判定待ち。オッズ更新後に再計算します。`;
+        return out;
+      }
+      pool=pool.filter(x=>Number.isFinite(Number(x.odds))&&Number(x.odds)>=cfg.minOdds);
+      pool.sort((a,b)=>(num(b.p,0)*num(b.odds,0))-(num(a.p,0)*num(a.odds,0))||num(b.p,0)-num(a.p,0)||String(a.combo).localeCompare(String(b.combo)));
+      if(!pool.length){
+        out.decision='pass';
+        out.passReason=`現在オッズ${cfg.minOdds}倍以上の候補がないため見送り。オッズ更新で再計算します。`;
+        return out;
+      }
+    }else{
+      pool.sort((a,b)=>num(b.p,0)-num(a.p,0)||String(a.combo).localeCompare(String(b.combo)));
+    }
+    out.picks=pool.slice(0,cfg.limit);
+    out.pointCount=out.picks.length;
+    out.formation=formationLabel(out.picks);
+    const oddsRows=out.picks.map(x=>num(x.odds,0)).filter(x=>x>0);
+    if(oddsRows.length===out.picks.length&&oddsRows.length){
+      try{out.compositeOdds=brcOddsBuilderComposite(oddsRows.map(odds=>({odds})));}catch(_e){}
+    }
+    return out;
+  }
+
+  function refModeEvidenceHtml(cfg){
+    const e=cfg.evidence||{};
+    const roiNum=parseFloat(String(e.roi||'').replace('%',''));
+    const roiClass=Number.isFinite(roiNum)?(roiNum>=100?'positive':'negative'):'';
+    const judgeClass=/PASS|本番/.test(String(e.judge||''))?'positive':(/Shadow|継続/.test(String(e.judge||''))?'shadow':'');
+    return `<div class="brc-refmode-performance">
+      <div class="brc-refmode-performance-head"><span class="brc-refmode-performance-title">検証実績</span><span class="brc-refmode-performance-period">${esc(e.period||'―')}</span></div>
+      <div class="brc-refmode-performance-grid">
+        <div class="brc-refmode-performance-item"><div class="k">対象</div><div class="v">${esc(e.races||'―')}</div></div>
+        <div class="brc-refmode-performance-item"><div class="k">的中率</div><div class="v">${esc(e.hit||'―')}</div></div>
+        <div class="brc-refmode-performance-item"><div class="k">回収率</div><div class="v ${roiClass}">${esc(e.roi||'―')}</div></div>
+        <div class="brc-refmode-performance-item"><div class="k">判定</div><div class="v ${judgeClass}">${esc(e.judge||'―')}</div></div>
+      </div>
+      <div class="brc-refmode-performance-source">過去検証値。将来の的中・回収を保証するものではありません。</div>
+    </div>`;
+  }
+
+  function refModePicksHtml(md){
+    const cfg=md.cfg;
+    if(md.decision==='pass'){
+      return `<div class="brc-refmon-picks"><div class="brc-refmon-picks-head"><span>${esc(cfg.label)} 参考買い目</span><strong>見送り</strong></div><div class="brc-refmode-pass"><strong>見送り</strong><span>${esc(md.passReason||'条件未成立のため見送り。')}</span></div></div>`;
+    }
+    const combos=(md.picks||[]).map(x=>x.combo);
+    const list=(md.picks||[]).map(x=>`<div class="brc-refmon-pick" data-brc-refmon-combo="${esc(x.combo)}"><strong>${esc(x.combo)}</strong><span class="odds" data-brc-refmon-odds="${esc(x.combo)}">${Number.isFinite(Number(x.odds))?Number(x.odds).toFixed(1)+'倍':'―'}</span></div>`).join('');
+    return `<div class="brc-refmon-picks" data-brc-ref-monitor-picks="${esc(combos.join(','))}">
+      <div class="brc-refmon-picks-head"><span class="brc-refmon-picks-title">${esc(cfg.label)} 参考買い目${brcBuildReferencePersonalWarningBadgeHtml(combos)}</span><strong>${md.pointCount}点</strong></div>
+      ${md.formation?`<div class="brc-refmon-formation">${esc(md.formation)}</div>`:''}
+      <div class="brc-refmon-pick-list">${list}</div>
+      <div class="brc-refmon-composite"><span>合成オッズ</span><strong data-brc-refmon-composite>${Number.isFinite(Number(md.compositeOdds))?Number(md.compositeOdds).toFixed(1)+'倍':'―'}</strong></div>
+    </div>`;
+  }
+
+  function refModePanelHtml(mode,data,boats,workerPrediction,phase){
+    const md=buildRefModeData(mode,data,boats,workerPrediction,phase), cfg=md.cfg;
+    const isShadow=/Shadow/.test(cfg.status);
+    const oddsRule=cfg.minOdds!=null?`<div class="brc-refmode-shadow-note">オッズ条件：${cfg.minOdds}倍以上。条件不足時は見送り、オッズ更新時に再計算します。</div>`:'';
+    const shadowNote=mode==='return'?'<div class="brc-refmode-parity-note"><strong>Shadow+</strong>：運用候補として監視継続。サンプルを蓄積して本番判定します。</div>':(mode==='high'?'<div class="brc-refmode-parity-note"><strong>Shadow</strong>：高配当狙いは回収率の安定性を確認中です。</div>':'');
+    return `<div class="brc-refmode-panel ${mode===brcRefModeSelected?'active':''}" data-brc-refmode-panel="${mode}">
+      <div class="brc-refmode-kpis">
+        <div class="brc-refmode-kpi"><div class="k">点数</div><div class="v">最大${cfg.limit}点</div></div>
+        <div class="brc-refmode-kpi"><div class="k">目標的中</div><div class="v">${esc(cfg.targetHit)}</div></div>
+        <div class="brc-refmode-kpi"><div class="k">目標回収</div><div class="v">${esc(cfg.targetRoi)}</div></div>
+        <div class="brc-refmode-kpi"><div class="k">運用</div><div class="v ${isShadow?'shadow':'good'}">${esc(cfg.status)}</div></div>
+      </div>
+      ${refModeEvidenceHtml(cfg)}
+      <div class="brc-refmode-desc"><strong>${esc(cfg.label)}</strong>：${esc(cfg.desc)}</div>
+      ${shadowNote}
+      ${refModePicksHtml(md)}
+      ${oddsRule}
+    </div>`;
+  }
+
+  function buildFourModeHtml(data,boats,workerPrediction,phase){
+    const order=['hit','balance','return','high'];
+    return `<div class="brc-refmode-shell">
+      <div class="brc-refmode-head"><span class="brc-refmode-head-title">BRC参考買い目</span><span class="brc-refmode-head-note">展開マトリックス × 用途別4モード</span></div>
+      <div class="brc-refmode-tabs" role="tablist" aria-label="BRC参考買い目モード">
+        ${order.map(mode=>`<button type="button" class="brc-refmode-tab ${mode===brcRefModeSelected?'active':''}" data-brc-refmode-tab="${mode}" role="tab" aria-selected="${mode===brcRefModeSelected?'true':'false'}">${esc(BRC_REFMODE_CONFIG[mode].label)}</button>`).join('')}
+      </div>
+      ${order.map(mode=>refModePanelHtml(mode,data,boats,workerPrediction,phase)).join('')}
+    </div>`;
+  }
+
+  function bindRefModeTabs(root){
+    if(!root) return;
+    root.querySelectorAll('[data-brc-refmode-tab]').forEach(btn=>btn.addEventListener('click',()=>{
+      const mode=String(btn.dataset.brcRefmodeTab||'balance');
+      if(!BRC_REFMODE_CONFIG[mode]) return;
+      brcRefModeSelected=mode;
+      root.querySelectorAll('[data-brc-refmode-tab]').forEach(x=>{const on=x===btn;x.classList.toggle('active',on);x.setAttribute('aria-selected',on?'true':'false');});
+      root.querySelectorAll('[data-brc-refmode-panel]').forEach(x=>x.classList.toggle('active',x.dataset.brcRefmodePanel===mode));
+      try{brcApplyAiOutcomeMark();}catch(_e){}
+    }));
+  }
+
+
   function reasonText(data){
     if(data.reason==='HEAD_MARK_WEAK') return '1着の最高印が△以下。旧方式では頭を作らない判定。';
     if(data.reason==='HEAD_3PLUS') return '最高印が3艇以上並び、2艇以内へ自然に絞れないため見送り。';
@@ -18619,18 +18920,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     const statusClass=data.decision==='pass'?'skip':(data.decision==='one'?'one':'two');
     const modeLabel=data.mode==='nige'?'イン逃げ':data.mode==='mixed'?'①＋外艇':data.mode==='nonin'?'外艇頭':'—';
     const markRows=(data.marks||[]).map(x=>`<div class="brc-refmon-mark-row"><span>${typeof scenarioLaneBadge==='function'?scenarioLaneBadge(x.course):x.course}</span><span class="mk ${esc(typeof brcMarkSymbolClass==='function'?brcMarkSymbolClass(x.head):'')}">${esc(x.head)}</span><span>${Math.round(x.rates.win)}%</span></div>`).join('');
-    let body='';
-    if(data.decision==='pass'){
-      body=`<div class="brc-refmon-picks"><div class="brc-refmon-picks-head"><span>BRC参考買い目</span><strong>見送り</strong></div><div class="brc-refmon-pass"><strong>${esc(status)}</strong><span>${esc(reasonText(data))}</span></div></div>`;
-    }else{
-      const list=(data.picks||[]).map(x=>`<div class="brc-refmon-pick" data-brc-refmon-combo="${esc(x.combo)}"><strong>${esc(x.combo)}</strong><span class="odds" data-brc-refmon-odds="${esc(x.combo)}">${Number.isFinite(Number(x.odds))?Number(x.odds).toFixed(1)+'倍':'―'}</span></div>`).join('');
-      body=`<div class="brc-refmon-picks" data-brc-ref-monitor-picks="${esc((data.picks||[]).map(x=>x.combo).join(','))}">
-        <div class="brc-refmon-picks-head"><span class="brc-refmon-picks-title">BRC参考買い目${brcBuildReferencePersonalWarningBadgeHtml((data.picks||[]).map(x=>x.combo))}</span><strong>${data.pointCount}点</strong></div>
-        ${data.formation?`<div class="brc-refmon-formation">${esc(data.formation)}</div>`:''}
-        <div class="brc-refmon-pick-list">${list}</div>
-        <div class="brc-refmon-composite"><span>合成オッズ</span><strong data-brc-refmon-composite>${Number.isFinite(Number(data.compositeOdds))?Number(data.compositeOdds).toFixed(1)+'倍':'―'}</strong></div>
-      </div>`;
-    }
+    const body=buildFourModeHtml(data,boats,workerPrediction,phase);
     const legacy=data.variants?.legacyV1||{};
     const changed=JSON.stringify(legacy.heads||[])!==JSON.stringify(data.heads||[])||legacy.decision!==data.decision;
     const decisionReason=data.decision==='pass'?reasonText(data):decisionRuleText(data);
@@ -18652,6 +18942,18 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     </div>`;
   }
 
+  function renderReferenceMonitor(boats,workerPrediction,localInReliability,exhibitionApplied,preserveMode=true){
+    const marksPanel=document.getElementById('brcAiAdminPanel-marks');
+    if(!marksPanel) return null;
+    if(!preserveMode) brcRefModeSelected='balance';
+    marksPanel.querySelector('[data-brc-refmon-root]')?.remove();
+    marksPanel.insertAdjacentHTML('beforeend',buildHtml(boats,workerPrediction,localInReliability,exhibitionApplied));
+    const root=marksPanel.querySelector('[data-brc-refmon-root]');
+    bindRefModeTabs(root);
+    try{brcApplyAiOutcomeMark();}catch(_e){}
+    return root;
+  }
+
   function injectMonitor(boats,workerPrediction,localInReliability,exhibitionApplied){
     if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return;
     const box=document.getElementById('predictAiResult');
@@ -18668,24 +18970,30 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     const marksBtn=tabs.querySelector('[data-brc-ai-admin-tab="marks"]');
     if(marksBtn) marksBtn.textContent='展開マトリックス';
 
-    // 展開マトリックスの直下へ、管理者専用のBRC参考買い目を一体表示する。
-    marksPanel.querySelector('[data-brc-refmon-root]')?.remove();
-    marksPanel.insertAdjacentHTML('beforeend',buildHtml(boats,workerPrediction,localInReliability,exhibitionApplied));
+    brcRefModeLastArgs={boats,workerPrediction,localInReliability,exhibitionApplied};
+    renderReferenceMonitor(boats,workerPrediction,localInReliability,exhibitionApplied,false);
 
-    try{brcApplyAiOutcomeMark();}catch(_e){}
     try{window.brcSetAiAdminSubTab?.(window.__brcAiAdminSubTabCurrent||'marks');}catch(_e){}
     Promise.resolve().then(()=>saveCurrent(boats,workerPrediction,localInReliability,exhibitionApplied)).catch(()=>{});
   }
 
-
   function refreshOdds(){
-    const root=document.querySelector('[data-brc-refmon-root]'), picksBox=root?.querySelector('[data-brc-ref-monitor-picks]'); if(!picksBox) return;
-    const combos=String(picksBox.dataset.brcRefMonitorPicks||'').split(',').map(x=>x.trim()).filter(Boolean); if(!combos.length) return;
-    let odds=null; try{ const sel=brcOddsSelection(); odds=sel?.key?(__brcOddsLocal?.[sel.key]?.odds||null):null; }catch(_e){}
-    const vals=[];
-    combos.forEach(c=>{ let v=null; try{v=brcOddsValue(odds,c);}catch(_e){} if(v!==null) vals.push(v); const el=picksBox.querySelector(`[data-brc-refmon-odds="${c}"]`); if(el) el.textContent=v===null?'―':`${v.toFixed(1)}倍`; });
-    let comp=null; if(vals.length===combos.length){ try{comp=brcOddsBuilderComposite(vals.map(v=>({odds:v})));}catch(_e){} }
-    const ce=picksBox.querySelector('[data-brc-refmon-composite]'); if(ce) ce.textContent=Number.isFinite(comp)?`${comp.toFixed(1)}倍`:'―';
+    // 回収型 / 高配当型は現在オッズ自体が採否条件なので、オッズ更新時は4モード全体を再生成する。
+    if(brcRefModeLastArgs){
+      const a=brcRefModeLastArgs;
+      renderReferenceMonitor(a.boats,a.workerPrediction,a.localInReliability,a.exhibitionApplied,true);
+      return;
+    }
+    const root=document.querySelector('[data-brc-refmon-root]');
+    if(!root) return;
+    root.querySelectorAll('[data-brc-ref-monitor-picks]').forEach(picksBox=>{
+      const combos=String(picksBox.dataset.brcRefMonitorPicks||'').split(',').map(x=>x.trim()).filter(Boolean); if(!combos.length) return;
+      let odds=null; try{ const sel=brcOddsSelection(); odds=sel?.key?(__brcOddsLocal?.[sel.key]?.odds||null):null; }catch(_e){}
+      const vals=[];
+      combos.forEach(c=>{ let v=null; try{v=brcOddsValue(odds,c);}catch(_e){} if(v!==null) vals.push(v); const el=picksBox.querySelector(`[data-brc-refmon-odds="${c}"]`); if(el) el.textContent=v===null?'―':`${v.toFixed(1)}倍`; });
+      let comp=null; if(vals.length===combos.length){ try{comp=brcOddsBuilderComposite(vals.map(v=>({odds:v})));}catch(_e){} }
+      const ce=picksBox.querySelector('[data-brc-refmon-composite]'); if(ce) ce.textContent=Number.isFinite(comp)?`${comp.toFixed(1)}倍`:'―';
+    });
   }
   window.brcRefreshReferenceMonitorOdds=refreshOdds;
 
@@ -19138,5 +19446,102 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 </script>
 
 
+<script id="brc-member-admin-restore-script">
+// BRC_MEMBER_ADMIN_MOBILE_RESTORE_V2_20260916
+(function(){
+  function el(id){ return document.getElementById(id); }
+  function setStatus(message, isError){
+    const node=el('brcMemberAdminStatus');
+    if(!node) return;
+    node.textContent=String(message||'');
+    node.style.color=isError?'#b42318':'var(--ink-soft)';
+  }
+  function clearResult(){
+    const result=el('brcMemberAdminResult');
+    if(result) result.classList.remove('is-visible');
+    const n=el('brcMemberAdminResultName'), i=el('brcMemberAdminResultId'), p=el('brcMemberAdminResultPassword');
+    if(n) n.textContent='-'; if(i) i.textContent='-'; if(p) p.textContent='-';
+    setStatus('',false);
+  }
+  function normalizePassword(value){
+    if(value===null || value===undefined) return '';
+    const raw=String(value);
+    return /^\d{1,4}$/.test(raw) ? raw.padStart(4,'0') : raw;
+  }
+  function readIssued(data, fallbackName){
+    data=(data&&typeof data==='object')?data:{};
+    const nested=(data.member&&typeof data.member==='object')?data.member:{};
+    const salonName=data.salon_name ?? data.salonName ?? data.display_name ?? data.name ?? nested.salon_name ?? nested.salonName ?? nested.display_name ?? fallbackName;
+    const memberId=data.member_id ?? data.memberId ?? data.id ?? nested.member_id ?? nested.memberId ?? nested.id ?? '';
+    const password=normalizePassword(data.password ?? data.temporary_password ?? data.temp_password ?? data.initial_password ?? nested.password ?? nested.temporary_password ?? nested.temp_password ?? nested.initial_password ?? '');
+    return {salonName:String(salonName||fallbackName||''),memberId:String(memberId||''),password};
+  }
+  function errorText(data,status){
+    const code=String(data?.reason||data?.error||data?.message||'');
+    if(status===401) return '管理者ログインの有効期限が切れています。再ログインしてください。';
+    if(status===403) return 'この操作は管理者のみ実行できます。';
+    if(code==='salon_name_required' || code==='invalid_salon_name') return 'サロンメンバー名を確認してください。';
+    if(code==='member_already_exists' || code==='duplicate_member') return '同じ会員情報がすでに存在します。';
+    return code ? `発行できませんでした：${code}` : `発行できませんでした（HTTP ${status}）`;
+  }
+  async function issue(){
+    const input=el('brcMemberAdminSalonName');
+    const button=el('brcMemberAdminIssue');
+    const result=el('brcMemberAdminResult');
+    const salonName=String(input?.value||'').trim();
+    if(!salonName){ setStatus('サロンメンバー名を入力してください。',true); input?.focus(); return; }
+    if(typeof BRC_ADMIN_ACTIVE!=='undefined' && !BRC_ADMIN_ACTIVE){ setStatus('管理者ログイン時のみ発行できます。',true); return; }
+    if(button) button.disabled=true;
+    if(result) result.classList.remove('is-visible');
+    setStatus('発行しています…',false);
+    try{
+      const session=(typeof brcEnsureFreshSession==='function') ? await brcEnsureFreshSession() : null;
+      if(!session?.access_token) throw Object.assign(new Error('session_required'),{status:401});
+      const res=await fetch(BRC_MEMBER_ADMIN_URL+'/admin/member/issue',{
+        method:'POST',
+        headers:{
+          'Authorization':'Bearer '+session.access_token,
+          'Content-Type':'application/json',
+          'Accept':'application/json'
+        },
+        body:JSON.stringify({salon_name:salonName})
+      });
+      let data=null;
+      try{ data=await res.json(); }catch(_e){ data=null; }
+      if(!res.ok) throw Object.assign(new Error(errorText(data,res.status)),{status:res.status,data});
+      const issued=readIssued(data,salonName);
+      if(!issued.memberId || !issued.password) throw new Error('発行結果の会員IDまたはパスワードを取得できませんでした。');
+      if(el('brcMemberAdminResultName')) el('brcMemberAdminResultName').textContent=issued.salonName;
+      if(el('brcMemberAdminResultId')) el('brcMemberAdminResultId').textContent=issued.memberId;
+      if(el('brcMemberAdminResultPassword')) el('brcMemberAdminResultPassword').textContent=issued.password;
+      if(result) result.classList.add('is-visible');
+      setStatus('発行しました。LINE送信用にコピーできます。',false);
+    }catch(err){
+      const msg=(err&&err.message&&err.message!=='session_required')?err.message:'管理者ログインの有効期限が切れています。再ログインしてください。';
+      setStatus(msg,true);
+    }finally{ if(button) button.disabled=false; }
+  }
+  async function copyForLine(){
+    const name=String(el('brcMemberAdminResultName')?.textContent||'').trim();
+    const id=String(el('brcMemberAdminResultId')?.textContent||'').trim();
+    const password=String(el('brcMemberAdminResultPassword')?.textContent||'').trim();
+    if(!id || id==='-' || !password || password==='-'){ setStatus('先にID・パスワードを発行してください。',true); return; }
+    const text=`BRC会員情報\n会員名：${name}\n会員ID：${id}\nパスワード：${password}`;
+    try{
+      if(navigator.clipboard?.writeText) await navigator.clipboard.writeText(text);
+      else { const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+      setStatus('LINE送信用の会員情報をコピーしました。',false);
+    }catch(_e){ setStatus('コピーできませんでした。会員IDとパスワードを手動でコピーしてください。',true); }
+  }
+  function init(){
+    el('brcMemberAdminIssue')?.addEventListener('click',issue);
+    el('brcMemberAdminCopy')?.addEventListener('click',copyForLine);
+    el('brcMemberAdminClear')?.addEventListener('click',clearResult);
+    el('brcMemberAdminSalonName')?.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();issue();} });
+    try{ if(typeof brcSetMemberAdminUi==='function' && typeof BRC_ADMIN_ACTIVE!=='undefined') brcSetMemberAdminUi(BRC_ADMIN_ACTIVE); }catch(_e){}
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true}); else init();
+})();
+</script>\n
 </body>
 </html>
