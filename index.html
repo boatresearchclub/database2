@@ -4445,7 +4445,7 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
             <div class="brc-admin-today-hits-title">🎯 本日の的中速報</div>
             <span class="brc-admin-today-hits-admin">管理者専用</span>
           </div>
-          <div class="brc-admin-today-hits-sub">BRC参考買い目4モードを確定結果と照合し、保存済み判定と画面判定を統合して最新順で表示します。</div>
+          <div class="brc-admin-today-hits-sub">BRC参考買い目の確定セットを確定結果と照合し、最新順で表示します。</div>
         </div>
         <div id="brcAdminTodayHitsSummary" class="brc-admin-today-hits-summary"><strong>0的中</strong>最高 ―</div>
       </div>
@@ -18886,6 +18886,69 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   };
   let brcRefModeSelected='balance';
   let brcRefModeLastArgs=null;
+  let brcRefModeLockedSnapshot=null;
+  let brcRefModeLockedRaceKey='';
+
+  function brcRefCurrentSelection(){
+    try{return brcOddsSelection?.()||null;}catch(_e){return null;}
+  }
+  function brcRefCurrentRaceKey(){
+    const s=brcRefCurrentSelection();
+    return s?.key||'';
+  }
+  function brcRefAfterDeadline(){
+    try{
+      const s=brcRefCurrentSelection();
+      return !!(s?.key&&brcOddsDeadlinePassed(s));
+    }catch(_e){return false;}
+  }
+  function brcRefLockedForCurrent(){
+    const key=brcRefCurrentRaceKey();
+    return key&&brcRefModeLockedRaceKey===key?brcRefModeLockedSnapshot:null;
+  }
+  function brcRefCanonicalRank(row){
+    const p=String(row?.phase||'');
+    if(p==='exhibition'||p==='current') return 3;
+    if(p==='pre') return 2;
+    if(p==='recovered') return 1;
+    return 0;
+  }
+  function brcRefCapturedScore(row){
+    const t=Date.parse(String(row?.capturedAt||''));
+    return Number.isFinite(t)?t:0;
+  }
+  async function brcLoadLockedSnapshotForCurrent(){
+    const sel=brcRefCurrentSelection();
+    const key=sel?.key||'';
+    if(!key||!brcRefAfterDeadline()){
+      if(brcRefModeLockedRaceKey!==key||brcRefModeLockedSnapshot){
+        brcRefModeLockedRaceKey=key;
+        brcRefModeLockedSnapshot=null;
+      }
+      return null;
+    }
+    const rows=await dbGetAll();
+    const code=String(sel.code||'').padStart(2,'0');
+    const candidates=(Array.isArray(rows)?rows:[]).filter(r=>{
+      const rcode=String(r?.venueCode||'').padStart(2,'0');
+      return String(r?.date||'')===String(sel.date||'') &&
+        Number(r?.raceNo||0)===Number(sel.raceNo||0) &&
+        (!!code ? rcode===code : String(r?.venue||'')===String(sel.venue||'')) &&
+        r?.refModes && typeof r.refModes==='object';
+    }).sort((a,b)=>brcRefCanonicalRank(b)-brcRefCanonicalRank(a)||brcRefCapturedScore(b)-brcRefCapturedScore(a));
+
+    const picked=candidates[0]||null;
+    const prevId=String(brcRefModeLockedSnapshot?.id||'');
+    const nextId=String(picked?.id||'');
+    brcRefModeLockedRaceKey=key;
+    brcRefModeLockedSnapshot=picked;
+    if(prevId!==nextId && brcRefModeLastArgs){
+      const a=brcRefModeLastArgs;
+      renderReferenceMonitor(a.boats,a.workerPrediction,a.localInReliability,a.exhibitionApplied,true);
+    }
+    return picked;
+  }
+  window.brcReloadReferenceCanonicalSource=brcLoadLockedSnapshotForCurrent;
 
   function buildRefModeCandidatePool(data,boats,workerPrediction,phase){
     if(!data||data.decision==='pass') return [];
@@ -18955,7 +19018,15 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       const modes={};
       ['hit','balance'].forEach(mode=>{
         const md=buildRefModeData(mode,data,boats,workerPrediction,phase);
-        modes[mode]={label:md?.cfg?.label||BRC_REFMODE_CONFIG[mode]?.label||mode,decision:md?.decision||'pass',picks:(md?.picks||[]).map(x=>String(x?.combo||'')).filter(Boolean)};
+        modes[mode]={
+          label:md?.cfg?.label||BRC_REFMODE_CONFIG[mode]?.label||mode,
+          decision:md?.decision||'pass',
+          passReason:String(md?.passReason||''),
+          pointCount:Number(md?.pointCount)||0,
+          formation:String(md?.formation||''),
+          compositeOdds:Number.isFinite(Number(md?.compositeOdds))?Number(md.compositeOdds):null,
+          picks:(md?.picks||[]).map(x=>({combo:String(x?.combo||''),odds:Number.isFinite(Number(x?.odds))?Number(x.odds):null})).filter(x=>/^([1-6]-){2}[1-6]$/.test(x.combo))
+        };
       });
       return {data,modes};
     }catch(_e){return null;}
@@ -19021,8 +19092,39 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     </div>`;
   }
 
+  function brcRefCanonicalMode(mode,liveMd){
+    const cfg=BRC_REFMODE_CONFIG[mode]||BRC_REFMODE_CONFIG.balance;
+    const lock=brcRefLockedForCurrent();
+    if(lock){
+      const src=lock?.refModes?.[mode];
+      if(src){
+        const picks=(Array.isArray(src.picks)?src.picks:[]).map(x=>{
+          if(typeof x==='string') return {combo:x,odds:null};
+          return {combo:String(x?.combo||''),odds:Number.isFinite(Number(x?.odds))?Number(x.odds):null};
+        }).filter(x=>/^([1-6]-){2}[1-6]$/.test(x.combo));
+        return {
+          ...liveMd,cfg,
+          decision:String(src.decision||'pass'),
+          passReason:String(src.passReason||''),
+          picks,
+          pointCount:Number(src.pointCount)||picks.length,
+          formation:String(src.formation||''),
+          compositeOdds:Number.isFinite(Number(src.compositeOdds))?Number(src.compositeOdds):null
+        };
+      }
+      return {...liveMd,cfg,decision:'pass',picks:[],pointCount:0,formation:'',compositeOdds:null,
+        passReason:'このモードは締切前の確定セットがないため、結果確定後の再計算は速報に使用しません。'};
+    }
+    if(brcRefAfterDeadline()){
+      return {...liveMd,cfg,decision:'pass',picks:[],pointCount:0,formation:'',compositeOdds:null,
+        passReason:'締切前の確定セットを確認中です。結果確定後の再計算は速報に使用しません。'};
+    }
+    return liveMd;
+  }
+
   function refModePanelHtml(mode,data,boats,workerPrediction,phase){
-    const md=buildRefModeData(mode,data,boats,workerPrediction,phase), cfg=md.cfg;
+    const liveMd=buildRefModeData(mode,data,boats,workerPrediction,phase);
+    const md=brcRefCanonicalMode(mode,liveMd), cfg=md.cfg;
     const oddsRule=cfg.minOdds!=null?`<div class="brc-refmode-shadow-note">オッズ条件：${cfg.minOdds}倍以上。条件不足時は見送り、オッズ更新時に再計算します。</div>`:'';
     const shadowNote=mode==='return'?'<div class="brc-refmode-parity-note"><strong>Shadow+</strong>：運用候補として監視継続。サンプルを蓄積して本番判定します。</div>':(mode==='high'?'<div class="brc-refmode-parity-note"><strong>Shadow</strong>：高配当狙いは回収率の安定性を確認中です。</div>':'');
     return `<div class="brc-refmode-panel ${mode===brcRefModeSelected?'active':''}" data-brc-refmode-panel="${mode}">
@@ -19036,8 +19138,10 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 
   function buildFourModeHtml(data,boats,workerPrediction,phase){
     const order=['hit','balance','return','high'];
+    const lock=brcRefLockedForCurrent();
+    const note=lock?(String(lock.phase)==='recovered'?'同一ロジック再構成':'締切前最終保存'):'展開マトリックス × 用途別4モード';
     return `<div class="brc-refmode-shell">
-      <div class="brc-refmode-head"><span class="brc-refmode-head-title">BRC参考買い目</span><span class="brc-refmode-head-note">展開マトリックス × 用途別4モード</span></div>
+      <div class="brc-refmode-head"><span class="brc-refmode-head-title">BRC参考買い目</span><span class="brc-refmode-head-note">${esc(note)}</span></div>
       <div class="brc-refmode-tabs" role="tablist" aria-label="BRC参考買い目モード">
         ${order.map(mode=>`<button type="button" class="brc-refmode-tab ${mode===brcRefModeSelected?'active':''}" data-brc-refmode-tab="${mode}" role="tab" aria-selected="${mode===brcRefModeSelected?'true':'false'}">${esc(BRC_REFMODE_CONFIG[mode].label)}</button>`).join('')}
       </div>
@@ -19105,7 +19209,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     const legacy=data.variants?.legacyV1||{};
     const changed=JSON.stringify(legacy.heads||[])!==JSON.stringify(data.heads||[])||legacy.decision!==data.decision;
     const decisionReason=data.decision==='pass'?reasonText(data):decisionRuleText(data);
-    return `<div class="brc-refmon-card" data-brc-refmon-root>
+    const sourceKind=brcRefLockedForCurrent()?(String(brcRefLockedForCurrent()?.phase)==='recovered'?'recovered':'locked'):(brcRefAfterDeadline()?'pending':'live');
+    return `<div class="brc-refmon-card" data-brc-refmon-root data-brc-ref-source="${sourceKind}">
       ${body}
       <!-- 将来の管理者成績監視差し込み口。100円/点想定、2024探索・2025検証・2026完全OOS・LIVE-OOSはデータセットを混在させない。 -->
       <div class="brc-refmon-performance-slot" data-brc-refmon-performance-slot hidden></div>
@@ -19130,7 +19235,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     refPanel.innerHTML=buildHtml(boats,workerPrediction,localInReliability,exhibitionApplied);
     const root=refPanel.querySelector('[data-brc-refmon-root]');
     bindRefModeTabs(root);
-    try{brcApplyAiOutcomeMark();}catch(_e){}
+    try{
+      if(!brcRefAfterDeadline()||brcRefLockedForCurrent()) brcApplyAiOutcomeMark();
+    }catch(_e){}
     return root;
   }
   window.brcRenderReferenceMonitorPanel=function(boats,workerPrediction,localInReliability,exhibitionApplied){
@@ -19168,11 +19275,19 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     refBtn.textContent='BRC参考買い目';
 
     brcRefModeLastArgs={boats,workerPrediction,localInReliability,exhibitionApplied};
+    const nowKey=brcRefCurrentRaceKey();
+    if(brcRefModeLockedRaceKey && brcRefModeLockedRaceKey!==nowKey){
+      brcRefModeLockedRaceKey='';
+      brcRefModeLockedSnapshot=null;
+    }
     renderReferenceMonitor(boats,workerPrediction,localInReliability,exhibitionApplied,false);
 
     try{brcBindAiAdminSubTabs?.();}catch(_e){}
     try{window.brcSetAiAdminSubTab?.(window.__brcAiAdminSubTabCurrent||'marks');}catch(_e){}
-    Promise.resolve().then(()=>saveCurrent(boats,workerPrediction,localInReliability,exhibitionApplied)).catch(()=>{});
+    Promise.resolve().then(async()=>{
+      await saveCurrent(boats,workerPrediction,localInReliability,exhibitionApplied);
+      await brcLoadLockedSnapshotForCurrent();
+    }).catch(()=>{});
   }
 
   function refreshOdds(){
@@ -19278,7 +19393,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       if(p) p.classList.toggle('active',x===k);
     });
     if(k==='nige') setTimeout(()=>{try{brcEnsureAiReferenceOddsAfterDeadline();}catch(_e){}},0);
-    if(k==='ref') setTimeout(refreshOdds,0);
+    if(k==='ref') setTimeout(()=>{refreshOdds();brcLoadLockedSnapshotForCurrent().catch(()=>{});},0);
   };
 
 
@@ -19796,24 +19911,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   function doneState(date){const all=readJson(REC_DONE_KEY,{});return {all:all&&typeof all==='object'?all:{},set:new Set(Array.isArray(all?.[date])?all[date]:[])};}
   function saveDoneState(date,state){state.all[date]=[...state.set].slice(-240);writeJson(REC_DONE_KEY,state.all);}
 
-  window.brcRecordVisibleReferenceHits=function(_raceKey,combo,result){
-    try{
-      if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return false;
-      const hitCombo=normalizedCombo(combo||result?.combination); if(!hitCombo) return false;
-      const sel=brcOddsSelection(); if(!sel?.venue||!sel?.raceNo||!sel?.date) return false;
-      const payout=Number(result?.payout_yen), deadline=String(RACE_INFO_TODAY?.[sel.venue]?.deadlines?.[String(sel.raceNo)]||'');
-      let added=false;
-      document.querySelectorAll('#brcAiAdminPanel-ref [data-brc-refmode-panel]').forEach(panel=>{
-        const mode=String(panel.dataset.brcRefmodePanel||''); if(!MODES.includes(mode)) return;
-        const box=panel.querySelector('.brc-refmon-picks[data-brc-ref-monitor-picks]'); if(!box) return;
-        const combos=String(box.dataset.brcRefMonitorPicks||'').split(',').map(normalizedCombo).filter(Boolean);
-        if(!combos.includes(hitCombo)) return;
-        added=addRecoveredHit({date:String(sel.date),venue:String(sel.venue),venueCode:String(sel.code||'').padStart(2,'0'),raceNo:Number(sel.raceNo),deadline,mode,label:MODE_LABEL[mode],combo:hitCombo,payout:Number.isFinite(payout)?payout:null,source:'visible-same-source'})||added;
-      });
-      if(added) setTimeout(()=>refresh(false),0);
-      return added;
-    }catch(_e){return false;}
-  };
+  // 結果確定後に画面を開いて再計算された買い目は、速報の正本にしない。
+  // 速報は canonical snapshot（展示後保存 > 展示前保存 > 同一ロジック再構成）だけを使用する。
+  window.brcRecordVisibleReferenceHits=function(){ return false; };
 
   function recoveryDeadlineMs(date,hhmm){const m=String(hhmm||'').match(/^(\d{1,2}):(\d{2})$/);return m?Date.parse(`${date}T${m[1].padStart(2,'0')}:${m[2]}:00+09:00`):NaN;}
   function recoveryBuildBoats(spec,prediction,live){
@@ -19849,10 +19949,32 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     try{const p1=boats.find(b=>Number(b.course)===1);localIr=classifyInReliabilityByWinPct(applied?p1?.pctFloat:p1?.basePctFloat,spec.grade,(spec.apiBoats||[]).map(b=>b.reg),detail.result.inReliability)||localIr;}catch(_e){}
     const pack=typeof window.brcBuildReferenceRecoveryModes==='function'?window.brcBuildReferenceRecoveryModes(boats,detail.result,localIr,applied?'current':'pre'):null;
     if(!pack?.modes) return {done:false,key:rkey};
+
+    const recModes={};
+    ['hit','balance'].forEach(mode=>{
+      const md=pack.modes?.[mode];
+      if(md) recModes[mode]=md;
+    });
+    try{
+      await putSnapshot({
+        id:`BRC_TODAY_HITS_RECOVERY_LOCK_V1|${date}|${code}|${raceNo}`,
+        version:'BRC_TODAY_HITS_RECOVERY_LOCK_V1',
+        date,venue:String(spec.venue||''),venueCode:code,raceNo,
+        deadline:String(spec.deadline||''),phase:'recovered',
+        capturedAt:new Date().toISOString(),refModes:recModes,recoveryOnly:true
+      });
+    }catch(_e){}
+    try{
+      if(typeof window.brcReloadReferenceCanonicalSource==='function'){
+        Promise.resolve(window.brcReloadReferenceCanonicalSource()).catch(()=>{});
+      }
+    }catch(_e){}
+
     const combo=normalizedCombo(result?.combination), payout=Number(result?.payout_yen); let added=0;
     ['hit','balance'].forEach(mode=>{
       const md=pack.modes?.[mode]; if(!md||md.decision==='pass') return;
-      if((md.picks||[]).map(normalizedCombo).includes(combo)){
+      const combos=(md.picks||[]).map(x=>normalizedCombo(x?.combo||x)).filter(Boolean);
+      if(combos.includes(combo)){
         if(addRecoveredHit({date,venue:String(spec.venue||''),venueCode:code,raceNo,deadline:String(spec.deadline||''),mode,label:String(md.label||MODE_LABEL[mode]),combo,payout:Number.isFinite(payout)?payout:null,source:applied?'auto-recovery-current':'auto-recovery-pre'})) added++;
       }
     });
@@ -19900,10 +20022,21 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     try{return await new Promise((resolve,reject)=>{const tx=db.transaction(DB_STORE,'readonly');const q=tx.objectStore(DB_STORE).getAll();q.onsuccess=()=>resolve(Array.isArray(q.result)?q.result:[]);q.onerror=()=>reject(q.error);});}
     finally{db.close();}
   }
+  async function putSnapshot(row){
+    const db=await openDb();
+    try{return await new Promise((resolve,reject)=>{const tx=db.transaction(DB_STORE,'readwrite');const q=tx.objectStore(DB_STORE).put(row);q.onsuccess=()=>resolve(true);q.onerror=()=>reject(q.error);});}
+    finally{db.close();}
+  }
   function capturedScore(r){const t=Date.parse(String(r?.capturedAt||''));return Number.isFinite(t)?t:0;}
   function phasePriority(row){
     const phase=String(row?.phase||'');
-    return (phase==='exhibition'||phase==='current')?2:1;
+    if(phase==='exhibition'||phase==='current') return 3;
+    if(phase==='pre') return 2;
+    if(phase==='recovered') return 1;
+    return 0;
+  }
+  function chooseCanonicalRow(list){
+    return (Array.isArray(list)?list:[]).slice().sort((a,b)=>phasePriority(b)-phasePriority(a)||capturedScore(b)-capturedScore(a))[0]||null;
   }
   function groupSourceRows(rows,date){
     const byRace=new Map();
@@ -19993,30 +20126,27 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     if(force)setLoading();
     try{
       const grouped=groupSourceRows(await getAll(),date);
-      const source=[...grouped.values()].map(list=>list.slice().sort((a,b)=>phasePriority(b)-phasePriority(a)||capturedScore(b)-capturedScore(a))[0]);
+      const source=[...grouped.values()].map(chooseCanonicalRow).filter(Boolean);
       if(!source.length){setSummary(0,NaN);setLoading('本日のBRC参考買い目はまだ保存されていません。');return true;}
       const hits=[];let settled=0;
       for(const primary of source.sort((a,b)=>timeScore(b)-timeScore(a))){
-        const key=`${String(primary?.venueCode||'').padStart(2,'0')}:${Number(primary?.raceNo||0)}`;
-        const group=(grouped.get(key)||[]).slice().sort((a,b)=>phasePriority(b)-phasePriority(a)||capturedScore(b)-capturedScore(a));
-        const spec=resultSpec(group[0]||primary); if(!spec) continue;
+        const spec=resultSpec(primary); if(!spec) continue;
         const result=await fetchConfirmed(spec); if(!result) continue;
         settled++;
-        const combo=String(result?.combination||''); const payout=Number(result?.payout_yen);
+        const combo=normalizedCombo(result?.combination); const payout=Number(result?.payout_yen);
+        const modes=primary?.refModes||primary?.fourModes||primary?.referenceModes||{};
         for(const mode of MODES){
-          const matchedRow=group.find(row=>{
-            const modes=row?.refModes||row?.fourModes||row?.referenceModes||{};
-            const md=modes?.[mode]; if(!md||md.decision==='pass') return false;
-            const picks=Array.isArray(md.picks)?md.picks:[];
-            return picks.some(p=>String(p?.combo||p)===combo);
+          const md=modes?.[mode]; if(!md||md.decision==='pass') continue;
+          const picks=Array.isArray(md.picks)?md.picks:[];
+          const matched=picks.some(p=>normalizedCombo(p?.combo||p)===combo);
+          if(!matched) continue;
+          hits.push({
+            venue:String(primary.venue||''),venueCode:String(primary.venueCode||''),
+            raceNo:Number(primary.raceNo),deadline:String(primary.deadline||''),
+            mode,label:String(md.label||MODE_LABEL[mode]),combo,payout
           });
-          if(!matchedRow) continue;
-          const modes=matchedRow?.refModes||matchedRow?.fourModes||matchedRow?.referenceModes||{};
-          const md=modes?.[mode]||{};
-          hits.push({venue:String(matchedRow.venue||primary.venue||''),raceNo:Number(matchedRow.raceNo||primary.raceNo),deadline:String(matchedRow.deadline||primary.deadline||''),mode,label:String(md.label||MODE_LABEL[mode]),combo,payout});
         }
       }
-      for(const r of recoveredRows(date)) hits.push({venue:String(r.venue||''),venueCode:String(r.venueCode||''),raceNo:Number(r.raceNo),deadline:String(r.deadline||''),mode:String(r.mode||''),label:String(r.label||MODE_LABEL[r.mode]||r.mode||''),combo:normalizedCombo(r.combo),payout:Number(r.payout)});
       const seen=new Set(), merged=[];
       for(const x of hits){
         const k=`${String(x.venueCode||brcVenueCodeFromName(x.venue)||'').padStart(2,'0')}|${Number(x.raceNo)}|${x.mode}|${normalizedCombo(x.combo)}`;
@@ -20182,6 +20312,13 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   .brc-nige-order-picks .brc-nige-order-formation{display:block;}
   .brc-nige-order-picks .brc-refmon-formation-label{display:block;margin-bottom:4px;line-height:1.2;}
 }
+</style>
+
+
+<style id="brc-reference-canonical-source-20260916">
+.brc-refmon-card[data-brc-ref-source="locked"] .brc-refmode-head-note{color:var(--trend-up);font-weight:900;}
+.brc-refmon-card[data-brc-ref-source="recovered"] .brc-refmode-head-note{color:#9a5d00;font-weight:900;}
+.brc-refmon-card[data-brc-ref-source="pending"] .brc-refmode-head-note{color:var(--ink-soft);font-weight:800;}
 </style>
 
 </body>
