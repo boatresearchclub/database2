@@ -4092,7 +4092,7 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
 .brc-admin-hit-mode.balance{color:#217247;background:rgba(47,143,91,.09);border-color:rgba(47,143,91,.20);}
 .brc-admin-hit-mode.return{color:#a85e00;background:rgba(217,119,6,.10);border-color:rgba(217,119,6,.20);}
 .brc-admin-hit-mode.high{color:#6d28d9;background:rgba(124,58,237,.09);border-color:rgba(124,58,237,.20);}
-.brc-admin-hit-body{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:8px;margin-top:9px;padding-top:8px;border-top:1px solid rgba(10,31,51,.07);}
+.brc-admin-hit-body{display:block;margin-top:9px;padding-top:8px;border-top:1px solid rgba(10,31,51,.07);min-width:0;}
 .brc-admin-hit-combo-wrap{min-width:0;}
 .brc-admin-hit-k{font-size:8.5px;font-weight:850;color:var(--ink-soft);margin-bottom:4px;}
 .brc-admin-hit-combo{display:flex;align-items:center;gap:3px;white-space:nowrap;}
@@ -4104,10 +4104,13 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
 .brc-admin-hit-boat.lane5,.brc-ref-combo-boat.lane5{background:var(--lane5);color:var(--lane5-text);border-color:#c4972d;}
 .brc-admin-hit-boat.lane6,.brc-ref-combo-boat.lane6{background:var(--lane6);color:var(--lane6-text);border-color:var(--lane6);}
 .brc-admin-hit-sep,.brc-ref-combo-sep{font-size:10px;font-weight:900;color:var(--ink-soft);}
-.brc-admin-hit-payout{text-align:right;flex:0 0 auto;min-width:82px;max-width:100%;}
-.brc-admin-hit-payout .v{font-size:clamp(16px,4.8vw,22px);font-weight:950;color:var(--navy);line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:-.02em;}
+.brc-admin-hit-payout{display:flex;align-items:flex-end;justify-content:space-between;gap:6px;margin-top:8px;padding-top:7px;border-top:1px solid rgba(10,31,51,.055);text-align:right;min-width:0;max-width:100%;}
+.brc-admin-hit-payout .brc-admin-hit-k{margin:0 0 1px;flex:0 0 auto;}
+.brc-admin-hit-payout .v{min-width:0;max-width:100%;font-size:21px;font-weight:950;color:var(--navy);line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:-.035em;}
 .brc-admin-hit-payout .v.high{color:#d1373f;}
-.brc-admin-hit-payout .v small{font-size:.56em;margin-left:1px;}
+.brc-admin-hit-payout .v.big{font-size:19px;}
+.brc-admin-hit-payout .v.huge{font-size:17px;letter-spacing:-.045em;}
+.brc-admin-hit-payout .v small{font-size:.55em;margin-left:1px;}
 .brc-admin-hit-empty{flex:1 0 100%;padding:16px 10px;border:1px dashed rgba(10,31,51,.14);border-radius:10px;background:rgba(10,31,51,.012);text-align:center;color:var(--ink-soft);font-size:10.5px;line-height:1.6;}
 .brc-admin-hit-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:1px;font-size:8.5px;color:var(--ink-soft);}
 .brc-admin-hit-refresh{appearance:none;border:0;background:transparent;color:var(--wave);padding:2px 0;font:inherit;font-size:8.5px;font-weight:900;cursor:pointer;}
@@ -4131,8 +4134,10 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
   .brc-admin-hit-card{flex:0 0 calc((100% - 7px)/2);padding:9px 8px 10px;}
   .brc-admin-hit-race{font-size:14px;}
   .brc-admin-hit-mode{font-size:8.5px;padding:3px 6px;}
-  .brc-admin-hit-payout{min-width:72px;}
-  .brc-admin-hit-payout .v{font-size:clamp(14px,4.8vw,18px);}
+  .brc-admin-hit-payout{margin-top:7px;padding-top:6px;}
+  .brc-admin-hit-payout .v{font-size:19px;}
+  .brc-admin-hit-payout .v.big{font-size:17px;}
+  .brc-admin-hit-payout .v.huge{font-size:15.5px;}
   .brc-admin-hit-boat,.brc-ref-combo-boat{width:21px;height:21px;font-size:10.5px;}
 }
 </style>
@@ -19936,11 +19941,12 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   function hitCardHtml(x,index){
     const payout=Number(x.payout);
     const payoutHigh=Number.isFinite(payout)&&payout>=10000;
+    const payoutSize=Number.isFinite(payout)?(payout>=1000000?'huge':payout>=100000?'big':''):'';
     return `<button type="button" class="brc-admin-hit-card ${index===0?'latest':''}" data-brc-hit-venue="${esc(x.venue)}" data-brc-hit-race="${x.raceNo}">
       <div class="brc-admin-hit-top"><span class="brc-admin-hit-race">${esc(x.venue)} ${x.raceNo}R</span><span class="brc-admin-hit-mode ${x.mode}">${esc(x.label)}</span></div>
       <div class="brc-admin-hit-body">
         <div class="brc-admin-hit-combo-wrap"><div class="brc-admin-hit-k">的中</div><div class="brc-admin-hit-combo">${comboHtml(x.combo)}</div></div>
-        <div class="brc-admin-hit-payout"><div class="brc-admin-hit-k">3連単配当</div><div class="v ${payoutHigh?'high':''}">${Number.isFinite(payout)?payout.toLocaleString('ja-JP'):'―'}<small>${Number.isFinite(payout)?'円':''}</small></div></div>
+        <div class="brc-admin-hit-payout"><div class="brc-admin-hit-k">3連単配当</div><div class="v ${payoutHigh?'high':''} ${payoutSize}">${Number.isFinite(payout)?payout.toLocaleString('ja-JP'):'―'}<small>${Number.isFinite(payout)?'円':''}</small></div></div>
       </div>
     </button>`;
   }
