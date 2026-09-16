@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_UI_MODAL_TALL_HITCARDS_2COL_V6_20260914_RESTORED_20260916 -->
 <!-- BRC_MASTER_REMERGE_ADMIN_HITS_REF_TAB_COLOR_V1_20260916 -->
 <!-- BRC_ADMIN_REFERENCE_DEDICATED_TAB_RESTORE_V2_20260916 -->
 <!-- BRC_ADMIN_TODAY_HITS_RESTORE_V5_20260916 -->
@@ -4131,6 +4132,32 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
   .brc-admin-hit-mode{font-size:8.5px;padding:3px 6px;}
   .brc-admin-hit-payout .v{font-size:20px;}
   .brc-admin-hit-boat,.brc-ref-combo-boat{width:23px;height:23px;font-size:11px;}
+}
+</style>
+
+
+<style id="brc-predict-detail-tall-restored-20260916">
+/* Restore previous mobile player-detail height: keep only iOS safe-area + 8px at top. */
+@media (max-width:640px){
+  .predict-detail-backdrop{
+    padding:calc(env(safe-area-inset-top, 0px) + 8px) 0 0 !important;
+    align-items:flex-end !important;
+  }
+  .predict-detail-backdrop .motor-detail-sheet{
+    width:100% !important;
+    height:calc(100dvh - env(safe-area-inset-top, 0px) - 8px) !important;
+    max-height:calc(100dvh - env(safe-area-inset-top, 0px) - 8px) !important;
+    border-radius:18px 18px 0 0 !important;
+    overflow:auto !important;
+  }
+}
+@supports not (height:100dvh){
+  @media (max-width:640px){
+    .predict-detail-backdrop .motor-detail-sheet{
+      height:calc(100vh - env(safe-area-inset-top, 0px) - 8px) !important;
+      max-height:calc(100vh - env(safe-area-inset-top, 0px) - 8px) !important;
+    }
+  }
 }
 </style>
 
