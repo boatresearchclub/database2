@@ -4411,7 +4411,7 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
             <div class="brc-admin-today-hits-title">🎯 本日の的中速報</div>
             <span class="brc-admin-today-hits-admin">管理者専用</span>
           </div>
-          <div class="brc-admin-today-hits-sub">締切前に保存したBRC参考買い目4モードを、確定結果と照合して最新順で表示します。</div>
+          <div class="brc-admin-today-hits-sub">BRC参考買い目4モードを確定結果と照合し、保存済み判定と画面判定を統合して最新順で表示します。</div>
         </div>
         <div id="brcAdminTodayHitsSummary" class="brc-admin-today-hits-summary"><strong>0的中</strong>最高 ―</div>
       </div>
@@ -10833,6 +10833,10 @@ function brcApplyAiOutcomeMark(result=null){
     document.querySelectorAll('#predictAiResult .brc-refmon-picks[data-brc-ref-monitor-picks]').forEach(box=>{
       apply(box,box.dataset.brcRefMonitorPicks,'[data-brc-refmon-combo]','data-brc-refmon-combo','strong');
     });
+    try{
+      const confirmed=result||brcCurrentConfirmedAiResult();
+      if(typeof window.brcRecordVisibleReferenceHits==='function') window.brcRecordVisibleReferenceHits(raceKey,combo,confirmed);
+    }catch(_e){}
     return true;
   }catch(_e){return false;}
 }
@@ -18897,6 +18901,18 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     return out;
   }
 
+  window.brcBuildReferenceRecoveryModes=function(boats,workerPrediction,localInReliability,phase='current'){
+    try{
+      const data=buildData(boats,workerPrediction,localInReliability,phase);
+      const modes={};
+      ['hit','balance'].forEach(mode=>{
+        const md=buildRefModeData(mode,data,boats,workerPrediction,phase);
+        modes[mode]={label:md?.cfg?.label||BRC_REFMODE_CONFIG[mode]?.label||mode,decision:md?.decision||'pass',picks:(md?.picks||[]).map(x=>String(x?.combo||'')).filter(Boolean)};
+      });
+      return {data,modes};
+    }catch(_e){return null;}
+  };
+
   function refModeEvidenceHtml(cfg){
     const e=cfg.evidence||{};
     const roiNum=parseFloat(String(e.roi||'').replace('%',''));
@@ -18948,7 +18964,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       return `<div class="brc-refmon-picks"><div class="brc-refmon-picks-head"><span>${esc(cfg.label)} 参考買い目</span><strong>見送り</strong></div><div class="brc-refmode-pass"><strong>見送り</strong><span>${esc(md.passReason||'条件未成立のため見送り。')}</span></div></div>`;
     }
     const combos=(md.picks||[]).map(x=>x.combo);
-    const list=(md.picks||[]).map((x,idx)=>`<div class="brc-refmon-pick" data-brc-refmon-combo="${esc(x.combo)}"><span class="brc-refmon-pick-no">${idx+1}</span><strong>${refModeComboHtml(x.combo)}</strong><span class="odds" data-brc-refmon-odds="${esc(x.combo)}">${Number.isFinite(Number(x.odds))?Number(x.odds).toFixed(1)+'倍':'―'}</span></div>`).join('');
+    const list=(md.picks||[]).map(x=>`<div class="brc-refmon-pick" data-brc-refmon-combo="${esc(x.combo)}"><strong>${refModeComboHtml(x.combo)}</strong><span class="odds" data-brc-refmon-odds="${esc(x.combo)}">${Number.isFinite(Number(x.odds))?Number(x.odds).toFixed(1)+'倍':'―'}</span></div>`).join('');
     return `<div class="brc-refmon-picks" data-brc-ref-monitor-picks="${esc(combos.join(','))}">
       <div class="brc-refmon-picks-head"><span class="brc-refmon-picks-title">${esc(cfg.label)} 参考買い目${brcBuildReferencePersonalWarningBadgeHtml(combos)}</span><strong>${md.pointCount}点</strong></div>
       ${md.formation?`<div class="brc-refmon-formation"><span class="brc-refmon-formation-label">フォーメーション</span>${refModeFormationHtml(md.formation)}</div>`:''}
@@ -19706,6 +19722,119 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   const MODE_LABEL={hit:'的中型',balance:'バランス型',return:'回収型',high:'高配当型'};
   let busy=false;
   let autoTimer=null;
+  let recoveryBusy=false;
+  let recoveryTimer=null;
+  const REC_HITS_KEY='brc_admin_today_hits_recovery_v3';
+  const REC_DONE_KEY='brc_admin_today_hits_recovery_done_v3';
+
+  function readJson(key,fallback){try{const x=JSON.parse(localStorage.getItem(key)||'null');return x??fallback;}catch(_e){return fallback;}}
+  function writeJson(key,value){try{localStorage.setItem(key,JSON.stringify(value));}catch(_e){}}
+  function normalizedCombo(v){const a=String(v||'').match(/[1-6]/g)||[];return a.length>=3?a.slice(0,3).join('-'):'';}
+  function recoveredRows(date){
+    const rows=readJson(REC_HITS_KEY,[]);
+    return (Array.isArray(rows)?rows:[]).filter(x=>String(x?.date||'')===date);
+  }
+  function addRecoveredHit(row){
+    if(!row||!row.date||!row.venue||!row.raceNo||!row.mode||!row.combo) return false;
+    const rows=readJson(REC_HITS_KEY,[]), list=Array.isArray(rows)?rows:[];
+    const key=`${row.date}|${String(row.venueCode||'').padStart(2,'0')}|${Number(row.raceNo)}|${row.mode}|${row.combo}`;
+    const idx=list.findIndex(x=>`${x.date}|${String(x.venueCode||'').padStart(2,'0')}|${Number(x.raceNo)}|${x.mode}|${x.combo}`===key);
+    const next={...row,recoveredAt:new Date().toISOString()};
+    if(idx>=0) list[idx]={...list[idx],...next}; else list.push(next);
+    const keep=list.filter(x=>String(x?.date||'')>=String(row.date||''));
+    writeJson(REC_HITS_KEY,keep.slice(-400));
+    return idx<0;
+  }
+  function doneState(date){const all=readJson(REC_DONE_KEY,{});return {all:all&&typeof all==='object'?all:{},set:new Set(Array.isArray(all?.[date])?all[date]:[])};}
+  function saveDoneState(date,state){state.all[date]=[...state.set].slice(-240);writeJson(REC_DONE_KEY,state.all);}
+
+  window.brcRecordVisibleReferenceHits=function(_raceKey,combo,result){
+    try{
+      if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return false;
+      const hitCombo=normalizedCombo(combo||result?.combination); if(!hitCombo) return false;
+      const sel=brcOddsSelection(); if(!sel?.venue||!sel?.raceNo||!sel?.date) return false;
+      const payout=Number(result?.payout_yen), deadline=String(RACE_INFO_TODAY?.[sel.venue]?.deadlines?.[String(sel.raceNo)]||'');
+      let added=false;
+      document.querySelectorAll('#brcAiAdminPanel-ref [data-brc-refmode-panel]').forEach(panel=>{
+        const mode=String(panel.dataset.brcRefmodePanel||''); if(!MODES.includes(mode)) return;
+        const box=panel.querySelector('.brc-refmon-picks[data-brc-ref-monitor-picks]'); if(!box) return;
+        const combos=String(box.dataset.brcRefMonitorPicks||'').split(',').map(normalizedCombo).filter(Boolean);
+        if(!combos.includes(hitCombo)) return;
+        added=addRecoveredHit({date:String(sel.date),venue:String(sel.venue),venueCode:String(sel.code||'').padStart(2,'0'),raceNo:Number(sel.raceNo),deadline,mode,label:MODE_LABEL[mode],combo:hitCombo,payout:Number.isFinite(payout)?payout:null,source:'visible-same-source'})||added;
+      });
+      if(added) setTimeout(()=>refresh(false),0);
+      return added;
+    }catch(_e){return false;}
+  };
+
+  function recoveryDeadlineMs(date,hhmm){const m=String(hhmm||'').match(/^(\d{1,2}):(\d{2})$/);return m?Date.parse(`${date}T${m[1].padStart(2,'0')}:${m[2]}:00+09:00`):NaN;}
+  function recoveryBuildBoats(spec,prediction,live){
+    try{
+      const byLive=new Map((Array.isArray(live?.boats)?live.boats:[]).map(x=>[Number(x.boat_no),x]));
+      const boats=[];
+      for(let c=1;c<=6;c++){
+        const api=(spec?.apiBoats||[]).find(x=>Number(x.course)===c), p=api?PLAYERS?.[String(api.reg)]:null; if(!p)return null;
+        const ww=prediction?.wins?.find(x=>Number(x.course)===c&&String(x.reg)===String(p.reg));
+        const tw=prediction?.top3s?.find(x=>Number(x.course)===c&&String(x.reg)===String(p.reg));
+        const bw=prediction?.baselines?.find(x=>Number(x.course)===c&&String(x.reg)===String(p.reg));
+        const sw=prediction?.seconds?.find(x=>Number(x.course)===c&&String(x.reg)===String(p.reg));
+        const win=Number(ww?.pctFloat), top3=Number(tw?.pctFloat), vavg=Number(bw?.venueAvgWin), second=Number(sw?.pct);
+        if(![win,top3,vavg,second].every(Number.isFinite))return null;
+        const lane=p.lane_excl?.[String(c)]||{n:0};
+        boats.push({course:c,player:p,pctFloat:win,pct:Number.isFinite(Number(ww?.pct))?Number(ww.pct):Math.round(win),pctRaw:win,pctCal:win,winWfApplied:true,attack17Applied:false,pct3Float:top3,pct3:Number.isFinite(Number(tw?.pct))?Number(tw.pct):Math.round(top3),basePctFloat:win,basePct3Float:top3,basePct2:second,playerSource:'today-hit-recovery',venueBaseSource:'protected-server-model',laneN:Number(lane.n)||0,venueN:Number(bw?.venueN)||0,venueAvgWin:vavg,pct2:second,motor2:Number.isFinite(Number(api?.motor2))?Number(api.motor2):null,motorNo:null,racerClass:String(api?.racerClass||''),exhibition:byLive.get(c)||null});
+      }
+      return boats;
+    }catch(_e){return null;}
+  }
+  async function recoverOne(spec,date){
+    const code=String(spec?.venueCode||brcVenueCodeFromName(spec?.venue)||'').padStart(2,'0'), raceNo=Number(spec?.raceNo||0), rkey=`${code}:${raceNo}`;
+    const rs=resultSpec({date,venue:spec.venue,venueCode:code,raceNo,deadline:spec.deadline}); if(!rs) return {done:false,key:rkey};
+    const result=await fetchConfirmed(rs); if(!result) return {done:false,key:rkey};
+    const detail=await brcInvFetchDetailedPrediction(spec); if(!detail?.result) return {done:false,key:rkey};
+    let live=null; try{live=await brcFetchLiveExhibition(spec.venue,raceNo);}catch(_e){}
+    // 展示データ自体が未取得なら、展示前データで確定扱いせず次回再試行する。
+    if(!live) return {done:false,key:rkey};
+    const boats=recoveryBuildBoats(spec,detail.result,live); if(!boats) return {done:false,key:rkey};
+    let applied=false; const oldEngine=window.__brcTimeXEngineCurrent;
+    try{applied=!!(live&&brcApplyExhibitionAdjustmentsToBoats(boats,live));}catch(_e){applied=false;}finally{window.__brcTimeXEngineCurrent=oldEngine;}
+    let localIr=detail.localIr||null;
+    try{const p1=boats.find(b=>Number(b.course)===1);localIr=classifyInReliabilityByWinPct(applied?p1?.pctFloat:p1?.basePctFloat,spec.grade,(spec.apiBoats||[]).map(b=>b.reg),detail.result.inReliability)||localIr;}catch(_e){}
+    const pack=typeof window.brcBuildReferenceRecoveryModes==='function'?window.brcBuildReferenceRecoveryModes(boats,detail.result,localIr,applied?'current':'pre'):null;
+    if(!pack?.modes) return {done:false,key:rkey};
+    const combo=normalizedCombo(result?.combination), payout=Number(result?.payout_yen); let added=0;
+    ['hit','balance'].forEach(mode=>{
+      const md=pack.modes?.[mode]; if(!md||md.decision==='pass') return;
+      if((md.picks||[]).map(normalizedCombo).includes(combo)){
+        if(addRecoveredHit({date,venue:String(spec.venue||''),venueCode:code,raceNo,deadline:String(spec.deadline||''),mode,label:String(md.label||MODE_LABEL[mode]),combo,payout:Number.isFinite(payout)?payout:null,source:applied?'auto-recovery-current':'auto-recovery-pre'})) added++;
+      }
+    });
+    return {done:true,key:rkey,added};
+  }
+  async function recoverSettledHits(force=false){
+    if(recoveryBusy||!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return false;
+    if(typeof BRC_MEMBER_ACTIVE!=='undefined'&&!BRC_MEMBER_ACTIVE) return false;
+    const date=today(); if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||String(TODAY_LABEL||'')!==date||!RACE_CARDS_TODAY) return false;
+    recoveryBusy=true;
+    try{
+      const state=doneState(date), candidates=[];
+      for(const venue of Object.keys(RACE_CARDS_TODAY||{})){
+        for(const raceNo of Object.keys(RACE_CARDS_TODAY?.[venue]||{}).map(Number)){
+          const spec=typeof buildTodayRaceSpec==='function'?buildTodayRaceSpec(venue,raceNo):null; if(!spec)continue;
+          const key=`${String(spec.venueCode||brcVenueCodeFromName(venue)||'').padStart(2,'0')}:${raceNo}`; if(!force&&state.set.has(key))continue;
+          const dm=recoveryDeadlineMs(date,spec.deadline); if(!Number.isFinite(dm)||Date.now()<dm+8*60000)continue;
+          candidates.push(spec);
+        }
+      }
+      candidates.sort((a,b)=>recoveryDeadlineMs(date,b.deadline)-recoveryDeadlineMs(date,a.deadline));
+      const batch=candidates.slice(0,force?16:8); let added=0;
+      for(const spec of batch){
+        try{const r=await recoverOne(spec,date);if(r.done){state.set.add(r.key);added+=Number(r.added)||0;saveDoneState(date,state);}}catch(_e){}
+      }
+      if(added) await refresh(false);
+      if(candidates.length>batch.length){clearTimeout(recoveryTimer);recoveryTimer=setTimeout(()=>recoverSettledHits(false),12000);}
+      return true;
+    }finally{recoveryBusy=false;}
+  }
 
   function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
   function today(){try{return String(getJstDateLabel()||TODAY_LABEL||'');}catch(_e){return '';}}
@@ -19837,11 +19966,19 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
           hits.push({venue:String(matchedRow.venue||primary.venue||''),raceNo:Number(matchedRow.raceNo||primary.raceNo),deadline:String(matchedRow.deadline||primary.deadline||''),mode,label:String(md.label||MODE_LABEL[mode]),combo,payout});
         }
       }
+      for(const r of recoveredRows(date)) hits.push({venue:String(r.venue||''),venueCode:String(r.venueCode||''),raceNo:Number(r.raceNo),deadline:String(r.deadline||''),mode:String(r.mode||''),label:String(r.label||MODE_LABEL[r.mode]||r.mode||''),combo:normalizedCombo(r.combo),payout:Number(r.payout)});
+      const seen=new Set(), merged=[];
+      for(const x of hits){
+        const k=`${String(x.venueCode||brcVenueCodeFromName(x.venue)||'').padStart(2,'0')}|${Number(x.raceNo)}|${x.mode}|${normalizedCombo(x.combo)}`;
+        if(seen.has(k))continue; seen.add(k); merged.push(x);
+      }
+      hits.length=0;hits.push(...merged);
       hits.sort((a,b)=>timeScore(b)-timeScore(a)||b.raceNo-a.raceNo||MODES.indexOf(a.mode)-MODES.indexOf(b.mode));
-      const max=hits.reduce((m,x)=>Number.isFinite(Number(x.payout))?Math.max(m,Number(x.payout)):m,NaN);
+      const max=hits.reduce((m,x)=>Number.isFinite(Number(x.payout))?Math.max(Number.isFinite(m)?m:-Infinity,Number(x.payout)):m,NaN);
       setSummary(hits.length,max);
       if(hits.length){body.innerHTML=hits.map(hitCardHtml).join('');bindCards();}
       else setLoading(settled?'本日の確定済みレースに的中はまだありません。':'保存済みレースの結果確定待ちです。');
+      if(!recoveryBusy) setTimeout(()=>recoverSettledHits(false),0);
       return true;
     }catch(err){
       console.warn('BRC today hits refresh failed:',err);setLoading('本日の的中速報を取得できませんでした。更新を押して再確認してください。');return false;
@@ -19856,50 +19993,48 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   window.brcRefreshAdminTodayHits=refresh;
   window.brcSetAdminTodayHitsUi=setUi;
   function init(){
-    document.getElementById('brcAdminTodayHitsRefresh')?.addEventListener('click',()=>refresh(true));
+    document.getElementById('brcAdminTodayHitsRefresh')?.addEventListener('click',()=>{refresh(true);recoverSettledHits(true);});
     try{setUi(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE);}catch(_e){}
+    setTimeout(()=>{try{brcApplyAiOutcomeMark?.();}catch(_e){};recoverSettledHits(false);},1200);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
 
 
-<style id="brc-refmode-ux-tune-20260916">
-.brc-refmode-summary-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-bottom:8px;}
-.brc-refmode-summary-chip{display:flex;flex-direction:column;justify-content:center;gap:2px;min-width:0;padding:7px 6px;border:1px solid rgba(10,31,51,.07);border-radius:9px;background:#fff;text-align:center;}
-.brc-refmode-summary-chip small{display:block;font-size:8.5px;font-weight:800;color:var(--ink-soft);line-height:1.1;white-space:nowrap;}
-.brc-refmode-summary-chip strong{display:block;font-size:11.8px;font-weight:950;color:var(--navy);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.brc-refmode-summary-chip.positive strong{color:var(--trend-up);}
-.brc-refmode-summary-chip.negative strong{color:var(--trend-down);}
-.brc-refmode-summary-chip.shadow strong{color:#9a5d00;}
-.brc-refmode-meta{margin:0 0 8px;border:1px solid rgba(10,31,51,.08);border-radius:9px;background:rgba(255,255,255,.78);overflow:hidden;}
-.brc-refmode-meta>summary{list-style:none;cursor:pointer;padding:8px 10px;font-size:10.5px;font-weight:900;color:var(--wave);user-select:none;}
-.brc-refmode-meta>summary::-webkit-details-marker{display:none;}
-.brc-refmode-meta>summary::after{content:' ▾';}
-.brc-refmode-meta[open]>summary::after{content:' ▴';}
-.brc-refmode-meta .brc-refmode-performance{margin:0 8px 8px;}
-.brc-refmode-meta .brc-refmode-kpis.compact{grid-template-columns:repeat(3,minmax(0,1fr));margin:0 8px 8px;}
-.brc-refmon-formation{display:flex;align-items:flex-start;gap:8px;flex-wrap:nowrap;}
-.brc-refmon-formation-label{flex:0 0 auto;font-size:9.5px;font-weight:900;color:var(--ink-soft);line-height:1.8;}
-.brc-ref-formation-colored{gap:4px;row-gap:6px;}
-.brc-ref-formation-group{display:inline-flex;align-items:center;gap:2px;padding:4px 5px;border-radius:7px;background:rgba(10,31,51,.025);border:1px solid rgba(10,31,51,.05);}
-.brc-ref-formation-group-sep{display:inline-flex;align-items:center;font-size:11px;font-weight:900;color:var(--ink-soft);padding:0 1px;}
-.brc-refmon-pick{grid-template-columns:24px minmax(0,1fr) auto 58px;}
-.brc-refmon-pick-no{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:999px;background:rgba(0,87,219,.08);color:var(--wave);font-size:9.5px;font-weight:950;}
-.brc-refmon-pick strong{display:flex;align-items:center;min-width:0;}
-.brc-refmon-pick > .brc-ai-pick-hit-badge{grid-column:3;}
-.brc-refmon-pick .odds{grid-column:4;}
+<style id="brc-refmode-ux-tune-20260916-v2">
+/* 4モード参考買い目: 買い目を主役、補足は一段弱く。連番は表示しない。 */
+.brc-refmode-head{margin-bottom:7px;}
+.brc-refmode-head-title{font-size:12px;}
+.brc-refmode-tabs{margin-bottom:7px;}
+.brc-refmode-tab{padding:8px 2px;font-size:10.2px;font-weight:850;}
+.brc-refmode-summary-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-bottom:7px;}
+.brc-refmode-summary-chip{display:flex;flex-direction:column;justify-content:center;gap:1px;min-width:0;padding:6px 4px;border:1px solid rgba(10,31,51,.065);border-radius:8px;background:#fff;text-align:center;}
+.brc-refmode-summary-chip small{display:block;font-size:7.8px;font-weight:750;color:var(--ink-soft);line-height:1.1;white-space:nowrap;}
+.brc-refmode-summary-chip strong{display:block;font-size:10.6px;font-weight:900;color:var(--navy);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.brc-refmode-summary-chip.positive strong{color:var(--trend-up);}.brc-refmode-summary-chip.negative strong{color:var(--trend-down);}.brc-refmode-summary-chip.shadow strong{color:#9a5d00;}
+.brc-refmode-meta{margin:0 0 7px;border:1px solid rgba(10,31,51,.07);border-radius:8px;background:rgba(255,255,255,.72);overflow:hidden;}
+.brc-refmode-meta>summary{list-style:none;cursor:pointer;padding:7px 9px;font-size:9.8px;font-weight:850;color:var(--wave);user-select:none;}
+.brc-refmode-meta>summary::-webkit-details-marker{display:none;}.brc-refmode-meta>summary::after{content:' ▾';}.brc-refmode-meta[open]>summary::after{content:' ▴';}
+.brc-refmode-meta .brc-refmode-performance{margin:0 7px 7px;}.brc-refmode-meta .brc-refmode-kpis.compact{grid-template-columns:repeat(3,minmax(0,1fr));margin:0 7px 7px;}
+.brc-refmode-desc{padding:6px 8px;margin-bottom:7px;font-size:9.8px;line-height:1.45;}
+.brc-refmon-picks-head{padding:7px 8px;}.brc-refmon-picks-head span{font-size:10.8px;}.brc-refmon-picks-head strong{font-size:11.5px;}
+.brc-refmon-formation{display:flex;align-items:flex-start;gap:7px;flex-wrap:nowrap;padding:6px 8px;font-size:11px;}
+.brc-refmon-formation-label{flex:0 0 auto;font-size:8.8px;font-weight:850;color:var(--ink-soft);line-height:20px;}
+.brc-ref-formation-colored{gap:3px;row-gap:5px;}.brc-ref-formation-group{display:inline-flex;align-items:center;gap:1px;padding:3px 4px;border-radius:6px;background:rgba(10,31,51,.02);border:1px solid rgba(10,31,51,.045);}
+.brc-ref-formation-group-sep{display:inline-flex;align-items:center;font-size:9.5px;font-weight:850;color:var(--ink-soft);padding:0 1px;}
+.brc-ref-formation-boat{width:18px;height:18px;border-radius:5px;font-size:9.2px;}.brc-ref-formation-sep{font-size:9px;line-height:18px;}
+.brc-refmon-pick{display:grid;grid-template-columns:minmax(0,1fr) auto 54px;align-items:center;gap:5px;padding:6px 8px;font-size:10px;}
+.brc-refmon-pick strong{grid-column:1;display:flex;align-items:center;min-width:0;font-size:11px;}.brc-refmon-pick > .brc-ai-pick-hit-badge{grid-column:2;margin-left:0;}.brc-refmon-pick .odds{grid-column:3;font-size:10.5px;font-weight:850;}
+.brc-ref-combo-boat{width:21px;height:21px;border-radius:5px;font-size:10.2px;}.brc-ref-combo-sep{font-size:9px;}.brc-ref-combo-chip{gap:2px;}
+.brc-refmon-composite{padding:6px 8px;}.brc-refmon-composite span{font-size:9.7px;}.brc-refmon-composite strong{font-size:13.5px;}
+.brc-refmon-pick-no{display:none!important;}
 @media(max-width:420px){
-  .brc-refmode-summary-strip{gap:5px;}
-  .brc-refmode-summary-chip{padding:6px 3px;}
-  .brc-refmode-summary-chip small{font-size:7.8px;}
-  .brc-refmode-summary-chip strong{font-size:10.5px;}
-  .brc-refmode-meta>summary{font-size:10px;padding:7px 8px;}
-  .brc-refmode-meta .brc-refmode-kpis.compact{gap:4px;}
-  .brc-refmon-formation{display:block;}
-  .brc-refmon-formation-label{display:block;margin-bottom:5px;line-height:1.2;}
-  .brc-refmon-pick{grid-template-columns:22px minmax(0,1fr) auto 54px;}
-  .brc-refmon-pick-no{width:18px;height:18px;font-size:9px;}
+  .brc-refmode-tab{padding:8px 1px;font-size:9.8px;}
+  .brc-refmode-summary-strip{gap:4px;}.brc-refmode-summary-chip{padding:5px 2px;}.brc-refmode-summary-chip small{font-size:7.4px;}.brc-refmode-summary-chip strong{font-size:9.9px;}
+  .brc-refmon-formation{display:block;}.brc-refmon-formation-label{display:block;margin-bottom:4px;line-height:1.2;}
+  .brc-refmon-pick{grid-template-columns:minmax(0,1fr) auto 50px;padding:6px 7px;}.brc-refmon-pick .odds{font-size:10px;}
+  .brc-ref-combo-boat{width:20px;height:20px;font-size:9.8px;}.brc-ref-formation-boat{width:17px;height:17px;font-size:8.8px;}.brc-ref-formation-sep{line-height:17px;}
 }
 </style>
 
