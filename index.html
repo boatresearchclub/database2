@@ -17721,7 +17721,7 @@ function getMotorDetail(venue,motorNo,motor2){
 }
 function buildMotorCellHtml(b,venue){
   if(brcIsNewMotorCollecting(venue, window.__predictBoatsCurrent||[])){
-    const core=`<span class="motor-cell-grade" style="color:#1769aa;">NEW</span><span class="motor-cell-rate">(集計中)</span>`;
+    const core=`<span class="motor-cell-grade" style="color:#1769aa;font-size:13px;letter-spacing:-0.2px;">NEW</span><span class="motor-cell-rate" style="font-size:9.5px;">(集計中)</span>`;
     return `<button type="button" class="motor-cell-btn" onclick="event.stopPropagation();openMotorDetail(${b.course});" title="新モーター・成績集計中">${core}</button>`;
   }
   const gcol=MOTOR_GRADE_COLOR[b.motorGrade]||'var(--ink-soft)';
