@@ -10716,6 +10716,20 @@ function brcBuildNigeFormationLabel(picks){
     .join(' / ');
 }
 
+// BRC_NIGE_REFERENCE_VISUAL_PARITY_20260916
+// 管理者BRC参考買い目と同じ枠色・フォーメーション表現をイン逃げ予測にも使用する。
+function brcNigeReferenceComboHtml(combo){
+  const nums=String(combo||'').split('-').map(Number);
+  if(nums.length!==3||nums.some(n=>!Number.isInteger(n)||n<1||n>6)) return String(combo||'');
+  return `<span class="brc-ref-combo-chip">${nums.map((n,i)=>`${i?'<span class="brc-ref-combo-sep">-</span>':''}<span class="brc-ref-combo-boat lane${n}">${n}</span>`).join('')}</span>`;
+}
+function brcNigeReferenceFormationHtml(formation){
+  const text=String(formation||'').trim();
+  if(!text) return '';
+  const groups=text.split('/').map(x=>x.trim()).filter(Boolean);
+  return `<span class="brc-ref-formation-colored">${groups.map((group,idx)=>`<span class="brc-ref-formation-group">${Array.from(group).map(ch=>/^[1-6]$/.test(ch)?`<span class="brc-ref-formation-boat lane${ch}">${ch}</span>`:`<span class="brc-ref-formation-sep">${ch}</span>`).join('')}</span>${idx<groups.length-1?'<span class="brc-ref-formation-group-sep">/</span>':''}`).join('')}</span>`;
+}
+
 // BRC_NIGE_REFERENCE_PICKS_CUM70_20260906
 // 「3連単上位3点」ではなく、1号艇が逃げた場合の20通りを予測確率順に積み上げ、
 // 累積70%へ到達するまでを参考買い目として表示する。収益性は未確定のため推奨表現は使わない。
@@ -10739,16 +10753,16 @@ function brcBuildNigeReferencePicksHtml(pred,target=0.70){
   const odds=sel?.key ? (__brcOddsLocal[sel.key]?.odds||null) : null;
   const pickRows=picks.map(x=>{
     const v=brcOddsValue(odds,x.combo);
-    return `<div class="brc-nige-order-pick" data-brc-ref-combo="${x.combo}"><span class="brc-nige-order-pick-combo">${x.combo}</span><span class="brc-nige-order-pick-odds" data-brc-ref-odds="${x.combo}">${v===null?'―':v.toFixed(1)+'倍'}</span></div>`;
+    return `<div class="brc-nige-order-pick brc-refmon-pick" data-brc-ref-combo="${x.combo}"><strong class="brc-nige-order-pick-combo">${brcNigeReferenceComboHtml(x.combo)}</strong><span class="brc-nige-order-pick-odds odds" data-brc-ref-odds="${x.combo}">${v===null?'―':v.toFixed(1)+'倍'}</span></div>`;
   }).join('');
   const available=picks.map(x=>brcOddsValue(odds,x.combo)).filter(v=>v!==null);
   const composite=(available.length===picks.length)?brcOddsBuilderComposite(picks.map((x,i)=>({odds:available[i]}))):null;
   const formation=brcBuildNigeFormationLabel(picks);
-  return `<div class="brc-nige-order-picks" data-brc-ref-picks="${picks.map(x=>x.combo).join(',')}">
-    <div class="brc-nige-order-picks-label"><span>BRC参考買い目</span>${brcBuildReferencePersonalWarningBadgeHtml(picks.map(x=>x.combo))}</div>
-    ${formation?`<div class="brc-nige-order-formation"><span class="brc-nige-order-formation-value">${formation}</span><span class="brc-nige-order-formation-points">${picks.length}点</span></div>`:''}
-    <div class="brc-nige-order-pick-list">${pickRows}</div>
-    <div class="brc-nige-order-composite"><span class="brc-nige-order-composite-label">合成オッズ</span><span class="brc-nige-order-composite-value" data-brc-ref-composite>${composite===null?'―':composite.toFixed(1)+'倍'}</span></div>
+  return `<div class="brc-nige-order-picks brc-refmon-picks" data-brc-ref-picks="${picks.map(x=>x.combo).join(',')}">
+    <div class="brc-refmon-picks-head"><span class="brc-nige-order-picks-label brc-refmon-picks-title">BRC参考買い目${brcBuildReferencePersonalWarningBadgeHtml(picks.map(x=>x.combo))}</span><strong>${picks.length}点</strong></div>
+    ${formation?`<div class="brc-nige-order-formation brc-refmon-formation"><span class="brc-refmon-formation-label">フォーメーション</span>${brcNigeReferenceFormationHtml(formation)}</div>`:''}
+    <div class="brc-nige-order-pick-list brc-refmon-pick-list">${pickRows}</div>
+    <div class="brc-nige-order-composite brc-refmon-composite"><span class="brc-nige-order-composite-label">合成オッズ</span><strong class="brc-nige-order-composite-value" data-brc-ref-composite>${composite===null?'―':composite.toFixed(1)+'倍'}</strong></div>
   </div>`;
 }
 
@@ -19945,7 +19959,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     return `<button type="button" class="brc-admin-hit-card ${index===0?'latest':''}" data-brc-hit-venue="${esc(x.venue)}" data-brc-hit-race="${x.raceNo}">
       <div class="brc-admin-hit-top"><span class="brc-admin-hit-race">${esc(x.venue)} ${x.raceNo}R</span><span class="brc-admin-hit-mode ${x.mode}">${esc(x.label)}</span></div>
       <div class="brc-admin-hit-body">
-        <div class="brc-admin-hit-combo-wrap"><div class="brc-admin-hit-k">的中</div><div class="brc-admin-hit-combo">${comboHtml(x.combo)}</div></div>
+        <div class="brc-admin-hit-combo-wrap"><div class="brc-admin-hit-combo">${comboHtml(x.combo)}</div></div>
         <div class="brc-admin-hit-payout"><div class="brc-admin-hit-k">3連単配当</div><div class="v ${payoutHigh?'high':''} ${payoutSize}">${Number.isFinite(payout)?payout.toLocaleString('ja-JP'):'―'}<small>${Number.isFinite(payout)?'円':''}</small></div></div>
       </div>
     </button>`;
@@ -20071,6 +20085,102 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   .brc-refmon-formation{display:block;}.brc-refmon-formation-label{display:block;margin-bottom:4px;line-height:1.2;}
   .brc-refmon-pick{grid-template-columns:minmax(0,1fr) auto 50px;padding:6px 7px;}.brc-refmon-pick .odds{font-size:10px;}
   .brc-ref-combo-boat{width:20px;height:20px;font-size:9.8px;}.brc-ref-formation-boat{width:17px;height:17px;font-size:8.8px;}.brc-ref-formation-sep{line-height:17px;}
+}
+</style>
+
+
+<style id="brc-nige-reference-visual-parity-20260916">
+/* イン逃げ予測の参考買い目 = BRC参考買い目と同一視覚ルール */
+.brc-nige-order-picks.brc-refmon-picks{
+  display:block;
+  margin-top:8px;
+  padding-top:0;
+  border-top:0;
+  border:1px solid rgba(10,31,51,.09);
+  border-radius:10px;
+  background:#fff;
+  overflow:hidden;
+}
+.brc-nige-order-picks .brc-refmon-picks-head{
+  padding:7px 8px;
+  background:#f7f9fc;
+  border-bottom:1px solid rgba(10,31,51,.07);
+}
+.brc-nige-order-picks .brc-nige-order-picks-label{
+  display:inline-flex;
+  align-items:center;
+  margin:0;
+  font-size:10.8px;
+  line-height:1.3;
+  font-weight:950;
+  color:var(--navy);
+}
+.brc-nige-order-picks .brc-nige-order-formation{
+  display:flex;
+  align-items:flex-start;
+  justify-content:flex-start;
+  gap:7px;
+  margin:0;
+  padding:6px 8px;
+  border:0;
+  border-bottom:1px solid rgba(10,31,51,.06);
+  border-radius:0;
+  background:#fff;
+}
+.brc-nige-order-picks .brc-nige-order-pick-list{display:grid;gap:0;}
+.brc-nige-order-picks .brc-nige-order-pick{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto 54px;
+  align-items:center;
+  justify-content:initial;
+  gap:5px;
+  padding:6px 8px;
+  border:0;
+  border-top:1px solid rgba(10,31,51,.055);
+  border-radius:0;
+  background:#fff;
+  font-size:10px;
+  white-space:normal;
+}
+.brc-nige-order-picks .brc-nige-order-pick:first-child{border-top:0;}
+.brc-nige-order-picks .brc-nige-order-pick-combo{
+  grid-column:1;
+  display:flex;
+  align-items:center;
+  min-width:0;
+  font-size:11px;
+  font-weight:950;
+  color:var(--navy);
+}
+.brc-nige-order-picks .brc-nige-order-pick > .brc-ai-pick-hit-badge{grid-column:2;margin-left:0;}
+.brc-nige-order-picks .brc-nige-order-pick-odds{
+  grid-column:3;
+  text-align:right;
+  font-size:10.5px;
+  font-weight:850;
+  color:var(--navy);
+  line-height:1.25;
+  white-space:nowrap;
+}
+.brc-nige-order-picks .brc-nige-order-composite{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:8px;
+  margin:0;
+  padding:6px 8px;
+  border:0;
+  border-top:1px solid rgba(124,58,237,.10);
+  border-radius:0;
+  background:rgba(124,58,237,.035);
+}
+.brc-nige-order-picks .brc-nige-order-composite-label{font-size:9.7px;font-weight:900;color:var(--ink-soft);}
+.brc-nige-order-picks .brc-nige-order-composite-value{font-size:13.5px;font-weight:950;color:#6d28d9;}
+@media(max-width:420px){
+  .brc-nige-order-picks .brc-nige-order-pick{grid-template-columns:minmax(0,1fr) auto 50px;padding:6px 7px;}
+  .brc-nige-order-picks .brc-nige-order-pick-odds{font-size:10px;}
+  .brc-nige-order-picks .brc-nige-order-formation{display:block;}
+  .brc-nige-order-picks .brc-refmon-formation-label{display:block;margin-bottom:4px;line-height:1.2;}
 }
 </style>
 
