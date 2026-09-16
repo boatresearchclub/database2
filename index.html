@@ -18902,16 +18902,30 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     const roiNum=parseFloat(String(e.roi||'').replace('%',''));
     const roiClass=Number.isFinite(roiNum)?(roiNum>=100?'positive':'negative'):'';
     const judgeClass=/PASS|本番/.test(String(e.judge||''))?'positive':(/Shadow|継続/.test(String(e.judge||''))?'shadow':'');
-    return `<div class="brc-refmode-performance">
-      <div class="brc-refmode-performance-head"><span class="brc-refmode-performance-title">検証実績</span><span class="brc-refmode-performance-period">${esc(e.period||'―')}</span></div>
-      <div class="brc-refmode-performance-grid">
-        <div class="brc-refmode-performance-item"><div class="k">対象</div><div class="v">${esc(e.races||'―')}</div></div>
-        <div class="brc-refmode-performance-item"><div class="k">的中率</div><div class="v">${esc(e.hit||'―')}</div></div>
-        <div class="brc-refmode-performance-item"><div class="k">回収率</div><div class="v ${roiClass}">${esc(e.roi||'―')}</div></div>
-        <div class="brc-refmode-performance-item"><div class="k">判定</div><div class="v ${judgeClass}">${esc(e.judge||'―')}</div></div>
+    return `<div class="brc-refmode-summary-strip">
+      <span class="brc-refmode-summary-chip"><small>最大</small><strong>${esc(cfg.limit)}点</strong></span>
+      <span class="brc-refmode-summary-chip"><small>的中</small><strong>${esc(e.hit||cfg.targetHit||'―')}</strong></span>
+      <span class="brc-refmode-summary-chip ${roiClass}"><small>回収</small><strong>${esc(e.roi||cfg.targetRoi||'―')}</strong></span>
+      <span class="brc-refmode-summary-chip ${judgeClass}"><small>判定</small><strong>${esc(e.judge||cfg.status||'―')}</strong></span>
+    </div>
+    <details class="brc-refmode-meta">
+      <summary>検証実績・運用条件</summary>
+      <div class="brc-refmode-performance">
+        <div class="brc-refmode-performance-head"><span class="brc-refmode-performance-title">検証実績</span><span class="brc-refmode-performance-period">${esc(e.period||'―')}</span></div>
+        <div class="brc-refmode-performance-grid">
+          <div class="brc-refmode-performance-item"><div class="k">対象</div><div class="v">${esc(e.races||'―')}</div></div>
+          <div class="brc-refmode-performance-item"><div class="k">的中率</div><div class="v">${esc(e.hit||'―')}</div></div>
+          <div class="brc-refmode-performance-item"><div class="k">回収率</div><div class="v ${roiClass}">${esc(e.roi||'―')}</div></div>
+          <div class="brc-refmode-performance-item"><div class="k">判定</div><div class="v ${judgeClass}">${esc(e.judge||'―')}</div></div>
+        </div>
+        <div class="brc-refmode-performance-source">過去検証値。将来の的中・回収を保証するものではありません。</div>
       </div>
-      <div class="brc-refmode-performance-source">過去検証値。将来の的中・回収を保証するものではありません。</div>
-    </div>`;
+      <div class="brc-refmode-kpis compact">
+        <div class="brc-refmode-kpi"><div class="k">目標的中</div><div class="v">${esc(cfg.targetHit)}</div></div>
+        <div class="brc-refmode-kpi"><div class="k">目標回収</div><div class="v">${esc(cfg.targetRoi)}</div></div>
+        <div class="brc-refmode-kpi"><div class="k">運用</div><div class="v ${/Shadow/.test(String(cfg.status||''))?'shadow':'good'}">${esc(cfg.status)}</div></div>
+      </div>
+    </details>`;
   }
 
   function refModeComboHtml(combo){
@@ -18923,8 +18937,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   function refModeFormationHtml(formation){
     const text=String(formation||'').trim();
     if(!text) return '';
-    // 1-23-23456 のようなフォーメーション表記も、オッズ欄と同じ枠色で表示する。
-    return `<span class="brc-ref-formation-colored">${Array.from(text).map(ch=>/^[1-6]$/.test(ch)?`<span class="brc-ref-formation-boat lane${ch}">${ch}</span>`:`<span class="brc-ref-formation-sep">${esc(ch)}</span>`).join('')}</span>`;
+    const groups=text.split('/').map(x=>x.trim()).filter(Boolean);
+    if(!groups.length) return '';
+    return `<span class="brc-ref-formation-colored">${groups.map((group,idx)=>`<span class="brc-ref-formation-group">${Array.from(group).map(ch=>/^[1-6]$/.test(ch)?`<span class="brc-ref-formation-boat lane${ch}">${ch}</span>`:`<span class="brc-ref-formation-sep">${esc(ch)}</span>`).join('')}</span>${idx<groups.length-1?'<span class="brc-ref-formation-group-sep">/</span>':''}`).join('')}</span>`;
   }
 
   function refModePicksHtml(md){
@@ -18933,10 +18948,10 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       return `<div class="brc-refmon-picks"><div class="brc-refmon-picks-head"><span>${esc(cfg.label)} 参考買い目</span><strong>見送り</strong></div><div class="brc-refmode-pass"><strong>見送り</strong><span>${esc(md.passReason||'条件未成立のため見送り。')}</span></div></div>`;
     }
     const combos=(md.picks||[]).map(x=>x.combo);
-    const list=(md.picks||[]).map(x=>`<div class="brc-refmon-pick" data-brc-refmon-combo="${esc(x.combo)}"><strong>${refModeComboHtml(x.combo)}</strong><span class="odds" data-brc-refmon-odds="${esc(x.combo)}">${Number.isFinite(Number(x.odds))?Number(x.odds).toFixed(1)+'倍':'―'}</span></div>`).join('');
+    const list=(md.picks||[]).map((x,idx)=>`<div class="brc-refmon-pick" data-brc-refmon-combo="${esc(x.combo)}"><span class="brc-refmon-pick-no">${idx+1}</span><strong>${refModeComboHtml(x.combo)}</strong><span class="odds" data-brc-refmon-odds="${esc(x.combo)}">${Number.isFinite(Number(x.odds))?Number(x.odds).toFixed(1)+'倍':'―'}</span></div>`).join('');
     return `<div class="brc-refmon-picks" data-brc-ref-monitor-picks="${esc(combos.join(','))}">
       <div class="brc-refmon-picks-head"><span class="brc-refmon-picks-title">${esc(cfg.label)} 参考買い目${brcBuildReferencePersonalWarningBadgeHtml(combos)}</span><strong>${md.pointCount}点</strong></div>
-      ${md.formation?`<div class="brc-refmon-formation">${refModeFormationHtml(md.formation)}</div>`:''}
+      ${md.formation?`<div class="brc-refmon-formation"><span class="brc-refmon-formation-label">フォーメーション</span>${refModeFormationHtml(md.formation)}</div>`:''}
       <div class="brc-refmon-pick-list">${list}</div>
       <div class="brc-refmon-composite"><span>合成オッズ</span><strong data-brc-refmon-composite>${Number.isFinite(Number(md.compositeOdds))?Number(md.compositeOdds).toFixed(1)+'倍':'―'}</strong></div>
     </div>`;
@@ -18944,16 +18959,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 
   function refModePanelHtml(mode,data,boats,workerPrediction,phase){
     const md=buildRefModeData(mode,data,boats,workerPrediction,phase), cfg=md.cfg;
-    const isShadow=/Shadow/.test(cfg.status);
     const oddsRule=cfg.minOdds!=null?`<div class="brc-refmode-shadow-note">オッズ条件：${cfg.minOdds}倍以上。条件不足時は見送り、オッズ更新時に再計算します。</div>`:'';
     const shadowNote=mode==='return'?'<div class="brc-refmode-parity-note"><strong>Shadow+</strong>：運用候補として監視継続。サンプルを蓄積して本番判定します。</div>':(mode==='high'?'<div class="brc-refmode-parity-note"><strong>Shadow</strong>：高配当狙いは回収率の安定性を確認中です。</div>':'');
     return `<div class="brc-refmode-panel ${mode===brcRefModeSelected?'active':''}" data-brc-refmode-panel="${mode}">
-      <div class="brc-refmode-kpis">
-        <div class="brc-refmode-kpi"><div class="k">点数</div><div class="v">最大${cfg.limit}点</div></div>
-        <div class="brc-refmode-kpi"><div class="k">目標的中</div><div class="v">${esc(cfg.targetHit)}</div></div>
-        <div class="brc-refmode-kpi"><div class="k">目標回収</div><div class="v">${esc(cfg.targetRoi)}</div></div>
-        <div class="brc-refmode-kpi"><div class="k">運用</div><div class="v ${isShadow?'shadow':'good'}">${esc(cfg.status)}</div></div>
-      </div>
       ${refModeEvidenceHtml(cfg)}
       <div class="brc-refmode-desc"><strong>${esc(cfg.label)}</strong>：${esc(cfg.desc)}</div>
       ${shadowNote}
@@ -19716,7 +19724,11 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     finally{db.close();}
   }
   function capturedScore(r){const t=Date.parse(String(r?.capturedAt||''));return Number.isFinite(t)?t:0;}
-  function pickSourceRows(rows,date){
+  function phasePriority(row){
+    const phase=String(row?.phase||'');
+    return (phase==='exhibition'||phase==='current')?2:1;
+  }
+  function groupSourceRows(rows,date){
     const byRace=new Map();
     for(const r of rows){
       if(String(r?.date||'')!==date) continue;
@@ -19726,10 +19738,10 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       const modes=r?.refModes||r?.fourModes||r?.referenceModes||null;
       if(!modes||typeof modes!=='object'||!MODES.some(m=>Array.isArray(modes?.[m]?.picks))) continue;
       const key=`${code}:${raceNo}`;
-      const prev=byRace.get(key);
-      if(!prev||capturedScore(r)>=capturedScore(prev)) byRace.set(key,r);
+      if(!byRace.has(key)) byRace.set(key,[]);
+      byRace.get(key).push(r);
     }
-    return [...byRace.values()];
+    return byRace;
   }
   function resultSpec(row){
     try{
@@ -19801,19 +19813,28 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     busy=true;if(btn)btn.disabled=true;
     if(force)setLoading();
     try{
-      const source=pickSourceRows(await getAll(),date);
+      const grouped=groupSourceRows(await getAll(),date);
+      const source=[...grouped.values()].map(list=>list.slice().sort((a,b)=>phasePriority(b)-phasePriority(a)||capturedScore(b)-capturedScore(a))[0]);
       if(!source.length){setSummary(0,NaN);setLoading('本日のBRC参考買い目はまだ保存されていません。');return true;}
       const hits=[];let settled=0;
-      for(const row of source.sort((a,b)=>timeScore(b)-timeScore(a))){
-        const spec=resultSpec(row); if(!spec) continue;
+      for(const primary of source.sort((a,b)=>timeScore(b)-timeScore(a))){
+        const key=`${String(primary?.venueCode||'').padStart(2,'0')}:${Number(primary?.raceNo||0)}`;
+        const group=(grouped.get(key)||[]).slice().sort((a,b)=>phasePriority(b)-phasePriority(a)||capturedScore(b)-capturedScore(a));
+        const spec=resultSpec(group[0]||primary); if(!spec) continue;
         const result=await fetchConfirmed(spec); if(!result) continue;
         settled++;
         const combo=String(result?.combination||''); const payout=Number(result?.payout_yen);
-        const modes=row?.refModes||row?.fourModes||row?.referenceModes||{};
         for(const mode of MODES){
-          const md=modes?.[mode]; if(!md||md.decision==='pass') continue;
-          const picks=Array.isArray(md.picks)?md.picks:[];
-          if(picks.some(p=>String(p?.combo||p)===combo)) hits.push({venue:String(row.venue||''),raceNo:Number(row.raceNo),deadline:String(row.deadline||''),mode,label:String(md.label||MODE_LABEL[mode]),combo,payout});
+          const matchedRow=group.find(row=>{
+            const modes=row?.refModes||row?.fourModes||row?.referenceModes||{};
+            const md=modes?.[mode]; if(!md||md.decision==='pass') return false;
+            const picks=Array.isArray(md.picks)?md.picks:[];
+            return picks.some(p=>String(p?.combo||p)===combo);
+          });
+          if(!matchedRow) continue;
+          const modes=matchedRow?.refModes||matchedRow?.fourModes||matchedRow?.referenceModes||{};
+          const md=modes?.[mode]||{};
+          hits.push({venue:String(matchedRow.venue||primary.venue||''),raceNo:Number(matchedRow.raceNo||primary.raceNo),deadline:String(matchedRow.deadline||primary.deadline||''),mode,label:String(md.label||MODE_LABEL[mode]),combo,payout});
         }
       }
       hits.sort((a,b)=>timeScore(b)-timeScore(a)||b.raceNo-a.raceNo||MODES.indexOf(a.mode)-MODES.indexOf(b.mode));
@@ -19841,6 +19862,46 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
+
+
+<style id="brc-refmode-ux-tune-20260916">
+.brc-refmode-summary-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-bottom:8px;}
+.brc-refmode-summary-chip{display:flex;flex-direction:column;justify-content:center;gap:2px;min-width:0;padding:7px 6px;border:1px solid rgba(10,31,51,.07);border-radius:9px;background:#fff;text-align:center;}
+.brc-refmode-summary-chip small{display:block;font-size:8.5px;font-weight:800;color:var(--ink-soft);line-height:1.1;white-space:nowrap;}
+.brc-refmode-summary-chip strong{display:block;font-size:11.8px;font-weight:950;color:var(--navy);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.brc-refmode-summary-chip.positive strong{color:var(--trend-up);}
+.brc-refmode-summary-chip.negative strong{color:var(--trend-down);}
+.brc-refmode-summary-chip.shadow strong{color:#9a5d00;}
+.brc-refmode-meta{margin:0 0 8px;border:1px solid rgba(10,31,51,.08);border-radius:9px;background:rgba(255,255,255,.78);overflow:hidden;}
+.brc-refmode-meta>summary{list-style:none;cursor:pointer;padding:8px 10px;font-size:10.5px;font-weight:900;color:var(--wave);user-select:none;}
+.brc-refmode-meta>summary::-webkit-details-marker{display:none;}
+.brc-refmode-meta>summary::after{content:' ▾';}
+.brc-refmode-meta[open]>summary::after{content:' ▴';}
+.brc-refmode-meta .brc-refmode-performance{margin:0 8px 8px;}
+.brc-refmode-meta .brc-refmode-kpis.compact{grid-template-columns:repeat(3,minmax(0,1fr));margin:0 8px 8px;}
+.brc-refmon-formation{display:flex;align-items:flex-start;gap:8px;flex-wrap:nowrap;}
+.brc-refmon-formation-label{flex:0 0 auto;font-size:9.5px;font-weight:900;color:var(--ink-soft);line-height:1.8;}
+.brc-ref-formation-colored{gap:4px;row-gap:6px;}
+.brc-ref-formation-group{display:inline-flex;align-items:center;gap:2px;padding:4px 5px;border-radius:7px;background:rgba(10,31,51,.025);border:1px solid rgba(10,31,51,.05);}
+.brc-ref-formation-group-sep{display:inline-flex;align-items:center;font-size:11px;font-weight:900;color:var(--ink-soft);padding:0 1px;}
+.brc-refmon-pick{grid-template-columns:24px minmax(0,1fr) auto 58px;}
+.brc-refmon-pick-no{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:999px;background:rgba(0,87,219,.08);color:var(--wave);font-size:9.5px;font-weight:950;}
+.brc-refmon-pick strong{display:flex;align-items:center;min-width:0;}
+.brc-refmon-pick > .brc-ai-pick-hit-badge{grid-column:3;}
+.brc-refmon-pick .odds{grid-column:4;}
+@media(max-width:420px){
+  .brc-refmode-summary-strip{gap:5px;}
+  .brc-refmode-summary-chip{padding:6px 3px;}
+  .brc-refmode-summary-chip small{font-size:7.8px;}
+  .brc-refmode-summary-chip strong{font-size:10.5px;}
+  .brc-refmode-meta>summary{font-size:10px;padding:7px 8px;}
+  .brc-refmode-meta .brc-refmode-kpis.compact{gap:4px;}
+  .brc-refmon-formation{display:block;}
+  .brc-refmon-formation-label{display:block;margin-bottom:5px;line-height:1.2;}
+  .brc-refmon-pick{grid-template-columns:22px minmax(0,1fr) auto 54px;}
+  .brc-refmon-pick-no{width:18px;height:18px;font-size:9px;}
+}
+</style>
 
 </body>
 </html>
