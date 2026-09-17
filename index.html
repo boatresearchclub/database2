@@ -725,6 +725,8 @@
     .direct-info-banner-note{font-size:10px;}
   }
 
+  #slitEvaluationSlot:empty{display:none;}
+
   /* ---- 2026-09-17: 展示スリット評価 / 風影響 バナー文字バランス調整 ---- */
   .slit-eval-compact{font-size:11.5px;line-height:1.25;padding:7px 10px;}
   .slit-eval-label,.direct-info-banner-label{font-size:11px;line-height:1.2;}
@@ -12736,10 +12738,9 @@ function brcBuildSlitEvaluationHtml(boats,liveRace,inReliability=null){
     return `<div id="slitEvaluationCard" class="slit-eval-compact"><span class="slit-eval-label">展示スリット評価</span><span class="slit-eval-items">${slitHtml}${timeXNotice}</span></div>`;
   }
 
-  const text=state.status==='excluded' ? '判定対象外' : state.status==='entry-waiting' ? '進入確認待ち' : state.status==='partial' ? '一部データ不足' : state.status==='none' ? '該当なし' : '展示待ち';
-  const title=state.reason ? ` title="${state.reason}"` : '';
-  const body=`<span class="slit-eval-muted"${title}>―　${text}</span>${timeXNotice}`;
-  return `<div id="slitEvaluationCard" class="slit-eval-compact"><span class="slit-eval-label">展示スリット評価</span><span class="slit-eval-items">${body}</span></div>`;
+  // 該当なし・展示待ち・判定対象外・データ不足時はバナー自体を出さない。
+  // ユーザーに見せるのは、検証済みスリット条件または高チルトの該当がある時だけ。
+  return '';
 }
 
 function brcApplyExhibitionAdjustmentsToBoats(boats,liveRace){
@@ -13714,10 +13715,10 @@ function brcRefreshExhibitionAdjustedDom(liveRace,venue,raceNo){
     const wrap=document.createElement('div'); wrap.innerHTML=buildInReliabilityCardHtmlFromServer(local).trim();
     if(wrap.firstElementChild) inCard.replaceWith(wrap.firstElementChild);
   }
-  const slit=document.getElementById('slitEvaluationCard');
-  if(slit){
-    const wrap=document.createElement('div'); wrap.innerHTML=brcBuildSlitEvaluationHtml(boats,liveRace,local).trim();
-    if(wrap.firstElementChild) slit.replaceWith(wrap.firstElementChild);
+  const slitSlot=document.getElementById('slitEvaluationSlot');
+  if(slitSlot){
+    // 該当が出た時だけ追加し、該当が消えた時は空に戻す。
+    slitSlot.innerHTML=brcBuildSlitEvaluationHtml(boats,liveRace,local);
   }
   const notice=document.getElementById('exhibitionRaceNotice');
   if(notice){
@@ -15766,6 +15767,22 @@ function brcBuildDirectInfoBannerHtml(liveRace,venue,threshold=5){
   const items=rows.map(({course})=>brcSlitBoatBadgeHtml(course)).join('');
   return `<div class="slit-eval-compact direct-info-banner"><span class="direct-info-banner-label">風影響</span><span class="direct-info-banner-items">${items}</span><span class="direct-info-banner-note">※下部データ参考</span></div>`;
 }
+function brcPredictLowSampleBoats(boats){
+  if(!Array.isArray(boats)) return [];
+  return boats.filter(b=>{
+    const laneN=Number(b?.laneN);
+    const venueN=Number(b?.venueN);
+    return (Number.isFinite(laneN) && laneN<15) || (Number.isFinite(venueN) && venueN<30);
+  });
+}
+function brcBuildLowSampleBannerHtml(boats){
+  const low=brcPredictLowSampleBoats(boats);
+  if(!low.length) return '';
+  const seen=new Set();
+  const items=low.map(b=>Number(b?.course)).filter(course=>Number.isFinite(course) && course>=1 && course<=6 && !seen.has(course) && seen.add(course)).map(course=>brcSlitBoatBadgeHtml(course)).join('');
+  if(!items) return '';
+  return `<div class="slit-eval-compact direct-info-banner"><span class="direct-info-banner-label">データ不足</span><span class="direct-info-banner-items">${items}</span><span class="direct-info-banner-note">※このレースは精度低下しています。</span></div>`;
+}
 
 function buildWindPanelHtml(venue){
   const sel = window.__windSelection || {dir:'', speed:''};
@@ -17397,8 +17414,9 @@ async function runPredict(){
   box.innerHTML = `
     ${buildCurrentRaceSummaryHtml(venue, exhibitionApplied)}
     ${buildInReliabilityCardHtmlFromServer(localInReliability)}
-    ${brcBuildSlitEvaluationHtml(boats, liveExhibitionRace, localInReliability)}
+    <div id="slitEvaluationSlot">${brcBuildSlitEvaluationHtml(boats, liveExhibitionRace, localInReliability)}</div>
     ${brcBuildDirectInfoBannerHtml(liveExhibitionRace, venue)}
+    ${brcBuildLowSampleBannerHtml(boats)}
     ${brcBuildRaceResultFoldHtml()}
     ${brcBuildExhibitionRaceNoticeHtml(liveExhibitionRace)}
     <div class="predict-player-tap-hint"><span class="tap-key">選手名をタップ ›</span><span>選手データ・展開・ST・モーターを確認できます</span></div>
@@ -17422,7 +17440,7 @@ async function runPredict(){
       <tbody>
         ${boats.map(b=>{
           const col = LANE_COLORS[b.course];
-          const warn = (b.laneN < 15 || b.venueN < 30) ? '<span style="color:#e3b23c;">サンプル少なめ</span>' : '';
+          const warn = brcPredictLowSampleBoats([b]).length ? '<span style="color:#e3b23c;">サンプル少なめ</span>' : '';
           const stCourse = ST_COURSE[b.player.reg] && ST_COURSE[b.player.reg][String(b.course)];
           const stText = stCourse
             ? `${stCourse.avg.toFixed(1)}<span class="predict-unit">位</span>`
