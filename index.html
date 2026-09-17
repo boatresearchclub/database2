@@ -2825,11 +2825,11 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
     /* スマホ：出走表AIの左右余白を少し詰め、選手列を確保する。 */
     #page-predict > #brcPredictProtected > section.card{ padding-left:4px; padding-right:4px; }
     #predictMainPanel-data > #predictResult{ padding-left:6px !important; padding-right:6px !important; }
-    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(1){ width:8%; }
-    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(2){ width:32%; }
-    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(3){ width:18%; }
-    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(4){ width:19%; }
-    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(5){ width:11%; }
+    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(1){ width:7%; }
+    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(2){ width:30%; }
+    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(3){ width:19%; }
+    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(4){ width:20%; }
+    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(5){ width:12%; }
     #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(6){ width:12%; }
     #predictResult .predict-player-name{ min-height:24px; }
     #predictResult .predict-player-name a{
@@ -4400,6 +4400,22 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
 }
 </style>
 
+
+<style id="brc-layout-v7-style">
+/* 2026-09-18 v7: 出走データ列バランス + 展開タブ±α */
+@media (max-width:640px){
+  #predictResult .predict-table th:nth-child(1),#predictResult .predict-table td:nth-child(1){padding-left:0!important;padding-right:0!important;}
+  #predictResult .predict-table th:nth-child(2),#predictResult .predict-table td:nth-child(2){padding-left:2px!important;padding-right:2px!important;}
+  #predictResult .predict-table th:nth-child(3),#predictResult .predict-table td:nth-child(3),
+  #predictResult .predict-table th:nth-child(4),#predictResult .predict-table td:nth-child(4){padding-left:2px!important;padding-right:2px!important;}
+  #predictResult .predict-table th:nth-child(5),#predictResult .predict-table td:nth-child(5),
+  #predictResult .predict-table th:nth-child(6),#predictResult .predict-table td:nth-child(6){padding-left:1px!important;padding-right:1px!important;}
+}
+#predictDetailBody .scenario-rate-main{display:inline-flex;align-items:flex-start;justify-content:center;gap:2px;white-space:nowrap;}
+#predictDetailBody .prob-alpha-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:13px;padding:0 3px;border-radius:999px;font-size:7.5px;font-weight:950;line-height:1;white-space:nowrap;transform:translateY(-2px);}
+#predictDetailBody .prob-alpha-badge.plus{color:#217247;background:rgba(47,143,91,.10);border:1px solid rgba(47,143,91,.24);}
+#predictDetailBody .prob-alpha-badge.minus{color:#b4232c;background:rgba(209,55,63,.09);border:1px solid rgba(209,55,63,.22);}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -7851,9 +7867,7 @@ function brcBuildPredictPlayerImpactHtml(b){
     }
   }
 
-  const currentThirdPct=Number.isFinite(Number(b?.exhibitionApplied?b?.exhibitionThirdPct:NaN)) ? Number(b.exhibitionThirdPct) : Math.max(0,(Number(b?.basePct3Float)||0)-(Number(b?.basePctFloat)||0)-(Number(b?.basePct2)||0));
-  const baseThirdPct=Math.max(0,(Number(b?.basePct3Float)||0)-(Number(b?.basePctFloat)||0)-(Number(b?.basePct2)||0));
-  return `<div class="predict-player-impact"><div class="predict-player-impact-head"><div class="predict-player-impact-title">今回の着率変化</div><div class="predict-player-impact-status">${applied?'BRCタイムX反映済':'展示反映前'}</div></div><div class="predict-player-impact-grid">${metric('win','1着率',b.pctFloat??b.pct,b.basePctFloat,b.exhibitionWinDeltaPt)}${metric('second','2着率',b.pct2,b.basePct2,b.exhibitionSecondDeltaPt)}${metric('third','3着率',currentThirdPct,baseThirdPct,b.exhibitionThirdDeltaPt)}${metric('top3','3連対率',b.pct3Float??b.pct3,b.basePct3Float,b.exhibitionTop3DeltaPt)}</div>${personalHtml}<div class="predict-player-impact-note">※着率差は展示前→現在のBRCタイムX変化。個人傾向は参考表示で、表示着率へ再加算しません。</div></div>`;
+  return `<div class="predict-player-impact"><div class="predict-player-impact-head"><div class="predict-player-impact-title">今回の着率変化</div><div class="predict-player-impact-status">${applied?'BRCタイムX反映済':'展示反映前'}</div></div><div class="predict-player-impact-grid">${metric('win','1着率',b.pctFloat??b.pct,b.basePctFloat,b.exhibitionWinDeltaPt)}${metric('top3','3連対率',b.pct3Float??b.pct3,b.basePct3Float,b.exhibitionTop3DeltaPt)}</div>${personalHtml}<div class="predict-player-impact-note">※着率差は展示前→現在のBRCタイムX変化。2着・3着の評価は「展開」タブで確認できます。個人傾向は参考表示で、表示着率へ再加算しません。</div></div>`;
 }
 
 function renderInlinePredictPlayer(reg, course, venue){
@@ -11235,7 +11249,7 @@ function brcBuildServerNigePredictionHtml(boats,workerPrediction,exhibitionAppli
   const isAdmin=!!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE);
   // 参考買い目は現時点では管理者だけに表示。累積70%生成ロジック自体は変更しない。
   const picks=isAdmin?brcBuildNigeReferencePicksHtml(pred,.70):'';
-  const legend=`<div class="brc-nige-order-legend">各着率＝BRCタイムX反映済｜本人傾向＝参考・数値未反映</div>`;
+  const legend=`<div class="brc-nige-order-legend">各着率＝BRCタイムX反映済｜±α＝本人傾向の参考評価</div>`;
   const rank=String(localInReliability?.rank||'―');
   const detail=isAdmin?`<details class="brc-nige-order-detail"><summary>判定詳細</summary><div class="brc-nige-order-detail-badges"><span>管理者のみ</span><span>TimeX状態 ${pred.phaseLabel}</span><span>イン信頼度 ${rank}</span></div>${legend}<div class="brc-nige-order-detail-rule"><strong>参考買い目ロジック：</strong>1号艇が逃げた場合の3連単20通りを予測確率順に積み上げ、累積70%へ到達するまでを表示。既存のAIイン逃げ予測・累積70%参考買い目・TimeX反映ロジックは変更していません。</div></details>`:'';
   return `<div id="brcNigeOrderPredictionCard" class="brc-nige-order-panel">
@@ -11780,7 +11794,7 @@ function brcBuildInlineNigeOrderPredictionHtml(course, boats, localInReliability
   }).join('');
   const isAdmin=!!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE);
   const picksHtml=isAdmin?brcBuildNigeReferencePicksHtml(pred,.70):'';
-  const legend=`<div class="brc-nige-order-legend">各着率＝BRCタイムX反映済｜本人傾向＝参考・数値未反映</div>`;
+  const legend=`<div class="brc-nige-order-legend">各着率＝BRCタイムX反映済｜±α＝本人傾向の参考評価</div>`;
   const rank=String(localInReliability?.rank||'―');
   const phase=(boats||[]).some(b=>!!b?.exhibitionApplied)?'TimeX反映後':'展示前';
   const detail=isAdmin?`<details class="brc-nige-order-detail"><summary>判定詳細</summary><div class="brc-nige-order-detail-badges"><span>管理者のみ</span><span>TimeX状態 ${phase}</span><span>イン信頼度 ${rank}</span></div>${legend}<div class="brc-nige-order-detail-rule"><strong>参考買い目ロジック：</strong>1号艇が逃げた場合の3連単20通りを予測確率順に積み上げ、累積70%へ到達するまでを表示。既存のAIイン逃げ予測・累積70%参考買い目・TimeX反映ロジックは変更していません。</div></details>`:'';
@@ -11881,14 +11895,14 @@ function renderInlinePredictScenario(course){
           <span class="predict-scenario-details-icon">📄</span>
           <div>
             <div class="predict-scenario-details-title">表示の詳細について</div>
-            <div class="predict-scenario-details-sub">各着率＝BRCタイムX反映済｜本人傾向＝参考・数値未反映</div>
+            <div class="predict-scenario-details-sub">各着率＝BRCタイムX反映済｜±α＝本人傾向の参考評価</div>
           </div>
         </div>
         <span class="predict-scenario-details-arrow">⌄</span>
       </summary>
       <div class="predict-scenario-details-content">
         <strong>全体</strong> は全決まり手を集計。展示取得後は2着・3着・3連対の表示率にもBRCタイムXを反映します。<br>
-        <strong>本人</strong> が出ている指標は、その選手×コース×TimeX差帯の個人傾向です。本人をタップすると参考加減値を確認できますが、N数不足のため表示着率へは加算しません。
+        <strong>±α</strong> は、その選手×コース×TimeX差帯の個人傾向を参考表示したものです。+αは表示率より少し上、-αは少し下に見る材料で、表示着率へは再加算していません。
       </div>
     </details>
   `;
@@ -13813,17 +13827,14 @@ function brcBuildScenarioPlaceRateHtml(rate,b,kind='second'){
   const adjusted=brcBuildScenarioAdjustedRate(rate,b,kind);
   const arrow=brcBuildScenarioPlaceExhibitionArrow(b,kind);
   const evalHtml=arrow || '<span class="scenario-rate-timex-empty" aria-label="BRCタイムX未反映">−</span>';
-  const personal=brcBuildScenarioPersonalTrendHtml(b,kind,adjusted);
-  const personalLine=personal || '<span class="scenario-personal-trend-spacer" aria-hidden="true">&nbsp;</span>';
-  return `<span class="scenario-rate-stack"><span class="scenario-rate-value">${r0(adjusted)}%</span><span class="scenario-rate-timex" title="BRCタイムXを表示率へ反映済">${evalHtml}</span>${personalLine}</span>`;
+  const alpha=brcBuildRateAlphaBadgeHtml(b,kind);
+  return `<span class="scenario-rate-stack"><span class="scenario-rate-main"><span class="scenario-rate-value">${r0(adjusted)}%</span>${alpha||''}</span><span class="scenario-rate-timex" title="BRCタイムXを表示率へ反映済">${evalHtml}</span></span>`;
 }
 function brcBuildScenarioTop3RateHtml(rate,b){
   const adjusted=brcBuildScenarioAdjustedRate(rate,b,'top3');
   const arrow=brcBuildScenarioPlaceExhibitionArrow(b,'top3');
   const evalHtml=arrow || '<span class="scenario-rate-timex-empty" aria-label="BRCタイムX未反映">−</span>';
-  const personal=brcBuildScenarioPersonalTrendHtml(b,'top3',adjusted);
-  const personalLine=personal || '<span class="scenario-personal-trend-spacer" aria-hidden="true">&nbsp;</span>';
-  return `<span class="scenario-top3-stack"><span class="scenario-top3-value">${r0(adjusted)}%</span><span class="scenario-rate-timex" title="BRCタイムXを表示率へ反映済">${evalHtml}</span>${personalLine}</span>`;
+  return `<span class="scenario-top3-stack"><span class="scenario-top3-value">${r0(adjusted)}%</span><span class="scenario-rate-timex" title="BRCタイムXを表示率へ反映済">${evalHtml}</span></span>`;
 }
 function brcBuildScenarioExhibitionBadge(b){
   if(!b?.exhibitionApplied) return '';
