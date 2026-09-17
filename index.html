@@ -749,6 +749,18 @@
     .direct-info-banner-note{font-size:9.5px;}
   }
 
+  /* ---- 2026-09-17: データ利用不可の警告バナー ---- */
+  .brc-condition-absence,.brc-condition-shortened{
+    border-color:rgba(209,55,63,.34);
+    background:rgba(209,55,63,.075);
+    box-shadow:inset 0 0 0 1px rgba(209,55,63,.035);
+  }
+  .brc-condition-absence .direct-info-banner-label,
+  .brc-condition-shortened .direct-info-banner-label{color:#b4232c;font-weight:950;}
+  .brc-condition-absence .direct-info-banner-note,
+  .brc-condition-shortened .direct-info-banner-note{color:#b4232c;font-weight:900;}
+  .brc-condition-absence .slit-eval-boat{box-shadow:0 0 0 1px rgba(209,55,63,.16);}
+
   .exhibition-race-notice{
     display:flex; align-items:center; gap:6px; flex-wrap:wrap;
     margin:-4px 1px 10px; padding:0 2px;
@@ -12398,9 +12410,6 @@ function brcBuildExhibitionRaceNoticeHtml(liveRace){
   for(let n=1;n<=6;n++) if(!byBoat.has(n) && !confirmedAbsent.has(n)) missing.push(n);
 
   const items=[];
-  [...confirmedAbsent].sort((a,b)=>a-b).forEach(n=>{
-    items.push(`<span class="ern-item ern-absence">※${n}号艇欠場</span>`);
-  });
 
   // 「展示情報未取得」は展示前の6艇未取得では出さない。
   // 他艇で実際の展示データが取得できているのに、一部の艇だけ欠ける場合に限り表示する。
@@ -12708,8 +12717,6 @@ function brcSlitMetricLabel(key){
 function brcBuildSlitEvaluationHtml(boats,liveRace,inReliability=null){
   const state=brcSlitEvaluationState(boats,liveRace,inReliability);
   const tiltHtml=brcBuildSlitHighTiltHtml(liveRace);
-  const timeXNotice=brcBuildTimeXLapNoticeHtml(liveRace);
-
   // 過去日も保存済み展示 + 固定OOS ST順位で同じスリット判定を再現する。
   let slitHtml='';
   if(state.status==='active'){
@@ -12730,12 +12737,12 @@ function brcBuildSlitEvaluationHtml(boats,liveRace,inReliability=null){
 
   // チルト1.0以上がいる場合は、スリット条件が非該当・待機中でも高チルト表示を優先。
   if(tiltHtml){
-    const body=`${slitHtml}${tiltHtml}${timeXNotice}`;
+    const body=`${slitHtml}${tiltHtml}`;
     return `<div id="slitEvaluationCard" class="slit-eval-compact"><span class="slit-eval-label">展示スリット評価</span><span class="slit-eval-items">${body}</span></div>`;
   }
 
   if(slitHtml){
-    return `<div id="slitEvaluationCard" class="slit-eval-compact"><span class="slit-eval-label">展示スリット評価</span><span class="slit-eval-items">${slitHtml}${timeXNotice}</span></div>`;
+    return `<div id="slitEvaluationCard" class="slit-eval-compact"><span class="slit-eval-label">展示スリット評価</span><span class="slit-eval-items">${slitHtml}</span></div>`;
   }
 
   // 該当なし・展示待ち・判定対象外・データ不足時はバナー自体を出さない。
@@ -13719,6 +13726,10 @@ function brcRefreshExhibitionAdjustedDom(liveRace,venue,raceNo){
   if(slitSlot){
     // 該当が出た時だけ追加し、該当が消えた時は空に戻す。
     slitSlot.innerHTML=brcBuildSlitEvaluationHtml(boats,liveRace,local);
+  }
+  const conditionSlot=document.getElementById('raceConditionBannerSlot');
+  if(conditionSlot){
+    conditionSlot.innerHTML=brcBuildRaceConditionBannerHtml(liveRace);
   }
   const notice=document.getElementById('exhibitionRaceNotice');
   if(notice){
@@ -15748,6 +15759,28 @@ function brcWindTrendSummary(combo){
   if(notable.length===1) return `参考傾向：${fmt(notable[0])} が場平均との差として目立ちます。`;
   return `参考傾向：${fmt(notable[0])}、${fmt(notable[1])} が場平均との差として目立ちます。`;
 }
+function brcBuildRaceConditionBannerHtml(liveRace){
+  const blocks=[];
+  const absent=[...brcCollectConfirmedAbsentBoats(liveRace)].sort((a,b)=>a-b);
+  if(absent.length){
+    const items=absent.map(n=>brcSlitBoatBadgeHtml(n)).join('');
+    blocks.push(`<div class="slit-eval-compact direct-info-banner brc-condition-banner brc-condition-absence"><span class="direct-info-banner-label">欠場</span><span class="direct-info-banner-items">${items}</span><span class="direct-info-banner-note">このレースはデータが算出できません</span></div>`);
+  }
+
+  // 欠場とは別に、6艇すべてラップ未計測なら周回短縮として明示する。
+  const code=String(liveRace?.venue_code ?? '').padStart(2,'0');
+  const lap=brcTimeXLapState(liveRace);
+  if(code!=='03' && !absent.length && lap.started && lap.allSix && !lap.ready){
+    if(lap.missing.length===6){
+      blocks.push(`<div class="slit-eval-compact direct-info-banner brc-condition-banner brc-condition-shortened"><span class="direct-info-banner-label">周回短縮</span><span class="direct-info-banner-note">BRCタイムX対象外</span></div>`);
+    }else if(lap.missing.length){
+      const items=lap.missing.map(n=>brcSlitBoatBadgeHtml(n)).join('');
+      blocks.push(`<div class="slit-eval-compact direct-info-banner brc-condition-banner brc-condition-lap"><span class="direct-info-banner-label">ラップ未取得</span><span class="direct-info-banner-items">${items}</span><span class="direct-info-banner-note">BRCタイムX待機</span></div>`);
+    }
+  }
+  return blocks.join('');
+}
+
 function brcWindAlertRowsFromLiveRace(liveRace,venue,threshold=5){
   const x=brcNormalizeLiveWind(liveRace);
   if(!x || !venue) return [];
@@ -17415,6 +17448,7 @@ async function runPredict(){
     ${buildCurrentRaceSummaryHtml(venue, exhibitionApplied)}
     ${buildInReliabilityCardHtmlFromServer(localInReliability)}
     <div id="slitEvaluationSlot">${brcBuildSlitEvaluationHtml(boats, liveExhibitionRace, localInReliability)}</div>
+    <div id="raceConditionBannerSlot">${brcBuildRaceConditionBannerHtml(liveExhibitionRace)}</div>
     ${brcBuildDirectInfoBannerHtml(liveExhibitionRace, venue)}
     ${brcBuildLowSampleBannerHtml(boats)}
     ${brcBuildRaceResultFoldHtml()}
