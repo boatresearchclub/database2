@@ -910,21 +910,38 @@
 
   /* ---- 2026-08-28: 出走予想 展開シナリオを決まり手タブ式へ ---- */
   .predict-scenario-tabs{
-    display:flex; gap:6px; overflow-x:auto; -webkit-overflow-scrolling:touch;
-    padding:1px 1px 8px; margin:10px 0 4px; scrollbar-width:none;
+    display:flex; gap:10px; overflow-x:auto; -webkit-overflow-scrolling:touch;
+    padding:1px 1px 10px; margin:10px 0 6px; scrollbar-width:none;
   }
   .predict-scenario-tabs::-webkit-scrollbar{display:none;}
   .predict-scenario-tab{
     flex:0 0 auto; appearance:none; border:1px solid rgba(10,31,51,.14); background:#fff;
-    color:var(--ink-soft); border-radius:999px; padding:7px 13px; font-family:inherit;
-    font-size:12px; font-weight:850; line-height:1; cursor:pointer; white-space:nowrap;
+    color:var(--ink-soft); border-radius:999px; padding:9px 16px; font-family:inherit;
+    font-size:13px; font-weight:850; line-height:1; cursor:pointer; white-space:nowrap;
+    box-shadow:0 1px 2px rgba(10,31,51,.03);
   }
   .predict-scenario-tab.active{background:var(--wave); border-color:var(--wave); color:#fff;}
   .predict-scenario-tab:hover{border-color:rgba(0,87,219,.38);}
-  .predict-scenario-summary{
-    display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;
-    margin:2px 0 7px; font-size:11px; color:var(--ink-soft);
+  .predict-scenario-hero{
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    margin:2px 0 14px; padding:16px 18px; border-radius:16px;
+    background:rgba(0,87,219,.05); border:1px solid rgba(0,87,219,.10);
   }
+  .predict-scenario-hero-copy{min-width:0;}
+  .predict-scenario-hero-title{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:900;color:var(--navy);line-height:1.35;}
+  .predict-scenario-hero-title .icon{font-size:24px;line-height:1;color:var(--wave);}
+  .predict-scenario-hero-text{margin-top:8px;font-size:12.5px;line-height:1.75;color:var(--ink-soft);}
+  .predict-scenario-hero-visual{display:flex;align-items:center;gap:10px;flex:0 0 auto;color:#90aeca;}
+  .predict-scenario-boat{display:inline-flex;align-items:center;justify-content:center;width:46px;height:24px;border-radius:999px 999px 12px 12px;background:linear-gradient(180deg,#1e4f98 0%, #173f79 100%);color:#fff;font-size:12px;font-weight:900;position:relative;}
+  .predict-scenario-boat::after{content:'';position:absolute;right:-14px;top:50%;width:10px;height:2px;background:rgba(0,87,219,.26);transform:translateY(-50%);}
+  .predict-scenario-boat.faded{background:linear-gradient(180deg,#d8e6f7 0%, #bfd4ed 100%);color:#5f7fa8;}
+  .predict-scenario-boat.faded::after{display:none;}
+  .predict-scenario-boat-label{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:800;color:#6b88aa;}
+  .predict-scenario-arrow{font-size:28px;color:#8bb2ee;font-weight:900;line-height:1;}
+  .predict-scenario-section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:6px 0 8px;}
+  .predict-scenario-section-title{font-size:18px;font-weight:900;line-height:1.3;color:var(--navy);}
+  .predict-scenario-section-meta{font-size:12px;font-weight:800;color:var(--ink-soft);white-space:nowrap;padding-top:3px;}
+  .predict-scenario-section-sub{margin:0 0 10px;font-size:12px;line-height:1.65;color:var(--ink-soft);}
   .scenario-rate-stack{
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     min-height:48px; line-height:1.05; white-space:nowrap;
@@ -959,15 +976,44 @@
   .scenario-personal-trend .watch-mark{font-size:7.5px;font-weight:950;line-height:1;margin-left:1px;}
   .scenario-personal-trend .arrow{font-size:11px;font-weight:950;line-height:1;}
   .scenario-personal-trend-spacer{display:block;min-height:15px;margin-top:2px;font-size:1px;visibility:hidden;}
+  table.predict-scenario-course-table{border-collapse:separate !important;border-spacing:0;width:100%;}
+  table.predict-scenario-course-table thead th{background:rgba(10,31,51,.045);font-size:11px;font-weight:800;color:var(--ink-soft);}
   table.predict-scenario-course-table th, table.predict-scenario-course-table td{text-align:center;}
-  table.predict-scenario-course-table .scenario-course-cell{display:flex;align-items:center;justify-content:center;gap:4px;}
-  table.predict-scenario-course-table .scenario-course-name{font-size:9.5px;color:var(--ink-soft);font-weight:700;max-width:66px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  table.predict-scenario-course-table .scenario-course-cell{display:flex;align-items:center;justify-content:center;gap:0;}
+  table.predict-scenario-course-table .scenario-course-name{display:none;}
   table.predict-scenario-course-table .scenario-no-data{color:rgba(61,74,99,.55);font-weight:600;}
+  .predict-scenario-tip{
+    display:flex;align-items:center;gap:10px;margin:12px 0 10px;padding:13px 15px;border-radius:14px;
+    border:1px solid rgba(0,87,219,.10);background:rgba(0,87,219,.035);color:var(--ink-soft);
+  }
+  .predict-scenario-tip .icon{font-size:20px;line-height:1;color:var(--wave);}
+  .predict-scenario-tip strong{color:var(--navy);}
+  .predict-scenario-details{margin:0 0 2px;border:1px solid rgba(10,31,51,.10);border-radius:16px;background:rgba(10,31,51,.025);overflow:hidden;}
+  .predict-scenario-details summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 18px;cursor:pointer;}
+  .predict-scenario-details summary::-webkit-details-marker{display:none;}
+  .predict-scenario-details-main{display:flex;align-items:center;gap:12px;min-width:0;}
+  .predict-scenario-details-icon{font-size:20px;line-height:1;color:#8a97ab;}
+  .predict-scenario-details-title{font-size:14px;font-weight:900;color:var(--navy);line-height:1.35;}
+  .predict-scenario-details-sub{font-size:11px;color:var(--ink-soft);margin-top:4px;line-height:1.55;}
+  .predict-scenario-details-arrow{font-size:20px;color:var(--ink-soft);line-height:1;transition:transform .18s ease;}
+  .predict-scenario-details[open] .predict-scenario-details-arrow{transform:rotate(180deg);}
+  .predict-scenario-details-content{padding:0 18px 16px;color:var(--ink-soft);font-size:11.5px;line-height:1.8;}
+  .predict-scenario-details-content strong{color:var(--navy);}
   @media(max-width:640px){
-    .predict-scenario-tabs{gap:5px;margin-top:8px;padding-bottom:7px;}
-    .predict-scenario-tab{padding:6px 11px;font-size:11px;}
+    .predict-scenario-tabs{gap:8px;margin-top:8px;padding-bottom:8px;}
+    .predict-scenario-tab{padding:8px 14px;font-size:12px;}
+    .predict-scenario-hero{padding:14px 14px;border-radius:14px;gap:10px;}
+    .predict-scenario-hero-title{font-size:14px;gap:8px;}
+    .predict-scenario-hero-title .icon{font-size:21px;}
+    .predict-scenario-hero-text{font-size:11.5px;margin-top:6px;line-height:1.7;}
+    .predict-scenario-boat{width:38px;height:21px;font-size:10.5px;}
+    .predict-scenario-boat-label{font-size:10px;gap:3px;}
+    .predict-scenario-arrow{font-size:22px;}
+    .predict-scenario-section-title{font-size:16px;}
+    .predict-scenario-section-meta{font-size:11px;padding-top:1px;}
+    .predict-scenario-section-sub{font-size:11px;margin-bottom:9px;}
     table.predict-scenario-course-table{font-size:10.5px !important;}
-    table.predict-scenario-course-table th,table.predict-scenario-course-table td{padding:6px 1px !important;}
+    table.predict-scenario-course-table th,table.predict-scenario-course-table td{padding:7px 2px !important;}
     .scenario-rate-stack{min-height:43px;}
     .scenario-rate-value{font-size:10.5px;}
     .scenario-rate-timex{min-height:13px;margin-top:1px;}
@@ -977,14 +1023,19 @@
     .scenario-personal-trend{min-height:13px;margin-top:1px;font-size:7.8px;gap:1px;}
     .scenario-personal-trend .arrow{font-size:10px;}
     .scenario-personal-trend-spacer{min-height:13px;margin-top:1px;}
-    table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(1),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(1){width:18%;}
-    table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(2),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(2){width:9%;}
-    table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(3),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(3){width:15%;}
-    table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(4),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(4){width:13%;}
-    table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(5),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(5){width:13%;}
-    table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(6),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(6){width:16%;}
+    .predict-scenario-tip{gap:8px;padding:12px 14px;margin-top:11px;border-radius:13px;font-size:11px;}
+    .predict-scenario-tip .icon{font-size:18px;}
+    .predict-scenario-details summary{padding:14px 14px;}
+    .predict-scenario-details-title{font-size:13px;}
+    .predict-scenario-details-sub{font-size:10.5px;}
+    .predict-scenario-details-content{padding:0 14px 14px;font-size:10.8px;}
+    table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(1),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(1){width:14%;}
+    table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(2),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(2){width:10%;}
+    table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(3),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(3){width:14%;}
+    table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(4),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(4){width:14%;}
+    table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(5),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(5){width:14%;}
+    table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(6),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(6){width:18%;}
     table.scenario-table.predict-scenario-course-table.compact-7 th:nth-child(7),table.scenario-table.predict-scenario-course-table.compact-7 td:nth-child(7){width:16%;}
-    .scenario-course-name{display:none;}
   }
 
 
@@ -11715,48 +11766,88 @@ function renderInlinePredictScenario(course){
 
   let available=0;
   const bodyRows=others.map(b=>{
-    const reg=b.player.reg, cc=Number(b.course), name=b.player.name;
+    const reg=b.player.reg, cc=Number(b.course);
     const allRows=(SCENARIO_DATA[reg]||[]).filter(r=>Number(r.sc)===cc&&Number(r.wc)===Number(course));
     const targetRows=selected==='全体'?allRows:allRows.filter(r=>r.k===selected);
     const agg=brcAggregatePredictScenarioRows(targetRows);
     if(agg) available++;
     return `<tr style="border-top:1px solid rgba(10,31,51,.06);text-align:center;">
-      <td style="padding:6px 3px;"><div class="scenario-course-cell">${scenarioLaneBadge(cc)}<span class="scenario-course-name">${name}</span></div></td>
-      <td style="padding:6px 3px;white-space:nowrap;">${agg?agg.n:'0'}</td>
-      <td style="padding:6px 3px;white-space:nowrap;font-weight:700;color:var(--line-white);">${agg?agg.ar.toFixed(1):'<span class="scenario-no-data">―</span>'}</td>
-      <td style="padding:6px 3px;white-space:nowrap;">${agg?brcBuildScenarioPlaceRateHtml(agg.t2,b,'second'):'<span class="scenario-no-data">―</span>'}</td>
-      <td style="padding:6px 3px;white-space:nowrap;">${agg?brcBuildScenarioPlaceRateHtml(agg.t3,b,'third'):'<span class="scenario-no-data">―</span>'}</td>
-      <td style="padding:6px 3px;white-space:nowrap;">${agg?brcBuildScenarioTop3RateHtml(agg.t3p,b):'<span class="scenario-no-data">―</span>'}</td>
-      <td style="padding:6px 3px;">${agg?scenarioRelBar(agg.n):'<span class="scenario-no-data">―</span>'}</td>
+      <td style="padding:8px 3px;"><div class="scenario-course-cell">${scenarioLaneBadge(cc)}</div></td>
+      <td style="padding:8px 3px;white-space:nowrap;">${agg?agg.n:'0'}</td>
+      <td style="padding:8px 3px;white-space:nowrap;font-weight:700;color:var(--line-white);">${agg?agg.ar.toFixed(1):'<span class="scenario-no-data">―</span>'}</td>
+      <td style="padding:8px 3px;white-space:nowrap;">${agg?brcBuildScenarioPlaceRateHtml(agg.t2,b,'second'):'<span class="scenario-no-data">―</span>'}</td>
+      <td style="padding:8px 3px;white-space:nowrap;">${agg?brcBuildScenarioPlaceRateHtml(agg.t3,b,'third'):'<span class="scenario-no-data">―</span>'}</td>
+      <td style="padding:8px 3px;white-space:nowrap;">${agg?brcBuildScenarioTop3RateHtml(agg.t3p,b):'<span class="scenario-no-data">―</span>'}</td>
+      <td style="padding:8px 3px;">${agg?scenarioRelBar(agg.n):'<span class="scenario-no-data">―</span>'}</td>
     </tr>`;
   }).join('');
 
   const winnerBoat=boats.find(b=>Number(b.course)===Number(course));
+  const winnerName=winnerBoat?winnerBoat.player.name:`コース${course}`;
+  const sectionTitle=`${course}コースで勝った時の相手候補`;
+  const sectionSub=selected==='全体'
+    ? '全決まり手での、各コースの2着・3着に残る確率です。'
+    : `${selected}で勝った時の、各コースの2着・3着に残る確率です。`;
+  const heroText1=`${winnerName}が${course}コースから勝つ時、`;
+  const heroText2='どのコースが2・3着に残りやすいかを見ます。';
+
   box.innerHTML=`
     <div class="motor-detail-head predict-detail-head">
       <div>
-        <div id="predictDetailTitle" class="motor-detail-title" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${scenarioLaneBadge(course)} ${winnerBoat?winnerBoat.player.name:`コース${course}`}</div>
-        <div class="motor-detail-sub">${winnerBoat?`予想勝率 ${winnerBoat.pct}% ・ `:''}${course}コース勝利時の他艇傾向</div>
+        <div id="predictDetailTitle" class="motor-detail-title" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${scenarioLaneBadge(course)} ${winnerName}</div>
+        <div class="motor-detail-sub">${window.__currentVenueLabel||'会場'} ${course}コース</div>
       </div>
       <button class="motor-detail-close" type="button" onclick="closePredictDetail()" aria-label="閉じる">×</button>
     </div>
     <div class="predict-scenario-tabs" role="tablist" aria-label="決まり手別展開シナリオ">${tabHtml}</div>
-    <div class="predict-scenario-summary"><span><strong>${selected}</strong> の相手残り傾向</span><span>${available}/${others.length}艇データあり</span></div>
+    <div class="predict-scenario-hero">
+      <div class="predict-scenario-hero-copy">
+        <div class="predict-scenario-hero-title"><span class="icon">📊</span><span>相手探しに使う画面</span></div>
+        <div class="predict-scenario-hero-text">${heroText1}<br>${heroText2}</div>
+      </div>
+      <div class="predict-scenario-hero-visual" aria-hidden="true">
+        <span class="predict-scenario-boat">${course}</span>
+        <span class="predict-scenario-arrow">→</span>
+        <span class="predict-scenario-boat-label"><span>2着?</span><span class="predict-scenario-boat faded"></span></span>
+        <span class="predict-scenario-boat-label"><span>3着?</span><span class="predict-scenario-boat faded"></span></span>
+      </div>
+    </div>
+    <div class="predict-scenario-section-head">
+      <div class="predict-scenario-section-title">${sectionTitle}</div>
+      <div class="predict-scenario-section-meta">${available}/${others.length}艇データあり</div>
+    </div>
+    <div class="predict-scenario-section-sub">${sectionSub}</div>
     <div class="scenario-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
-      <table class="scenario-table predict-scenario-course-table compact-7" style="border-collapse:collapse;font-size:11.5px;">
+      <table class="scenario-table predict-scenario-course-table compact-7" style="font-size:11.5px;">
         <thead><tr style="text-align:center;color:var(--ink-soft);">
-          <th style="padding:5px 3px;">コース</th>
-          <th style="padding:5px 3px;white-space:nowrap;">N</th>
-          <th style="padding:5px 3px;white-space:nowrap;">平均</th>
-          <th style="padding:5px 3px;white-space:nowrap;">2着</th>
-          <th style="padding:5px 3px;white-space:nowrap;">3着</th>
-          <th style="padding:5px 3px;white-space:nowrap;">3連</th>
-          <th style="padding:5px 3px;white-space:nowrap;">信頼</th>
+          <th style="padding:8px 3px;">コース</th>
+          <th style="padding:8px 3px;white-space:nowrap;">N</th>
+          <th style="padding:8px 3px;white-space:nowrap;">平均着</th>
+          <th style="padding:8px 3px;white-space:nowrap;">2着率</th>
+          <th style="padding:8px 3px;white-space:nowrap;">3着率</th>
+          <th style="padding:8px 3px;white-space:nowrap;">3連対率</th>
+          <th style="padding:8px 3px;white-space:nowrap;">信頼</th>
         </tr></thead>
         <tbody>${bodyRows}</tbody>
       </table>
     </div>
-    <div class="predict-detail-note" style="margin-top:9px;line-height:1.7;"><strong>各着率＝BRCタイムX反映済｜本人傾向＝参考・数値未反映</strong><br>「全体」は全決まり手を集計。展示取得後は2着・3着・3連対の表示率にもBRCタイムXを反映します。<br>「本人」が出ている指標は、その選手×コース×TimeX差帯の個人傾向です。本人をタップすると参考加減値を確認できますが、N数不足のため表示着率へは加算しません。</div>
+    <div class="predict-scenario-tip"><span class="icon">💡</span><div><strong>見方：</strong>数値が高いコースほど、相手として残りやすいです。</div></div>
+    <details class="predict-scenario-details">
+      <summary>
+        <div class="predict-scenario-details-main">
+          <span class="predict-scenario-details-icon">📄</span>
+          <div>
+            <div class="predict-scenario-details-title">表示の詳細について</div>
+            <div class="predict-scenario-details-sub">各着率＝BRCタイムX反映済｜本人傾向＝参考・数値未反映</div>
+          </div>
+        </div>
+        <span class="predict-scenario-details-arrow">⌄</span>
+      </summary>
+      <div class="predict-scenario-details-content">
+        <strong>全体</strong> は全決まり手を集計。展示取得後は2着・3着・3連対の表示率にもBRCタイムXを反映します。<br>
+        <strong>本人</strong> が出ている指標は、その選手×コース×TimeX差帯の個人傾向です。本人をタップすると参考加減値を確認できますが、N数不足のため表示着率へは加算しません。
+      </div>
+    </details>
   `;
 }
 
