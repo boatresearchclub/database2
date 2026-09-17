@@ -2776,26 +2776,25 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
     min-width:0; line-height:1;
   }
   #predictResult .prob-value{
-    min-height:24px; display:flex; align-items:flex-start; justify-content:center;
+    min-height:24px; display:flex; align-items:flex-start; justify-content:center; gap:2px;
     font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap;
   }
   #predictResult .prob-value-main{
     display:inline-flex; align-items:baseline; justify-content:center; white-space:nowrap;
   }
-  #predictResult .prob-alpha-row{
-    min-height:14px; margin-top:1px; display:flex; align-items:center; justify-content:center; line-height:1;
+  #predictResult .prob-alpha-slot{
+    width:20px; min-height:14px; display:flex; align-items:flex-start; justify-content:flex-start;
   }
   /* 2026-09-17: 1着率の補足評価。数値はBRCタイムX反映済みのまま変更しない。 */
   #predictResult .prob-alpha-badge{
     display:inline-flex; align-items:center; justify-content:center;
-    min-width:20px; height:14px; padding:0 4px; margin-top:0; border-radius:999px;
-    font-size:7.5px; font-weight:950; line-height:1; letter-spacing:-.02em;
+    min-width:24px; height:17px; padding:0 5px; margin-top:-1px; border-radius:999px;
+    font-size:9px; font-weight:950; line-height:1; letter-spacing:-.02em;
     white-space:nowrap; flex:0 0 auto; box-shadow:0 1px 2px rgba(10,31,51,.06);
   }
   #predictResult .prob-alpha-badge.placeholder{
     visibility:hidden; box-shadow:none; border-color:transparent; background:transparent;
   }
-  #predictResult .prob-alpha-row:empty{display:none;}
   #predictResult .prob-alpha-badge.plus{
     color:#217247; background:rgba(47,143,91,.10); border:1px solid rgba(47,143,91,.24);
   }
@@ -2826,10 +2825,10 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
     #page-predict > #brcPredictProtected > section.card{ padding-left:8px; padding-right:8px; }
     #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(1){ width:8%; }
     #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(2){ width:32%; }
-    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(3){ width:16%; }
-    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(4){ width:18%; }
-    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(5){ width:13%; }
-    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(6){ width:13%; }
+    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(3){ width:18%; }
+    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(4){ width:19%; }
+    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(5){ width:11%; }
+    #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(6){ width:12%; }
     #predictResult .predict-player-name{ min-height:24px; }
     #predictResult .predict-player-name a{
       font-size:14.5px !important; line-height:1.2 !important; font-weight:800 !important;
@@ -2842,16 +2841,17 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
     #predictResult .predict-exhibition-base,
     #predictResult .predict-exhibition-alert{font-size:10px !important;}
     #predictResult .prob-value{
-      min-height:24px; font-size:16.5px !important; line-height:1.05 !important; font-weight:850 !important;
+      min-height:24px; font-size:16.5px !important; line-height:1.05 !important; font-weight:850 !important; gap:1px;
     }
-    #predictResult .prob-alpha-row{min-height:14px;margin-top:0;}
-    #predictResult .prob-alpha-badge{min-width:20px;height:14px;padding:0 3px;font-size:7.5px;margin-top:0;}
+    #predictResult .prob-alpha-slot{width:18px;min-height:13px;}
+    #predictResult .prob-alpha-badge{min-width:18px;height:13px;padding:0 3px;font-size:7.5px;margin-top:-1px;}
     #predictResult .prob-eval-row{ min-height:19px; margin-top:3px; }
     #predictResult .prob-eval-row .exhibition-arrow-icon{ width:16px; height:16px; }
     #predictResult .prob-personal-row{margin-top:2px;}
     #predictResult .prob-personal-row .scenario-personal-trend{min-height:13px;font-size:8px;}
 
     #predictResult .prob-eval-hyphen{ font-size:15px; }
+    #predictResult .predict-table tbody td:nth-child(5) > div:first-child{font-size:14.5px !important;letter-spacing:-.03em;}
   }
 
   @media (max-width:420px){
@@ -13061,8 +13061,8 @@ function brcBuildExhibitionProbabilityArrowIcon(deltaPt,threshold){
 function brcBuildProbabilityCell(value,arrowHtml,personalHtml='',alphaHtml=''){
   const evalHtml=arrowHtml || '<span class="prob-eval-hyphen" aria-label="展示未反映">−</span>';
   const personalLine=personalHtml ? `<div class="prob-personal-row">${personalHtml}</div>` : '';
-  const alphaLine=`<div class="prob-alpha-row">${alphaHtml || '<span class="prob-alpha-badge placeholder" aria-hidden="true">+α</span>'}</div>`;
-  return `<div class="prob-cell-stack"><div class="prob-value"><span class="prob-value-main">${value}<span class="predict-unit">%</span></span></div>${alphaLine}<div class="prob-eval-row">${evalHtml}</div>${personalLine}</div>`;
+  const alphaSlot=`<span class="prob-alpha-slot">${alphaHtml || '<span class="prob-alpha-badge placeholder" aria-hidden="true">+α</span>'}</span>`;
+  return `<div class="prob-cell-stack"><div class="prob-value"><span class="prob-value-main">${value}<span class="predict-unit">%</span></span>${alphaSlot}</div><div class="prob-eval-row">${evalHtml}</div>${personalLine}</div>`;
 }
 
 // ±αは「表示着率を再計算する値」ではなく、一覧での読み方を一瞬で示す参考バッジ。
