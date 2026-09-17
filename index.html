@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_PLAYER_DETAIL_DISCOVERY_IMPACT_V1_20260917 -->
 <!-- BRC_ADMIN_UX_PREVIEW_V1_20260917: admin-only preview toggle; public UI unchanged -->
 <!-- BRC_SHARE7_MOTOR7_V37_20260917: SOURCE=BRC_SHARE(7)/BRCdatabase/index.html; preserved latest 9/16+ fixes -->
 <!-- BRC_UI_MODAL_TALL_HITCARDS_2COL_V6_20260914_RESTORED_20260916 -->
@@ -7675,6 +7676,47 @@ function closePredictDetail(){
   document.body.style.overflow='';
 }
 
+function brcBuildPredictPlayerImpactHtml(b){
+  if(!b) return '';
+  const fmtRate=v=>Number.isFinite(Number(v))?`${r0(Number(v))}%`:'―';
+  const applied=!!b.exhibitionApplied;
+  const metric=(label,current,base,delta)=>{
+    const d=Number(delta);
+    const hasDelta=applied&&Number.isFinite(d);
+    const cls=hasDelta?brcMetricClass(d):'flat';
+    const arrow=hasDelta?brcPersonalTrendArrow(d):'→';
+    const deltaText=hasDelta?`${arrow} ${brcSignedPt(d)}`:'展示待ち';
+    const flow=(applied&&Number.isFinite(Number(base))&&Number.isFinite(Number(current)))
+      ? `展示前 ${fmtRate(base)} → 現在 ${fmtRate(current)}`
+      : `現在 ${fmtRate(current)}`;
+    return `<div class="predict-player-impact-metric ${cls}"><div class="k">${label}</div><div class="main"><span class="now">${fmtRate(current)}</span><span class="delta">${deltaText}</span></div><div class="flow">${flow}</div></div>`;
+  };
+
+  let personalHtml='';
+  const personal=brcFindPredictNamePersonalTrendRow(b);
+  if(personal){
+    const decision=brcAlertDecision(personal);
+    const winDiff=brcPersonalEffectDiff(personal,'win');
+    const top3Diff=brcPersonalEffectDiff(personal,'top3');
+    const mini=[];
+    if(Number.isFinite(Number(winDiff))) mini.push(`1着 ${brcPersonalTrendArrow(winDiff)} ${brcSignedPt(winDiff)}`);
+    if(Number.isFinite(Number(top3Diff))) mini.push(`3連対 ${brcPersonalTrendArrow(top3Diff)} ${brcSignedPt(top3Diff)}`);
+    const payload=encodeURIComponent(JSON.stringify(brcAlertPayload(personal,b)));
+    personalHtml=`<div class="predict-player-impact-personal"><div class="predict-player-impact-personal-top"><span class="predict-player-impact-personal-label">個人傾向</span><span class="predict-player-impact-personal-value">${decision.title}</span></div>${mini.length?`<div class="predict-player-impact-personal-sub">本人傾向差：${mini.join(' ／ ')}</div>`:''}<button type="button" class="predict-player-impact-personal-btn" onclick="event.stopPropagation();brcShowPredictNamePersonalTrend(decodeURIComponent('${payload}'))">個人傾向の詳細を見る ›</button></div>`;
+  }else{
+    const tendency=brcFindPlayerTimeXTendency(b);
+    if(tendency){
+      const easy=tendency.direction==='easy';
+      const text=`${Number(b.course)}コースでタイムを${easy?'出しやすい':'出しにくい'}傾向`;
+      personalHtml=`<div class="predict-player-impact-personal"><div class="predict-player-impact-personal-top"><span class="predict-player-impact-personal-label">個人傾向</span><span class="predict-player-impact-personal-value">${text}</span></div><div class="predict-player-impact-personal-sub">今回帯の本人傾向データが出た場合は、展示後に内容が更新されます。</div><button type="button" class="predict-player-impact-personal-btn" onclick="event.stopPropagation();brcShowPlayerTimeXTendencyForCourse(${Number(b.course)||0})">個人傾向の詳細を見る ›</button></div>`;
+    }else{
+      personalHtml=`<div class="predict-player-impact-personal"><div class="predict-player-impact-personal-top"><span class="predict-player-impact-personal-label">個人傾向</span><span class="predict-player-impact-personal-value">該当なし</span></div><div class="predict-player-impact-personal-sub">現在コースで強く表示する個人傾向はありません。</div></div>`;
+    }
+  }
+
+  return `<div class="predict-player-impact"><div class="predict-player-impact-head"><div class="predict-player-impact-title">今回の着率変化</div><div class="predict-player-impact-status">${applied?'BRCタイムX反映済':'展示反映前'}</div></div><div class="predict-player-impact-grid">${metric('1着率',b.pctFloat??b.pct,b.basePctFloat,b.exhibitionWinDeltaPt)}${metric('3連対率',b.pct3Float??b.pct3,b.basePct3Float,b.exhibitionTop3DeltaPt)}</div>${personalHtml}<div class="predict-player-impact-note">※着率差は展示前→現在のBRCタイムX変化。個人傾向は参考表示で、表示着率へ再加算しません。</div></div>`;
+}
+
 function renderInlinePredictPlayer(reg, course, venue){
   const box = document.getElementById(`predict-pl-box-${course}`);
   if(!box) return;
@@ -7724,6 +7766,7 @@ function renderInlinePredictPlayer(reg, course, venue){
       <div class="motor-detail-stat"><b>${stLabel}</b><span>平均ST順位</span></div>
       <div class="motor-detail-stat"><b style="color:${motorColor};">${motorLabel}</b><span>モーター</span></div>
     </div>
+    ${brcBuildPredictPlayerImpactHtml(raceBoat)}
     <div class="predict-detail-section-title">${course === 1 ? '1コースの敗因・弱点' : `${course}コースの決まり手`}</div>
     ${kimHtml}
     ${venueHtml}
@@ -17310,6 +17353,7 @@ async function runPredict(){
     ${brcBuildSlitEvaluationHtml(boats, liveExhibitionRace, localInReliability)}
     ${brcBuildRaceResultFoldHtml()}
     ${brcBuildExhibitionRaceNoticeHtml(liveExhibitionRace)}
+    <div class="predict-player-tap-hint"><span class="tap-key">選手名をタップ ›</span><span>選手データ・展開・ST・モーターを確認できます</span></div>
     <div id="predictTableWrap" style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
     <table class="predict-table">
       <thead>
@@ -17339,7 +17383,7 @@ async function runPredict(){
               : '<span style="color:var(--ink-soft);">―</span>';
           return `<tr>
             <td><span class="num-badge" style="width:22px;height:22px;font-size:12.5px;background:${col.bg};color:${col.text};${b.course===1?'border:1.5px solid rgba(10,31,51,.35);box-sizing:border-box;':''}display:inline-flex;align-items:center;justify-content:center;border-radius:50%;">${b.course}</span></td>
-            <td class="predict-player-cell"><div class="predict-player-name"><a href="#" style="color:var(--line-white); text-decoration:none; cursor:pointer; font-weight:800;" onclick="event.preventDefault(); togglePredictPlayer(${b.course}, '${b.player.reg}', '${venue}');" title="タップで選手・展開・ST・モーター詳細を表示">${b.player.name}</a></div><div id="predict-exhibition-label-${b.course}" class="predict-exhibition-label">${brcBuildPredictExhibitionLabelHtml(b)}</div></td>
+            <td class="predict-player-cell"><div class="predict-player-name"><a href="#" class="predict-player-link" onclick="event.preventDefault(); togglePredictPlayer(${b.course}, '${b.player.reg}', '${venue}');" title="タップで選手・展開・ST・モーター詳細を表示" aria-label="${b.player.name}の選手詳細を開く">${b.player.name}</a></div><div id="predict-exhibition-label-${b.course}" class="predict-exhibition-label">${brcBuildPredictExhibitionLabelHtml(b)}</div></td>
             <td id="predict-win-cell-${b.course}" class="num" style="font-weight:800; color:var(--line-white);">${brcBuildWinCellInner(b,venue)}</td>
             <td id="predict-top3-cell-${b.course}" class="num" style="font-weight:800; color:var(--line-white);">${brcBuildTop3CellInner(b)}</td>
             <td class="num" title="タップで詳細の「ST」タブを表示" onclick="openSTStabilityDetail('${b.player.reg}',${b.course})"><div class="st-rank-stack"><span class="st-rank-main">${stText}</span>${buildSTStabilitySub(b.player.reg,b.course)}</div></td>
@@ -17377,7 +17421,7 @@ async function runPredict(){
           </div>
           <div class="predict-guide-item">
             <div class="predict-guide-key">③ 展示後</div>
-            <div class="predict-guide-text"><strong>BRCタイムX</strong>の矢印で、事前予測から上がった艇・下がった艇を確認します。「BRCタイムX 注意」が出た選手は、タップして今回の見方を確認します。</div>
+            <div class="predict-guide-text"><strong>BRCタイムX</strong>の矢印で、事前予測から上がった艇・下がった艇を確認します。<strong>選手名をタップ</strong>すると、今回の1着率・3連対率の変化、個人傾向、展開・ST・モーターまで確認できます。</div>
           </div>
         </div>
 
@@ -17628,6 +17672,73 @@ window.__playersRendered = true;
 .predict-detail-note{font-size:11.5px;color:var(--ink-soft);line-height:1.55;background:rgba(10,31,51,.035);border:1px solid rgba(10,31,51,.07);border-radius:10px;padding:9px 10px;margin:2px 0 14px;}
 .predict-detail-more{display:block;width:100%;margin-top:14px;border:1px solid rgba(0,87,219,.28);background:rgba(0,87,219,.05);color:var(--wave);font:inherit;font-size:12.5px;font-weight:800;border-radius:10px;padding:10px 12px;cursor:pointer;}
 .predict-detail-more:active{background:rgba(0,87,219,.10);}
+
+/* ---- BRC_PLAYER_DETAIL_DISCOVERY_IMPACT_V1_20260917 ----
+   出走データの選手名タップ導線を常時可視化し、選手詳細に今回の着率変化＋個人傾向を集約。 */
+.predict-player-tap-hint{
+  display:flex;align-items:center;gap:7px;flex-wrap:wrap;
+  margin:0 1px 8px;padding:7px 9px;border-radius:9px;
+  border:1px solid rgba(0,87,219,.13);background:rgba(0,87,219,.045);
+  color:var(--ink-soft);font-size:10.5px;font-weight:750;line-height:1.45;
+}
+.predict-player-tap-hint .tap-key{
+  display:inline-flex;align-items:center;gap:3px;flex:0 0 auto;
+  color:var(--wave);font-weight:950;white-space:nowrap;
+}
+#predictResult .predict-player-link{
+  color:var(--wave)!important;text-decoration:underline!important;
+  text-decoration-thickness:1px!important;text-underline-offset:3px!important;
+  font-weight:850!important;cursor:pointer;
+}
+#predictResult .predict-player-link::after{
+  content:' ›';display:inline-block;margin-left:2px;color:var(--wave);font-weight:950;
+  text-decoration:none;
+}
+#predictResult .predict-player-link:active{opacity:.68;}
+
+.predict-player-impact{
+  margin:10px 0 2px;padding:10px;border:1px solid rgba(0,87,219,.14);
+  border-radius:11px;background:linear-gradient(160deg,rgba(0,87,219,.045),rgba(255,255,255,.98));
+}
+.predict-player-impact-head{
+  display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:7px;
+}
+.predict-player-impact-title{font-size:11.5px;font-weight:950;color:var(--navy);}
+.predict-player-impact-status{font-size:8.5px;font-weight:900;color:var(--ink-soft);white-space:nowrap;}
+.predict-player-impact-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.predict-player-impact-metric{
+  min-width:0;padding:8px 8px 7px;border:1px solid rgba(10,31,51,.07);border-radius:9px;background:#fff;
+}
+.predict-player-impact-metric .k{font-size:9px;font-weight:850;color:var(--ink-soft);}
+.predict-player-impact-metric .main{display:flex;align-items:baseline;justify-content:space-between;gap:6px;margin-top:2px;}
+.predict-player-impact-metric .now{font-size:18px;font-weight:950;color:var(--navy);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.predict-player-impact-metric .delta{font-size:11px;font-weight:950;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.predict-player-impact-metric.up .delta{color:var(--trend-up);}
+.predict-player-impact-metric.down .delta{color:var(--trend-down);}
+.predict-player-impact-metric.flat .delta{color:var(--ink-soft);}
+.predict-player-impact-metric .flow{margin-top:2px;font-size:8.5px;font-weight:750;color:var(--ink-soft);white-space:nowrap;}
+.predict-player-impact-personal{
+  margin-top:7px;padding:8px 9px;border-radius:9px;border:1px solid rgba(10,31,51,.07);background:rgba(10,31,51,.025);
+}
+.predict-player-impact-personal-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.predict-player-impact-personal-label{font-size:9px;font-weight:900;color:var(--ink-soft);white-space:nowrap;}
+.predict-player-impact-personal-value{font-size:11.5px;font-weight:950;color:var(--navy);text-align:right;}
+.predict-player-impact-personal-sub{margin-top:3px;font-size:8.5px;font-weight:800;color:var(--ink-soft);line-height:1.45;}
+.predict-player-impact-personal-btn{
+  appearance:none;border:0;background:transparent;color:var(--wave);padding:0;margin:4px 0 0;
+  font:inherit;font-size:9.5px;font-weight:950;cursor:pointer;text-decoration:underline;text-underline-offset:2px;
+}
+.predict-player-impact-note{margin-top:6px;font-size:8.5px;line-height:1.45;color:var(--ink-soft);}
+@media(max-width:640px){
+  .predict-player-tap-hint{font-size:9.5px;padding:6px 7px;margin-bottom:7px;gap:5px;}
+  .predict-player-impact{padding:8px;margin-top:8px;}
+  .predict-player-impact-title{font-size:11px;}
+  .predict-player-impact-metric{padding:7px 6px 6px;}
+  .predict-player-impact-metric .now{font-size:16px;}
+  .predict-player-impact-metric .delta{font-size:10px;}
+  .predict-player-impact-metric .flow{font-size:7.8px;}
+  .predict-player-impact-personal-value{font-size:10.5px;}
+}
 .predict-detail-content .card{box-shadow:none;}
 .predict-detail-content .bar-track{height:6px;background:rgba(10,31,51,.09);border-radius:4px;overflow:hidden;}
 .predict-detail-content .bar-fill{height:100%;border-radius:4px;}
