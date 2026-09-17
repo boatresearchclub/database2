@@ -1408,8 +1408,9 @@
   .brc-nige-order-row:first-child{border-top:0;}
   .brc-nige-order-row.head{min-height:29px;background:var(--bg3);color:var(--ink-soft);font-size:10px;font-weight:850;text-align:center;}
   .brc-nige-order-boat{display:flex;align-items:center;justify-content:center;}
-  .brc-nige-order-metric{display:flex;align-items:baseline;justify-content:center;gap:3px;font-variant-numeric:tabular-nums;min-width:0;}
+  .brc-nige-order-metric{display:flex;align-items:baseline;justify-content:center;gap:3px;font-variant-numeric:tabular-nums;min-width:0;flex-wrap:wrap;}
   .brc-nige-order-pct{font-size:15px;font-weight:900;color:var(--navy);white-space:nowrap;}
+  .brc-nige-order-metric .prob-alpha-badge{margin-top:0;transform:translateY(-1px);}
   .brc-nige-order-timex-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;padding:3px 1px;}
   .brc-nige-order-timex-line{display:flex;align-items:center;justify-content:center;gap:2px;width:100%;min-height:18px;white-space:nowrap;}
   .brc-nige-order-timex-label{font-size:8px;font-weight:900;color:var(--ink-soft);line-height:1;letter-spacing:-.05em;flex:0 0 auto;}
@@ -2775,15 +2776,24 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
     min-width:0; line-height:1;
   }
   #predictResult .prob-value{
-    min-height:24px; display:flex; align-items:flex-start; justify-content:center; gap:3px;
+    min-height:24px; display:grid; grid-template-columns:auto 28px; align-items:flex-start; justify-content:center; column-gap:3px;
     font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap;
+  }
+  #predictResult .prob-value-main{
+    display:inline-flex; align-items:baseline; justify-content:flex-end; white-space:nowrap;
+  }
+  #predictResult .prob-alpha-slot{
+    width:28px; min-height:17px; display:flex; align-items:flex-start; justify-content:flex-start;
   }
   /* 2026-09-17: 1着率の補足評価。数値はBRCタイムX反映済みのまま変更しない。 */
   #predictResult .prob-alpha-badge{
     display:inline-flex; align-items:center; justify-content:center;
-    min-width:24px; height:17px; padding:0 5px; margin-top:-3px; border-radius:999px;
+    min-width:24px; height:17px; padding:0 5px; margin-top:-1px; border-radius:999px;
     font-size:9px; font-weight:950; line-height:1; letter-spacing:-.02em;
     white-space:nowrap; flex:0 0 auto; box-shadow:0 1px 2px rgba(10,31,51,.06);
+  }
+  #predictResult .prob-alpha-badge.placeholder{
+    visibility:hidden; box-shadow:none; border-color:transparent; background:transparent;
   }
   #predictResult .prob-alpha-badge.plus{
     color:#217247; background:rgba(47,143,91,.10); border:1px solid rgba(47,143,91,.24);
@@ -2831,9 +2841,10 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
     #predictResult .predict-exhibition-base,
     #predictResult .predict-exhibition-alert{font-size:10px !important;}
     #predictResult .prob-value{
-      min-height:24px; font-size:16.5px !important; line-height:1.05 !important; font-weight:850 !important; gap:2px;
+      min-height:24px; grid-template-columns:auto 26px; font-size:16.5px !important; line-height:1.05 !important; font-weight:850 !important; column-gap:2px;
     }
-    #predictResult .prob-alpha-badge{min-width:22px;height:16px;padding:0 4px;font-size:8.5px;margin-top:-2px;}
+    #predictResult .prob-alpha-slot{width:26px;min-height:16px;}
+    #predictResult .prob-alpha-badge{min-width:22px;height:16px;padding:0 4px;font-size:8.5px;margin-top:0;}
     #predictResult .prob-eval-row{ min-height:19px; margin-top:3px; }
     #predictResult .prob-eval-row .exhibition-arrow-icon{ width:16px; height:16px; }
     #predictResult .prob-personal-row{margin-top:2px;}
@@ -7801,7 +7812,7 @@ function brcBuildPredictPlayerImpactHtml(b){
   if(!b) return '';
   const fmtRate=v=>Number.isFinite(Number(v))?`${r0(Number(v))}%`:'―';
   const applied=!!b.exhibitionApplied;
-  const metric=(label,current,base,delta)=>{
+  const metric=(kind,label,current,base,delta)=>{
     const d=Number(delta);
     const hasDelta=applied&&Number.isFinite(d);
     const cls=hasDelta?brcMetricClass(d):'flat';
@@ -7810,7 +7821,8 @@ function brcBuildPredictPlayerImpactHtml(b){
     const flow=(applied&&Number.isFinite(Number(base))&&Number.isFinite(Number(current)))
       ? `展示前 ${fmtRate(base)} → 現在 ${fmtRate(current)}`
       : `現在 ${fmtRate(current)}`;
-    return `<div class="predict-player-impact-metric ${cls}"><div class="k">${label}</div><div class="main"><span class="now">${fmtRate(current)}</span><span class="delta">${deltaText}</span></div><div class="flow">${flow}</div></div>`;
+    const alpha=brcBuildRateAlphaBadgeHtml(b,kind);
+    return `<div class="predict-player-impact-metric ${cls}"><div class="k">${label}</div><div class="main"><span class="nowline"><span class="now">${fmtRate(current)}</span>${alpha||''}</span><span class="delta">${deltaText}</span></div><div class="flow">${flow}</div></div>`;
   };
 
   let personalHtml='';
@@ -7835,7 +7847,9 @@ function brcBuildPredictPlayerImpactHtml(b){
     }
   }
 
-  return `<div class="predict-player-impact"><div class="predict-player-impact-head"><div class="predict-player-impact-title">今回の着率変化</div><div class="predict-player-impact-status">${applied?'BRCタイムX反映済':'展示反映前'}</div></div><div class="predict-player-impact-grid">${metric('1着率',b.pctFloat??b.pct,b.basePctFloat,b.exhibitionWinDeltaPt)}${metric('3連対率',b.pct3Float??b.pct3,b.basePct3Float,b.exhibitionTop3DeltaPt)}</div>${personalHtml}<div class="predict-player-impact-note">※着率差は展示前→現在のBRCタイムX変化。個人傾向は参考表示で、表示着率へ再加算しません。</div></div>`;
+  const currentThirdPct=Number.isFinite(Number(b?.exhibitionApplied?b?.exhibitionThirdPct:NaN)) ? Number(b.exhibitionThirdPct) : Math.max(0,(Number(b?.basePct3Float)||0)-(Number(b?.basePctFloat)||0)-(Number(b?.basePct2)||0));
+  const baseThirdPct=Math.max(0,(Number(b?.basePct3Float)||0)-(Number(b?.basePctFloat)||0)-(Number(b?.basePct2)||0));
+  return `<div class="predict-player-impact"><div class="predict-player-impact-head"><div class="predict-player-impact-title">今回の着率変化</div><div class="predict-player-impact-status">${applied?'BRCタイムX反映済':'展示反映前'}</div></div><div class="predict-player-impact-grid">${metric('win','1着率',b.pctFloat??b.pct,b.basePctFloat,b.exhibitionWinDeltaPt)}${metric('second','2着率',b.pct2,b.basePct2,b.exhibitionSecondDeltaPt)}${metric('third','3着率',currentThirdPct,baseThirdPct,b.exhibitionThirdDeltaPt)}${metric('top3','3連対率',b.pct3Float??b.pct3,b.basePct3Float,b.exhibitionTop3DeltaPt)}</div>${personalHtml}<div class="predict-player-impact-note">※着率差は展示前→現在のBRCタイムX変化。個人傾向は参考表示で、表示着率へ再加算しません。</div></div>`;
 }
 
 function renderInlinePredictPlayer(reg, course, venue){
@@ -10915,10 +10929,11 @@ function brcGetNigeVenueBaseMap(venue){
   return out;
 }
 
-function brcBuildNigeOrderMetricHtml(x,baseText='',baseClass=''){
+function brcBuildNigeOrderMetricHtml(x,baseText='',baseClass='',b=null,kind='second'){
   const pct=Number(x?.pct);
-  if(!Number.isFinite(pct)) return '<div class="brc-nige-order-metric"><span class="brc-nige-order-pct">―</span></div>';
-  return `<div class="brc-nige-order-metric"><span class="brc-nige-order-pct">${Math.round(pct)}%</span>${baseText?`<span class="brc-nige-order-base ${baseClass}">(${baseText})</span>`:''}</div>`;
+  const alpha=b?brcBuildRateAlphaBadgeHtml(b,kind):'';
+  if(!Number.isFinite(pct)) return `<div class="brc-nige-order-metric"><span class="brc-nige-order-pct">―</span>${alpha||''}</div>`;
+  return `<div class="brc-nige-order-metric"><span class="brc-nige-order-pct">${Math.round(pct)}%</span>${alpha||''}${baseText?`<span class="brc-nige-order-base ${baseClass}">(${baseText})</span>`:''}</div>`;
 }
 function brcBuildNigeOrderPersonalHtml(b,kind,currentRate=NaN){
   const a=brcFindExhibitionPlayerAlert(b);
@@ -11211,7 +11226,7 @@ function brcBuildServerNigePredictionHtml(boats,workerPrediction,exhibitionAppli
     const diff=Number.isFinite(basePct)&&Number.isFinite(predPct)?Math.round(predPct-basePct):null;
     const diffText=diff==null?'':(diff===0?'±0pt':`${diff>0?'+':''}${diff}pt`);
     const diffClass=diff!=null&&diff>0?'is-strong-plus':(diff!=null&&diff<0?'is-strong-minus':'');
-    return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${brcBuildNigeOrderMetricHtml(secondMap.get(boat),diffText,diffClass)}${brcBuildNigeOrderTimexHtml(b,'second',secondMap.get(boat)?.pct)}${brcBuildNigeOrderMetricHtml(thirdMap.get(boat))}${brcBuildNigeOrderTimexHtml(b,'third',thirdMap.get(boat)?.pct)}</div>`;
+    return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${brcBuildNigeOrderMetricHtml(secondMap.get(boat),diffText,diffClass,b,'second')}${brcBuildNigeOrderTimexHtml(b,'second',secondMap.get(boat)?.pct)}${brcBuildNigeOrderMetricHtml(thirdMap.get(boat),'','',b,'third')}${brcBuildNigeOrderTimexHtml(b,'third',thirdMap.get(boat)?.pct)}</div>`;
   }).join('');
   const isAdmin=!!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE);
   // 参考買い目は現時点では管理者だけに表示。累積70%生成ロジック自体は変更しない。
@@ -11757,7 +11772,7 @@ function brcBuildInlineNigeOrderPredictionHtml(course, boats, localInReliability
     const diff=Number.isFinite(basePct)&&Number.isFinite(predPct)?Math.round(predPct-basePct):null;
     const diffText=diff==null?'':(diff===0?'±0pt':`${diff>0?'+':''}${diff}pt`);
     const diffClass=diff!=null&&diff>0?'is-strong-plus':(diff!=null&&diff<0?'is-strong-minus':'');
-    return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${brcBuildNigeOrderMetricHtml(secondMap.get(boat),diffText,diffClass)}${brcBuildNigeOrderTimexHtml(b,'second',secondMap.get(boat)?.pct)}${brcBuildNigeOrderMetricHtml(thirdMap.get(boat))}${brcBuildNigeOrderTimexHtml(b,'third',thirdMap.get(boat)?.pct)}</div>`;
+    return `<div class="brc-nige-order-row"><div class="brc-nige-order-boat">${scenarioLaneBadge(boat)}</div>${brcBuildNigeOrderMetricHtml(secondMap.get(boat),diffText,diffClass,b,'second')}${brcBuildNigeOrderTimexHtml(b,'second',secondMap.get(boat)?.pct)}${brcBuildNigeOrderMetricHtml(thirdMap.get(boat),'','',b,'third')}${brcBuildNigeOrderTimexHtml(b,'third',thirdMap.get(boat)?.pct)}</div>`;
   }).join('');
   const isAdmin=!!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE);
   const picksHtml=isAdmin?brcBuildNigeReferencePicksHtml(pred,.70):'';
@@ -13045,48 +13060,55 @@ function brcBuildExhibitionProbabilityArrowIcon(deltaPt,threshold){
 function brcBuildProbabilityCell(value,arrowHtml,personalHtml='',alphaHtml=''){
   const evalHtml=arrowHtml || '<span class="prob-eval-hyphen" aria-label="展示未反映">−</span>';
   const personalLine=personalHtml ? `<div class="prob-personal-row">${personalHtml}</div>` : '';
-  return `<div class="prob-cell-stack"><div class="prob-value"><span>${value}<span class="predict-unit">%</span></span>${alphaHtml||''}</div><div class="prob-eval-row">${evalHtml}</div>${personalLine}</div>`;
+  const alphaSlot=`<span class="prob-alpha-slot">${alphaHtml || '<span class="prob-alpha-badge placeholder" aria-hidden="true">+α</span>'}</span>`;
+  return `<div class="prob-cell-stack"><div class="prob-value"><span class="prob-value-main">${value}<span class="predict-unit">%</span></span>${alphaSlot}</div><div class="prob-eval-row">${evalHtml}</div>${personalLine}</div>`;
 }
 
 // ±αは「表示着率を再計算する値」ではなく、一覧での読み方を一瞬で示す参考バッジ。
-// +α = 表示1着率より少し上に見る余地 / -α = 表示1着率より少し下に見る必要。
+// +α = 表示着率より少し上に見る余地 / -α = 表示着率より少し下に見る必要。
 // 数値・TimeX・AI予測ロジックは一切変更しない。
-function brcBuildWinAlphaBadgeHtml(b){
+function brcBuildRateAlphaBadgeHtml(b,kind='win'){
   if(!b?.exhibitionApplied) return '';
-  const winDelta=Number(b?.exhibitionWinDeltaPt);
-  if(!Number.isFinite(winDelta) || brcTimeXSimplePolarity(winDelta)==='flat') return '';
+  const cfgMap={
+    win:{deltaKey:'exhibitionWinDeltaPt',label:'1着率',personalKind:'win'},
+    second:{deltaKey:'exhibitionSecondDeltaPt',label:'2着率',personalKind:'second'},
+    third:{deltaKey:'exhibitionThirdDeltaPt',label:'3着率',personalKind:'third'},
+    top3:{deltaKey:'exhibitionTop3DeltaPt',label:'3連対率',personalKind:'top3'}
+  };
+  const cfg=cfgMap[kind]||cfgMap.win;
+  const delta=Number(b?.[cfg.deltaKey]);
+  if(!Number.isFinite(delta) || brcTimeXSimplePolarity(delta)==='flat') return '';
 
   let sign='';
   let reason='';
 
-  // 今回TimeX帯の本人傾向が十分ある場合は、1着の本人差を最優先。
   const personal=brcFindPredictNamePersonalTrendRow(b);
   if(personal && personal?.['採用区分']!=='監視'){
-    const personalWin=Number(brcPersonalEffectDiff(personal,'win'));
-    const rounded=brcTimeXArrowRoundedPt(personalWin);
-    if(Number.isFinite(personalWin) && rounded!==0){
+    const personalDiff=Number(brcPersonalEffectDiff(personal,cfg.personalKind));
+    const rounded=brcTimeXArrowRoundedPt(personalDiff);
+    if(Number.isFinite(personalDiff) && rounded!==0){
       sign=rounded>0?'+α':'-α';
-      reason=rounded>0?'本人傾向では表示1着率より少し上に見る余地':'本人傾向では表示1着率より少し下に見る必要';
+      reason=rounded>0
+        ? `本人傾向では表示${cfg.label}より少し上に見る余地`
+        : `本人傾向では表示${cfg.label}より少し下に見る必要`;
     }
   }
 
-  // 今回帯の具体傾向がない場合は、選手×現在コースの基礎特性を使用。
   if(!sign){
     const tendency=brcFindPlayerTimeXTendency(b);
     if(!tendency) return '';
     const grade=String(tendency?.reliabilityGrade||'E').toUpperCase();
-    // Cは参考、D/Eは評価を変えない既存ルールを維持。バッジはS/A/Bだけ。
     if(!['S','A','B'].includes(grade)) return '';
     if(tendency.direction==='hard'){
       sign='+α';
-      reason=winDelta<0
-        ? 'タイムを出しにくい選手。今回の下降は額面どおりに下げすぎない'
-        : 'タイムを出しにくい選手が上昇。表示1着率より少し上に見る余地';
+      reason=delta<0
+        ? `タイムを出しにくい選手。今回の${cfg.label}下降は額面どおりに下げすぎない`
+        : `タイムを出しにくい選手が上昇。表示${cfg.label}より少し上に見る余地`;
     }else if(tendency.direction==='easy'){
       sign='-α';
-      reason=winDelta>0
-        ? 'タイムを出しやすい選手。今回の上昇は額面どおりに上げすぎない'
-        : 'タイムを出しやすい選手が下降。表示1着率より少し下に見る必要';
+      reason=delta>0
+        ? `タイムを出しやすい選手。今回の${cfg.label}上昇は額面どおりに上げすぎない`
+        : `タイムを出しやすい選手が下降。表示${cfg.label}より少し下に見る必要`;
     }
   }
 
@@ -13094,6 +13116,7 @@ function brcBuildWinAlphaBadgeHtml(b){
   const cls=sign.startsWith('+')?'plus':'minus';
   return `<span class="prob-alpha-badge ${cls}" aria-label="${sign} ${reason}" title="${reason}。理由は選手名をタップ">${sign}</span>`;
 }
+function brcBuildWinAlphaBadgeHtml(b){ return brcBuildRateAlphaBadgeHtml(b,'win'); }
 
 function brcBuildTimeXFinalPredictionHtml(boats){
   if(!Array.isArray(boats)||!boats.length) return '';
@@ -13110,15 +13133,15 @@ function brcBuildWinCellInner(b,venue){
   const arrow=b?.exhibitionApplied
     ? brcBuildExhibitionProbabilityArrowIcon(Number(b?.exhibitionWinDeltaPt),0.75)
     : '';
-  const alpha=brcBuildWinAlphaBadgeHtml(b);
+  const alpha=brcBuildRateAlphaBadgeHtml(b,'win');
   return brcBuildProbabilityCell(b.pct,arrow,'',alpha);
 }
 function brcBuildTop3CellInner(b){
-  // ±αは一覧の視認性を優先して1着率だけに表示。3連対率の既存表示は維持する。
   const arrow=b?.exhibitionApplied
     ? brcBuildExhibitionProbabilityArrowIcon(Number(b?.exhibitionTop3DeltaPt),2.0)
     : '';
-  return brcBuildProbabilityCell(b.pct3,arrow,'');
+  const alpha=brcBuildRateAlphaBadgeHtml(b,'top3');
+  return brcBuildProbabilityCell(b.pct3,arrow,'',alpha);
 }
 
 // ---- BRCタイムX：選手別個人化データ（6方向盲点再検証 / 2024-2025作成 → 2026完全OOS） ----
@@ -17938,7 +17961,9 @@ window.__playersRendered = true;
 }
 .predict-player-impact-metric .k{font-size:9px;font-weight:850;color:var(--ink-soft);}
 .predict-player-impact-metric .main{display:flex;align-items:baseline;justify-content:space-between;gap:6px;margin-top:2px;}
+.predict-player-impact-metric .nowline{display:inline-flex;align-items:flex-start;gap:4px;white-space:nowrap;}
 .predict-player-impact-metric .now{font-size:18px;font-weight:950;color:var(--navy);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.predict-player-impact-metric .nowline .prob-alpha-badge{margin-top:1px;box-shadow:none;}
 .predict-player-impact-metric .delta{font-size:11px;font-weight:950;white-space:nowrap;font-variant-numeric:tabular-nums;}
 .predict-player-impact-metric.up .delta{color:var(--trend-up);}
 .predict-player-impact-metric.down .delta{color:var(--trend-down);}
