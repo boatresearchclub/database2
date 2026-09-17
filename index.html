@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_REFMON_DIAG_V3_20260917: logging-only audit patch; buy logic unchanged -->
 <!-- BRC_PLAYER_DETAIL_DISCOVERY_IMPACT_V1_20260917 -->
 <!-- BRC_ADMIN_UX_PREVIEW_V1_20260917: admin-only preview toggle; public UI unchanged -->
 <!-- BRC_SHARE7_MOTOR7_V37_20260917: SOURCE=BRC_SHARE(7)/BRCdatabase/index.html; preserved latest 9/16+ fixes -->
@@ -19458,14 +19459,23 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       const modes={};
       ['hit','balance'].forEach(mode=>{
         const md=buildRefModeData(mode,data,boats,workerPrediction,phase);
+        // Recovery is post-race same-logic reconstruction, not a pre-deadline odds snapshot.
+        // Never persist the currently selected race's odds into a recovered historical race.
         modes[mode]={
           label:md?.cfg?.label||BRC_REFMODE_CONFIG[mode]?.label||mode,
           decision:md?.decision||'pass',
           passReason:String(md?.passReason||''),
           pointCount:Number(md?.pointCount)||0,
           formation:String(md?.formation||''),
-          compositeOdds:Number.isFinite(Number(md?.compositeOdds))?Number(md.compositeOdds):null,
-          picks:(md?.picks||[]).map(x=>({combo:String(x?.combo||''),odds:Number.isFinite(Number(x?.odds))?Number(x.odds):null})).filter(x=>/^([1-6]-){2}[1-6]$/.test(x.combo))
+          compositeOdds:null,
+          picks:(md?.picks||[]).map(x=>({
+            combo:String(x?.combo||''),odds:null,
+            p:Number.isFinite(Number(x?.p))?Number(x.p):null,
+            head:Number.isFinite(Number(x?.head))?Number(x.head):null,
+            second:Number.isFinite(Number(x?.second))?Number(x.second):null,
+            third:Number.isFinite(Number(x?.third))?Number(x.third):null,
+            source:String(x?.source||'')
+          })).filter(x=>/^([1-6]-){2}[1-6]$/.test(x.combo))
         };
       });
       return {data,modes};
@@ -19735,6 +19745,13 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     if(brcRefModeLastArgs){
       const a=brcRefModeLastArgs;
       renderReferenceMonitor(a.boats,a.workerPrediction,a.localInReliability,a.exhibitionApplied,true);
+      // Odds can arrive after the first prediction render. Persist again so Return/High modes
+      // and the exact odds snapshot are not lost from the admin CSV.
+      try{
+        if(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE&&!brcRefAfterDeadline()){
+          Promise.resolve(saveCurrent(a.boats,a.workerPrediction,a.localInReliability,a.exhibitionApplied)).catch(()=>{});
+        }
+      }catch(_e){}
       return;
     }
     const root=document.querySelector('[data-brc-refmon-root]');
@@ -19771,12 +19788,19 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
             mode,label:md?.cfg?.label||BRC_REFMODE_CONFIG[mode]?.label||mode,decision:md?.decision||'pass',
             passReason:md?.passReason||'',pointCount:Number(md?.pointCount)||0,formation:String(md?.formation||''),
             compositeOdds:Number.isFinite(Number(md?.compositeOdds))?Number(md.compositeOdds):null,
-            picks:(md?.picks||[]).map(x=>({combo:String(x?.combo||''),odds:Number.isFinite(Number(x?.odds))?Number(x.odds):null})).filter(x=>/^([1-6]-){2}[1-6]$/.test(x.combo))
+            picks:(md?.picks||[]).map(x=>({
+              combo:String(x?.combo||''),odds:Number.isFinite(Number(x?.odds))?Number(x.odds):null,
+              p:Number.isFinite(Number(x?.p))?Number(x.p):null,
+              head:Number.isFinite(Number(x?.head))?Number(x.head):null,
+              second:Number.isFinite(Number(x?.second))?Number(x.second):null,
+              third:Number.isFinite(Number(x?.third))?Number(x.third):null,
+              source:String(x?.source||'')
+            })).filter(x=>/^([1-6]-){2}[1-6]$/.test(x.combo))
           };
         });
       }
     }catch(_e){}
-    const row={id:`${VERSION}|${sel.date}|${sel.venue}|${sel.raceNo}|${phase}`,version:VERSION,date:sel.date,venue:sel.venue,venueCode:sel.code,raceNo:sel.raceNo,deadline:deadlineText(sel),phase,capturedAt:new Date().toISOString(),inReliability:data.inReliability,inPct:data.inPct,todayReject:data.todayReject,decision:data.decision,reason:data.reason,mode:data.mode,heads:data.heads,pointCount:data.pointCount,formation:data.formation,picks:data.picks,variants:data.variants,marks:data.marks,hc:data.hc,oc:data.oc,boundary:data.boundary,headBand:data.headBand,opponentBand:data.opponentBand,compositeOdds:data.compositeOdds,refModes,oddsCapturedAt:String(oddsRec?.capturedAt||oddsRec?.updatedAt||''),exhibitionApplied:phase==='exhibition'};
+    const row={id:`${VERSION}|${sel.date}|${sel.venue}|${sel.raceNo}|${phase}`,version:VERSION,date:sel.date,venue:sel.venue,venueCode:sel.code,raceNo:sel.raceNo,deadline:deadlineText(sel),phase,capturedAt:new Date().toISOString(),inReliability:data.inReliability,inPct:data.inPct,todayReject:data.todayReject,decision:data.decision,reason:data.reason,mode:data.mode,heads:data.heads,pointCount:data.pointCount,formation:data.formation,picks:data.picks,variants:data.variants,marks:data.marks,hc:data.hc,oc:data.oc,boundary:data.boundary,headBand:data.headBand,opponentBand:data.opponentBand,compositeOdds:data.compositeOdds,refModes,oddsCapturedAt:String(oddsRec?.capturedAt||oddsRec?.updatedAt||''),oddsSelectionKey:String(sel?.key||''),oddsTrusted:true,recoveryOnly:false,exhibitionApplied:phase==='exhibition'};
     await dbPut(row);
     try{ if(typeof window.brcRefreshAdminTodayHits==='function') window.brcRefreshAdminTodayHits(false); }catch(_e){}
     return true;
@@ -19793,10 +19817,10 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   async function exportCsv(){
     const rows=(await dbGetAll()).sort((a,b)=>String(a.date).localeCompare(String(b.date))||String(a.venue).localeCompare(String(b.venue))||num(a.raceNo)-num(b.raceNo)||String(a.phase).localeCompare(String(b.phase)));
     if(!rows.length) throw new Error('参考買い目V2ログはまだありません');
-    const cols=['date','venue','venue_code','race_no','deadline','phase','captured_at','version','in_reliability','in_pct','today_reject','decision','reason','mode','heads','head_cover_hc','head_band','opponent_cover_oc','opponent_band','boundary_ratio','point_count','formation','picks','composite_odds','ref_modes_json','legacy_v1_json','variants_json','marks_json'];
+    const cols=['date','venue','venue_code','race_no','deadline','phase','captured_at','version','in_reliability','in_pct','today_reject','decision','reason','mode','heads','head_cover_hc','head_band','opponent_cover_oc','opponent_band','boundary_ratio','point_count','formation','picks','composite_odds','odds_captured_at','odds_selection_key','odds_trusted','recovery_only','ref_modes_json','legacy_v1_json','variants_json','marks_json'];
     const lines=[cols.join(',')];
     for(const r of rows){
-      const o={date:r.date,venue:r.venue,venue_code:r.venueCode,race_no:r.raceNo,deadline:r.deadline,phase:r.phase,captured_at:r.capturedAt,version:r.version,in_reliability:r.inReliability,in_pct:r.inPct,today_reject:r.todayReject,decision:r.decision,reason:r.reason,mode:r.mode,heads:(r.heads||[]).join(''),head_cover_hc:r.hc,head_band:r.headBand,opponent_cover_oc:r.oc,opponent_band:r.opponentBand,boundary_ratio:r.boundary,point_count:r.pointCount,formation:r.formation,picks:(r.picks||[]).map(x=>x.combo).join(';'),composite_odds:r.compositeOdds,ref_modes_json:JSON.stringify(r.refModes||{}),legacy_v1_json:JSON.stringify(r.variants?.legacyV1||{}),variants_json:JSON.stringify(r.variants||{}),marks_json:JSON.stringify(r.marks||[])};
+      const o={date:r.date,venue:r.venue,venue_code:r.venueCode,race_no:r.raceNo,deadline:r.deadline,phase:r.phase,captured_at:r.capturedAt,version:r.version,in_reliability:r.inReliability,in_pct:r.inPct,today_reject:r.todayReject,decision:r.decision,reason:r.reason,mode:r.mode,heads:(r.heads||[]).join(''),head_cover_hc:r.hc,head_band:r.headBand,opponent_cover_oc:r.oc,opponent_band:r.opponentBand,boundary_ratio:r.boundary,point_count:r.pointCount,formation:r.formation,picks:(r.picks||[]).map(x=>x.combo).join(';'),composite_odds:r.compositeOdds,odds_captured_at:r.oddsCapturedAt,odds_selection_key:r.oddsSelectionKey,odds_trusted:r.oddsTrusted,recovery_only:r.recoveryOnly,ref_modes_json:JSON.stringify(r.refModes||{}),legacy_v1_json:JSON.stringify(r.variants?.legacyV1||{}),variants_json:JSON.stringify(r.variants||{}),marks_json:JSON.stringify(r.marks||[])};
       lines.push(cols.map(k=>csvEsc(o[k])).join(','));
     }
     const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}), url=URL.createObjectURL(blob), a=document.createElement('a');
@@ -20401,7 +20425,12 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
         version:'BRC_TODAY_HITS_RECOVERY_LOCK_V1',
         date,venue:String(spec.venue||''),venueCode:code,raceNo,
         deadline:String(spec.deadline||''),phase:'recovered',
-        capturedAt:new Date().toISOString(),refModes:recModes,recoveryOnly:true
+        capturedAt:new Date().toISOString(),
+        inReliability:pack.data?.inReliability||'',inPct:pack.data?.inPct??null,todayReject:!!pack.data?.todayReject,
+        decision:pack.data?.decision||'pass',reason:pack.data?.reason||'',mode:pack.data?.mode||'',heads:pack.data?.heads||[],
+        pointCount:pack.data?.pointCount||0,formation:pack.data?.formation||'',picks:pack.data?.picks||[],variants:pack.data?.variants||{},marks:pack.data?.marks||[],
+        hc:pack.data?.hc??null,oc:pack.data?.oc??null,boundary:pack.data?.boundary??null,headBand:pack.data?.headBand||'',opponentBand:pack.data?.opponentBand||'',compositeOdds:null,
+        refModes:recModes,oddsCapturedAt:'',oddsSelectionKey:'',oddsTrusted:false,recoveryOnly:true
       });
     }catch(_e){}
     try{
