@@ -2776,14 +2776,14 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
     min-width:0; line-height:1;
   }
   #predictResult .prob-value{
-    min-height:24px; display:grid; grid-template-columns:auto 28px; align-items:flex-start; justify-content:center; column-gap:3px;
+    min-height:24px; display:flex; align-items:flex-start; justify-content:center;
     font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap;
   }
   #predictResult .prob-value-main{
-    display:inline-flex; align-items:baseline; justify-content:flex-end; white-space:nowrap;
+    display:inline-flex; align-items:baseline; justify-content:center; white-space:nowrap;
   }
-  #predictResult .prob-alpha-slot{
-    width:28px; min-height:17px; display:flex; align-items:flex-start; justify-content:flex-start;
+  #predictResult .prob-alpha-row{
+    min-height:17px; margin-top:1px; display:flex; align-items:center; justify-content:center; line-height:1;
   }
   /* 2026-09-17: 1着率の補足評価。数値はBRCタイムX反映済みのまま変更しない。 */
   #predictResult .prob-alpha-badge{
@@ -2795,6 +2795,7 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
   #predictResult .prob-alpha-badge.placeholder{
     visibility:hidden; box-shadow:none; border-color:transparent; background:transparent;
   }
+  #predictResult .prob-alpha-row:empty{display:none;}
   #predictResult .prob-alpha-badge.plus{
     color:#217247; background:rgba(47,143,91,.10); border:1px solid rgba(47,143,91,.24);
   }
@@ -2841,9 +2842,9 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
     #predictResult .predict-exhibition-base,
     #predictResult .predict-exhibition-alert{font-size:10px !important;}
     #predictResult .prob-value{
-      min-height:24px; grid-template-columns:auto 26px; font-size:16.5px !important; line-height:1.05 !important; font-weight:850 !important; column-gap:2px;
+      min-height:24px; font-size:16.5px !important; line-height:1.05 !important; font-weight:850 !important;
     }
-    #predictResult .prob-alpha-slot{width:26px;min-height:16px;}
+    #predictResult .prob-alpha-row{min-height:16px;margin-top:0;}
     #predictResult .prob-alpha-badge{min-width:22px;height:16px;padding:0 4px;font-size:8.5px;margin-top:0;}
     #predictResult .prob-eval-row{ min-height:19px; margin-top:3px; }
     #predictResult .prob-eval-row .exhibition-arrow-icon{ width:16px; height:16px; }
@@ -13060,8 +13061,8 @@ function brcBuildExhibitionProbabilityArrowIcon(deltaPt,threshold){
 function brcBuildProbabilityCell(value,arrowHtml,personalHtml='',alphaHtml=''){
   const evalHtml=arrowHtml || '<span class="prob-eval-hyphen" aria-label="展示未反映">−</span>';
   const personalLine=personalHtml ? `<div class="prob-personal-row">${personalHtml}</div>` : '';
-  const alphaSlot=`<span class="prob-alpha-slot">${alphaHtml || '<span class="prob-alpha-badge placeholder" aria-hidden="true">+α</span>'}</span>`;
-  return `<div class="prob-cell-stack"><div class="prob-value"><span class="prob-value-main">${value}<span class="predict-unit">%</span></span>${alphaSlot}</div><div class="prob-eval-row">${evalHtml}</div>${personalLine}</div>`;
+  const alphaLine=`<div class="prob-alpha-row">${alphaHtml || '<span class="prob-alpha-badge placeholder" aria-hidden="true">+α</span>'}</div>`;
+  return `<div class="prob-cell-stack"><div class="prob-value"><span class="prob-value-main">${value}<span class="predict-unit">%</span></span></div>${alphaLine}<div class="prob-eval-row">${evalHtml}</div>${personalLine}</div>`;
 }
 
 // ±αは「表示着率を再計算する値」ではなく、一覧での読み方を一瞬で示す参考バッジ。
