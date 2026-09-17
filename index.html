@@ -1,3 +1,4 @@
+<!-- BRC_ADMIN_OPERATIONS_HUB_V1_20260918: admin-only operations dashboard; public UI unchanged -->
 <!DOCTYPE html>
 <!-- BRC_ALPHA_BADGE_WINRATE_V1_20260917: +α/-α reference badge on 1着率; detail via player name; no probability recalculation -->
 <!-- BRC_REFMON_DIAG_V3_20260917: logging-only audit patch; buy logic unchanged -->
@@ -4416,6 +4417,55 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
 #predictDetailBody .prob-alpha-badge.plus{color:#217247;background:rgba(47,143,91,.10);border:1px solid rgba(47,143,91,.24);}
 #predictDetailBody .prob-alpha-badge.minus{color:#b4232c;background:rgba(209,55,63,.09);border:1px solid rgba(209,55,63,.22);}
 </style>
+
+
+<style id="brc-admin-operations-hub-v1-style">
+/* BRC_ADMIN_OPERATIONS_HUB_V1_20260918
+   公開UIは変更せず、管理者ログイン時だけ表示する運営ダッシュボード。 */
+.brc-admin-hub{display:none;margin:0 0 14px;border:1px solid rgba(10,31,51,.10);border-radius:15px;background:#fff;box-shadow:0 8px 26px rgba(10,31,51,.07);overflow:hidden;}
+.brc-admin-hub.is-visible{display:block;}
+.brc-admin-hub-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:14px 14px 11px;background:linear-gradient(155deg,rgba(0,87,219,.075),rgba(255,255,255,.98));border-bottom:1px solid rgba(10,31,51,.08);}
+.brc-admin-hub-kicker{font-size:9px;font-weight:950;letter-spacing:.09em;color:var(--wave);}
+.brc-admin-hub-title{margin-top:2px;font-size:18px;font-weight:950;color:var(--navy);line-height:1.25;}
+.brc-admin-hub-sub{margin-top:3px;font-size:10px;line-height:1.5;color:var(--ink-soft);}
+.brc-admin-hub-live{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:999px;background:rgba(47,143,91,.09);color:#217247;border:1px solid rgba(47,143,91,.18);font-size:9px;font-weight:950;white-space:nowrap;}
+.brc-admin-hub-live::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--trend-up);box-shadow:0 0 0 3px rgba(var(--trend-up-rgb),.10);}
+.brc-admin-hub-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;padding:7px;background:#f5f7fa;border-bottom:1px solid rgba(10,31,51,.08);}
+.brc-admin-hub-tab{appearance:none;border:0;border-radius:9px;background:transparent;color:var(--ink-soft);padding:8px 3px;font:inherit;font-size:10.5px;font-weight:900;cursor:pointer;white-space:nowrap;}
+.brc-admin-hub-tab.active{background:#fff;color:var(--wave);box-shadow:0 1px 5px rgba(10,31,51,.10);}
+.brc-admin-hub-panel{display:none;padding:11px 12px 13px;}
+.brc-admin-hub-panel.active{display:block;}
+.brc-admin-hub-status{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-bottom:10px;}
+.brc-admin-hub-stat{min-width:0;padding:8px 7px;border:1px solid rgba(10,31,51,.07);border-radius:10px;background:#f8fafc;}
+.brc-admin-hub-stat .k{font-size:8.5px;font-weight:850;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.brc-admin-hub-stat .v{margin-top:3px;font-size:12px;font-weight:950;color:var(--navy);line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.brc-admin-hub-stat.good .v{color:#217247;}.brc-admin-hub-stat.warn .v{color:#9a5d00;}.brc-admin-hub-stat.accent .v{color:var(--wave);}
+.brc-admin-hub-section-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:2px 1px 7px;font-size:11.5px;font-weight:950;color:var(--navy);}
+.brc-admin-hub-section-title small{font-size:8.5px;color:var(--ink-soft);font-weight:750;}
+.brc-admin-hub-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;}
+.brc-admin-hub-action{appearance:none;min-width:0;border:1px solid rgba(10,31,51,.09);border-radius:11px;background:#fff;padding:10px;text-align:left;font:inherit;cursor:pointer;transition:.12s;}
+.brc-admin-hub-action:hover{border-color:rgba(0,87,219,.26);background:rgba(0,87,219,.018);}
+.brc-admin-hub-action:active{transform:translateY(1px);}
+.brc-admin-hub-action .top{display:flex;align-items:center;justify-content:space-between;gap:7px;}
+.brc-admin-hub-action .icon{font-size:18px;line-height:1;}.brc-admin-hub-action .arrow{font-size:13px;color:var(--wave);font-weight:950;}
+.brc-admin-hub-action strong{display:block;margin-top:6px;font-size:11.5px;font-weight:950;color:var(--navy);line-height:1.25;}
+.brc-admin-hub-action span.copy{display:block;margin-top:3px;font-size:9px;line-height:1.45;color:var(--ink-soft);}
+.brc-admin-hub-action.attention{border-color:rgba(217,119,6,.20);background:rgba(217,119,6,.025);}
+.brc-admin-hub-action.primary{border-color:rgba(0,87,219,.20);background:rgba(0,87,219,.035);}
+.brc-admin-hub-message{margin-top:9px;padding:8px 9px;border:1px solid rgba(10,31,51,.07);border-radius:9px;background:rgba(10,31,51,.022);font-size:8.8px;line-height:1.5;color:var(--ink-soft);}
+.brc-admin-hub-message strong{color:var(--navy);}
+.brc-admin-hub-refresh{appearance:none;border:1px solid rgba(0,87,219,.20);border-radius:999px;background:#fff;color:var(--wave);padding:4px 8px;font:inherit;font-size:8.5px;font-weight:900;cursor:pointer;}
+.brc-admin-hub-compact-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 9px;border:1px solid rgba(10,31,51,.07);border-radius:9px;background:#f8fafc;margin-bottom:7px;}
+.brc-admin-hub-compact-row:last-child{margin-bottom:0;}
+.brc-admin-hub-compact-row .label{font-size:10px;font-weight:900;color:var(--navy);}.brc-admin-hub-compact-row .state{font-size:9px;font-weight:850;color:var(--ink-soft);text-align:right;}
+@media(max-width:520px){
+  .brc-admin-hub-head{padding:12px 10px 10px;}.brc-admin-hub-title{font-size:16px;}.brc-admin-hub-sub{font-size:9.5px;}
+  .brc-admin-hub-live{font-size:8.5px;padding:4px 7px;}.brc-admin-hub-tabs{gap:3px;padding:5px;}.brc-admin-hub-tab{font-size:9.5px;padding:8px 1px;letter-spacing:-.02em;}
+  .brc-admin-hub-panel{padding:9px 8px 11px;}.brc-admin-hub-status{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;}.brc-admin-hub-actions{gap:6px;}
+  .brc-admin-hub-action{padding:9px 8px;}.brc-admin-hub-action strong{font-size:10.8px;}.brc-admin-hub-action span.copy{font-size:8.5px;}
+}
+</style>
+
 </head>
 <body>
 <div class="wrap">
@@ -4686,6 +4736,78 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
   </div><!-- /page-database -->
 
   <div id="page-predict">
+
+    <section id="brcAdminHub" class="brc-admin-hub" aria-hidden="true">
+      <div class="brc-admin-hub-head">
+        <div>
+          <div class="brc-admin-hub-kicker">BRC OPERATIONS</div>
+          <div class="brc-admin-hub-title">管理者ホーム</div>
+          <div class="brc-admin-hub-sub">今日の状態確認と、運営機能へのショートカット。公開ユーザーには表示されません。</div>
+        </div>
+        <div class="brc-admin-hub-live">管理者接続中</div>
+      </div>
+      <div class="brc-admin-hub-tabs" role="tablist" aria-label="管理者ホーム切り替え">
+        <button type="button" class="brc-admin-hub-tab active" data-brc-admin-hub-tab="today">今日</button>
+        <button type="button" class="brc-admin-hub-tab" data-brc-admin-hub-tab="verify">検証</button>
+        <button type="button" class="brc-admin-hub-tab" data-brc-admin-hub-tab="post">投稿</button>
+        <button type="button" class="brc-admin-hub-tab" data-brc-admin-hub-tab="member">会員</button>
+        <button type="button" class="brc-admin-hub-tab" data-brc-admin-hub-tab="research">研究</button>
+      </div>
+
+      <div class="brc-admin-hub-panel active" data-brc-admin-hub-panel="today">
+        <div class="brc-admin-hub-section-title"><span>今日の運営状態</span><button type="button" id="brcAdminHubRefresh" class="brc-admin-hub-refresh">更新</button></div>
+        <div class="brc-admin-hub-status">
+          <div class="brc-admin-hub-stat good"><div class="k">ログイン</div><div class="v">管理者</div></div>
+          <div class="brc-admin-hub-stat accent"><div class="k">選択レース</div><div id="brcAdminHubRace" class="v">未選択</div></div>
+          <div class="brc-admin-hub-stat"><div class="k">直前情報</div><div id="brcAdminHubLive" class="v">事前 / 待ち</div></div>
+          <div class="brc-admin-hub-stat"><div class="k">本日の的中</div><div id="brcAdminHubHits" class="v">集計中</div></div>
+        </div>
+        <div class="brc-admin-hub-actions">
+          <button type="button" class="brc-admin-hub-action primary" data-brc-admin-action="hits"><div class="top"><span class="icon">🎯</span><span class="arrow">→</span></div><strong>本日の的中速報</strong><span class="copy">確定した参考買い目と結果を確認</span></button>
+          <button type="button" class="brc-admin-hub-action" data-brc-admin-action="race-search"><div class="top"><span class="icon">🔎</span><span class="arrow">→</span></div><strong>レース検索</strong><span class="copy">本日厳選・展開検索へ</span></button>
+          <button type="button" class="brc-admin-hub-action" data-brc-admin-action="ui-preview"><div class="top"><span class="icon">📱</span><span class="arrow">→</span></div><strong>公開UI確認</strong><span class="copy">管理者だけのUI改善プレビューへ</span></button>
+          <button type="button" class="brc-admin-hub-action" data-brc-admin-action="investment"><div class="top"><span class="icon">📊</span><span class="arrow">→</span></div><strong>投資管理</strong><span class="copy">運用記録・検証・月次へ</span></button>
+        </div>
+        <div class="brc-admin-hub-message"><strong>運用方針：</strong>公開UIは極力固定。管理・検証・投稿など運営側の機能はこの管理者ホームから扱います。</div>
+      </div>
+
+      <div class="brc-admin-hub-panel" data-brc-admin-hub-panel="verify">
+        <div class="brc-admin-hub-section-title"><span>検証・モニター</span><small>公開UIに影響しない管理領域</small></div>
+        <div class="brc-admin-hub-actions">
+          <button type="button" class="brc-admin-hub-action primary" data-brc-admin-action="investment"><div class="top"><span class="icon">📈</span><span class="arrow">→</span></div><strong>投資管理・検証</strong><span class="copy">運用判定、実績、月次、検証テーブル</span></button>
+          <button type="button" class="brc-admin-hub-action" data-brc-admin-action="ai"><div class="top"><span class="icon">🧪</span><span class="arrow">→</span></div><strong>AI予測・参考買い目</strong><span class="copy">管理者β、参考買い目モニターを確認</span></button>
+          <button type="button" class="brc-admin-hub-action" data-brc-admin-action="ui-preview"><div class="top"><span class="icon">🧭</span><span class="arrow">→</span></div><strong>UI改善プレビュー</strong><span class="copy">公開前に導線案だけ重ねて確認</span></button>
+          <button type="button" class="brc-admin-hub-action" data-brc-admin-action="race-search"><div class="top"><span class="icon">🧩</span><span class="arrow">→</span></div><strong>展開検索</strong><span class="copy">条件検索・管理者βへ移動</span></button>
+        </div>
+      </div>
+
+      <div class="brc-admin-hub-panel" data-brc-admin-hub-panel="post">
+        <div class="brc-admin-hub-section-title"><span>投稿運用</span><small>選択中のレースを使用</small></div>
+        <div class="brc-admin-hub-compact-row"><span class="label">現在の対象レース</span><span id="brcAdminHubPostRace" class="state">未選択</span></div>
+        <div class="brc-admin-hub-actions">
+          <button type="button" class="brc-admin-hub-action primary" data-brc-admin-action="social"><div class="top"><span class="icon">✍️</span><span class="arrow">→</span></div><strong>SNS投稿アシスタント</strong><span class="copy">Threads / X の文章・画像作成へ</span></button>
+          <button type="button" class="brc-admin-hub-action" data-brc-admin-action="data"><div class="top"><span class="icon">🏁</span><span class="arrow">→</span></div><strong>レースを選び直す</strong><span class="copy">出走データへ戻って対象レースを変更</span></button>
+        </div>
+        <div class="brc-admin-hub-message">自動投稿本体のロジックは変更していません。ここは既存の投稿アシスタントへの入口だけを整理しています。</div>
+      </div>
+
+      <div class="brc-admin-hub-panel" data-brc-admin-hub-panel="member">
+        <div class="brc-admin-hub-section-title"><span>会員運用</span><small>管理者限定</small></div>
+        <div class="brc-admin-hub-actions">
+          <button type="button" class="brc-admin-hub-action primary" data-brc-admin-action="member-issue"><div class="top"><span class="icon">👤</span><span class="arrow">→</span></div><strong>新規会員を発行</strong><span class="copy">YOOR確認後、ID・4桁パスワード発行へ</span></button>
+          <button type="button" class="brc-admin-hub-action" data-brc-admin-action="member-issue"><div class="top"><span class="icon">💬</span><span class="arrow">→</span></div><strong>LINE送信用情報</strong><span class="copy">発行後のコピー操作へすぐ移動</span></button>
+        </div>
+      </div>
+
+      <div class="brc-admin-hub-panel" data-brc-admin-hub-panel="research">
+        <div class="brc-admin-hub-section-title"><span>研究・コンテンツ</span><small>BRC研究室</small></div>
+        <div class="brc-admin-hub-actions">
+          <button type="button" class="brc-admin-hub-action primary" data-brc-admin-action="research"><div class="top"><span class="icon">🔬</span><span class="arrow">→</span></div><strong>BRC研究室を管理</strong><span class="copy">記事登録・編集・公開範囲・並び替え</span></button>
+          <button type="button" class="brc-admin-hub-action" data-brc-admin-action="database"><div class="top"><span class="icon">🗂️</span><span class="arrow">→</span></div><strong>各種データ</strong><span class="copy">選手・会場データへ移動</span></button>
+        </div>
+      </div>
+    </section>
+
     <section id="brcAdminTodayHits" class="brc-admin-today-hits" aria-hidden="true">
       <div class="brc-admin-today-hits-head">
         <div>
@@ -5678,6 +5800,7 @@ function brcSetAdminSocialUi(user=null){
   const box=document.getElementById('brcAdminSocial');
   BRC_ADMIN_ACTIVE=!!(user && brcIsAdminUser(user) && BRC_MEMBER_ACTIVE);
   brcSetMemberAdminUi(BRC_ADMIN_ACTIVE);
+  try{ if(typeof window.brcSetAdminHubUi==='function') window.brcSetAdminHubUi(BRC_ADMIN_ACTIVE); }catch(_e){}
   try{ if(typeof brcSetUxPreviewAdminUi==='function') brcSetUxPreviewAdminUi(BRC_ADMIN_ACTIVE); }catch(_e){}
   if(box){
     box.classList.toggle('is-visible',BRC_ADMIN_ACTIVE);
@@ -21070,6 +21193,129 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     bind();
     try{ window.brcSetUxPreviewAdminUi(isAdmin()); }catch(_e){}
   });
+})();
+</script>
+
+
+
+<script id="brc-admin-operations-hub-v1-script">
+// BRC_ADMIN_OPERATIONS_HUB_V1_20260918
+(function(){
+  const q=(sel,root=document)=>root.querySelector(sel);
+  const qa=(sel,root=document)=>Array.from(root.querySelectorAll(sel));
+  let observer=null;
+
+  function isAdmin(){ return typeof BRC_ADMIN_ACTIVE!=='undefined' && !!BRC_ADMIN_ACTIVE; }
+  function compactText(value,max=26){
+    const t=String(value||'').replace(/\s+/g,' ').trim();
+    if(!t) return '';
+    return t.length>max?t.slice(0,max-1)+'…':t;
+  }
+  function currentRaceText(){
+    const result=q('#predictResult');
+    const summary=result&&q('.race-summary-compact',result);
+    if(summary){
+      const venue=compactText(q('.race-summary-top',summary)?.textContent,18);
+      const race=compactText(q('.race-summary-bottom .rs-race',summary)?.textContent,8);
+      const joined=[venue,race].filter(Boolean).join(' ');
+      if(joined) return joined;
+    }
+    const activeVenue=q('.venue-pill.active');
+    const activeRace=q('.race-pill.active');
+    const joined=[compactText(activeVenue?.textContent,12),compactText(activeRace?.textContent,8)].filter(Boolean).join(' ');
+    return joined||'未選択';
+  }
+  function hitsText(){
+    const el=q('#brcAdminTodayHitsSummary');
+    if(!el) return '集計中';
+    const strong=q('strong',el)?.textContent||'';
+    return compactText(strong||el.textContent,14)||'0的中';
+  }
+  function updateStatus(){
+    if(!isAdmin()) return;
+    const race=currentRaceText();
+    const raceEl=q('#brcAdminHubRace'); if(raceEl) raceEl.textContent=race;
+    const postRace=q('#brcAdminHubPostRace'); if(postRace) postRace.textContent=race;
+    const live=q('#brcAdminHubLive'); if(live) live.textContent=window.__currentExhibitionApplied?'展示反映済み':'事前 / 待ち';
+    const hits=q('#brcAdminHubHits'); if(hits) hits.textContent=hitsText();
+  }
+  function setTab(key){
+    qa('[data-brc-admin-hub-tab]').forEach(btn=>{
+      const on=btn.dataset.brcAdminHubTab===key;
+      btn.classList.toggle('active',on); btn.setAttribute('aria-selected',on?'true':'false');
+    });
+    qa('[data-brc-admin-hub-panel]').forEach(panel=>panel.classList.toggle('active',panel.dataset.brcAdminHubPanel===key));
+    updateStatus();
+  }
+  function openPage(page){
+    const btn=q(`.page-tabs > .page-tab[data-page="${page}"]`);
+    if(btn){ btn.click(); return true; }
+    return false;
+  }
+  function scrollToEl(el,openDetails=false){
+    if(!el) return false;
+    if(openDetails && el.tagName==='DETAILS') el.open=true;
+    setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'start'}),80);
+    return true;
+  }
+  function openPredictSubTab(key){
+    openPage('predict');
+    setTimeout(()=>{
+      try{
+        if(typeof setPredictMainTab==='function') setPredictMainTab(key);
+        else q(`[data-predict-main-tab="${key}"]`)?.click();
+      }catch(_e){ q(`[data-predict-main-tab="${key}"]`)?.click(); }
+      updateStatus();
+    },120);
+  }
+  function action(name){
+    if(!isAdmin()) return;
+    switch(name){
+      case 'hits':
+        openPage('predict'); setTimeout(()=>scrollToEl(q('#brcAdminTodayHits')),120); break;
+      case 'race-search':
+        openPage('today'); break;
+      case 'ui-preview':
+        openPage('predict'); setTimeout(()=>scrollToEl(q('#brcUxPreviewAdmin')),120); break;
+      case 'investment':
+        openPredictSubTab('invest'); break;
+      case 'ai':
+        openPredictSubTab('ai'); break;
+      case 'social':
+        openPredictSubTab('data'); setTimeout(()=>scrollToEl(q('#brcAdminSocial')),180); break;
+      case 'data':
+        openPredictSubTab('data'); break;
+      case 'member-issue':
+        openPage('predict'); setTimeout(()=>scrollToEl(q('#brcMemberAdmin'),true),120); break;
+      case 'research':
+        openPage('research'); setTimeout(()=>scrollToEl(q('#brcResearchAdminPanel')),180); break;
+      case 'database':
+        openPage('database'); break;
+    }
+  }
+  function bind(){
+    qa('[data-brc-admin-hub-tab]').forEach(btn=>{
+      if(btn.dataset.bound==='1')return; btn.dataset.bound='1';
+      btn.addEventListener('click',()=>setTab(btn.dataset.brcAdminHubTab));
+    });
+    qa('[data-brc-admin-action]').forEach(btn=>{
+      if(btn.dataset.bound==='1')return; btn.dataset.bound='1';
+      btn.addEventListener('click',()=>action(btn.dataset.brcAdminAction));
+    });
+    const ref=q('#brcAdminHubRefresh');
+    if(ref&&ref.dataset.bound!=='1'){ref.dataset.bound='1';ref.addEventListener('click',updateStatus);}
+    if(!observer){
+      observer=new MutationObserver(()=>{ if(isAdmin()) requestAnimationFrame(updateStatus); });
+      ['#brcAdminTodayHitsSummary','#predictResult'].forEach(sel=>{const el=q(sel);if(el)observer.observe(el,{subtree:true,childList:true,characterData:true});});
+    }
+  }
+  window.brcSetAdminHubUi=function(active){
+    const hub=q('#brcAdminHub'); const on=!!active;
+    if(hub){hub.classList.toggle('is-visible',on);hub.setAttribute('aria-hidden',on?'false':'true');}
+    bind(); if(on) requestAnimationFrame(updateStatus);
+  };
+  window.brcAdminHubRefresh=updateStatus;
+  document.addEventListener('DOMContentLoaded',()=>{bind();try{window.brcSetAdminHubUi(isAdmin());}catch(_e){}});
 })();
 </script>
 
