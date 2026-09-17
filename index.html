@@ -718,24 +718,19 @@
     .slit-rate-metric,.slit-rate-generic{font-size:10.5px;}
   }
   .direct-info-banner{
-    display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap;width:100%;
-    border:1px solid rgba(0,87,219,.14);border-radius:9px;padding:8px 11px;margin:-4px 0 10px;
-    background:rgba(0,87,219,.045);font-size:12px;line-height:1.45;
+    display:flex;align-items:center;gap:8px;width:100%;
+    border:1px solid rgba(10,31,51,.10);border-radius:9px;padding:8px 11px;margin:-4px 0 10px;
+    background:rgba(10,31,51,.025);font-size:12.5px;line-height:1.35;white-space:nowrap;overflow:hidden;
   }
-  .direct-info-banner-label{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:999px;background:rgba(0,87,219,.10);color:var(--wave);font-size:10px;font-weight:900;white-space:nowrap;flex:0 0 auto;}
-  .direct-info-banner-body{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap;min-width:0;flex:1 1 auto;color:var(--line-white);font-weight:850;}
-  .direct-info-banner-copy{white-space:nowrap;}
-  .direct-info-banner-items{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap;min-width:0;}
-  .direct-info-banner-item{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
-  .direct-info-banner-pt{font-variant-numeric:tabular-nums;font-weight:950;}
-  .direct-info-banner-pt.up{color:var(--trend-up);}
-  .direct-info-banner-pt.down{color:var(--trend-down);}
-  .direct-info-banner-note{color:var(--ink-soft);font-size:10.5px;font-weight:800;white-space:nowrap;}
+  .direct-info-banner-label{font-weight:800;color:var(--ink-soft);white-space:nowrap;flex:0 0 auto;}
+  .direct-info-banner-items{display:inline-flex;align-items:center;gap:4px;min-width:0;flex:0 0 auto;}
+  .direct-info-banner-note{color:var(--ink-soft);font-size:10.5px;font-weight:800;white-space:nowrap;flex:0 0 auto;}
+  .direct-info-banner .slit-eval-boat{width:22px;height:22px;font-size:11px;}
   @media (max-width:420px){
     .direct-info-banner{gap:6px;padding:8px 9px;font-size:11px;}
-    .direct-info-banner-label{font-size:9.5px;padding:2px 7px;}
-    .direct-info-banner-body,.direct-info-banner-items{gap:5px 7px;}
-    .direct-info-banner-note{font-size:10px;white-space:normal;}
+    .direct-info-banner-label{font-size:10.5px;}
+    .direct-info-banner-note{font-size:10px;}
+    .direct-info-banner .slit-eval-boat{width:21px;height:21px;font-size:10.5px;}
   }
 
   .exhibition-race-notice{
@@ -15754,12 +15749,8 @@ function brcWindAlertRowsFromLiveRace(liveRace,venue,threshold=5){
 function brcBuildDirectInfoBannerHtml(liveRace,venue,threshold=5){
   const rows=brcWindAlertRowsFromLiveRace(liveRace,venue,threshold);
   if(!rows.length) return '';
-  const items=rows.map(({course,dev})=>{
-    const sign=dev>0?'+':'';
-    const cls=dev>=0?'up':'down';
-    return `<span class="direct-info-banner-item">${brcSlitBoatBadgeHtml(course)}<span class="direct-info-banner-pt ${cls}">${sign}${Math.round(dev)}pt</span></span>`;
-  }).join('');
-  return `<div class="direct-info-banner"><span class="direct-info-banner-label">直前情報</span><span class="direct-info-banner-body"><span class="direct-info-banner-copy">風の影響が大きい艇</span><span class="direct-info-banner-items">${items}</span><span class="direct-info-banner-note">※下部データを参考に</span></span></div>`;
+  const items=rows.map(({course})=>brcSlitBoatBadgeHtml(course)).join('');
+  return `<div class="direct-info-banner"><span class="direct-info-banner-label">風影響</span><span class="direct-info-banner-items">${items}</span><span class="direct-info-banner-note">※下部データ参考</span></div>`;
 }
 
 function buildWindPanelHtml(venue){
