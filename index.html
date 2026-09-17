@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_ADMIN_UX_PREVIEW_V1_20260917: admin-only preview toggle; public UI unchanged -->
 <!-- BRC_SHARE7_MOTOR7_V37_20260917: SOURCE=BRC_SHARE(7)/BRCdatabase/index.html; preserved latest 9/16+ fixes -->
 <!-- BRC_UI_MODAL_TALL_HITCARDS_2COL_V6_20260914_RESTORED_20260916 -->
 <!-- BRC_MASTER_REMERGE_ADMIN_HITS_REF_TAB_COLOR_V1_20260916 -->
@@ -4169,6 +4170,100 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
 }
 </style>
 
+
+<style id="brc-admin-ux-preview-v1-style">
+/* ---- BRC_ADMIN_UX_PREVIEW_V1_20260917 ----
+   管理者だけが「現状表示 / 改善案プレビュー」を切り替えて確認するためのUI。
+   一般ユーザー側の既存表示・予測ロジック・データ取得には介入しない。 */
+.brc-ux-preview-admin{
+  display:none;
+  margin:0 0 12px;
+  padding:10px 11px;
+  border:1px solid rgba(124,58,237,.18);
+  border-radius:12px;
+  background:linear-gradient(160deg,rgba(124,58,237,.055),rgba(255,255,255,.97));
+  box-shadow:0 2px 10px rgba(10,31,51,.035);
+}
+.brc-ux-preview-admin.is-visible{display:block;}
+.brc-ux-preview-admin-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.brc-ux-preview-admin-copy{min-width:0;}
+.brc-ux-preview-admin-title{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:950;color:var(--navy);}
+.brc-ux-preview-admin-badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 6px;border-radius:999px;background:rgba(124,58,237,.10);color:#6d28d9;font-size:8.5px;font-weight:950;white-space:nowrap;}
+.brc-ux-preview-admin-sub{margin-top:2px;font-size:9.5px;line-height:1.45;color:var(--ink-soft);}
+.brc-ux-preview-toggle{display:grid;grid-template-columns:1fr 1fr;gap:3px;min-width:174px;padding:3px;border:1px solid rgba(10,31,51,.09);border-radius:9px;background:#eef2f7;}
+.brc-ux-preview-toggle button{appearance:none;border:0;border-radius:7px;background:transparent;color:var(--ink-soft);padding:7px 9px;font:inherit;font-size:10px;font-weight:900;cursor:pointer;white-space:nowrap;}
+.brc-ux-preview-toggle button.active{background:#fff;color:#6d28d9;box-shadow:0 1px 4px rgba(10,31,51,.10);}
+.brc-ux-preview-admin-note{display:none;margin-top:7px;padding-top:7px;border-top:1px dashed rgba(124,58,237,.18);font-size:9px;line-height:1.5;color:#6d28d9;font-weight:800;}
+.brc-ux-preview-admin.preview-on .brc-ux-preview-admin-note{display:block;}
+
+/* 以下は管理者がプレビューONにした時だけ、既存出走データへ追加表示する。 */
+.brc-ux-preview-injected{display:none;}
+#brcPredictProtected.brc-ux-preview-mode .brc-ux-preview-injected{display:block;}
+.brc-ux-flow-card{
+  margin:0 0 10px;padding:10px;border:1px solid rgba(0,87,219,.16);border-radius:11px;
+  background:linear-gradient(160deg,rgba(0,87,219,.055),rgba(255,255,255,.98));
+}
+.brc-ux-flow-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
+.brc-ux-flow-title{font-size:12px;font-weight:950;color:var(--navy);}
+.brc-ux-flow-label{font-size:8.5px;font-weight:900;color:#6d28d9;background:rgba(124,58,237,.09);border:1px solid rgba(124,58,237,.15);border-radius:999px;padding:2px 6px;white-space:nowrap;}
+.brc-ux-flow-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;}
+.brc-ux-flow-step{position:relative;min-width:0;padding:7px 4px;border:1px solid rgba(10,31,51,.08);border-radius:8px;background:#fff;text-align:center;font-size:9.5px;font-weight:900;line-height:1.3;color:var(--navy);}
+.brc-ux-flow-step b{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;margin-right:2px;border-radius:50%;background:rgba(0,87,219,.09);color:var(--wave);font-size:9px;vertical-align:-1px;}
+.brc-ux-flow-note{margin-top:6px;font-size:8.8px;line-height:1.5;color:var(--ink-soft);}
+
+.brc-ux-incheck{
+  margin:0 0 10px;padding:9px 10px;border:1px solid rgba(0,87,219,.14);border-radius:10px;background:#fff;
+}
+.brc-ux-incheck-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:7px;}
+.brc-ux-incheck-title{font-size:11.5px;font-weight:950;color:var(--navy);}
+.brc-ux-incheck-sub{font-size:8.5px;font-weight:800;color:var(--ink-soft);}
+.brc-ux-incheck-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;}
+.brc-ux-incheck-metric{min-width:0;padding:7px 5px;border:1px solid rgba(10,31,51,.07);border-radius:8px;background:#f7f9fc;text-align:center;}
+.brc-ux-incheck-metric .k{font-size:8px;font-weight:850;color:var(--ink-soft);white-space:nowrap;}
+.brc-ux-incheck-metric .v{margin-top:2px;font-size:14px;font-weight:950;color:var(--navy);line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.brc-ux-incheck-metric .v.accent{color:var(--wave);}
+.brc-ux-incheck-foot{margin-top:6px;font-size:8.8px;line-height:1.45;color:var(--ink-soft);}
+
+.brc-ux-player-hint{margin:7px 1px 8px;padding:7px 8px;border-radius:8px;background:rgba(0,87,219,.055);border:1px solid rgba(0,87,219,.10);font-size:9.5px;line-height:1.5;color:#30465c;font-weight:800;}
+#brcPredictProtected.brc-ux-preview-mode #predictResult .predict-player-name a{color:var(--wave)!important;text-decoration:underline!important;text-decoration-thickness:1px!important;text-underline-offset:2px!important;}
+#brcPredictProtected.brc-ux-preview-mode #predictResult .predict-player-name a::after{content:'  ›';font-size:.9em;font-weight:950;color:var(--wave);}
+#brcPredictProtected.brc-ux-preview-mode #predictResult.brc-ux-focus-players .predict-player-name{animation:brcUxPlayerPulse .7s ease 2;}
+@keyframes brcUxPlayerPulse{0%,100%{background:transparent}50%{background:rgba(0,87,219,.09);border-radius:6px}}
+
+.brc-ux-branch-card{margin:0 0 9px;padding:9px;border:1px solid rgba(10,31,51,.09);border-radius:10px;background:#fff;}
+.brc-ux-branch-title{font-size:10.5px;font-weight:950;color:var(--navy);margin-bottom:7px;}
+.brc-ux-branch-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.brc-ux-branch-btn{appearance:none;min-width:0;border-radius:9px;padding:9px 7px;font:inherit;text-align:left;cursor:pointer;}
+.brc-ux-branch-btn strong{display:block;font-size:10.5px;font-weight:950;line-height:1.3;}
+.brc-ux-branch-btn span{display:block;margin-top:3px;font-size:8.5px;font-weight:800;line-height:1.4;}
+.brc-ux-branch-btn.trust{border:1px solid rgba(47,143,91,.23);background:rgba(47,143,91,.055);color:#217247;}
+.brc-ux-branch-btn.doubt{border:1px solid rgba(209,55,63,.20);background:rgba(209,55,63,.045);color:#a52c35;}
+.brc-ux-branch-foot{margin-top:6px;font-size:8.5px;line-height:1.45;color:var(--ink-soft);}
+
+.brc-ux-live-card{margin:0 0 9px;padding:8px 9px;border:1px solid rgba(217,119,6,.15);border-radius:9px;background:rgba(217,119,6,.035);}
+.brc-ux-live-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.brc-ux-live-title{font-size:10.5px;font-weight:950;color:var(--navy);}
+.brc-ux-live-state{font-size:8.5px;font-weight:950;color:#8a5a00;white-space:nowrap;}
+.brc-ux-live-copy{margin-top:3px;font-size:8.7px;line-height:1.5;color:var(--ink-soft);}
+
+@media(max-width:520px){
+  .brc-ux-preview-admin-head{align-items:flex-start;flex-direction:column;}
+  .brc-ux-preview-toggle{width:100%;min-width:0;}
+  .brc-ux-flow-card{padding:8px 7px;}
+  .brc-ux-flow-steps{gap:3px;}
+  .brc-ux-flow-step{padding:6px 2px;font-size:8.7px;letter-spacing:-.02em;}
+  .brc-ux-flow-step b{display:block;margin:0 auto 3px;}
+  .brc-ux-incheck{padding:8px 7px;}
+  .brc-ux-incheck-metric{padding:6px 2px;}
+  .brc-ux-incheck-metric .k{font-size:7.6px;}
+  .brc-ux-incheck-metric .v{font-size:12.5px;}
+  .brc-ux-branch-grid{gap:5px;}
+  .brc-ux-branch-btn{padding:8px 6px;}
+  .brc-ux-branch-btn strong{font-size:9.8px;}
+  .brc-ux-branch-btn span{font-size:8px;}
+}
+</style>
+
 </head>
 <body>
 <div class="wrap">
@@ -4521,6 +4616,20 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
           </div>
         </div>
       </details>
+
+      <div id="brcUxPreviewAdmin" class="brc-ux-preview-admin" aria-hidden="true">
+        <div class="brc-ux-preview-admin-head">
+          <div class="brc-ux-preview-admin-copy">
+            <div class="brc-ux-preview-admin-title">UI改善プレビュー <span class="brc-ux-preview-admin-badge">管理者専用・未公開</span></div>
+            <div class="brc-ux-preview-admin-sub">現状INDEXはそのまま。改善案だけを重ねて見比べられます。</div>
+          </div>
+          <div class="brc-ux-preview-toggle" role="group" aria-label="UIプレビュー切り替え">
+            <button type="button" id="brcUxPreviewOff" class="active" aria-pressed="true">現状表示</button>
+            <button type="button" id="brcUxPreviewOn" aria-pressed="false">改善案プレビュー</button>
+          </div>
+        </div>
+        <div class="brc-ux-preview-admin-note">この表示は管理者確認用です。一般ユーザーの画面には表示されず、予測ロジック・着率・買い目・自動取得処理にも変更を加えません。</div>
+      </div>
       <div id="brcFreePreviewBanner" class="brc-free-result-banner"></div>
     <section class="card">
       <h2>出走表AI</h2>
@@ -5416,6 +5525,7 @@ function brcSetAdminSocialUi(user=null){
   const box=document.getElementById('brcAdminSocial');
   BRC_ADMIN_ACTIVE=!!(user && brcIsAdminUser(user) && BRC_MEMBER_ACTIVE);
   brcSetMemberAdminUi(BRC_ADMIN_ACTIVE);
+  try{ if(typeof brcSetUxPreviewAdminUi==='function') brcSetUxPreviewAdminUi(BRC_ADMIN_ACTIVE); }catch(_e){}
   if(box){
     box.classList.toggle('is-visible',BRC_ADMIN_ACTIVE);
     box.setAttribute('aria-hidden',BRC_ADMIN_ACTIVE?'false':'true');
@@ -20353,6 +20463,209 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 .brc-refmon-card[data-brc-ref-source="recovered"] .brc-refmode-head-note{color:#9a5d00;font-weight:900;}
 .brc-refmon-card[data-brc-ref-source="pending"] .brc-refmode-head-note{color:var(--ink-soft);font-weight:800;}
 </style>
+
+
+<script id="brc-admin-ux-preview-v1-script">
+// BRC_ADMIN_UX_PREVIEW_V1_20260917
+// 管理者の端末上だけで、既存INDEXへ「見る順番・イン判断・選手名タップ導線」を重ねて確認する。
+(function(){
+  let previewOn=false;
+  let observer=null;
+  let applyQueued=false;
+
+  function isAdmin(){
+    return typeof BRC_ADMIN_ACTIVE!=='undefined' && !!BRC_ADMIN_ACTIVE;
+  }
+  function q(sel,root=document){ return root.querySelector(sel); }
+  function textOf(sel,root=document){ return String(q(sel,root)?.textContent||'').replace(/\s+/g,' ').trim(); }
+  function removeInjected(){
+    document.querySelectorAll('.brc-ux-preview-injected').forEach(el=>el.remove());
+    const protectedBox=document.getElementById('brcPredictProtected');
+    protectedBox?.classList.remove('brc-ux-preview-mode');
+    q('#predictResult')?.classList.remove('brc-ux-focus-players');
+  }
+  function updateToggleUi(){
+    const box=document.getElementById('brcUxPreviewAdmin');
+    const off=document.getElementById('brcUxPreviewOff');
+    const on=document.getElementById('brcUxPreviewOn');
+    if(box) box.classList.toggle('preview-on',previewOn && isAdmin());
+    if(off){ off.classList.toggle('active',!previewOn); off.setAttribute('aria-pressed',previewOn?'false':'true'); }
+    if(on){ on.classList.toggle('active',previewOn); on.setAttribute('aria-pressed',previewOn?'true':'false'); }
+  }
+  function metricValue(root,kind){
+    if(kind==='reliability'){
+      return textOf('.in-reliability-compact .irc-rank',root) || '―';
+    }
+    if(kind==='win1'){
+      const cell=q('#predict-win-cell-1',root);
+      if(!cell) return '―';
+      return textOf('.prob-value',cell) || String(cell.textContent||'').trim().split(/\s+/)[0] || '―';
+    }
+    if(kind==='motor1'){
+      const row=q('#predictTableWrap table.predict-table tbody tr',root);
+      if(!row) return '―';
+      const cell=row.querySelector('td:nth-child(6)');
+      return String(cell?.textContent||'').replace(/\s+/g,' ').trim() || '―';
+    }
+    return '―';
+  }
+  function buildFlow(){
+    const el=document.createElement('div');
+    el.className='brc-ux-preview-injected brc-ux-flow-card';
+    el.dataset.brcUx='flow';
+    el.innerHTML=`
+      <div class="brc-ux-flow-head"><div class="brc-ux-flow-title">まずはこの順番</div><span class="brc-ux-flow-label">改善案プレビュー</span></div>
+      <div class="brc-ux-flow-steps">
+        <div class="brc-ux-flow-step"><b>1</b>イン判断</div>
+        <div class="brc-ux-flow-step"><b>2</b>勝ち艇</div>
+        <div class="brc-ux-flow-step"><b>3</b>相手探し</div>
+        <div class="brc-ux-flow-step"><b>4</b>直前・オッズ</div>
+      </div>
+      <div class="brc-ux-flow-note">全部の数字を一度に読むのではなく、舟券判断の順番を最初に見せる案です。</div>`;
+    return el;
+  }
+  function buildInCheck(root){
+    const rel=metricValue(root,'reliability');
+    const win=metricValue(root,'win1');
+    const motor=metricValue(root,'motor1');
+    const el=document.createElement('div');
+    el.className='brc-ux-preview-injected brc-ux-incheck';
+    el.dataset.brcUx='incheck';
+    el.innerHTML=`
+      <div class="brc-ux-incheck-head"><div class="brc-ux-incheck-title">① まず1号艇を確認</div><div class="brc-ux-incheck-sub">最初の判断ポイントを固定</div></div>
+      <div class="brc-ux-incheck-grid">
+        <div class="brc-ux-incheck-metric"><div class="k">イン信頼度</div><div class="v accent">${escapeHtml(rel)}</div></div>
+        <div class="brc-ux-incheck-metric"><div class="k">1着率</div><div class="v">${escapeHtml(win)}</div></div>
+        <div class="brc-ux-incheck-metric"><div class="k">モーター</div><div class="v">${escapeHtml(motor)}</div></div>
+      </div>
+      <div class="brc-ux-incheck-foot">ここで「1号艇を信頼するか / 怪しいか」を先に決める導線のサンプルです。</div>`;
+    return el;
+  }
+  function buildPlayerHint(){
+    const el=document.createElement('div');
+    el.className='brc-ux-preview-injected brc-ux-player-hint';
+    el.dataset.brcUx='playerhint';
+    el.textContent='👆 選手名をタップすると、決まり手・展開傾向・ST・モーター詳細を確認できます。';
+    return el;
+  }
+  function buildBranch(){
+    const el=document.createElement('div');
+    el.className='brc-ux-preview-injected brc-ux-branch-card';
+    el.dataset.brcUx='branch';
+    el.innerHTML=`
+      <div class="brc-ux-branch-title">② 1号艇の判断後は2ルートだけ</div>
+      <div class="brc-ux-branch-grid">
+        <button type="button" class="brc-ux-branch-btn trust" data-brc-ux-action="trust"><strong>1号艇を信頼する →</strong><span>AI予測の「イン逃げ時予測」で2・3着候補を見る</span></button>
+        <button type="button" class="brc-ux-branch-btn doubt" data-brc-ux-action="doubt"><strong>1号艇が怪しい →</strong><span>1着率＋選手名タップで勝ち候補・展開傾向を見る</span></button>
+      </div>
+      <div class="brc-ux-branch-foot">迷った時に「次にどこを見るか」を画面側から案内する想定です。</div>`;
+    el.addEventListener('click',e=>{
+      const btn=e.target.closest('[data-brc-ux-action]'); if(!btn)return;
+      if(btn.dataset.brcUxAction==='trust'){
+        try{ if(typeof setPredictMainTab==='function') setPredictMainTab('ai'); }catch(_e){}
+        try{ if(typeof scrollPredictMainTabsToFixedPosition==='function') scrollPredictMainTabsToFixedPosition('smooth'); }catch(_e){}
+      }else{
+        try{ if(typeof setPredictMainTab==='function') setPredictMainTab('data'); }catch(_e){}
+        const result=document.getElementById('predictResult');
+        if(result){
+          result.classList.remove('brc-ux-focus-players'); void result.offsetWidth; result.classList.add('brc-ux-focus-players');
+          q('#predictTableWrap',result)?.scrollIntoView({behavior:'smooth',block:'center'});
+          setTimeout(()=>result.classList.remove('brc-ux-focus-players'),1700);
+        }
+      }
+    });
+    return el;
+  }
+  function buildLiveCard(){
+    const applied=!!window.__currentExhibitionApplied;
+    const el=document.createElement('div');
+    el.className='brc-ux-preview-injected brc-ux-live-card';
+    el.dataset.brcUx='live';
+    el.innerHTML=`<div class="brc-ux-live-head"><div class="brc-ux-live-title">④ 最後は直前情報＋オッズ</div><div class="brc-ux-live-state">${applied?'展示反映済み':'展示待ち / 事前予測'}</div></div><div class="brc-ux-live-copy">BRCタイムXの↑↓、展示・風情報を確認し、最後にオッズと比較して参戦するかを判断する流れを明示する案です。</div>`;
+    return el;
+  }
+  function escapeHtml(value){
+    return String(value==null?'':value).replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+  }
+  function inject(){
+    applyQueued=false;
+    if(!previewOn || !isAdmin()){ removeInjected(); updateToggleUi(); return; }
+    const protectedBox=document.getElementById('brcPredictProtected');
+    const result=document.getElementById('predictResult');
+    if(!protectedBox || !result) return;
+    protectedBox.classList.add('brc-ux-preview-mode');
+
+    // レース未選択時は結果領域が空なので、描画済みになってから差し込む。
+    if(!q('#predictTableWrap',result)) return;
+
+    if(!q('[data-brc-ux="flow"]',result)){
+      const summary=q('.race-summary-compact',result);
+      const flow=buildFlow();
+      if(summary) summary.insertAdjacentElement('afterend',flow); else result.prepend(flow);
+    }
+    if(!q('[data-brc-ux="incheck"]',result)){
+      const anchor=q('.in-reliability-compact',result) || q('[data-brc-ux="flow"]',result);
+      const card=buildInCheck(result);
+      if(anchor) anchor.insertAdjacentElement('afterend',card); else result.prepend(card);
+    }else{
+      // レース切替・展示更新後は実データの数値だけ更新する。
+      const card=q('[data-brc-ux="incheck"]',result);
+      const vals=card?.querySelectorAll('.brc-ux-incheck-metric .v');
+      if(vals?.length>=3){
+        const next=[metricValue(result,'reliability'),metricValue(result,'win1'),metricValue(result,'motor1')];
+        vals.forEach((el,i)=>{ if(i<3 && el.textContent!==next[i]) el.textContent=next[i]; });
+      }
+    }
+    const table=q('#predictTableWrap',result);
+    if(table && !q('[data-brc-ux="playerhint"]',result)) table.insertAdjacentElement('afterend',buildPlayerHint());
+    const hint=q('[data-brc-ux="playerhint"]',result);
+    if(hint && !q('[data-brc-ux="branch"]',result)) hint.insertAdjacentElement('afterend',buildBranch());
+    const branch=q('[data-brc-ux="branch"]',result);
+    if(branch && !q('[data-brc-ux="live"]',result)) branch.insertAdjacentElement('afterend',buildLiveCard());
+    else{
+      const state=q('[data-brc-ux="live"] .brc-ux-live-state',result);
+      if(state){ const next=window.__currentExhibitionApplied?'展示反映済み':'展示待ち / 事前予測'; if(state.textContent!==next) state.textContent=next; }
+    }
+    updateToggleUi();
+  }
+  function queueInject(){
+    if(applyQueued)return; applyQueued=true;
+    requestAnimationFrame(()=>requestAnimationFrame(inject));
+  }
+  function setMode(on){
+    if(on && !isAdmin()) return;
+    previewOn=!!on;
+    if(!previewOn) removeInjected();
+    updateToggleUi();
+    queueInject();
+  }
+  function bind(){
+    const off=document.getElementById('brcUxPreviewOff');
+    const on=document.getElementById('brcUxPreviewOn');
+    if(off && off.dataset.bound!=='1'){ off.dataset.bound='1'; off.addEventListener('click',()=>setMode(false)); }
+    if(on && on.dataset.bound!=='1'){ on.dataset.bound='1'; on.addEventListener('click',()=>setMode(true)); }
+    const result=document.getElementById('predictResult');
+    if(result && !observer){
+      observer=new MutationObserver(()=>{ if(previewOn && isAdmin()) queueInject(); });
+      observer.observe(result,{childList:true,subtree:true,characterData:true});
+    }
+  }
+
+  window.brcSetUxPreviewAdminUi=function(active){
+    const box=document.getElementById('brcUxPreviewAdmin');
+    const on=!!active;
+    if(box){ box.classList.toggle('is-visible',on); box.setAttribute('aria-hidden',on?'false':'true'); }
+    if(!on){ previewOn=false; removeInjected(); }
+    bind(); updateToggleUi(); if(on && previewOn) queueInject();
+  };
+  window.brcSetUxPreviewMode=setMode;
+
+  document.addEventListener('DOMContentLoaded',()=>{
+    bind();
+    try{ window.brcSetUxPreviewAdminUi(isAdmin()); }catch(_e){}
+  });
+})();
+</script>
 
 </body>
 </html>
