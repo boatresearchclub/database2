@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BRC_ALPHA_BADGE_WINRATE_V1_20260917: +α/-α reference badge on 1着率; detail via player name; no probability recalculation -->
 <!-- BRC_REFMON_DIAG_V3_20260917: logging-only audit patch; buy logic unchanged -->
 <!-- BRC_PLAYER_DETAIL_DISCOVERY_IMPACT_V1_20260917 -->
 <!-- BRC_ADMIN_UX_PREVIEW_V1_20260917: admin-only preview toggle; public UI unchanged -->
@@ -2774,9 +2775,23 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
     min-width:0; line-height:1;
   }
   #predictResult .prob-value{
-    min-height:24px; display:flex; align-items:center; justify-content:center;
+    min-height:24px; display:flex; align-items:flex-start; justify-content:center; gap:3px;
     font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap;
   }
+  /* 2026-09-17: 1着率の補足評価。数値はBRCタイムX反映済みのまま変更しない。 */
+  #predictResult .prob-alpha-badge{
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:24px; height:17px; padding:0 5px; margin-top:-3px; border-radius:999px;
+    font-size:9px; font-weight:950; line-height:1; letter-spacing:-.02em;
+    white-space:nowrap; flex:0 0 auto; box-shadow:0 1px 2px rgba(10,31,51,.06);
+  }
+  #predictResult .prob-alpha-badge.plus{
+    color:#217247; background:rgba(47,143,91,.10); border:1px solid rgba(47,143,91,.24);
+  }
+  #predictResult .prob-alpha-badge.minus{
+    color:#b4232c; background:rgba(209,55,63,.09); border:1px solid rgba(209,55,63,.22);
+  }
+  #predictResult .predict-exhibition-label:empty{display:none;}
   #predictResult .prob-eval-row{
     min-height:22px; margin-top:3px; display:flex; align-items:center; justify-content:center;
     line-height:1;
@@ -2816,8 +2831,9 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
     #predictResult .predict-exhibition-base,
     #predictResult .predict-exhibition-alert{font-size:10px !important;}
     #predictResult .prob-value{
-      min-height:24px; font-size:16.5px !important; line-height:1.05 !important; font-weight:850 !important;
+      min-height:24px; font-size:16.5px !important; line-height:1.05 !important; font-weight:850 !important; gap:2px;
     }
+    #predictResult .prob-alpha-badge{min-width:22px;height:16px;padding:0 4px;font-size:8.5px;margin-top:-2px;}
     #predictResult .prob-eval-row{ min-height:19px; margin-top:3px; }
     #predictResult .prob-eval-row .exhibition-arrow-icon{ width:16px; height:16px; }
     #predictResult .prob-personal-row{margin-top:2px;}
@@ -13026,10 +13042,57 @@ function brcBuildExhibitionProbabilityArrowIcon(deltaPt,threshold){
   const icon=repeated || brcBuildBakedArrowSvg(label);
   return `<span aria-label="BRCタイムX ${label}" title="BRCタイムX ${label}" style="display:inline-flex;align-items:center;justify-content:center;color:${color};line-height:1;flex:0 0 auto;">${icon}</span>`;
 }
-function brcBuildProbabilityCell(value,arrowHtml,personalHtml=''){
+function brcBuildProbabilityCell(value,arrowHtml,personalHtml='',alphaHtml=''){
   const evalHtml=arrowHtml || '<span class="prob-eval-hyphen" aria-label="展示未反映">−</span>';
   const personalLine=personalHtml ? `<div class="prob-personal-row">${personalHtml}</div>` : '';
-  return `<div class="prob-cell-stack"><div class="prob-value">${value}<span class="predict-unit">%</span></div><div class="prob-eval-row">${evalHtml}</div>${personalLine}</div>`;
+  return `<div class="prob-cell-stack"><div class="prob-value"><span>${value}<span class="predict-unit">%</span></span>${alphaHtml||''}</div><div class="prob-eval-row">${evalHtml}</div>${personalLine}</div>`;
+}
+
+// ±αは「表示着率を再計算する値」ではなく、一覧での読み方を一瞬で示す参考バッジ。
+// +α = 表示1着率より少し上に見る余地 / -α = 表示1着率より少し下に見る必要。
+// 数値・TimeX・AI予測ロジックは一切変更しない。
+function brcBuildWinAlphaBadgeHtml(b){
+  if(!b?.exhibitionApplied) return '';
+  const winDelta=Number(b?.exhibitionWinDeltaPt);
+  if(!Number.isFinite(winDelta) || brcTimeXSimplePolarity(winDelta)==='flat') return '';
+
+  let sign='';
+  let reason='';
+
+  // 今回TimeX帯の本人傾向が十分ある場合は、1着の本人差を最優先。
+  const personal=brcFindPredictNamePersonalTrendRow(b);
+  if(personal && personal?.['採用区分']!=='監視'){
+    const personalWin=Number(brcPersonalEffectDiff(personal,'win'));
+    const rounded=brcTimeXArrowRoundedPt(personalWin);
+    if(Number.isFinite(personalWin) && rounded!==0){
+      sign=rounded>0?'+α':'-α';
+      reason=rounded>0?'本人傾向では表示1着率より少し上に見る余地':'本人傾向では表示1着率より少し下に見る必要';
+    }
+  }
+
+  // 今回帯の具体傾向がない場合は、選手×現在コースの基礎特性を使用。
+  if(!sign){
+    const tendency=brcFindPlayerTimeXTendency(b);
+    if(!tendency) return '';
+    const grade=String(tendency?.reliabilityGrade||'E').toUpperCase();
+    // Cは参考、D/Eは評価を変えない既存ルールを維持。バッジはS/A/Bだけ。
+    if(!['S','A','B'].includes(grade)) return '';
+    if(tendency.direction==='hard'){
+      sign='+α';
+      reason=winDelta<0
+        ? 'タイムを出しにくい選手。今回の下降は額面どおりに下げすぎない'
+        : 'タイムを出しにくい選手が上昇。表示1着率より少し上に見る余地';
+    }else if(tendency.direction==='easy'){
+      sign='-α';
+      reason=winDelta>0
+        ? 'タイムを出しやすい選手。今回の上昇は額面どおりに上げすぎない'
+        : 'タイムを出しやすい選手が下降。表示1着率より少し下に見る必要';
+    }
+  }
+
+  if(!sign) return '';
+  const cls=sign.startsWith('+')?'plus':'minus';
+  return `<span class="prob-alpha-badge ${cls}" aria-label="${sign} ${reason}" title="${reason}。理由は選手名をタップ">${sign}</span>`;
 }
 
 function brcBuildTimeXFinalPredictionHtml(boats){
@@ -13043,18 +13106,15 @@ function brcBuildTimeXFinalPredictionHtml(boats){
 }
 
 function brcBuildWinCellInner(b,venue){
-  // 1着率はTimeX v2の正式補正値。
-  // 本人傾向は選手名下の「BRCタイムX 注意」から確認できるため、一覧の重複表示はしない。
-  // 表示整理のみで、本人傾向データ・TimeX補正・着率計算は変更しない。
+  // 1着率はTimeX v2の正式補正値。±αは参考評価だけを付記し、数値そのものは変更しない。
   const arrow=b?.exhibitionApplied
     ? brcBuildExhibitionProbabilityArrowIcon(Number(b?.exhibitionWinDeltaPt),0.75)
     : '';
-  return brcBuildProbabilityCell(b.pct,arrow,'');
+  const alpha=brcBuildWinAlphaBadgeHtml(b);
+  return brcBuildProbabilityCell(b.pct,arrow,'',alpha);
 }
 function brcBuildTop3CellInner(b){
-  // 3連対率もTimeX v2の正式補正値。
-  // 本人傾向は選手名下の「BRCタイムX 注意」から確認できるため、一覧の重複表示はしない。
-  // 表示整理のみで、本人傾向データ・TimeX補正・着率計算は変更しない。
+  // ±αは一覧の視認性を優先して1着率だけに表示。3連対率の既存表示は維持する。
   const arrow=b?.exhibitionApplied
     ? brcBuildExhibitionProbabilityArrowIcon(Number(b?.exhibitionTop3DeltaPt),2.0)
     : '';
@@ -13603,31 +13663,11 @@ function brcFindPredictNamePersonalTrendRow(b){
   return selected && Number(selected.N)>=12 ? selected : null;
 }
 function brcBuildPredictExhibitionLabelHtml(b){
-  // 選手名下は「個人傾向」がある場合だけ表示する。
-  // 1) 展示後：今回のTimeX差帯に一致する本人傾向（N>=12）を最優先。
-  // 2) 展示前/帯一致なし：選手×現在コースの基礎的なTimeX選手特性を表示。
-  // これによりAI予測の「注意」対象を出走データ側でも展示前から確認できる。
-  // 表示導線のみの変更で、着率・TimeX補正・AI予測の計算ロジックは変更しない。
-  const personal=brcFindPredictNamePersonalTrendRow(b);
-  if(personal){
-    const payload=encodeURIComponent(JSON.stringify(brcAlertPayload(personal,b)));
-    const decision=brcAlertDecision(personal);
-    // 参考扱い（グレー/flat）は選手名下に表示しない。明確な上昇・下降傾向だけ表示する。
-    if(decision.cls!=='up' && decision.cls!=='down') return '';
-    const cls=decision.cls==='up'?'personal-up':'personal-down';
-    return `<button type="button" class="predict-personal-inline ${cls}" onclick="event.stopPropagation();brcShowPredictNamePersonalTrend(decodeURIComponent('${payload}'))" title="個人傾向をタップして内容を確認">個人傾向</button>`;
-  }
-  const tendency=brcFindPlayerTimeXTendency(b);
-  if(tendency){
-    const cls=tendency.direction==='easy'?'personal-up':tendency.direction==='hard'?'personal-down':'personal-flat';
-    const course=Number(b?.course)||0;
-    const title=tendency.direction==='easy'
-      ? 'このコースでタイムを出しやすい個人傾向。タップで確認'
-      : 'このコースでタイムを出しにくい個人傾向。タップで確認';
-    return `<button type="button" class="predict-personal-inline ${cls}" onclick="event.stopPropagation();brcShowPlayerTimeXTendencyForCourse(${course})" title="${title}">個人傾向</button>`;
-  }
+  // 2026-09-17: 一覧の「個人傾向」バッジは廃止。
+  // 一発判断は1着率横の ±α に集約し、詳しい理由は選手名タップ内で確認する。
   return '';
 }
+
 function brcAlertPct(v){
   const n=Number(v); return Number.isFinite(n)?`${n.toFixed(1)}%`:'―';
 }
@@ -17608,7 +17648,7 @@ async function runPredict(){
           </div>
           <div class="predict-guide-item">
             <div class="predict-guide-key">③ 展示後</div>
-            <div class="predict-guide-text"><strong>BRCタイムX</strong>の矢印で、事前予測から上がった艇・下がった艇を確認します。<strong>選手名をタップ</strong>すると、今回の1着率・3連対率の変化、個人傾向、展開・ST・モーターまで確認できます。</div>
+            <div class="predict-guide-text"><strong>BRCタイムX</strong>の矢印で、事前予測から上がった艇・下がった艇を確認します。1着率に<strong>+α / -α</strong>があれば、数字をそのまま鵜呑みにせず少し上下に見る補足評価があります。詳しい理由は<strong>選手名をタップ</strong>して確認できます。</div>
           </div>
         </div>
 
@@ -17645,8 +17685,8 @@ async function runPredict(){
             </div>
           </div>
           <div class="predict-guide-item">
-            <div class="predict-guide-key">BRCタイムX 注意</div>
-            <div class="predict-guide-text"><span class="predict-guide-status reference">判断の補助</span>選手本人の「今回コースでタイムを出しやすい／出しにくい特性」や、今回のTimeX帯での本人傾向がある時に表示します。タップすると今回の評価と根拠を確認できます。選手特性の信頼度はS/Aほど重く、Bは1段階だけ、Cは参考、D/Eは評価を変えません。<strong>表示中の着率へ再加算はしません。</strong></div>
+            <div class="predict-guide-key">+α / -α</div>
+            <div class="predict-guide-text"><span class="predict-guide-status reference">判断の補助</span>1着率の横に表示します。<strong>+α</strong>は「表示の数字より少し上に見る余地」、<strong>-α</strong>は「表示の数字より少し下に見る必要」の意味です。矢印はBRCタイムXによる実際の着率変化、±αは選手特性・本人傾向を踏まえた読み方です。詳しい理由は<strong>選手名をタップ</strong>して確認できます。<strong>±αを着率へ数値として再加算・再減算はしません。</strong></div>
           </div>
           <div class="predict-guide-item">
             <div class="predict-guide-key">展示スリット評価</div>
@@ -17658,7 +17698,7 @@ async function runPredict(){
           </div>
           <div class="predict-guide-item">
             <div class="predict-guide-key">数値反映</div>
-            <div class="predict-guide-text"><span class="predict-guide-status applied">反映する</span>BRCタイムX　<span class="predict-guide-status reference">参考のみ</span>本人傾向・選手特性・展示スリット評価・風データ・ST安定度。参考項目を画面側で着率へ二重加点することはありません。</div>
+            <div class="predict-guide-text"><span class="predict-guide-status applied">反映する</span>BRCタイムX　<span class="predict-guide-status reference">参考のみ</span>±α・本人傾向・選手特性・展示スリット評価・風データ・ST安定度。参考項目を画面側で着率へ二重加点することはありません。</div>
           </div>
         </div>
 
