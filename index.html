@@ -2776,14 +2776,15 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
     min-width:0; line-height:1;
   }
   #predictResult .prob-value{
-    min-height:24px; display:flex; align-items:flex-start; justify-content:center; gap:2px;
+    position:relative; min-height:24px; display:flex; align-items:flex-start; justify-content:center;
     font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap;
   }
   #predictResult .prob-value-main{
     display:inline-flex; align-items:baseline; justify-content:center; white-space:nowrap;
   }
   #predictResult .prob-alpha-slot{
-    width:20px; min-height:14px; display:flex; align-items:flex-start; justify-content:flex-start;
+    position:absolute; left:calc(50% + 17px); top:-2px; width:auto; min-height:13px;
+    display:flex; align-items:flex-start; justify-content:flex-start; pointer-events:none;
   }
   /* 2026-09-17: 1着率の補足評価。数値はBRCタイムX反映済みのまま変更しない。 */
   #predictResult .prob-alpha-badge{
@@ -2822,7 +2823,8 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
 
   @media (max-width:640px){
     /* スマホ：出走表AIの左右余白を少し詰め、選手列を確保する。 */
-    #page-predict > #brcPredictProtected > section.card{ padding-left:8px; padding-right:8px; }
+    #page-predict > #brcPredictProtected > section.card{ padding-left:4px; padding-right:4px; }
+    #predictMainPanel-data > #predictResult{ padding-left:6px !important; padding-right:6px !important; }
     #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(1){ width:8%; }
     #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(2){ width:32%; }
     #predictTableWrap:not(.show-all-cols) table.predict-table th:nth-child(3){ width:18%; }
@@ -2843,19 +2845,20 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
     #predictResult .prob-value{
       min-height:24px; font-size:16.5px !important; line-height:1.05 !important; font-weight:850 !important; gap:1px;
     }
-    #predictResult .prob-alpha-slot{width:18px;min-height:13px;}
-    #predictResult .prob-alpha-badge{min-width:18px;height:13px;padding:0 3px;font-size:7.5px;margin-top:-1px;}
+    #predictResult .prob-alpha-slot{left:calc(50% + 15px);top:-2px;width:auto;min-height:12px;}
+    #predictResult .prob-alpha-badge{min-width:18px;height:13px;padding:0 3px;font-size:7.5px;margin-top:0;}
     #predictResult .prob-eval-row{ min-height:19px; margin-top:3px; }
     #predictResult .prob-eval-row .exhibition-arrow-icon{ width:16px; height:16px; }
     #predictResult .prob-personal-row{margin-top:2px;}
     #predictResult .prob-personal-row .scenario-personal-trend{min-height:13px;font-size:8px;}
 
     #predictResult .prob-eval-hyphen{ font-size:15px; }
-    #predictResult .predict-table tbody td:nth-child(5) > div:first-child{font-size:14.5px !important;letter-spacing:-.03em;}
+    #predictResult .predict-table tbody td:nth-child(5) > div:first-child{font-size:13.5px !important;letter-spacing:-.04em;}
   }
 
   @media (max-width:420px){
-    #page-predict > #brcPredictProtected > section.card{ padding-left:6px; padding-right:6px; }
+    #page-predict > #brcPredictProtected > section.card{ padding-left:2px; padding-right:2px; }
+    #predictMainPanel-data > #predictResult{ padding-left:4px !important; padding-right:4px !important; }
     #predictResult .predict-table thead th,
     #predictResult .predict-table tbody td{ padding-left:1px !important; padding-right:1px !important; }
   }
