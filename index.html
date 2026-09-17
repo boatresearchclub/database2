@@ -2927,48 +2927,88 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
   }
 
 
-  /* ---- 風情報：スマホ表示を5列で収める ---- */
-  #windRefBox{ max-width:100%; overflow:hidden; }
-  #windRefBox .wind-table-wrap{ width:100%; overflow:hidden; }
-  #windRefBox table.wind-ref-table{ width:100%; table-layout:fixed; font-size:13px; }
-  #windRefBox table.wind-ref-table th,
-  #windRefBox table.wind-ref-table td{ padding:6px 4px; white-space:nowrap; text-align:center; }
-  #windRefBox table.wind-ref-table th:first-child,
-  #windRefBox table.wind-ref-table td:first-child{ width:15%; }
-  #windRefBox table.wind-ref-table th:nth-child(2){ width:20%; }
-  #windRefBox table.wind-ref-table th:nth-child(3){ width:22%; }
-  #windRefBox table.wind-ref-table th:nth-child(4){ width:23%; }
-  #windRefBox table.wind-ref-table th:nth-child(5){ width:20%; }
-  #windRefBox .wind-current-summary{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;margin-bottom:9px;}
+  /* ---- 風情報：スマホでも見やすいカード表示 ---- */
+  #windPanel{
+    margin:14px 0 12px; padding:14px; background:rgba(10,31,51,.025);
+    border:1px solid rgba(10,31,51,.08); border-radius:16px;
+  }
+  #windPanel .wind-panel-head{
+    display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px;
+  }
+  #windPanel .wind-panel-title{
+    display:flex; align-items:center; gap:8px; font-size:14px; font-weight:900; line-height:1.4; color:var(--line-white);
+  }
+  #windPanel .wind-panel-title .icon{font-size:16px; line-height:1;}
+  #windPanel .wind-panel-sub{margin-top:3px; font-size:11px; color:var(--ink-soft); line-height:1.55;}
+  #windPanel #windAutoStatus{
+    display:inline-flex; align-items:center; justify-content:center; text-align:center; flex:0 0 auto;
+    padding:6px 10px; border-radius:999px; background:rgba(47,143,91,.08); font-size:10.5px; font-weight:800;
+    line-height:1.35; max-width:56%;
+  }
+  #windPanel .wind-panel-controls{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px; margin-bottom:8px;}
+  #windPanel .wind-control-group{display:flex; flex-direction:column; gap:5px; min-width:0;}
+  #windPanel .wind-control-label{font-size:11px; font-weight:800; color:var(--ink-soft); padding-left:2px;}
+  #windPanel .wind-control-select{
+    width:100%; padding:10px 12px; border-radius:12px; border:1px solid rgba(10,31,51,.14);
+    background:#fff; color:var(--line-white); font-size:15px; font-weight:700;
+  }
+  #windPanel .wind-panel-reset{font-size:11px; color:var(--ink-soft); line-height:1.5; padding-left:2px;}
+  #windRefBox{ max-width:100%; overflow:hidden; margin-top:10px; padding:12px; background:#fff; border:1px solid rgba(10,31,51,.08); border-radius:14px; }
+  #windRefBox .wind-current-summary{
+    display:flex; justify-content:space-between; gap:10px; align-items:flex-start; margin-bottom:11px;
+    padding:12px 12px 10px; background:rgba(0,87,219,.04); border:1px solid rgba(0,87,219,.08); border-radius:12px;
+  }
   #windRefBox .wind-current-main{display:flex;gap:7px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--ink-soft);}
-  #windRefBox .wind-current-main strong{font-size:16px;color:var(--line-white);letter-spacing:.01em;}
+  #windRefBox .wind-current-main span:first-child{font-size:11px;font-weight:800;letter-spacing:.02em;}
+  #windRefBox .wind-current-main strong{font-size:17px;color:var(--line-white);letter-spacing:.01em;}
   #windRefBox .wind-current-sub{font-size:10.5px;color:var(--ink-soft);line-height:1.45;text-align:right;}
-  #windRefBox .wind-relative-badge{display:inline-flex;align-items:center;justify-content:center;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:900;line-height:1;border:1px solid rgba(10,31,51,.10);background:rgba(10,31,51,.05);}
+  #windRefBox .wind-relative-badge{display:inline-flex;align-items:center;justify-content:center;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:900;line-height:1;border:1px solid rgba(10,31,51,.10);background:rgba(10,31,51,.05);}
   #windRefBox .wind-relative-badge.tail{color:#1769aa;background:rgba(23,105,170,.08);border-color:rgba(23,105,170,.18);}
   #windRefBox .wind-relative-badge.head{color:#6f42c1;background:rgba(111,66,193,.08);border-color:rgba(111,66,193,.18);}
   #windRefBox .wind-relative-badge.left,
   #windRefBox .wind-relative-badge.right{color:#8a5a00;background:rgba(176,122,0,.09);border-color:rgba(176,122,0,.18);}
-  #windRefBox .wind-tendency-box{padding:9px 10px;border-radius:8px;background:rgba(0,102,255,.035);border:1px solid rgba(0,102,255,.10);}
-  #windRefBox .wind-tendency-title{font-size:12.5px;font-weight:800;line-height:1.55;color:var(--line-white);}
-  #windRefBox .wind-tendency-meta{font-size:10.5px;color:var(--ink-soft);margin-top:3px;}
+  #windRefBox .wind-tendency-box{padding:11px 12px;border-radius:12px;background:rgba(0,102,255,.035);border:1px solid rgba(0,102,255,.10);}
+  #windRefBox .wind-tendency-title{font-size:12.5px;font-weight:800;line-height:1.6;color:var(--line-white);}
+  #windRefBox .wind-tendency-meta{font-size:10.5px;color:var(--ink-soft);margin-top:4px;}
+  #windRefBox .wind-title{font-size:13px; color:var(--line-white); margin:12px 0 8px; line-height:1.6;}
+  #windRefBox .wind-note{font-size:11px; color:var(--ink-soft);}
+  #windRefBox .wind-table-wrap{ width:100%; overflow:hidden; border:1px solid rgba(10,31,51,.08); border-radius:12px; }
+  #windRefBox table.wind-ref-table{ width:100%; table-layout:fixed; font-size:13px; background:#fff; }
+  #windRefBox table.wind-ref-table thead th{background:rgba(10,31,51,.04); color:var(--ink-soft); font-size:11px; font-weight:800;}
+  #windRefBox table.wind-ref-table th,
+  #windRefBox table.wind-ref-table td{ padding:8px 4px; white-space:nowrap; text-align:center; }
+  #windRefBox table.wind-ref-table tbody tr+tr td{border-top:1px solid rgba(10,31,51,.06);}
+  #windRefBox table.wind-ref-table th:first-child,
+  #windRefBox table.wind-ref-table td:first-child{ width:12%; }
+  #windRefBox table.wind-ref-table th:nth-child(2){ width:19%; }
+  #windRefBox table.wind-ref-table th:nth-child(3){ width:19%; }
+  #windRefBox table.wind-ref-table th:nth-child(4){ width:26%; }
+  #windRefBox table.wind-ref-table th:nth-child(5){ width:24%; }
+  #windRefBox .wind-ref-notes{margin-top:9px; display:flex; flex-direction:column; gap:4px; font-size:11px; color:var(--ink-soft); line-height:1.6;}
+  #windRefBox .wind-ref-note{display:flex; gap:6px;}
+  #windRefBox .wind-ref-note::before{content:'※'; flex:0 0 auto;}
   @media (max-width:640px){
-    #windRefBox{ padding:10px 6px !important; }
-    #windRefBox table.wind-ref-table{ font-size:12px !important; }
-    #windRefBox table.wind-ref-table th,
-    #windRefBox table.wind-ref-table td{ padding:5px 2px !important; letter-spacing:-.02em; }
-    #windRefBox .wind-title{ font-size:13px !important; line-height:1.5; }
-    #windRefBox .wind-note{ font-size:10.5px !important; }
-    #windRefBox .wind-current-summary{display:block;}
-    #windRefBox .wind-current-sub{text-align:left;margin-top:4px;}
-    #windRefBox .wind-current-main strong{font-size:15px;}
+    #windPanel{padding:12px; border-radius:14px;}
+    #windPanel .wind-panel-head{display:block; margin-bottom:10px;}
+    #windPanel #windAutoStatus{margin-top:8px; max-width:100%; justify-content:flex-start;}
+    #windPanel .wind-panel-controls{grid-template-columns:1fr; gap:9px;}
+    #windPanel .wind-control-select{font-size:14px; padding:10px 11px;}
+    #windRefBox{padding:11px 10px; border-radius:13px;}
+    #windRefBox .wind-current-summary{display:block; padding:10px 11px; margin-bottom:10px;}
+    #windRefBox .wind-current-sub{text-align:left; margin-top:5px;}
+    #windRefBox .wind-current-main strong{font-size:16px;}
     #windRefBox .wind-tendency-title{font-size:12px;}
+    #windRefBox .wind-title{font-size:12.5px; margin:11px 0 7px;}
+    #windRefBox .wind-note{font-size:10.5px;}
+    #windRefBox table.wind-ref-table{font-size:12px !important;}
+    #windRefBox table.wind-ref-table th,
+    #windRefBox table.wind-ref-table td{padding:7px 2px !important; letter-spacing:-.02em;}
   }
   @media (max-width:390px){
-    #windRefBox table.wind-ref-table{ font-size:11px !important; }
+    #windRefBox table.wind-ref-table{font-size:11px !important;}
     #windRefBox table.wind-ref-table th,
-    #windRefBox table.wind-ref-table td{ padding:4px 1px !important; }
+    #windRefBox table.wind-ref-table td{padding:6px 1px !important;}
   }
-
 
   /* ---- 会場別攻略：1着コース×決まり手 相手傾向 ---- */
   .ck-section{margin-top:28px; padding-top:2px;}
@@ -15913,27 +15953,37 @@ function brcBuildLowSampleBannerHtml(boats){
 function buildWindPanelHtml(venue){
   const sel = window.__windSelection || {dir:'', speed:''};
   const dirs = ['北','北東','東','南東','南','南西','西','北西'];
-  const dirOpts = [`<option value="">風向: 選択</option>`]
+  const dirOpts = [`<option value="">選択してください</option>`]
     .concat(dirs.map(d=>{
       const relative = BRC_WIND_RELATIVE_MAP?.[venue]?.[d] || '風向参考';
-      return `<option value="${d}"${sel.dir===d?' selected':''}>風向: ${relative}（${d}）</option>`;
+      return `<option value="${d}"${sel.dir===d?' selected':''}>${relative}（${d}）</option>`;
     })).join('');
-  const speedOpts = [`<option value="">風速: 選択</option>`]
-    .concat(Array.from({length:16},(_,i)=>`<option value="${i}"${String(sel.speed)===String(i)?' selected':''}>風速: ${i}m</option>`)).join('');
+  const speedOpts = [`<option value="">選択してください</option>`]
+    .concat(Array.from({length:16},(_,i)=>`<option value="${i}"${String(sel.speed)===String(i)?' selected':''}>${i}m</option>`)).join('');
   return `
-    <div id="windPanel" style="margin:14px 0 12px; padding:12px 14px; background:rgba(10,31,51,.025); border:1px solid rgba(10,31,51,.08); border-radius:10px;">
-      <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px;">
-        <div style="font-size:13px;font-weight:800;">🌬️ 風向・風速 参考データ</div>
-        <span id="windAutoStatus" style="font-size:10.5px;color:var(--ink-soft);font-weight:700;">展示後に自動反映</span>
+    <div id="windPanel">
+      <div class="wind-panel-head">
+        <div>
+          <div class="wind-panel-title"><span class="icon">🌬️</span><span>風向・風速 参考データ</span></div>
+          <div class="wind-panel-sub">公式の風向・風速をもとに、同条件での枠別傾向を確認できます。</div>
+        </div>
+        <span id="windAutoStatus">展示後に自動反映</span>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-        <select id="predictWindDir" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(10,31,51,.16); background:rgba(10,31,51,.04); color:var(--line-white); font-size:14px; min-width:120px;">${dirOpts}</select>
-        <select id="predictWindSpeed" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(10,31,51,.16); background:rgba(10,31,51,.04); color:var(--line-white); font-size:14px; min-width:120px;">${speedOpts}</select>
-        <span style="font-size:11.5px;color:var(--ink-soft);">レース切替でリセット</span>
+      <div class="wind-panel-controls">
+        <label class="wind-control-group">
+          <span class="wind-control-label">風向</span>
+          <select id="predictWindDir" class="wind-control-select">${dirOpts}</select>
+        </label>
+        <label class="wind-control-group">
+          <span class="wind-control-label">風速</span>
+          <select id="predictWindSpeed" class="wind-control-select">${speedOpts}</select>
+        </label>
       </div>
-      <div id="windRefBox" class="card-sub" style="margin:10px 0 0; padding:12px 14px; background:rgba(10,31,51,.03); border:1px solid rgba(10,31,51,.08); border-radius:8px; display:none;"></div>
+      <div class="wind-panel-reset">※ レース切替でリセットされます</div>
+      <div id="windRefBox" style="display:none;"></div>
     </div>`;
 }
+
 function brcNormalizeLiveWind(liveRace){
   const w=liveRace?.weather;
   if(!w || typeof w!=='object') return null;
@@ -16033,9 +16083,12 @@ function renderWindRef(venue, dir, speed, officialQuality=''){
         <div class="wind-current-main"><span>現在の風</span>${relativeBadge}<strong>${speedKey}m</strong></div>
         <div class="wind-current-sub">${relativeSource}</div>
       </div>
-      <div style="font-size:13px; color:var(--ink-soft);line-height:1.6;">
-        この風向・風速の組み合わせ実測データはありません。風区分のみ参考にしてください。<br>
-        <span style="font-size:11.5px;">※ 予想1着率・2着率・3着率には反映していません。</span>
+      <div class="wind-tendency-box">
+        <div class="wind-tendency-title">この風向・風速の組み合わせ実測データはありません。</div>
+        <div class="wind-tendency-meta">風区分のみ参考にしてください。</div>
+      </div>
+      <div class="wind-ref-notes">
+        <div class="wind-ref-note">表示専用で、予想1着率・2着率・3着率には反映していません。</div>
       </div>`;
     return;
   }
@@ -16076,9 +16129,9 @@ function renderWindRef(venue, dir, speed, officialQuality=''){
       <div class="wind-tendency-title">${trend}</div>
       <div class="wind-tendency-meta">${brcWindDataVolumeLabel(comboN)}・同条件の生実測</div>
     </div>
-    <div class="wind-title" style="font-size:13px; color:var(--ink-soft); margin:9px 0 7px;">
+    <div class="wind-title">
       <strong>${venue}・${effectiveDir}${speedKey}m</strong> の枠別1着実測
-      <span class="wind-note" style="font-size:11.5px;">（場平均との比較）</span>
+      <span class="wind-note">（場平均との比較）</span>
     </div>
     <div class="wind-table-wrap">
       <table class="wind-ref-table">
@@ -16092,9 +16145,9 @@ function renderWindRef(venue, dir, speed, officialQuality=''){
         <tbody>${rows}</tbody>
       </table>
     </div>
-    <div style="margin-top:7px;font-size:11.5px;color:var(--ink-soft);line-height:1.6;">
-      ※ 2023/1/1〜2026/7/31の生実測。風が差の原因と断定する値ではありません。N数と合わせて参考にしてください。<br>
-      ※ 表示専用で、BRCの1着率・2着率・3着率やその他の予測値には加算していません。
+    <div class="wind-ref-notes">
+      <div class="wind-ref-note">2023/1/1〜2026/7/31の生実測です。風が差の原因と断定する値ではありません。</div>
+      <div class="wind-ref-note">表示専用で、BRCの1着率・2着率・3着率やその他の予測値には加算していません。</div>
     </div>`;
 }
 
