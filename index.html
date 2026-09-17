@@ -932,9 +932,15 @@
   .predict-scenario-hero-title .icon{font-size:24px;line-height:1;color:var(--wave);}
   .predict-scenario-hero-text{margin-top:8px;font-size:12.5px;line-height:1.75;color:var(--ink-soft);}
   .predict-scenario-hero-visual{display:flex;align-items:center;gap:10px;flex:0 0 auto;color:#90aeca;}
-  .predict-scenario-boat{display:inline-flex;align-items:center;justify-content:center;width:46px;height:24px;border-radius:999px 999px 12px 12px;background:linear-gradient(180deg,#1e4f98 0%, #173f79 100%);color:#fff;font-size:12px;font-weight:900;position:relative;}
+  .predict-scenario-boat{display:inline-flex;align-items:center;justify-content:center;width:46px;height:24px;border-radius:999px 999px 12px 12px;background:linear-gradient(180deg,#1e4f98 0%, #173f79 100%);color:#fff;font-size:12px;font-weight:900;position:relative;border:1px solid transparent;box-sizing:border-box;}
   .predict-scenario-boat::after{content:'';position:absolute;right:-14px;top:50%;width:10px;height:2px;background:rgba(0,87,219,.26);transform:translateY(-50%);}
-  .predict-scenario-boat.faded{background:linear-gradient(180deg,#d8e6f7 0%, #bfd4ed 100%);color:#5f7fa8;}
+  .predict-scenario-boat.lane-1{background:#fff;color:#21324a;border-color:#94a3b8;}
+  .predict-scenario-boat.lane-2{background:linear-gradient(180deg,#1f1f22 0%, #111214 100%);color:#fff;}
+  .predict-scenario-boat.lane-3{background:linear-gradient(180deg,#e44a4f 0%, #c9353a 100%);color:#fff;}
+  .predict-scenario-boat.lane-4{background:linear-gradient(180deg,#2d73d2 0%, #205fb4 100%);color:#fff;}
+  .predict-scenario-boat.lane-5{background:linear-gradient(180deg,#f0c54a 0%, #dfb137 100%);color:#21324a;}
+  .predict-scenario-boat.lane-6{background:linear-gradient(180deg,#3ba366 0%, #2f8854 100%);color:#fff;}
+  .predict-scenario-boat.faded{background:linear-gradient(180deg,#d8e6f7 0%, #bfd4ed 100%);color:#5f7fa8;border-color:transparent;}
   .predict-scenario-boat.faded::after{display:none;}
   .predict-scenario-boat-label{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:800;color:#6b88aa;}
   .predict-scenario-arrow{font-size:28px;color:#8bb2ee;font-weight:900;line-height:1;}
@@ -11807,7 +11813,7 @@ function renderInlinePredictScenario(course){
         <div class="predict-scenario-hero-text">${heroText1}<br>${heroText2}</div>
       </div>
       <div class="predict-scenario-hero-visual" aria-hidden="true">
-        <span class="predict-scenario-boat">${course}</span>
+        <span class="predict-scenario-boat lane-${course}">${course}</span>
         <span class="predict-scenario-arrow">→</span>
         <span class="predict-scenario-boat-label"><span>2着?</span><span class="predict-scenario-boat faded"></span></span>
         <span class="predict-scenario-boat-label"><span>3着?</span><span class="predict-scenario-boat faded"></span></span>
