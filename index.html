@@ -3265,7 +3265,7 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
   }
   #predictResult .predict-personal-inline.personal-up{color:#217247;background:rgba(47,143,91,.10);}
   #predictResult .predict-personal-inline.personal-down{color:#b4232c;background:rgba(209,55,63,.09);}
-  #predictResult .predict-personal-inline.personal-flat{color:#667085;background:rgba(61,74,99,.08);}
+  #predictResult .predict-personal-inline.personal-flat{display:none !important;}
   @media(max-width:640px){
     .brc-timex-final.brc-timex-final-banner{padding:9px 10px;margin-bottom:10px;}
     .brc-timex-final-banner .brc-timex-final-title{font-size:12.5px;}
@@ -13513,7 +13513,9 @@ function brcBuildPredictExhibitionLabelHtml(b){
   if(personal){
     const payload=encodeURIComponent(JSON.stringify(brcAlertPayload(personal,b)));
     const decision=brcAlertDecision(personal);
-    const cls=decision.cls==='up'?'personal-up':decision.cls==='down'?'personal-down':'personal-flat';
+    // 参考扱い（グレー/flat）は選手名下に表示しない。明確な上昇・下降傾向だけ表示する。
+    if(decision.cls!=='up' && decision.cls!=='down') return '';
+    const cls=decision.cls==='up'?'personal-up':'personal-down';
     return `<button type="button" class="predict-personal-inline ${cls}" onclick="event.stopPropagation();brcShowPredictNamePersonalTrend(decodeURIComponent('${payload}'))" title="個人傾向をタップして内容を確認">個人傾向</button>`;
   }
   const tendency=brcFindPlayerTimeXTendency(b);
@@ -17446,12 +17448,12 @@ async function runPredict(){
   if(!brcPredictRequestIsCurrent(requestCtx)) return;
   box.innerHTML = `
     ${buildCurrentRaceSummaryHtml(venue, exhibitionApplied)}
+    ${brcBuildRaceResultFoldHtml()}
     ${buildInReliabilityCardHtmlFromServer(localInReliability)}
     <div id="slitEvaluationSlot">${brcBuildSlitEvaluationHtml(boats, liveExhibitionRace, localInReliability)}</div>
     <div id="raceConditionBannerSlot">${brcBuildRaceConditionBannerHtml(liveExhibitionRace)}</div>
     ${brcBuildDirectInfoBannerHtml(liveExhibitionRace, venue)}
     ${brcBuildLowSampleBannerHtml(boats)}
-    ${brcBuildRaceResultFoldHtml()}
     ${brcBuildExhibitionRaceNoticeHtml(liveExhibitionRace)}
     <div class="predict-player-tap-hint"><span class="tap-key">選手名をタップ ›</span><span>選手データ・展開・ST・モーターを確認できます</span></div>
     <div id="predictTableWrap" style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
