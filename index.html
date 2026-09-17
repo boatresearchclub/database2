@@ -4466,6 +4466,78 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
 }
 </style>
 
+<style id="brc-admin-workspace-v2-style">
+.page-tab.brc-admin-main-tab{display:none;}
+.page-tab.brc-admin-main-tab.is-visible{display:inline-flex;background:#0a1f33;color:#fff;border-color:rgba(10,31,51,.28);}
+.page-tab.brc-admin-main-tab.active{background:#0f2944;color:#fff;border-color:#0f2944;}
+#page-admin{display:none;}
+.brc-admin-workspace-shell{display:flex;flex-direction:column;gap:12px;}
+.brc-admin-workspace-hero{padding:15px 16px;border:1px solid rgba(10,31,51,.10);border-radius:16px;background:linear-gradient(155deg,rgba(10,31,51,.98),rgba(16,52,89,.98));box-shadow:0 12px 32px rgba(10,31,51,.12);color:#fff;}
+.brc-admin-workspace-kicker{font-size:10px;font-weight:950;letter-spacing:.12em;color:rgba(255,255,255,.72);}
+.brc-admin-workspace-title{margin-top:4px;font-size:24px;font-weight:950;line-height:1.2;color:#fff;}
+.brc-admin-workspace-copy{margin-top:6px;font-size:12.5px;line-height:1.7;color:rgba(255,255,255,.84);}
+.brc-admin-workspace-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+.brc-admin-workspace-pills span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);font-size:11px;font-weight:900;color:#fff;}
+.brc-admin-workspace-block{padding:12px;border:1px solid rgba(10,31,51,.10);border-radius:16px;background:#fff;box-shadow:0 8px 26px rgba(10,31,51,.06);}
+.brc-admin-workspace-block-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:10px;}
+.brc-admin-workspace-block-title{font-size:15px;font-weight:950;color:var(--navy);line-height:1.2;}
+.brc-admin-workspace-block-sub{font-size:10px;font-weight:750;color:var(--ink-soft);text-align:right;line-height:1.5;}
+.brc-admin-workspace-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.brc-admin-workspace-mount:empty{display:none;}
+#page-admin .brc-admin-hub{margin:0;}
+#page-admin .brc-admin-hub-message{font-size:9.2px;}
+#page-admin .brc-admin-today-hits,
+#page-admin .brc-member-admin,
+#page-admin .brc-ux-preview-admin{margin:0;}
+#page-admin .brc-member-admin.is-visible{display:block;}
+#page-admin .brc-member-admin[aria-hidden="true"]{display:none;}
+.brc-admin-workspace-note{padding:12px 13px;border:1px dashed rgba(10,31,51,.14);border-radius:14px;background:rgba(10,31,51,.03);font-size:12px;line-height:1.7;color:var(--ink-soft);}
+.brc-admin-workspace-note strong{color:var(--navy);}
+@media (max-width:720px){
+  .brc-admin-workspace-grid{grid-template-columns:1fr;}
+}
+@media (max-width:520px){
+  .page-tabs > .page-tab.brc-admin-main-tab{padding:9px 2px !important;font-size:10.5px !important;}
+  .brc-admin-workspace-hero{padding:13px 12px;}
+  .brc-admin-workspace-title{font-size:21px;}
+  .brc-admin-workspace-copy{font-size:11.5px;}
+  .brc-admin-workspace-block{padding:10px;}
+  .brc-admin-workspace-block-title{font-size:14px;}
+}
+.brc-admin-view-switch{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:12px;padding:4px;border-radius:12px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);max-width:320px;}
+.brc-admin-view-switch-btn{appearance:none;border:0;border-radius:9px;background:transparent;color:rgba(255,255,255,.72);padding:8px 12px;font:inherit;font-size:11.5px;font-weight:950;cursor:pointer;}
+.brc-admin-view-switch-btn.active{background:#fff;color:#0a1f33;box-shadow:0 2px 8px rgba(0,0,0,.12);}
+.brc-admin-view-switch-note{margin-top:7px;max-width:560px;font-size:10px;line-height:1.55;color:rgba(255,255,255,.68);}
+.brc-admin-view-restore{display:none;position:fixed;right:12px;bottom:14px;z-index:9999;appearance:none;border:1px solid rgba(10,31,51,.18);border-radius:999px;background:#0a1f33;color:#fff;padding:9px 12px;font:inherit;font-size:11px;font-weight:950;box-shadow:0 8px 24px rgba(10,31,51,.22);cursor:pointer;}
+body.brc-admin-public-view .brc-admin-view-restore{display:inline-flex;}
+/* 管理者ログインを維持したまま、公開ユーザーに近い見え方へ。 */
+body.brc-admin-public-view #brcAdminMainTab,
+body.brc-admin-public-view #page-admin,
+body.brc-admin-public-view #brcAdminSocial,
+body.brc-admin-public-view #brcResearchAdminPanel,
+body.brc-admin-public-view .brc-admin-invest-tab,
+body.brc-admin-public-view .brc-ai-admin-tabs,
+body.brc-admin-public-view .brc-ai-admin-panel,
+body.brc-admin-public-view .brc-refmon-card,
+body.brc-admin-public-view .brc-refmon-wrap,
+body.brc-admin-public-view .brc-reference-monitor,
+body.brc-admin-public-view .brc-nonin-ref-card,
+body.brc-admin-public-view .brc-motor-current-admin-detail,
+body.brc-admin-public-view .brc-motor-admin-verify,
+body.brc-admin-public-view #raceCardFoldWrap,
+body.brc-admin-public-view #brcOosAdminFold,
+body.brc-admin-public-view #brcOosAdminTools,
+body.brc-admin-public-view #raceSearchScenarioAdmin,
+body.brc-admin-public-view .scenario-search-admin,
+body.brc-admin-public-view .brc-invest-admin-badge,
+body.brc-admin-public-view .brc-admin-only,
+body.brc-admin-public-view [data-brc-admin-only="true"]{display:none !important;}
+@media(max-width:520px){
+  .brc-admin-view-switch{max-width:none;}
+  .brc-admin-view-restore{right:9px;bottom:10px;font-size:10.5px;padding:8px 11px;}
+}
+</style>
+
 </head>
 <body>
 <div class="wrap">
@@ -4479,6 +4551,7 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
     <button class="page-tab sg-special-tab" data-page="special">特集</button>
     <button class="page-tab" data-page="database">各種データ</button>
     <button class="page-tab brc-admin-research-tab" data-page="research" id="brcResearchTab" aria-hidden="false">BRC研究室</button>
+    <button class="page-tab brc-admin-main-tab" data-page="admin" id="brcAdminMainTab" aria-hidden="true">⚙ 管理</button>
   </div>
 
 
@@ -4741,8 +4814,8 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
       <div class="brc-admin-hub-head">
         <div>
           <div class="brc-admin-hub-kicker">BRC OPERATIONS</div>
-          <div class="brc-admin-hub-title">管理者ホーム</div>
-          <div class="brc-admin-hub-sub">今日の状態確認と、運営機能へのショートカット。公開ユーザーには表示されません。</div>
+          <div class="brc-admin-hub-title">管理ダッシュボード</div>
+          <div class="brc-admin-hub-sub">公開ユーザー画面と切り離した管理専用スペースです。運営機能への入口をここに集約します。</div>
         </div>
         <div class="brc-admin-hub-live">管理者接続中</div>
       </div>
@@ -5117,6 +5190,67 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
     </section>
   </div><!-- /page-research -->
 
+  <div id="page-admin" style="display:none;" aria-hidden="true">
+    <div class="brc-admin-workspace-shell">
+      <section class="brc-admin-workspace-hero">
+        <div class="brc-admin-workspace-kicker">BRC ADMIN WORKSPACE</div>
+        <div class="brc-admin-workspace-title">⚙ 管理</div>
+        <div class="brc-admin-workspace-copy">公開ユーザー向けの「出走表AI」と切り分けた、管理者専用の運営スペースです。会員発行・検証・投稿・UI確認などの入口をここへ集約しました。</div>
+        <div class="brc-admin-view-switch" role="group" aria-label="管理者表示モード">
+          <button type="button" class="brc-admin-view-switch-btn" data-brc-admin-view-mode="public">通常表示</button>
+          <button type="button" class="brc-admin-view-switch-btn active" data-brc-admin-view-mode="admin">管理表示</button>
+        </div>
+        <div class="brc-admin-view-switch-note">通常表示にすると管理者専用UIだけを隠し、一般ユーザーに近い見え方で確認できます。ログイン・管理権限は維持されます。</div>
+        <div class="brc-admin-workspace-pills">
+          <span>公開UIは極力固定</span>
+          <span>運営機能はここに集約</span>
+          <span>異常確認を最短で</span>
+        </div>
+      </section>
+
+      <section class="brc-admin-workspace-block">
+        <div class="brc-admin-workspace-block-head">
+          <div class="brc-admin-workspace-block-title">運営ダッシュボード</div>
+          <div class="brc-admin-workspace-block-sub">今日 / 検証 / 投稿 / 会員 / 研究</div>
+        </div>
+        <div id="brcAdminPageHubMount" class="brc-admin-workspace-mount"></div>
+      </section>
+
+      <div class="brc-admin-workspace-grid">
+        <section class="brc-admin-workspace-block">
+          <div class="brc-admin-workspace-block-head">
+            <div class="brc-admin-workspace-block-title">本日の的中速報</div>
+            <div class="brc-admin-workspace-block-sub">BRC参考買い目の確定確認</div>
+          </div>
+          <div id="brcAdminPageHitsMount" class="brc-admin-workspace-mount"></div>
+        </section>
+
+        <section class="brc-admin-workspace-block">
+          <div class="brc-admin-workspace-block-head">
+            <div class="brc-admin-workspace-block-title">会員発行・LINE送信</div>
+            <div class="brc-admin-workspace-block-sub">YOOR確認後の会員処理</div>
+          </div>
+          <div id="brcAdminPageMemberMount" class="brc-admin-workspace-mount"></div>
+        </section>
+      </div>
+
+      <section class="brc-admin-workspace-block">
+        <div class="brc-admin-workspace-block-head">
+          <div class="brc-admin-workspace-block-title">公開UI確認</div>
+          <div class="brc-admin-workspace-block-sub">改善案プレビューは管理側で確認</div>
+        </div>
+        <div id="brcAdminPagePreviewMount" class="brc-admin-workspace-mount"></div>
+      </section>
+
+      <div class="brc-admin-workspace-note">
+        <strong>使い方：</strong>今日の運営確認は上のダッシュボード、会員発行や的中確認はこのページ内、
+        投資管理・AI予測・SNS投稿・研究室管理などの詳細ツールはダッシュボード内のショートカットから開いてください。
+      </div>
+    </div>
+  </div><!-- /page-admin -->
+
+  <button type="button" id="brcAdminViewRestore" class="brc-admin-view-restore" aria-hidden="true">⚙ 管理表示に戻る</button>
+
   <div id="page-today" style="display:none;">
     <section class="card today-picks-card">
       <div class="race-search-head">
@@ -5413,7 +5547,7 @@ function r0(v){
 }
 
 // ---- Page tabs ----
-const PAGE_IDS = ['predict','today','special','database','research'];
+const PAGE_IDS = ['predict','today','special','database','research','admin'];
 const DATABASE_PAGE_IDS = ['players','venue'];
 let currentDatabasePage = 'players';
 
@@ -5800,6 +5934,7 @@ function brcSetAdminSocialUi(user=null){
   const box=document.getElementById('brcAdminSocial');
   BRC_ADMIN_ACTIVE=!!(user && brcIsAdminUser(user) && BRC_MEMBER_ACTIVE);
   brcSetMemberAdminUi(BRC_ADMIN_ACTIVE);
+  try{ if(typeof window.brcSetAdminWorkspaceUi==='function') window.brcSetAdminWorkspaceUi(BRC_ADMIN_ACTIVE); }catch(_e){}
   try{ if(typeof window.brcSetAdminHubUi==='function') window.brcSetAdminHubUi(BRC_ADMIN_ACTIVE); }catch(_e){}
   try{ if(typeof brcSetUxPreviewAdminUi==='function') brcSetUxPreviewAdminUi(BRC_ADMIN_ACTIVE); }catch(_e){}
   if(box){
@@ -6946,6 +7081,7 @@ document.querySelectorAll('.page-tabs > .page-tab').forEach(btn=>{
     if(target==='today'){ initTodayPicksPage(); }
     if(target==='special'){ initSpecialPage(); }
     if(target==='research'){ brcInitResearchPage(); }
+    if(target==='admin'){ try{ if(typeof window.brcInitAdminWorkspace==='function') window.brcInitAdminWorkspace(); }catch(_e){} }
     requestAnimationFrame(syncPageTabsStickyHeight);
   });
 });
@@ -9807,7 +9943,8 @@ function brcEnsureAiReferenceOddsAfterDeadline(){
 function setPredictMainTab(key){
   const valid=['data','odds','ai','invest'];
   let k=valid.includes(key)?key:'data';
-  if(k==='invest' && !(typeof BRC_ADMIN_ACTIVE!=='undefined' && BRC_ADMIN_ACTIVE)) k='data';
+  if(k==='invest' && (!(typeof BRC_ADMIN_ACTIVE!=='undefined' && BRC_ADMIN_ACTIVE)
+    || (typeof window.brcGetAdminViewMode==='function' && window.brcGetAdminViewMode()==='public'))) k='data';
   document.querySelectorAll('.predict-main-tab').forEach(btn=>{
     const on=btn.dataset.predictMainTab===k;
     btn.classList.toggle('active',on);
@@ -11772,7 +11909,8 @@ function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhib
   const box=document.getElementById('predictAiResult');
   if(!box) return;
   const venue=document.getElementById('predictVenue')?.value||'';
-  const isAdmin=!!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE);
+  const isAdmin=!!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)
+    && !(typeof window.brcGetAdminViewMode==='function' && window.brcGetAdminViewMode()==='public');
   const nigeHtml=brcBuildServerNigePredictionHtml(boats,workerPrediction,exhibitionApplied,localInReliability);
   // 管理者画面では研究用の信頼度タグを参考買い目より上へ出さず、各「判定詳細」内へ集約する。
   const reliability=!isAdmin&&localInReliability?.rank
@@ -19900,6 +20038,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 
   function injectMonitor(boats,workerPrediction,localInReliability,exhibitionApplied){
     if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return;
+    if(typeof window.brcGetAdminViewMode==='function' && window.brcGetAdminViewMode()==='public') return;
     const box=document.getElementById('predictAiResult');
     const tabs=box?.querySelector('.brc-ai-admin-tabs');
     if(!box||!tabs) return;
@@ -21204,8 +21343,72 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   const q=(sel,root=document)=>root.querySelector(sel);
   const qa=(sel,root=document)=>Array.from(root.querySelectorAll(sel));
   let observer=null;
+  let mounted=false;
+
+  function mountWorkspace(){
+    const pairs=[
+      ['#brcAdminHub','#brcAdminPageHubMount'],
+      ['#brcAdminTodayHits','#brcAdminPageHitsMount'],
+      ['#brcMemberAdmin','#brcAdminPageMemberMount'],
+      ['#brcUxPreviewAdmin','#brcAdminPagePreviewMount']
+    ];
+    pairs.forEach(([fromSel,toSel])=>{
+      const from=q(fromSel);
+      const to=q(toSel);
+      if(from && to && from.parentNode!==to) to.appendChild(from);
+    });
+    mounted=true;
+  }
 
   function isAdmin(){ return typeof BRC_ADMIN_ACTIVE!=='undefined' && !!BRC_ADMIN_ACTIVE; }
+  const ADMIN_VIEW_STORAGE_KEY='brc_admin_view_mode_v1';
+  let adminViewMode='admin';
+  function readAdminViewMode(){
+    try{
+      const v=localStorage.getItem(ADMIN_VIEW_STORAGE_KEY);
+      return v==='public'?'public':'admin';
+    }catch(_e){ return 'admin'; }
+  }
+  function syncAdminViewButtons(){
+    qa('[data-brc-admin-view-mode]').forEach(btn=>{
+      const on=btn.dataset.brcAdminViewMode===adminViewMode;
+      btn.classList.toggle('active',on);
+      btn.setAttribute('aria-pressed',on?'true':'false');
+    });
+    const restore=q('#brcAdminViewRestore');
+    if(restore) restore.setAttribute('aria-hidden',adminViewMode==='public'&&isAdmin()?'false':'true');
+  }
+  function applyAdminViewMode(mode,{navigate=true}={}){
+    if(!isAdmin()) mode='admin';
+    adminViewMode=(mode==='public')?'public':'admin';
+    try{ localStorage.setItem(ADMIN_VIEW_STORAGE_KEY,adminViewMode); }catch(_e){}
+    document.body?.classList.toggle('brc-admin-public-view',adminViewMode==='public' && isAdmin());
+    const adminTab=q('#brcAdminMainTab');
+    if(adminTab && isAdmin()){
+      const showAdminTab=adminViewMode!=='public';
+      adminTab.classList.toggle('is-visible',showAdminTab);
+      adminTab.style.display=showAdminTab?'inline-flex':'none';
+      adminTab.setAttribute('aria-hidden',showAdminTab?'false':'true');
+    }
+    syncAdminViewButtons();
+    if(adminViewMode==='public' && isAdmin()){
+      const active=q('.page-tabs > .page-tab.active');
+      if(navigate && active?.dataset.page==='admin') openPage('predict');
+      try{ if(typeof window.brcSetUxPreviewMode==='function') window.brcSetUxPreviewMode(false); }catch(_e){}
+      try{ if(window.__predictMainTabCurrent==='invest' && typeof setPredictMainTab==='function') setPredictMainTab('data'); }catch(_e){}
+    }
+    // AI予測は管理者用と会員用で描画自体が異なるため、表示モード切替時に再描画する。
+    try{
+      const boats=window.__predictBoatsCurrent;
+      const worker=window.__predictWorkerCurrent;
+      if(Array.isArray(boats)&&boats.length===6&&worker&&typeof window.renderPredictAiPanel==='function'){
+        window.renderPredictAiPanel(boats,worker,window.__currentLocalInReliability||null,!!window.__currentExhibitionApplied);
+      }
+    }catch(_e){}
+    requestAnimationFrame(()=>{ try{ syncPageTabsStickyHeight(); }catch(_e){} });
+  }
+  window.brcSetAdminViewMode=(mode)=>applyAdminViewMode(mode);
+  window.brcGetAdminViewMode=()=>adminViewMode;
   function compactText(value,max=26){
     const t=String(value||'').replace(/\s+/g,' ').trim();
     if(!t) return '';
@@ -21248,6 +21451,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     updateStatus();
   }
   function openPage(page){
+    if(page==='admin' && adminViewMode==='public') return false;
     const btn=q(`.page-tabs > .page-tab[data-page="${page}"]`);
     if(btn){ btn.click(); return true; }
     return false;
@@ -21272,11 +21476,11 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     if(!isAdmin()) return;
     switch(name){
       case 'hits':
-        openPage('predict'); setTimeout(()=>scrollToEl(q('#brcAdminTodayHits')),120); break;
+        openPage('admin'); setTimeout(()=>scrollToEl(q('#brcAdminTodayHits')),120); break;
       case 'race-search':
         openPage('today'); break;
       case 'ui-preview':
-        openPage('predict'); setTimeout(()=>scrollToEl(q('#brcUxPreviewAdmin')),120); break;
+        openPage('admin'); setTimeout(()=>scrollToEl(q('#brcUxPreviewAdmin')),120); break;
       case 'investment':
         openPredictSubTab('invest'); break;
       case 'ai':
@@ -21286,7 +21490,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       case 'data':
         openPredictSubTab('data'); break;
       case 'member-issue':
-        openPage('predict'); setTimeout(()=>scrollToEl(q('#brcMemberAdmin'),true),120); break;
+        openPage('admin'); setTimeout(()=>scrollToEl(q('#brcMemberAdmin'),true),120); break;
       case 'research':
         openPage('research'); setTimeout(()=>scrollToEl(q('#brcResearchAdminPanel')),180); break;
       case 'database':
@@ -21304,18 +21508,60 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     });
     const ref=q('#brcAdminHubRefresh');
     if(ref&&ref.dataset.bound!=='1'){ref.dataset.bound='1';ref.addEventListener('click',updateStatus);}
+    qa('[data-brc-admin-view-mode]').forEach(btn=>{
+      if(btn.dataset.viewBound==='1') return;
+      btn.dataset.viewBound='1';
+      btn.addEventListener('click',()=>applyAdminViewMode(btn.dataset.brcAdminViewMode));
+    });
+    const restore=q('#brcAdminViewRestore');
+    if(restore&&restore.dataset.bound!=='1'){
+      restore.dataset.bound='1';
+      restore.addEventListener('click',()=>{ applyAdminViewMode('admin',{navigate:false}); openPage('admin'); });
+    }
     if(!observer){
       observer=new MutationObserver(()=>{ if(isAdmin()) requestAnimationFrame(updateStatus); });
       ['#brcAdminTodayHitsSummary','#predictResult'].forEach(sel=>{const el=q(sel);if(el)observer.observe(el,{subtree:true,childList:true,characterData:true});});
     }
   }
+  window.brcInitAdminWorkspace=function(){ mountWorkspace(); bind(); updateStatus(); };
+  window.brcSetAdminWorkspaceUi=function(active){
+    mountWorkspace();
+    const tab=q('#brcAdminMainTab');
+    const page=q('#page-admin');
+    const on=!!active;
+    if(tab){
+      const showTab=on && adminViewMode!=='public';
+      tab.classList.toggle('is-visible',showTab);
+      tab.style.display=showTab?'inline-flex':'none';
+      tab.setAttribute('aria-hidden',showTab?'false':'true');
+    }
+    if(page){
+      page.setAttribute('aria-hidden',on?'false':'true');
+      if(!on) page.style.display='none';
+    }
+    const activeBtn=q('.page-tabs > .page-tab.active');
+    if(!on && activeBtn && activeBtn.dataset.page==='admin'){
+      q('.page-tabs > .page-tab[data-page="predict"]')?.click();
+    }
+    if(!on){ document.body?.classList.remove('brc-admin-public-view'); }
+    else{ applyAdminViewMode(adminViewMode,{navigate:false}); }
+    requestAnimationFrame(()=>{ try{ syncPageTabsStickyHeight(); }catch(_e){} });
+  };
   window.brcSetAdminHubUi=function(active){
+    mountWorkspace();
     const hub=q('#brcAdminHub'); const on=!!active;
     if(hub){hub.classList.toggle('is-visible',on);hub.setAttribute('aria-hidden',on?'false':'true');}
     bind(); if(on) requestAnimationFrame(updateStatus);
   };
   window.brcAdminHubRefresh=updateStatus;
-  document.addEventListener('DOMContentLoaded',()=>{bind();try{window.brcSetAdminHubUi(isAdmin());}catch(_e){}});
+  document.addEventListener('DOMContentLoaded',()=>{
+    adminViewMode=readAdminViewMode();
+    mountWorkspace();
+    bind();
+    try{window.brcSetAdminWorkspaceUi(isAdmin());}catch(_e){}
+    try{window.brcSetAdminHubUi(isAdmin());}catch(_e){}
+    try{applyAdminViewMode(adminViewMode,{navigate:false});}catch(_e){}
+  });
 })();
 </script>
 
