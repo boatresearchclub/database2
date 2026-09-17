@@ -717,20 +717,12 @@
     .slit-rate-metrics{gap:4px;}
     .slit-rate-metric,.slit-rate-generic{font-size:10.5px;}
   }
-  .direct-info-banner{
-    display:flex;align-items:center;gap:8px;width:100%;
-    border:1px solid rgba(10,31,51,.10);border-radius:9px;padding:8px 11px;margin:-4px 0 10px;
-    background:rgba(10,31,51,.025);font-size:12.5px;line-height:1.35;white-space:nowrap;overflow:hidden;
-  }
+  .direct-info-banner{white-space:nowrap;overflow:hidden;}
   .direct-info-banner-label{font-weight:800;color:var(--ink-soft);white-space:nowrap;flex:0 0 auto;}
   .direct-info-banner-items{display:inline-flex;align-items:center;gap:4px;min-width:0;flex:0 0 auto;}
   .direct-info-banner-note{color:var(--ink-soft);font-size:10.5px;font-weight:800;white-space:nowrap;flex:0 0 auto;}
-  .direct-info-banner .slit-eval-boat{width:22px;height:22px;font-size:11px;}
   @media (max-width:420px){
-    .direct-info-banner{gap:6px;padding:8px 9px;font-size:11px;}
-    .direct-info-banner-label{font-size:10.5px;}
     .direct-info-banner-note{font-size:10px;}
-    .direct-info-banner .slit-eval-boat{width:21px;height:21px;font-size:10.5px;}
   }
 
   .exhibition-race-notice{
@@ -15750,7 +15742,7 @@ function brcBuildDirectInfoBannerHtml(liveRace,venue,threshold=5){
   const rows=brcWindAlertRowsFromLiveRace(liveRace,venue,threshold);
   if(!rows.length) return '';
   const items=rows.map(({course})=>brcSlitBoatBadgeHtml(course)).join('');
-  return `<div class="direct-info-banner"><span class="direct-info-banner-label">風影響</span><span class="direct-info-banner-items">${items}</span><span class="direct-info-banner-note">※下部データ参考</span></div>`;
+  return `<div class="slit-eval-compact direct-info-banner"><span class="direct-info-banner-label">風影響</span><span class="direct-info-banner-items">${items}</span><span class="direct-info-banner-note">※下部データ参考</span></div>`;
 }
 
 function buildWindPanelHtml(venue){
