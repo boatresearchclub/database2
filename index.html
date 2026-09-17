@@ -717,6 +717,27 @@
     .slit-rate-metrics{gap:4px;}
     .slit-rate-metric,.slit-rate-generic{font-size:10.5px;}
   }
+  .direct-info-banner{
+    display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap;width:100%;
+    border:1px solid rgba(0,87,219,.14);border-radius:9px;padding:8px 11px;margin:-4px 0 10px;
+    background:rgba(0,87,219,.045);font-size:12px;line-height:1.45;
+  }
+  .direct-info-banner-label{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:999px;background:rgba(0,87,219,.10);color:var(--wave);font-size:10px;font-weight:900;white-space:nowrap;flex:0 0 auto;}
+  .direct-info-banner-body{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap;min-width:0;flex:1 1 auto;color:var(--line-white);font-weight:850;}
+  .direct-info-banner-copy{white-space:nowrap;}
+  .direct-info-banner-items{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap;min-width:0;}
+  .direct-info-banner-item{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+  .direct-info-banner-pt{font-variant-numeric:tabular-nums;font-weight:950;}
+  .direct-info-banner-pt.up{color:var(--trend-up);}
+  .direct-info-banner-pt.down{color:var(--trend-down);}
+  .direct-info-banner-note{color:var(--ink-soft);font-size:10.5px;font-weight:800;white-space:nowrap;}
+  @media (max-width:420px){
+    .direct-info-banner{gap:6px;padding:8px 9px;font-size:11px;}
+    .direct-info-banner-label{font-size:9.5px;padding:2px 7px;}
+    .direct-info-banner-body,.direct-info-banner-items{gap:5px 7px;}
+    .direct-info-banner-note{font-size:10px;white-space:normal;}
+  }
+
   .exhibition-race-notice{
     display:flex; align-items:center; gap:6px; flex-wrap:wrap;
     margin:-4px 1px 10px; padding:0 2px;
@@ -3130,16 +3151,17 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
     margin:0 0 12px;padding:11px 12px;border:1px solid rgba(10,31,51,.10);border-radius:12px;
     background:linear-gradient(180deg,#fff 0%,rgba(10,31,51,.018) 100%);
   }
-  .racecard-date-current{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:8px;row-gap:5px;min-width:0;}
-  .racecard-date-caption{grid-column:1/-1;font-size:10.5px;font-weight:800;color:var(--ink-soft);white-space:nowrap;}
-  .racecard-date-value{grid-column:1/-1;font-size:17px;font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1.2;}
+  .racecard-date-current{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:8px;row-gap:4px;min-width:0;}
+  .racecard-date-caption{grid-column:1;grid-row:1;font-size:10.5px;font-weight:800;color:var(--ink-soft);white-space:nowrap;}
+  .racecard-date-mainline{grid-column:1;grid-row:2;display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap;}
+  .racecard-date-value{font-size:15px;font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1.2;}
   .racecard-date-state{
-    grid-column:1;display:inline-flex;align-items:center;justify-content:center;width:max-content;border-radius:999px;padding:3px 8px;
-    font-size:9.5px;font-weight:900;line-height:1.2;background:rgba(0,87,219,.08);color:var(--wave);white-space:nowrap;
+    display:inline-flex;align-items:center;justify-content:center;width:max-content;border-radius:999px;padding:3px 8px;
+    font-size:9.5px;font-weight:900;line-height:1.2;background:rgba(0,87,219,.08);color:var(--wave);white-space:nowrap;flex:0 0 auto;
   }
   .racecard-date-state.historical{background:rgba(227,178,60,.16);color:#805700;}
   .racecard-date-return{
-    grid-column:2;appearance:none;border:0;background:transparent;color:var(--wave);padding:2px 0;font:inherit;
+    grid-column:2;grid-row:1 / span 2;align-self:center;appearance:none;border:0;background:transparent;color:var(--wave);padding:2px 0;font:inherit;
     font-size:10px;font-weight:900;cursor:pointer;white-space:nowrap;text-decoration:underline;text-underline-offset:2px;
   }
   .racecard-date-return[hidden]{display:none!important;}
@@ -3174,7 +3196,8 @@ table.brc-invest-ev-table td.ng{color:var(--trend-down);font-weight:950;}
     .racecard-date-toolbar{grid-template-columns:minmax(0,1fr) auto;padding:9px 10px;gap:7px 8px;}
     .racecard-date-current{column-gap:6px;row-gap:4px;}
     .racecard-date-caption{font-size:10px;}
-    .racecard-date-value{font-size:15px;}
+    .racecard-date-mainline{gap:6px;}
+    .racecard-date-value{font-size:14px;}
     .racecard-date-state{font-size:9px;padding:3px 7px;}
     .racecard-date-return{font-size:9.5px;}
     .racecard-date-picker-btn{font-size:11px;padding:6px 9px;}
@@ -4633,7 +4656,6 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
       </div>
       <div id="brcFreePreviewBanner" class="brc-free-result-banner"></div>
     <section class="card">
-      <h2>出走表AI</h2>
       <div class="note-fold" style="display:none; margin-bottom:6px;" id="raceCardFoldWrap">
         <button type="button" class="note-fold-toggle" id="raceCardFoldToggle" onclick="var b=this.nextElementSibling; var s=(b.style.display!=='none'); b.style.display=s?'none':'flex'; this.textContent=s?'番組表の読み込み ▸':'番組表の読み込み ▾';">番組表の読み込み ▾</button>
         <div class="card-sub fold-body" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
@@ -4652,8 +4674,10 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
       <div class="racecard-date-toolbar" id="raceCardDateToolbar">
         <div class="racecard-date-current">
           <span class="racecard-date-caption">表示中</span>
-          <strong class="racecard-date-value" id="raceCardDisplayDate">-</strong>
-          <span class="racecard-date-state" id="raceCardDisplayState">今日</span>
+          <div class="racecard-date-mainline">
+            <strong class="racecard-date-value" id="raceCardDisplayDate">-</strong>
+            <span class="racecard-date-state" id="raceCardDisplayState">今日</span>
+          </div>
           <button type="button" class="racecard-date-return" id="raceCardReturnToday" hidden>本日に戻る</button>
         </div>
         <button type="button" class="racecard-date-picker-btn" id="raceCardDatePickerButton" aria-expanded="false" aria-controls="raceCardDateMenu">日付変更 ▾</button>
@@ -7759,12 +7783,6 @@ function renderInlinePredictPlayer(reg, course, venue){
         <div class="motor-detail-sub">登番 ${reg}${venue ? ` ・ ${venue} ${course}コース` : ` ・ ${course}コース`}</div>
       </div>
       <button class="motor-detail-close" type="button" onclick="closePredictDetail()" aria-label="閉じる">×</button>
-    </div>
-    <div class="motor-detail-topstats predict-detail-topstats">
-      <div class="motor-detail-stat"><b>${raceBoat ? raceBoat.pct+'%' : '―'}</b><span>予想勝率</span></div>
-      <div class="motor-detail-stat"><b>${raceBoat ? raceBoat.pct3+'%' : '―'}</b><span>3連対率</span></div>
-      <div class="motor-detail-stat"><b>${stLabel}</b><span>平均ST順位</span></div>
-      <div class="motor-detail-stat"><b style="color:${motorColor};">${motorLabel}</b><span>モーター</span></div>
     </div>
     ${brcBuildPredictPlayerImpactHtml(raceBoat)}
     <div class="predict-detail-section-title">${course === 1 ? '1コースの敗因・弱点' : `${course}コースの決まり手`}</div>
@@ -15720,6 +15738,30 @@ function brcWindTrendSummary(combo){
   if(notable.length===1) return `参考傾向：${fmt(notable[0])} が場平均との差として目立ちます。`;
   return `参考傾向：${fmt(notable[0])}、${fmt(notable[1])} が場平均との差として目立ちます。`;
 }
+function brcWindAlertRowsFromLiveRace(liveRace,venue,threshold=5){
+  const x=brcNormalizeLiveWind(liveRace);
+  if(!x || !venue) return [];
+  const effectiveDir=x.speed===0 ? '無風' : x.dir;
+  const combo=WIND_COMBO_REF?.[venue]?.[effectiveDir]?.[String(x.speed)];
+  if(!combo) return [];
+  return [1,2,3,4,5,6].map(course=>{
+    const row=combo?.[String(course)];
+    const dev=Number(row?.dev);
+    if(!Number.isFinite(dev) || Math.abs(dev) < Number(threshold)) return null;
+    return {course,dev};
+  }).filter(Boolean);
+}
+function brcBuildDirectInfoBannerHtml(liveRace,venue,threshold=5){
+  const rows=brcWindAlertRowsFromLiveRace(liveRace,venue,threshold);
+  if(!rows.length) return '';
+  const items=rows.map(({course,dev})=>{
+    const sign=dev>0?'+':'';
+    const cls=dev>=0?'up':'down';
+    return `<span class="direct-info-banner-item">${brcSlitBoatBadgeHtml(course)}<span class="direct-info-banner-pt ${cls}">${sign}${Math.round(dev)}pt</span></span>`;
+  }).join('');
+  return `<div class="direct-info-banner"><span class="direct-info-banner-label">直前情報</span><span class="direct-info-banner-body"><span class="direct-info-banner-copy">風の影響が大きい艇</span><span class="direct-info-banner-items">${items}</span><span class="direct-info-banner-note">※下部データを参考に</span></span></div>`;
+}
+
 function buildWindPanelHtml(venue){
   const sel = window.__windSelection || {dir:'', speed:''};
   const dirs = ['北','北東','東','南東','南','南西','西','北西'];
@@ -17351,6 +17393,7 @@ async function runPredict(){
     ${buildCurrentRaceSummaryHtml(venue, exhibitionApplied)}
     ${buildInReliabilityCardHtmlFromServer(localInReliability)}
     ${brcBuildSlitEvaluationHtml(boats, liveExhibitionRace, localInReliability)}
+    ${brcBuildDirectInfoBannerHtml(liveExhibitionRace, venue)}
     ${brcBuildRaceResultFoldHtml()}
     ${brcBuildExhibitionRaceNoticeHtml(liveExhibitionRace)}
     <div class="predict-player-tap-hint"><span class="tap-key">選手名をタップ ›</span><span>選手データ・展開・ST・モーターを確認できます</span></div>
@@ -17397,8 +17440,6 @@ async function runPredict(){
       </tbody>
     </table>
     </div>
-    <div class="predict-detail-note" style="margin:8px 2px 10px;line-height:1.6;"><strong>${exhibitionApplied ? '各着率＝BRCタイムX反映済' : '各着率＝事前予測（展示後にBRCタイムX反映）'}｜本人傾向・選手特性＝参考表示</strong></div>
-
     <details class="predict-guide">
       <summary>出走データの見方</summary>
       <div class="predict-guide-body">
