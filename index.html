@@ -1,3 +1,4 @@
+<!-- BRC_EXHIBITION_ONLY_PRIORITY_V1_20260918: 展示差のみを弱表示。展示差+ST順位条件成立時は強条件を優先し重複非表示 -->
 <!-- BRC_ADMIN_OPERATIONS_HUB_V1_20260918: admin-only operations dashboard; public UI unchanged -->
 <!DOCTYPE html>
 <!-- BRC_ALPHA_BADGE_WINRATE_V1_20260917: +α/-α reference badge on 1着率; detail via player name; no probability recalculation -->
@@ -707,6 +708,7 @@
   .slit-rate-up{color:var(--trend-up);}
   .slit-rate-down{color:var(--trend-down);}
   .slit-rate-generic{font-size:11.5px;font-weight:850;color:var(--line-white);white-space:nowrap;}
+.slit-rate-exhibition-only{font-size:11.5px;font-weight:900;color:#8a5a00;white-space:nowrap;}
   .slit-rate-note{font-size:10px;font-weight:700;color:var(--ink-soft);white-space:nowrap;}
   @media (max-width:420px){
     .slit-eval-compact{gap:6px;padding:8px 9px;font-size:11px;align-items:flex-start;}
@@ -718,7 +720,7 @@
     .slit-eval-strong,.slit-eval-head{font-size:9.5px;padding:2px 5px;}
     .slit-rate-row{gap:5px;}
     .slit-rate-metrics{gap:4px;}
-    .slit-rate-metric,.slit-rate-generic{font-size:10.5px;}
+    .slit-rate-metric,.slit-rate-generic,.slit-rate-exhibition-only{font-size:10.5px;}
   }
   .direct-info-banner{white-space:nowrap;overflow:hidden;}
   .direct-info-banner-label{font-weight:800;color:var(--ink-soft);white-space:nowrap;flex:0 0 auto;}
@@ -735,7 +737,7 @@
   .slit-eval-label,.direct-info-banner-label{font-size:11px;line-height:1.2;}
   .slit-eval-muted{font-size:11px;}
   .slit-eval-boat{width:22px;height:22px;font-size:11px;}
-  .slit-rate-metric,.slit-rate-generic{font-size:10.5px;}
+  .slit-rate-metric,.slit-rate-generic,.slit-rate-exhibition-only{font-size:10.5px;}
   .direct-info-banner-note{font-size:10px;}
   @media (max-width:420px){
     .slit-eval-compact{gap:6px;padding:7px 9px;font-size:10.5px;line-height:1.2;align-items:center;}
@@ -745,7 +747,7 @@
     .slit-eval-boat{width:20px;height:20px;font-size:10px;}
     .slit-rate-row{gap:4px;padding:1px 0;}
     .slit-rate-metrics{gap:3px;}
-    .slit-rate-metric,.slit-rate-generic{font-size:9.8px;}
+    .slit-rate-metric,.slit-rate-generic,.slit-rate-exhibition-only{font-size:9.8px;}
     .slit-eval-strong,.slit-eval-head{font-size:9px;padding:2px 5px;}
     .slit-eval-timex-note{font-size:9.5px;}
     .direct-info-banner-items{gap:3px;}
@@ -13017,28 +13019,28 @@ function brcSlitEvaluationState(boats,liveRace,inReliability=null){
   // 過去日も保存済み展示だけを使用して判定する。
   // ST順位は2026-07-31までの固定OOS参照値なので、2026年8月以降の日付では未来情報を含まない。
   const raceBoats=Array.isArray(liveRace?.boats) ? liveRace.boats : [];
-  if(!liveRace || raceBoats.length!==6) return {status:'waiting',items:[],rows:[]};
+  if(!liveRace || raceBoats.length!==6) return {status:'waiting',items:[],rows:[],exhibitionOnlyItems:[],exhibitionOnlyRows:[]};
 
   // 進入が6艇とも確認済みかつ枠なりの時だけ判定。
   const fixedKnown=liveRace.fixed_course!==null && liveRace.fixed_course!==undefined && String(liveRace.fixed_course)!=='';
-  if(!fixedKnown) return {status:'entry-waiting',items:[],rows:[]};
-  if(!brcSlitBoolTrue(liveRace.fixed_course)) return {status:'excluded',reason:'進入変更',items:[],rows:[]};
+  if(!fixedKnown) return {status:'entry-waiting',items:[],rows:[],exhibitionOnlyItems:[],exhibitionOnlyRows:[]};
+  if(!brcSlitBoolTrue(liveRace.fixed_course)) return {status:'excluded',reason:'進入変更',items:[],rows:[],exhibitionOnlyItems:[],exhibitionOnlyRows:[]};
 
   const byBoat=new Map();
   raceBoats.forEach(x=>{
     const n=Number(x?.boat_no);
     if(Number.isInteger(n)&&n>=1&&n<=6) byBoat.set(n,x);
   });
-  if(byBoat.size!==6) return {status:'waiting',items:[],rows:[]};
+  if(byBoat.size!==6) return {status:'waiting',items:[],rows:[],exhibitionOnlyItems:[],exhibitionOnlyRows:[]};
   for(let n=1;n<=6;n++){
     const e=brcSlitNumber(byBoat.get(n)?.entry_course);
-    if(e!==null && e!==n) return {status:'excluded',reason:'進入変更',items:[],rows:[]};
+    if(e!==null && e!==n) return {status:'excluded',reason:'進入変更',items:[],rows:[],exhibitionOnlyItems:[],exhibitionOnlyRows:[]};
   }
 
   const ex={};
   for(let n=1;n<=6;n++){
     const v=brcSlitNumber(byBoat.get(n)?.exhibition_time);
-    if(v===null) return {status:'waiting',items:[],rows:[]};
+    if(v===null) return {status:'waiting',items:[],rows:[],exhibitionOnlyItems:[],exhibitionOnlyRows:[]};
     ex[n]=v;
   }
 
@@ -13061,25 +13063,37 @@ function brcSlitEvaluationState(boats,liveRace,inReliability=null){
   const general=brcSlitIsGeneralRace();
   const venue=brcSlitCurrentVenue();
   const items=[];
+  const exhibitionOnlyItems=[];
+
+  // 判定優先順位：
+  // 1) 展示差0.10秒以上 + 平均ST順位差0.50位以上（現行スリット条件）
+  // 2) 1が発動しない時だけ、展示差0.10秒以上を「展示優位」として弱表示
+  // 同一ペアで1と2を重複表示しない。
   for(let inner=1;inner<=5;inner++){
     const outer=inner+1;
-    if(!st[inner] || !st[outer]) continue;
     const exGap=ex[inner]-ex[outer];
-    // ST順位は小さいほど良い。内艇順位 - 外艇順位 が +0.50以上なら外艇優位。
-    const stGap=st[inner].avg-st[outer].avg;
-    if(exGap+1e-9 < BRC_SLIT_EXHIBITION_GAP_SEC || stGap+1e-9 < BRC_SLIT_ST_RANK_GAP) continue;
-    // 2025だけで選定し、2026 OOSで再現した会場×隣接コースだけを先行導入。
-    if(!brcSlitVenuePairPilotEligible(venue,inner,outer)) continue;
-    const compatGrade=brcSlitAttackCompatibilityGrade(boats,outer);
-    const headUpgrade=brcSlitOuterHeadUpgrade(boats,outer);
-    const profile=general ? brcSlitRateProfile(outer,!!headUpgrade,inReliability) : null;
-    const pair=`${outer}>${inner}`;
-    items.push({inner,outer,pair,venue,exGap,stGap,compatGrade:compatGrade||'',headInfo:headUpgrade||null,profile});
+    if(exGap+1e-9 < BRC_SLIT_EXHIBITION_GAP_SEC) continue;
+
+    let strongTriggered=false;
+    if(st[inner] && st[outer]){
+      // ST順位は小さいほど良い。内艇順位 - 外艇順位 が +0.50以上なら外艇優位。
+      const stGap=st[inner].avg-st[outer].avg;
+      if(stGap+1e-9 >= BRC_SLIT_ST_RANK_GAP && brcSlitVenuePairPilotEligible(venue,inner,outer)){
+        const compatGrade=brcSlitAttackCompatibilityGrade(boats,outer);
+        const headUpgrade=brcSlitOuterHeadUpgrade(boats,outer);
+        const profile=general ? brcSlitRateProfile(outer,!!headUpgrade,inReliability) : null;
+        const pair=`${outer}>${inner}`;
+        items.push({inner,outer,pair,venue,exGap,stGap,compatGrade:compatGrade||'',headInfo:headUpgrade||null,profile});
+        strongTriggered=true;
+      }
+    }
+
+    if(!strongTriggered){
+      exhibitionOnlyItems.push({inner,outer,pair:`${outer}>${inner}`,venue,exGap});
+    }
   }
 
-  if(!items.length) return {status:stIncomplete?'partial':'none',items:[],rows:[]};
-
-  // 艇ごとへ集約。同一艇・同一指標で↑系と↓系が衝突した場合、その指標だけ非表示。
+  // 強条件を艇ごとへ集約。同一艇・同一指標で↑系と↓系が衝突した場合、その指標だけ非表示。
   const rowMap=new Map();
   const ensureRow=(boat)=>{
     if(!rowMap.has(boat)) rowMap.set(boat,{boat,metrics:{},generic:false,titles:[],order:999});
@@ -13118,7 +13132,23 @@ function brcSlitEvaluationState(boats,liveRace,inReliability=null){
     // 各ALペアごとに「優位艇 → 内側艇」の順で読めるように並べる。
     .sort((a,b)=>a.order-b.order || a.boat-b.boat);
 
-  return {status:rows.length?'active':(stIncomplete?'partial':'none'),items,rows,general};
+  // 展示差のみは外艇だけを弱表示する。
+  // 同じ艇に強条件の表示がある場合は、関係するペアが別でも強条件を優先して弱表示を抑止する。
+  const strongBoats=new Set(rows.map(r=>Number(r.boat)));
+  const exhibitionOnlyRows=exhibitionOnlyItems
+    .filter(x=>!strongBoats.has(Number(x.outer)))
+    .map(x=>({
+      boat:x.outer,
+      order:x.inner*10,
+      title:`${x.venue} ${x.outer}号艇→${x.inner}号艇 / 展示差 +${x.exGap.toFixed(2)}秒 / 展示差のみ（ST順位の強条件は非成立）`
+    }))
+    .sort((a,b)=>a.order-b.order || a.boat-b.boat);
+
+  const active=rows.length>0 || exhibitionOnlyRows.length>0;
+  return {
+    status:active?'active':(stIncomplete?'partial':'none'),
+    items,rows,exhibitionOnlyItems,exhibitionOnlyRows,general
+  };
 }
 function brcSlitMetricLabel(key){
   return key==='win' ? '1着' : key==='second' ? '2着' : key==='top3' ? '3連対' : key;
@@ -13129,7 +13159,7 @@ function brcBuildSlitEvaluationHtml(boats,liveRace,inReliability=null){
   // 過去日も保存済み展示 + 固定OOS ST順位で同じスリット判定を再現する。
   let slitHtml='';
   if(state.status==='active'){
-    slitHtml=state.rows.map(r=>{
+    const strongHtml=(state.rows||[]).map(r=>{
       const title=(r.titles||[]).join(' / ');
       if(r.generic){
         return `<span class="slit-rate-row" title="${title}">${brcSlitBoatBadgeHtml(r.boat)}<span class="slit-rate-generic">スリット優位</span></span>`;
@@ -13142,6 +13172,13 @@ function brcBuildSlitEvaluationHtml(boats,liveRace,inReliability=null){
       }).join('');
       return `<span class="slit-rate-row" title="${title}">${brcSlitBoatBadgeHtml(r.boat)}<span class="slit-rate-metrics">${metrics}</span></span>`;
     }).join('');
+
+    // 展示差のみは弱い参考表示。展示差+ST順位の強条件が出ている艇には重ねない。
+    const exhibitionOnlyHtml=(state.exhibitionOnlyRows||[]).map(r=>
+      `<span class="slit-rate-row" title="${r.title}">${brcSlitBoatBadgeHtml(r.boat)}<span class="slit-rate-exhibition-only">展示優位</span></span>`
+    ).join('');
+
+    slitHtml=`${strongHtml}${exhibitionOnlyHtml}`;
   }
 
   // チルト1.0以上がいる場合は、スリット条件が非該当・待機中でも高チルト表示を優先。
@@ -13155,10 +13192,9 @@ function brcBuildSlitEvaluationHtml(boats,liveRace,inReliability=null){
   }
 
   // 該当なし・展示待ち・判定対象外・データ不足時はバナー自体を出さない。
-  // ユーザーに見せるのは、検証済みスリット条件または高チルトの該当がある時だけ。
+  // ユーザーに見せるのは、展示差0.10秒以上の弱条件、検証済みスリット強条件、または高チルトの該当がある時だけ。
   return '';
 }
-
 function brcApplyExhibitionAdjustmentsToBoats(boats,liveRace){
   if(!Array.isArray(boats) || boats.length!==6) return false;
   const byBoat=new Map(Array.isArray(liveRace?.boats) ? liveRace.boats.map(x=>[Number(x.boat_no),x]) : []);
@@ -17989,7 +18025,7 @@ async function runPredict(){
           </div>
           <div class="predict-guide-item">
             <div class="predict-guide-key">展示スリット評価</div>
-            <div class="predict-guide-text"><span class="predict-guide-status reference">参考・再加点なし</span>展示タイム差と「選手×今回コース」の平均ST順位から、隣接艇に攻めの優位性がある検証済み条件だけを表示します。展示ST順位そのものを使う判定ではありません。</div>
+            <div class="predict-guide-text"><span class="predict-guide-status reference">参考・再加点なし</span>直内艇より展示タイムが0.10秒以上速い艇は「展示優位」として弱く表示します。さらに「選手×今回コース」の平均ST順位差0.50位以上（双方N≥5）など現行スリット条件まで成立した場合は強い評価を優先し、「展示優位」は重複表示しません。展示ST順位そのものを使う判定ではありません。</div>
           </div>
           <div class="predict-guide-item">
             <div class="predict-guide-key">風向・風速</div>
