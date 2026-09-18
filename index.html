@@ -1,3 +1,4 @@
+<!-- BRC_MOTOR7_UNIFIED_UI_V44_20260918: verified 7 venues use the same BRC motor analysis UI as Tokuyama -->
 <!-- BRC_EXHIBITION_ONLY_PRIORITY_V1_20260918: 展示差のみを弱表示。展示差+ST順位条件成立時は強条件を優先し重複非表示 -->
 <!-- BRC_ADMIN_OPERATIONS_HUB_V1_20260918: admin-only operations dashboard; public UI unchanged -->
 <!DOCTYPE html>
@@ -8134,7 +8135,7 @@ function renderPredictUnifiedMotor(course,target){
   if(!d){
     const publicInfo={grade:b.motorGrade,gradeColor:gcol,motor2:b.motor2,motorNo:b.motorNo,finalsCount:null,winsCount:null,n:null,cycleStart:venueMeta.cycle_start};
     const adminTraitHtml=brcBuildAdminTokuyamaMotorTraitHtml(venue,b.motorNo,publicInfo);
-    if(String(venue||'')==='徳山'){
+    if(BRC_MOTOR_PUBLIC_VENUES.has(String(venue||''))){
       target.innerHTML=adminTraitHtml||'<div class="predict-unified-empty">BRCモーター分析データがありません。</div>';
       return;
     }
@@ -8149,12 +8150,12 @@ function renderPredictUnifiedMotor(course,target){
   const finalHtml=finals.length?finals.map(f=>`<div class="motor-final-row"><span class="motor-final-date">${fmtMotorDate(f.date)}</span><span class="motor-final-grade">${escMotor(f.grade||'')}</span><span class="motor-final-name">${escMotor(f.name)}</span><span class="motor-final-rank ${String(f.rank)==='1'?'win':''}">${String(f.rank)==='1'?'🏆 1着':escMotor(f.rank)+'着'}</span></div>`).join(''):'<div class="motor-detail-empty">優勝戦出場歴なし</div>';
   const publicInfo={grade:b.motorGrade,gradeColor:gcol,motor2:b.motor2,motorNo:b.motorNo,finalsCount:Number(d.finals_count||0),winsCount:Number(d.wins_count||0),n:Number(d.n)||0,cycleStart:venueMeta.cycle_start,prevUsers:prev?.users?.map(u=>u.name)||[],prevStart:prev?.start||'',prevEnd:prev?.end||'',prevRanks:prev?.ranks||[],finals};
   const adminTraitHtml=brcBuildAdminTokuyamaMotorTraitHtml(venue,b.motorNo,publicInfo);
-  if(String(venue||'')==='徳山'){
-    // 徳山は新BRCモーター分析へ一本化。旧モーター詳細は重複するため表示しない。
+  if(BRC_MOTOR_PUBLIC_VENUES.has(String(venue||''))){
+    // 検証完了7場は徳山と同じ新BRCモーター分析へ一本化。旧モーター詳細は重複するため表示しない。
     target.innerHTML=adminTraitHtml||'<div class="predict-unified-empty">BRCモーター分析データがありません。</div>';
     return;
   }
-  // 徳山以外は従来表示を維持。
+  // 未公開場は従来表示を維持。
   target.innerHTML=`
     <div class="motor-detail-topstats"><div class="motor-detail-stat"><b style="color:${gcol};">${escMotor(b.motorGrade||'―')}</b><span>相対評価</span></div><div class="motor-detail-stat"><b>${Math.round(Number(b.motor2))}%</b><span>2連対率</span></div><div class="motor-detail-stat"><b>${Number(d.finals_count||0)}</b><span>優出</span></div><div class="motor-detail-stat"><b>${Number(d.wins_count||0)}</b><span>優勝</span></div></div>
     <div class="motor-detail-section"><h4>${escMotor(venue)} ${escMotor(b.motorNo)}号機</h4><div class="motor-detail-sub">使用開始 ${escMotor(venueMeta.cycle_start||'―')} / N=${Number(d.n)||0}</div></div>
