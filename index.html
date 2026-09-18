@@ -1,3 +1,4 @@
+<!-- BRC_PREDICT_GUIDE_TOP_V1_20260919: beginner/betting guide moved above venue/day race summary; prediction logic unchanged -->
 <!-- BRC_ADMIN_ORIGINAL_EXHIBITION_V1_20260918: 出走データ下に1周/回り足/直線/展示を管理者限定表示。live展示payloadをそのまま表示し予測ロジック非変更 -->
 <!-- BRC_SPECIAL_TAB_REMOVED_20260918: 特集タブをメインメニューから非表示。特集本体/既存ロジックは保持 -->
 <!-- BRC_MOTOR7_UNIFIED_UI_V44_20260918: verified 7 venues use the same BRC motor analysis UI as Tokuyama -->
@@ -18133,61 +18134,8 @@ async function runPredict(){
 
   if(!brcPredictRequestIsCurrent(requestCtx)) return;
   box.innerHTML = `
-    ${buildCurrentRaceSummaryHtml(venue, exhibitionApplied)}
-    ${brcBuildRaceResultFoldHtml()}
-    ${buildInReliabilityCardHtmlFromServer(localInReliability)}
-    <div id="slitEvaluationSlot">${brcBuildSlitEvaluationHtml(boats, liveExhibitionRace, localInReliability)}</div>
-    <div id="raceConditionBannerSlot">${brcBuildRaceConditionBannerHtml(liveExhibitionRace)}</div>
-    ${brcBuildDirectInfoBannerHtml(liveExhibitionRace, venue)}
-    ${brcBuildLowSampleBannerHtml(boats)}
-    ${brcBuildExhibitionRaceNoticeHtml(liveExhibitionRace)}
-    <div class="predict-player-tap-hint"><span class="tap-key">選手名をタップ ›</span><span>選手データ・展開・ST・モーターを確認できます</span></div>
-    <div id="predictTableWrap" style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
-    <table class="predict-table">
-      <thead>
-        <tr>
-          <th rowspan="2">枠</th><th rowspan="2">選手</th>
-          <th class="num"><span class="predict-head-main">1着率</span></th>
-          <th class="num"><span class="predict-head-main">3連対率</span></th>
-          <th class="num"><span class="predict-head-main">ST順位</span></th>
-          <th class="num"><span class="predict-head-main">モーター</span></th>
-          <th class="predict-col-opt" rowspan="2">備考</th>
-        </tr>
-        <tr class="predict-timex-common-row">
-          <th class="num predict-timex-common" colspan="2">（BRCタイムX）</th>
-          <th class="num predict-timex-common">（S安定）</th>
-          <th class="num predict-timex-common">（2連）</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${boats.map(b=>{
-          const col = LANE_COLORS[b.course];
-          const warn = brcPredictLowSampleBoats([b]).length ? '<span style="color:#e3b23c;">サンプル少なめ</span>' : '';
-          const stCourse = ST_COURSE[b.player.reg] && ST_COURSE[b.player.reg][String(b.course)];
-          const stText = stCourse
-            ? `${stCourse.avg.toFixed(1)}<span class="predict-unit">位</span>`
-            : (b.player.avg_st_rank != null)
-              ? `${b.player.avg_st_rank.toFixed(1)}<span class="predict-unit">位</span>`
-              : '<span style="color:var(--ink-soft);">―</span>';
-          return `<tr>
-            <td><span class="num-badge" style="width:22px;height:22px;font-size:12.5px;background:${col.bg};color:${col.text};${b.course===1?'border:1.5px solid rgba(10,31,51,.35);box-sizing:border-box;':''}display:inline-flex;align-items:center;justify-content:center;border-radius:50%;">${b.course}</span></td>
-            <td class="predict-player-cell"><div class="predict-player-name"><a href="#" class="predict-player-link" onclick="event.preventDefault(); togglePredictPlayer(${b.course}, '${b.player.reg}', '${venue}');" title="タップで選手・展開・ST・モーター詳細を表示" aria-label="${b.player.name}の選手詳細を開く">${b.player.name}</a></div><div id="predict-exhibition-label-${b.course}" class="predict-exhibition-label">${brcBuildPredictExhibitionLabelHtml(b)}</div></td>
-            <td id="predict-win-cell-${b.course}" class="num" style="font-weight:800; color:var(--line-white);">${brcBuildWinCellInner(b,venue)}</td>
-            <td id="predict-top3-cell-${b.course}" class="num" style="font-weight:800; color:var(--line-white);">${brcBuildTop3CellInner(b)}</td>
-            <td class="num" title="タップで詳細の「ST」タブを表示" onclick="openSTStabilityDetail('${b.player.reg}',${b.course})"><div class="st-rank-stack"><span class="st-rank-main">${stText}</span>${buildSTStabilitySub(b.player.reg,b.course)}</div></td>
-            <td class="num">${(()=>{
-              if(b.motor2 == null || !b.motorGrade) return '<span style="color:var(--ink-soft);">―</span>';
-              return buildMotorCellHtml(b, venue);
-            })()}</td>
-            <td class="predict-col-opt" style="font-size:12.5px;">${warn}</td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-    </div>
-    <section id="brcAdminOriginalExhibition" class="brc-admin-original-exhibition brc-admin-only" aria-hidden="true"></section>
-    <details class="predict-guide">
-      <summary>データの見方・予想の組み立て方</summary>
+<details class="predict-guide">
+      <summary>初めての方・舟券に迷った方へ</summary>
       <div class="predict-guide-body">
 
         <div class="predict-guide-lead">
@@ -18263,6 +18211,60 @@ async function runPredict(){
 
       </div>
     </details>
+    ${buildCurrentRaceSummaryHtml(venue, exhibitionApplied)}
+    ${brcBuildRaceResultFoldHtml()}
+    ${buildInReliabilityCardHtmlFromServer(localInReliability)}
+    <div id="slitEvaluationSlot">${brcBuildSlitEvaluationHtml(boats, liveExhibitionRace, localInReliability)}</div>
+    <div id="raceConditionBannerSlot">${brcBuildRaceConditionBannerHtml(liveExhibitionRace)}</div>
+    ${brcBuildDirectInfoBannerHtml(liveExhibitionRace, venue)}
+    ${brcBuildLowSampleBannerHtml(boats)}
+    ${brcBuildExhibitionRaceNoticeHtml(liveExhibitionRace)}
+    <div class="predict-player-tap-hint"><span class="tap-key">選手名をタップ ›</span><span>選手データ・展開・ST・モーターを確認できます</span></div>
+    <div id="predictTableWrap" style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
+    <table class="predict-table">
+      <thead>
+        <tr>
+          <th rowspan="2">枠</th><th rowspan="2">選手</th>
+          <th class="num"><span class="predict-head-main">1着率</span></th>
+          <th class="num"><span class="predict-head-main">3連対率</span></th>
+          <th class="num"><span class="predict-head-main">ST順位</span></th>
+          <th class="num"><span class="predict-head-main">モーター</span></th>
+          <th class="predict-col-opt" rowspan="2">備考</th>
+        </tr>
+        <tr class="predict-timex-common-row">
+          <th class="num predict-timex-common" colspan="2">（BRCタイムX）</th>
+          <th class="num predict-timex-common">（S安定）</th>
+          <th class="num predict-timex-common">（2連）</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${boats.map(b=>{
+          const col = LANE_COLORS[b.course];
+          const warn = brcPredictLowSampleBoats([b]).length ? '<span style="color:#e3b23c;">サンプル少なめ</span>' : '';
+          const stCourse = ST_COURSE[b.player.reg] && ST_COURSE[b.player.reg][String(b.course)];
+          const stText = stCourse
+            ? `${stCourse.avg.toFixed(1)}<span class="predict-unit">位</span>`
+            : (b.player.avg_st_rank != null)
+              ? `${b.player.avg_st_rank.toFixed(1)}<span class="predict-unit">位</span>`
+              : '<span style="color:var(--ink-soft);">―</span>';
+          return `<tr>
+            <td><span class="num-badge" style="width:22px;height:22px;font-size:12.5px;background:${col.bg};color:${col.text};${b.course===1?'border:1.5px solid rgba(10,31,51,.35);box-sizing:border-box;':''}display:inline-flex;align-items:center;justify-content:center;border-radius:50%;">${b.course}</span></td>
+            <td class="predict-player-cell"><div class="predict-player-name"><a href="#" class="predict-player-link" onclick="event.preventDefault(); togglePredictPlayer(${b.course}, '${b.player.reg}', '${venue}');" title="タップで選手・展開・ST・モーター詳細を表示" aria-label="${b.player.name}の選手詳細を開く">${b.player.name}</a></div><div id="predict-exhibition-label-${b.course}" class="predict-exhibition-label">${brcBuildPredictExhibitionLabelHtml(b)}</div></td>
+            <td id="predict-win-cell-${b.course}" class="num" style="font-weight:800; color:var(--line-white);">${brcBuildWinCellInner(b,venue)}</td>
+            <td id="predict-top3-cell-${b.course}" class="num" style="font-weight:800; color:var(--line-white);">${brcBuildTop3CellInner(b)}</td>
+            <td class="num" title="タップで詳細の「ST」タブを表示" onclick="openSTStabilityDetail('${b.player.reg}',${b.course})"><div class="st-rank-stack"><span class="st-rank-main">${stText}</span>${buildSTStabilitySub(b.player.reg,b.course)}</div></td>
+            <td class="num">${(()=>{
+              if(b.motor2 == null || !b.motorGrade) return '<span style="color:var(--ink-soft);">―</span>';
+              return buildMotorCellHtml(b, venue);
+            })()}</td>
+            <td class="predict-col-opt" style="font-size:12.5px;">${warn}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    </div>
+    <section id="brcAdminOriginalExhibition" class="brc-admin-original-exhibition brc-admin-only" aria-hidden="true"></section>
+    
     ${buildWindPanelHtml(venue)}
   `;
   try{ brcRenderAdminOriginalExhibition(liveExhibitionRace); }catch(_e){}
