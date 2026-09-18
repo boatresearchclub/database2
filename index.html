@@ -1,4 +1,5 @@
 <!-- BRC_MOTOR7_UNIFIED_UI_V44_20260918: verified 7 venues use the same BRC motor analysis UI as Tokuyama -->
+<!-- BRC_NIGE_ALPHA_TOPRIGHT_V1_20260918: イン逃げ予測2着/3着の±αを出走データ同様の右上色付きバッジへ -->
 <!-- BRC_EXHIBITION_ONLY_PRIORITY_V1_20260918: 展示差のみを弱表示。展示差+ST順位条件成立時は強条件を優先し重複非表示 -->
 <!-- BRC_ADMIN_OPERATIONS_HUB_V1_20260918: admin-only operations dashboard; public UI unchanged -->
 <!DOCTYPE html>
@@ -1412,9 +1413,25 @@
   .brc-nige-order-row:first-child{border-top:0;}
   .brc-nige-order-row.head{min-height:29px;background:var(--bg3);color:var(--ink-soft);font-size:10px;font-weight:850;text-align:center;}
   .brc-nige-order-boat{display:flex;align-items:center;justify-content:center;}
-  .brc-nige-order-metric{display:flex;align-items:baseline;justify-content:center;gap:3px;font-variant-numeric:tabular-nums;min-width:0;flex-wrap:wrap;}
+  .brc-nige-order-metric{
+    position:relative;display:flex;align-items:baseline;justify-content:center;gap:3px;
+    font-variant-numeric:tabular-nums;min-width:0;flex-wrap:wrap;padding-top:2px;
+  }
   .brc-nige-order-pct{font-size:15px;font-weight:900;color:var(--navy);white-space:nowrap;}
-  .brc-nige-order-metric .prob-alpha-badge{margin-top:0;transform:translateY(-1px);}
+  /* イン逃げ予測の±αは数値の横へ連結せず、出走データと同じくセル右上へ独立表示 */
+  .brc-nige-order-metric .prob-alpha-badge{
+    position:absolute;top:1px;right:3px;z-index:1;
+    min-width:22px;height:15px;padding:0 4px;margin:0;border-radius:999px;
+    font-size:8px;font-weight:950;line-height:1;letter-spacing:-.02em;
+    display:inline-flex;align-items:center;justify-content:center;
+    white-space:nowrap;box-shadow:0 1px 2px rgba(10,31,51,.06);transform:none;
+  }
+  .brc-nige-order-metric .prob-alpha-badge.plus{
+    color:#217247;background:rgba(47,143,91,.10);border:1px solid rgba(47,143,91,.24);
+  }
+  .brc-nige-order-metric .prob-alpha-badge.minus{
+    color:#b4232c;background:rgba(209,55,63,.09);border:1px solid rgba(209,55,63,.22);
+  }
   .brc-nige-order-timex-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;padding:3px 1px;}
   .brc-nige-order-timex-line{display:flex;align-items:center;justify-content:center;gap:2px;width:100%;min-height:18px;white-space:nowrap;}
   .brc-nige-order-timex-label{font-size:8px;font-weight:900;color:var(--ink-soft);line-height:1;letter-spacing:-.05em;flex:0 0 auto;}
@@ -1458,6 +1475,7 @@
     .brc-nige-order-title{font-size:12px;}
     .brc-nige-order-row{grid-template-columns:34px minmax(0,1.45fr) 50px minmax(0,.9fr) 50px;}
     .brc-nige-order-pct{font-size:14px;}
+    .brc-nige-order-metric .prob-alpha-badge{top:1px;right:2px;min-width:19px;height:13px;padding:0 3px;font-size:7.5px;}
     .brc-nige-order-base{font-size:8px;}
     .brc-nige-order-timex{min-width:16px;min-height:16px;}
     .brc-nige-order-timex .exhibition-arrow-icon{width:16px;height:16px;}
