@@ -11,6 +11,7 @@
 <!-- BRC_ADMIN_OPERATIONS_HUB_V1_20260918: admin-only operations dashboard; public UI unchanged -->
 <!DOCTYPE html>
 <!-- BRC_SLIT_3Y_NOLOOKAHEAD_A_ONLY_V1_20260920: 2023 warmup, 2024/2025/2026 validation; A-only trust badges; prediction/arrows unchanged -->
+<!-- BRC_SLIT_PT_INTEGER_ROUND_V1_20260920: slit-effect pt display rounded to integer; raw values and prediction logic unchanged -->
 <!-- BRC_ADMIN_SOCIAL_VENUE_12R_BATCH_V1_20260919: admin SNS image batch export; selected venue 1R-12R rendered sequentially and saved as one ZIP; prediction/image design unchanged -->
 <!-- BRC_ALPHA_BADGE_WINRATE_V1_20260917: +α/-α reference badge on 1着率; detail via player name; no probability recalculation -->
 <!-- BRC_REFMON_DIAG_V3_20260917: logging-only audit patch; buy logic unchanged -->
@@ -13452,12 +13453,21 @@ function brcSlitConfidenceAllA(list){
   if(arr.every(x=>x?.grade==='A')) return arr[0];
   return null;
 }
+function brcSlitRoundInt(v){
+  const n=Number(v);
+  if(!Number.isFinite(n)) return null;
+  return n<0 ? -Math.round(Math.abs(n)) : Math.round(n);
+}
+function brcSlitPtText(v){
+  const n=brcSlitRoundInt(v);
+  if(n===null) return '―';
+  return `${n>=0?'+':''}${n}pt`;
+}
 function brcSlitConfidenceBadgeHtml(conf,mode='strong'){
   if(conf?.grade!=='A') return '';
   const label=mode==='exhibition'?'展示A':'信頼A';
   const condition=mode==='exhibition'?'展示差0.10':'展示差0.10＋平均ST順位差0.50';
-  const sign=v=>Number(v)>=0?'+':'';
-  const title=`${label}：${condition} / 2024・2025・2026の3期間で方向再現 / N=${Number(conf.n)||0} (2024=${Number(conf.n2024)||0}, 2025=${Number(conf.n2025)||0}, 2026=${Number(conf.n2026)||0}) / 後艇1着 ${sign(conf.outerWin)}${Number(conf.outerWin).toFixed(1)}pt・3連対 ${sign(conf.outerTop3)}${Number(conf.outerTop3).toFixed(1)}pt / 前艇1着 ${sign(conf.innerWin)}${Number(conf.innerWin).toFixed(1)}pt・3連対 ${sign(conf.innerTop3)}${Number(conf.innerTop3).toFixed(1)}pt（表示専用・的中保証ではありません）`;
+  const title=`${label}：${condition} / 2024・2025・2026の3期間で方向再現 / N=${Number(conf.n)||0} (2024=${Number(conf.n2024)||0}, 2025=${Number(conf.n2025)||0}, 2026=${Number(conf.n2026)||0}) / 後艇1着 ${brcSlitPtText(conf.outerWin)}・3連対 ${brcSlitPtText(conf.outerTop3)} / 前艇1着 ${brcSlitPtText(conf.innerWin)}・3連対 ${brcSlitPtText(conf.innerTop3)}（表示専用・的中保証ではありません）`;
   return `<span class="slit-confidence-badge slit-confidence-A" title="${title}">${label}</span>`;
 }
 function brcSlitAttackCompatibilityGrade(boats, outerCourse){
@@ -13643,7 +13653,7 @@ function brcSlitEvaluationState(boats,liveRace,inReliability=null){
   for(const x of items){
     const outEff=brcSlitNationalEffect(x.pair,x.outer);
     const inEff=brcSlitNationalEffect(x.pair,x.inner);
-    const effText=(outEff&&inEff) ? ` / 全国2025実測(ST順位条件): ${x.outer}号 1着${outEff.win>=0?'+':''}${outEff.win.toFixed(1)}pt・3連対${outEff.top3>=0?'+':''}${outEff.top3.toFixed(1)}pt, ${x.inner}号 1着${inEff.win>=0?'+':''}${inEff.win.toFixed(1)}pt・3連対${inEff.top3>=0?'+':''}${inEff.top3.toFixed(1)}pt` : '';
+    const effText=(outEff&&inEff) ? ` / 全国2025実測(ST順位条件): ${x.outer}号 1着${brcSlitPtText(outEff.win)}・3連対${brcSlitPtText(outEff.top3)}, ${x.inner}号 1着${brcSlitPtText(inEff.win)}・3連対${brcSlitPtText(inEff.top3)}` : '';
     const title=`${x.venue} ${x.outer}号艇→${x.inner}号艇 / 展示差 +${x.exGap.toFixed(2)}秒 / 平均ST順位差 +${x.stGap.toFixed(2)}位${effText}${x.compatGrade?` / 攻め相性${x.compatGrade}`:''}${x.headInfo?` / ${x.outer}C勝率 ${x.headInfo.win.toFixed(1)}% (N=${x.headInfo.n})`:''}`;
     const pairOrder=x.inner*10;
     if(x.profile){
