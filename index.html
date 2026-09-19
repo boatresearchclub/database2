@@ -1,3 +1,4 @@
+<!-- BRC_SLIT_A_NUMERIC_PRIORITY_V2_20260920: latest 233206 base; exhibition trust-A numeric rows persist even when ST-strong condition also fires; A beats conflicting B; conflicting B-only signals are hidden; prediction logic unchanged -->
 <!-- BRC_SLIT_TRUST_B_C19_AUDIT_V1_20260920: 19 monitor-C cells rechecked with 10,000 date-cluster bootstrap reps; 18/19 CI4-direction pass; 6 promoted to B after same half>=4/5 and rolling90>=63.3% thresholds; 下関4>3 failed CI4-direction. -->
 <!-- BRC_SLIT_TRUST_B_EXHIBITION_23_V2_20260920: exhibition-gap-only trust-B for 23 venue/pairs; C19 daily-cluster bootstrap audit promoted 6 additional venue/pairs under same half-year/rolling90/CI thresholds; annual 3/3 direction, completed-half stability, rolling90 stability, daily-cluster bootstrap 95% CI all four directions; direction-only display, no pt; strong ST-condition grading unchanged -->
 <!-- BRC_SLIT_CONFIDENCE_BADGE_V1_20260920: display-only evidence grade for verified strong slit pairs; arrow/prediction logic unchanged; 2>1 excluded until exact strong-in-denial OOS is isolated -->
@@ -13677,7 +13678,14 @@ function brcSlitEvaluationState(boats,liveRace,inReliability=null){
     }
 
     if(!strongTriggered){
-      exhibitionOnlyItems.push({inner,outer,pair:`${outer}>${inner}`,venue,exGap});
+      exhibitionOnlyItems.push({inner,outer,pair:`${outer}>${inner}`,venue,exGap,strongAlso:false});
+    }else{
+      // 展示差0.10の会場別信頼A/Bがある場合は、ST強条件と同時成立しても信頼情報を消さない。
+      // この信頼度は「展示差0.10」側の検証結果であり、強条件の信頼度ではないため別行で明示する。
+      const exhibitionTrust=brcSlitConfidence(venue,`${outer}>${inner}`,'exhibition');
+      if(exhibitionTrust?.grade==='A' || exhibitionTrust?.grade==='B'){
+        exhibitionOnlyItems.push({inner,outer,pair:`${outer}>${inner}`,venue,exGap,strongAlso:true});
+      }
     }
   }
 
@@ -13732,20 +13740,57 @@ function brcSlitEvaluationState(boats,liveRace,inReliability=null){
   // 展示差のみは外艇だけを弱表示する。
   // 同じ艇に強条件の表示がある場合は、関係するペアが別でも強条件を優先して弱表示を抑止する。
   const strongBoats=new Set(rows.map(r=>Number(r.boat)));
-  const exhibitionOnlyRows=exhibitionOnlyItems
+  const exhibitionOnlyRowsRaw=exhibitionOnlyItems
     .flatMap(x=>{
       const conf=brcSlitConfidence(x.venue,x.pair,'exhibition');
-      const title=`${x.venue} ${x.outer}号艇→${x.inner}号艇 / 展示差 +${x.exGap.toFixed(2)}秒 / 展示差のみ（ST順位の強条件は非成立）`;
+      const title=x.strongAlso
+        ? `${x.venue} ${x.outer}号艇→${x.inner}号艇 / 展示差 +${x.exGap.toFixed(2)}秒 / 展示差0.10の信頼度（展示差＋ST強条件も同時成立）`
+        : `${x.venue} ${x.outer}号艇→${x.inner}号艇 / 展示差 +${x.exGap.toFixed(2)}秒 / 展示差のみ（ST順位の強条件は非成立）`;
       const out=[];
-      // 3年信頼Aは前後艇とも実測方向を確認済みなので、両艇を数値表示する。
+      // 信頼A/Bは前後艇とも検証済み。ST強条件と同時成立しても展示差側の信頼情報を残す。
       if(conf?.grade==='A' || conf?.grade==='B'){
-        if(!strongBoats.has(Number(x.outer))) out.push({boat:x.outer,role:'outer',order:x.inner*10,confidence:conf,title});
-        if(!strongBoats.has(Number(x.inner))) out.push({boat:x.inner,role:'inner',order:x.inner*10+1,confidence:conf,title});
+        out.push({boat:x.outer,role:'outer',order:x.inner*10,confidence:conf,title,strongAlso:!!x.strongAlso});
+        out.push({boat:x.inner,role:'inner',order:x.inner*10+1,confidence:conf,title,strongAlso:!!x.strongAlso});
         return out;
       }
       // A/B以外は従来どおり外艇だけを弱い「展示優位」として表示する。
       if(!strongBoats.has(Number(x.outer))) out.push({boat:x.outer,role:'outer',order:x.inner*10,confidence:conf,title});
       return out;
+    });
+
+  // 隣接する複数の信頼条件が同時成立し、同じ艇に「後艇＋」と「前艇−」が重なる場合の優先制御。
+  // 信頼Aは実測ptを持つ最上位検証結果なので、Bとの競合で消さない。
+  // AとBが逆方向ならAだけ残す。B同士だけが逆方向なら、その艇のBは相殺して非表示。
+  const exhibitionTrustedByBoat=new Map();
+  for(const r of exhibitionOnlyRowsRaw){
+    if(r.confidence?.grade!=='A' && r.confidence?.grade!=='B') continue;
+    const boat=Number(r.boat);
+    if(!exhibitionTrustedByBoat.has(boat)) exhibitionTrustedByBoat.set(boat,[]);
+    exhibitionTrustedByBoat.get(boat).push(r);
+  }
+  const exhibitionConflictBOnlyBoats=new Set();
+  const exhibitionHasAByBoat=new Set();
+  for(const [boat,list] of exhibitionTrustedByBoat.entries()){
+    const aRows=list.filter(r=>r.confidence?.grade==='A');
+    if(aRows.length){
+      exhibitionHasAByBoat.add(boat);
+      continue;
+    }
+    const signs=new Set(list.map(r=>r.role==='outer'?1:-1));
+    if(signs.size>1) exhibitionConflictBOnlyBoats.add(boat);
+  }
+  const exhibitionTrustedBoats=new Set([...exhibitionTrustedByBoat.keys()]);
+  const exhibitionOnlyRows=exhibitionOnlyRowsRaw
+    .filter(r=>{
+      const boat=Number(r.boat);
+      const grade=r.confidence?.grade;
+      // Aがある艇ではAを最優先し、競合するBは表示しない。Aの実測ptは必ず残す。
+      if(exhibitionHasAByBoat.has(boat) && grade==='B') return false;
+      // B同士だけで方向が衝突した艇は、誤解防止のためB表示を相殺する。
+      if(exhibitionConflictBOnlyBoats.has(boat) && grade==='B') return false;
+      // 同じ艇にA/Bがある場合は、弱い「展示優位」の重複表示を抑止する。
+      if(exhibitionTrustedBoats.has(boat) && grade!=='A' && grade!=='B') return false;
+      return true;
     })
     .sort((a,b)=>a.order-b.order || a.boat-b.boat);
 
