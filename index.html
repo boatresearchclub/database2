@@ -13,6 +13,7 @@
 <!-- BRC_SLIT_3Y_NOLOOKAHEAD_A_ONLY_V1_20260920: 2023 warmup, 2024/2025/2026 validation; A-only trust badges; prediction/arrows unchanged -->
 <!-- BRC_SLIT_PT_INTEGER_ROUND_V1_20260920: slit-effect pt display rounded to integer; raw values and prediction logic unchanged -->
 <!-- BRC_SLIT_A_NUMERIC_ONLY_V1_20260920: trust-A rows show 1着/3連対 integer pt only; arrows and 2着 hidden; non-A logic unchanged -->
+<!-- BRC_SLIT_EXHIBITION_A_BOTH_SIDES_V1_20260920: exhibition-only trust-A shows both outer positive and inner negative measured pt; "展示優位" label hidden for A rows; prediction logic unchanged -->
 <!-- BRC_SLIT_A_VISIBLE_PT_V1_20260920: 3-year trust-A rows show visible rounded win/top3 effect pt; non-A remains arrow/text only; prediction logic unchanged -->
 <!-- BRC_ADMIN_SOCIAL_VENUE_12R_BATCH_V1_20260919: admin SNS image batch export; selected venue 1R-12R rendered sequentially and saved as one ZIP; prediction/image design unchanged -->
 <!-- BRC_ALPHA_BADGE_WINRATE_V1_20260917: +α/-α reference badge on 1着率; detail via player name; no probability recalculation -->
@@ -13467,7 +13468,7 @@ function brcSlitPtText(v){
 }
 function brcSlitConfidenceBadgeHtml(conf,mode='strong'){
   if(conf?.grade!=='A') return '';
-  const label=mode==='exhibition'?'展示A':'信頼A';
+  const label='信頼A';
   const condition=mode==='exhibition'?'展示差0.10':'展示差0.10＋平均ST順位差0.50';
   const title=`${label}：${condition} / 2024・2025・2026の3期間で方向再現 / N=${Number(conf.n)||0} (2024=${Number(conf.n2024)||0}, 2025=${Number(conf.n2025)||0}, 2026=${Number(conf.n2026)||0}) / 後艇1着 ${brcSlitPtText(conf.outerWin)}・3連対 ${brcSlitPtText(conf.outerTop3)} / 前艇1着 ${brcSlitPtText(conf.innerWin)}・3連対 ${brcSlitPtText(conf.innerTop3)}（表示専用・的中保証ではありません）`;
   return `<span class="slit-confidence-badge slit-confidence-A" title="${title}">${label}</span>`;
@@ -13698,13 +13699,20 @@ function brcSlitEvaluationState(boats,liveRace,inReliability=null){
   // 同じ艇に強条件の表示がある場合は、関係するペアが別でも強条件を優先して弱表示を抑止する。
   const strongBoats=new Set(rows.map(r=>Number(r.boat)));
   const exhibitionOnlyRows=exhibitionOnlyItems
-    .filter(x=>!strongBoats.has(Number(x.outer)))
-    .map(x=>({
-      boat:x.outer,
-      order:x.inner*10,
-      confidence:brcSlitConfidence(x.venue,x.pair,'exhibition'),
-      title:`${x.venue} ${x.outer}号艇→${x.inner}号艇 / 展示差 +${x.exGap.toFixed(2)}秒 / 展示差のみ（ST順位の強条件は非成立）`
-    }))
+    .flatMap(x=>{
+      const conf=brcSlitConfidence(x.venue,x.pair,'exhibition');
+      const title=`${x.venue} ${x.outer}号艇→${x.inner}号艇 / 展示差 +${x.exGap.toFixed(2)}秒 / 展示差のみ（ST順位の強条件は非成立）`;
+      const out=[];
+      // 3年信頼Aは前後艇とも実測方向を確認済みなので、両艇を数値表示する。
+      if(conf?.grade==='A'){
+        if(!strongBoats.has(Number(x.outer))) out.push({boat:x.outer,role:'outer',order:x.inner*10,confidence:conf,title});
+        if(!strongBoats.has(Number(x.inner))) out.push({boat:x.inner,role:'inner',order:x.inner*10+1,confidence:conf,title});
+        return out;
+      }
+      // A以外は従来どおり外艇だけを弱い「展示優位」として表示する。
+      if(!strongBoats.has(Number(x.outer))) out.push({boat:x.outer,role:'outer',order:x.inner*10,confidence:conf,title});
+      return out;
+    })
     .sort((a,b)=>a.order-b.order || a.boat-b.boat);
 
   const active=rows.length>0 || exhibitionOnlyRows.length>0;
@@ -13759,15 +13767,24 @@ function brcBuildSlitEvaluationHtml(boats,liveRace,inReliability=null){
     // 展示差のみは弱い参考表示。展示差+ST順位の強条件が出ている艇には重ねない。
     const exhibitionOnlyHtml=(state.exhibitionOnlyRows||[]).map(r=>{
       const confidenceBadge=brcSlitConfidenceBadgeHtml(r.confidence,'exhibition');
-      let effect='';
       if(r.confidence?.grade==='A'){
-        const win=Number(r.confidence.outerWin), top3=Number(r.confidence.outerTop3);
+        // 展示差Aは後艇の上昇だけでなく、比較対象の前艇の低下も3年検証済み。
+        // 「展示優位」の文字は出さず、艇番 + 1着/3連対の実測pt + Aバッジで統一する。
+        const win=Number(r.role==='inner' ? r.confidence.innerWin : r.confidence.outerWin);
+        const top3=Number(r.role==='inner' ? r.confidence.innerTop3 : r.confidence.outerTop3);
         const parts=[];
-        if(Number.isFinite(win)) parts.push(`<span class="slit-rate-metric slit-rate-up">1着 ${brcSlitPtText(win)}</span>`);
-        if(Number.isFinite(top3)) parts.push(`<span class="slit-rate-metric slit-rate-up">3連対 ${brcSlitPtText(top3)}</span>`);
-        if(parts.length) effect=`<span class="slit-rate-metrics">${parts.join('')}</span>`;
+        if(Number.isFinite(win)){
+          const cls=win>=0?'slit-rate-up':'slit-rate-down';
+          parts.push(`<span class="slit-rate-metric ${cls}">1着 ${brcSlitPtText(win)}</span>`);
+        }
+        if(Number.isFinite(top3)){
+          const cls=top3>=0?'slit-rate-up':'slit-rate-down';
+          parts.push(`<span class="slit-rate-metric ${cls}">3連対 ${brcSlitPtText(top3)}</span>`);
+        }
+        const effect=parts.length?`<span class="slit-rate-metrics">${parts.join('')}</span>`:'';
+        return `<span class="slit-rate-row" title="${r.title}">${brcSlitBoatBadgeHtml(r.boat)}${effect}${confidenceBadge}</span>`;
       }
-      return `<span class="slit-rate-row" title="${r.title}">${brcSlitBoatBadgeHtml(r.boat)}<span class="slit-rate-exhibition-only">展示優位</span>${effect}${confidenceBadge}</span>`;
+      return `<span class="slit-rate-row" title="${r.title}">${brcSlitBoatBadgeHtml(r.boat)}<span class="slit-rate-exhibition-only">展示優位</span></span>`;
     }).join('');
 
     slitHtml=`${strongHtml}${exhibitionOnlyHtml}`;
