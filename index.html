@@ -1,3 +1,4 @@
+<!-- BRC_SLIT_CONFIDENCE_BADGE_V1_20260920: display-only evidence grade for verified strong slit pairs; arrow/prediction logic unchanged; 2>1 excluded until exact strong-in-denial OOS is isolated -->
 <!-- BRC_VENUE_BADGES_V6_OFFICIAL_ONLY_20260919 -->
 <!-- BRC_VENUE_CATEGORY_BADGES_V5_STRICT_20260919: venue badges are shown ONLY after Worker official gradeContext confirms officialResolved=true and officialAmbiguous=false; no title guessing / no hardcoded schedule fallback; unresolved means no badge; uniform card width; prediction logic unchanged -->
 <!-- BRC_GRADE_PROD_INDEX_V1_20260919: official G1/G2 metadata activation for brc-api; prediction changes are Worker-gated; unrelated UI/logic unchanged -->
@@ -744,6 +745,14 @@
   .slit-rate-generic{font-size:11.5px;font-weight:850;color:var(--line-white);white-space:nowrap;}
 .slit-rate-exhibition-only{font-size:11.5px;font-weight:900;color:#8a5a00;white-space:nowrap;}
   .slit-rate-note{font-size:10px;font-weight:700;color:var(--ink-soft);white-space:nowrap;}
+  .slit-confidence-badge{
+    display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;
+    height:18px;padding:0 6px;border-radius:999px;font-size:9px;font-weight:950;line-height:1;
+    letter-spacing:-.02em;white-space:nowrap;border:1px solid rgba(10,31,51,.12);
+  }
+  .slit-confidence-A{color:#217247;background:rgba(47,143,91,.10);border-color:rgba(47,143,91,.24);}
+  .slit-confidence-B{color:#1d4ed8;background:rgba(37,99,235,.08);border-color:rgba(37,99,235,.22);}
+  .slit-confidence-C{color:#8a5a00;background:rgba(217,119,6,.08);border-color:rgba(217,119,6,.22);}
   @media (max-width:420px){
     .slit-eval-compact{gap:6px;padding:8px 9px;font-size:11px;align-items:flex-start;}
     .slit-eval-label{font-size:10.5px;padding-top:1px;}
@@ -782,6 +791,7 @@
     .slit-rate-row{gap:4px;padding:1px 0;}
     .slit-rate-metrics{gap:3px;}
     .slit-rate-metric,.slit-rate-generic,.slit-rate-exhibition-only{font-size:9.8px;}
+    .slit-confidence-badge{height:16px;padding:0 5px;font-size:8.2px;}
     .slit-eval-strong,.slit-eval-head{font-size:9px;padding:2px 5px;}
     .slit-eval-timex-note{font-size:9.5px;}
     .direct-info-banner-items{gap:3px;}
@@ -13377,6 +13387,17 @@ const BRC_SLIT_ST_RANK_GAP = 0.50;
 const BRC_SLIT_ST_MIN_N = 5;
 const BRC_SLIT_VENUE_PAIR_PILOT = {"びわこ":["3>2","4>3","5>4","6>5"],"三国":["5>4","6>5"],"丸亀":["3>2","4>3","5>4","6>5"],"児島":["2>1","3>2","5>4"],"多摩川":["4>3","5>4"],"大村":["6>5"],"平和島":["3>2","4>3","6>5"],"戸田":["2>1","3>2","4>3","5>4","6>5"],"桐生":["4>3","5>4","6>5"],"江戸川":["2>1","3>2","4>3","5>4"],"津":["4>3","5>4","6>5"],"芦屋":["6>5"],"若松":["4>3","6>5"],"鳴門":["3>2","4>3","5>4","6>5"]};
 const BRC_SLIT_NATIONAL_EFFECT_2025 = {"2>1":{"1":{"win":-20.5,"second":-1.5,"top3":-16.3,"n":145},"2":{"win":20.8,"second":8.9,"top3":21.2,"n":145}},"3>2":{"2":{"win":-5.1,"second":-7.7,"top3":-14.5,"n":704},"3":{"win":11.5,"second":6.7,"top3":15.2,"n":704}},"4>3":{"3":{"win":-5.8,"second":-9.7,"top3":-17.0,"n":527},"4":{"win":11.2,"second":6.4,"top3":16.6,"n":527}},"5>4":{"4":{"win":-4.7,"second":-7.7,"top3":-15.0,"n":543},"5":{"win":6.7,"second":6.1,"top3":10.8,"n":543}},"6>5":{"5":{"win":-3.4,"second":-6.5,"top3":-14.5,"n":328},"6":{"win":6.1,"second":3.9,"top3":11.6,"n":328}}};
+// 表示専用の検証信頼度。予想確率・矢印判定には使用しない。
+// A: 同一強条件が2026固定OOSでN>=100かつ表示方向を再現。
+// B: 同一強条件が2026固定OOSでN>=75かつ表示方向を再現。
+// C: N>=30の参考帯。ただし②→①は「強イン否定」まで含む完全同条件OOS未分離のため現時点ではバッジ非表示。
+const BRC_SLIT_CONFIDENCE_BY_PAIR = {
+  "3>2":{grade:"A",oosN:145,label:"全国2025→2026固定OOSで方向再現"},
+  "4>3":{grade:"B",oosN:99,label:"全国2025→2026固定OOSで方向再現"},
+  "5>4":{grade:"B",oosN:94,label:"全国2025→2026固定OOSで方向再現"},
+  "6>5":{grade:"B",oosN:76,label:"全国2025→2026固定OOSで方向再現"}
+};
+
 const BRC_SLIT_ATTACK_MIN_N = 10;
 const BRC_SLIT_HEAD_MIN_N = 10;
 const BRC_SLIT_C5_HEAD_WIN_PCT = 10.0;
@@ -13423,6 +13444,21 @@ function brcSlitVenuePairPilotEligible(venue,inner,outer){
 }
 function brcSlitNationalEffect(pair,boat){
   return BRC_SLIT_NATIONAL_EFFECT_2025?.[String(pair)]?.[String(boat)] || null;
+}
+function brcSlitConfidence(pair){
+  return BRC_SLIT_CONFIDENCE_BY_PAIR?.[String(pair)] || null;
+}
+function brcSlitConfidenceWorst(list){
+  const arr=(Array.isArray(list)?list:[]).filter(x=>x&&x.grade);
+  if(!arr.length) return null;
+  const rank={A:1,B:2,C:3};
+  return arr.slice().sort((a,b)=>(rank[a.grade]||99)-(rank[b.grade]||99)).reverse()[0] || null;
+}
+function brcSlitConfidenceBadgeHtml(conf){
+  if(!conf?.grade) return '';
+  const g=String(conf.grade);
+  const title=`信頼${g}：${conf.label||'検証済み'} / 2026固定OOS N=${Number(conf.oosN)||0}（表示専用・的中保証ではありません）`;
+  return `<span class="slit-confidence-badge slit-confidence-${g}" title="${title}">信頼${g}</span>`;
 }
 function brcSlitAttackCompatibilityGrade(boats, outerCourse){
   const oc=Number(outerCourse);
@@ -13601,7 +13637,7 @@ function brcSlitEvaluationState(boats,liveRace,inReliability=null){
   // 強条件を艇ごとへ集約。同一艇・同一指標で↑系と↓系が衝突した場合、その指標だけ非表示。
   const rowMap=new Map();
   const ensureRow=(boat)=>{
-    if(!rowMap.has(boat)) rowMap.set(boat,{boat,metrics:{},generic:false,titles:[],order:999});
+    if(!rowMap.has(boat)) rowMap.set(boat,{boat,metrics:{},generic:false,titles:[],confidences:[],order:999});
     return rowMap.get(boat);
   };
   for(const x of items){
@@ -13615,6 +13651,8 @@ function brcSlitEvaluationState(boats,liveRace,inReliability=null){
       ro.order=Math.min(ro.order,pairOrder);
       ri.order=Math.min(ri.order,pairOrder+1);
       ro.titles.push(title); ri.titles.push(title);
+      const conf=brcSlitConfidence(x.pair);
+      if(conf){ ro.confidences.push(conf); ri.confidences.push(conf); }
       for(const [k,a] of Object.entries(x.profile.outer)) brcSlitMergeMetric(ro.metrics,k,a);
       for(const [k,a] of Object.entries(x.profile.inner)) brcSlitMergeMetric(ri.metrics,k,a);
     }else{
@@ -13632,7 +13670,8 @@ function brcSlitEvaluationState(boats,liveRace,inReliability=null){
     const clean={};
     for(const k of metricOrder){ if(r.metrics[k]) clean[k]=r.metrics[k]; }
     const hasMetrics=Object.keys(clean).length>0;
-    return {...r,metrics:clean,generic:r.generic && !hasMetrics};
+    const confidence=hasMetrics ? brcSlitConfidenceWorst(r.confidences) : null;
+    return {...r,metrics:clean,generic:r.generic && !hasMetrics,confidence};
   }).filter(r=>Object.keys(r.metrics).length || r.generic)
     // 各ALペアごとに「優位艇 → 内側艇」の順で読めるように並べる。
     .sort((a,b)=>a.order-b.order || a.boat-b.boat);
@@ -13675,7 +13714,8 @@ function brcBuildSlitEvaluationHtml(boats,liveRace,inReliability=null){
         const cls=brcSlitArrowSign(a)>0?'slit-rate-up':'slit-rate-down';
         return `<span class="slit-rate-metric ${cls}">${brcSlitMetricLabel(k)}${a}</span>`;
       }).join('');
-      return `<span class="slit-rate-row" title="${title}">${brcSlitBoatBadgeHtml(r.boat)}<span class="slit-rate-metrics">${metrics}</span></span>`;
+      const confidenceBadge=brcSlitConfidenceBadgeHtml(r.confidence);
+      return `<span class="slit-rate-row" title="${title}">${brcSlitBoatBadgeHtml(r.boat)}<span class="slit-rate-metrics">${metrics}</span>${confidenceBadge}</span>`;
     }).join('');
 
     // 展示差のみは弱い参考表示。展示差+ST順位の強条件が出ている艇には重ねない。
