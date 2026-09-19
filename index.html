@@ -13,6 +13,7 @@
 <!-- BRC_ADMIN_OPERATIONS_HUB_V1_20260918: admin-only operations dashboard; public UI unchanged -->
 <!-- BRC_SLIT_STRONG_TRUST_DEMOTED_V1_20260920: production recent-ST legacy subset is frozen and not historically reproducible from complete-K 365d; venue-specific strong trust-A numeric badge disabled. Strong directional arrows remain unchanged and are supported by exact fixed-ST OOS nationally. Exhibition-only strict-A remains 12 cells. -->
 <!-- BRC_SLIT_STRICT_A_EXHIBITION_12_V2_20260920: strict exhibition A corrected to 12 cells after independent recomputation of annual 3/3, completed half-years 5/5, rolling90 thresholds and date-cluster bootstrap 95% CI; restored 福岡4>3, 若松4>3, 蒲郡4>3. Strong venue-specific A numeric remains disabled due legacy production recent-ST provenance. -->
+<!-- BRC_TIMEX_LAP_PENDING_FIX_V1_20260920: exhibition-time-only phase is treated as waiting, not shortened; lap_type/detail arrival separates pending from true lap-missing state; prediction math unchanged -->
 <!DOCTYPE html>
 <!-- BRC_SLIT_3Y_NOLOOKAHEAD_A_ONLY_V1_20260920: 2023 warmup, 2024/2025/2026 validation; A-only trust badges; prediction/arrows unchanged -->
 <!-- BRC_SLIT_PT_INTEGER_ROUND_V1_20260920: slit-effect pt display rounded to integer; raw values and prediction logic unchanged -->
@@ -13215,6 +13216,9 @@ function brcHasMeasuredLapTime(v){
   const n=Number(v);
   return Number.isFinite(n) && n>0;
 }
+function brcHasLapType(v){
+  return v!==null && v!==undefined && String(v).trim()!=='';
+}
 function brcTimeXLapState(liveRace){
   const boats=Array.isArray(liveRace?.boats) ? liveRace.boats : [];
   const validBoats=boats.filter(b=>{
@@ -13223,26 +13227,41 @@ function brcTimeXLapState(liveRace){
   });
   const hasValue=v=>v!==null && v!==undefined && String(v).trim()!=='' && Number.isFinite(Number(v));
   const exhibitionStarted=validBoats.some(b=>
-    hasValue(b?.exhibition_time) || hasValue(b?.display_st) || hasValue(b?.turn_time) ||
-    hasValue(b?.straight_time) || hasValue(b?.relative_diff) || hasValue(b?.relative_diff_capped) ||
-    brcHasMeasuredLapTime(b?.lap_time)
+    hasValue(b?.exhibition_time) || hasValue(b?.display_st) || brcHasLapType(b?.lap_type) ||
+    hasValue(b?.turn_time) || hasValue(b?.straight_time) || hasValue(b?.relative_diff) ||
+    hasValue(b?.relative_diff_capped) || brcHasMeasuredLapTime(b?.lap_time)
   );
   const missing=validBoats
     .filter(b=>!brcHasMeasuredLapTime(b?.lap_time))
     .map(b=>Number(b.boat_no))
     .sort((a,b)=>a-b);
   const allSix=validBoats.length===6 && new Set(validBoats.map(b=>Number(b.boat_no))).size===6;
-  return {ready:allSix && missing.length===0, started:exhibitionStarted, allSix, missing};
+
+  // 展示タイムは先に配信され、1周/回り足/直線（lap_typeを含む）は数十秒〜数分遅れて入ることがある。
+  // その途中状態を「周回短縮」と誤判定しないため、詳細展示が6艇分到着したことを別判定する。
+  const detailCount=validBoats.filter(b=>
+    brcHasLapType(b?.lap_type) || brcHasMeasuredLapTime(b?.lap_time) ||
+    hasValue(b?.turn_time) || hasValue(b?.straight_time)
+  ).length;
+  const detailReady=allSix && detailCount===6;
+  const ready=allSix && missing.length===0;
+  const waiting=exhibitionStarted && allSix && !ready && !detailReady;
+  const shortened=detailReady && missing.length===6;
+  const partial=detailReady && missing.length>0 && missing.length<6;
+  return {ready, started:exhibitionStarted, allSix, missing, detailCount, detailReady, waiting, shortened, partial};
 }
 function brcBuildTimeXLapNoticeHtml(liveRace){
   const code=String(liveRace?.venue_code ?? '').padStart(2,'0');
   if(code==='03') return '';
   const st=brcTimeXLapState(liveRace);
-  if(!st.started || st.ready || !st.allSix) return '';
-  if(st.missing.length===6){
+  if(!st.started || st.ready || !st.allSix || st.waiting) return '';
+  if(st.shortened){
     return '<span class="slit-eval-timex-note">周回短縮のためラップタイム未計測｜BRCタイムX対象外</span>';
   }
-  return `<span class="slit-eval-timex-note">ラップタイム一部未取得（${st.missing.join('・')}号艇）｜BRCタイムX待機</span>`;
+  if(st.partial){
+    return `<span class="slit-eval-timex-note">ラップタイム一部未取得（${st.missing.join('・')}号艇）｜BRCタイムX待機</span>`;
+  }
+  return '';
 }
 
 function brcLiveExhibitionEligible(liveRace){
@@ -13965,8 +13984,14 @@ function brcBuildExhibitionProbabilitySubHtml(b,kind){
   const currentLive=window.__currentLiveExhibition;
   const eligible=brcLiveExhibitionEligible(currentLive);
   const lapState=brcTimeXLapState(currentLive);
-  if(lapState.started && lapState.allSix && !lapState.ready){
+  if(lapState.waiting){
+    return `<div class="live-exhibition-slot" data-live-exhibition-course="${Number(b.course)||0}" style="font-size:10px;font-weight:650;color:var(--ink-soft);margin-top:2px;">BRCタイムX 待機（展示詳細取得中）</div>`;
+  }
+  if(lapState.shortened){
     return `<div class="live-exhibition-slot" data-live-exhibition-course="${Number(b.course)||0}" style="font-size:10px;font-weight:650;color:#8a5a00;margin-top:2px;">BRCタイムX 対象外（ラップ未計測）</div>`;
+  }
+  if(lapState.partial){
+    return `<div class="live-exhibition-slot" data-live-exhibition-course="${Number(b.course)||0}" style="font-size:10px;font-weight:650;color:#8a5a00;margin-top:2px;">BRCタイムX 待機（ラップ一部未取得）</div>`;
   }
   const sign=d>0?'+':'';
   return `<div class="live-exhibition-slot" data-live-exhibition-course="${Number(b.course)||0}" style="font-size:10px;font-weight:650;color:${eligible?'var(--ink-soft)':'#8a5a00'};margin-top:2px;">タイムX差 ${sign}${d.toFixed(2)}秒${eligible?'':' 対象外'}</div>`;
@@ -14786,8 +14811,12 @@ function buildLiveExhibitionStatusHtml(liveRace, venue='', raceNo=0){
     label='BRCタイムX反映済'; color='#2f8f5b';
   }else if(liveRace){
     const lapState=brcTimeXLapState(liveRace);
-    if(lapState.started && lapState.allSix && !lapState.ready){
+    if(lapState.waiting){
+      label='展示詳細取得待ち・BRCタイムX待機'; color='var(--ink-soft)';
+    }else if(lapState.shortened){
       label='ラップタイム未計測・BRCタイムX対象外'; color='#8a5a00';
+    }else if(lapState.partial){
+      label='ラップタイム一部未取得・BRCタイムX待機'; color='#8a5a00';
     }
   }
   const sub=historical ? `<span style="display:block;margin-top:3px;font-size:10px;font-weight:600;color:var(--ink-soft);">${TODAY_LABEL} / ${venue} ${Number(raceNo)}R の保存データのみ使用</span>` : '';
@@ -17076,13 +17105,14 @@ function brcBuildRaceConditionBannerHtml(liveRace){
     blocks.push(`<div class="slit-eval-compact direct-info-banner brc-condition-banner brc-condition-absence"><span class="direct-info-banner-label">欠場</span><span class="direct-info-banner-items">${items}</span><span class="direct-info-banner-note">このレースはデータが算出できません</span></div>`);
   }
 
-  // 欠場とは別に、6艇すべてラップ未計測なら周回短縮として明示する。
+  // 展示タイムだけ先に来る途中状態は警告しない。
+  // lap_type / 1周 / 回り足 / 直線の詳細展示が6艇分到着した後にだけ、周回短縮・一部欠測を判定する。
   const code=String(liveRace?.venue_code ?? '').padStart(2,'0');
   const lap=brcTimeXLapState(liveRace);
   if(code!=='03' && !absent.length && lap.started && lap.allSix && !lap.ready){
-    if(lap.missing.length===6){
+    if(lap.shortened){
       blocks.push(`<div class="slit-eval-compact direct-info-banner brc-condition-banner brc-condition-shortened"><span class="direct-info-banner-label">周回短縮</span><span class="direct-info-banner-note">BRCタイムX対象外</span></div>`);
-    }else if(lap.missing.length){
+    }else if(lap.partial){
       const items=lap.missing.map(n=>brcSlitBoatBadgeHtml(n)).join('');
       blocks.push(`<div class="slit-eval-compact direct-info-banner brc-condition-banner brc-condition-lap"><span class="direct-info-banner-label">ラップ未取得</span><span class="direct-info-banner-items">${items}</span><span class="direct-info-banner-note">BRCタイムX待機</span></div>`);
     }
