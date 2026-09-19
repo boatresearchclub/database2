@@ -1,3 +1,4 @@
+<!-- BRC_GRADE_PROD_INDEX_V1_20260919: official G1/G2 metadata activation for brc-api; prediction changes are Worker-gated; unrelated UI/logic unchanged -->
 <!-- BRC_PREDICT_GUIDE_TOP_V1_20260919: beginner/betting guide moved above venue/day race summary; prediction logic unchanged -->
 <!-- BRC_ADMIN_ORIGINAL_EXHIBITION_V1_20260918: 出走データ下に1周/回り足/直線/展示を管理者限定表示。live展示payloadをそのまま表示し予測ロジック非変更 -->
 <!-- BRC_SPECIAL_TAB_REMOVED_20260918: 特集タブをメインメニューから非表示。特集本体/既存ロジックは保持 -->
@@ -5749,6 +5750,35 @@ let currentDatabasePage = 'players';
 const BRC_SUPABASE_URL = 'https://wchvzhftwxraqgihochk.supabase.co';
 const BRC_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_ix5nZCzuhx013fMyAmy5wQ_I_naLXAI';
 const BRC_API_URL = 'https://brc-api.sk48159212.workers.dev';
+// BRC_GRADE_PROD_INDEX_V1_20260919
+// Worker側はこの明示フラグがtrueの時だけ公式グレード判定/G1専用1着率を有効化する。
+// 緊急ロールバック時は false にするだけで旧挙動へ戻せる。
+const BRC_GRADE_LOGIC_V1_ENABLED = true;
+function brcGradeLogicWomenV1(grade, boats){
+  try{
+    const regs=(Array.isArray(boats)?boats:[]).map(b=>String(b?.reg||'')).filter(Boolean);
+    if(typeof brcIsWomenRace==='function') return !!brcIsWomenRace(String(grade||'一般'),regs);
+    return String(grade||'')==='女子' || String(grade||'')==='ヴィーナス';
+  }catch(_e){ return String(grade||'')==='女子' || String(grade||'')==='ヴィーナス'; }
+}
+function brcGradeLogicTitleV1(venue){
+  try{return String((typeof RACE_INFO_TODAY!=='undefined' && RACE_INFO_TODAY?.[String(venue||'')])?.title||'');}catch(_e){return '';}
+}
+function brcGradeLogicDateV1(){
+  try{return /^\d{4}-\d{2}-\d{2}$/.test(String(TODAY_LABEL||''))?String(TODAY_LABEL):'';}catch(_e){return '';}
+}
+function brcGradeLogicEnrichRaceV1(input, fallbackDate=''){
+  const x={...(input||{})};
+  if(!BRC_GRADE_LOGIC_V1_ENABLED) return x;
+  x.gradeLogicV1=true;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(x.date||''))){
+    const d=/^\d{4}-\d{2}-\d{2}$/.test(String(fallbackDate||''))?String(fallbackDate):brcGradeLogicDateV1();
+    if(d) x.date=d;
+  }
+  if(!String(x.title||'').trim() && x.venue) x.title=brcGradeLogicTitleV1(x.venue);
+  if(typeof x.women!=='boolean') x.women=brcGradeLogicWomenV1(x.grade,x.boats);
+  return x;
+}
 // ---- BRC オリジナル展示ライブ連携 Phase 2 ----
 // Cloudflare Live Workerを作成後、このURLだけ実URLへ変更する。
 // 空欄の間は外部通信せず、展示補正は発火しない。
@@ -5953,10 +5983,16 @@ async function brcCheckMembership(session){
 
 
 async function brcFreePreviewApi(input){
+  const payload={...(input||{})};
+  if(BRC_GRADE_LOGIC_V1_ENABLED){
+    payload.gradeLogicV1=true;
+    const fallbackDate=String(payload.date||brcGradeLogicDateV1());
+    if(Array.isArray(payload.races)) payload.races=payload.races.map(r=>brcGradeLogicEnrichRaceV1(r,fallbackDate));
+  }
   const res=await fetch(BRC_API_URL + '/free-preview',{
     method:'POST',
     headers:{'Content-Type':'application/json','Accept':'application/json'},
-    body:JSON.stringify(input)
+    body:JSON.stringify(payload)
   });
   let data=null; try{data=await res.json();}catch(_){data=null;}
   if(!res.ok){
@@ -5967,10 +6003,11 @@ async function brcFreePreviewApi(input){
 }
 
 async function brcPostRacePreviewApi(input){
+  const payload=brcGradeLogicEnrichRaceV1(input,String(input?.date||''));
   const res=await fetch(BRC_API_URL + '/post-race-preview',{
     method:'POST',
     headers:{'Content-Type':'application/json','Accept':'application/json'},
-    body:JSON.stringify(input)
+    body:JSON.stringify(payload)
   });
   let data=null; try{data=await res.json();}catch(_){data=null;}
   if(!res.ok){
@@ -5988,6 +6025,7 @@ async function brcPredictApi(input){
     throw err;
   }
 
+  const payload=brcGradeLogicEnrichRaceV1(input,String(input?.date||''));
   const res = await fetch(BRC_API_URL + '/predict', {
     method:'POST',
     headers:{
@@ -5995,7 +6033,7 @@ async function brcPredictApi(input){
       'Content-Type':'application/json',
       'Accept':'application/json'
     },
-    body:JSON.stringify(input)
+    body:JSON.stringify(payload)
   });
 
   let data = null;
@@ -6016,8 +6054,10 @@ async function brcPredictBatchApi(input){
     const err = new Error('not_logged_in'); err.status = 401; throw err;
   }
 
-  const races = Array.isArray(input?.races) ? input.races : [];
-  if(!races.length) return {authorized:true,prediction_api:true,batch:true,races:[]};
+  const racesRaw = Array.isArray(input?.races) ? input.races : [];
+  if(!racesRaw.length) return {authorized:true,prediction_api:true,batch:true,races:[]};
+  const fallbackDate=String(input?.date||'');
+  const races=racesRaw.map(r=>brcGradeLogicEnrichRaceV1(r,fallbackDate));
 
   // 全場・全レースを1リクエストに詰めると、Worker無料枠のCPU/実行時間に
   // 引っかかる可能性がある。16レースずつに分割し、結果だけ結合する。
@@ -6037,7 +6077,7 @@ async function brcPredictBatchApi(input){
             'Content-Type':'application/json',
             'Accept':'application/json'
           },
-          body:JSON.stringify({races:chunk})
+          body:JSON.stringify({races:chunk,gradeLogicV1:BRC_GRADE_LOGIC_V1_ENABLED===true})
         });
         let data=null; try{ data=await res.json(); }catch(_){ data=null; }
         if(res.ok){
@@ -9340,7 +9380,7 @@ async function brcInvFetchDetailedPrediction(spec){
   let lastErr=null;
   for(let attempt=0;attempt<3;attempt++){
     try{
-      const result=await brcPredictApi({venue:String(spec?.venue||''),grade:String(spec?.grade||'一般'),boats:Array.isArray(spec?.apiBoats)?spec.apiBoats:[]});
+      const result=await brcPredictApi({venue:String(spec?.venue||''),grade:String(spec?.grade||'一般'),boats:Array.isArray(spec?.apiBoats)?spec.apiBoats:[],date:String(spec?.date||''),title:String(spec?.title||''),women:typeof spec?.women==='boolean'?spec.women:brcGradeLogicWomenV1(spec?.grade,spec?.apiBoats),gradeLogicV1:BRC_GRADE_LOGIC_V1_ENABLED===true});
       if(!result||result.prediction_api!==true||!Array.isArray(result.wins)||!result.inReliability) throw new Error('prediction_detail_invalid');
       const set70=brcInvAutoReferenceSet(result,.70);
       if(!set70?.picks?.length) throw new Error('prediction_detail_reference_not_ready');
@@ -9469,7 +9509,7 @@ async function brcInvAutoCollectToday(force=false){
       return true;
     }
 
-    const api=await brcPredictBatchApi({races:specs.map(x=>({id:x.id,venue:x.venue,grade:x.grade,boats:x.apiBoats}))});
+    const api=await brcPredictBatchApi({races:specs.map(x=>({id:x.id,venue:x.venue,grade:x.grade,boats:x.apiBoats,date:x.date,title:x.title,women:x.women,gradeLogicV1:BRC_GRADE_LOGIC_V1_ENABLED===true}))});
     if(!api||api.prediction_api!==true||!Array.isArray(api.races)) throw new Error('prediction_batch_not_ready');
     const byId=new Map(api.races.map(r=>[String(r.id),r]));
     let scanned=0,saCount=0,captured=0;
@@ -9578,9 +9618,12 @@ function brcInvBackfillBuildSpecs(payload,date){
       const info=payload?.info?.[venue]||{};
       const code=String(brcVenueCodeFromName(venue)||'').padStart(2,'0');
       if(!code) continue;
+      const grade=brcInvBackfillGrade(payload,venue,raceNo);
       specs.push({
         id:`${date}:${venue}:${raceNo}`,date,venue,raceNo:Number(raceNo),venueCode:code,
-        grade:brcInvBackfillGrade(payload,venue,raceNo),apiBoats,
+        grade,apiBoats,
+        title:String(info?.title||''),
+        women:brcGradeLogicWomenV1(grade,apiBoats),
         deadline:String(info?.deadlines?.[String(raceNo)]||''),
         raceTitle:String(info?.raceTitles?.[String(raceNo)]||''),
         motors:payload?.motor?.[venue]?.[String(raceNo)]||[]
@@ -9713,7 +9756,7 @@ async function brcInvBackfillCurrentMonth(force=false){
       try{
         const payload=await brcInvBackfillFetchRaceCard(date),specs=brcInvBackfillBuildSpecs(payload,date);
         if(!specs.length) throw new Error('no_backfill_races');
-        const api=await brcPredictBatchApi({races:specs.map(x=>({id:x.id,venue:x.venue,grade:x.grade,boats:x.apiBoats}))});
+        const api=await brcPredictBatchApi({races:specs.map(x=>({id:x.id,venue:x.venue,grade:x.grade,boats:x.apiBoats,date:x.date,title:x.title,women:x.women,gradeLogicV1:BRC_GRADE_LOGIC_V1_ENABLED===true}))});
         if(!api||api.prediction_api!==true||!Array.isArray(api.races)) throw new Error('prediction_batch_not_ready');
         const byId=new Map(api.races.map(r=>[String(r.id),r])),specByKey=new Map(),rows=[];
         let scanned=0,sa=0,captured=0;
@@ -17239,6 +17282,9 @@ function buildTodayRaceSpec(venue, raceNo){
   const info=RACE_INFO_TODAY[venue]||{};
   return {
     id:`${venue}:${raceNo}`, venue, raceNo:Number(raceNo), grade, apiBoats,
+    date:String(TODAY_LABEL||''),
+    title:String(info?.title||''),
+    women:brcGradeLogicWomenV1(grade,apiBoats),
     deadline:(info.deadlines&&info.deadlines[String(raceNo)])||'',
     motors,
     playerName:PLAYERS[String(regs[0])]?.name||''
@@ -17272,7 +17318,8 @@ function buildFreePreviewRacePool(){
       if(!brcRaceHasCompleteSTStability(venue,raceNo)) continue;
       rows.push({
         id:spec.id,venue:spec.venue,raceNo:spec.raceNo,grade:spec.grade,deadline:spec.deadline,
-        women:brcIsWomenRace(spec.grade,spec.apiBoats.map(b=>b.reg)),
+        date:spec.date,title:spec.title,
+        women:typeof spec.women==='boolean'?spec.women:brcIsWomenRace(spec.grade,spec.apiBoats.map(b=>b.reg)),
         boats:spec.apiBoats.map(b=>({course:b.course,reg:b.reg}))
       });
     }
@@ -17519,7 +17566,7 @@ async function buildTodayPicksCache(){
       TODAY_PICKS_CACHE={all:[],iron:[],reject:[],skipped};
       return TODAY_PICKS_CACHE;
     }
-    const api=await brcPredictBatchApi({races:specs.map(x=>({id:x.id,venue:x.venue,grade:x.grade,boats:x.apiBoats}))});
+    const api=await brcPredictBatchApi({races:specs.map(x=>({id:x.id,venue:x.venue,grade:x.grade,boats:x.apiBoats,date:x.date,title:x.title,women:x.women,gradeLogicV1:BRC_GRADE_LOGIC_V1_ENABLED===true}))});
     if(!api || api.prediction_api!==true || !Array.isArray(api.races)) throw new Error('prediction_batch_not_ready');
     const byId=new Map(api.races.map(r=>[String(r.id),r]));
     const all=[];
@@ -18259,7 +18306,7 @@ async function runPredict(){
     }else if(!BRC_MEMBER_ACTIVE){
       const deadline=RACE_INFO_TODAY?.[venue]?.deadlines?.[String(raceNoLive)]||'';
       if(brcIsPostRaceUnlocked(deadline)){
-        apiResult=await brcPostRacePreviewApi({date:TODAY_LABEL,venue,raceNo:raceNoLive,grade,boats:apiBoats});
+        apiResult=await brcPostRacePreviewApi({date:TODAY_LABEL,venue,raceNo:raceNoLive,grade,boats:apiBoats,title:String(RACE_INFO_TODAY?.[venue]?.title||''),women:brcGradeLogicWomenV1(grade,apiBoats),gradeLogicV1:BRC_GRADE_LOGIC_V1_ENABLED===true});
         if(!brcPredictRequestIsCurrent(requestCtx)) return;
         brcRenderPostRaceMode({venue,raceNo:raceNoLive,deadline,id:currentId});
       }else{
@@ -18268,7 +18315,7 @@ async function runPredict(){
         return;
       }
     }else{
-      apiResult = await brcPredictApi({venue, grade, boats:apiBoats});
+      apiResult = await brcPredictApi({venue, grade, boats:apiBoats,date:String(TODAY_LABEL||''),title:String(RACE_INFO_TODAY?.[venue]?.title||''),women:brcGradeLogicWomenV1(grade,apiBoats),gradeLogicV1:BRC_GRADE_LOGIC_V1_ENABLED===true});
       if(!brcPredictRequestIsCurrent(requestCtx)) return;
     }
     if(!brcPredictRequestIsCurrent(requestCtx)) return;
@@ -18360,6 +18407,8 @@ async function runPredict(){
   window.__predictBoatsCurrent = boats;
   window.__predictWorkerCurrent = workerPrediction;
   window.__predictGradeCurrent = grade;
+  window.__predictOfficialGradeCurrent = String(workerPrediction?.gradeContext?.officialGrade||workerPrediction?.gradeContext?.displayGrade||workerPrediction?.gradeContext?.plan?.displayGrade||'');
+  window.__predictGradeContextCurrent = workerPrediction?.gradeContext||null;
   window.__predictApiBoatsCurrent = apiBoats;
   window.__currentExhibitionApplied = exhibitionApplied;
 
@@ -21040,7 +21089,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       await dbClear(SIM_DB,[SIM_STORE],SIM_STORE);
       for(const date of dateRange(SIM_START,end)){
         const payload=await brcInvBackfillFetchRaceCard(date),specs=brcInvBackfillBuildSpecs(payload,date);m.scanned+=specs.length;metaWrite(SIM_META_KEY,m);renderStatusOnly();if(!specs.length)continue;
-        const api=await brcPredictBatchApi({races:specs.map(x=>({id:x.id,venue:x.venue,grade:x.grade,boats:x.apiBoats}))});
+        const api=await brcPredictBatchApi({races:specs.map(x=>({id:x.id,venue:x.venue,grade:x.grade,boats:x.apiBoats,date:x.date,title:x.title,women:x.women,gradeLogicV1:BRC_GRADE_LOGIC_V1_ENABLED===true}))});
         if(!api||api.prediction_api!==true||!Array.isArray(api.races))continue;
         const byId=new Map(api.races.map(r=>[String(r.id),r]));
         const batchRows=specs.map(spec=>({spec,prediction:byId.get(String(spec.id))})).filter(x=>x.prediction);m.batchReady+=batchRows.length;
