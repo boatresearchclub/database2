@@ -1,4 +1,5 @@
-<!-- BRC_VENUE_CATEGORY_BADGES_V3_20260919: fix false G1 from generic "周年記念" titles; uniform venue-card width; badges SG/G1/G2/G3/女子/ルーキー/マスター; display only; prediction logic unchanged -->
+<!-- BRC_VENUE_BADGES_V6_OFFICIAL_ONLY_20260919 -->
+<!-- BRC_VENUE_CATEGORY_BADGES_V5_STRICT_20260919: venue badges are shown ONLY after Worker official gradeContext confirms officialResolved=true and officialAmbiguous=false; no title guessing / no hardcoded schedule fallback; unresolved means no badge; uniform card width; prediction logic unchanged -->
 <!-- BRC_GRADE_PROD_INDEX_V1_20260919: official G1/G2 metadata activation for brc-api; prediction changes are Worker-gated; unrelated UI/logic unchanged -->
 <!-- BRC_PREDICT_GUIDE_TOP_V1_20260919: beginner/betting guide moved above venue/day race summary; prediction logic unchanged -->
 <!-- BRC_ADMIN_ORIGINAL_EXHIBITION_V1_20260918: 出走データ下に1周/回り足/直線/展示を管理者限定表示。live展示payloadをそのまま表示し予測ロジック非変更 -->
@@ -15717,6 +15718,9 @@ function populateDaySelect(){
 
   renderVenueTabs();
   renderRaceTabs();
+  // 会場バッジは描画後に公式Workerで検証し、確認できたものだけ差し込む。
+  // API未確認・曖昧判定では何も表示しないため、タイトル推測による誤バッジは起こさない。
+  brcHydrateVerifiedVenueBadges(todayVenues, renderVenueTabs).catch(()=>{});
 }
 
 // 締切が近い（15分以内）レースだけを表示するパネル。
@@ -15927,85 +15931,17 @@ function guessGradeFromTitle(title){
 // レディースチャレンジカップはチャレンジカップと同日・同会場で併催される。
 // 会場タイトルだけでは区別できないケースに備え、出走6選手が全員女子と確認できるレースだけG2へ戻す。
 
-// ---- BRC venue badges V2 ----
-// 公式番組表TXTのタイトルには「G1/G3」表記が入らない開催があるため、
-// 会場ピッカーだけは2026年のBOAT RACE公式開催スケジュールを表示用フォールバックに使う。
-// 予測グレード・確率計算には一切使わない。
-const BRC_VENUE_BADGE_SCHEDULE_2026 = [
-  // SG / PG1（PG1は会場バッジ上はG1扱い）
-  ['2026-09-22','2026-09-27','若松','G1'],
-  ['2026-10-27','2026-11-01','尼崎','SG'],
-  ['2026-11-24','2026-11-29','常滑','SG'],
-  ['2026-12-15','2026-12-20','大村','SG'],
-  ['2026-12-26','2026-12-31','住之江','女子'],
+// ---- BRC venue badges V4 VERIFIED ----
+// 会場バッジは「推測しない」。
+// brc-api の公式 gradeContext が officialResolved=true かつ officialAmbiguous=false の場合だけ表示する。
+// タイトル文字列・周年記念・INDEX内の手書き日程表からは一切判定しない。
+// 公式判定が取れない / 曖昧 / API未接続の場合は「誤表示するより非表示」を優先する。
+const BRC_VERIFIED_VENUE_BADGES = new Map();
+let BRC_VERIFIED_VENUE_BADGE_DATE = '';
+let BRC_VERIFIED_VENUE_BADGE_PROMISE = null;
+let BRC_VERIFIED_VENUE_BADGE_RETRY = 0;
+let BRC_VERIFIED_VENUE_BADGE_SEQ = 0;
 
-  // G1 / G2
-  ['2026-09-03','2026-09-08','津','G1'],
-  ['2026-09-07','2026-09-12','大村','G1'],
-  ['2026-09-12','2026-09-17','徳山','G1'],
-  ['2026-09-16','2026-09-21','多摩川','G1'],
-  ['2026-09-28','2026-10-03','児島','G1'],
-  ['2026-10-04','2026-10-09','三国','G1'],
-  ['2026-10-13','2026-10-18','平和島','G1'],
-  ['2026-10-18','2026-10-23','唐津','G1'],
-  ['2026-11-05','2026-11-10','住之江','G1'],
-  ['2026-11-06','2026-11-11','鳴門','G1'],
-  ['2026-11-14','2026-11-19','びわこ','G1'],
-  ['2026-11-15','2026-11-20','丸亀','G1'],
-  // 常滑 11/24-29 はSGチャレンジカップ併催のため会場表示はSGを優先
-  ['2026-12-03','2026-12-08','徳山','G1'],
-  ['2026-12-06','2026-12-11','蒲郡','G1'],
-
-  // G3（オールレディースは「女子」を優先表示）
-  ['2026-09-18','2026-09-23','宮島','女子'],
-  ['2026-09-22','2026-09-27','びわこ','G3'],
-  ['2026-09-24','2026-09-29','芦屋','女子'],
-  ['2026-09-29','2026-10-04','蒲郡','G3'],
-  ['2026-10-07','2026-10-12','江戸川','女子'],
-  ['2026-10-19','2026-10-24','住之江','女子'],
-  ['2026-10-21','2026-10-26','浜名湖','G3'],
-  ['2026-10-31','2026-11-05','津','女子'],
-  ['2026-11-11','2026-11-16','大村','G3'],
-  ['2026-11-18','2026-11-23','戸田','女子'],
-  ['2026-11-21','2026-11-26','三国','G3'],
-  ['2026-11-27','2026-12-02','尼崎','G3'],
-  ['2026-12-01','2026-12-06','びわこ','女子'],
-  ['2026-12-13','2026-12-18','福岡','G3'],
-  ['2026-12-20','2026-12-25','唐津','G3'],
-  ['2026-12-26','2026-12-31','住之江','女子'],
-
-  // ヴィーナスシリーズ
-  ['2026-10-01','2026-10-06','下関','女子'],
-  ['2026-10-13','2026-10-18','若松','女子'],
-  ['2026-10-25','2026-10-30','桐生','女子'],
-  ['2026-11-06','2026-11-11','多摩川','女子'],
-  ['2026-11-12','2026-11-17','唐津','女子'],
-  ['2026-12-08','2026-12-13','尼崎','女子'],
-
-  // ルーキーシリーズ
-  ['2026-10-02','2026-10-07','徳山','ルーキー'],
-  ['2026-10-12','2026-10-17','鳴門','ルーキー'],
-  ['2026-10-22','2026-10-27','多摩川','ルーキー'],
-  ['2026-11-01','2026-11-06','宮島','ルーキー'],
-  ['2026-11-10','2026-11-15','津','ルーキー'],
-  ['2026-11-19','2026-11-24','福岡','ルーキー'],
-  ['2026-12-09','2026-12-14','戸田','ルーキー'],
-  ['2026-12-18','2026-12-23','芦屋','ルーキー'],
-
-  // マスターズリーグ
-  ['2026-09-28','2026-10-03','平和島','マスター'],
-  ['2026-10-29','2026-11-03','徳山','マスター'],
-  ['2026-11-20','2026-11-25','芦屋','マスター'],
-  ['2026-12-19','2026-12-24','戸田','マスター']
-];
-
-function brcVenueBadgeFromSchedule(venue, dateStr){
-  const d=String(dateStr||'');
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(d)) return null;
-  // 同一会場・同一日で複数グレード併催がある場合は、先に登録した高位表示を優先。
-  const hit=BRC_VENUE_BADGE_SCHEDULE_2026.find(x=>x[2]===venue && d>=x[0] && d<=x[1]);
-  return hit ? hit[3] : null;
-}
 function brcVenueBadgeObj(label){
   const x=String(label||'');
   if(x==='SG') return {label:'SG',cls:'sg'};
@@ -16017,33 +15953,175 @@ function brcVenueBadgeObj(label){
   if(x==='マスター') return {label:'マスター',cls:'master'};
   return null;
 }
-function brcVenueCategoryBadge(info, venue=''){
-  const title = normalizeGradeTitle(info?.title || '');
-  const rawGrade = String(info?.grade || '').toUpperCase().replace(/\s+/g,'');
 
-  // タイトルにシリーズ名が明記される場合は最優先。
-  if(/ヴィーナス|オールレディース|レディース|女子|クイーンズ|おんな/.test(title)) return brcVenueBadgeObj('女子');
-  if(/ルーキー/.test(title) || rawGrade==='ルーキー') return brcVenueBadgeObj('ルーキー');
-  if(/マスターズ|名人/.test(title) || rawGrade==='マスターズ' || rawGrade==='マスター') return brcVenueBadgeObj('マスター');
+function brcOfficialVenueBadgeFromContext(ctx){
+  if(!ctx || typeof ctx!=='object') return null;
 
-  // 公式2026スケジュール（TXTタイトルにグレード表記が無い開催を補う）。
-  const scheduled=brcVenueBadgeFromSchedule(String(venue||''), String(TODAY_LABEL||''));
-  if(scheduled) return brcVenueBadgeObj(scheduled);
+  // 会場バッジは「公式スケジュールの一意解決結果」だけを採用する。
+  // displayGrade / plan.displayGrade / ctx.series / タイトル文字列からは補完・推測しない。
+  // 不明・曖昧・未知のseriesは誤表示を避けるため非表示にする（fail closed）。
+  const officialSource=String(ctx.officialSource||'').trim();
+  const officialTitle=String(ctx.officialTitle||'').trim();
+  if(ctx.applied !== true) return null;
+  if(ctx.officialResolved !== true) return null;
+  if(ctx.officialAmbiguous !== false) return null;
+  if(officialSource !== 'official_schedule_unique') return null;
+  if(!officialTitle) return null;
 
-  // タイトル / 既存gradeのフォールバック。
-  if(isTrueSgTitle(title) || rawGrade==='SG') return brcVenueBadgeObj('SG');
-  if(isLadiesChallengeCupTitle(title) || /Ｇ２|G2/i.test(title) || rawGrade==='G2') return brcVenueBadgeObj('G2');
-  if(/Ｇ１|G1/i.test(title) || rawGrade==='G1') return brcVenueBadgeObj('G1');
-  if(/Ｇ３|G3/i.test(title) || rawGrade==='G3') return brcVenueBadgeObj('G3');
+  const seriesRaw=String(ctx.officialSeries||'').trim().toLowerCase();
+  const seriesKey=seriesRaw
+    .replace(/[\s-]+/g,'_')
+    .replace(/__+/g,'_');
+  const gradeRaw=String(ctx.officialGrade||'').trim().toUpperCase().replace(/\s+/g,'');
 
-  // 「周年記念」は一般戦（例: オラレ/BTS開設周年）にも多数あるため、
-  // タイトルだけでG1へ昇格させない。G1は公式日程または明示的なG1表記のみ。
-  if(rawGrade==='女子' || rawGrade==='ヴィーナス') return brcVenueBadgeObj('女子');
+  // 特殊シリーズは公式 officialSeries の明示値だけで分類。
+  // 未知値は推測せず、通常グレード判定へ進む。
+  const womenSeries=new Set(['venus','all_ladies','ladies']);
+  const rookieSeries=new Set(['rookie','rookie_series']);
+  const masterSeries=new Set(['masters','masters_league','master','master_series']);
+
+  if(womenSeries.has(seriesKey)) return brcVenueBadgeObj('女子');
+  if(rookieSeries.has(seriesKey)) return brcVenueBadgeObj('ルーキー');
+  if(masterSeries.has(seriesKey)) return brcVenueBadgeObj('マスター');
+
+  // グレードも公式 officialGrade だけを見る。displayGrade は使わない。
+  if(gradeRaw==='SG') return brcVenueBadgeObj('SG');
+  if(gradeRaw==='G1' || gradeRaw==='PG1') return brcVenueBadgeObj('G1');
+  if(gradeRaw==='G2') return brcVenueBadgeObj('G2');
+  if(gradeRaw==='G3') return brcVenueBadgeObj('G3');
+
   return null;
+}
+function brcExtractOfficialGradeContext(result){
+  if(!result || typeof result!=='object') return null;
+  return result.gradeContext || result.grade_context || result?.meta?.gradeContext || result?.result?.gradeContext || null;
+}
+
+function brcVenueCategoryBadge(_info, venue=''){
+  const key=String(venue||'');
+  const badge=BRC_VERIFIED_VENUE_BADGES.get(key);
+  return badge || null;
 }
 function brcVenueCategoryBadgeHtml(info, venue=''){
   const badge=brcVenueCategoryBadge(info,venue);
-  return badge ? `<span class="vp-badge ${badge.cls}">${badge.label}</span>` : '';
+  return badge ? `<span class="vp-badge ${badge.cls}" title="公式開催情報で確認済み">${badge.label}</span>` : '';
+}
+
+function brcVenueBadgeBuildSpec(venue){
+  const races=RACE_CARDS_TODAY?.[venue]||{};
+  const raceNos=Object.keys(races).map(Number).filter(Number.isFinite).sort((a,b)=>a-b);
+  for(const raceNo of raceNos){
+    try{
+      const spec=typeof buildTodayRaceSpec==='function' ? buildTodayRaceSpec(venue,raceNo) : null;
+      if(spec && Array.isArray(spec.apiBoats) && spec.apiBoats.length===6){
+        return {...spec,id:`venuebadge:${venue}`,date:String(TODAY_LABEL||''),title:String(RACE_INFO_TODAY?.[venue]?.title||'')};
+      }
+    }catch(_e){}
+  }
+  return null;
+}
+
+async function brcVenueBadgeResolveSingle(spec){
+  try{
+    const r=await brcPredictApi({
+      venue:spec.venue, grade:'一般', boats:spec.apiBoats,
+      date:spec.date, title:spec.title, women:false,
+      gradeLogicV1:true
+    });
+    return brcOfficialVenueBadgeFromContext(brcExtractOfficialGradeContext(r));
+  }catch(_e){ return null; }
+}
+
+async function brcHydrateVerifiedVenueBadges(venues,onUpdate){
+  const date=String(TODAY_LABEL||'');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Array.isArray(venues) || !venues.length) return;
+
+  if(BRC_VERIFIED_VENUE_BADGE_DATE!==date){
+    BRC_VERIFIED_VENUE_BADGES.clear();
+    BRC_VERIFIED_VENUE_BADGE_DATE=date;
+    BRC_VERIFIED_VENUE_BADGE_PROMISE=null;
+    BRC_VERIFIED_VENUE_BADGE_RETRY=0;
+    // 日付切替前に飛ばした応答を無効化する。
+    BRC_VERIFIED_VENUE_BADGE_SEQ++;
+  }
+  if(BRC_VERIFIED_VENUE_BADGE_PROMISE) return BRC_VERIFIED_VENUE_BADGE_PROMISE;
+
+  // ログインセッションが無い場合は公式Worker判定を呼べないため、バッジを推測表示しない。
+  try{ if(typeof brcGetStoredSession==='function' && !brcGetStoredSession()) return; }catch(_e){ return; }
+
+  // 現在表示対象ではない会場の古い結果は保持しない。
+  const venueSet=new Set(venues.map(v=>String(v||'')));
+  for(const key of Array.from(BRC_VERIFIED_VENUE_BADGES.keys())){
+    if(!venueSet.has(String(key))) BRC_VERIFIED_VENUE_BADGES.delete(key);
+  }
+
+  const specs=venues.map(brcVenueBadgeBuildSpec).filter(Boolean);
+  const specVenueSet=new Set(specs.map(s=>String(s.venue||'')));
+  for(const v of venues){
+    if(!specVenueSet.has(String(v||''))) BRC_VERIFIED_VENUE_BADGES.delete(String(v||''));
+  }
+  if(!specs.length) return;
+
+  const requestDate=date;
+  const requestSeq=++BRC_VERIFIED_VENUE_BADGE_SEQ;
+  let requestPromise=null;
+  requestPromise=(async()=>{
+    let batchResults=[];
+    try{
+      const api=await brcPredictBatchApi({races:specs.map(s=>({
+        id:s.id,venue:s.venue,grade:'一般',boats:s.apiBoats,date:s.date,title:s.title,women:false,gradeLogicV1:true
+      }))});
+      if(api && Array.isArray(api.races)) batchResults=api.races;
+    }catch(err){
+      console.warn('BRC venue badge official batch verification failed:',err);
+    }
+
+    // 日付変更などで新しい検証が始まっていたら、古い応答は一切反映しない。
+    if(BRC_VERIFIED_VENUE_BADGE_DATE!==requestDate || BRC_VERIFIED_VENUE_BADGE_SEQ!==requestSeq) return;
+
+    const byId=new Map(batchResults.map(r=>[String(r?.id||''),r]));
+    const unresolved=[];
+    let changed=false;
+
+    for(const spec of specs){
+      const r=byId.get(String(spec.id));
+      const ctx=brcExtractOfficialGradeContext(r);
+      if(!ctx){ unresolved.push(spec); continue; }
+      const badge=brcOfficialVenueBadgeFromContext(ctx);
+      const old=BRC_VERIFIED_VENUE_BADGES.get(spec.venue)||null;
+      if(badge){
+        BRC_VERIFIED_VENUE_BADGES.set(spec.venue,badge);
+        if(!old || old.label!==badge.label) changed=true;
+      }else{
+        if(old){ BRC_VERIFIED_VENUE_BADGES.delete(spec.venue); changed=true; }
+      }
+    }
+
+    // /predict-batch が gradeContext を返さない環境だけ、各会場1レースを通常 /predict で確認。
+    // ここでも officialResolved / officialAmbiguous 条件を満たさない限り表示しない。
+    for(const spec of unresolved){
+      if(BRC_VERIFIED_VENUE_BADGE_DATE!==requestDate || BRC_VERIFIED_VENUE_BADGE_SEQ!==requestSeq) return;
+      const badge=await brcVenueBadgeResolveSingle(spec);
+      if(BRC_VERIFIED_VENUE_BADGE_DATE!==requestDate || BRC_VERIFIED_VENUE_BADGE_SEQ!==requestSeq) return;
+      const old=BRC_VERIFIED_VENUE_BADGES.get(spec.venue)||null;
+      if(badge){
+        BRC_VERIFIED_VENUE_BADGES.set(spec.venue,badge);
+        if(!old || old.label!==badge.label) changed=true;
+      }else if(old){
+        BRC_VERIFIED_VENUE_BADGES.delete(spec.venue); changed=true;
+      }
+    }
+
+    if(changed && BRC_VERIFIED_VENUE_BADGE_DATE===requestDate && BRC_VERIFIED_VENUE_BADGE_SEQ===requestSeq && typeof onUpdate==='function') onUpdate();
+  })();
+
+  BRC_VERIFIED_VENUE_BADGE_PROMISE=requestPromise;
+  requestPromise.finally(()=>{
+    // 古い要求のfinallyで、新しい要求のin-flight状態を消さない。
+    if(BRC_VERIFIED_VENUE_BADGE_PROMISE===requestPromise) BRC_VERIFIED_VENUE_BADGE_PROMISE=null;
+  });
+
+  return requestPromise;
 }
 
 function isKnownFemaleRacer(reg){
