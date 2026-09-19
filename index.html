@@ -6448,9 +6448,18 @@ async function brcCreateAdminSocialImage(options={}){
   const table=document.getElementById('predictTableWrap');
   if(!box || !table || !box.querySelector('.predict-table')) throw new Error('先に出走表AIの「計算」を実行してください。');
   const html2canvas=await brcLoadHtml2Canvas();
+  const startEl=box.querySelector('.race-summary-compact') || box;
+  const endEl=table.querySelector('.predict-table') || table;
   const boxRect=box.getBoundingClientRect();
-  const tableRect=table.getBoundingClientRect();
-  const cropHeight=Math.max(1,Math.ceil(tableRect.bottom-boxRect.top+4));
+  const startRect=startEl.getBoundingClientRect();
+  const endRect=endEl.getBoundingClientRect();
+  const topPad=8;
+  const bottomPad=8;
+  const startOffset=Math.max(0,Math.floor(startRect.top-boxRect.top-topPad));
+  const endOffset=Math.max(startOffset+1,Math.ceil(endRect.bottom-boxRect.top+bottomPad));
+  const captureHeight=endOffset;
+  const cropHeight=Math.max(1,endOffset-startOffset);
+  const baseWidth=Math.max(1,box.scrollWidth,Math.ceil(boxRect.width));
   const fullCanvas=await html2canvas(box,{
     backgroundColor:'#ffffff',
     scale:Math.min(3,Math.max(2,window.devicePixelRatio||1)),
@@ -6458,16 +6467,19 @@ async function brcCreateAdminSocialImage(options={}){
     logging:false,
     scrollX:0,
     scrollY:-window.scrollY,
-    windowWidth:Math.max(document.documentElement.clientWidth,box.scrollWidth),
-    width:box.scrollWidth,
-    height:cropHeight
+    windowWidth:Math.max(document.documentElement.clientWidth,baseWidth),
+    width:baseWidth,
+    height:captureHeight
   });
+  const scaleY=fullCanvas.height/Math.max(1,captureHeight);
+  const srcY=Math.max(0,Math.min(fullCanvas.height-1,Math.round(startOffset*scaleY)));
+  const srcHeight=Math.max(1,Math.min(fullCanvas.height-srcY,Math.round(cropHeight*scaleY)));
   const canvas=document.createElement('canvas');
   canvas.width=fullCanvas.width;
-  canvas.height=Math.min(fullCanvas.height,Math.round(cropHeight*(fullCanvas.width/Math.max(1,box.scrollWidth))));
+  canvas.height=srcHeight;
   const ctx=canvas.getContext('2d');
   ctx.fillStyle='#fff'; ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.drawImage(fullCanvas,0,0,canvas.width,canvas.height,0,0,canvas.width,canvas.height);
+  ctx.drawImage(fullCanvas,0,srcY,fullCanvas.width,srcHeight,0,0,canvas.width,canvas.height);
   const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('PNG画像を作成できませんでした。')),'image/png',1));
   let imageUrl='';
   if(options.preview!==false){
