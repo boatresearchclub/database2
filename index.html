@@ -1,4 +1,4 @@
-<!-- BRC_VENUE_CATEGORY_BADGES_V2_20260919: venue picker badges SG/G1/G2/G3/女子/ルーキー/マスター; 2026 official schedule fallback + title detection; display only; prediction logic unchanged -->
+<!-- BRC_VENUE_CATEGORY_BADGES_V3_20260919: fix false G1 from generic "周年記念" titles; uniform venue-card width; badges SG/G1/G2/G3/女子/ルーキー/マスター; display only; prediction logic unchanged -->
 <!-- BRC_GRADE_PROD_INDEX_V1_20260919: official G1/G2 metadata activation for brc-api; prediction changes are Worker-gated; unrelated UI/logic unchanged -->
 <!-- BRC_PREDICT_GUIDE_TOP_V1_20260919: beginner/betting guide moved above venue/day race summary; prediction logic unchanged -->
 <!-- BRC_ADMIN_ORIGINAL_EXHIBITION_V1_20260918: 出走データ下に1周/回り足/直線/展示を管理者限定表示。live展示payloadをそのまま表示し予測ロジック非変更 -->
@@ -593,9 +593,10 @@
     border-radius:10px; border:1px solid rgba(10,31,51,.14); background:var(--panel);
     cursor:pointer; font-family:inherit; color:var(--line-white); transition:.15s;
   }
-  .venue-pill{min-width:58px; padding:5px 8px; font-size:13px; font-weight:700; border-radius:8px;}
-  .venue-pill .vp-main{display:flex;align-items:center;justify-content:center;gap:4px;min-height:20px;white-space:nowrap;}
-  .venue-pill .vp-name{font-size:13px;font-weight:800;line-height:1.1;}
+  /* バッジ有無でカード幅が変わらないよう全会場を同じ幅に固定 */
+  .venue-pill{width:76px;min-width:76px;max-width:76px;padding:5px 6px;font-size:13px;font-weight:700;border-radius:8px;}
+  .venue-pill .vp-main{display:flex;align-items:center;justify-content:center;gap:3px;min-height:20px;width:100%;white-space:nowrap;overflow:hidden;}
+  .venue-pill .vp-name{font-size:12.5px;font-weight:800;line-height:1.1;flex:0 0 auto;}
   .venue-pill .vp-day{font-size:10px; font-weight:400; color:var(--ink-soft); margin-top:2px; white-space:nowrap;}
   .venue-pill .vp-badge{
     display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;
@@ -614,10 +615,13 @@
   .venue-pill.active{background:var(--wave); border-color:var(--wave); color:#fff;}
   .venue-pill.active .vp-day{color:rgba(255,255,255,.85);}
   .venue-pill.active .vp-badge{box-shadow:0 0 0 1px rgba(255,255,255,.22);}
+  .venue-pill .vp-badge.rookie,.venue-pill .vp-badge.master{min-width:0;padding:0 3px;font-size:7px;}
   @media (max-width:420px){
-    .venue-pill{min-width:56px;padding-left:7px;padding-right:7px;}
-    .venue-pill .vp-main{gap:3px;}
-    .venue-pill .vp-badge{height:15px;min-width:20px;padding:0 4px;font-size:8px;}
+    .venue-pill{width:74px;min-width:74px;max-width:74px;padding-left:5px;padding-right:5px;}
+    .venue-pill .vp-main{gap:2px;}
+    .venue-pill .vp-name{font-size:12px;}
+    .venue-pill .vp-badge{height:15px;min-width:19px;padding:0 3px;font-size:7.5px;}
+    .venue-pill .vp-badge.rookie,.venue-pill .vp-badge.master{font-size:6.5px;padding:0 2px;}
   }
   .race-pill{min-width:42px; padding:5px 8px; font-size:13px; font-weight:700; border-radius:8px;}
   .race-pill .rp-time{font-size:10px; font-weight:400; color:var(--ink-soft); margin-top:1px; white-space:nowrap;}
@@ -16032,8 +16036,8 @@ function brcVenueCategoryBadge(info, venue=''){
   if(/Ｇ１|G1/i.test(title) || rawGrade==='G1') return brcVenueBadgeObj('G1');
   if(/Ｇ３|G3/i.test(title) || rawGrade==='G3') return brcVenueBadgeObj('G3');
 
-  // 周年記念はG1の典型。スケジュール外年の最低限フォールバック。
-  if(/開設\s*[０-９0-9]+\s*周年|周年記念/.test(title)) return brcVenueBadgeObj('G1');
+  // 「周年記念」は一般戦（例: オラレ/BTS開設周年）にも多数あるため、
+  // タイトルだけでG1へ昇格させない。G1は公式日程または明示的なG1表記のみ。
   if(rawGrade==='女子' || rawGrade==='ヴィーナス') return brcVenueBadgeObj('女子');
   return null;
 }
