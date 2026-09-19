@@ -10,6 +10,7 @@
 <!-- BRC_EXHIBITION_ONLY_PRIORITY_V1_20260918: 展示差のみを弱表示。展示差+ST順位条件成立時は強条件を優先し重複非表示 -->
 <!-- BRC_ADMIN_OPERATIONS_HUB_V1_20260918: admin-only operations dashboard; public UI unchanged -->
 <!DOCTYPE html>
+<!-- BRC_SLIT_3Y_NOLOOKAHEAD_A_ONLY_V1_20260920: 2023 warmup, 2024/2025/2026 validation; A-only trust badges; prediction/arrows unchanged -->
 <!-- BRC_ADMIN_SOCIAL_VENUE_12R_BATCH_V1_20260919: admin SNS image batch export; selected venue 1R-12R rendered sequentially and saved as one ZIP; prediction/image design unchanged -->
 <!-- BRC_ALPHA_BADGE_WINRATE_V1_20260917: +α/-α reference badge on 1着率; detail via player name; no probability recalculation -->
 <!-- BRC_REFMON_DIAG_V3_20260917: logging-only audit patch; buy logic unchanged -->
@@ -13387,16 +13388,11 @@ const BRC_SLIT_ST_RANK_GAP = 0.50;
 const BRC_SLIT_ST_MIN_N = 5;
 const BRC_SLIT_VENUE_PAIR_PILOT = {"びわこ":["3>2","4>3","5>4","6>5"],"三国":["5>4","6>5"],"丸亀":["3>2","4>3","5>4","6>5"],"児島":["2>1","3>2","5>4"],"多摩川":["4>3","5>4"],"大村":["6>5"],"平和島":["3>2","4>3","6>5"],"戸田":["2>1","3>2","4>3","5>4","6>5"],"桐生":["4>3","5>4","6>5"],"江戸川":["2>1","3>2","4>3","5>4"],"津":["4>3","5>4","6>5"],"芦屋":["6>5"],"若松":["4>3","6>5"],"鳴門":["3>2","4>3","5>4","6>5"]};
 const BRC_SLIT_NATIONAL_EFFECT_2025 = {"2>1":{"1":{"win":-20.5,"second":-1.5,"top3":-16.3,"n":145},"2":{"win":20.8,"second":8.9,"top3":21.2,"n":145}},"3>2":{"2":{"win":-5.1,"second":-7.7,"top3":-14.5,"n":704},"3":{"win":11.5,"second":6.7,"top3":15.2,"n":704}},"4>3":{"3":{"win":-5.8,"second":-9.7,"top3":-17.0,"n":527},"4":{"win":11.2,"second":6.4,"top3":16.6,"n":527}},"5>4":{"4":{"win":-4.7,"second":-7.7,"top3":-15.0,"n":543},"5":{"win":6.7,"second":6.1,"top3":10.8,"n":543}},"6>5":{"5":{"win":-3.4,"second":-6.5,"top3":-14.5,"n":328},"6":{"win":6.1,"second":3.9,"top3":11.6,"n":328}}};
-// 表示専用の検証信頼度。予想確率・矢印判定には使用しない。
-// A: 同一強条件が2026固定OOSでN>=100かつ表示方向を再現。
-// B: 同一強条件が2026固定OOSでN>=75かつ表示方向を再現。
-// C: N>=30の参考帯。ただし②→①は「強イン否定」まで含む完全同条件OOS未分離のため現時点ではバッジ非表示。
-const BRC_SLIT_CONFIDENCE_BY_PAIR = {
-  "3>2":{grade:"A",oosN:145,label:"全国2025→2026固定OOSで方向再現"},
-  "4>3":{grade:"B",oosN:99,label:"全国2025→2026固定OOSで方向再現"},
-  "5>4":{grade:"B",oosN:94,label:"全国2025→2026固定OOSで方向再現"},
-  "6>5":{grade:"B",oosN:76,label:"全国2025→2026固定OOSで方向再現"}
-};
+// 表示専用の3年ノールックアヘッド信頼度。予想確率・矢印判定には使用しない。
+// 2023年は平均ST順位の過去365日ウォームアップ、2024/2025/2026を独立評価。
+// Aのみ先行表示：3期間N>=100、後艇1着↑/3連対↑・前艇1着↓/3連対↓が3年すべて一致、4指標すべてFDR q<0.05。
+// B/Cは検証データとして保持するが、現時点では本番バナーへ出さない。
+const BRC_SLIT_TRUST_A_BY_CONDITION = {"exhibition":{"びわこ|2>1":{"grade":"A","n":439,"n2024":140,"n2025":157,"n2026":142,"outerWin":6.1,"outerTop3":5.7,"innerWin":-6.3,"innerTop3":-5.0},"びわこ|4>3":{"grade":"A","n":591,"n2024":217,"n2025":219,"n2026":155,"outerWin":6.3,"outerTop3":7.9,"innerWin":-4.1,"innerTop3":-7.5},"びわこ|5>4":{"grade":"A","n":596,"n2024":214,"n2025":215,"n2026":167,"outerWin":2.8,"outerTop3":8.3,"innerWin":-4.4,"innerTop3":-9.0},"三国|2>1":{"grade":"A","n":292,"n2024":107,"n2025":105,"n2026":80,"outerWin":12.5,"outerTop3":10.2,"innerWin":-14.8,"innerTop3":-8.6},"三国|4>3":{"grade":"A","n":404,"n2024":152,"n2025":139,"n2026":113,"outerWin":7.7,"outerTop3":7.5,"innerWin":-6.9,"innerTop3":-11.0},"三国|5>4":{"grade":"A","n":365,"n2024":113,"n2025":140,"n2026":112,"outerWin":4.4,"outerTop3":9.5,"innerWin":-4.2,"innerTop3":-9.2},"三国|6>5":{"grade":"A","n":494,"n2024":192,"n2025":173,"n2026":129,"outerWin":1.7,"outerTop3":7.3,"innerWin":-2.6,"innerTop3":-6.6},"下関|3>2":{"grade":"A","n":170,"n2024":64,"n2025":57,"n2026":49,"outerWin":9.5,"outerTop3":11.7,"innerWin":-6.9,"innerTop3":-14.9},"下関|4>3":{"grade":"A","n":217,"n2024":88,"n2025":63,"n2026":66,"outerWin":4.0,"outerTop3":8.2,"innerWin":-5.6,"innerTop3":-14.0},"下関|5>4":{"grade":"A","n":213,"n2024":86,"n2025":75,"n2026":52,"outerWin":5.0,"outerTop3":9.3,"innerWin":-6.1,"innerTop3":-6.7},"丸亀|2>1":{"grade":"A","n":203,"n2024":68,"n2025":81,"n2026":54,"outerWin":9.8,"outerTop3":11.7,"innerWin":-9.0,"innerTop3":-7.3},"丸亀|4>3":{"grade":"A","n":407,"n2024":151,"n2025":152,"n2026":104,"outerWin":6.8,"outerTop3":11.9,"innerWin":-4.8,"innerTop3":-10.5},"丸亀|6>5":{"grade":"A","n":463,"n2024":162,"n2025":164,"n2026":137,"outerWin":3.3,"outerTop3":8.3,"innerWin":-2.3,"innerTop3":-6.3},"住之江|2>1":{"grade":"A","n":154,"n2024":62,"n2025":53,"n2026":39,"outerWin":11.9,"outerTop3":10.5,"innerWin":-20.6,"innerTop3":-16.8},"住之江|3>2":{"grade":"A","n":191,"n2024":64,"n2025":68,"n2026":59,"outerWin":7.4,"outerTop3":13.8,"innerWin":-6.1,"innerTop3":-10.9},"住之江|4>3":{"grade":"A","n":239,"n2024":73,"n2025":105,"n2026":61,"outerWin":10.0,"outerTop3":13.6,"innerWin":-5.3,"innerTop3":-14.9},"住之江|6>5":{"grade":"A","n":281,"n2024":93,"n2025":108,"n2026":80,"outerWin":2.2,"outerTop3":6.5,"innerWin":-2.9,"innerTop3":-9.4},"児島|2>1":{"grade":"A","n":467,"n2024":154,"n2025":181,"n2026":132,"outerWin":5.4,"outerTop3":5.4,"innerWin":-9.7,"innerTop3":-6.9},"児島|4>3":{"grade":"A","n":448,"n2024":142,"n2025":154,"n2026":152,"outerWin":3.2,"outerTop3":5.5,"innerWin":-4.8,"innerTop3":-6.3},"唐津|2>1":{"grade":"A","n":158,"n2024":66,"n2025":45,"n2026":47,"outerWin":18.2,"outerTop3":13.7,"innerWin":-24.5,"innerTop3":-11.5},"唐津|3>2":{"grade":"A","n":207,"n2024":79,"n2025":67,"n2026":61,"outerWin":9.6,"outerTop3":10.1,"innerWin":-6.9,"innerTop3":-13.8},"唐津|4>3":{"grade":"A","n":239,"n2024":98,"n2025":74,"n2026":67,"outerWin":6.5,"outerTop3":10.5,"innerWin":-6.2,"innerTop3":-12.9},"大村|2>1":{"grade":"A","n":148,"n2024":53,"n2025":57,"n2026":38,"outerWin":11.9,"outerTop3":13.4,"innerWin":-20.5,"innerTop3":-16.3},"大村|4>3":{"grade":"A","n":257,"n2024":89,"n2025":90,"n2026":78,"outerWin":5.1,"outerTop3":16.2,"innerWin":-4.4,"innerTop3":-17.2},"大村|5>4":{"grade":"A","n":271,"n2024":95,"n2025":101,"n2026":75,"outerWin":8.4,"outerTop3":12.9,"innerWin":-4.8,"innerTop3":-14.6},"宮島|2>1":{"grade":"A","n":159,"n2024":61,"n2025":52,"n2026":46,"outerWin":13.8,"outerTop3":15.9,"innerWin":-16.8,"innerTop3":-18.8},"宮島|4>3":{"grade":"A","n":219,"n2024":82,"n2025":80,"n2026":57,"outerWin":10.6,"outerTop3":14.2,"innerWin":-7.8,"innerTop3":-20.5},"尼崎|2>1":{"grade":"A","n":125,"n2024":47,"n2025":29,"n2026":49,"outerWin":11.9,"outerTop3":15.9,"innerWin":-18.0,"innerTop3":-7.0},"尼崎|3>2":{"grade":"A","n":190,"n2024":62,"n2025":54,"n2026":74,"outerWin":9.0,"outerTop3":14.4,"innerWin":-6.0,"innerTop3":-13.2},"尼崎|4>3":{"grade":"A","n":225,"n2024":85,"n2025":67,"n2026":73,"outerWin":14.7,"outerTop3":15.0,"innerWin":-7.5,"innerTop3":-10.0},"尼崎|5>4":{"grade":"A","n":198,"n2024":68,"n2025":62,"n2026":68,"outerWin":6.3,"outerTop3":16.5,"innerWin":-6.7,"innerTop3":-19.8},"常滑|2>1":{"grade":"A","n":124,"n2024":43,"n2025":48,"n2026":33,"outerWin":10.8,"outerTop3":9.3,"innerWin":-15.4,"innerTop3":-11.4},"平和島|3>2":{"grade":"A","n":441,"n2024":151,"n2025":150,"n2026":140,"outerWin":9.6,"outerTop3":12.9,"innerWin":-5.9,"innerTop3":-8.9},"平和島|4>3":{"grade":"A","n":665,"n2024":255,"n2025":247,"n2026":163,"outerWin":4.4,"outerTop3":7.7,"innerWin":-3.9,"innerTop3":-6.2},"平和島|6>5":{"grade":"A","n":604,"n2024":210,"n2025":198,"n2026":196,"outerWin":3.2,"outerTop3":5.4,"innerWin":-2.9,"innerTop3":-3.7},"戸田|2>1":{"grade":"A","n":423,"n2024":152,"n2025":167,"n2026":104,"outerWin":10.0,"outerTop3":12.4,"innerWin":-9.4,"innerTop3":-10.1},"戸田|3>2":{"grade":"A","n":401,"n2024":140,"n2025":164,"n2026":97,"outerWin":7.3,"outerTop3":8.8,"innerWin":-6.5,"innerTop3":-12.4},"桐生|4>3":{"grade":"A","n":554,"n2024":149,"n2025":172,"n2026":233,"outerWin":3.8,"outerTop3":4.6,"innerWin":-3.2,"innerTop3":-4.6},"江戸川|5>4":{"grade":"A","n":870,"n2024":278,"n2025":369,"n2026":223,"outerWin":2.8,"outerTop3":6.5,"innerWin":-2.3,"innerTop3":-4.3},"津|2>1":{"grade":"A","n":274,"n2024":121,"n2025":91,"n2026":62,"outerWin":14.1,"outerTop3":11.9,"innerWin":-14.0,"innerTop3":-10.5},"津|3>2":{"grade":"A","n":365,"n2024":167,"n2025":109,"n2026":89,"outerWin":7.1,"outerTop3":11.8,"innerWin":-6.2,"innerTop3":-11.8},"津|4>3":{"grade":"A","n":444,"n2024":191,"n2025":161,"n2026":92,"outerWin":11.0,"outerTop3":11.7,"innerWin":-3.4,"innerTop3":-8.9},"津|5>4":{"grade":"A","n":442,"n2024":199,"n2025":151,"n2026":92,"outerWin":3.7,"outerTop3":9.1,"innerWin":-4.5,"innerTop3":-10.2},"津|6>5":{"grade":"A","n":499,"n2024":213,"n2025":168,"n2026":118,"outerWin":2.0,"outerTop3":6.7,"innerWin":-2.1,"innerTop3":-6.3},"浜名湖|2>1":{"grade":"A","n":196,"n2024":48,"n2025":90,"n2026":58,"outerWin":14.1,"outerTop3":11.6,"innerWin":-18.2,"innerTop3":-8.9},"浜名湖|3>2":{"grade":"A","n":230,"n2024":66,"n2025":81,"n2026":83,"outerWin":10.4,"outerTop3":10.5,"innerWin":-6.0,"innerTop3":-14.5},"福岡|2>1":{"grade":"A","n":147,"n2024":42,"n2025":63,"n2026":42,"outerWin":17.0,"outerTop3":9.0,"innerWin":-18.1,"innerTop3":-9.9},"福岡|3>2":{"grade":"A","n":184,"n2024":59,"n2025":68,"n2026":57,"outerWin":7.7,"outerTop3":10.9,"innerWin":-6.7,"innerTop3":-15.0},"福岡|4>3":{"grade":"A","n":230,"n2024":77,"n2025":89,"n2026":64,"outerWin":12.6,"outerTop3":19.9,"innerWin":-5.9,"innerTop3":-17.5},"福岡|6>5":{"grade":"A","n":277,"n2024":90,"n2025":99,"n2026":88,"outerWin":2.9,"outerTop3":11.6,"innerWin":-2.6,"innerTop3":-8.6},"芦屋|2>1":{"grade":"A","n":155,"n2024":52,"n2025":65,"n2026":38,"outerWin":15.4,"outerTop3":13.6,"innerWin":-21.7,"innerTop3":-11.0},"芦屋|4>3":{"grade":"A","n":291,"n2024":98,"n2025":122,"n2026":71,"outerWin":11.8,"outerTop3":17.6,"innerWin":-5.7,"innerTop3":-18.3},"芦屋|5>4":{"grade":"A","n":274,"n2024":96,"n2025":100,"n2026":78,"outerWin":5.8,"outerTop3":16.0,"innerWin":-5.0,"innerTop3":-10.5},"芦屋|6>5":{"grade":"A","n":322,"n2024":94,"n2025":142,"n2026":86,"outerWin":3.2,"outerTop3":6.4,"innerWin":-3.7,"innerTop3":-13.3},"若松|4>3":{"grade":"A","n":257,"n2024":83,"n2025":104,"n2026":70,"outerWin":11.3,"outerTop3":14.4,"innerWin":-6.7,"innerTop3":-17.0},"蒲郡|2>1":{"grade":"A","n":154,"n2024":69,"n2025":51,"n2026":34,"outerWin":14.3,"outerTop3":14.5,"innerWin":-15.5,"innerTop3":-14.5},"蒲郡|4>3":{"grade":"A","n":304,"n2024":103,"n2025":111,"n2026":90,"outerWin":9.4,"outerTop3":12.4,"innerWin":-6.7,"innerTop3":-14.3},"蒲郡|5>4":{"grade":"A","n":280,"n2024":100,"n2025":97,"n2026":83,"outerWin":3.9,"outerTop3":10.2,"innerWin":-7.7,"innerTop3":-12.9},"鳴門|2>1":{"grade":"A","n":264,"n2024":124,"n2025":101,"n2026":39,"outerWin":6.5,"outerTop3":9.1,"innerWin":-11.6,"innerTop3":-9.1},"鳴門|3>2":{"grade":"A","n":465,"n2024":184,"n2025":172,"n2026":109,"outerWin":7.9,"outerTop3":8.8,"innerWin":-4.3,"innerTop3":-8.1},"鳴門|6>5":{"grade":"A","n":607,"n2024":217,"n2025":259,"n2026":131,"outerWin":3.1,"outerTop3":5.7,"innerWin":-2.8,"innerTop3":-5.6}},"strong":{"平和島|3>2":{"grade":"A","n":195,"n2024":56,"n2025":73,"n2026":66,"outerWin":12.0,"outerTop3":14.9,"innerWin":-8.9,"innerTop3":-10.7},"江戸川|5>4":{"grade":"A","n":225,"n2024":77,"n2025":90,"n2026":58,"outerWin":6.0,"outerTop3":13.6,"innerWin":-7.7,"innerTop3":-15.0},"鳴門|3>2":{"grade":"A","n":200,"n2024":81,"n2025":73,"n2026":46,"outerWin":11.9,"outerTop3":17.9,"innerWin":-7.2,"innerTop3":-14.0}}};
 
 const BRC_SLIT_ATTACK_MIN_N = 10;
 const BRC_SLIT_HEAD_MIN_N = 10;
@@ -13445,20 +13441,24 @@ function brcSlitVenuePairPilotEligible(venue,inner,outer){
 function brcSlitNationalEffect(pair,boat){
   return BRC_SLIT_NATIONAL_EFFECT_2025?.[String(pair)]?.[String(boat)] || null;
 }
-function brcSlitConfidence(pair){
-  return BRC_SLIT_CONFIDENCE_BY_PAIR?.[String(pair)] || null;
+function brcSlitConfidence(venue,pair,mode){
+  const key=`${String(venue||'').trim()}|${String(pair||'')}`;
+  return BRC_SLIT_TRUST_A_BY_CONDITION?.[String(mode||'')]?.[key] || null;
 }
-function brcSlitConfidenceWorst(list){
-  const arr=(Array.isArray(list)?list:[]).filter(x=>x&&x.grade);
+function brcSlitConfidenceAllA(list){
+  const arr=Array.isArray(list)?list:[];
   if(!arr.length) return null;
-  const rank={A:1,B:2,C:3};
-  return arr.slice().sort((a,b)=>(rank[a.grade]||99)-(rank[b.grade]||99)).reverse()[0] || null;
+  // 同一艇に複数ペアの効果を集約した場合、すべてAの時だけAを表示。
+  if(arr.every(x=>x?.grade==='A')) return arr[0];
+  return null;
 }
-function brcSlitConfidenceBadgeHtml(conf){
-  if(!conf?.grade) return '';
-  const g=String(conf.grade);
-  const title=`信頼${g}：${conf.label||'検証済み'} / 2026固定OOS N=${Number(conf.oosN)||0}（表示専用・的中保証ではありません）`;
-  return `<span class="slit-confidence-badge slit-confidence-${g}" title="${title}">信頼${g}</span>`;
+function brcSlitConfidenceBadgeHtml(conf,mode='strong'){
+  if(conf?.grade!=='A') return '';
+  const label=mode==='exhibition'?'展示A':'信頼A';
+  const condition=mode==='exhibition'?'展示差0.10':'展示差0.10＋平均ST順位差0.50';
+  const sign=v=>Number(v)>=0?'+':'';
+  const title=`${label}：${condition} / 2024・2025・2026の3期間で方向再現 / N=${Number(conf.n)||0} (2024=${Number(conf.n2024)||0}, 2025=${Number(conf.n2025)||0}, 2026=${Number(conf.n2026)||0}) / 後艇1着 ${sign(conf.outerWin)}${Number(conf.outerWin).toFixed(1)}pt・3連対 ${sign(conf.outerTop3)}${Number(conf.outerTop3).toFixed(1)}pt / 前艇1着 ${sign(conf.innerWin)}${Number(conf.innerWin).toFixed(1)}pt・3連対 ${sign(conf.innerTop3)}${Number(conf.innerTop3).toFixed(1)}pt（表示専用・的中保証ではありません）`;
+  return `<span class="slit-confidence-badge slit-confidence-A" title="${title}">${label}</span>`;
 }
 function brcSlitAttackCompatibilityGrade(boats, outerCourse){
   const oc=Number(outerCourse);
@@ -13637,7 +13637,7 @@ function brcSlitEvaluationState(boats,liveRace,inReliability=null){
   // 強条件を艇ごとへ集約。同一艇・同一指標で↑系と↓系が衝突した場合、その指標だけ非表示。
   const rowMap=new Map();
   const ensureRow=(boat)=>{
-    if(!rowMap.has(boat)) rowMap.set(boat,{boat,metrics:{},generic:false,titles:[],confidences:[],order:999});
+    if(!rowMap.has(boat)) rowMap.set(boat,{boat,metrics:{},generic:false,titles:[],confidenceEntries:[],order:999});
     return rowMap.get(boat);
   };
   for(const x of items){
@@ -13651,8 +13651,8 @@ function brcSlitEvaluationState(boats,liveRace,inReliability=null){
       ro.order=Math.min(ro.order,pairOrder);
       ri.order=Math.min(ri.order,pairOrder+1);
       ro.titles.push(title); ri.titles.push(title);
-      const conf=brcSlitConfidence(x.pair);
-      if(conf){ ro.confidences.push(conf); ri.confidences.push(conf); }
+      const conf=brcSlitConfidence(x.venue,x.pair,'strong');
+      ro.confidenceEntries.push(conf); ri.confidenceEntries.push(conf);
       for(const [k,a] of Object.entries(x.profile.outer)) brcSlitMergeMetric(ro.metrics,k,a);
       for(const [k,a] of Object.entries(x.profile.inner)) brcSlitMergeMetric(ri.metrics,k,a);
     }else{
@@ -13670,7 +13670,7 @@ function brcSlitEvaluationState(boats,liveRace,inReliability=null){
     const clean={};
     for(const k of metricOrder){ if(r.metrics[k]) clean[k]=r.metrics[k]; }
     const hasMetrics=Object.keys(clean).length>0;
-    const confidence=hasMetrics ? brcSlitConfidenceWorst(r.confidences) : null;
+    const confidence=hasMetrics ? brcSlitConfidenceAllA(r.confidenceEntries) : null;
     return {...r,metrics:clean,generic:r.generic && !hasMetrics,confidence};
   }).filter(r=>Object.keys(r.metrics).length || r.generic)
     // 各ALペアごとに「優位艇 → 内側艇」の順で読めるように並べる。
@@ -13684,6 +13684,7 @@ function brcSlitEvaluationState(boats,liveRace,inReliability=null){
     .map(x=>({
       boat:x.outer,
       order:x.inner*10,
+      confidence:brcSlitConfidence(x.venue,x.pair,'exhibition'),
       title:`${x.venue} ${x.outer}号艇→${x.inner}号艇 / 展示差 +${x.exGap.toFixed(2)}秒 / 展示差のみ（ST順位の強条件は非成立）`
     }))
     .sort((a,b)=>a.order-b.order || a.boat-b.boat);
@@ -13714,14 +13715,15 @@ function brcBuildSlitEvaluationHtml(boats,liveRace,inReliability=null){
         const cls=brcSlitArrowSign(a)>0?'slit-rate-up':'slit-rate-down';
         return `<span class="slit-rate-metric ${cls}">${brcSlitMetricLabel(k)}${a}</span>`;
       }).join('');
-      const confidenceBadge=brcSlitConfidenceBadgeHtml(r.confidence);
+      const confidenceBadge=brcSlitConfidenceBadgeHtml(r.confidence,'strong');
       return `<span class="slit-rate-row" title="${title}">${brcSlitBoatBadgeHtml(r.boat)}<span class="slit-rate-metrics">${metrics}</span>${confidenceBadge}</span>`;
     }).join('');
 
     // 展示差のみは弱い参考表示。展示差+ST順位の強条件が出ている艇には重ねない。
-    const exhibitionOnlyHtml=(state.exhibitionOnlyRows||[]).map(r=>
-      `<span class="slit-rate-row" title="${r.title}">${brcSlitBoatBadgeHtml(r.boat)}<span class="slit-rate-exhibition-only">展示優位</span></span>`
-    ).join('');
+    const exhibitionOnlyHtml=(state.exhibitionOnlyRows||[]).map(r=>{
+      const confidenceBadge=brcSlitConfidenceBadgeHtml(r.confidence,'exhibition');
+      return `<span class="slit-rate-row" title="${r.title}">${brcSlitBoatBadgeHtml(r.boat)}<span class="slit-rate-exhibition-only">展示優位</span>${confidenceBadge}</span>`;
+    }).join('');
 
     slitHtml=`${strongHtml}${exhibitionOnlyHtml}`;
   }
