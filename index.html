@@ -1,4 +1,5 @@
 <!-- BRC_GRADE_PROD_INDEX_V1_20260919: official G1/G2 metadata activation for brc-api; prediction changes are Worker-gated; unrelated UI/logic unchanged -->
+<!-- BRC_VENUE_CATEGORY_BADGES_V1_20260919: venue picker badges SG/G1/G2/G3/女子/ルーキー/マスター; display only; prediction logic unchanged -->
 <!-- BRC_PREDICT_GUIDE_TOP_V1_20260919: beginner/betting guide moved above venue/day race summary; prediction logic unchanged -->
 <!-- BRC_ADMIN_ORIGINAL_EXHIBITION_V1_20260918: 出走データ下に1周/回り足/直線/展示を管理者限定表示。live展示payloadをそのまま表示し予測ロジック非変更 -->
 <!-- BRC_SPECIAL_TAB_REMOVED_20260918: 特集タブをメインメニューから非表示。特集本体/既存ロジックは保持 -->
@@ -592,11 +593,32 @@
     border-radius:10px; border:1px solid rgba(10,31,51,.14); background:var(--panel);
     cursor:pointer; font-family:inherit; color:var(--line-white); transition:.15s;
   }
-  .venue-pill{min-width:52px; padding:5px 9px; font-size:13px; font-weight:700; border-radius:8px;}
-  .venue-pill .vp-day{font-size:10px; font-weight:400; color:var(--ink-soft); margin-top:1px; white-space:nowrap;}
+  .venue-pill{min-width:58px; padding:5px 8px; font-size:13px; font-weight:700; border-radius:8px;}
+  .venue-pill .vp-main{display:flex;align-items:center;justify-content:center;gap:4px;min-height:20px;white-space:nowrap;}
+  .venue-pill .vp-name{font-size:13px;font-weight:800;line-height:1.1;}
+  .venue-pill .vp-day{font-size:10px; font-weight:400; color:var(--ink-soft); margin-top:2px; white-space:nowrap;}
+  .venue-pill .vp-badge{
+    display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;
+    min-width:22px;height:16px;padding:0 5px;border-radius:999px;
+    font-size:8.5px;font-weight:950;line-height:1;letter-spacing:-.02em;white-space:nowrap;
+    border:1px solid transparent;box-sizing:border-box;
+  }
+  .venue-pill .vp-badge.sg{color:#b4232c;background:#fff1f2;border-color:#fecdd3;}
+  .venue-pill .vp-badge.g1{color:#6d28d9;background:#f5f3ff;border-color:#ddd6fe;}
+  .venue-pill .vp-badge.g2{color:#1d4ed8;background:#eff6ff;border-color:#bfdbfe;}
+  .venue-pill .vp-badge.g3{color:#0f766e;background:#f0fdfa;border-color:#99f6e4;}
+  .venue-pill .vp-badge.women{color:#be185d;background:#fdf2f8;border-color:#fbcfe8;}
+  .venue-pill .vp-badge.rookie{color:#047857;background:#ecfdf5;border-color:#a7f3d0;}
+  .venue-pill .vp-badge.master{color:#92400e;background:#fffbeb;border-color:#fde68a;}
   .venue-pill:hover{border-color:rgba(0,102,255,.4);}
   .venue-pill.active{background:var(--wave); border-color:var(--wave); color:#fff;}
   .venue-pill.active .vp-day{color:rgba(255,255,255,.85);}
+  .venue-pill.active .vp-badge{box-shadow:0 0 0 1px rgba(255,255,255,.22);}
+  @media (max-width:420px){
+    .venue-pill{min-width:56px;padding-left:7px;padding-right:7px;}
+    .venue-pill .vp-main{gap:3px;}
+    .venue-pill .vp-badge{height:15px;min-width:20px;padding:0 4px;font-size:8px;}
+  }
   .race-pill{min-width:42px; padding:5px 8px; font-size:13px; font-weight:700; border-radius:8px;}
   .race-pill .rp-time{font-size:10px; font-weight:400; color:var(--ink-soft); margin-top:1px; white-space:nowrap;}
   .race-pill:hover{border-color:rgba(0,102,255,.4);}
@@ -15599,7 +15621,7 @@ function populateDaySelect(){
       const info = RACE_INFO_TODAY[v];
       const active = newDaySel.value === v ? ' active' : '';
       const cancelled=brcVenueCancelled(v);
-      return `<button type="button" class="venue-pill${active}${cancelled?' venue-cancelled':''}" data-venue="${v}"${cancelled?' disabled':''}>${v}<span class="vp-day">${cancelled?'中止':resolveRaceDayLabel(info)}</span></button>`;
+      return `<button type="button" class="venue-pill${active}${cancelled?' venue-cancelled':''}" data-venue="${v}"${cancelled?' disabled':''}><span class="vp-main"><span class="vp-name">${v}</span>${brcVenueCategoryBadgeHtml(info)}</span><span class="vp-day">${cancelled?'中止':resolveRaceDayLabel(info)}</span></button>`;
     }).join('');
     venueTabRow.querySelectorAll('.venue-pill').forEach(btn=>{
       btn.addEventListener('click', ()=>{
@@ -15896,6 +15918,45 @@ function guessGradeFromTitle(title){
   if(/ルーキー/.test(t)) return 'ルーキー';
   if(/マスターズ/.test(t)) return 'マスターズ';
   return '一般';
+}
+
+
+// 会場ピッカー用の表示バッジ。予測グレードとは独立したUI表示専用。
+// 女子/ルーキー/マスターはシリーズ性を優先し、該当しない開催だけSG/G1/G2/G3を表示する。
+function brcVenueCategoryBadge(info){
+  const title = normalizeGradeTitle(info?.title || '');
+  const rawGrade = String(info?.grade || '').toUpperCase().replace(/\s+/g,'');
+
+  if(/ヴィーナス|オールレディース|レディース|女子|クイーンズ|おんな/.test(title)){
+    return {label:'女子', cls:'women'};
+  }
+  if(/ルーキー/.test(title) || rawGrade==='ルーキー'){
+    return {label:'ルーキー', cls:'rookie'};
+  }
+  if(/マスターズ|名人/.test(title) || rawGrade==='マスターズ' || rawGrade==='マスター'){
+    return {label:'マスター', cls:'master'};
+  }
+  if(isTrueSgTitle(title) || rawGrade==='SG'){
+    return {label:'SG', cls:'sg'};
+  }
+  if(isLadiesChallengeCupTitle(title) || /Ｇ２|G2/i.test(title) || rawGrade==='G2'){
+    return {label:'G2', cls:'g2'};
+  }
+  if(/Ｇ１|G1/i.test(title) || rawGrade==='G1'){
+    return {label:'G1', cls:'g1'};
+  }
+  if(/Ｇ３|G3/i.test(title) || rawGrade==='G3'){
+    return {label:'G3', cls:'g3'};
+  }
+  // 旧データでG1/G2が統合されている場合は、タイトルから分離できないため誤表示を避けて出さない。
+  if(rawGrade==='女子' || rawGrade==='ヴィーナス') return {label:'女子', cls:'women'};
+  if(rawGrade==='ルーキー') return {label:'ルーキー', cls:'rookie'};
+  if(rawGrade==='マスターズ') return {label:'マスター', cls:'master'};
+  return null;
+}
+function brcVenueCategoryBadgeHtml(info){
+  const badge = brcVenueCategoryBadge(info);
+  return badge ? `<span class="vp-badge ${badge.cls}">${badge.label}</span>` : '';
 }
 
 // レディースチャレンジカップはチャレンジカップと同日・同会場で併催される。
