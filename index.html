@@ -12,6 +12,8 @@
 <!DOCTYPE html>
 <!-- BRC_SLIT_3Y_NOLOOKAHEAD_A_ONLY_V1_20260920: 2023 warmup, 2024/2025/2026 validation; A-only trust badges; prediction/arrows unchanged -->
 <!-- BRC_SLIT_PT_INTEGER_ROUND_V1_20260920: slit-effect pt display rounded to integer; raw values and prediction logic unchanged -->
+<!-- BRC_SLIT_A_NUMERIC_ONLY_V1_20260920: trust-A rows show 1着/3連対 integer pt only; arrows and 2着 hidden; non-A logic unchanged -->
+<!-- BRC_SLIT_A_VISIBLE_PT_V1_20260920: 3-year trust-A rows show visible rounded win/top3 effect pt; non-A remains arrow/text only; prediction logic unchanged -->
 <!-- BRC_ADMIN_SOCIAL_VENUE_12R_BATCH_V1_20260919: admin SNS image batch export; selected venue 1R-12R rendered sequentially and saved as one ZIP; prediction/image design unchanged -->
 <!-- BRC_ALPHA_BADGE_WINRATE_V1_20260917: +α/-α reference badge on 1着率; detail via player name; no probability recalculation -->
 <!-- BRC_REFMON_DIAG_V3_20260917: logging-only audit patch; buy logic unchanged -->
@@ -13647,7 +13649,7 @@ function brcSlitEvaluationState(boats,liveRace,inReliability=null){
   // 強条件を艇ごとへ集約。同一艇・同一指標で↑系と↓系が衝突した場合、その指標だけ非表示。
   const rowMap=new Map();
   const ensureRow=(boat)=>{
-    if(!rowMap.has(boat)) rowMap.set(boat,{boat,metrics:{},generic:false,titles:[],confidenceEntries:[],order:999});
+    if(!rowMap.has(boat)) rowMap.set(boat,{boat,metrics:{},generic:false,titles:[],confidenceEntries:[],confidenceRoleEntries:[],order:999});
     return rowMap.get(boat);
   };
   for(const x of items){
@@ -13663,6 +13665,8 @@ function brcSlitEvaluationState(boats,liveRace,inReliability=null){
       ro.titles.push(title); ri.titles.push(title);
       const conf=brcSlitConfidence(x.venue,x.pair,'strong');
       ro.confidenceEntries.push(conf); ri.confidenceEntries.push(conf);
+      ro.confidenceRoleEntries.push({conf,role:'outer'});
+      ri.confidenceRoleEntries.push({conf,role:'inner'});
       for(const [k,a] of Object.entries(x.profile.outer)) brcSlitMergeMetric(ro.metrics,k,a);
       for(const [k,a] of Object.entries(x.profile.inner)) brcSlitMergeMetric(ri.metrics,k,a);
     }else{
@@ -13681,7 +13685,11 @@ function brcSlitEvaluationState(boats,liveRace,inReliability=null){
     for(const k of metricOrder){ if(r.metrics[k]) clean[k]=r.metrics[k]; }
     const hasMetrics=Object.keys(clean).length>0;
     const confidence=hasMetrics ? brcSlitConfidenceAllA(r.confidenceEntries) : null;
-    return {...r,metrics:clean,generic:r.generic && !hasMetrics,confidence};
+    // 実測ptは会場×前艇比較の3年信頼Aが1条件に一意に対応する時だけ表示する。
+    // 複数A条件が同一艇へ重なった場合は誤解を避けてptを出さない。
+    const confidenceRoleEntry=(confidence && Array.isArray(r.confidenceRoleEntries) && r.confidenceRoleEntries.length===1)
+      ? r.confidenceRoleEntries[0] : null;
+    return {...r,metrics:clean,generic:r.generic && !hasMetrics,confidence,confidenceRoleEntry};
   }).filter(r=>Object.keys(r.metrics).length || r.generic)
     // 各ALペアごとに「優位艇 → 内側艇」の順で読めるように並べる。
     .sort((a,b)=>a.order-b.order || a.boat-b.boat);
@@ -13719,12 +13727,31 @@ function brcBuildSlitEvaluationHtml(boats,liveRace,inReliability=null){
       if(r.generic){
         return `<span class="slit-rate-row" title="${title}">${brcSlitBoatBadgeHtml(r.boat)}<span class="slit-rate-generic">スリット優位</span></span>`;
       }
-      const order=['win','second','top3'];
-      const metrics=order.filter(k=>r.metrics[k]).map(k=>{
-        const a=r.metrics[k];
-        const cls=brcSlitArrowSign(a)>0?'slit-rate-up':'slit-rate-down';
-        return `<span class="slit-rate-metric ${cls}">${brcSlitMetricLabel(k)}${a}</span>`;
-      }).join('');
+      const ce=r.confidenceRoleEntry;
+      let metrics='';
+      if(ce?.conf?.grade==='A'){
+        // BRC_SLIT_A_NUMERIC_ONLY_V1_20260920:
+        // 信頼Aは実測pt自体が方向を示すため矢印を重複表示しない。
+        // 信頼Aの評価軸である1着・3連対だけを整数ptで表示し、2着は非表示。
+        const aMetrics=[
+          ['win','1着', ce.role==='outer' ? ce.conf?.outerWin : ce.conf?.innerWin],
+          ['top3','3連対', ce.role==='outer' ? ce.conf?.outerTop3 : ce.conf?.innerTop3]
+        ];
+        metrics=aMetrics.map(([k,label,value])=>{
+          const v=Number(value);
+          if(!Number.isFinite(v)) return '';
+          const cls=v>=0?'slit-rate-up':'slit-rate-down';
+          return `<span class="slit-rate-metric ${cls}">${label} ${brcSlitPtText(v)}</span>`;
+        }).join('');
+      }else{
+        // 信頼A以外は従来どおり検証済み方向の矢印表示を維持する。
+        const order=['win','second','top3'];
+        metrics=order.filter(k=>r.metrics[k]).map(k=>{
+          const a=r.metrics[k];
+          const cls=brcSlitArrowSign(a)>0?'slit-rate-up':'slit-rate-down';
+          return `<span class="slit-rate-metric ${cls}">${brcSlitMetricLabel(k)}${a}</span>`;
+        }).join('');
+      }
       const confidenceBadge=brcSlitConfidenceBadgeHtml(r.confidence,'strong');
       return `<span class="slit-rate-row" title="${title}">${brcSlitBoatBadgeHtml(r.boat)}<span class="slit-rate-metrics">${metrics}</span>${confidenceBadge}</span>`;
     }).join('');
@@ -13732,7 +13759,15 @@ function brcBuildSlitEvaluationHtml(boats,liveRace,inReliability=null){
     // 展示差のみは弱い参考表示。展示差+ST順位の強条件が出ている艇には重ねない。
     const exhibitionOnlyHtml=(state.exhibitionOnlyRows||[]).map(r=>{
       const confidenceBadge=brcSlitConfidenceBadgeHtml(r.confidence,'exhibition');
-      return `<span class="slit-rate-row" title="${r.title}">${brcSlitBoatBadgeHtml(r.boat)}<span class="slit-rate-exhibition-only">展示優位</span>${confidenceBadge}</span>`;
+      let effect='';
+      if(r.confidence?.grade==='A'){
+        const win=Number(r.confidence.outerWin), top3=Number(r.confidence.outerTop3);
+        const parts=[];
+        if(Number.isFinite(win)) parts.push(`<span class="slit-rate-metric slit-rate-up">1着 ${brcSlitPtText(win)}</span>`);
+        if(Number.isFinite(top3)) parts.push(`<span class="slit-rate-metric slit-rate-up">3連対 ${brcSlitPtText(top3)}</span>`);
+        if(parts.length) effect=`<span class="slit-rate-metrics">${parts.join('')}</span>`;
+      }
+      return `<span class="slit-rate-row" title="${r.title}">${brcSlitBoatBadgeHtml(r.boat)}<span class="slit-rate-exhibition-only">展示優位</span>${effect}${confidenceBadge}</span>`;
     }).join('');
 
     slitHtml=`${strongHtml}${exhibitionOnlyHtml}`;
