@@ -1,5 +1,5 @@
+<!-- BRC_VENUE_CATEGORY_BADGES_V2_20260919: venue picker badges SG/G1/G2/G3/女子/ルーキー/マスター; 2026 official schedule fallback + title detection; display only; prediction logic unchanged -->
 <!-- BRC_GRADE_PROD_INDEX_V1_20260919: official G1/G2 metadata activation for brc-api; prediction changes are Worker-gated; unrelated UI/logic unchanged -->
-<!-- BRC_VENUE_CATEGORY_BADGES_V1_20260919: venue picker badges SG/G1/G2/G3/女子/ルーキー/マスター; display only; prediction logic unchanged -->
 <!-- BRC_PREDICT_GUIDE_TOP_V1_20260919: beginner/betting guide moved above venue/day race summary; prediction logic unchanged -->
 <!-- BRC_ADMIN_ORIGINAL_EXHIBITION_V1_20260918: 出走データ下に1周/回り足/直線/展示を管理者限定表示。live展示payloadをそのまま表示し予測ロジック非変更 -->
 <!-- BRC_SPECIAL_TAB_REMOVED_20260918: 特集タブをメインメニューから非表示。特集本体/既存ロジックは保持 -->
@@ -15621,7 +15621,7 @@ function populateDaySelect(){
       const info = RACE_INFO_TODAY[v];
       const active = newDaySel.value === v ? ' active' : '';
       const cancelled=brcVenueCancelled(v);
-      return `<button type="button" class="venue-pill${active}${cancelled?' venue-cancelled':''}" data-venue="${v}"${cancelled?' disabled':''}><span class="vp-main"><span class="vp-name">${v}</span>${brcVenueCategoryBadgeHtml(info)}</span><span class="vp-day">${cancelled?'中止':resolveRaceDayLabel(info)}</span></button>`;
+      return `<button type="button" class="venue-pill${active}${cancelled?' venue-cancelled':''}" data-venue="${v}"${cancelled?' disabled':''}><span class="vp-main"><span class="vp-name">${v}</span>${brcVenueCategoryBadgeHtml(info,v)}</span><span class="vp-day">${cancelled?'中止':resolveRaceDayLabel(info)}</span></button>`;
     }).join('');
     venueTabRow.querySelectorAll('.venue-pill').forEach(btn=>{
       btn.addEventListener('click', ()=>{
@@ -15920,47 +15920,128 @@ function guessGradeFromTitle(title){
   return '一般';
 }
 
+// レディースチャレンジカップはチャレンジカップと同日・同会場で併催される。
+// 会場タイトルだけでは区別できないケースに備え、出走6選手が全員女子と確認できるレースだけG2へ戻す。
 
-// 会場ピッカー用の表示バッジ。予測グレードとは独立したUI表示専用。
-// 女子/ルーキー/マスターはシリーズ性を優先し、該当しない開催だけSG/G1/G2/G3を表示する。
-function brcVenueCategoryBadge(info){
+// ---- BRC venue badges V2 ----
+// 公式番組表TXTのタイトルには「G1/G3」表記が入らない開催があるため、
+// 会場ピッカーだけは2026年のBOAT RACE公式開催スケジュールを表示用フォールバックに使う。
+// 予測グレード・確率計算には一切使わない。
+const BRC_VENUE_BADGE_SCHEDULE_2026 = [
+  // SG / PG1（PG1は会場バッジ上はG1扱い）
+  ['2026-09-22','2026-09-27','若松','G1'],
+  ['2026-10-27','2026-11-01','尼崎','SG'],
+  ['2026-11-24','2026-11-29','常滑','SG'],
+  ['2026-12-15','2026-12-20','大村','SG'],
+  ['2026-12-26','2026-12-31','住之江','女子'],
+
+  // G1 / G2
+  ['2026-09-03','2026-09-08','津','G1'],
+  ['2026-09-07','2026-09-12','大村','G1'],
+  ['2026-09-12','2026-09-17','徳山','G1'],
+  ['2026-09-16','2026-09-21','多摩川','G1'],
+  ['2026-09-28','2026-10-03','児島','G1'],
+  ['2026-10-04','2026-10-09','三国','G1'],
+  ['2026-10-13','2026-10-18','平和島','G1'],
+  ['2026-10-18','2026-10-23','唐津','G1'],
+  ['2026-11-05','2026-11-10','住之江','G1'],
+  ['2026-11-06','2026-11-11','鳴門','G1'],
+  ['2026-11-14','2026-11-19','びわこ','G1'],
+  ['2026-11-15','2026-11-20','丸亀','G1'],
+  // 常滑 11/24-29 はSGチャレンジカップ併催のため会場表示はSGを優先
+  ['2026-12-03','2026-12-08','徳山','G1'],
+  ['2026-12-06','2026-12-11','蒲郡','G1'],
+
+  // G3（オールレディースは「女子」を優先表示）
+  ['2026-09-18','2026-09-23','宮島','女子'],
+  ['2026-09-22','2026-09-27','びわこ','G3'],
+  ['2026-09-24','2026-09-29','芦屋','女子'],
+  ['2026-09-29','2026-10-04','蒲郡','G3'],
+  ['2026-10-07','2026-10-12','江戸川','女子'],
+  ['2026-10-19','2026-10-24','住之江','女子'],
+  ['2026-10-21','2026-10-26','浜名湖','G3'],
+  ['2026-10-31','2026-11-05','津','女子'],
+  ['2026-11-11','2026-11-16','大村','G3'],
+  ['2026-11-18','2026-11-23','戸田','女子'],
+  ['2026-11-21','2026-11-26','三国','G3'],
+  ['2026-11-27','2026-12-02','尼崎','G3'],
+  ['2026-12-01','2026-12-06','びわこ','女子'],
+  ['2026-12-13','2026-12-18','福岡','G3'],
+  ['2026-12-20','2026-12-25','唐津','G3'],
+  ['2026-12-26','2026-12-31','住之江','女子'],
+
+  // ヴィーナスシリーズ
+  ['2026-10-01','2026-10-06','下関','女子'],
+  ['2026-10-13','2026-10-18','若松','女子'],
+  ['2026-10-25','2026-10-30','桐生','女子'],
+  ['2026-11-06','2026-11-11','多摩川','女子'],
+  ['2026-11-12','2026-11-17','唐津','女子'],
+  ['2026-12-08','2026-12-13','尼崎','女子'],
+
+  // ルーキーシリーズ
+  ['2026-10-02','2026-10-07','徳山','ルーキー'],
+  ['2026-10-12','2026-10-17','鳴門','ルーキー'],
+  ['2026-10-22','2026-10-27','多摩川','ルーキー'],
+  ['2026-11-01','2026-11-06','宮島','ルーキー'],
+  ['2026-11-10','2026-11-15','津','ルーキー'],
+  ['2026-11-19','2026-11-24','福岡','ルーキー'],
+  ['2026-12-09','2026-12-14','戸田','ルーキー'],
+  ['2026-12-18','2026-12-23','芦屋','ルーキー'],
+
+  // マスターズリーグ
+  ['2026-09-28','2026-10-03','平和島','マスター'],
+  ['2026-10-29','2026-11-03','徳山','マスター'],
+  ['2026-11-20','2026-11-25','芦屋','マスター'],
+  ['2026-12-19','2026-12-24','戸田','マスター']
+];
+
+function brcVenueBadgeFromSchedule(venue, dateStr){
+  const d=String(dateStr||'');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d)) return null;
+  // 同一会場・同一日で複数グレード併催がある場合は、先に登録した高位表示を優先。
+  const hit=BRC_VENUE_BADGE_SCHEDULE_2026.find(x=>x[2]===venue && d>=x[0] && d<=x[1]);
+  return hit ? hit[3] : null;
+}
+function brcVenueBadgeObj(label){
+  const x=String(label||'');
+  if(x==='SG') return {label:'SG',cls:'sg'};
+  if(x==='G1') return {label:'G1',cls:'g1'};
+  if(x==='G2') return {label:'G2',cls:'g2'};
+  if(x==='G3') return {label:'G3',cls:'g3'};
+  if(x==='女子') return {label:'女子',cls:'women'};
+  if(x==='ルーキー') return {label:'ルーキー',cls:'rookie'};
+  if(x==='マスター') return {label:'マスター',cls:'master'};
+  return null;
+}
+function brcVenueCategoryBadge(info, venue=''){
   const title = normalizeGradeTitle(info?.title || '');
   const rawGrade = String(info?.grade || '').toUpperCase().replace(/\s+/g,'');
 
-  if(/ヴィーナス|オールレディース|レディース|女子|クイーンズ|おんな/.test(title)){
-    return {label:'女子', cls:'women'};
-  }
-  if(/ルーキー/.test(title) || rawGrade==='ルーキー'){
-    return {label:'ルーキー', cls:'rookie'};
-  }
-  if(/マスターズ|名人/.test(title) || rawGrade==='マスターズ' || rawGrade==='マスター'){
-    return {label:'マスター', cls:'master'};
-  }
-  if(isTrueSgTitle(title) || rawGrade==='SG'){
-    return {label:'SG', cls:'sg'};
-  }
-  if(isLadiesChallengeCupTitle(title) || /Ｇ２|G2/i.test(title) || rawGrade==='G2'){
-    return {label:'G2', cls:'g2'};
-  }
-  if(/Ｇ１|G1/i.test(title) || rawGrade==='G1'){
-    return {label:'G1', cls:'g1'};
-  }
-  if(/Ｇ３|G3/i.test(title) || rawGrade==='G3'){
-    return {label:'G3', cls:'g3'};
-  }
-  // 旧データでG1/G2が統合されている場合は、タイトルから分離できないため誤表示を避けて出さない。
-  if(rawGrade==='女子' || rawGrade==='ヴィーナス') return {label:'女子', cls:'women'};
-  if(rawGrade==='ルーキー') return {label:'ルーキー', cls:'rookie'};
-  if(rawGrade==='マスターズ') return {label:'マスター', cls:'master'};
+  // タイトルにシリーズ名が明記される場合は最優先。
+  if(/ヴィーナス|オールレディース|レディース|女子|クイーンズ|おんな/.test(title)) return brcVenueBadgeObj('女子');
+  if(/ルーキー/.test(title) || rawGrade==='ルーキー') return brcVenueBadgeObj('ルーキー');
+  if(/マスターズ|名人/.test(title) || rawGrade==='マスターズ' || rawGrade==='マスター') return brcVenueBadgeObj('マスター');
+
+  // 公式2026スケジュール（TXTタイトルにグレード表記が無い開催を補う）。
+  const scheduled=brcVenueBadgeFromSchedule(String(venue||''), String(TODAY_LABEL||''));
+  if(scheduled) return brcVenueBadgeObj(scheduled);
+
+  // タイトル / 既存gradeのフォールバック。
+  if(isTrueSgTitle(title) || rawGrade==='SG') return brcVenueBadgeObj('SG');
+  if(isLadiesChallengeCupTitle(title) || /Ｇ２|G2/i.test(title) || rawGrade==='G2') return brcVenueBadgeObj('G2');
+  if(/Ｇ１|G1/i.test(title) || rawGrade==='G1') return brcVenueBadgeObj('G1');
+  if(/Ｇ３|G3/i.test(title) || rawGrade==='G3') return brcVenueBadgeObj('G3');
+
+  // 周年記念はG1の典型。スケジュール外年の最低限フォールバック。
+  if(/開設\s*[０-９0-9]+\s*周年|周年記念/.test(title)) return brcVenueBadgeObj('G1');
+  if(rawGrade==='女子' || rawGrade==='ヴィーナス') return brcVenueBadgeObj('女子');
   return null;
 }
-function brcVenueCategoryBadgeHtml(info){
-  const badge = brcVenueCategoryBadge(info);
+function brcVenueCategoryBadgeHtml(info, venue=''){
+  const badge=brcVenueCategoryBadge(info,venue);
   return badge ? `<span class="vp-badge ${badge.cls}">${badge.label}</span>` : '';
 }
 
-// レディースチャレンジカップはチャレンジカップと同日・同会場で併催される。
-// 会場タイトルだけでは区別できないケースに備え、出走6選手が全員女子と確認できるレースだけG2へ戻す。
 function isKnownFemaleRacer(reg){
   const d = GRADE_STATS?.[String(reg)];
   if(!d) return false;
