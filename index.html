@@ -6,6 +6,7 @@
 <!-- BRC_EXHIBITION_ONLY_PRIORITY_V1_20260918: 展示差のみを弱表示。展示差+ST順位条件成立時は強条件を優先し重複非表示 -->
 <!-- BRC_ADMIN_OPERATIONS_HUB_V1_20260918: admin-only operations dashboard; public UI unchanged -->
 <!DOCTYPE html>
+<!-- BRC_ADMIN_SOCIAL_VENUE_12R_BATCH_V1_20260919: admin SNS image batch export; selected venue 1R-12R rendered sequentially and saved as one ZIP; prediction/image design unchanged -->
 <!-- BRC_ALPHA_BADGE_WINRATE_V1_20260917: +α/-α reference badge on 1着率; detail via player name; no probability recalculation -->
 <!-- BRC_REFMON_DIAG_V3_20260917: logging-only audit patch; buy logic unchanged -->
 <!-- BRC_PLAYER_DETAIL_DISCOVERY_IMPACT_V1_20260917 -->
@@ -5261,6 +5262,7 @@ body.brc-admin-public-view [data-brc-admin-only="true"]{display:none !important;
             <div id="brcAdminSocialTheme" class="brc-admin-social-theme"><span>自動判定：</span><strong>レースを表示すると投稿テーマを判定します</strong></div>
             <div class="brc-admin-social-actions">
               <button type="button" id="brcAdminSocialImage" class="brc-admin-social-btn secondary">SNS画像を作成して保存</button>
+              <button type="button" id="brcAdminSocialImageVenueBatch" class="brc-admin-social-btn secondary">この会場12Rを一括保存</button>
               <button type="button" id="brcAdminSocialGenerate" class="brc-admin-social-btn">投稿文を作成</button>
               <button type="button" id="brcAdminSocialCopy" class="brc-admin-social-btn secondary">コピー</button>
             </div>
@@ -6416,7 +6418,32 @@ function brcAdminSocialImageFileName(){
   const day=String(window.TODAY_LABEL||'').replace(/[^0-9]/g,'');
   return `BRC_${day?day+'_':''}${venue}${raceNo?raceNo+'R':''}.png`.replace(/[\\/:*?"<>|\s]+/g,'_');
 }
-async function brcCreateAdminSocialImage(){
+function brcAdminSocialBatchImageFileName(venue,raceNo){
+  const day=String(window.TODAY_LABEL||'').replace(/[^0-9]/g,'');
+  const r=String(Math.max(0,Number(raceNo)||0)).padStart(2,'0');
+  return `BRC_${day?day+'_':''}${String(venue||'BRC').trim()}_${r}R.png`.replace(/[\\/:*?"<>|\s]+/g,'_');
+}
+function brcAdminSocialBatchZipFileName(venue){
+  const day=String(window.TODAY_LABEL||'').replace(/[^0-9]/g,'');
+  return `BRC_${day?day+'_':''}${String(venue||'BRC').trim()}_SNS_01R-12R.zip`.replace(/[\\/:*?"<>|\s]+/g,'_');
+}
+function brcLoadJsZip(){
+  if(typeof window.JSZip==='function') return Promise.resolve(window.JSZip);
+  if(window.__brcJsZipLoading) return window.__brcJsZipLoading;
+  window.__brcJsZipLoading=new Promise((resolve,reject)=>{
+    const script=document.createElement('script');
+    script.src='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
+    script.async=true;
+    script.onload=()=>typeof window.JSZip==='function'?resolve(window.JSZip):reject(new Error('ZIP作成ライブラリを読み込めませんでした。'));
+    script.onerror=()=>reject(new Error('ZIP作成ライブラリの通信に失敗しました。'));
+    document.head.appendChild(script);
+  }).catch(err=>{window.__brcJsZipLoading=null;throw err;});
+  return window.__brcJsZipLoading;
+}
+function brcAdminSocialWaitForLayout(){
+  return new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(resolve,80))));
+}
+async function brcCreateAdminSocialImage(options={}){
   const box=document.getElementById('predictResult');
   const table=document.getElementById('predictTableWrap');
   if(!box || !table || !box.querySelector('.predict-table')) throw new Error('先に出走表AIの「計算」を実行してください。');
@@ -6442,14 +6469,18 @@ async function brcCreateAdminSocialImage(){
   ctx.fillStyle='#fff'; ctx.fillRect(0,0,canvas.width,canvas.height);
   ctx.drawImage(fullCanvas,0,0,canvas.width,canvas.height,0,0,canvas.width,canvas.height);
   const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('PNG画像を作成できませんでした。')),'image/png',1));
-  if(__brcAdminSocialImageUrl) URL.revokeObjectURL(__brcAdminSocialImageUrl);
-  __brcAdminSocialImageBlob=blob;
-  __brcAdminSocialImageUrl=URL.createObjectURL(blob);
-  const preview=document.getElementById('brcAdminSocialPreview');
-  const img=document.getElementById('brcAdminSocialPreviewImg');
-  if(img) img.src=__brcAdminSocialImageUrl;
-  if(preview) preview.classList.add('is-visible');
-  return {blob,url:__brcAdminSocialImageUrl,fileName:brcAdminSocialImageFileName()};
+  let imageUrl='';
+  if(options.preview!==false){
+    if(__brcAdminSocialImageUrl) URL.revokeObjectURL(__brcAdminSocialImageUrl);
+    __brcAdminSocialImageBlob=blob;
+    __brcAdminSocialImageUrl=URL.createObjectURL(blob);
+    imageUrl=__brcAdminSocialImageUrl;
+    const preview=document.getElementById('brcAdminSocialPreview');
+    const img=document.getElementById('brcAdminSocialPreviewImg');
+    if(img) img.src=__brcAdminSocialImageUrl;
+    if(preview) preview.classList.add('is-visible');
+  }
+  return {blob,url:imageUrl,fileName:brcAdminSocialImageFileName()};
 }
 async function brcShareOrSaveAdminSocialImage(){
   if(!__brcAdminSocialImageBlob || !__brcAdminSocialImageUrl) throw new Error('先にSNS画像を作成してください。');
@@ -6479,14 +6510,72 @@ async function brcAutoSaveAdminSocialImage(){
   return fileName;
 }
 
+
+async function brcCreateAdminSocialVenueZip(onProgress){
+  if(!BRC_ADMIN_ACTIVE) throw new Error('管理者ログインが必要です。');
+  const venue=String(document.getElementById('predictRaceDay')?.value||document.getElementById('predictVenue')?.value||'').trim();
+  if(!venue) throw new Error('先に会場を選択してください。');
+  const races=RACE_CARDS_TODAY?.[venue]||{};
+  if(!Object.keys(races).length) throw new Error(`${venue}のレースデータがありません。`);
+  const JSZip=await brcLoadJsZip();
+  const zip=new JSZip();
+  const originalVenue=String(document.getElementById('predictRaceDay')?.value||document.getElementById('predictVenue')?.value||'').trim();
+  const originalRace=Number(document.getElementById('predictRaceNo')?.value||0);
+  const saved=[];
+  const skipped=[];
+  try{
+    for(let raceNo=1;raceNo<=12;raceNo++){
+      if(typeof onProgress==='function') onProgress({phase:'load',venue,raceNo,done:saved.length+skipped.length,total:12});
+      if(brcRaceCancelled(venue,raceNo)){skipped.push({raceNo,reason:brcRaceCancelReason(venue,raceNo)||'中止'});continue;}
+      if(!Array.isArray(races[String(raceNo)]) || races[String(raceNo)].length!==6){skipped.push({raceNo,reason:'出走データなし'});continue;}
+      try{
+        const task=loadTodaysRace(venue,raceNo);
+        if(task && typeof task.then==='function') await task;
+        await brcAdminSocialWaitForLayout();
+        const currentVenue=String(document.getElementById('predictRaceDay')?.value||document.getElementById('predictVenue')?.value||'').trim();
+        const currentRace=Number(document.getElementById('predictRaceNo')?.value||0);
+        if(currentVenue!==venue || currentRace!==raceNo) throw new Error('レース切替を確認できませんでした。');
+        if(typeof onProgress==='function') onProgress({phase:'image',venue,raceNo,done:saved.length+skipped.length,total:12});
+        const image=await brcCreateAdminSocialImage({preview:false});
+        const fileName=brcAdminSocialBatchImageFileName(venue,raceNo);
+        zip.file(fileName,image.blob);
+        saved.push({raceNo,fileName});
+      }catch(err){
+        skipped.push({raceNo,reason:String(err?.message||err||'画像作成エラー')});
+      }
+    }
+    if(!saved.length) throw new Error('保存できるSNS画像を作成できませんでした。');
+    if(typeof onProgress==='function') onProgress({phase:'zip',venue,raceNo:0,done:12,total:12});
+    const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=brcAdminSocialBatchZipFileName(venue);
+    a.target='_blank';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),30000);
+    return {venue,saved,skipped,fileName:brcAdminSocialBatchZipFileName(venue)};
+  }finally{
+    if(originalVenue && originalRace && RACE_CARDS_TODAY?.[originalVenue]?.[String(originalRace)] && !brcRaceCancelled(originalVenue,originalRace)){
+      try{
+        const restore=loadTodaysRace(originalVenue,originalRace);
+        if(restore && typeof restore.then==='function') await restore;
+      }catch(_e){}
+    }
+  }
+}
+
 function brcBindAdminSocial(){
-  const imageBtn=document.getElementById('brcAdminSocialImage'), shareBtn=document.getElementById('brcAdminSocialImageShare'), gen=document.getElementById('brcAdminSocialGenerate'), copy=document.getElementById('brcAdminSocialCopy'), ta=document.getElementById('brcAdminSocialText'), status=document.getElementById('brcAdminSocialStatus');
+  const imageBtn=document.getElementById('brcAdminSocialImage'), batchBtn=document.getElementById('brcAdminSocialImageVenueBatch'), shareBtn=document.getElementById('brcAdminSocialImageShare'), gen=document.getElementById('brcAdminSocialGenerate'), copy=document.getElementById('brcAdminSocialCopy'), ta=document.getElementById('brcAdminSocialText'), status=document.getElementById('brcAdminSocialStatus');
   ['brcAdminSocialPlatform','brcAdminSocialPhase'].forEach(id=>{
     const root=document.getElementById(id); if(root && !root.dataset.bound){root.dataset.bound='1';root.addEventListener('click',e=>{const b=e.target.closest('button[data-value]');if(!b)return;root.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));brcAdminSocialUpdateUi();});}
   });
   ['brcAdminSocialPurpose','brcAdminSocialNote','brcAdminSocialResult','brcAdminSocialPayout'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.dataset.bound){el.dataset.bound='1';el.addEventListener('input',()=>brcAdminSocialUpdateTheme());el.addEventListener('change',()=>{if(id==='brcAdminSocialPurpose'&&el.value==='hit'){const root=document.getElementById('brcAdminSocialPhase');root?.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.value==='result'));}brcAdminSocialUpdateUi();});}});
   if(ta && !ta.dataset.counterBound){ta.dataset.counterBound='1';ta.addEventListener('input',brcAdminSocialUpdateCounter);}
   if(imageBtn && !imageBtn.dataset.bound){imageBtn.dataset.bound='1';imageBtn.addEventListener('click',async()=>{if(!BRC_ADMIN_ACTIVE)return;const old=imageBtn.textContent;imageBtn.disabled=true;imageBtn.textContent='画像作成中…';if(status)status.textContent='出走表AIの表示部分をPNG画像にしています。';try{await brcCreateAdminSocialImage();await brcAutoSaveAdminSocialImage();if(status)status.textContent='SNS画像を作成し、端末へ保存しました。下にプレビューも表示しています。';}catch(err){if(status)status.textContent=`画像作成エラー: ${err?.message||err}`;}finally{imageBtn.disabled=false;imageBtn.textContent=old;}});}
+  if(batchBtn && !batchBtn.dataset.bound){batchBtn.dataset.bound='1';batchBtn.addEventListener('click',async()=>{if(!BRC_ADMIN_ACTIVE)return;const old=batchBtn.textContent;batchBtn.disabled=true;if(imageBtn)imageBtn.disabled=true;try{const result=await brcCreateAdminSocialVenueZip(p=>{if(p.phase==='zip'){batchBtn.textContent='ZIP作成中…';if(status)status.textContent=`${p.venue} 1R〜12Rの画像をZIPにまとめています。`;}else{batchBtn.textContent=`一括作成 ${p.raceNo}/12`;if(status)status.textContent=`${p.venue} ${p.raceNo}R：${p.phase==='image'?'SNS画像を作成中':'出走データを読込中'}…`;}});const skipText=result.skipped.length?`（${result.skipped.map(x=>`${x.raceNo}R:${x.reason}`).join(' / ')} はスキップ）`:'';if(status)status.textContent=`${result.venue} ${result.saved.length}レース分を「${result.fileName}」で一括保存しました。${skipText}`;}catch(err){if(status)status.textContent=`一括保存エラー: ${err?.message||err}`;}finally{batchBtn.disabled=false;batchBtn.textContent=old;if(imageBtn)imageBtn.disabled=false;}});}
   if(shareBtn && !shareBtn.dataset.bound){shareBtn.dataset.bound='1';shareBtn.addEventListener('click',async()=>{if(!BRC_ADMIN_ACTIVE)return;try{const msg=await brcShareOrSaveAdminSocialImage();if(status)status.textContent=msg;}catch(err){if(err?.name!=='AbortError'&&status)status.textContent=`画像保存エラー: ${err?.message||err}`;}});}
   if(gen && !gen.dataset.bound){gen.dataset.bound='1';gen.addEventListener('click',async()=>{if(!BRC_ADMIN_ACTIVE)return;const old=gen.textContent;gen.disabled=true;gen.textContent='AI分析中…';if(status)status.textContent='AIが「このレースで一番伝える価値のあるポイント」を選んでいます。';try{const out=await brcBuildAdminSocialPostAI();if(ta)ta.value=out.text||'';if(status)status.textContent=out.status||'';}catch(err){const fallback=brcBuildAdminSocialPost();if(ta)ta.value=fallback.text||'';if(status)status.textContent=`AI接続に失敗したためV2ローカル分析で作成しました（${err?.message||err}）。`;}finally{gen.disabled=false;brcAdminSocialUpdateUi();brcAdminSocialUpdateCounter();}});}
   if(copy && !copy.dataset.bound){copy.dataset.bound='1';copy.addEventListener('click',async()=>{if(!BRC_ADMIN_ACTIVE)return;const text=String(ta?.value||'');if(!text){if(status)status.textContent='先に投稿文を作成してください。';return;}try{await navigator.clipboard.writeText(text);if(status)status.textContent='コピーしました。';}catch(_){if(ta){ta.focus();ta.select();}let ok=false;try{ok=document.execCommand('copy');}catch(_e){}if(status)status.textContent=ok?'コピーしました。':'文章を選択したので、端末のコピー操作を使ってください。';}});}
@@ -16134,8 +16223,11 @@ function loadTodaysRace(venue, raceNo){
   try{ brcStartRaceResultMonitor(venue, Number(raceNo)); }catch(_e){}
 
   // 予測計算で例外が発生しても、レース番号クリック・出走表表示を止めない。
+  // Promiseを返すことで、管理者のSNS画像一括保存時だけ描画完了を待てるようにする。
+  // 通常のクリック操作は従来どおりawait不要。
+  let predictPromise = null;
   try {
-    runPredict();
+    predictPromise = runPredict();
   } catch(err) {
     console.error('予測自動計算エラー:', err);
     const resultBox = document.getElementById('predictResult');
@@ -16149,6 +16241,7 @@ function loadTodaysRace(venue, raceNo){
 
   renderDeadlineSchedule();
   if(document.getElementById('page-special')) renderSpecialLivePanel();
+  return predictPromise;
 }
 
 // 出走表テーブルの1行分（登録番号・コース別勝率・3連対率・平均ST順）を、
