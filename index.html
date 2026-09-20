@@ -1,3 +1,6 @@
+<!-- BRC_SLIT_GRADE_MEANING_CLARITY_V1_20260921: A/B clarified as evidence-grade tiers, not future-effect or hit-rate ranking; display/prediction math unchanged -->
+<!-- BRC_SLIT_PT_MEAN_CLARITY_V1_20260921: A/B numeric pt clarified as 2024-2026 observed mean difference, not a future additive prediction; B tooltip includes bootstrap 95% CI; prediction math unchanged -->
+<!-- BRC_SLIT_STRONG_INCREMENTAL_V1_20260921: strong ST display is incremental effect versus exhibition-gap-only within production-enabled venue/pairs; 3>2 outer win/top3 + inner win retained, 4>3 only outer top3 weak, 5>4 inner win/top3 retained, 2>1 and 6>5 held; prediction math unchanged -->
 <!-- BRC_SLIT_TRUST_B_NUMERIC_PT_V1_20260920: trust-B 23 exhibition-only cells now carry observed 3-period central effect sizes and display rounded 1st/top3 pt for both boats; confidence grade remains B; strong ST-condition remains directional-only -->
 <!-- BRC_SLIT_PAIR_CONTEXT_V1_20260920: trusted exhibition A/B signals are pair-conditional; do not cancel valid opposite-role signals on the same boat; show pair context (e.g. 4>3) beside each trusted row; weak duplicate display suppressed; prediction logic unchanged -->
 <!-- BRC_SLIT_A_NUMERIC_PRIORITY_V2_20260920: latest 233206 base; exhibition trust-A numeric rows persist even when ST-strong condition also fires; A beats conflicting B; conflicting B-only signals are hidden; prediction logic unchanged -->
@@ -13504,9 +13507,10 @@ function brcSlitConfidenceBadgeHtml(conf,mode='strong'){
   let title='';
   if(grade==='A'){
     const ciText=(Number.isFinite(Number(conf.outerWinLo))&&Number.isFinite(Number(conf.outerWinHi))) ? ` / 95%CI: 後艇1着 ${brcSlitPtText(conf.outerWinLo)}〜${brcSlitPtText(conf.outerWinHi)}・3連対 ${brcSlitPtText(conf.outerTop3Lo)}〜${brcSlitPtText(conf.outerTop3Hi)} / 前艇1着 ${brcSlitPtText(conf.innerWinLo)}〜${brcSlitPtText(conf.innerWinHi)}・3連対 ${brcSlitPtText(conf.innerTop3Lo)}〜${brcSlitPtText(conf.innerTop3Hi)}` : '';
-    title=`${label}：${condition} / 3年方向再現＋完了5半期5/5一致＋90日ローリング監査通過 / N=${Number(conf.n)||0} (2024=${Number(conf.n2024)||0}, 2025=${Number(conf.n2025)||0}, 2026=${Number(conf.n2026)||0}) / ローリング: 4方向一致${Number(conf.rollAll4)||0}%・3方向以上${Number(conf.roll3plus)||0}%・各指標最低${Number(conf.rollMinMetric)||0}% / 後艇1着 ${brcSlitPtText(conf.outerWin)}・3連対 ${brcSlitPtText(conf.outerTop3)} / 前艇1着 ${brcSlitPtText(conf.innerWin)}・3連対 ${brcSlitPtText(conf.innerTop3)}${ciText}（表示専用・的中保証ではありません）`;
+    title=`${label}：${condition} / 表示pt＝2024〜2026の3期間実測平均差（未来の上乗せ予測値ではありません） / A/Bは検証証拠の区分であり、将来効果の大小・的中率の順位ではありません / 3年方向再現＋完了5半期5/5一致＋90日ローリング監査通過 / N=${Number(conf.n)||0} (2024=${Number(conf.n2024)||0}, 2025=${Number(conf.n2025)||0}, 2026=${Number(conf.n2026)||0}) / ローリング: 4方向一致${Number(conf.rollAll4)||0}%・3方向以上${Number(conf.roll3plus)||0}%・各指標最低${Number(conf.rollMinMetric)||0}% / 後艇1着 ${brcSlitPtText(conf.outerWin)}・3連対 ${brcSlitPtText(conf.outerTop3)} / 前艇1着 ${brcSlitPtText(conf.innerWin)}・3連対 ${brcSlitPtText(conf.innerTop3)}${ciText}（表示専用・的中保証ではありません）`;
   }else{
-    title=`${label}：${condition} / 2024・2025・2026で4方向一致、完了5半期で大崩れなし、90日ローリング安定、日付クラスターブートストラップ95%CIで後艇1着・3連対はプラス、前艇1着・3連対はマイナスを確認 / N=${Number(conf.n)||0} (2024=${Number(conf.n2024)||0}, 2025=${Number(conf.n2025)||0}, 2026=${Number(conf.n2026)||0}) / 完了半期4方向一致=${Number(conf.halfFull)||0}/5・90日4方向一致=${Number(conf.rollAll4)||0}% / 後艇1着 ${brcSlitPtText(conf.outerWin)}・3連対 ${brcSlitPtText(conf.outerTop3)} / 前艇1着 ${brcSlitPtText(conf.innerWin)}・3連対 ${brcSlitPtText(conf.innerTop3)}（実測差pt表示・的中保証ではありません）`;
+    const ciText=(Number.isFinite(Number(conf.outerWinLo))&&Number.isFinite(Number(conf.outerWinHi))) ? ` / 95%CI: 後艇1着 ${brcSlitPtText(conf.outerWinLo)}〜${brcSlitPtText(conf.outerWinHi)}・3連対 ${brcSlitPtText(conf.outerTop3Lo)}〜${brcSlitPtText(conf.outerTop3Hi)} / 前艇1着 ${brcSlitPtText(conf.innerWinLo)}〜${brcSlitPtText(conf.innerWinHi)}・3連対 ${brcSlitPtText(conf.innerTop3Lo)}〜${brcSlitPtText(conf.innerTop3Hi)}` : '';
+    title=`${label}：${condition} / 表示pt＝2024〜2026の3期間実測平均差（未来の上乗せ予測値ではありません） / A/Bは検証証拠の区分であり、将来効果の大小・的中率の順位ではありません / 2024・2025・2026で4方向一致、完了5半期で大崩れなし、90日ローリング安定、日付クラスターブートストラップ95%CIで後艇1着・3連対はプラス、前艇1着・3連対はマイナスを確認 / N=${Number(conf.n)||0} (2024=${Number(conf.n2024)||0}, 2025=${Number(conf.n2025)||0}, 2026=${Number(conf.n2026)||0}) / 完了半期4方向一致=${Number(conf.halfFull)||0}/5・90日4方向一致=${Number(conf.rollAll4)||0}% / 後艇1着 ${brcSlitPtText(conf.outerWin)}・3連対 ${brcSlitPtText(conf.outerTop3)} / 前艇1着 ${brcSlitPtText(conf.innerWin)}・3連対 ${brcSlitPtText(conf.innerTop3)}${ciText}（実測差pt表示・的中保証ではありません）`;
   }
   return `<span class="slit-confidence-badge slit-confidence-${grade}" title="${title}">${label}</span>`;
 }
@@ -13566,28 +13570,44 @@ function brcSlitIsGeneralRace(){
 }
 
 // metric: win=1着率 / second=2着率 / top3=3連対率
-// arrow: ↑ ↗ ↘ ↓。方向は2025→2026OOSで再現した範囲だけ固定表示。
+// arrow: ↑ ↗ ↘ ↓。
+// A/B数値が「展示差0.10そのものの効果」を既に表示するため、ここでの強条件矢印は
+// 「ST順位差0.50を追加した時に、展示差だけよりさらに動く方向」を示す補助表示として扱う。
 function brcSlitRateProfile(outerCourse, headUpgrade, inReliability){
   const oc=Number(outerCourse);
+  // BRC_SLIT_STRONG_INCREMENTAL_V1_20260920
+  // 2025検証 + 2026固定production OOSで、展示差のみとの差分（追加効果）を再検証。
+  // 2026は実際に強条件を有効化している会場×比較だけを対象に集計。
+  // 2>1: N=8で判断保留 → 詳細矢印なし（従来どおりgeneric表示へ）
   if(oc===2){
     if(!brcSlitStrongInDenial(inReliability)) return null;
+    return null;
+  }
+  // 3>2: 後艇1着↑・3連対↑、前艇1着↓を確認。前艇3連対はCIが0をまたぐため非表示。
+  if(oc===3){
     return {
       outer:{win:'↑',top3:'↑'},
-      inner:{win:'↘',top3:'↘'}
+      inner:{win:'↓'}
     };
   }
-  if(oc===3 || oc===4){
+  // 4>3: ST追加効果で再現したのは後艇3連対のみ。
+  // 2025: +8.5pt（8/10会場で+）、2026固定OOS: +6.0pt（8/10会場で+）。
+  // 後艇1着は2026会場別で5勝5敗、前艇3連対も5勝5敗のため表示しない。
+  if(oc===4){
     return {
-      outer:{win:'↑',second:'↗',top3:'↑'},
-      inner:{win:'↘',second:'↘',top3:'↓'}
+      outer:{top3:'↗'},
+      inner:{}
     };
   }
-  if(oc===5 || oc===6){
+  // 5>4: 後艇側の上昇は完全OOSで再現せず。前艇1着↓・3連対↓だけを表示。
+  if(oc===5){
     return {
-      outer:{win:headUpgrade?'↑':'↗',second:'↗',top3:'↑'},
-      inner:{win:'↘',second:'↘',top3:'↓'}
+      outer:{},
+      inner:{win:'↓',top3:'↓'}
     };
   }
+  // 6>5: 現時点では1着・3連対とも95%CIが0をまたぐため詳細矢印なし。
+  if(oc===6) return null;
   return null;
 }
 function brcSlitArrowSign(arrow){
@@ -13698,10 +13718,14 @@ function brcSlitEvaluationState(boats,liveRace,inReliability=null){
     return rowMap.get(boat);
   };
   for(const x of items){
-    const outEff=brcSlitNationalEffect(x.pair,x.outer);
-    const inEff=brcSlitNationalEffect(x.pair,x.inner);
-    const effText=(outEff&&inEff) ? ` / 全国2025実測(ST順位条件): ${x.outer}号 1着${brcSlitPtText(outEff.win)}・3連対${brcSlitPtText(outEff.top3)}, ${x.inner}号 1着${brcSlitPtText(inEff.win)}・3連対${brcSlitPtText(inEff.top3)}` : '';
-    const title=`${x.venue} ${x.outer}号艇→${x.inner}号艇 / 展示差 +${x.exGap.toFixed(2)}秒 / 平均ST順位差 +${x.stGap.toFixed(2)}位${effText}${x.compatGrade?` / 攻め相性${x.compatGrade}`:''}${x.headInfo?` / ${x.outer}C勝率 ${x.headInfo.win.toFixed(1)}% (N=${x.headInfo.n})`:''}`;
+    const prodOosNote={
+      '2>1':'ST追加効果はproduction OOS N=8のため判断保留',
+      '3>2':'ST追加効果：2026固定OOSで後艇1着+10pt・3連対+18pt / 前艇1着-4pt。2025も同方向',
+      '4>3':'ST追加効果：後艇3連対のみ再現（2025 +8.5pt・8/10会場、2026 +6.0pt・8/10会場）。1着・前艇低下は会場間不安定',
+      '5>4':'ST追加効果：前艇1着-3pt・3連対-9pt。2025も同方向。後艇上昇は再現せず',
+      '6>5':'ST追加効果は一部方向一致するが、production OOS N=40で会場間ばらつきが大きく判断保留'
+    }[x.pair]||'';
+    const title=`${x.venue} ${x.outer}号艇→${x.inner}号艇 / 展示差 +${x.exGap.toFixed(2)}秒 / 平均ST順位差 +${x.stGap.toFixed(2)}位${prodOosNote?` / ${prodOosNote}`:''}${x.compatGrade?` / 攻め相性${x.compatGrade}`:''}${x.headInfo?` / ${x.outer}C勝率 ${x.headInfo.win.toFixed(1)}% (N=${x.headInfo.n})`:''}`;
     const pairOrder=x.inner*10;
     if(x.profile){
       const ro=ensureRow(x.outer), ri=ensureRow(x.inner);
