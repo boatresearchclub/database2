@@ -1,3 +1,4 @@
+<!-- BRC_SLIT_UI_DEDUP_V1_20260921: hide arrow-only strong row and remove pair note 3→2/4→3 from numeric A/B rows; keep tooltips/data unchanged -->
 <!-- BRC_SLIT_GRADE_MEANING_CLARITY_V1_20260921: A/B clarified as evidence-grade tiers, not future-effect or hit-rate ranking; display/prediction math unchanged -->
 <!-- BRC_SLIT_PT_MEAN_CLARITY_V1_20260921: A/B numeric pt clarified as 2024-2026 observed mean difference, not a future additive prediction; B tooltip includes bootstrap 95% CI; prediction math unchanged -->
 <!-- BRC_SLIT_STRONG_INCREMENTAL_V1_20260921: strong ST display is incremental effect versus exhibition-gap-only within production-enabled venue/pairs; 3>2 outer win/top3 + inner win retained, 4>3 only outer top3 weak, 5>4 inner win/top3 retained, 2>1 and 6>5 held; prediction math unchanged -->
@@ -13868,7 +13869,7 @@ function brcBuildSlitEvaluationHtml(boats,liveRace,inReliability=null){
           parts.push(`<span class="slit-rate-metric ${cls}">3連対 ${brcSlitPtText(top3)}</span>`);
         }
         const effect=parts.length?`<span class="slit-rate-metrics">${parts.join('')}</span>`:'';
-        return `<span class="slit-rate-row" title="${r.title}">${brcSlitBoatBadgeHtml(r.boat)}<span class="slit-rate-note">${String(r.pair||'').replace('>','→')}</span>${effect}${confidenceBadge}</span>`;
+        return `<span class="slit-rate-row" title="${r.title}">${brcSlitBoatBadgeHtml(r.boat)}${effect}${confidenceBadge}</span>`;
       }
       if(r.confidence?.grade==='B'){
         // 信頼Bも検証済みの3期間実測差ptを数値表示。A/Bの違いは信頼度バッジで示す。
@@ -13884,12 +13885,14 @@ function brcBuildSlitEvaluationHtml(boats,liveRace,inReliability=null){
           parts.push(`<span class="slit-rate-metric ${cls}">3連対 ${brcSlitPtText(top3)}</span>`);
         }
         const effect=parts.length?`<span class="slit-rate-metrics">${parts.join('')}</span>`:'';
-        return `<span class="slit-rate-row" title="${r.title}">${brcSlitBoatBadgeHtml(r.boat)}<span class="slit-rate-note">${String(r.pair||'').replace('>','→')}</span>${effect}${confidenceBadge}</span>`;
+        return `<span class="slit-rate-row" title="${r.title}">${brcSlitBoatBadgeHtml(r.boat)}${effect}${confidenceBadge}</span>`;
       }
       return `<span class="slit-rate-row" title="${r.title}">${brcSlitBoatBadgeHtml(r.boat)}<span class="slit-rate-exhibition-only">展示優位</span></span>`;
     }).join('');
 
-    slitHtml=`${strongHtml}${exhibitionOnlyHtml}`;
+    // 2026-09-21: 矢印だけの強条件行は、数値行と意味が重複して見えるため非表示。
+    // 展示差の数値行（A/B）と、必要時の展示優位のみを表示する。
+    slitHtml=`${exhibitionOnlyHtml}`;
   }
 
   // チルト1.0以上がいる場合は、スリット条件が非該当・待機中でも高チルト表示を優先。
