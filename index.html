@@ -27,6 +27,7 @@
 <!-- BRC_SLIT_STRICT_A_EXHIBITION_12_V2_20260920: strict exhibition A corrected to 12 cells after independent recomputation of annual 3/3, completed half-years 5/5, rolling90 thresholds and date-cluster bootstrap 95% CI; restored 福岡4>3, 若松4>3, 蒲郡4>3. Strong venue-specific A numeric remains disabled due legacy production recent-ST provenance. -->
 <!-- BRC_TIMEX_LAP_PENDING_FIX_V1_20260920: exhibition-time-only phase is treated as waiting, not shortened; lap_type/detail arrival separates pending from true lap-missing state; prediction math unchanged -->
 <!DOCTYPE html>
+<!-- BRC_CANCEL_POSTPONE_GUARD_V1_20260921: live-scheduleの開催中止/順延を終端状態として保持し、中止会場・中止Rを締切カードから除外。payloadのstatus/reason文字列も防御的に解釈。予測ロジック非変更 -->
 <!-- BRC_MOTOR_NATIONAL_24_V1_20260921: 24場モーター評価。標準22場=オリジナル展示優先/通常展示fallback、桐生=専用、江戸川=通常展示専用。1走判定前/2走暫定/3走本判定。足色信頼は今節差+長期傾向のOOS確率校正。AI予測への自動加点なし -->
 
 <!-- BRC_SLIT_3Y_NOLOOKAHEAD_A_ONLY_V1_20260920: 2023 warmup, 2024/2025/2026 validation; A-only trust badges; prediction/arrows unchanged -->
@@ -15926,18 +15927,40 @@ function initPredictPage(){
 function brcVenueNameFromCode(code){
   return (BOAT_VENUE_CODE && BOAT_VENUE_CODE[String(code||'').padStart(2,'0')]) || '';
 }
+function brcCancelText(value){
+  return String(value??'').replace(/[\s　]+/g,'');
+}
+function brcVenueCancelTextHit(value){
+  const t=brcCancelText(value);
+  return /(?:開催中止|全レース中止|全競走中止|以降(?:の)?(?:レース|競走)?を?中止|以降中止|打ち切り|打切り|中止順延|順延)/.test(t);
+}
+function brcRaceCancelTextHit(value){
+  const t=brcCancelText(value);
+  return /(?:レース中止|競走中止|中止|取消)/.test(t);
+}
 function brcVenueCancelled(venue){
-  return !!RACE_INFO_TODAY?.[venue]?.brcCancelled;
+  const info=RACE_INFO_TODAY?.[venue]||{};
+  // 同一開催日の「開催中止/順延」は終端状態。boolだけでなく理由/status文字列も防御的に見る。
+  return info.brcCancelled===true || brcVenueCancelTextHit(info.brcCancelReason||info.cancel_reason||info.officialStatus||info.status||'');
 }
 function brcRaceCancelled(venue,raceNo){
   const info=RACE_INFO_TODAY?.[venue]||{};
-  if(info.brcCancelled) return true;
-  return !!info?.brcCancelledRaces?.[String(Number(raceNo))];
+  if(brcVenueCancelled(venue)) return true;
+  const reason=info?.brcCancelledRaces?.[String(Number(raceNo))];
+  return !!reason || brcRaceCancelTextHit(reason);
 }
 function brcRaceCancelReason(venue,raceNo){
   const info=RACE_INFO_TODAY?.[venue]||{};
-  if(info.brcCancelled) return String(info.brcCancelReason||'開催中止・打ち切り');
+  if(brcVenueCancelled(venue)) return String(info.brcCancelReason||info.cancel_reason||info.officialStatus||info.status||'開催中止・順延');
   return String(info?.brcCancelledRaces?.[String(Number(raceNo))]||'レース中止');
+}
+function brcLiveVenueCancelledFromPayload(v){
+  if(v?.cancelled===true) return true;
+  return brcVenueCancelTextHit(v?.cancel_reason||v?.reason||v?.official_status||v?.officialStatus||v?.status||'');
+}
+function brcLiveRaceCancelledFromPayload(rr){
+  if(rr?.cancelled===true) return true;
+  return brcRaceCancelTextHit(rr?.cancel_reason||rr?.reason||rr?.official_status||rr?.officialStatus||rr?.status||'');
 }
 function brcDeadlineMsFor(venue,raceNo){
   const date=TODAY_LABEL||getJstDateLabel();
@@ -16028,18 +16051,27 @@ function brcApplyLiveSchedule(schedule){
     const venue=String(v?.venue||brcVenueNameFromCode(code)||'');
     const info=RACE_INFO_TODAY?.[venue];
     if(!venue||!info) continue;
-    const venueCancelled=v?.cancelled===true;
+    // 開催中止・順延はその開催日では終端状態。後続の古い/欠落payloadでfalseへ戻さない。
+    const payloadVenueCancelled=brcLiveVenueCancelledFromPayload(v);
+    const venueCancelled=info.brcCancelled===true || payloadVenueCancelled;
     if(!!info.brcCancelled!==venueCancelled){info.brcCancelled=venueCancelled;changed=true;}
-    const vreason=String(v?.cancel_reason||'');
-    if(String(info.brcCancelReason||'')!==vreason){info.brcCancelReason=vreason;changed=true;}
+    const vreason=String(v?.cancel_reason||v?.reason||v?.official_status||v?.officialStatus||v?.status||'');
+    if(vreason && String(info.brcCancelReason||'')!==vreason){info.brcCancelReason=vreason;changed=true;}
+    if(venueCancelled && !String(info.brcCancelReason||'')){
+      info.brcCancelReason=brcVenueCancelTextHit(vreason)&&/順延/.test(brcCancelText(vreason))?'開催中止・順延':'開催中止・打ち切り';
+      changed=true;
+    }
     if(!info.deadlines||typeof info.deadlines!=='object') info.deadlines={};
-    const cancelledRaces={};
+    // 個別R中止も同日中は終端状態として保持。部分payloadで既存の中止を消さない。
+    const cancelledRaces={...(info.brcCancelledRaces||{})};
     for(const [raceNo,rr] of Object.entries(v?.races||{})){
       const n=String(Number(rr?.race_no||raceNo));
       if(!/^\d+$/.test(n)||Number(n)<1||Number(n)>12) continue;
       const hhmm=String(rr?.deadline||'');
       if(/^\d{1,2}:\d{2}$/.test(hhmm) && info.deadlines[n]!==hhmm){info.deadlines[n]=hhmm;changed=true;}
-      if(rr?.cancelled===true) cancelledRaces[n]=String(rr?.cancel_reason||'レース中止');
+      if(brcLiveRaceCancelledFromPayload(rr)){
+        cancelledRaces[n]=String(rr?.cancel_reason||rr?.reason||rr?.official_status||rr?.officialStatus||rr?.status||'レース中止');
+      }
     }
     const prev=JSON.stringify(info.brcCancelledRaces||{}), next=JSON.stringify(cancelledRaces);
     if(prev!==next){info.brcCancelledRaces=cancelledRaces;changed=true;}
@@ -16294,8 +16326,9 @@ function renderDeadlineSchedule(){
 
   for(const venue of Object.keys(RACE_INFO_TODAY)){
     const info = RACE_INFO_TODAY[venue]||{};
-    if(info.brcCancelled){
-      cancelLabels.push(`${venue} 開催中止`);
+    if(brcVenueCancelled(venue)){
+      const reason=brcRaceCancelReason(venue,1);
+      cancelLabels.push(`${venue} ${/順延/.test(brcCancelText(reason))?'順延・開催中止':'開催中止'}`);
       continue;
     }
     const deadlines = info.deadlines;
@@ -16316,9 +16349,10 @@ function renderDeadlineSchedule(){
     }
   }
 
-  const cancelHtml=cancelLabels.length
-    ? `<div class="deadline-cancel-status">${[...new Set(cancelLabels)].map(x=>`<span class="deadline-cancel-chip">${x}</span>`).join('')}</div>`
-    : '';
+  // BRC_DEADLINE_CANCEL_CHIP_HIDDEN_V1_20260921:
+  // 中止会場は会場カード側で表示済みのため、締切カード上の重複ラベルは表示しない。
+  // 中止会場・中止Rを締切一覧から除外する判定自体はそのまま維持。
+  const cancelHtml='';
 
   if(entries.length === 0){
     box.innerHTML = `${cancelHtml}<span style="font-size:13px; color:var(--ink-soft);">締切時刻の情報はありません。</span>`;
