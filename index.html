@@ -1,6 +1,7 @@
 <!-- BRC_SLIT_PT_BASELINE_CLARITY_V1_20260921: displayed ±pt is each boat's observed difference versus its own venue×course baseline; not direct absolute-rate comparison between the two boats; prediction unchanged -->
 <!-- BRC_SLIT_UI_CONFLICT_GUARD_V1_20260921: pair labels hidden; if one boat is simultaneously trusted outer(+) and inner(-) from adjacent A/B pairs, suppress only that boat's conflicting display rows; data/prediction unchanged -->
 <!-- BRC_ADMIN_EXPECTED_VALUE_V1_20260921: AI予測管理者βに期待値評価を追加。現行3連単オッズから逆数正規化した1着市場支持率を算出し、AI1着率との差・期待値指数を表示。予測ロジック非変更 -->
+<!-- BRC_ADMIN_NARAIME_V2_20260921: AI予測「期待値評価」を「狙い目」へ刷新。本命頭/狙い頭/妙味頭/レース判定を主表示、6艇比較を簡素化、期待値指数は判定詳細へ移動。予測本体は非変更 -->
 <!-- BRC_SLIT_UI_DEDUP_V1_20260921: hide arrow-only strong row and remove pair note 3→2/4→3 from numeric A/B rows; keep tooltips/data unchanged -->
 <!-- BRC_SLIT_GRADE_MEANING_CLARITY_V1_20260921: A/B clarified as evidence-grade tiers, not future-effect or hit-rate ranking; display/prediction math unchanged -->
 <!-- BRC_SLIT_PT_MEAN_CLARITY_V1_20260921: A/B numeric pt clarified as 2024-2026 observed mean difference, not a future additive prediction; B tooltip includes bootstrap 95% CI; prediction math unchanged -->
@@ -4270,51 +4271,78 @@ table.brc-mark-table td:first-child{text-align:left;padding-left:7px;}
 .brc-refmon-detail .brc-refmon-shadowline{margin:7px 9px 0;}
 .brc-refmon-detail .brc-refmon-note{margin:7px 9px 9px;}
 .brc-refmon-performance-slot[hidden]{display:none!important;}
-/* BRC_ADMIN_EXPECTED_VALUE_V1_20260921 */
+/* BRC_ADMIN_NARAIME_V2_20260921 */
 .brc-ev-card{
   margin:0;padding:11px;border:1px solid rgba(0,87,219,.16);border-radius:12px;
   background:linear-gradient(160deg,rgba(0,87,219,.045),rgba(255,255,255,.97));
 }
 .brc-ev-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:9px;}
-.brc-ev-title{font-size:13px;font-weight:950;color:var(--navy);}
+.brc-ev-title{font-size:14px;font-weight:950;color:var(--navy);}
 .brc-ev-sub{margin-top:2px;font-size:9.5px;line-height:1.5;color:var(--ink-soft);}
 .brc-ev-badges{display:flex;align-items:center;justify-content:flex-end;gap:4px;flex-wrap:wrap;}
 .brc-ev-badge{display:inline-flex;align-items:center;justify-content:center;padding:3px 7px;border-radius:999px;background:rgba(0,87,219,.08);border:1px solid rgba(0,87,219,.16);color:var(--wave);font-size:8.5px;font-weight:950;white-space:nowrap;}
-.brc-ev-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:9px;}
-.brc-ev-summary-item{min-width:0;padding:9px 8px;border:1px solid rgba(10,31,51,.08);border-radius:9px;background:#fff;}
-.brc-ev-summary-item.good{border-color:rgba(var(--trend-up-rgb),.22);background:rgba(var(--trend-up-rgb),.035);}
-.brc-ev-summary-item.bad{border-color:rgba(var(--trend-down-rgb),.22);background:rgba(var(--trend-down-rgb),.035);}
-.brc-ev-summary-item .k{font-size:8.5px;font-weight:850;color:var(--ink-soft);}
-.brc-ev-summary-item .v{display:flex;align-items:center;gap:5px;margin-top:3px;font-size:12px;font-weight:950;color:var(--navy);min-width:0;}
-.brc-ev-summary-item.good .v{color:#217247}.brc-ev-summary-item.bad .v{color:#b4232c}
-.brc-ev-summary-item .n{margin-top:2px;font-size:8.5px;font-weight:800;color:var(--ink-soft);font-variant-numeric:tabular-nums;}
+.brc-ev-badge.beta{background:rgba(217,119,6,.08);border-color:rgba(217,119,6,.18);color:#8a5a00;}
+
+.brc-ev-decision{margin-bottom:9px;padding:11px;border:1px solid rgba(10,31,51,.09);border-radius:11px;background:#fff;}
+.brc-ev-decision.fixed{border-color:rgba(0,87,219,.22);background:rgba(0,87,219,.035);}
+.brc-ev-decision.two{border-color:rgba(217,119,6,.22);background:rgba(217,119,6,.035);}
+.brc-ev-decision.value{border-color:rgba(var(--trend-up-rgb),.24);background:rgba(var(--trend-up-rgb),.035);}
+.brc-ev-decision.skip{border-color:rgba(var(--trend-down-rgb),.20);background:rgba(var(--trend-down-rgb),.025);}
+.brc-ev-decision-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.brc-ev-decision-k{font-size:8.5px;font-weight:900;color:var(--ink-soft);letter-spacing:.03em;}
+.brc-ev-decision-v{margin-top:2px;font-size:18px;font-weight:950;line-height:1.15;color:var(--navy);}
+.brc-ev-decision.fixed .brc-ev-decision-v{color:var(--wave);}
+.brc-ev-decision.value .brc-ev-decision-v{color:#217247;}
+.brc-ev-decision.skip .brc-ev-decision-v{color:#b4232c;}
+.brc-ev-confidence{display:inline-flex;align-items:center;justify-content:center;min-width:42px;padding:4px 7px;border-radius:999px;background:rgba(10,31,51,.06);color:var(--navy);font-size:9px;font-weight:950;white-space:nowrap;}
+.brc-ev-decision-copy{margin-top:5px;font-size:9.5px;line-height:1.5;color:var(--ink-soft);}
+.brc-ev-reasons{display:flex;gap:4px;flex-wrap:wrap;margin-top:7px;}
+.brc-ev-reason{display:inline-flex;align-items:center;padding:3px 6px;border-radius:999px;border:1px solid rgba(10,31,51,.09);background:#fff;color:#536176;font-size:8.5px;font-weight:850;white-space:nowrap;}
+.brc-ev-reason.good{color:#217247;border-color:rgba(var(--trend-up-rgb),.20);background:rgba(var(--trend-up-rgb),.045);}
+.brc-ev-reason.warn{color:#8a5a00;border-color:rgba(217,119,6,.20);background:rgba(217,119,6,.045);}
+
+.brc-ev-headcards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:9px;}
+.brc-ev-headcard{min-width:0;padding:9px 5px;border:1px solid rgba(10,31,51,.08);border-radius:9px;background:#fff;text-align:center;}
+.brc-ev-headcard.favorite{border-color:rgba(0,87,219,.20);background:rgba(0,87,219,.025);}
+.brc-ev-headcard.target{border-color:rgba(0,87,219,.30);background:rgba(0,87,219,.055);}
+.brc-ev-headcard.value{border-color:rgba(var(--trend-up-rgb),.24);background:rgba(var(--trend-up-rgb),.04);}
+.brc-ev-headcard .k{font-size:8px;font-weight:900;color:var(--ink-soft);white-space:nowrap;}
+.brc-ev-headcard .boat{min-height:25px;margin-top:3px;display:flex;align-items:center;justify-content:center;gap:4px;}
+.brc-ev-headcard .rate{margin-top:2px;font-size:13px;font-weight:950;color:var(--navy);white-space:nowrap;}
+.brc-ev-headcard.target .rate{color:var(--wave);}.brc-ev-headcard.value .rate{color:#217247;}
+.brc-ev-headcard .n{margin-top:2px;font-size:7.8px;font-weight:800;color:var(--ink-soft);line-height:1.3;min-height:20px;}
+.brc-ev-mini-beta{display:inline-flex;margin-left:2px;padding:1px 4px;border-radius:999px;background:rgba(217,119,6,.10);color:#8a5a00;font-size:7px;font-weight:950;vertical-align:1px;}
+
 .brc-ev-table-wrap{overflow:hidden;border:1px solid rgba(10,31,51,.09);border-radius:10px;background:#fff;}
 table.brc-ev-table{width:100%;table-layout:fixed;border-collapse:collapse;font-variant-numeric:tabular-nums;}
 table.brc-ev-table th{padding:7px 2px;background:var(--bg3);color:var(--ink-soft);font-size:8.5px;font-weight:900;text-align:center;cursor:default;white-space:nowrap;}
-table.brc-ev-table th:nth-child(1){width:12%}table.brc-ev-table th:nth-child(2){width:19%}table.brc-ev-table th:nth-child(3){width:22%}table.brc-ev-table th:nth-child(4){width:17%}table.brc-ev-table th:nth-child(5){width:17%}table.brc-ev-table th:nth-child(6){width:13%}
+table.brc-ev-table th:nth-child(1){width:14%}table.brc-ev-table th:nth-child(2){width:22%}table.brc-ev-table th:nth-child(3){width:23%}table.brc-ev-table th:nth-child(4){width:20%}table.brc-ev-table th:nth-child(5){width:21%}
 table.brc-ev-table td{padding:8px 2px;border-top:1px solid rgba(10,31,51,.06);text-align:center;white-space:nowrap;font-size:10px;color:var(--navy);}
 .brc-ev-boat{display:flex;align-items:center;justify-content:center;}
-.brc-ev-num{font-weight:950;font-size:11px;}
+.brc-ev-num{font-weight:950;font-size:10.5px;}
 .brc-ev-gap{font-weight:950}.brc-ev-gap.plus{color:var(--trend-up)}.brc-ev-gap.minus{color:var(--trend-down)}
-.brc-ev-index{font-weight:950}.brc-ev-index.plus{color:var(--trend-up)}.brc-ev-index.minus{color:var(--trend-down)}
-.brc-ev-judge{display:inline-flex;align-items:center;justify-content:center;min-width:45px;padding:3px 5px;border-radius:999px;font-size:8.5px;font-weight:950;line-height:1.15;}
+.brc-ev-judge{display:inline-flex;align-items:center;justify-content:center;min-width:42px;padding:3px 5px;border-radius:999px;font-size:8px;font-weight:950;line-height:1.15;}
+.brc-ev-judge.favorite{color:var(--wave);background:rgba(0,87,219,.08);border:1px solid rgba(0,87,219,.18);}
+.brc-ev-judge.target{color:#1d4ed8;background:rgba(37,99,235,.09);border:1px solid rgba(37,99,235,.20);}
 .brc-ev-judge.good{color:#217247;background:rgba(var(--trend-up-rgb),.09);border:1px solid rgba(var(--trend-up-rgb),.22);}
 .brc-ev-judge.neutral{color:#667085;background:rgba(100,116,139,.07);border:1px solid rgba(100,116,139,.18);}
 .brc-ev-judge.bad{color:#b4232c;background:rgba(var(--trend-down-rgb),.08);border:1px solid rgba(var(--trend-down-rgb),.20);}
+
+.brc-ev-detail{margin-top:8px;border:1px solid rgba(10,31,51,.09);border-radius:10px;background:#fff;overflow:hidden;}
+.brc-ev-detail>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;color:var(--wave);font-size:10px;font-weight:950;cursor:pointer;user-select:none;}
+.brc-ev-detail>summary::-webkit-details-marker{display:none;}.brc-ev-detail>summary::after{content:'⌄';font-size:14px;line-height:1;}.brc-ev-detail[open]>summary::after{transform:rotate(180deg);}
+.brc-ev-detail-body{padding:0 10px 10px;border-top:1px solid rgba(10,31,51,.06);}
+.brc-ev-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin-top:9px;}
+.brc-ev-detail-item{padding:7px 6px;border-radius:8px;background:#f8fafc;border:1px solid rgba(10,31,51,.06);}
+.brc-ev-detail-item .k{font-size:7.8px;font-weight:850;color:var(--ink-soft);}.brc-ev-detail-item .v{margin-top:2px;font-size:10.5px;font-weight:950;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.brc-ev-index-list{display:flex;gap:4px;flex-wrap:wrap;margin-top:7px;}.brc-ev-index-chip{display:inline-flex;align-items:center;gap:3px;padding:3px 6px;border-radius:999px;background:rgba(10,31,51,.04);border:1px solid rgba(10,31,51,.07);font-size:8.2px;font-weight:850;color:var(--ink-soft);}.brc-ev-index-chip strong{color:var(--navy);font-weight:950;}
 .brc-ev-empty{padding:18px 10px;text-align:center;border:1px dashed rgba(10,31,51,.15);border-radius:10px;background:rgba(10,31,51,.018);color:var(--ink-soft);font-size:10.5px;line-height:1.65;}
-.brc-ev-action{appearance:none;margin-top:9px;border:0;border-radius:9px;background:var(--wave);color:#fff;padding:9px 12px;font:inherit;font-size:10.5px;font-weight:950;cursor:pointer;}
-.brc-ev-action:disabled{background:#aab4c2;cursor:not-allowed;}
-.brc-ev-note{margin:8px 2px 0;font-size:8.8px;line-height:1.55;color:var(--ink-soft);}
-.brc-ev-note strong{color:var(--navy);}
+.brc-ev-action{appearance:none;margin-top:9px;border:0;border-radius:9px;background:var(--wave);color:#fff;padding:9px 12px;font:inherit;font-size:10.5px;font-weight:950;cursor:pointer;}.brc-ev-action:disabled{background:#aab4c2;cursor:not-allowed;}
+.brc-ev-note{margin:8px 2px 0;font-size:8.8px;line-height:1.55;color:var(--ink-soft);}.brc-ev-note strong{color:var(--navy);}
 @media(max-width:420px){
-  .brc-ev-card{padding:9px 7px;}
-  .brc-ev-head{display:block;}
-  .brc-ev-badges{justify-content:flex-start;margin-top:5px;}
-  .brc-ev-summary{gap:5px;}
-  .brc-ev-summary-item{padding:8px 6px;}
-  table.brc-ev-table th{font-size:7.8px;padding:6px 1px;}
-  table.brc-ev-table td{font-size:9.3px;padding:7px 1px;}
-  .brc-ev-judge{min-width:40px;padding:3px 4px;font-size:7.8px;}
+  .brc-ev-card{padding:9px 7px;}.brc-ev-head{display:block;}.brc-ev-badges{justify-content:flex-start;margin-top:5px;}
+  .brc-ev-decision{padding:9px 8px;}.brc-ev-decision-v{font-size:16.5px;}.brc-ev-headcards{gap:4px;}.brc-ev-headcard{padding:8px 3px;}.brc-ev-headcard .k{font-size:7.5px;}.brc-ev-headcard .rate{font-size:12px;}.brc-ev-headcard .n{font-size:7px;}
+  table.brc-ev-table th{font-size:7.6px;padding:6px 1px;}table.brc-ev-table td{font-size:9.1px;padding:7px 1px;}.brc-ev-judge{min-width:38px;padding:3px 3px;font-size:7.5px;}
 }
 
 @media(max-width:420px){
@@ -12466,10 +12494,9 @@ function brcRenderAdminNonInReferencePanel(boats,workerPrediction,localInReliabi
   }catch(_e){}
 }
 
-// BRC_ADMIN_EXPECTED_VALUE_V1_20260921
-// 現行INDEXが保持する3連単120通りのオッズを、1/oddsで市場ウェイト化して全体正規化し、
-// 1着艇ごとに合算した「市場支持率（オッズ織り込み）」を算出する。
-// 実際の投票金額シェアではなく、控除率等を除いた相対的な市場評価として使う。
+// BRC_ADMIN_NARAIME_V2_20260921
+// 「狙い目」表示。BRC頭率そのものは既存予測値を使い、市場は独立レイヤーとして比較する。
+// 現行INDEXの市場支持は既存3連単120通りから算出。頭予測本体へ市場値を再加点しない。
 function brcEvMarketHeadSupport(odds){
   if(!odds || typeof odds!=='object') return null;
   const headWeight={1:0,2:0,3:0,4:0,5:0,6:0};
@@ -12484,7 +12511,6 @@ function brcEvMarketHeadSupport(odds){
     const w=1/o;
     headWeight[a]+=w; total+=w; valid++;
   });
-  // 欠損の多いオッズでは誤解を招くため表示しない。通常は120通り。
   if(!(total>0)||valid<100) return null;
   const pct={};
   [1,2,3,4,5,6].forEach(i=>{pct[i]=headWeight[i]/total*100;});
@@ -12496,19 +12522,61 @@ function brcEvFmtPt(v){
   if(Math.abs(r)<0.05) return '±0.0pt';
   return `${r>0?'+':''}${r.toFixed(1)}pt`;
 }
-function brcEvJudge(gap){
-  const n=Number(gap);
-  if(!Number.isFinite(n)) return {label:'―',cls:'neutral'};
-  if(n>=5) return {label:'妙味',cls:'good'};
-  if(n<=-5) return {label:'売れすぎ',cls:'bad'};
-  return {label:'適正',cls:'neutral'};
-}
 function brcEvLaneName(boat){
   try{
     const n=Number(boat?.course||0);
     const raw=String(boat?.player?.name||'').trim();
     return raw?raw.replace(/（[^）]*）/g,'').trim():`${n}号艇`;
   }catch(_e){return '';}
+}
+function brcEvConfidence(topAi,aiGap){
+  const p=Number(topAi),g=Number(aiGap);
+  if(p>=75&&g>=60) return 'A';
+  if(p>=65&&g>=45) return 'B';
+  if(p>=55&&g>=30) return 'C';
+  return 'D';
+}
+function brcEvBaseDecision(topAi,aiGap,confidence){
+  const p=Number(topAi),g=Number(aiGap),c=String(confidence||'D');
+  if(c==='A'||c==='B') return {key:'fixed',label:'1艇固定候補',copy:'BRC頭率と2位差が十分に開いています。'};
+  if(c==='C'&&p>=60) return {key:'fixed',label:'本命中心',copy:'本命優位。相手・展開条件を確認して次へ進むゾーンです。'};
+  if(p>=45&&g>=10) return {key:'two',label:'頭2艇',copy:'1艇固定より上位2艇を残して考えるゾーンです。'};
+  return {key:'skip',label:'見送り',copy:'頭が収束していないため、頭段階では見送り寄りです。'};
+}
+function brcEvParseDisplaySt(v){
+  if(v===null||v===undefined||v==='') return null;
+  if(typeof v==='number') return Number.isFinite(v)?v:null;
+  const s=String(v).trim().toUpperCase().replace(/ＳＴ|ST/g,'');
+  if(!s) return null;
+  const m=s.match(/^([FL])?\s*([+-]?\d*\.?\d+)/);
+  if(!m) return null;
+  let n=Number(m[2]); if(!Number.isFinite(n)) return null;
+  if(m[1]==='F') n=-Math.abs(n);
+  return n;
+}
+function brcEvValueCandidate(row,src){
+  if(!row||!Number.isFinite(row.ai)||!Number.isFinite(row.gap)) return null;
+  const c=Number(row.course);
+  if(c===2 && row.ai>=25 && row.gap>=8) return {...row,valueRule:'2C +8pt',beta:false};
+  if(c===3 && row.ai>=25 && row.gap>=6) return {...row,valueRule:'3C +6pt',beta:false};
+  if(c===4 && row.ai>=20 && row.gap>=4){
+    const b4=src.find(b=>Number(b?.course)===4), b3=src.find(b=>Number(b?.course)===3);
+    const st4=brcEvParseDisplaySt(b4?.exhibition?.display_st ?? b4?.display_st);
+    const st3=brcEvParseDisplaySt(b3?.exhibition?.display_st ?? b3?.display_st);
+    if(Number.isFinite(st4)&&Number.isFinite(st3)&&st4<=st3) return {...row,valueRule:'4C 市場差+展示ST',beta:true,st4,st3};
+  }
+  return null;
+}
+function brcEvRowJudge(row,favorite,target,valueHead){
+  const c=Number(row?.course);
+  const isFav=Number(favorite?.course)===c, isTarget=Number(target?.course)===c, isValue=Number(valueHead?.course)===c;
+  if(isValue&&isTarget&&isFav) return {label:'本命+',cls:'good'};
+  if(isValue&&isTarget) return {label:'狙い+',cls:'good'};
+  if(isValue) return {label:'妙味',cls:'good'};
+  if(isTarget&&!isFav) return {label:'狙い',cls:'target'};
+  if(isFav) return {label:'本命',cls:'favorite'};
+  if(Number.isFinite(row?.gap)&&row.gap<=-5) return {label:'売れ気味',cls:'bad'};
+  return {label:'―',cls:'neutral'};
 }
 function brcBuildExpectedValueHtml(boats){
   const isAdmin=!!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)
@@ -12518,50 +12586,53 @@ function brcBuildExpectedValueHtml(boats){
   const rec=sel?.key&&typeof __brcOddsLocal!=='undefined'?__brcOddsLocal[sel.key]:null;
   const market=brcEvMarketHeadSupport(rec?.odds||null);
   const src=(Array.isArray(boats)?boats:[]).filter(b=>Number(b?.course)>=1&&Number(b?.course)<=6).sort((a,b)=>Number(a.course)-Number(b.course));
-  const badge=`<div class="brc-ev-badges"><span class="brc-ev-badge">管理者</span><span class="brc-ev-badge">3連単市場</span></div>`;
+  const badge=`<div class="brc-ev-badges"><span class="brc-ev-badge">管理者β</span><span class="brc-ev-badge${market?'':' beta'}">${market?'3連単市場':'市場未取得'}</span></div>`;
   if(src.length!==6){
-    return `<div class="brc-ev-card"><div class="brc-ev-head"><div><div class="brc-ev-title">期待値評価</div><div class="brc-ev-sub">AI1着率と市場評価のズレを確認</div></div>${badge}</div><div class="brc-ev-empty">6艇分のAI予測が揃うと表示します。</div></div>`;
-  }
-  if(!market){
-    const today=typeof getJstDateLabel==='function'?getJstDateLabel():'';
-    const historical=!!(sel?.date&&today&&String(sel.date)!==String(today));
-    const passed=sel&&typeof brcOddsDeadlinePassed==='function'?brcOddsDeadlinePassed(sel):false;
-    const canUpdate=!!sel?.key&&!historical&&!passed;
-    const msg=historical?'保存済みオッズがありません。':(passed?'最終オッズを取得・確認中です。':'現在オッズを取得すると市場支持率を算出します。');
-    return `<div class="brc-ev-card"><div class="brc-ev-head"><div><div class="brc-ev-title">期待値評価</div><div class="brc-ev-sub">AI1着率と市場評価のズレを確認</div></div>${badge}</div><div class="brc-ev-empty">${msg}${canUpdate?'<br><button type="button" class="brc-ev-action" data-brc-ev-refresh="1">オッズを取得して評価</button>':''}</div><div class="brc-ev-note">市場支持率＝3連単オッズ120通りの逆数を正規化し、1着艇ごとに合算したオッズ織り込み評価です。</div></div>`;
+    return `<div class="brc-ev-card"><div class="brc-ev-head"><div><div class="brc-ev-title">狙い目</div><div class="brc-ev-sub">本命頭・狙い頭・妙味頭を整理</div></div>${badge}</div><div class="brc-ev-empty">6艇分のAI予測が揃うと表示します。</div></div>`;
   }
   const rows=src.map(b=>{
-    const c=Number(b.course);
-    const ai=Number(b.pctFloat);
-    const mk=Number(market.pct[c]);
+    const c=Number(b.course),ai=Number(b.pctFloat),mk=market?Number(market.pct[c]):null;
     const gap=Number.isFinite(ai)&&Number.isFinite(mk)?ai-mk:null;
     const idx=Number.isFinite(ai)&&Number.isFinite(mk)&&mk>0?ai/mk*100:null;
-    const judge=brcEvJudge(gap);
-    const gapCls=gap>0?'plus':(gap<0?'minus':'');
-    const idxCls=Number.isFinite(idx)&&idx>105?'plus':(Number.isFinite(idx)&&idx<95?'minus':'');
-    return {course:c,name:brcEvLaneName(b),ai,mk,gap,idx,judge,gapCls,idxCls};
+    return {course:c,name:brcEvLaneName(b),ai,mk,gap,idx};
   });
-  const ranked=rows.slice().filter(r=>Number.isFinite(r.gap)).sort((a,b)=>b.gap-a.gap);
-  const best=ranked[0]||null, worst=ranked[ranked.length-1]||null;
-  const summary=`<div class="brc-ev-summary">
-    <div class="brc-ev-summary-item good"><div class="k">最大プラス差</div><div class="v">${best?scenarioLaneBadge(best.course):''}<span>${best?brcEvFmtPt(best.gap):'―'}</span></div><div class="n">${best?`AI ${best.ai.toFixed(1)}% / 市場 ${best.mk.toFixed(1)}%`:'―'}</div></div>
-    <div class="brc-ev-summary-item bad"><div class="k">最大マイナス差</div><div class="v">${worst?scenarioLaneBadge(worst.course):''}<span>${worst?brcEvFmtPt(worst.gap):'―'}</span></div><div class="n">${worst?`AI ${worst.ai.toFixed(1)}% / 市場 ${worst.mk.toFixed(1)}%`:'―'}</div></div>
-  </div>`;
-  const body=rows.map(r=>`<tr>
-    <td><div class="brc-ev-boat">${scenarioLaneBadge(r.course)}</div></td>
-    <td class="brc-ev-num">${Number.isFinite(r.ai)?r.ai.toFixed(1)+'%':'―'}</td>
-    <td class="brc-ev-num">${Number.isFinite(r.mk)?r.mk.toFixed(1)+'%':'―'}</td>
-    <td class="brc-ev-gap ${r.gapCls}">${brcEvFmtPt(r.gap)}</td>
-    <td class="brc-ev-index ${r.idxCls}">${Number.isFinite(r.idx)?Math.round(r.idx):'―'}</td>
-    <td><span class="brc-ev-judge ${r.judge.cls}">${r.judge.label}</span></td>
-  </tr>`).join('');
-  const captured=rec?.captured_at_jst?`・${rec.final?'最終':'取得'} ${typeof brcOddsFmtTime==='function'?brcOddsFmtTime(rec.captured_at_jst):rec.captured_at_jst}`:'';
-  return `<div class="brc-ev-card">
-    <div class="brc-ev-head"><div><div class="brc-ev-title">期待値評価</div><div class="brc-ev-sub">AI1着率 − 市場支持率で「売れすぎ / 妙味」を確認${captured}</div></div>${badge}</div>
-    ${summary}
-    <div class="brc-ev-table-wrap"><table class="brc-ev-table"><thead><tr><th>艇</th><th>AI1着率</th><th>市場支持率</th><th>市場差</th><th>期待値<br>指数</th><th>判定</th></tr></thead><tbody>${body}</tbody></table></div>
-    <div class="brc-ev-note"><strong>市場差＝AI1着率 − 市場支持率。</strong> +5pt以上を「妙味」、-5pt以下を「売れすぎ」とする管理者用の暫定表示です。期待値指数＝AI1着率 ÷ 市場支持率 ×100（100が市場と一致）。実投票金額シェアや実現ROIそのものではありません。</div>
-  </div>`;
+  const byAi=rows.slice().filter(r=>Number.isFinite(r.ai)).sort((a,b)=>b.ai-a.ai);
+  const favorite=byAi[0]||null,second=byAi[1]||null;
+  const aiGap=favorite&&second?favorite.ai-second.ai:null;
+  const confidence=brcEvConfidence(favorite?.ai,aiGap);
+  const base=brcEvBaseDecision(favorite?.ai,aiGap,confidence);
+  let target=base.key==='skip'?null:favorite;
+  let switched=false, marketSwitchGap=null;
+  if(base.key==='two'&&market&&favorite&&second&&Number.isFinite(favorite.mk)&&Number.isFinite(second.mk)){
+    marketSwitchGap=second.mk-favorite.mk;
+    if(marketSwitchGap>=8){target=second;switched=true;}
+  }
+  const valueCandidates=market?rows.map(r=>brcEvValueCandidate(r,src)).filter(Boolean).sort((a,b)=>b.gap-a.gap):[];
+  const valueHead=valueCandidates[0]||null;
+  let decision={...base};
+  if(base.key==='skip'&&valueHead){decision={key:'value',label:'妙味候補',copy:'通常は見送りゾーンですが、市場乖離から外頭が浮上しています。'};target=valueHead;}
+  const captured=rec?.captured_at_jst?`${rec.final?'最終':'取得'} ${typeof brcOddsFmtTime==='function'?brcOddsFmtTime(rec.captured_at_jst):rec.captured_at_jst}`:'未取得';
+  const reasons=[];
+  if(favorite) reasons.push(`<span class="brc-ev-reason">本命 ${scenarioLaneBadge(favorite.course)} ${favorite.ai.toFixed(1)}%</span>`);
+  if(Number.isFinite(aiGap)) reasons.push(`<span class="brc-ev-reason">2位差 ${brcEvFmtPt(aiGap)}</span>`);
+  if(switched) reasons.push(`<span class="brc-ev-reason warn">市場で2位が +${marketSwitchGap.toFixed(1)}pt → 狙い頭変更</span>`);
+  if(valueHead) reasons.push(`<span class="brc-ev-reason good">${scenarioLaneBadge(valueHead.course)} 妙味 ${brcEvFmtPt(valueHead.gap)}${valueHead.beta?' β':''}</span>`);
+  if(!market) reasons.push(`<span class="brc-ev-reason warn">市場取得後に狙い頭・妙味頭を更新</span>`);
+  const twoText=base.key==='two'&&favorite&&second?` ${scenarioLaneBadge(favorite.course)} ${favorite.ai.toFixed(0)}% / ${scenarioLaneBadge(second.course)} ${second.ai.toFixed(0)}%`:'';
+  const decisionHtml=`<div class="brc-ev-decision ${decision.key}"><div class="brc-ev-decision-top"><div><div class="brc-ev-decision-k">レース頭判定</div><div class="brc-ev-decision-v">${decision.label}${twoText}</div></div><span class="brc-ev-confidence">信頼 ${confidence}</span></div><div class="brc-ev-decision-copy">${decision.copy}</div><div class="brc-ev-reasons">${reasons.join('')}</div></div>`;
+  const headCard=(kind,label,row,note,beta=false)=>`<div class="brc-ev-headcard ${kind}"><div class="k">${label}</div><div class="boat">${row?scenarioLaneBadge(row.course):'<span style="color:var(--ink-soft);font-weight:900;">―</span>'}${beta?'<span class="brc-ev-mini-beta">β</span>':''}</div><div class="rate">${row&&Number.isFinite(row.ai)?row.ai.toFixed(1)+'%':'―'}</div><div class="n">${note||'―'}</div></div>`;
+  const targetNote=target?(switched?`市場補正で ${favorite.course}→${target.course}`:(decision.key==='value'?'妙味復活候補':'本命を維持')):'見送り';
+  const valueNote=valueHead?(market?`市場 ${valueHead.mk.toFixed(1)}% / ${brcEvFmtPt(valueHead.gap)}`:'市場未取得'):'該当なし';
+  const cards=`<div class="brc-ev-headcards">${headCard('favorite','本命頭',favorite,'BRCで最も勝ちやすい')}${headCard('target','狙い頭',target,targetNote,target?.beta)}${headCard('value','妙味頭',valueHead,valueNote,valueHead?.beta)}</div>`;
+  const body=rows.map(r=>{
+    const j=brcEvRowJudge(r,favorite,target,valueHead);
+    const gapCls=Number.isFinite(r.gap)?(r.gap>0?'plus':(r.gap<0?'minus':'')):'';
+    return `<tr><td><div class="brc-ev-boat">${scenarioLaneBadge(r.course)}</div></td><td class="brc-ev-num">${Number.isFinite(r.ai)?r.ai.toFixed(1)+'%':'―'}</td><td class="brc-ev-num">${Number.isFinite(r.mk)?r.mk.toFixed(1)+'%':'―'}</td><td class="brc-ev-gap ${gapCls}">${brcEvFmtPt(r.gap)}</td><td><span class="brc-ev-judge ${j.cls}">${j.label}</span></td></tr>`;
+  }).join('');
+  const detailIndexes=rows.map(r=>`<span class="brc-ev-index-chip">${scenarioLaneBadge(r.course)} <strong>${Number.isFinite(r.idx)?Math.round(r.idx):'―'}</strong></span>`).join('');
+  const detail=`<details class="brc-ev-detail"><summary>判定詳細</summary><div class="brc-ev-detail-body"><div class="brc-ev-detail-grid"><div class="brc-ev-detail-item"><div class="k">BRC頭1位</div><div class="v">${favorite?`${favorite.course}号艇 ${favorite.ai.toFixed(1)}%`:'―'}</div></div><div class="brc-ev-detail-item"><div class="k">BRC 1位−2位差</div><div class="v">${brcEvFmtPt(aiGap)}</div></div><div class="brc-ev-detail-item"><div class="k">市場データ</div><div class="v">${market?`3連単 ${market.valid}通り`:'未取得'}</div></div><div class="brc-ev-detail-item"><div class="k">市場取得時刻</div><div class="v">${captured}</div></div></div><div class="brc-ev-note"><strong>期待値指数（詳細）</strong>＝BRC頭率 ÷ 市場支持率 ×100。100が市場と一致。</div><div class="brc-ev-index-list">${detailIndexes}</div><div class="brc-ev-note">頭信頼 A：75%/2位差60pt以上、B：65%/45pt以上、C：55%/30pt以上。頭2艇では市場支持が2番手へ8pt以上傾いた時だけ狙い頭を入れ替えます。妙味頭は暫定コース別条件（2C:25%かつ+8pt、3C:25%かつ+6pt、4C:20%かつ+4pt＋展示STで3C以上）で表示します。4Cはβです。</div></div></details>`;
+  const noMarketAction=!market?(()=>{const today=typeof getJstDateLabel==='function'?getJstDateLabel():'';const historical=!!(sel?.date&&today&&String(sel.date)!==String(today));const passed=sel&&typeof brcOddsDeadlinePassed==='function'?brcOddsDeadlinePassed(sel):false;const canUpdate=!!sel?.key&&!historical&&!passed;return `<div class="brc-ev-note">市場支持が未取得のため、本命頭と頭判定のみ表示中です。${canUpdate?'<br><button type="button" class="brc-ev-action" data-brc-ev-refresh="1">オッズを取得して更新</button>':''}</div>`;})():'';
+  return `<div class="brc-ev-card"><div class="brc-ev-head"><div><div class="brc-ev-title">狙い目</div><div class="brc-ev-sub">本命頭 → 狙い頭 → 妙味頭の順でレースを整理${market&&rec?.captured_at_jst?`・${captured}`:''}</div></div>${badge}</div>${decisionHtml}${cards}<div class="brc-ev-table-wrap"><table class="brc-ev-table"><thead><tr><th>艇</th><th>BRC頭率</th><th>市場支持</th><th>差</th><th>評価</th></tr></thead><tbody>${body}</tbody></table></div>${noMarketAction}${detail}</div>`;
 }
 function brcBindExpectedValueActions(){
   const btn=document.querySelector('#brcAiAdminPanel-ev [data-brc-ev-refresh]');
@@ -12633,7 +12704,7 @@ function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhib
         <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="marks">展開マトリックス</button>
         <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="nige">イン逃げ予測</button>
         <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="ref">BRC参考買い目</button>
-        <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="ev">期待値評価</button>
+        <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="ev">狙い目</button>
       </div>
       <div id="brcAiAdminPanel-marks" class="brc-ai-admin-panel">${marksHtml}</div>
       <div id="brcAiAdminPanel-nige" class="brc-ai-admin-panel">${nigeHtml}</div>
@@ -21272,7 +21343,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     refBtn.textContent='BRC参考買い目';
     let evBtn=tabs.querySelector('[data-brc-ai-admin-tab="ev"]');
     if(!evBtn){
-      evBtn=document.createElement('button');evBtn.type='button';evBtn.className='brc-ai-admin-tab';evBtn.dataset.brcAiAdminTab='ev';evBtn.textContent='期待値評価';tabs.appendChild(evBtn);
+      evBtn=document.createElement('button');evBtn.type='button';evBtn.className='brc-ai-admin-tab';evBtn.dataset.brcAiAdminTab='ev';evBtn.textContent='狙い目';tabs.appendChild(evBtn);
     }
     let evPanel=document.getElementById('brcAiAdminPanel-ev');
     if(!evPanel){
