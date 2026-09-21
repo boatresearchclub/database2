@@ -1,3 +1,5 @@
+<!-- BRC_SLIT_PT_BASELINE_CLARITY_V1_20260921: displayed ±pt is each boat's observed difference versus its own venue×course baseline; not direct absolute-rate comparison between the two boats; prediction unchanged -->
+<!-- BRC_SLIT_UI_CONFLICT_GUARD_V1_20260921: pair labels hidden; if one boat is simultaneously trusted outer(+) and inner(-) from adjacent A/B pairs, suppress only that boat's conflicting display rows; data/prediction unchanged -->
 <!-- BRC_ADMIN_EXPECTED_VALUE_V1_20260921: AI予測管理者βに期待値評価を追加。現行3連単オッズから逆数正規化した1着市場支持率を算出し、AI1着率との差・期待値指数を表示。予測ロジック非変更 -->
 <!-- BRC_SLIT_UI_DEDUP_V1_20260921: hide arrow-only strong row and remove pair note 3→2/4→3 from numeric A/B rows; keep tooltips/data unchanged -->
 <!-- BRC_SLIT_GRADE_MEANING_CLARITY_V1_20260921: A/B clarified as evidence-grade tiers, not future-effect or hit-rate ranking; display/prediction math unchanged -->
@@ -13679,10 +13681,10 @@ function brcSlitConfidenceBadgeHtml(conf,mode='strong'){
   let title='';
   if(grade==='A'){
     const ciText=(Number.isFinite(Number(conf.outerWinLo))&&Number.isFinite(Number(conf.outerWinHi))) ? ` / 95%CI: 後艇1着 ${brcSlitPtText(conf.outerWinLo)}〜${brcSlitPtText(conf.outerWinHi)}・3連対 ${brcSlitPtText(conf.outerTop3Lo)}〜${brcSlitPtText(conf.outerTop3Hi)} / 前艇1着 ${brcSlitPtText(conf.innerWinLo)}〜${brcSlitPtText(conf.innerWinHi)}・3連対 ${brcSlitPtText(conf.innerTop3Lo)}〜${brcSlitPtText(conf.innerTop3Hi)}` : '';
-    title=`${label}：${condition} / 表示pt＝2024〜2026の3期間実測平均差（未来の上乗せ予測値ではありません） / A/Bは検証証拠の区分であり、将来効果の大小・的中率の順位ではありません / 3年方向再現＋完了5半期5/5一致＋90日ローリング監査通過 / N=${Number(conf.n)||0} (2024=${Number(conf.n2024)||0}, 2025=${Number(conf.n2025)||0}, 2026=${Number(conf.n2026)||0}) / ローリング: 4方向一致${Number(conf.rollAll4)||0}%・3方向以上${Number(conf.roll3plus)||0}%・各指標最低${Number(conf.rollMinMetric)||0}% / 後艇1着 ${brcSlitPtText(conf.outerWin)}・3連対 ${brcSlitPtText(conf.outerTop3)} / 前艇1着 ${brcSlitPtText(conf.innerWin)}・3連対 ${brcSlitPtText(conf.innerTop3)}${ciText}（表示専用・的中保証ではありません）`;
+    title=`${label}：${condition} / 表示pt＝各艇自身の場×コース基準に対する2024〜2026の3期間実測平均差（2艇の絶対着率の大小を直接示す値ではなく、未来の上乗せ予測値でもありません） / A/Bは検証証拠の区分であり、将来効果の大小・的中率の順位ではありません / 3年方向再現＋完了5半期5/5一致＋90日ローリング監査通過 / N=${Number(conf.n)||0} (2024=${Number(conf.n2024)||0}, 2025=${Number(conf.n2025)||0}, 2026=${Number(conf.n2026)||0}) / ローリング: 4方向一致${Number(conf.rollAll4)||0}%・3方向以上${Number(conf.roll3plus)||0}%・各指標最低${Number(conf.rollMinMetric)||0}% / 後艇1着 ${brcSlitPtText(conf.outerWin)}・3連対 ${brcSlitPtText(conf.outerTop3)} / 前艇1着 ${brcSlitPtText(conf.innerWin)}・3連対 ${brcSlitPtText(conf.innerTop3)}${ciText}（表示専用・的中保証ではありません）`;
   }else{
     const ciText=(Number.isFinite(Number(conf.outerWinLo))&&Number.isFinite(Number(conf.outerWinHi))) ? ` / 95%CI: 後艇1着 ${brcSlitPtText(conf.outerWinLo)}〜${brcSlitPtText(conf.outerWinHi)}・3連対 ${brcSlitPtText(conf.outerTop3Lo)}〜${brcSlitPtText(conf.outerTop3Hi)} / 前艇1着 ${brcSlitPtText(conf.innerWinLo)}〜${brcSlitPtText(conf.innerWinHi)}・3連対 ${brcSlitPtText(conf.innerTop3Lo)}〜${brcSlitPtText(conf.innerTop3Hi)}` : '';
-    title=`${label}：${condition} / 表示pt＝2024〜2026の3期間実測平均差（未来の上乗せ予測値ではありません） / A/Bは検証証拠の区分であり、将来効果の大小・的中率の順位ではありません / 2024・2025・2026で4方向一致、完了5半期で大崩れなし、90日ローリング安定、日付クラスターブートストラップ95%CIで後艇1着・3連対はプラス、前艇1着・3連対はマイナスを確認 / N=${Number(conf.n)||0} (2024=${Number(conf.n2024)||0}, 2025=${Number(conf.n2025)||0}, 2026=${Number(conf.n2026)||0}) / 完了半期4方向一致=${Number(conf.halfFull)||0}/5・90日4方向一致=${Number(conf.rollAll4)||0}% / 後艇1着 ${brcSlitPtText(conf.outerWin)}・3連対 ${brcSlitPtText(conf.outerTop3)} / 前艇1着 ${brcSlitPtText(conf.innerWin)}・3連対 ${brcSlitPtText(conf.innerTop3)}${ciText}（実測差pt表示・的中保証ではありません）`;
+    title=`${label}：${condition} / 表示pt＝各艇自身の場×コース基準に対する2024〜2026の3期間実測平均差（2艇の絶対着率の大小を直接示す値ではなく、未来の上乗せ予測値でもありません） / A/Bは検証証拠の区分であり、将来効果の大小・的中率の順位ではありません / 2024・2025・2026で4方向一致、完了5半期で大崩れなし、90日ローリング安定、日付クラスターブートストラップ95%CIで後艇1着・3連対はプラス、前艇1着・3連対はマイナスを確認 / N=${Number(conf.n)||0} (2024=${Number(conf.n2024)||0}, 2025=${Number(conf.n2025)||0}, 2026=${Number(conf.n2026)||0}) / 完了半期4方向一致=${Number(conf.halfFull)||0}/5・90日4方向一致=${Number(conf.rollAll4)||0}% / 後艇1着 ${brcSlitPtText(conf.outerWin)}・3連対 ${brcSlitPtText(conf.outerTop3)} / 前艇1着 ${brcSlitPtText(conf.innerWin)}・3連対 ${brcSlitPtText(conf.innerTop3)}${ciText}（実測差pt表示・的中保証ではありません）`;
   }
   return `<span class="slit-confidence-badge slit-confidence-${grade}" title="${title}">${label}</span>`;
 }
@@ -13957,18 +13959,29 @@ function brcSlitEvaluationState(boats,liveRace,inReliability=null){
     });
 
   // 信頼A/Bは「会場×隣接ペア」ごとの検証結果。
-  // 同じ艇が別ペアで後艇側(+)と前艇側(-)を同時に持つことは、比較相手が違うため矛盾ではない。
-  // 検証済みA/Bを勝手に相殺せず両方残し、表示側でペア(例:4>3)を明示する。
-  // ただし同じ艇に信頼A/Bがある時は、より弱い「展示優位」だけ重複抑止する。
-  const exhibitionTrustedBoats=new Set(
-    exhibitionOnlyRowsRaw
-      .filter(r=>r.confidence?.grade==='A' || r.confidence?.grade==='B')
-      .map(r=>Number(r.boat))
+  // 画面では比較表記（3→2等）を出さないため、同じ艇が隣接2条件で
+  // 後艇側(+)と前艇側(-)を同時に持つ稀なケースは、その艇のA/B行だけ表示しない。
+  // 判定データ自体は保持し、表示の誤読だけを防ぐ（過去A/B発火10,171件中22件=0.22%）。
+  const exhibitionTrustedRows=exhibitionOnlyRowsRaw
+    .filter(r=>r.confidence?.grade==='A' || r.confidence?.grade==='B');
+  const exhibitionTrustedBoats=new Set(exhibitionTrustedRows.map(r=>Number(r.boat)));
+  const trustedRolesByBoat=new Map();
+  for(const r of exhibitionTrustedRows){
+    const boat=Number(r.boat);
+    if(!trustedRolesByBoat.has(boat)) trustedRolesByBoat.set(boat,new Set());
+    trustedRolesByBoat.get(boat).add(String(r.role||''));
+  }
+  const exhibitionConflictBoats=new Set(
+    [...trustedRolesByBoat.entries()]
+      .filter(([,roles])=>roles.has('outer') && roles.has('inner'))
+      .map(([boat])=>boat)
   );
   const exhibitionOnlyRows=exhibitionOnlyRowsRaw
     .filter(r=>{
+      const boat=Number(r.boat);
       const grade=r.confidence?.grade;
-      if(exhibitionTrustedBoats.has(Number(r.boat)) && grade!=='A' && grade!=='B') return false;
+      if((grade==='A' || grade==='B') && exhibitionConflictBoats.has(boat)) return false;
+      if(exhibitionTrustedBoats.has(boat) && grade!=='A' && grade!=='B') return false;
       return true;
     })
     .sort((a,b)=>a.order-b.order || a.boat-b.boat);
