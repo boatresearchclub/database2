@@ -12794,6 +12794,7 @@ function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhib
         <div><div class="predict-ai-title">AI予測</div><div class="predict-ai-sub">管理者β</div></div>
         ${reliability}
       </div>
+      <div id="brcFinalEvalMountV2" data-brc-final-eval-mount="1"></div>
       <div class="brc-ai-admin-tabs brc-refmon-enabled" role="tablist" aria-label="AI予測の管理者表示切り替え">
         <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="marks">展開マトリックス</button>
         <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="nige">イン逃げ予測</button>
@@ -12818,6 +12819,16 @@ function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhib
       ${nigeHtml}
     `;
   }
+  // BRC_AI_FINAL_EVAL_DIRECT_MOUNT_V2_20260922:
+  // AI予測本体の描画直後に直接最終評価を更新する。後段ラッパー/MutationObserverだけに依存しない。
+  setTimeout(()=>{
+    try{
+      if(typeof window.BRC_FINAL_EVAL_V1?.refresh==='function'){
+        window.BRC_FINAL_EVAL_V1.refresh(boats,workerPrediction,localInReliability);
+      }
+    }catch(err){ console.warn('[BRC final eval] direct refresh failed',err); }
+  },0);
+
   // 念のためAI予測エリア内の買い目カードは常に1枚に制限する。
   const recommendationCards=box.querySelectorAll('[data-brc-ai3-root], #recommendedBetsCard');
   recommendationCards.forEach((card,index)=>{ if(index>0) card.remove(); });
@@ -23083,5 +23094,507 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 })();
 </script>
 
+
+<!-- BRC_AI_FINAL_EVAL_DIRECT_MOUNT_V2_20260922: fixed mount inside renderPredictAiPanel + direct refresh; fixes shadow card disappearing/not mounting behind wrapper chain; prediction logic unchanged -->
+<!-- BRC_AI_FINAL_EVAL_SHADOW_V1_20260922: admin-only shadow final evaluation; does not modify /predict, current probabilities, odds/value logic or buy logic -->
+<script>
+/*
+ BRC AI FINAL EVALUATION - SHADOW V1
+ 2026-09-22
+
+ Purpose
+ - Add an independent "AI最終評価" layer on top of the current BRC prediction.
+ - Never overwrite /predict, current 1着率, TimeX, odds/value logic, or buy logic.
+ - Use only signals that are already available at prediction time.
+ - Keep odds completely outside this pure-race evaluation.
+
+ Important
+ - Current pctFloat already includes the Worker prediction and (when available) TimeX.
+ - motor2 is already sent to the Worker. It is NOT added again here.
+ - TimeX deltas are explanation-only here; they are NOT added twice.
+ - Wind / slit / personal exhibition tendency / advanced motor-foot data are treated as
+   independent, shrunken "unreflected signals". V1 produces a score, not a probability.
+ - Scenario data is used to explain likely winning method and likely 2nd/3rd followers,
+   not to inflate the head probability without validation.
+*/
+(function BRC_FINAL_EVAL_V1_BOOT(){
+  'use strict';
+
+  const G = window;
+  const VERSION = 'BRC_FINAL_EVAL_SHADOW_V1_20260922';
+  const MARKER_ID = 'brc-final-eval-v1';
+  const STYLE_ID = 'brc-final-eval-v1-style';
+
+  const CONFIG = Object.freeze({
+    // Score weights are deliberately conservative. They are not probability-points.
+    score: {
+      baseZ: 14.0,
+      windMax: 6.0,
+      slitMax: 7.0,
+      personalMax: 5.0,
+      motorFootMax: 6.0,
+      totalUnreflectedCap: 16.0,
+    },
+    wind: { priorN: 80, devScalePt: 8.0, minN: 12 },
+    slit: { priorN: 140, effectScalePt: 14.0 },
+    personal: { priorN: 25, diffScalePt: 8.0 },
+    motor: { priorN: 55, scale: 1.10 },
+    scenario: { minWins: 5, dominantPct: 42 },
+    // Keep the feature admin-only until forward validation is complete.
+    adminOnly: true,
+  });
+
+  function num(v, fallback=null){
+    const n = Number(v);
+    return Number.isFinite(n) ? n : fallback;
+  }
+  function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, Number(v)||0)); }
+  function mean(a){ const v=a.filter(Number.isFinite); return v.length?v.reduce((s,x)=>s+x,0)/v.length:0; }
+  function sd(a){
+    const v=a.filter(Number.isFinite); if(v.length<2) return 0;
+    const m=mean(v); return Math.sqrt(v.reduce((s,x)=>s+(x-m)*(x-m),0)/v.length);
+  }
+  function logitPct(p){
+    const q=clamp((Number(p)||0)/100,0.005,0.995);
+    return Math.log(q/(1-q));
+  }
+  function esc(v){
+    return String(v??'').replace(/[&<>"']/g,ch=>({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[ch]));
+  }
+  function round1(v){ return Number.isFinite(Number(v)) ? Math.round(Number(v)*10)/10 : null; }
+  function signed(v, digits=1){
+    const n=Number(v); if(!Number.isFinite(n)) return '―';
+    const x=digits===0?Math.round(n):Math.round(n*Math.pow(10,digits))/Math.pow(10,digits);
+    return `${x>0?'+':''}${x.toFixed(digits)}`;
+  }
+  function isAdmin(){
+    let active=false;
+    try{ if(typeof BRC_ADMIN_ACTIVE!=='undefined') active=!!BRC_ADMIN_ACTIVE; else active=!!G.BRC_ADMIN_ACTIVE; }catch(_e){ active=!!G.BRC_ADMIN_ACTIVE; }
+    try{ if(active && typeof G.brcGetAdminViewMode==='function' && G.brcGetAdminViewMode()==='public') return false; }catch(_e){}
+    return active;
+  }
+  function getVenue(){
+    return String(document.getElementById('predictRaceDay')?.value || document.getElementById('predictVenue')?.value || '').trim();
+  }
+  function getRaceNo(){ return Number(document.getElementById('predictRaceNo')?.value || 0) || null; }
+  function getRaceDate(){
+    try{
+      const venue=getVenue(), raceNo=getRaceNo();
+      const info=(typeof RACE_INFO_TODAY!=='undefined')?RACE_INFO_TODAY?.[venue]:null;
+      return String(info?.date || G.__predictRaceDateCurrent || (typeof TODAY_LABEL!=='undefined'?TODAY_LABEL:'') || '');
+    }catch(_e){ return ''; }
+  }
+  function liveRace(){ return G.__currentLiveExhibition || null; }
+
+  function readJsonScript(id){
+    try{
+      const el=document.getElementById(id); if(!el) return null;
+      const cacheKey=`__brcFinalEvalJson_${id.replace(/[^a-z0-9]/gi,'_')}`;
+      if(G[cacheKey]) return G[cacheKey];
+      const obj=JSON.parse(el.textContent||'{}'); G[cacheKey]=obj; return obj;
+    }catch(_e){ return null; }
+  }
+
+  function normalizeWind(live){
+    try{
+      if(typeof brcNormalizeLiveWind==='function') return brcNormalizeLiveWind(live);
+    }catch(_e){}
+    const w=live?.weather||live?.wind||{};
+    const speed=num(w.wind_speed_m ?? w.wind_speed ?? live?.wind_speed_m ?? live?.wind_speed,0);
+    const dir=String(w.wind_direction ?? w.direction ?? live?.wind_direction ?? '').trim();
+    return {dir, speed};
+  }
+
+  function getWindComboRef(){
+    try{ if(typeof WIND_COMBO_REF!=='undefined') return WIND_COMBO_REF; }catch(_e){}
+    return G.WIND_COMBO_REF || null;
+  }
+
+  function windSignal(ctx, boat){
+    const w=normalizeWind(ctx.liveRace);
+    const ref=getWindComboRef();
+    const speedKey=String(Math.max(0,Math.round(num(w?.speed,0))));
+    const dir=speedKey==='0'?'無風':String(w?.dir||'');
+    const row=ref?.[ctx.venue]?.[dir]?.[speedKey]?.[String(boat.course)];
+    const n=num(row?.n,0), dev=num(row?.dev,null);
+    if(!Number.isFinite(dev) || n<CONFIG.wind.minN){
+      return {key:'wind', ready:false, score:0, confidence:0, label:'風', detail:n?`風条件 N=${n}（保留）`:'風条件データ待ち'};
+    }
+    const conf=n/(n+CONFIG.wind.priorN);
+    const normalized=clamp(dev/CONFIG.wind.devScalePt,-1,1);
+    const score=CONFIG.score.windMax*normalized*conf;
+    return {
+      key:'wind', ready:true, score, confidence:conf, raw:dev, n,
+      label:'風',
+      detail:`${dir}${speedKey}m / 会場×${boat.course}コース 実測差 ${signed(dev,1)}pt (N=${n})`
+    };
+  }
+
+  function getSlitState(ctx){
+    try{
+      if(typeof brcSlitEvaluationState==='function') return brcSlitEvaluationState(ctx.boats,ctx.liveRace,ctx.inReliability||null);
+    }catch(_e){}
+    return null;
+  }
+  function getSlitNationalEffect(pair, course){
+    try{ if(typeof brcSlitNationalEffect==='function') return brcSlitNationalEffect(pair,course); }catch(_e){}
+    try{ if(typeof BRC_SLIT_NATIONAL_EFFECT_2025!=='undefined') return BRC_SLIT_NATIONAL_EFFECT_2025?.[String(pair)]?.[String(course)]||null; }catch(_e){}
+    return null;
+  }
+  function rowArrowScore(rows, course){
+    // Compatibility fallback for future/older slit state shapes.
+    let best=0;
+    for(const r of (Array.isArray(rows)?rows:[])){
+      const c=Number(r?.boat ?? r?.course ?? r?.targetCourse);
+      if(c!==Number(course)) continue;
+      const a=String(r?.win ?? r?.arrow ?? r?.winArrow ?? '');
+      const v=(a==='↑'?1:a==='↗'?.5:a==='↓'?-1:a==='↘'?-.5:0);
+      if(Math.abs(v)>Math.abs(best)) best=v;
+    }
+    return best;
+  }
+  function slitSignal(ctx, boat){
+    const state=ctx.slitState;
+    if(!state || state.status!=='ok') return {key:'slit',ready:false,score:0,confidence:0,label:'展示スリット',detail:'対象条件なし'};
+    let weighted=0, weight=0, evidence=[];
+    for(const item of (state.items||[])){
+      const pair=String(item?.pair||`${Number(item?.outer)}>${Number(item?.inner)}`);
+      if(Number(item?.inner)!==Number(boat.course) && Number(item?.outer)!==Number(boat.course)) continue;
+      const e=getSlitNationalEffect(pair,boat.course);
+      if(e && Number.isFinite(Number(e.win))){
+        const n=num(e.n,0), conf=n/(n+CONFIG.slit.priorN);
+        const raw=num(e.win,0);
+        weighted += clamp(raw/CONFIG.slit.effectScalePt,-1,1)*conf;
+        weight += conf;
+        evidence.push(`${pair} 1着実測差 ${signed(raw,1)}pt N=${n}`);
+      }
+    }
+    if(weight<=0){
+      const arrow=rowArrowScore(state.rows,boat.course);
+      if(!arrow) return {key:'slit',ready:false,score:0,confidence:0,label:'展示スリット',detail:'有効シグナルなし'};
+      const score=CONFIG.score.slitMax*arrow*.45;
+      return {key:'slit',ready:true,score,confidence:.45,label:'展示スリット',detail:`方向評価 ${arrow>0?'上向き':'下向き'}`};
+    }
+    const z=clamp(weighted/Math.max(1,weight),-1,1);
+    const conf=clamp(weight/Math.max(1,(state.items||[]).length),0,1);
+    return {key:'slit',ready:true,score:CONFIG.score.slitMax*z,confidence:conf,label:'展示スリット',detail:evidence.join(' / ')};
+  }
+
+  function personalSignal(ctx,boat){
+    let alert=null, diff=null;
+    try{ if(typeof brcFindExhibitionPlayerAlert==='function') alert=brcFindExhibitionPlayerAlert(boat); }catch(_e){}
+    if(!alert) return {key:'personal',ready:false,score:0,confidence:0,label:'個人展示傾向',detail:'該当なし'};
+    try{ if(typeof brcPersonalEffectDiff==='function') diff=brcPersonalEffectDiff(alert,'win'); }catch(_e){}
+    diff=num(diff,null);
+    if(!Number.isFinite(diff)) return {key:'personal',ready:false,score:0,confidence:0,label:'個人展示傾向',detail:'効果差なし'};
+    const n=num(alert?.N ?? alert?.n,0);
+    const grade=String(alert?.評価 ?? alert?.grade ?? alert?.信頼度 ?? '').toUpperCase();
+    const gradeConf=grade.includes('S')?1:grade.includes('A')?.86:grade.includes('B')?.68:grade.includes('C')?.45:.35;
+    const conf=gradeConf*(n/(n+CONFIG.personal.priorN));
+    const score=CONFIG.score.personalMax*clamp(diff/CONFIG.personal.diffScalePt,-1,1)*conf;
+    return {key:'personal',ready:true,score,confidence:conf,raw:diff,n,label:'個人展示傾向',detail:`通常比 ${signed(diff,1)}pt / N=${n||'―'}${grade?` / ${grade}`:''}`};
+  }
+
+  function tokuyamaMotorSignal(ctx,boat){
+    // Older compatible path. New national-24 implementation can override via hook below.
+    if(ctx.venue!=='徳山') return null;
+    try{
+      if(typeof BRC_ADMIN_TOKUYAMA_MOTOR_BASE==='undefined') return null;
+      const base=BRC_ADMIN_TOKUYAMA_MOTOR_BASE?.[String(Number(boat.motorNo))];
+      if(!base) return null;
+      const n=num(base.n,0);
+      const long=num(base.longStretch,0), recent=num(base.recent10,0);
+      const raw=.4*long+.6*recent;
+      const conf=n/(n+CONFIG.motor.priorN);
+      const score=CONFIG.score.motorFootMax*clamp(raw/CONFIG.motor.scale,-1,1)*conf;
+      const type=raw>=.25?'伸び寄り':raw<=-.25?'出足・回り足寄り':'バランス';
+      return {key:'motorFoot',ready:true,score,confidence:conf,raw,n,label:'モーター足色',detail:`${type} / 長期 ${signed(long,2)}・直近10 ${signed(recent,2)} (N=${n})`};
+    }catch(_e){ return null; }
+  }
+  function motorSignal(ctx,boat){
+    // Hook contract: return {score (-6..+6), confidence 0..1, detail, raw, n}.
+    // This is the intended connection point for the current 24-venue motor-foot implementation.
+    try{
+      const hook=G.BRC_FINAL_EVAL_MOTOR_ADAPTER || G.BRC_FINAL_EVAL_HOOKS?.motor;
+      if(typeof hook==='function'){
+        const r=hook({ctx,boat,version:VERSION});
+        if(r && Number.isFinite(Number(r.score))){
+          return {key:'motorFoot',ready:true,score:clamp(r.score,-CONFIG.score.motorFootMax,CONFIG.score.motorFootMax),confidence:clamp(r.confidence??.5,0,1),label:'モーター足色',detail:String(r.detail||'24場モーター評価'),raw:r.raw,n:r.n,source:'hook'};
+        }
+      }
+    }catch(_e){}
+    const legacy=tokuyamaMotorSignal(ctx,boat);
+    if(legacy) return legacy;
+    // motor2 / motorGrade are intentionally not added: they are already in the base Worker.
+    return {key:'motorFoot',ready:false,score:0,confidence:0,label:'モーター足色',detail:'24場足色アダプタ未接続（motor2は基礎AI反映済みのため二重加点しない）'};
+  }
+
+  function getKimariteData(){
+    try{ if(typeof KIMARITE_DATA!=='undefined') return KIMARITE_DATA; }catch(_e){}
+    return readJsonScript('data-kimarite');
+  }
+  function getCourseKimariteOpp(){
+    try{ if(typeof CK_DATA!=='undefined') return CK_DATA; }catch(_e){}
+    return readJsonScript('data-course-kimarite-opp');
+  }
+  function likelyMethod(ctx,boat){
+    const kd=getKimariteData();
+    const reg=String(boat?.player?.reg||'');
+    const row=kd?.[reg]?.by_course?.[String(boat.course)];
+    const n=num(row?.n,0), pct=row?.pct||{};
+    if(n<CONFIG.scenario.minWins || !pct || typeof pct!=='object') return null;
+    const entries=Object.entries(pct).map(([k,v])=>[k,num(v,0)]).filter(x=>Number.isFinite(x[1])).sort((a,b)=>b[1]-a[1]);
+    if(!entries.length) return null;
+    const [method,p]=entries[0];
+    return {method,pct:p,n,dominant:p>=CONFIG.scenario.dominantPct};
+  }
+  function likelyFollowers(ctx, headCourse, method){
+    const ck=getCourseKimariteOpp();
+    const row=ck?.[ctx.venue]?.[String(headCourse)]?.[String(method)];
+    const n=num(row?.n,0); if(!row?.opp || n<20) return null;
+    const top2=Object.entries(row.opp).map(([c,v])=>({course:Number(c),p:num(v?.top2,0)})).sort((a,b)=>b.p-a.p);
+    const top3=Object.entries(row.opp).map(([c,v])=>({course:Number(c),p:num(v?.top3,0)})).sort((a,b)=>b.p-a.p);
+    return {n, second:top2[0]||null, third:top3.find(x=>x.course!==top2[0]?.course)||top3[0]||null};
+  }
+
+  function timeXExplanation(boat){
+    const d=num(boat?.exhibitionWinDeltaPt,null);
+    if(!boat?.exhibitionApplied || !Number.isFinite(d)) return null;
+    return `TimeX反映済 ${signed(d,1)}pt`;
+  }
+
+  function confidenceGrade(v){
+    const x=clamp(v,0,1);
+    return x>=.82?'A':x>=.65?'B':x>=.48?'C':'D';
+  }
+  function statusFor(row, baseLeaderCourse){
+    if(Number(row.course)===Number(baseLeaderCourse)) return '本命';
+    if(row.deltaScore>=4.0 && row.winPct>=8) return 'AI上方評価';
+    if(row.deltaScore<=-4.0 && row.winPct>=10) return '注意';
+    if(row.top3Pct>=55 && row.winPct<20) return '相手注目';
+    return '標準';
+  }
+
+  function buildContext(boats, workerPrediction, localInReliability){
+    const b=(boats||[]).filter(x=>Number.isFinite(num(x?.pctFloat,null))).slice().sort((a,c)=>Number(a.course)-Number(c.course));
+    return {
+      version:VERSION,
+      venue:getVenue(), raceNo:getRaceNo(), date:getRaceDate(),
+      boats:b, workerPrediction:workerPrediction||G.__predictWorkerCurrent||null,
+      inReliability:localInReliability||G.__currentLocalInReliability||null,
+      liveRace:liveRace(),
+      createdAt:new Date().toISOString(),
+    };
+  }
+
+  function compute(boats,workerPrediction,localInReliability){
+    const ctx=buildContext(boats,workerPrediction,localInReliability);
+    if(ctx.boats.length!==6) return null;
+    ctx.slitState=getSlitState(ctx);
+
+    const logits=ctx.boats.map(b=>logitPct(b.pctFloat));
+    const mu=mean(logits), sigma=Math.max(.35,sd(logits));
+    const baseLeader=[...ctx.boats].sort((a,b)=>num(b.pctFloat,0)-num(a.pctFloat,0))[0];
+
+    const rows=ctx.boats.map((b,i)=>{
+      const baseScore=clamp(50+CONFIG.score.baseZ*((logits[i]-mu)/sigma),18,88);
+      const signals=[windSignal(ctx,b),slitSignal(ctx,b),personalSignal(ctx,b),motorSignal(ctx,b)];
+      let delta=signals.reduce((s,x)=>s+num(x.score,0),0);
+      delta=clamp(delta,-CONFIG.score.totalUnreflectedCap,CONFIG.score.totalUnreflectedCap);
+      const score=clamp(baseScore+delta,0,100);
+      const usable=signals.filter(x=>x.ready);
+      const coverage=usable.length/4;
+      const sigConf=usable.length?mean(usable.map(x=>clamp(x.confidence,0,1))):0;
+      const conf=clamp(.45 + .30*coverage + .25*sigConf,0,1);
+      const method=likelyMethod(ctx,b);
+      const reasons=[];
+      const tx=timeXExplanation(b); if(tx) reasons.push({type:'base',text:tx});
+      for(const s of signals){
+        if(s.ready && Math.abs(num(s.score,0))>=.55) reasons.push({type:s.score>0?'plus':'minus',text:`${s.label}: ${s.detail}`});
+      }
+      return {
+        course:Number(b.course), player:String(b?.player?.name||''), reg:String(b?.player?.reg||''),
+        winPct:round1(b.pctFloat), top3Pct:round1(b.pct3Float),
+        baseScore:round1(baseScore), deltaScore:round1(delta), score:round1(score),
+        confidence:round1(conf), confidenceGrade:confidenceGrade(conf),
+        motorNo:num(b.motorNo,null), method, signals, reasons,
+      };
+    });
+
+    rows.forEach(r=>{ r.status=statusFor(r,baseLeader.course); });
+    const scoreRank=[...rows].sort((a,b)=>b.score-a.score);
+    const baseRank=[...rows].sort((a,b)=>b.winPct-a.winPct);
+    const upward=[...rows].filter(r=>r.deltaScore>=1.5).sort((a,b)=>b.deltaScore-a.deltaScore || b.score-a.score)[0]||null;
+    const warning=[...rows].filter(r=>r.deltaScore<=-2.5 && r.winPct>=10).sort((a,b)=>a.deltaScore-b.deltaScore)[0]||null;
+
+    const head=scoreRank[0];
+    const method=head?.method?.method||null;
+    const followers=method?likelyFollowers(ctx,head.course,method):null;
+    const scenario=method ? {
+      headCourse:head.course, method, methodPct:head.method.pct, methodN:head.method.n,
+      followers,
+      text:`${head.course}号艇 ${method}${head.method?.dominant?'本線':'候補'}${followers?.second?` → 2着${followers.second.course}号艇` : ''}${followers?.third?` / 3着${followers.third.course}号艇` : ''}`
+    } : null;
+
+    const topGap=scoreRank[0]&&scoreRank[1]?scoreRank[0].score-scoreRank[1].score:0;
+    const raceConfidence=clamp(mean(rows.map(r=>r.confidence)) + clamp(topGap/25,0,.15),0,1);
+    const contradictions=rows.filter(r=>{
+      const dirs=r.signals.filter(s=>s.ready&&Math.abs(num(s.score,0))>=1).map(s=>Math.sign(s.score));
+      return dirs.includes(1)&&dirs.includes(-1);
+    }).length;
+    const raceState=(raceConfidence<.55 || (topGap<4 && contradictions>=2))?'見送り寄り':topGap>=10&&raceConfidence>=.68?'軸候補明確':'比較必要';
+
+    const result={
+      version:VERSION, mode:'shadow', probabilityChanged:false, oddsUsed:false,
+      venue:ctx.venue,raceNo:ctx.raceNo,date:ctx.date,createdAt:ctx.createdAt,
+      baseLeader:baseRank[0], scoreLeader:scoreRank[0], upward, warning,
+      scenario, raceConfidence:round1(raceConfidence), raceConfidenceGrade:confidenceGrade(raceConfidence), raceState,
+      rows,
+      meta:{
+        slitStatus:ctx.slitState?.status||'none',
+        liveExhibition:!!ctx.liveRace,
+        motorAdapter:typeof (G.BRC_FINAL_EVAL_MOTOR_ADAPTER||G.BRC_FINAL_EVAL_HOOKS?.motor)==='function',
+        note:'AI評価スコアは確率ではありません。現行1着率は変更しません。'
+      }
+    };
+    G.__brcFinalAiEvaluation=result;
+    try{ document.dispatchEvent(new CustomEvent('brc:final-eval-updated',{detail:result})); }catch(_e){}
+    return result;
+  }
+
+  function boatBadge(c){ return `<span class="brc-fe-boat b${Number(c)}">${Number(c)}</span>`; }
+  function reasonHtml(r){
+    const main=r.reasons.slice(0,3);
+    if(!main.length) return '<span class="brc-fe-muted">追加シグナルなし</span>';
+    return main.map(x=>`<span class="brc-fe-reason ${x.type}">${esc(x.text)}</span>`).join('');
+  }
+  function renderCard(result){
+    if(!result) return '';
+    const base=result.baseLeader, ai=result.scoreLeader, up=result.upward, warn=result.warning;
+    const scenario=result.scenario;
+    const rows=[...result.rows].sort((a,b)=>b.score-a.score);
+    return `
+      <section class="brc-fe-card" id="${MARKER_ID}">
+        <div class="brc-fe-head">
+          <div>
+            <div class="brc-fe-title">AI最終評価 <span>管理者β / SHADOW</span></div>
+            <div class="brc-fe-sub">現行着率を壊さず、未反映シグナルを統合。オッズは使用しません。</div>
+          </div>
+          <div class="brc-fe-conf">確信度 <b>${esc(result.raceConfidenceGrade)}</b><small>${Math.round(result.raceConfidence*100)}%</small></div>
+        </div>
+        <div class="brc-fe-summary">
+          <div class="brc-fe-pick"><span class="k">本命</span><strong>${boatBadge(base.course)} ${esc(base.player||'')}</strong><small>1着率 ${base.winPct.toFixed(1)}%</small></div>
+          <div class="brc-fe-pick accent"><span class="k">AI総合1位</span><strong>${boatBadge(ai.course)} ${esc(ai.player||'')}</strong><small>評価 ${Math.round(ai.score)} / 100・追加 ${signed(ai.deltaScore,1)}</small></div>
+          <div class="brc-fe-pick"><span class="k">AI上方評価</span><strong>${up?`${boatBadge(up.course)} ${esc(up.player||'')}`:'―'}</strong><small>${up?`追加 ${signed(up.deltaScore,1)}`:'明確な上方材料なし'}</small></div>
+          <div class="brc-fe-pick"><span class="k">レース判定</span><strong>${esc(result.raceState)}</strong><small>${warn?`${warn.course}号艇は追加材料 ${signed(warn.deltaScore,1)}`:'強いマイナス警告なし'}</small></div>
+        </div>
+        ${scenario?`<div class="brc-fe-scenario"><span>展開本線</span><b>${boatBadge(scenario.headCourse)} ${esc(scenario.method)}</b><small>本人コース別勝ち方 ${Math.round(scenario.methodPct)}%（勝ちN=${scenario.methodN}）${scenario.followers?` / 会場展開N=${scenario.followers.n}`:''}</small></div>`:''}
+        <div class="brc-fe-grid">
+          ${rows.map(r=>`<div class="brc-fe-row ${r.course===ai.course?'leader':''}">
+            <div class="brc-fe-rowtop"><div>${boatBadge(r.course)} <b>${esc(r.player||'')}</b><span class="tag">${esc(r.status)}</span></div><div class="score">${Math.round(r.score)}<small>/100</small></div></div>
+            <div class="brc-fe-metrics"><span>1着 <b>${r.winPct.toFixed(1)}%</b></span><span>3連対 <b>${Number.isFinite(r.top3Pct)?r.top3Pct.toFixed(1):'―'}%</b></span><span>追加評価 <b class="${r.deltaScore>0?'up':r.deltaScore<0?'down':''}">${signed(r.deltaScore,1)}</b></span><span>根拠 ${r.confidenceGrade}</span></div>
+            <div class="brc-fe-reasons">${reasonHtml(r)}</div>
+          </div>`).join('')}
+        </div>
+        <details class="brc-fe-detail"><summary>仕組み・注意点</summary><div>
+          <p><b>基礎:</b> 現行BRCの1着率（Worker＋TimeX反映後）を相対スコア化。</p>
+          <p><b>追加:</b> 風、展示スリット、個人展示傾向、未反映のモーター足色をサンプル数で縮小して加点/減点。</p>
+          <p><b>展開:</b> 選手のコース別決まり手と会場×決まり手の相手残り傾向から「勝った場合の形」を表示。</p>
+          <p><b>二重計上防止:</b> TimeXとmotor2は既存着率に含まれるため再加点しません。</p>
+          <p><b>SHADOW:</b> このV1は1着率・買い目・期待値・公開画面を変更しません。OOS検証後に確率統合へ昇格します。</p>
+        </div></details>
+      </section>`;
+  }
+
+  function ensureStyle(){
+    if(document.getElementById(STYLE_ID)) return;
+    const style=document.createElement('style'); style.id=STYLE_ID;
+    style.textContent=`
+      .brc-fe-card{margin:12px 0 16px;border:1px solid rgba(0,87,219,.18);border-radius:15px;background:linear-gradient(155deg,rgba(0,87,219,.055),rgba(255,255,255,.98) 45%,rgba(124,58,237,.035));overflow:hidden;box-shadow:0 8px 24px rgba(10,31,51,.04)}
+      .brc-fe-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:13px 14px 10px;border-bottom:1px solid rgba(10,31,51,.07)}
+      .brc-fe-title{font-size:15px;font-weight:950;color:var(--navy,#0a1f33)} .brc-fe-title span{display:inline-flex;margin-left:5px;padding:3px 6px;border-radius:999px;background:rgba(124,58,237,.08);font-size:8px;color:#6d28d9;vertical-align:2px}
+      .brc-fe-sub{margin-top:3px;font-size:9.5px;font-weight:700;color:var(--ink-soft,#6b7280)}
+      .brc-fe-conf{min-width:62px;text-align:center;padding:6px 8px;border-radius:10px;background:#fff;border:1px solid rgba(10,31,51,.08);font-size:8px;color:var(--ink-soft,#6b7280);font-weight:850}.brc-fe-conf b{display:block;font-size:17px;color:var(--navy,#0a1f33);line-height:1.05}.brc-fe-conf small{font-size:8px}
+      .brc-fe-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;padding:10px 12px}.brc-fe-pick{padding:9px;border-radius:11px;background:#fff;border:1px solid rgba(10,31,51,.07);min-width:0}.brc-fe-pick.accent{border-color:rgba(0,87,219,.25);background:rgba(0,87,219,.035)}.brc-fe-pick .k{display:block;font-size:8px;font-weight:900;color:var(--ink-soft,#6b7280)}.brc-fe-pick strong{display:flex;align-items:center;gap:5px;margin-top:4px;font-size:11.5px;color:var(--navy,#0a1f33);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brc-fe-pick small{display:block;margin-top:4px;font-size:8.5px;color:var(--ink-soft,#6b7280);font-weight:750}
+      .brc-fe-scenario{margin:0 12px 10px;padding:9px 10px;border-radius:11px;border:1px dashed rgba(0,87,219,.24);background:rgba(0,87,219,.025);display:flex;align-items:center;gap:7px;flex-wrap:wrap}.brc-fe-scenario>span{font-size:8px;font-weight:900;color:var(--ink-soft,#6b7280)}.brc-fe-scenario>b{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--navy,#0a1f33)}.brc-fe-scenario>small{font-size:8.5px;color:var(--ink-soft,#6b7280)}
+      .brc-fe-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:0 12px 12px}.brc-fe-row{padding:9px;border:1px solid rgba(10,31,51,.075);border-radius:11px;background:#fff}.brc-fe-row.leader{border-color:rgba(0,87,219,.28);box-shadow:inset 3px 0 0 rgba(0,87,219,.65)}.brc-fe-rowtop{display:flex;align-items:center;justify-content:space-between;gap:8px}.brc-fe-rowtop>div:first-child{display:flex;align-items:center;gap:5px;min-width:0}.brc-fe-rowtop b{font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brc-fe-rowtop .tag{font-size:7px;font-weight:900;padding:2px 5px;border-radius:999px;background:rgba(10,31,51,.055);color:var(--ink-soft,#6b7280);white-space:nowrap}.brc-fe-rowtop .score{font-size:19px;font-weight:950;color:var(--navy,#0a1f33);font-variant-numeric:tabular-nums}.brc-fe-rowtop .score small{font-size:7px;color:var(--ink-soft,#6b7280);margin-left:1px}.brc-fe-metrics{display:flex;gap:7px;flex-wrap:wrap;margin-top:5px;font-size:8px;color:var(--ink-soft,#6b7280);font-weight:750}.brc-fe-metrics b{color:var(--navy,#0a1f33)}.brc-fe-metrics b.up{color:#0f8a58}.brc-fe-metrics b.down{color:#c2414a}.brc-fe-reasons{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}.brc-fe-reason{font-size:7.8px;line-height:1.35;padding:3px 5px;border-radius:6px;background:rgba(10,31,51,.035);color:var(--ink-soft,#6b7280);font-weight:700}.brc-fe-reason.plus{background:rgba(15,138,88,.065);color:#08734a}.brc-fe-reason.minus{background:rgba(194,65,74,.06);color:#a3323b}.brc-fe-muted{font-size:8px;color:var(--ink-soft,#6b7280)}
+      .brc-fe-boat{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;font-size:10px;font-weight:950;border:1px solid rgba(0,0,0,.08);flex:0 0 19px}.brc-fe-boat.b1{background:#fff;color:#111}.brc-fe-boat.b2{background:#444;color:#fff}.brc-fe-boat.b3{background:#e64545;color:#fff}.brc-fe-boat.b4{background:#3b78d8;color:#fff}.brc-fe-boat.b5{background:#e9c640;color:#111}.brc-fe-boat.b6{background:#57a56a;color:#fff}
+      .brc-fe-detail{border-top:1px solid rgba(10,31,51,.06);padding:8px 12px 10px}.brc-fe-detail summary{cursor:pointer;font-size:8.5px;font-weight:900;color:var(--ink-soft,#6b7280)}.brc-fe-detail div{padding:6px 2px 0}.brc-fe-detail p{margin:4px 0;font-size:8px;line-height:1.5;color:var(--ink-soft,#6b7280)}
+      @media(max-width:640px){.brc-fe-summary{grid-template-columns:1fr 1fr}.brc-fe-grid{grid-template-columns:1fr}.brc-fe-head{padding:12px}.brc-fe-summary,.brc-fe-grid{padding-left:10px;padding-right:10px}.brc-fe-scenario{margin-left:10px;margin-right:10px}.brc-fe-pick strong{font-size:10.5px}}
+    `;
+    document.head.appendChild(style);
+  }
+
+  function mount(result){
+    if(CONFIG.adminOnly && !isAdmin()){
+      document.getElementById(MARKER_ID)?.remove(); return;
+    }
+    ensureStyle();
+    const root=document.getElementById('predictAiResult');
+    if(!root) return;
+    const old=document.getElementById(MARKER_ID); if(old) old.remove();
+    const host=document.createElement('div'); host.innerHTML=renderCard(result);
+    const card=host.firstElementChild; if(!card) return;
+    // V2: renderPredictAiPanel itself creates a dedicated mount point.
+    // This avoids competing with the existing AI render wrappers that replace root.innerHTML.
+    const fixedMount=document.getElementById('brcFinalEvalMountV2');
+    if(fixedMount && root.contains(fixedMount)){
+      fixedMount.replaceChildren(card);
+    }else{
+      const head=root.querySelector('.predict-ai-head,.brc-ai-head,.brc-ai3-head');
+      if(head && head.parentNode===root) head.insertAdjacentElement('afterend',card);
+      else root.prepend(card);
+    }
+  }
+
+  let refreshTimer=null;
+  function refresh(explicitBoats=null,workerPrediction=null,localInReliability=null){
+    clearTimeout(refreshTimer);
+    refreshTimer=setTimeout(()=>{
+      try{
+        const boats=explicitBoats || G.__predictBoatsCurrent;
+        if(!Array.isArray(boats)||boats.length!==6) return;
+        const res=compute(boats,workerPrediction||G.__predictWorkerCurrent,localInReliability||G.__currentLocalInReliability);
+        mount(res);
+      }catch(e){ console.warn('[BRC final eval] refresh failed',e); }
+    },30);
+  }
+
+  function wrap(name, after){
+    const original=G[name]; if(typeof original!=='function' || original.__brcFinalEvalWrapped) return false;
+    function wrapped(){
+      const args=arguments, out=original.apply(this,args);
+      try{ after(args,out); }catch(_e){}
+      return out;
+    }
+    wrapped.__brcFinalEvalWrapped=true; wrapped.__brcFinalEvalOriginal=original; G[name]=wrapped; return true;
+  }
+
+  function installHooks(){
+    wrap('renderPredictAiPanel',(args)=>refresh(args[0],args[1],args[2]));
+    wrap('brcRefreshExhibitionAdjustedDom',()=>refresh());
+    wrap('brcSyncWindPanelFromLiveRace',()=>refresh());
+    document.addEventListener('brc-motor-detail-updated',()=>refresh());
+    document.addEventListener('visibilitychange',()=>{ if(!document.hidden) refresh(); });
+    // Race/tab DOM may be replaced; one small observer only watches the AI result container.
+    const observer=new MutationObserver((muts)=>{
+      if(!G.__predictBoatsCurrent) return;
+      const root=document.getElementById('predictAiResult'); if(!root) return;
+      if(!document.getElementById(MARKER_ID)) refresh();
+    });
+    const start=()=>{ const root=document.getElementById('predictAiResult'); if(root) observer.observe(root,{childList:true}); };
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start,{once:true}); else start();
+  }
+
+  G.BRC_FINAL_EVAL_HOOKS = G.BRC_FINAL_EVAL_HOOKS || {};
+  G.BRC_FINAL_EVAL_V1 = Object.freeze({VERSION,CONFIG,compute,refresh,renderCard});
+  installHooks();
+  setTimeout(()=>refresh(),250);
+  console.info(`[${VERSION}] installed (shadow / probabilities unchanged / odds unused)`);
+})();
+
+</script>
 </body>
 </html>
