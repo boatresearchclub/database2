@@ -4203,6 +4203,17 @@ table.brc-mark-table td:first-child{text-align:left;padding-left:7px;}
 /* BRC_ADMIN_REFERENCE_INLINE_V3_20260911 */
 /* BRC_ADMIN_REFERENCE_MONITOR_UI_V2_20260910: pick marks hidden + typography aligned with イン逃げ予測 */
 .brc-ai-admin-tabs.brc-refmon-enabled{grid-template-columns:repeat(2,minmax(0,1fr));}
+/* BRC_AI_FINAL_EVAL_SUBTAB_V5_20260922 */
+.brc-ai-admin-tabs.brc-refmon-enabled.brc-ai-admin-tabs-five{grid-template-columns:repeat(5,minmax(0,1fr));}
+@media(max-width:640px){
+  .brc-ai-admin-tabs.brc-refmon-enabled.brc-ai-admin-tabs-five{
+    display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+  }
+  .brc-ai-admin-tabs.brc-refmon-enabled.brc-ai-admin-tabs-five::-webkit-scrollbar{display:none;}
+  .brc-ai-admin-tabs.brc-refmon-enabled.brc-ai-admin-tabs-five .brc-ai-admin-tab{
+    flex:0 0 auto;min-width:94px;padding-left:8px;padding-right:8px;
+  }
+}
 .brc-refmon-card{margin:10px 0 0;padding:11px;border:1px solid rgba(124,58,237,.18);border-radius:12px;background:linear-gradient(160deg,rgba(124,58,237,.045),rgba(255,255,255,.97));}
 .brc-refmon-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:9px;}
 .brc-refmon-title{font-size:13px;font-weight:950;color:var(--navy);}
@@ -12750,9 +12761,9 @@ window.brcRefreshAiExpectedValue=brcRefreshAiExpectedValue;
 
 function brcSetAiAdminSubTab(key){
   if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return;
-  const valid=['marks','nige','ref','ev'];
+  const valid=['final','marks','nige','ref','ev'];
   const requested=key==='monitor'?'ref':key;
-  const k=valid.includes(requested)?requested:'marks';
+  const k=valid.includes(requested)?requested:'final';
   window.__brcAiAdminSubTabCurrent=k;
   document.querySelectorAll('#predictAiResult [data-brc-ai-admin-tab]').forEach(btn=>{
     const on=btn.dataset.brcAiAdminTab===k;
@@ -12772,7 +12783,7 @@ function brcBindAiAdminSubTabs(){
     btn.dataset.brcBound='1';
     btn.addEventListener('click',()=>brcSetAiAdminSubTab(btn.dataset.brcAiAdminTab));
   });
-  brcSetAiAdminSubTab(window.__brcAiAdminSubTabCurrent||'marks');
+  brcSetAiAdminSubTab(window.__brcAiAdminSubTabCurrent||'final');
 }
 
 function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhibitionApplied){
@@ -12794,13 +12805,14 @@ function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhib
         <div><div class="predict-ai-title">AI予測</div><div class="predict-ai-sub">管理者β</div></div>
         ${reliability}
       </div>
-      <div id="brcFinalEvalMountV2" data-brc-final-eval-mount="1"></div>
-      <div class="brc-ai-admin-tabs brc-refmon-enabled" role="tablist" aria-label="AI予測の管理者表示切り替え">
+      <div class="brc-ai-admin-tabs brc-refmon-enabled brc-ai-admin-tabs-five" role="tablist" aria-label="AI予測の管理者表示切り替え">
+        <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="final">最終評価</button>
         <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="marks">展開マトリックス</button>
         <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="nige">イン逃げ予測</button>
         <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="ref">BRC参考買い目</button>
         <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="ev">狙い目</button>
       </div>
+      <div id="brcAiAdminPanel-final" class="brc-ai-admin-panel"><div id="brcFinalEvalMountV2" data-brc-final-eval-mount="1"></div></div>
       <div id="brcAiAdminPanel-marks" class="brc-ai-admin-panel">${marksHtml}</div>
       <div id="brcAiAdminPanel-nige" class="brc-ai-admin-panel">${nigeHtml}</div>
       <div id="brcAiAdminPanel-ref" class="brc-ai-admin-panel"></div>
@@ -23095,7 +23107,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 </script>
 
 
+<!-- BRC_AI_FINAL_EVAL_SUBTAB_V5_20260922: AI予測管理者β内に「最終評価」サブタブを新設。SHADOW最終評価カードを独立パネルへ移動し初期表示を最終評価に変更。評価ロジック・着率・買い目・期待値は非変更 -->
 <!-- BRC_AI_FINAL_EVAL_MOTOR24_PRIORRUN_V3_20260922: 全国24場モーター今節評価をSHADOW接続。現在選択Rの展示サンプルは除外し、今節の過去走だけで総合機力を評価してTimeX二重計上を防止。現行着率/買い目/期待値は非変更 -->
+<!-- BRC_AI_FINAL_EVAL_SIGNAL_STATE_V4_20260922: AI最終評価の接続状態を 接続/展示待ち/風待ち/該当なし/参考のみ/標本不足/読込中/データ不足 に分離。予測値・加点ロジック非変更 -->
 <!-- BRC_AI_FINAL_EVAL_WIND_SLIT_REAL_V2_20260922: AI最終評価SHADOWに現行風実測・展示スリット現行stateを実接続。スリットstatus active対応、信頼A/B実測pt優先、現行着率/買い目/期待値は非変更 -->
 <!-- BRC_AI_FINAL_EVAL_DIRECT_MOUNT_V2_20260922: fixed mount inside renderPredictAiPanel + direct refresh; fixes shadow card disappearing/not mounting behind wrapper chain; prediction logic unchanged -->
 <!-- BRC_AI_FINAL_EVAL_SHADOW_V1_20260922: admin-only shadow final evaluation; does not modify /predict, current probabilities, odds/value logic or buy logic -->
@@ -23575,6 +23589,37 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
           personal:rows.some(r=>r.signals.some(x=>x.key==='personal'&&x.ready)),
           motor:rows.some(r=>r.signals.some(x=>x.key==='motorFoot'&&x.ready))
         },
+        signalState:(()=>{
+          const list=(key)=>rows.flatMap(r=>r.signals.filter(x=>x.key===key));
+          const state=(key)=>{
+            const xs=list(key);
+            if(xs.some(x=>x.ready)) return {code:'connected',label:'接続',detail:xs.filter(x=>x.ready).map(x=>x.detail).filter(Boolean).slice(0,2).join(' / ')};
+            const details=xs.map(x=>String(x?.detail||'')).filter(Boolean);
+            if(key==='slit'){
+              if(!ctx.slitState || ctx.slitState?.status!=='active') return {code:'waiting',label:'展示待ち',detail:details[0]||'展示データ待ち'};
+              if(details.some(x=>x.includes('頭加点保留'))) return {code:'reference',label:'参考のみ',detail:'展示優位はあるが、信頼A/B実測ptまたは固定OOS強条件に該当しないため頭評価へ加点しません。'};
+              return {code:'none',label:'該当なし',detail:'このレースでは最終評価へ加点する展示スリット条件なし'};
+            }
+            if(key==='personal'){
+              const exhibitionReady=ctx.boats.some(b=>b?.exhibitionApplied || Number.isFinite(Number(b?.exhibitionWinDeltaPt)));
+              if(!exhibitionReady) return {code:'waiting',label:'展示待ち',detail:'TimeX帯確定後に個人傾向を照合'};
+              if(details.some(x=>x.includes('効果差なし'))) return {code:'none',label:'該当なし',detail:'本人傾向データはあるが通常傾向との差が算出対象外'};
+              return {code:'none',label:'該当なし',detail:'今回の選手×コース×TimeX帯で強く使う個人傾向なし'};
+            }
+            if(key==='wind'){
+              if(details.some(x=>x.includes('風データ待ち')||x.includes('風向データ待ち'))) return {code:'waiting',label:'風待ち',detail:details[0]||''};
+              if(details.some(x=>x.includes('標本不足'))) return {code:'insufficient',label:'標本不足',detail:details.find(x=>x.includes('標本不足'))||''};
+              return {code:'none',label:'該当なし',detail:details[0]||'同条件データなし'};
+            }
+            if(key==='motorFoot'){
+              if(details.some(x=>x.includes('読込中'))) return {code:'loading',label:'読込中',detail:'今節の過去走を読込中'};
+              if(details.some(x=>x.includes('2走未満'))) return {code:'insufficient',label:'データ不足',detail:details.find(x=>x.includes('2走未満'))||''};
+              return {code:'none',label:'該当なし',detail:details[0]||'評価対象データなし'};
+            }
+            return {code:'none',label:'該当なし',detail:details[0]||''};
+          };
+          return {wind:state('wind'),slit:state('slit'),personal:state('personal'),motor:state('motorFoot')};
+        })(),
         note:'AI評価スコアは確率ではありません。現行1着率は変更しません。'
       }
     };
@@ -23603,7 +23648,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
           </div>
           <div class="brc-fe-conf">確信度 <b>${esc(result.raceConfidenceGrade)}</b><small>${Math.round(result.raceConfidence*100)}%</small></div>
         </div>
-        <div class="brc-fe-connect">${[['風','wind'],['展示スリット','slit'],['個人傾向','personal'],['モーター足色','motor']].map(([label,key])=>`<span class="${result.meta?.signalReady?.[key]?'on':'off'}">${label} ${result.meta?.signalReady?.[key]?'接続':'待機'}</span>`).join('')}</div>
+        <div class="brc-fe-connect">${[['風','wind'],['展示スリット','slit'],['個人傾向','personal'],['モーター足色','motor']].map(([label,key])=>{const st=result.meta?.signalState?.[key]||{code:result.meta?.signalReady?.[key]?'connected':'none',label:result.meta?.signalReady?.[key]?'接続':'該当なし',detail:''};return `<span class="${st.code==='connected'?'on':st.code==='waiting'||st.code==='loading'?'wait':st.code==='reference'?'ref':st.code==='insufficient'?'insufficient':'off'}" title="${esc(st.detail||'')}">${label} ${esc(st.label)}</span>`;}).join('')}</div>
+        <details class="brc-fe-signal-detail"><summary>接続状態の詳細</summary><div>${[['風','wind'],['展示スリット','slit'],['個人傾向','personal'],['モーター足色','motor']].map(([label,key])=>{const st=result.meta?.signalState?.[key]||{};return `<p><b>${label}：${esc(st.label||'該当なし')}</b><span>${esc(st.detail||'―')}</span></p>`;}).join('')}</div></details>
         <div class="brc-fe-summary">
           <div class="brc-fe-pick"><span class="k">本命</span><strong>${boatBadge(base.course)} ${esc(base.player||'')}</strong><small>1着率 ${base.winPct.toFixed(1)}%</small></div>
           <div class="brc-fe-pick accent"><span class="k">AI総合1位</span><strong>${boatBadge(ai.course)} ${esc(ai.player||'')}</strong><small>評価 ${Math.round(ai.score)} / 100・追加 ${signed(ai.deltaScore,1)}</small></div>
@@ -23623,7 +23669,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
           <p><b>追加:</b> 風は会場×風向×風速×コースの生実測、展示スリットは現行stateの信頼A/B実測ptを優先し、サンプル数で縮小して加点/減点。</p>
           <p><b>展開:</b> 選手のコース別決まり手と会場×決まり手の相手残り傾向から「勝った場合の形」を表示。</p>
           <p><b>二重計上防止:</b> TimeXとmotor2は既存着率に含まれるため再加点しません。今節モーターも現在選択Rの展示サンプルを除外し、過去走だけを使用します。</p>
-          <p><b>SHADOW:</b> このV1は1着率・買い目・期待値・公開画面を変更しません。OOS検証後に確率統合へ昇格します。</p>
+          <p><b>状態表示:</b> 接続=実際に評価へ使用、展示待ち/風待ち=必要データ未到着、該当なし=データは確認済みだが条件なし、参考のみ=表示材料はあるが頭スコアへは加点保留、標本不足/データ不足=サンプル不足。</p>
+          <p><b>SHADOW:</b> 現段階では1着率・買い目・期待値・公開画面を変更しません。OOS検証後に確率統合へ昇格します。</p>
         </div></details>
       </section>`;
   }
@@ -23632,12 +23679,12 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     if(document.getElementById(STYLE_ID)) return;
     const style=document.createElement('style'); style.id=STYLE_ID;
     style.textContent=`
-      .brc-fe-card{margin:12px 0 16px;border:1px solid rgba(0,87,219,.18);border-radius:15px;background:linear-gradient(155deg,rgba(0,87,219,.055),rgba(255,255,255,.98) 45%,rgba(124,58,237,.035));overflow:hidden;box-shadow:0 8px 24px rgba(10,31,51,.04)}
+      .brc-fe-card{margin:0 0 16px;border:1px solid rgba(0,87,219,.18);border-radius:15px;background:linear-gradient(155deg,rgba(0,87,219,.055),rgba(255,255,255,.98) 45%,rgba(124,58,237,.035));overflow:hidden;box-shadow:0 8px 24px rgba(10,31,51,.04)}
       .brc-fe-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:13px 14px 10px;border-bottom:1px solid rgba(10,31,51,.07)}
       .brc-fe-title{font-size:15px;font-weight:950;color:var(--navy,#0a1f33)} .brc-fe-title span{display:inline-flex;margin-left:5px;padding:3px 6px;border-radius:999px;background:rgba(124,58,237,.08);font-size:8px;color:#6d28d9;vertical-align:2px}
       .brc-fe-sub{margin-top:3px;font-size:9.5px;font-weight:700;color:var(--ink-soft,#6b7280)}
       .brc-fe-conf{min-width:62px;text-align:center;padding:6px 8px;border-radius:10px;background:#fff;border:1px solid rgba(10,31,51,.08);font-size:8px;color:var(--ink-soft,#6b7280);font-weight:850}.brc-fe-conf b{display:block;font-size:17px;color:var(--navy,#0a1f33);line-height:1.05}.brc-fe-conf small{font-size:8px}
-      .brc-fe-connect{display:flex;gap:5px;flex-wrap:wrap;padding:8px 12px 0}.brc-fe-connect span{display:inline-flex;align-items:center;padding:3px 6px;border-radius:999px;font-size:7.5px;font-weight:900;border:1px solid rgba(10,31,51,.08)}.brc-fe-connect .on{color:#08734a;background:rgba(15,138,88,.06);border-color:rgba(15,138,88,.16)}.brc-fe-connect .off{color:#7b8491;background:rgba(10,31,51,.03)}
+      .brc-fe-connect{display:flex;gap:5px;flex-wrap:wrap;padding:8px 12px 0}.brc-fe-connect span{display:inline-flex;align-items:center;padding:3px 6px;border-radius:999px;font-size:7.5px;font-weight:900;border:1px solid rgba(10,31,51,.08)}.brc-fe-connect .on{color:#08734a;background:rgba(15,138,88,.06);border-color:rgba(15,138,88,.16)}.brc-fe-connect .off{color:#7b8491;background:rgba(10,31,51,.03)}.brc-fe-connect .wait{color:#1d4ed8;background:rgba(37,99,235,.06);border-color:rgba(37,99,235,.16)}.brc-fe-connect .ref{color:#8a5a00;background:rgba(217,119,6,.06);border-color:rgba(217,119,6,.18)}.brc-fe-connect .insufficient{color:#8a5a00;background:rgba(217,119,6,.045);border-color:rgba(217,119,6,.14)}.brc-fe-signal-detail{margin:6px 12px 0;border:1px solid rgba(10,31,51,.06);border-radius:9px;background:rgba(255,255,255,.58);padding:0 8px}.brc-fe-signal-detail summary{cursor:pointer;padding:6px 1px;font-size:7.8px;font-weight:900;color:var(--ink-soft,#6b7280)}.brc-fe-signal-detail>div{padding:0 1px 6px}.brc-fe-signal-detail p{display:grid;grid-template-columns:105px minmax(0,1fr);gap:6px;margin:4px 0;font-size:7.7px;line-height:1.45;color:var(--ink-soft,#6b7280)}.brc-fe-signal-detail p b{color:var(--navy,#0a1f33)}.brc-fe-signal-detail p span{min-width:0;overflow-wrap:anywhere}
       .brc-fe-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;padding:10px 12px}.brc-fe-pick{padding:9px;border-radius:11px;background:#fff;border:1px solid rgba(10,31,51,.07);min-width:0}.brc-fe-pick.accent{border-color:rgba(0,87,219,.25);background:rgba(0,87,219,.035)}.brc-fe-pick .k{display:block;font-size:8px;font-weight:900;color:var(--ink-soft,#6b7280)}.brc-fe-pick strong{display:flex;align-items:center;gap:5px;margin-top:4px;font-size:11.5px;color:var(--navy,#0a1f33);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brc-fe-pick small{display:block;margin-top:4px;font-size:8.5px;color:var(--ink-soft,#6b7280);font-weight:750}
       .brc-fe-scenario{margin:0 12px 10px;padding:9px 10px;border-radius:11px;border:1px dashed rgba(0,87,219,.24);background:rgba(0,87,219,.025);display:flex;align-items:center;gap:7px;flex-wrap:wrap}.brc-fe-scenario>span{font-size:8px;font-weight:900;color:var(--ink-soft,#6b7280)}.brc-fe-scenario>b{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--navy,#0a1f33)}.brc-fe-scenario>small{font-size:8.5px;color:var(--ink-soft,#6b7280)}
       .brc-fe-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:0 12px 12px}.brc-fe-row{padding:9px;border:1px solid rgba(10,31,51,.075);border-radius:11px;background:#fff}.brc-fe-row.leader{border-color:rgba(0,87,219,.28);box-shadow:inset 3px 0 0 rgba(0,87,219,.65)}.brc-fe-rowtop{display:flex;align-items:center;justify-content:space-between;gap:8px}.brc-fe-rowtop>div:first-child{display:flex;align-items:center;gap:5px;min-width:0}.brc-fe-rowtop b{font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brc-fe-rowtop .tag{font-size:7px;font-weight:900;padding:2px 5px;border-radius:999px;background:rgba(10,31,51,.055);color:var(--ink-soft,#6b7280);white-space:nowrap}.brc-fe-rowtop .score{font-size:19px;font-weight:950;color:var(--navy,#0a1f33);font-variant-numeric:tabular-nums}.brc-fe-rowtop .score small{font-size:7px;color:var(--ink-soft,#6b7280);margin-left:1px}.brc-fe-metrics{display:flex;gap:7px;flex-wrap:wrap;margin-top:5px;font-size:8px;color:var(--ink-soft,#6b7280);font-weight:750}.brc-fe-metrics b{color:var(--navy,#0a1f33)}.brc-fe-metrics b.up{color:#0f8a58}.brc-fe-metrics b.down{color:#c2414a}.brc-fe-reasons{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}.brc-fe-reason{font-size:7.8px;line-height:1.35;padding:3px 5px;border-radius:6px;background:rgba(10,31,51,.035);color:var(--ink-soft,#6b7280);font-weight:700}.brc-fe-reason.plus{background:rgba(15,138,88,.065);color:#08734a}.brc-fe-reason.minus{background:rgba(194,65,74,.06);color:#a3323b}.brc-fe-muted{font-size:8px;color:var(--ink-soft,#6b7280)}
