@@ -29,7 +29,7 @@
 <!-- BRC_SLIT_STRICT_A_EXHIBITION_12_V2_20260920: strict exhibition A corrected to 12 cells after independent recomputation of annual 3/3, completed half-years 5/5, rolling90 thresholds and date-cluster bootstrap 95% CI; restored 福岡4>3, 若松4>3, 蒲郡4>3. Strong venue-specific A numeric remains disabled due legacy production recent-ST provenance. -->
 <!-- BRC_TIMEX_LAP_PENDING_FIX_V1_20260920: exhibition-time-only phase is treated as waiting, not shortened; lap_type/detail arrival separates pending from true lap-missing state; prediction math unchanged -->
 <!DOCTYPE html>
-<!-- BRC_AI_FINAL_EVAL_V7_OOS1_20260922: 2026-08-26..09-16 strict OOS一次検証(3196R)を反映。風はプラスのみ縮小加点、個人傾向はプラスのみ頭加点、マイナスは注意表示。motor/slitは維持。SHADOWで現行着率/買い目/期待値は非変更。 -->
+<!-- BRC_AI_FINAL_EVAL_V8_SCORE_RULE_V2_20260922: 3196R strict-OOSで追加スコアの実戦ラベルを検証。R内delta最大かつ+3以上=AI注目、1Cかつ-2.5以下=危険1号艇。本命一致+3以上=本命強化。見送り判定は未検証のため廃止。現行着率/買い目/期待値は非変更。 -->
 
 <!-- BRC_AI_FINAL_EVAL_TAB_V6_20260922: final tab force-refreshes and remounts the SHADOW card on every open; prediction logic unchanged -->
 <!-- BRC_CANCEL_POSTPONE_GUARD_V1_20260921: live-scheduleの開催中止/順延を終端状態として保持し、中止会場・中止Rを締切カードから除外。payloadのstatus/reason文字列も防御的に解釈。予測ロジック非変更 -->
@@ -23219,7 +23219,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   'use strict';
 
   const G = window;
-  const VERSION = 'BRC_FINAL_EVAL_SHADOW_V7_OOS1_20260922';
+  const VERSION = 'BRC_FINAL_EVAL_SHADOW_V8_SCORE_RULE_V2_20260922';
   const MARKER_ID = 'brc-final-eval-v1';
   const STYLE_ID = 'brc-final-eval-v1-style';
 
@@ -23583,10 +23583,16 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     const x=clamp(v,0,1);
     return x>=.82?'A':x>=.65?'B':x>=.48?'C':'D';
   }
-  function statusFor(row, baseLeaderCourse){
-    if(Number(row.course)===Number(baseLeaderCourse)) return '本命';
-    if(row.deltaScore>=4.0 && row.winPct>=8) return 'AI上方評価';
-    if(row.deltaScore<=-4.0 && row.winPct>=10) return '注意';
+  function statusFor(row, baseLeaderCourse, aiWatchCourse){
+    const isBase=Number(row.course)===Number(baseLeaderCourse);
+    const isWatch=Number(row.course)===Number(aiWatchCourse) && row.deltaScore>=3.0;
+    // V8 score-rule V2: strict OOS 3,196Rで採用した実戦ラベルだけを表示。
+    if(isBase && Number(row.course)===1 && row.deltaScore<=-2.5) return '本命注意';
+    if(isBase && isWatch) return '本命強化';
+    if(isBase) return '本命';
+    if(isWatch) return 'AI注目';
+    if(Number(row.course)===1 && row.deltaScore<=-2.5) return '危険1号艇';
+    if(row.deltaScore<=-2.5 && row.winPct>=10) return '下方評価';
     if(row.top3Pct>=55 && row.winPct<20) return '相手注目';
     return '標準';
   }
@@ -23637,11 +23643,16 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       };
     });
 
-    rows.forEach(r=>{ r.status=statusFor(r,baseLeader.course); });
     const scoreRank=[...rows].sort((a,b)=>b.score-a.score);
     const baseRank=[...rows].sort((a,b)=>b.winPct-a.winPct);
-    const upward=[...rows].filter(r=>r.deltaScore>=1.5).sort((a,b)=>b.deltaScore-a.deltaScore || b.score-a.score)[0]||null;
+    const deltaRank=[...rows].sort((a,b)=>b.deltaScore-a.deltaScore || b.score-a.score);
+    // strict OOS V2: R内の追加評価最大艇で +3.0以上だけを「AI注目」にする。
+    const aiWatch=(deltaRank[0] && deltaRank[0].deltaScore>=3.0) ? deltaRank[0] : null;
+    // 1号艇 -2.5以下は基礎期待55.0%→実43.0%まで低下したため専用警告。
+    const danger1=[...rows].filter(r=>Number(r.course)===1 && r.deltaScore<=-2.5).sort((a,b)=>a.deltaScore-b.deltaScore)[0]||null;
     const warning=[...rows].filter(r=>r.deltaScore<=-2.5 && r.winPct>=10).sort((a,b)=>a.deltaScore-b.deltaScore)[0]||null;
+    const upward=aiWatch;
+    rows.forEach(r=>{ r.status=statusFor(r,baseLeader.course,aiWatch?.course); });
 
     const head=scoreRank[0];
     const method=head?.method?.method||null;
@@ -23658,12 +23669,13 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       const dirs=r.signals.filter(s=>s.ready&&Math.abs(num(s.score,0))>=1).map(s=>Math.sign(s.score));
       return dirs.includes(1)&&dirs.includes(-1);
     }).length;
-    const raceState=(raceConfidence<.55 || (topGap<4 && contradictions>=2))?'見送り寄り':topGap>=10&&raceConfidence>=.68?'軸候補明確':'比較必要';
+    // 「見送り」は過去Worker順位との直接検証前なので使わない。追加スコアで確認できた事実だけ表示。
+    const raceState=danger1?'1号艇注意':aiWatch?(Number(aiWatch.course)===Number(baseRank[0]?.course)?'本命強化':'AI注目あり'):warning?'下方材料あり':'追加材料小';
 
     const result={
       version:VERSION, mode:'shadow', probabilityChanged:false, oddsUsed:false,
       venue:ctx.venue,raceNo:ctx.raceNo,date:ctx.date,createdAt:ctx.createdAt,
-      baseLeader:baseRank[0], scoreLeader:scoreRank[0], upward, warning,
+      baseLeader:baseRank[0], scoreLeader:scoreRank[0], upward, aiWatch, warning, danger1,
       scenario, raceConfidence:round1(raceConfidence), raceConfidenceGrade:confidenceGrade(raceConfidence), raceState,
       rows,
       meta:{
@@ -23723,15 +23735,15 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   }
   function renderCard(result){
     if(!result) return '';
-    const base=result.baseLeader, ai=result.scoreLeader, up=result.upward, warn=result.warning;
+    const base=result.baseLeader, ai=result.scoreLeader, up=result.aiWatch||result.upward, warn=result.danger1||result.warning;
     const scenario=result.scenario;
     const rows=[...result.rows].sort((a,b)=>b.score-a.score);
     return `
       <section class="brc-fe-card" id="${MARKER_ID}">
         <div class="brc-fe-head">
           <div>
-            <div class="brc-fe-title">AI最終評価 <span>管理者β / SHADOW・OOS一次調整</span></div>
-            <div class="brc-fe-sub">現行着率を壊さず未反映シグナルを統合。3,196RのOOS一次検証に基づき、風と個人傾向は非対称に調整。オッズは使用しません。</div>
+            <div class="brc-fe-title">AI最終評価 <span>管理者β / SCORE V2</span></div>
+            <div class="brc-fe-sub">現行1着率を土台に、追加材料だけをスコア評価。3,196Rのstrict OOSから「AI注目 +3以上」「危険1号艇 -2.5以下」を実戦ラベル化。オッズは使用しません。</div>
           </div>
           <div class="brc-fe-conf">確信度 <b>${esc(result.raceConfidenceGrade)}</b><small>${Math.round(result.raceConfidence*100)}%</small></div>
         </div>
@@ -23740,10 +23752,10 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
         <div class="brc-fe-summary">
           <div class="brc-fe-pick"><span class="k">本命</span><strong>${boatBadge(base.course)} ${esc(base.player||'')}</strong><small>1着率 ${base.winPct.toFixed(1)}%</small></div>
           <div class="brc-fe-pick accent"><span class="k">AI総合1位</span><strong>${boatBadge(ai.course)} ${esc(ai.player||'')}</strong><small>評価 ${Math.round(ai.score)} / 100・追加 ${signed(ai.deltaScore,1)}</small></div>
-          <div class="brc-fe-pick"><span class="k">AI上方評価</span><strong>${up?`${boatBadge(up.course)} ${esc(up.player||'')}`:'―'}</strong><small>${up?`追加 ${signed(up.deltaScore,1)}`:'明確な上方材料なし'}</small></div>
-          <div class="brc-fe-pick"><span class="k">レース判定</span><strong>${esc(result.raceState)}</strong><small>${warn?`${warn.course}号艇は追加材料 ${signed(warn.deltaScore,1)}`:'強いマイナス警告なし'}</small></div>
+          <div class="brc-fe-pick"><span class="k">AI注目</span><strong>${up?`${boatBadge(up.course)} ${esc(up.player||'')}`:'―'}</strong><small>${up?`R内追加評価最大・${signed(up.deltaScore,1)}`:'追加評価+3以上なし'}</small></div>
+          <div class="brc-fe-pick"><span class="k">追加材料判定</span><strong>${esc(result.raceState)}</strong><small>${warn?`${warn.course}号艇 ${signed(warn.deltaScore,1)}`:'強い下方材料なし'}</small></div>
         </div>
-        <details class="brc-fe-oos"><summary>OOS一次検証 3,196R</summary><div class="brc-fe-oos-grid"><span><b>今節モーター</b> +7.4 / -4.7pt</span><span><b>展示スリット</b> +4.7 / -5.7pt</span><span><b>風</b> +1.7 / -0.0pt</span><span><b>個人傾向</b> ＋側 本人通常帯比+6.0pt</span></div><p>風のマイナス・個人傾向のマイナスは頭減点に使わず、参考表示へ変更。現行Worker着率とのLogLoss/Brier比較は次段階。</p></details>
+        <details class="brc-fe-oos"><summary>AIスコア検証V2 3,196R</summary><div class="brc-fe-oos-grid"><span><b>AI注目</b> R内delta最大＋3以上：N=1,213 / 1着27.3% / 基礎18.1% / +9.2pt</span><span><b>AI注目3連対</b> 69.0%</span><span><b>危険1号艇</b> delta-2.5以下：N=316 / 1着43.0% / 基礎55.0% / -11.9pt</span><span><b>危険1号艇敗率</b> 57.0%</span></div><p>期間前後半でも方向は再現。日付クラスタ95%CIはAI注目 +7.4〜+11.1pt、危険1号艇 -16.5〜-7.5pt。基礎は会場×コース期待値で、過去Worker順位そのものではありません。</p></details>
         <details class="brc-fe-replay"><summary>過去Worker再構成チェック（管理者）</summary><div class="brc-fe-replay-body"><div class="brc-fe-replay-row"><label>開始<input type="date" id="brcFeReplayStart" value="2026-09-10"></label><label>終了<input type="date" id="brcFeReplayEnd" value="2026-09-16"></label><button type="button" id="brcFeReplayRun">Worker＋TimeX CSV作成</button></div><div id="brcFeReplayStatus" class="brc-fe-replay-status">最大14日。現行Workerを過去番組・保存展示へ再適用する再構成検証です。当時保存された予測スナップショットではありません。</div></div></details>
         ${scenario?`<div class="brc-fe-scenario"><span>展開本線</span><b>${boatBadge(scenario.headCourse)} ${esc(scenario.method)}</b><small>本人コース別勝ち方 ${Math.round(scenario.methodPct)}%（勝ちN=${scenario.methodN}）${scenario.followers?` / 会場展開N=${scenario.followers.n}`:''}</small></div>`:''}
         <div class="brc-fe-grid">
@@ -23755,11 +23767,11 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
         </div>
         <details class="brc-fe-detail"><summary>仕組み・注意点</summary><div>
           <p><b>基礎:</b> 現行BRCの1着率（Worker＋TimeX反映後）を相対スコア化。</p>
-          <p><b>追加:</b> 今節モーターと展示スリットは両方向を使用。風はOOS一次結果によりプラス方向だけ最大2点へ縮小、個人傾向もプラス方向だけ頭加点。マイナス側は参考表示。</p>
+          <p><b>追加:</b> 今節モーターと展示スリットは両方向を使用。風はプラス方向だけ最大2点、個人傾向もプラス方向だけ頭加点。追加スコアは確率ではありません。</p>
           <p><b>展開:</b> 選手のコース別決まり手と会場×決まり手の相手残り傾向から「勝った場合の形」を表示。</p>
           <p><b>二重計上防止:</b> TimeXとmotor2は既存着率に含まれるため再加点しません。今節モーターも現在選択Rの展示サンプルを除外し、過去走だけを使用します。</p>
           <p><b>状態表示:</b> 接続=実際に評価へ使用、展示待ち/風待ち=必要データ未到着、該当なし=データは確認済みだが条件なし、参考のみ=表示材料はあるが頭スコアへは加点保留、標本不足/データ不足=サンプル不足。</p>
-          <p><b>OOS一次:</b> 2026-08-26〜09-16の3,196Rで追加シグナルの方向性を確認。まだ現行Worker着率との確率校正比較前なのでSHADOWを維持します。</p><p><b>SHADOW:</b> 1着率・買い目・期待値・公開画面は変更しません。確率統合は再構成Worker比較とLIVE-OOS後。</p>
+          <p><b>スコア検証V2:</b> 2026-08-26〜09-16の3,196Rで、R内追加評価最大かつ+3以上をAI注目、1号艇-2.5以下を危険1号艇として採用。「見送り」は未検証なので判定しません。</p><p><b>SHADOW:</b> 1着率・買い目・期待値・公開画面は変更しません。過去Worker順位の直接比較は再構成CSVが揃ってから別検証します。</p>
         </div></details>
       </section>`;
   }
