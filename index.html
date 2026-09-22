@@ -23095,6 +23095,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 </script>
 
 
+<!-- BRC_AI_FINAL_EVAL_MOTOR24_PRIORRUN_V3_20260922: 全国24場モーター今節評価をSHADOW接続。現在選択Rの展示サンプルは除外し、今節の過去走だけで総合機力を評価してTimeX二重計上を防止。現行着率/買い目/期待値は非変更 -->
+<!-- BRC_AI_FINAL_EVAL_WIND_SLIT_REAL_V2_20260922: AI最終評価SHADOWに現行風実測・展示スリット現行stateを実接続。スリットstatus active対応、信頼A/B実測pt優先、現行着率/買い目/期待値は非変更 -->
 <!-- BRC_AI_FINAL_EVAL_DIRECT_MOUNT_V2_20260922: fixed mount inside renderPredictAiPanel + direct refresh; fixes shadow card disappearing/not mounting behind wrapper chain; prediction logic unchanged -->
 <!-- BRC_AI_FINAL_EVAL_SHADOW_V1_20260922: admin-only shadow final evaluation; does not modify /predict, current probabilities, odds/value logic or buy logic -->
 <script>
@@ -23113,7 +23115,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
  - motor2 is already sent to the Worker. It is NOT added again here.
  - TimeX deltas are explanation-only here; they are NOT added twice.
  - Wind / slit / personal exhibition tendency / advanced motor-foot data are treated as
-   independent, shrunken "unreflected signals". V1 produces a score, not a probability.
+   independent, shrunken "unreflected signals". V2 connects the current wind reference
+   and current slit-state implementation directly. It still produces a score, not a probability.
  - Scenario data is used to explain likely winning method and likely 2nd/3rd followers,
    not to inflate the head probability without validation.
 */
@@ -23121,7 +23124,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   'use strict';
 
   const G = window;
-  const VERSION = 'BRC_FINAL_EVAL_SHADOW_V1_20260922';
+  const VERSION = 'BRC_FINAL_EVAL_SHADOW_V3_WIND_SLIT_MOTOR24_20260922';
   const MARKER_ID = 'brc-final-eval-v1';
   const STYLE_ID = 'brc-final-eval-v1-style';
 
@@ -23198,13 +23201,26 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   }
 
   function normalizeWind(live){
+    // 公式LIVEを最優先。取得前/欠測時は画面の手動風設定をフォールバックとして使用する。
     try{
-      if(typeof brcNormalizeLiveWind==='function') return brcNormalizeLiveWind(live);
+      if(typeof brcNormalizeLiveWind==='function'){
+        const x=brcNormalizeLiveWind(live);
+        if(x && Number.isFinite(Number(x.speed))) return {...x, source:'live'};
+      }
     }catch(_e){}
     const w=live?.weather||live?.wind||{};
-    const speed=num(w.wind_speed_m ?? w.wind_speed ?? live?.wind_speed_m ?? live?.wind_speed,0);
-    const dir=String(w.wind_direction ?? w.direction ?? live?.wind_direction ?? '').trim();
-    return {dir, speed};
+    const liveSpeed=num(w.wind_speed_m ?? w.wind_speed ?? live?.wind_speed_m ?? live?.wind_speed,null);
+    const liveDir=String(w.wind_direction ?? w.direction ?? live?.wind_direction ?? '').trim();
+    if(Number.isFinite(liveSpeed)) return {dir:liveSpeed===0?'無風':liveDir, speed:Math.max(0,Math.round(liveSpeed)), source:'live-fallback'};
+    try{
+      const sel=G.__windSelection||{};
+      if(sel.speed!=='' && sel.speed!==null && sel.speed!==undefined){
+        const sp=Math.max(0,Math.round(Number(sel.speed)||0));
+        const dir=sp===0?'無風':String(sel.dir||'').trim();
+        if(sp===0 || dir) return {dir,speed:sp,source:'manual'};
+      }
+    }catch(_e){}
+    return null;
   }
 
   function getWindComboRef(){
@@ -23215,20 +23231,23 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   function windSignal(ctx, boat){
     const w=normalizeWind(ctx.liveRace);
     const ref=getWindComboRef();
-    const speedKey=String(Math.max(0,Math.round(num(w?.speed,0))));
-    const dir=speedKey==='0'?'無風':String(w?.dir||'');
+    if(!w || !Number.isFinite(Number(w.speed))) return {key:'wind', ready:false, score:0, confidence:0, label:'風', detail:'風データ待ち'};
+    const speedKey=String(Math.max(0,Math.round(num(w.speed,0))));
+    const dir=speedKey==='0'?'無風':String(w.dir||'').trim();
+    if(speedKey!=='0' && !dir) return {key:'wind', ready:false, score:0, confidence:0, label:'風', detail:'風向データ待ち'};
     const row=ref?.[ctx.venue]?.[dir]?.[speedKey]?.[String(boat.course)];
-    const n=num(row?.n,0), dev=num(row?.dev,null);
+    const n=num(row?.n,0), dev=num(row?.dev,null), rate=num(row?.rate,null), base=num(row?.base,null);
     if(!Number.isFinite(dev) || n<CONFIG.wind.minN){
-      return {key:'wind', ready:false, score:0, confidence:0, label:'風', detail:n?`風条件 N=${n}（保留）`:'風条件データ待ち'};
+      return {key:'wind', ready:false, score:0, confidence:0, label:'風', raw:dev, n, source:w.source||'', detail:n?`${dir}${speedKey}m / N=${n}（標本不足で保留）`:`${dir}${speedKey}m / 同条件データなし`};
     }
+    // 風の生実測差は因果効果とは断定できないため、N縮小＋最大6点で保守的に扱う。
     const conf=n/(n+CONFIG.wind.priorN);
     const normalized=clamp(dev/CONFIG.wind.devScalePt,-1,1);
     const score=CONFIG.score.windMax*normalized*conf;
+    const sourceLabel=w.source==='manual'?'手動設定':'公式LIVE';
     return {
-      key:'wind', ready:true, score, confidence:conf, raw:dev, n,
-      label:'風',
-      detail:`${dir}${speedKey}m / 会場×${boat.course}コース 実測差 ${signed(dev,1)}pt (N=${n})`
+      key:'wind', ready:true, score, confidence:conf, raw:dev, n, source:w.source||'', label:'風',
+      detail:`${sourceLabel} ${dir}${speedKey}m / ${boat.course}C 同条件${Number.isFinite(rate)?rate.toFixed(1)+'%':'―'} vs 場平均${Number.isFinite(base)?base.toFixed(1)+'%':'―'} = ${signed(dev,1)}pt (N=${n})`
     };
   }
 
@@ -23257,29 +23276,62 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   }
   function slitSignal(ctx, boat){
     const state=ctx.slitState;
-    if(!state || state.status!=='ok') return {key:'slit',ready:false,score:0,confidence:0,label:'展示スリット',detail:'対象条件なし'};
-    let weighted=0, weight=0, evidence=[];
-    for(const item of (state.items||[])){
-      const pair=String(item?.pair||`${Number(item?.outer)}>${Number(item?.inner)}`);
-      if(Number(item?.inner)!==Number(boat.course) && Number(item?.outer)!==Number(boat.course)) continue;
-      const e=getSlitNationalEffect(pair,boat.course);
-      if(e && Number.isFinite(Number(e.win))){
-        const n=num(e.n,0), conf=n/(n+CONFIG.slit.priorN);
-        const raw=num(e.win,0);
-        weighted += clamp(raw/CONFIG.slit.effectScalePt,-1,1)*conf;
-        weight += conf;
-        evidence.push(`${pair} 1着実測差 ${signed(raw,1)}pt N=${n}`);
+    if(!state) return {key:'slit',ready:false,score:0,confidence:0,label:'展示スリット',detail:'展示データ待ち'};
+    if(state.status!=='active'){
+      const reason=state.reason?`（${state.reason}）`:'';
+      return {key:'slit',ready:false,score:0,confidence:0,label:'展示スリット',detail:`${state.status||'none'}${reason}`};
+    }
+
+    const course=Number(boat.course);
+    // 1) 現行UIと同じ「展示差0.10 会場×ペア 信頼A/B」の2024-2026実測ptを最優先。
+    //    strongAlso=trueでも、同じ展示差由来の数値を1回だけ使い二重加点しない。
+    const trusted=(state.exhibitionOnlyRows||[]).filter(r=>Number(r?.boat)===course && (r?.confidence?.grade==='A'||r?.confidence?.grade==='B'));
+    if(trusted.length){
+      let nume=0, den=0, parts=[];
+      for(const r of trusted){
+        const confObj=r.confidence||{};
+        const raw=num(r.role==='inner'?confObj.innerWin:confObj.outerWin,null);
+        if(!Number.isFinite(raw)) continue;
+        const n=num(confObj.n,0);
+        const grade=String(confObj.grade||'');
+        const gradeConf=grade==='A'?0.92:0.74;
+        const nConf=n/(n+CONFIG.slit.priorN);
+        const c=gradeConf*nConf;
+        nume += clamp(raw/CONFIG.slit.effectScalePt,-1,1)*c;
+        den += c;
+        parts.push(`${r.pair} 信頼${grade} 1着実測差 ${signed(raw,1)}pt (N=${n})${r.strongAlso?'・ST強条件同時':''}`);
+      }
+      if(den>0){
+        const z=clamp(nume/den,-1,1);
+        const conf=clamp(den/Math.max(1,trusted.length),0,1);
+        return {key:'slit',ready:true,score:CONFIG.score.slitMax*z*conf,confidence:conf,label:'展示スリット',detail:parts.join(' / '),source:'venue-trust-ab'};
       }
     }
-    if(weight<=0){
-      const arrow=rowArrowScore(state.rows,boat.course);
-      if(!arrow) return {key:'slit',ready:false,score:0,confidence:0,label:'展示スリット',detail:'有効シグナルなし'};
-      const score=CONFIG.score.slitMax*arrow*.45;
-      return {key:'slit',ready:true,score,confidence:.45,label:'展示スリット',detail:`方向評価 ${arrow>0?'上向き':'下向き'}`};
+
+    // 2) A/B数値がない場合は、現行の固定OOSで再現確認済み「強条件の方向」だけを保守的に使用。
+    //    頭評価なので1着矢印を主、3連対だけの矢印はごく小さくする。
+    const strong=(state.rows||[]).filter(r=>Number(r?.boat)===course && !r?.generic);
+    if(strong.length){
+      let best=0, details=[];
+      for(const r of strong){
+        const win=String(r?.metrics?.win||'');
+        const top3=String(r?.metrics?.top3||'');
+        const arrowVal=a=>a==='↑'?1:a==='↗'?0.55:a==='↓'?-1:a==='↘'?-0.55:0;
+        const v=arrowVal(win) || (arrowVal(top3)*0.22);
+        if(Math.abs(v)>Math.abs(best)) best=v;
+        const m=[]; if(win)m.push(`1着${win}`); if(top3)m.push(`3連対${top3}`);
+        if(m.length) details.push(m.join('・'));
+      }
+      if(best){
+        const conf=.52;
+        return {key:'slit',ready:true,score:CONFIG.score.slitMax*best*conf,confidence:conf,label:'展示スリット',detail:`固定OOS強条件 ${details.join(' / ')}`,source:'strong-direction'};
+      }
     }
-    const z=clamp(weighted/Math.max(1,weight),-1,1);
-    const conf=clamp(weight/Math.max(1,(state.items||[]).length),0,1);
-    return {key:'slit',ready:true,score:CONFIG.score.slitMax*z,confidence:conf,label:'展示スリット',detail:evidence.join(' / ')};
+
+    // 展示優位だけでA/Bも強条件方向もないケースは、表示材料にはするが頭スコアには加点しない。
+    const weak=(state.exhibitionOnlyRows||[]).find(r=>Number(r?.boat)===course);
+    if(weak) return {key:'slit',ready:false,score:0,confidence:0,label:'展示スリット',detail:'展示優位（数値信頼A/Bなし・頭加点保留）'};
+    return {key:'slit',ready:false,score:0,confidence:0,label:'展示スリット',detail:'該当なし'};
   }
 
   function personalSignal(ctx,boat){
@@ -23295,6 +23347,65 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     const conf=gradeConf*(n/(n+CONFIG.personal.priorN));
     const score=CONFIG.score.personalMax*clamp(diff/CONFIG.personal.diffScalePt,-1,1)*conf;
     return {key:'personal',ready:true,score,confidence:conf,raw:diff,n,label:'個人展示傾向',detail:`通常比 ${signed(diff,1)}pt / N=${n||'―'}${grade?` / ${grade}`:''}`};
+  }
+
+  const motorShadowCache=new Map();
+  const motorShadowPending=new Map();
+  function motorShadowKey(ctx,boat){ return `${ctx.venue}|${ctx.date}|${Number(boat?.motorNo)||0}|${ctx.raceNo||0}`; }
+  function motorShadowSchedule(ctx,boat){
+    const motorNo=Number(boat?.motorNo);
+    if(!Number.isFinite(motorNo)||motorNo<=0) return;
+    let supported=false;
+    try{ supported=typeof BRC_MOTOR_PUBLIC_VENUES!=='undefined' && BRC_MOTOR_PUBLIC_VENUES.has(String(ctx.venue||'')); }catch(_e){}
+    if(!supported || typeof brcTokuyamaSyncMotorSamples!=='function' || typeof brcTokuyamaCurrentSummary!=='function') return;
+    const key=motorShadowKey(ctx,boat);
+    if(motorShadowCache.has(key)||motorShadowPending.has(key)) return;
+    const task=(async()=>{
+      try{
+        const base=(typeof brcMotorBaseForVenue==='function')?brcMotorBaseForVenue(ctx.venue)?.[String(motorNo)]||null:null;
+        const all=await brcTokuyamaSyncMotorSamples(ctx.venue,motorNo);
+        // 現在選択中のRそのものはTimeXへ既に反映されるため、モーター今節評価から必ず除外する。
+        const prior=(Array.isArray(all)?all:[]).filter(x=>!(String(x?.date||'')===String(ctx.date||'') && Number(x?.raceNo)===Number(ctx.raceNo)));
+        const summary=brcTokuyamaCurrentSummary(prior,base,ctx.venue);
+        motorShadowCache.set(key,{summary,base,priorN:prior.length});
+      }catch(e){
+        motorShadowCache.set(key,{error:String(e?.message||e),summary:null,base:null,priorN:0});
+      }finally{
+        motorShadowPending.delete(key);
+        setTimeout(()=>refresh(),20);
+      }
+    })();
+    motorShadowPending.set(key,task);
+  }
+  function motor24Signal(ctx,boat){
+    const motorNo=Number(boat?.motorNo);
+    if(!Number.isFinite(motorNo)||motorNo<=0) return null;
+    let supported=false;
+    try{ supported=typeof BRC_MOTOR_PUBLIC_VENUES!=='undefined' && BRC_MOTOR_PUBLIC_VENUES.has(String(ctx.venue||'')); }catch(_e){}
+    if(!supported) return null;
+    const key=motorShadowKey(ctx,boat);
+    const rec=motorShadowCache.get(key);
+    if(!rec){ motorShadowSchedule(ctx,boat); return {key:'motorFoot',ready:false,score:0,confidence:0,label:'モーター今節',detail:'今節の過去走を読込中'}; }
+    const sm=rec.summary;
+    if(!sm?.ready || !Number.isFinite(Number(sm.overall))){
+      const n=Number(sm?.n||rec.priorN||0);
+      return {key:'motorFoot',ready:false,score:0,confidence:0,label:'モーター今節',detail:`今節の過去走 ${n}走（2走未満のため保留）`,n};
+    }
+    const n=Number(sm.n)||0;
+    // 今節総合指数は6艇内相対zの走平均。現在Rを除外済みなのでTimeXとは別情報。
+    let conf=n/(n+2.0);
+    if(sm.hasFiveBoat) conf*=0.92;
+    if(sm.fallback) conf*=0.88;
+    if(ctx.venue==='桐生') conf*=0.90;
+    conf=clamp(conf,0,0.88);
+    const overall=Number(sm.overall);
+    const score=CONFIG.score.motorFootMax*clamp(overall/0.90,-1,1)*conf;
+    const type=String(sm.type||'特徴未確定');
+    const grade=String(sm.grade||'―');
+    const trust=String(sm.conf||'―');
+    const typeProb=Number.isFinite(Number(sm.typeProb))?`${Math.round(Number(sm.typeProb)*100)}%`:'';
+    const typeText=(ctx.venue==='江戸川'||type==='足色判定なし')?'足色判定なし':`${type}${trust!=='―'?`・信頼${trust}`:''}${typeProb?`(${typeProb})`:''}`;
+    return {key:'motorFoot',ready:true,score,confidence:conf,raw:overall,n,label:'モーター今節',source:'motor24-prior-runs',detail:`${motorNo}号機 / 現在R除外の今節${n}走 / 機力${grade}・総合 ${signed(overall,2)} / ${typeText}`};
   }
 
   function tokuyamaMotorSignal(ctx,boat){
@@ -23314,21 +23425,23 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     }catch(_e){ return null; }
   }
   function motorSignal(ctx,boat){
-    // Hook contract: return {score (-6..+6), confidence 0..1, detail, raw, n}.
-    // This is the intended connection point for the current 24-venue motor-foot implementation.
+    // 全国24場の今節モーター評価を優先。現在選択Rは除外してTimeXとの二重計上を防ぐ。
+    const national=motor24Signal(ctx,boat);
+    if(national) return national;
+    // 外部でより新しいアダプタが入った場合の互換口。
     try{
       const hook=G.BRC_FINAL_EVAL_MOTOR_ADAPTER || G.BRC_FINAL_EVAL_HOOKS?.motor;
       if(typeof hook==='function'){
         const r=hook({ctx,boat,version:VERSION});
         if(r && Number.isFinite(Number(r.score))){
-          return {key:'motorFoot',ready:true,score:clamp(r.score,-CONFIG.score.motorFootMax,CONFIG.score.motorFootMax),confidence:clamp(r.confidence??.5,0,1),label:'モーター足色',detail:String(r.detail||'24場モーター評価'),raw:r.raw,n:r.n,source:'hook'};
+          return {key:'motorFoot',ready:true,score:clamp(r.score,-CONFIG.score.motorFootMax,CONFIG.score.motorFootMax),confidence:clamp(r.confidence??.5,0,1),label:'モーター足色',detail:String(r.detail||'モーター評価'),raw:r.raw,n:r.n,source:'hook'};
         }
       }
     }catch(_e){}
     const legacy=tokuyamaMotorSignal(ctx,boat);
     if(legacy) return legacy;
     // motor2 / motorGrade are intentionally not added: they are already in the base Worker.
-    return {key:'motorFoot',ready:false,score:0,confidence:0,label:'モーター足色',detail:'24場足色アダプタ未接続（motor2は基礎AI反映済みのため二重加点しない）'};
+    return {key:'motorFoot',ready:false,score:0,confidence:0,label:'モーター足色',detail:'今節評価データ待ち（motor2は基礎AI反映済みのため二重加点しない）'};
   }
 
   function getKimariteData(){
@@ -23456,6 +23569,12 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
         slitStatus:ctx.slitState?.status||'none',
         liveExhibition:!!ctx.liveRace,
         motorAdapter:typeof (G.BRC_FINAL_EVAL_MOTOR_ADAPTER||G.BRC_FINAL_EVAL_HOOKS?.motor)==='function',
+        signalReady:{
+          wind:rows.some(r=>r.signals.some(x=>x.key==='wind'&&x.ready)),
+          slit:rows.some(r=>r.signals.some(x=>x.key==='slit'&&x.ready)),
+          personal:rows.some(r=>r.signals.some(x=>x.key==='personal'&&x.ready)),
+          motor:rows.some(r=>r.signals.some(x=>x.key==='motorFoot'&&x.ready))
+        },
         note:'AI評価スコアは確率ではありません。現行1着率は変更しません。'
       }
     };
@@ -23480,10 +23599,11 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
         <div class="brc-fe-head">
           <div>
             <div class="brc-fe-title">AI最終評価 <span>管理者β / SHADOW</span></div>
-            <div class="brc-fe-sub">現行着率を壊さず、未反映シグナルを統合。オッズは使用しません。</div>
+            <div class="brc-fe-sub">現行着率を壊さず、風・展示スリット・今節モーター等の未反映シグナルを統合。オッズは使用しません。</div>
           </div>
           <div class="brc-fe-conf">確信度 <b>${esc(result.raceConfidenceGrade)}</b><small>${Math.round(result.raceConfidence*100)}%</small></div>
         </div>
+        <div class="brc-fe-connect">${[['風','wind'],['展示スリット','slit'],['個人傾向','personal'],['モーター足色','motor']].map(([label,key])=>`<span class="${result.meta?.signalReady?.[key]?'on':'off'}">${label} ${result.meta?.signalReady?.[key]?'接続':'待機'}</span>`).join('')}</div>
         <div class="brc-fe-summary">
           <div class="brc-fe-pick"><span class="k">本命</span><strong>${boatBadge(base.course)} ${esc(base.player||'')}</strong><small>1着率 ${base.winPct.toFixed(1)}%</small></div>
           <div class="brc-fe-pick accent"><span class="k">AI総合1位</span><strong>${boatBadge(ai.course)} ${esc(ai.player||'')}</strong><small>評価 ${Math.round(ai.score)} / 100・追加 ${signed(ai.deltaScore,1)}</small></div>
@@ -23500,9 +23620,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
         </div>
         <details class="brc-fe-detail"><summary>仕組み・注意点</summary><div>
           <p><b>基礎:</b> 現行BRCの1着率（Worker＋TimeX反映後）を相対スコア化。</p>
-          <p><b>追加:</b> 風、展示スリット、個人展示傾向、未反映のモーター足色をサンプル数で縮小して加点/減点。</p>
+          <p><b>追加:</b> 風は会場×風向×風速×コースの生実測、展示スリットは現行stateの信頼A/B実測ptを優先し、サンプル数で縮小して加点/減点。</p>
           <p><b>展開:</b> 選手のコース別決まり手と会場×決まり手の相手残り傾向から「勝った場合の形」を表示。</p>
-          <p><b>二重計上防止:</b> TimeXとmotor2は既存着率に含まれるため再加点しません。</p>
+          <p><b>二重計上防止:</b> TimeXとmotor2は既存着率に含まれるため再加点しません。今節モーターも現在選択Rの展示サンプルを除外し、過去走だけを使用します。</p>
           <p><b>SHADOW:</b> このV1は1着率・買い目・期待値・公開画面を変更しません。OOS検証後に確率統合へ昇格します。</p>
         </div></details>
       </section>`;
@@ -23517,6 +23637,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       .brc-fe-title{font-size:15px;font-weight:950;color:var(--navy,#0a1f33)} .brc-fe-title span{display:inline-flex;margin-left:5px;padding:3px 6px;border-radius:999px;background:rgba(124,58,237,.08);font-size:8px;color:#6d28d9;vertical-align:2px}
       .brc-fe-sub{margin-top:3px;font-size:9.5px;font-weight:700;color:var(--ink-soft,#6b7280)}
       .brc-fe-conf{min-width:62px;text-align:center;padding:6px 8px;border-radius:10px;background:#fff;border:1px solid rgba(10,31,51,.08);font-size:8px;color:var(--ink-soft,#6b7280);font-weight:850}.brc-fe-conf b{display:block;font-size:17px;color:var(--navy,#0a1f33);line-height:1.05}.brc-fe-conf small{font-size:8px}
+      .brc-fe-connect{display:flex;gap:5px;flex-wrap:wrap;padding:8px 12px 0}.brc-fe-connect span{display:inline-flex;align-items:center;padding:3px 6px;border-radius:999px;font-size:7.5px;font-weight:900;border:1px solid rgba(10,31,51,.08)}.brc-fe-connect .on{color:#08734a;background:rgba(15,138,88,.06);border-color:rgba(15,138,88,.16)}.brc-fe-connect .off{color:#7b8491;background:rgba(10,31,51,.03)}
       .brc-fe-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;padding:10px 12px}.brc-fe-pick{padding:9px;border-radius:11px;background:#fff;border:1px solid rgba(10,31,51,.07);min-width:0}.brc-fe-pick.accent{border-color:rgba(0,87,219,.25);background:rgba(0,87,219,.035)}.brc-fe-pick .k{display:block;font-size:8px;font-weight:900;color:var(--ink-soft,#6b7280)}.brc-fe-pick strong{display:flex;align-items:center;gap:5px;margin-top:4px;font-size:11.5px;color:var(--navy,#0a1f33);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brc-fe-pick small{display:block;margin-top:4px;font-size:8.5px;color:var(--ink-soft,#6b7280);font-weight:750}
       .brc-fe-scenario{margin:0 12px 10px;padding:9px 10px;border-radius:11px;border:1px dashed rgba(0,87,219,.24);background:rgba(0,87,219,.025);display:flex;align-items:center;gap:7px;flex-wrap:wrap}.brc-fe-scenario>span{font-size:8px;font-weight:900;color:var(--ink-soft,#6b7280)}.brc-fe-scenario>b{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--navy,#0a1f33)}.brc-fe-scenario>small{font-size:8.5px;color:var(--ink-soft,#6b7280)}
       .brc-fe-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:0 12px 12px}.brc-fe-row{padding:9px;border:1px solid rgba(10,31,51,.075);border-radius:11px;background:#fff}.brc-fe-row.leader{border-color:rgba(0,87,219,.28);box-shadow:inset 3px 0 0 rgba(0,87,219,.65)}.brc-fe-rowtop{display:flex;align-items:center;justify-content:space-between;gap:8px}.brc-fe-rowtop>div:first-child{display:flex;align-items:center;gap:5px;min-width:0}.brc-fe-rowtop b{font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brc-fe-rowtop .tag{font-size:7px;font-weight:900;padding:2px 5px;border-radius:999px;background:rgba(10,31,51,.055);color:var(--ink-soft,#6b7280);white-space:nowrap}.brc-fe-rowtop .score{font-size:19px;font-weight:950;color:var(--navy,#0a1f33);font-variant-numeric:tabular-nums}.brc-fe-rowtop .score small{font-size:7px;color:var(--ink-soft,#6b7280);margin-left:1px}.brc-fe-metrics{display:flex;gap:7px;flex-wrap:wrap;margin-top:5px;font-size:8px;color:var(--ink-soft,#6b7280);font-weight:750}.brc-fe-metrics b{color:var(--navy,#0a1f33)}.brc-fe-metrics b.up{color:#0f8a58}.brc-fe-metrics b.down{color:#c2414a}.brc-fe-reasons{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}.brc-fe-reason{font-size:7.8px;line-height:1.35;padding:3px 5px;border-radius:6px;background:rgba(10,31,51,.035);color:var(--ink-soft,#6b7280);font-weight:700}.brc-fe-reason.plus{background:rgba(15,138,88,.065);color:#08734a}.brc-fe-reason.minus{background:rgba(194,65,74,.06);color:#a3323b}.brc-fe-muted{font-size:8px;color:var(--ink-soft,#6b7280)}
@@ -23577,6 +23698,15 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     wrap('brcRefreshExhibitionAdjustedDom',()=>refresh());
     wrap('brcSyncWindPanelFromLiveRace',()=>refresh());
     document.addEventListener('brc-motor-detail-updated',()=>refresh());
+    // 手動の風向・風速変更もSHADOWへ即反映する。
+    const bindManualWindRefresh=()=>{
+      ['predictWindDir','predictWindSpeed'].forEach(id=>{
+        const el=document.getElementById(id);
+        if(el && !el.dataset.brcFinalEvalBound){ el.dataset.brcFinalEvalBound='1'; el.addEventListener('change',()=>refresh()); }
+      });
+    };
+    bindManualWindRefresh();
+    setTimeout(bindManualWindRefresh,300);
     document.addEventListener('visibilitychange',()=>{ if(!document.hidden) refresh(); });
     // Race/tab DOM may be replaced; one small observer only watches the AI result container.
     const observer=new MutationObserver((muts)=>{
