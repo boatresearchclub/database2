@@ -29,8 +29,11 @@
 <!-- BRC_SLIT_STRICT_A_EXHIBITION_12_V2_20260920: strict exhibition A corrected to 12 cells after independent recomputation of annual 3/3, completed half-years 5/5, rolling90 thresholds and date-cluster bootstrap 95% CI; restored 福岡4>3, 若松4>3, 蒲郡4>3. Strong venue-specific A numeric remains disabled due legacy production recent-ST provenance. -->
 <!-- BRC_TIMEX_LAP_PENDING_FIX_V1_20260920: exhibition-time-only phase is treated as waiting, not shortened; lap_type/detail arrival separates pending from true lap-missing state; prediction math unchanged -->
 <!DOCTYPE html>
+<!-- BRC_AI_FINAL_EVAL_V7_OOS1_20260922: 2026-08-26..09-16 strict OOS一次検証(3196R)を反映。風はプラスのみ縮小加点、個人傾向はプラスのみ頭加点、マイナスは注意表示。motor/slitは維持。SHADOWで現行着率/買い目/期待値は非変更。 -->
+
 <!-- BRC_AI_FINAL_EVAL_TAB_V6_20260922: final tab force-refreshes and remounts the SHADOW card on every open; prediction logic unchanged -->
 <!-- BRC_CANCEL_POSTPONE_GUARD_V1_20260921: live-scheduleの開催中止/順延を終端状態として保持し、中止会場・中止Rを締切カードから除外。payloadのstatus/reason文字列も防御的に解釈。予測ロジック非変更 -->
+<!-- BRC_MOTOR_MEET_BOUNDARY_V2_20260922: current-meet discovery now follows official rawDay sequence and skips cancelled/no-race calendar days; prevents truncating earlier meet samples after full-day cancellation. Prediction probabilities unchanged -->
 <!-- BRC_MOTOR_NATIONAL_24_V1_20260921: 24場モーター評価。標準22場=オリジナル展示優先/通常展示fallback、桐生=専用、江戸川=通常展示専用。1走判定前/2走暫定/3走本判定。足色信頼は今節差+長期傾向のOOS確率校正。AI予測への自動加点なし -->
 
 <!-- BRC_SLIT_3Y_NOLOOKAHEAD_A_ONLY_V1_20260920: 2023 warmup, 2024/2025/2026 validation; A-only trust badges; prediction/arrows unchanged -->
@@ -19925,13 +19928,46 @@ async function brcTokuyamaMeetDates(venue='徳山'){
   const baseDate=cur.date; if(!/^\d{4}-\d{2}-\d{2}$/.test(baseDate)) return [];
   const v=String(venue||''); const currentInfo=cur.info?.[v]; if(!currentInfo) return [];
   const title=brcTokuyamaNormalizeTitle(currentInfo.title||'');
+  const rawDay=Number.parseInt(String(currentInfo.rawDay||''),10);
   const dates=[];
-  for(let off=0;off>=-6;off--){
+
+  // BRC_MOTOR_MEET_BOUNDARY_V2_20260922
+  // 開催途中の全休・中止順延でカレンダー日が抜けても、今節前半を落とさない。
+  // 公式番組表の「第N日」を主キーにして N→N-1→... と逆走し、休催日はスキップする。
+  // タイトルは別開催への誤接続防止に併用する。rawDayが取れない時だけ旧タイトル方式へフォールバック。
+  if(Number.isInteger(rawDay) && rawDay>=1){
+    let expected=rawDay;
+    for(let off=0;off>=-16 && expected>=1;off--){
+      const d=brcTokuyamaDateAdd(baseDate,off);
+      const rc=off===0?cur:await brcTokuyamaFetchRaceCard(d,v);
+      const vi=rc?.info?.[v];
+      if(!vi) continue; // 全休・中止順延日は飛ばして探索継続
+      const rd=Number.parseInt(String(vi.rawDay||''),10);
+      const t=brcTokuyamaNormalizeTitle(vi.title||'');
+      if(title && t && t!==title){
+        // 同一開催のはずの第N日を集め始めた後に別タイトルへ到達したら終了。
+        if(dates.length) break;
+        continue;
+      }
+      if(Number.isInteger(rd) && rd>=1){
+        if(rd===expected){ dates.push(d); expected--; continue; }
+        // 逆走中に期待日目より小さい値へ飛んだら前開催へ到達した可能性が高い。
+        if(rd<expected && dates.length) break;
+        continue;
+      }
+      // rawDay欠測日のみ、タイトル一致を補助条件として採用する。
+      if(title && t===title){ dates.push(d); expected--; }
+    }
+    if(dates.length) return dates.reverse();
+  }
+
+  // rawDayが取れないケースの保険。休催日は最大16日内なら飛ばして探索する。
+  for(let off=0;off>=-16;off--){
     const d=brcTokuyamaDateAdd(baseDate,off); const rc=off===0?cur:await brcTokuyamaFetchRaceCard(d,v);
     const vi=rc?.info?.[v];
-    if(!vi){ if(off<0) break; else continue; }
+    if(!vi) continue;
     const t=brcTokuyamaNormalizeTitle(vi.title||'');
-    if(off<0 && title && t && t!==title) break;
+    if(off<0 && title && t && t!==title){ if(dates.length) break; continue; }
     dates.push(d);
   }
   return dates.reverse();
@@ -23183,7 +23219,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
   'use strict';
 
   const G = window;
-  const VERSION = 'BRC_FINAL_EVAL_SHADOW_V3_WIND_SLIT_MOTOR24_20260922';
+  const VERSION = 'BRC_FINAL_EVAL_SHADOW_V7_OOS1_20260922';
   const MARKER_ID = 'brc-final-eval-v1';
   const STYLE_ID = 'brc-final-eval-v1-style';
 
@@ -23191,7 +23227,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     // Score weights are deliberately conservative. They are not probability-points.
     score: {
       baseZ: 14.0,
-      windMax: 6.0,
+      windMax: 2.0,
       slitMax: 7.0,
       personalMax: 5.0,
       motorFootMax: 6.0,
@@ -23302,11 +23338,14 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     // 風の生実測差は因果効果とは断定できないため、N縮小＋最大6点で保守的に扱う。
     const conf=n/(n+CONFIG.wind.priorN);
     const normalized=clamp(dev/CONFIG.wind.devScalePt,-1,1);
-    const score=CONFIG.score.windMax*normalized*conf;
+    // V7 OOS一次調整: 8/26-9/16 strict検証ではプラス側+1.7pt、マイナス側-0.0pt。
+    // よって頭評価はプラス方向だけ、最大2点へ縮小。マイナスは参考表示のみ。
+    const score=dev>0 ? CONFIG.score.windMax*Math.max(0,normalized)*conf : 0;
     const sourceLabel=w.source==='manual'?'手動設定':'公式LIVE';
+    const oosNote=dev>0?'OOS一次: プラス側のみ縮小加点':'OOS一次: マイナスは頭減点保留';
     return {
       key:'wind', ready:true, score, confidence:conf, raw:dev, n, source:w.source||'', label:'風',
-      detail:`${sourceLabel} ${dir}${speedKey}m / ${boat.course}C 同条件${Number.isFinite(rate)?rate.toFixed(1)+'%':'―'} vs 場平均${Number.isFinite(base)?base.toFixed(1)+'%':'―'} = ${signed(dev,1)}pt (N=${n})`
+      detail:`${sourceLabel} ${dir}${speedKey}m / ${boat.course}C 同条件${Number.isFinite(rate)?rate.toFixed(1)+'%':'―'} vs 場平均${Number.isFinite(base)?base.toFixed(1)+'%':'―'} = ${signed(dev,1)}pt (N=${n}) / ${oosNote}`
     };
   }
 
@@ -23404,8 +23443,11 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     const grade=String(alert?.評価 ?? alert?.grade ?? alert?.信頼度 ?? '').toUpperCase();
     const gradeConf=grade.includes('S')?1:grade.includes('A')?.86:grade.includes('B')?.68:grade.includes('C')?.45:.35;
     const conf=gradeConf*(n/(n+CONFIG.personal.priorN));
-    const score=CONFIG.score.personalMax*clamp(diff/CONFIG.personal.diffScalePt,-1,1)*conf;
-    return {key:'personal',ready:true,score,confidence:conf,raw:diff,n,label:'個人展示傾向',detail:`通常比 ${signed(diff,1)}pt / N=${n||'―'}${grade?` / ${grade}`:''}`};
+    // V7 OOS一次調整: プラス判定は本人通常帯比+6.0pt、マイナス判定は+0.9ptで減点再現なし。
+    // そのためプラスだけ頭スコアへ加点し、マイナスは注意材料として表示のみ残す。
+    const score=diff>0 ? CONFIG.score.personalMax*clamp(diff/CONFIG.personal.diffScalePt,0,1)*conf : 0;
+    const oosNote=diff>0?'OOS一次: 頭加点':'OOS一次: 頭減点なし・注意表示のみ';
+    return {key:'personal',ready:true,score,confidence:conf,raw:diff,n,label:'個人展示傾向',detail:`通常比 ${signed(diff,1)}pt / N=${n||'―'}${grade?` / ${grade}`:''} / ${oosNote}`};
   }
 
   const motorShadowCache=new Map();
@@ -23688,8 +23730,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       <section class="brc-fe-card" id="${MARKER_ID}">
         <div class="brc-fe-head">
           <div>
-            <div class="brc-fe-title">AI最終評価 <span>管理者β / SHADOW</span></div>
-            <div class="brc-fe-sub">現行着率を壊さず、風・展示スリット・今節モーター等の未反映シグナルを統合。オッズは使用しません。</div>
+            <div class="brc-fe-title">AI最終評価 <span>管理者β / SHADOW・OOS一次調整</span></div>
+            <div class="brc-fe-sub">現行着率を壊さず未反映シグナルを統合。3,196RのOOS一次検証に基づき、風と個人傾向は非対称に調整。オッズは使用しません。</div>
           </div>
           <div class="brc-fe-conf">確信度 <b>${esc(result.raceConfidenceGrade)}</b><small>${Math.round(result.raceConfidence*100)}%</small></div>
         </div>
@@ -23701,6 +23743,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
           <div class="brc-fe-pick"><span class="k">AI上方評価</span><strong>${up?`${boatBadge(up.course)} ${esc(up.player||'')}`:'―'}</strong><small>${up?`追加 ${signed(up.deltaScore,1)}`:'明確な上方材料なし'}</small></div>
           <div class="brc-fe-pick"><span class="k">レース判定</span><strong>${esc(result.raceState)}</strong><small>${warn?`${warn.course}号艇は追加材料 ${signed(warn.deltaScore,1)}`:'強いマイナス警告なし'}</small></div>
         </div>
+        <details class="brc-fe-oos"><summary>OOS一次検証 3,196R</summary><div class="brc-fe-oos-grid"><span><b>今節モーター</b> +7.4 / -4.7pt</span><span><b>展示スリット</b> +4.7 / -5.7pt</span><span><b>風</b> +1.7 / -0.0pt</span><span><b>個人傾向</b> ＋側 本人通常帯比+6.0pt</span></div><p>風のマイナス・個人傾向のマイナスは頭減点に使わず、参考表示へ変更。現行Worker着率とのLogLoss/Brier比較は次段階。</p></details>
+        <details class="brc-fe-replay"><summary>過去Worker再構成チェック（管理者）</summary><div class="brc-fe-replay-body"><div class="brc-fe-replay-row"><label>開始<input type="date" id="brcFeReplayStart" value="2026-09-10"></label><label>終了<input type="date" id="brcFeReplayEnd" value="2026-09-16"></label><button type="button" id="brcFeReplayRun">Worker＋TimeX CSV作成</button></div><div id="brcFeReplayStatus" class="brc-fe-replay-status">最大14日。現行Workerを過去番組・保存展示へ再適用する再構成検証です。当時保存された予測スナップショットではありません。</div></div></details>
         ${scenario?`<div class="brc-fe-scenario"><span>展開本線</span><b>${boatBadge(scenario.headCourse)} ${esc(scenario.method)}</b><small>本人コース別勝ち方 ${Math.round(scenario.methodPct)}%（勝ちN=${scenario.methodN}）${scenario.followers?` / 会場展開N=${scenario.followers.n}`:''}</small></div>`:''}
         <div class="brc-fe-grid">
           ${rows.map(r=>`<div class="brc-fe-row ${r.course===ai.course?'leader':''}">
@@ -23711,14 +23755,82 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
         </div>
         <details class="brc-fe-detail"><summary>仕組み・注意点</summary><div>
           <p><b>基礎:</b> 現行BRCの1着率（Worker＋TimeX反映後）を相対スコア化。</p>
-          <p><b>追加:</b> 風は会場×風向×風速×コースの生実測、展示スリットは現行stateの信頼A/B実測ptを優先し、サンプル数で縮小して加点/減点。</p>
+          <p><b>追加:</b> 今節モーターと展示スリットは両方向を使用。風はOOS一次結果によりプラス方向だけ最大2点へ縮小、個人傾向もプラス方向だけ頭加点。マイナス側は参考表示。</p>
           <p><b>展開:</b> 選手のコース別決まり手と会場×決まり手の相手残り傾向から「勝った場合の形」を表示。</p>
           <p><b>二重計上防止:</b> TimeXとmotor2は既存着率に含まれるため再加点しません。今節モーターも現在選択Rの展示サンプルを除外し、過去走だけを使用します。</p>
           <p><b>状態表示:</b> 接続=実際に評価へ使用、展示待ち/風待ち=必要データ未到着、該当なし=データは確認済みだが条件なし、参考のみ=表示材料はあるが頭スコアへは加点保留、標本不足/データ不足=サンプル不足。</p>
-          <p><b>SHADOW:</b> 現段階では1着率・買い目・期待値・公開画面を変更しません。OOS検証後に確率統合へ昇格します。</p>
+          <p><b>OOS一次:</b> 2026-08-26〜09-16の3,196Rで追加シグナルの方向性を確認。まだ現行Worker着率との確率校正比較前なのでSHADOWを維持します。</p><p><b>SHADOW:</b> 1着率・買い目・期待値・公開画面は変更しません。確率統合は再構成Worker比較とLIVE-OOS後。</p>
         </div></details>
       </section>`;
   }
+
+  let __brcFeReplayBusy=false;
+  function brcFeDateRange(start,end){
+    const out=[]; let d=Date.parse(`${start}T00:00:00+09:00`), e=Date.parse(`${end}T00:00:00+09:00`);
+    while(Number.isFinite(d)&&d<=e){ out.push(new Date(d+9*3600000).toISOString().slice(0,10)); d+=86400000; }
+    return out;
+  }
+  async function brcFeMapLimit(items,limit,fn){
+    const list=Array.isArray(items)?items:[], out=new Array(list.length); let cursor=0;
+    async function w(){ while(cursor<list.length){ const i=cursor++; try{out[i]=await fn(list[i],i);}catch(e){out[i]={error:e};} } }
+    await Promise.all(Array.from({length:Math.min(Math.max(1,limit||1),Math.max(1,list.length))},()=>w())); return out;
+  }
+  async function brcFeFetchHistoricalExhibition(date,venueCode,raceNo){
+    if(!BRC_LIVE_EXHIBITION_API_URL) return null;
+    const qs=new URLSearchParams({date:String(date),venue_code:String(venueCode).padStart(2,'0'),race_no:String(raceNo),_:String(Date.now())});
+    try{ const res=await fetch(`${BRC_LIVE_EXHIBITION_API_URL}/live-exhibition?${qs.toString()}`,{method:'GET',cache:'no-store',headers:{Accept:'application/json'}}); if(!res.ok)return null; const obj=await res.json(); return obj?.ok===true&&obj?.race?obj.race:null; }catch(_e){ return null; }
+  }
+  function brcFeAdjustedWins(prediction,live){
+    try{
+      if(!prediction||!Array.isArray(prediction.wins)||!live||typeof brcLiveExhibitionEligible!=='function'||!brcLiveExhibitionEligible(live)) return null;
+      const base=[]; for(let c=1;c<=6;c++){ const w=prediction.wins.find(x=>Number(x?.course)===c); const n=Number(w?.pctFloat); if(!Number.isFinite(n)) return null; base.push(n/100); }
+      const byBoat=new Map((Array.isArray(live.boats)?live.boats:[]).map(x=>[Number(x?.boat_no),x]));
+      const engine=typeof brcTimeXEngineMode==='function'?brcTimeXEngineMode():'v2'; let adjusted=null;
+      if(engine==='v2'){
+        const pre=base.map((v,i)=>{ const raw=Number(byBoat.get(i+1)?.relative_diff_capped??byBoat.get(i+1)?.relative_diff); const cell=brcExhibitionV2Cell(i+1,raw,live?.venue_code); if(!cell)throw new Error('timex_cell_missing'); return brcClamp(v+(Number(cell.r1pp)||0)/100,1e-7,1-1e-7); });
+        adjusted=brcConstrainLogitProbabilities(pre,base.reduce((a,v)=>a+v,0));
+      }else{
+        const pre=base.map((v,i)=>{ const raw=Number(byBoat.get(i+1)?.relative_diff_capped??byBoat.get(i+1)?.relative_diff); const bucket=brcExhibitionDiffBucket(raw); const cell=brcExhibitionMatrixCell(i+1,bucket,live?.venue_code); if(!cell)throw new Error('timex_cell_missing'); return brcSigmoid(brcLogit(v)+Number(cell.win)); });
+        adjusted=brcConstrainLogitProbabilities(pre,base.reduce((a,v)=>a+v,0));
+      }
+      return {base:base.map(x=>x*100),adjusted:adjusted.map(x=>x*100),engine};
+    }catch(_e){ return null; }
+  }
+  function brcFeCsv(rows){
+    const cols=['date','venue','venue_code','race_no','course','reg','motor_no','worker_pre_pct','worker_timex_pct','timex_engine','winner_course','result_combo','exhibition_ok'];
+    const q=v=>{const t=String(v??'');return /[",\n]/.test(t)?`"${t.replace(/"/g,'""')}"`:t;};
+    return '\ufeff'+[cols.join(','),...rows.map(r=>cols.map(c=>q(r[c])).join(','))].join('\n');
+  }
+  async function brcFeRunReplayExport(){
+    if(__brcFeReplayBusy) return;
+    const status=document.getElementById('brcFeReplayStatus'), btn=document.getElementById('brcFeReplayRun');
+    const start=String(document.getElementById('brcFeReplayStart')?.value||''), end=String(document.getElementById('brcFeReplayEnd')?.value||'');
+    const dates=brcFeDateRange(start,end);
+    if(!dates.length||dates.length>14){ if(status)status.textContent='日付を確認してください。1回最大14日です。'; return; }
+    __brcFeReplayBusy=true; if(btn)btn.disabled=true;
+    const rows=[]; let scanned=0,exok=0,resok=0;
+    try{
+      if(typeof brcEnsureFreshSession==='function'){ const ss=await brcEnsureFreshSession(); if(!ss?.access_token) throw new Error('管理者ログインを確認できません'); }
+      for(let di=0;di<dates.length;di++){
+        const date=dates[di]; if(status)status.textContent=`${date} を再構成中… (${di+1}/${dates.length})`;
+        const payload=await brcInvBackfillFetchRaceCard(date), specs=brcInvBackfillBuildSpecs(payload,date); scanned+=specs.length; if(!specs.length)continue;
+        const api=await brcPredictBatchApi({races:specs.map(x=>({id:x.id,venue:x.venue,grade:x.grade,boats:x.apiBoats,date:x.date,title:x.title,women:x.women,gradeLogicV1:BRC_GRADE_LOGIC_V1_ENABLED===true}))});
+        if(!api||!Array.isArray(api.races))continue; const byId=new Map(api.races.map(r=>[String(r.id),r]));
+        const work=await brcFeMapLimit(specs,4,async spec=>{
+          const prediction=byId.get(String(spec.id)); if(!prediction)return null;
+          const [live,resultObj]=await Promise.all([brcFeFetchHistoricalExhibition(date,spec.venueCode,spec.raceNo),brcFetchRaceResult({date,venueCode:String(spec.venueCode).padStart(2,'0'),raceNo:Number(spec.raceNo)})]);
+          const adj=brcFeAdjustedWins(prediction,live); const combo=String(resultObj?.result?.combination||''); const winner=Number((combo.match(/[1-6]/)||[])[0])||null;
+          return {spec,prediction,live,adj,combo,winner};
+        });
+        for(const x of work){ if(!x||x.error)continue; if(x.adj)exok++; if(x.winner)resok++; for(let c=1;c<=6;c++){ const apiBoat=x.spec.apiBoats?.find(b=>Number(b.course)===c)||{}; const w=x.prediction?.wins?.find(v=>Number(v.course)===c); rows.push({date,venue:x.spec.venue,venue_code:x.spec.venueCode,race_no:x.spec.raceNo,course:c,reg:apiBoat.reg||'',motor_no:x.spec.motors?.[c-1]??'',worker_pre_pct:Number.isFinite(Number(w?.pctFloat))?Number(w.pctFloat).toFixed(6):'',worker_timex_pct:x.adj?Number(x.adj.adjusted[c-1]).toFixed(6):'',timex_engine:x.adj?.engine||'',winner_course:x.winner||'',result_combo:x.combo,exhibition_ok:x.adj?'1':'0'}); } }
+      }
+      if(!rows.length) throw new Error('再構成できるデータがありませんでした');
+      const blob=new Blob([brcFeCsv(rows)],{type:'text/csv;charset=utf-8'}), url=URL.createObjectURL(blob), a=document.createElement('a'); a.href=url; a.download=`BRC_worker_replay_${start.replace(/-/g,'')}_${end.replace(/-/g,'')}.csv`; document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);
+      if(status)status.textContent=`完了：${scanned}R走査 / 展示反映 ${exok}R / 結果取得 ${resok}R。CSVをこのチャットへ送れば、厳密OOS追加点と結合して比較できます。`;
+    }catch(e){ if(status)status.textContent=`再構成エラー：${String(e?.message||e)}`; }
+    finally{__brcFeReplayBusy=false;if(btn)btn.disabled=false;}
+  }
+  if(!G.__brcFeReplayDelegated){ G.__brcFeReplayDelegated=true; document.addEventListener('click',e=>{ if(e.target?.id==='brcFeReplayRun'){ e.preventDefault(); brcFeRunReplayExport(); } }); }
 
   function ensureStyle(){
     if(document.getElementById(STYLE_ID)) return;
@@ -23732,6 +23844,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       .brc-fe-connect{display:flex;gap:5px;flex-wrap:wrap;padding:8px 12px 0}.brc-fe-connect span{display:inline-flex;align-items:center;padding:3px 6px;border-radius:999px;font-size:7.5px;font-weight:900;border:1px solid rgba(10,31,51,.08)}.brc-fe-connect .on{color:#08734a;background:rgba(15,138,88,.06);border-color:rgba(15,138,88,.16)}.brc-fe-connect .off{color:#7b8491;background:rgba(10,31,51,.03)}.brc-fe-connect .wait{color:#1d4ed8;background:rgba(37,99,235,.06);border-color:rgba(37,99,235,.16)}.brc-fe-connect .ref{color:#8a5a00;background:rgba(217,119,6,.06);border-color:rgba(217,119,6,.18)}.brc-fe-connect .insufficient{color:#8a5a00;background:rgba(217,119,6,.045);border-color:rgba(217,119,6,.14)}.brc-fe-signal-detail{margin:6px 12px 0;border:1px solid rgba(10,31,51,.06);border-radius:9px;background:rgba(255,255,255,.58);padding:0 8px}.brc-fe-signal-detail summary{cursor:pointer;padding:6px 1px;font-size:7.8px;font-weight:900;color:var(--ink-soft,#6b7280)}.brc-fe-signal-detail>div{padding:0 1px 6px}.brc-fe-signal-detail p{display:grid;grid-template-columns:105px minmax(0,1fr);gap:6px;margin:4px 0;font-size:7.7px;line-height:1.45;color:var(--ink-soft,#6b7280)}.brc-fe-signal-detail p b{color:var(--navy,#0a1f33)}.brc-fe-signal-detail p span{min-width:0;overflow-wrap:anywhere}
       .brc-fe-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;padding:10px 12px}.brc-fe-pick{padding:9px;border-radius:11px;background:#fff;border:1px solid rgba(10,31,51,.07);min-width:0}.brc-fe-pick.accent{border-color:rgba(0,87,219,.25);background:rgba(0,87,219,.035)}.brc-fe-pick .k{display:block;font-size:8px;font-weight:900;color:var(--ink-soft,#6b7280)}.brc-fe-pick strong{display:flex;align-items:center;gap:5px;margin-top:4px;font-size:11.5px;color:var(--navy,#0a1f33);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brc-fe-pick small{display:block;margin-top:4px;font-size:8.5px;color:var(--ink-soft,#6b7280);font-weight:750}
       .brc-fe-scenario{margin:0 12px 10px;padding:9px 10px;border-radius:11px;border:1px dashed rgba(0,87,219,.24);background:rgba(0,87,219,.025);display:flex;align-items:center;gap:7px;flex-wrap:wrap}.brc-fe-scenario>span{font-size:8px;font-weight:900;color:var(--ink-soft,#6b7280)}.brc-fe-scenario>b{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--navy,#0a1f33)}.brc-fe-scenario>small{font-size:8.5px;color:var(--ink-soft,#6b7280)}
+      .brc-fe-oos,.brc-fe-replay{margin:0 12px 9px;border:1px solid rgba(10,31,51,.08);border-radius:10px;background:rgba(255,255,255,.72);overflow:hidden}.brc-fe-oos summary,.brc-fe-replay summary{cursor:pointer;padding:8px 10px;font-size:8.5px;font-weight:950;color:var(--navy,#0a1f33)}.brc-fe-oos>div,.brc-fe-replay-body{padding:0 10px 9px}.brc-fe-oos-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}.brc-fe-oos-grid span{padding:5px 6px;border-radius:7px;background:rgba(10,31,51,.03);font-size:7.5px;color:var(--ink-soft,#6b7280)}.brc-fe-oos-grid b{color:var(--navy,#0a1f33)}.brc-fe-oos p{margin:6px 0 0;font-size:7.5px;line-height:1.5;color:var(--ink-soft,#6b7280)}.brc-fe-replay-row{display:flex;gap:6px;align-items:end;flex-wrap:wrap}.brc-fe-replay-row label{display:flex;flex-direction:column;gap:3px;font-size:7.5px;font-weight:850;color:var(--ink-soft,#6b7280)}.brc-fe-replay-row input{height:31px;border:1px solid rgba(10,31,51,.14);border-radius:7px;padding:0 6px;font:inherit;font-size:9px;color:var(--navy,#0a1f33);background:#fff}.brc-fe-replay-row button{height:31px;border:0;border-radius:8px;padding:0 10px;background:var(--wave,#0057db);color:#fff;font:inherit;font-size:8.5px;font-weight:950;cursor:pointer}.brc-fe-replay-row button:disabled{opacity:.55;cursor:wait}.brc-fe-replay-status{margin-top:6px;font-size:7.5px;line-height:1.5;color:var(--ink-soft,#6b7280)}
       .brc-fe-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:0 12px 12px}.brc-fe-row{padding:9px;border:1px solid rgba(10,31,51,.075);border-radius:11px;background:#fff}.brc-fe-row.leader{border-color:rgba(0,87,219,.28);box-shadow:inset 3px 0 0 rgba(0,87,219,.65)}.brc-fe-rowtop{display:flex;align-items:center;justify-content:space-between;gap:8px}.brc-fe-rowtop>div:first-child{display:flex;align-items:center;gap:5px;min-width:0}.brc-fe-rowtop b{font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brc-fe-rowtop .tag{font-size:7px;font-weight:900;padding:2px 5px;border-radius:999px;background:rgba(10,31,51,.055);color:var(--ink-soft,#6b7280);white-space:nowrap}.brc-fe-rowtop .score{font-size:19px;font-weight:950;color:var(--navy,#0a1f33);font-variant-numeric:tabular-nums}.brc-fe-rowtop .score small{font-size:7px;color:var(--ink-soft,#6b7280);margin-left:1px}.brc-fe-metrics{display:flex;gap:7px;flex-wrap:wrap;margin-top:5px;font-size:8px;color:var(--ink-soft,#6b7280);font-weight:750}.brc-fe-metrics b{color:var(--navy,#0a1f33)}.brc-fe-metrics b.up{color:#0f8a58}.brc-fe-metrics b.down{color:#c2414a}.brc-fe-reasons{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}.brc-fe-reason{font-size:7.8px;line-height:1.35;padding:3px 5px;border-radius:6px;background:rgba(10,31,51,.035);color:var(--ink-soft,#6b7280);font-weight:700}.brc-fe-reason.plus{background:rgba(15,138,88,.065);color:#08734a}.brc-fe-reason.minus{background:rgba(194,65,74,.06);color:#a3323b}.brc-fe-muted{font-size:8px;color:var(--ink-soft,#6b7280)}
       .brc-fe-boat{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;font-size:10px;font-weight:950;border:1px solid rgba(0,0,0,.08);flex:0 0 19px}.brc-fe-boat.b1{background:#fff;color:#111}.brc-fe-boat.b2{background:#444;color:#fff}.brc-fe-boat.b3{background:#e64545;color:#fff}.brc-fe-boat.b4{background:#3b78d8;color:#fff}.brc-fe-boat.b5{background:#e9c640;color:#111}.brc-fe-boat.b6{background:#57a56a;color:#fff}
       .brc-fe-detail{border-top:1px solid rgba(10,31,51,.06);padding:8px 12px 10px}.brc-fe-detail summary{cursor:pointer;font-size:8.5px;font-weight:900;color:var(--ink-soft,#6b7280)}.brc-fe-detail div{padding:6px 2px 0}.brc-fe-detail p{margin:4px 0;font-size:8px;line-height:1.5;color:var(--ink-soft,#6b7280)}
