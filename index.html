@@ -29,6 +29,7 @@
 <!-- BRC_SLIT_STRICT_A_EXHIBITION_12_V2_20260920: strict exhibition A corrected to 12 cells after independent recomputation of annual 3/3, completed half-years 5/5, rolling90 thresholds and date-cluster bootstrap 95% CI; restored 福岡4>3, 若松4>3, 蒲郡4>3. Strong venue-specific A numeric remains disabled due legacy production recent-ST provenance. -->
 <!-- BRC_TIMEX_LAP_PENDING_FIX_V1_20260920: exhibition-time-only phase is treated as waiting, not shortened; lap_type/detail arrival separates pending from true lap-missing state; prediction math unchanged -->
 <!DOCTYPE html>
+<!-- BRC_AI_FINAL_EVAL_TAB_V6_20260922: final tab force-refreshes and remounts the SHADOW card on every open; prediction logic unchanged -->
 <!-- BRC_CANCEL_POSTPONE_GUARD_V1_20260921: live-scheduleの開催中止/順延を終端状態として保持し、中止会場・中止Rを締切カードから除外。payloadのstatus/reason文字列も防御的に解釈。予測ロジック非変更 -->
 <!-- BRC_MOTOR_NATIONAL_24_V1_20260921: 24場モーター評価。標準22場=オリジナル展示優先/通常展示fallback、桐生=専用、江戸川=通常展示専用。1走判定前/2走暫定/3走本判定。足色信頼は今節差+長期傾向のOOS確率校正。AI予測への自動加点なし -->
 
@@ -12774,9 +12775,35 @@ function brcSetAiAdminSubTab(key){
     const panel=document.getElementById(`brcAiAdminPanel-${x}`);
     if(panel) panel.classList.toggle('active',x===k);
   });
+  if(k==='final') {
+    // V6: 最終評価タブを開くたび、現在の6艇データで必ず再計算・再マウントする。
+    // 後段の管理者パネル再描画でmountが空になったケースもここで復旧する。
+    setTimeout(()=>{
+      try{
+        const boats=Array.isArray(window.__predictBoatsCurrent)?window.__predictBoatsCurrent:[];
+        if(typeof window.BRC_FINAL_EVAL_V1?.refresh==='function' && boats.length===6){
+          window.BRC_FINAL_EVAL_V1.refresh(boats,window.__predictWorkerCurrent,window.__currentLocalInReliability);
+        }
+      }catch(err){ console.warn('[BRC final eval] tab refresh failed',err); }
+    },0);
+    setTimeout(()=>{
+      try{
+        const mount=document.getElementById('brcFinalEvalMountV2');
+        const card=document.getElementById('brc-final-eval-v1');
+        if(mount && !mount.querySelector('#brc-final-eval-v1')){
+          if(card){ mount.replaceChildren(card); }
+          else if(typeof window.BRC_FINAL_EVAL_V1?.refresh==='function'){
+            const boats=Array.isArray(window.__predictBoatsCurrent)?window.__predictBoatsCurrent:[];
+            if(boats.length===6) window.BRC_FINAL_EVAL_V1.refresh(boats,window.__predictWorkerCurrent,window.__currentLocalInReliability);
+          }
+        }
+      }catch(_e){}
+    },90);
+  }
   if(k==='nige') setTimeout(()=>brcEnsureAiReferenceOddsAfterDeadline(),0);
   if(k==='ev') setTimeout(()=>{try{brcEnsureAiReferenceOddsAfterDeadline();}catch(_e){} try{brcRefreshAiExpectedValue();}catch(_e){}},0);
 }
+window.brcSetAiAdminSubTab=brcSetAiAdminSubTab;
 function brcBindAiAdminSubTabs(){
   document.querySelectorAll('#predictAiResult [data-brc-ai-admin-tab]').forEach(btn=>{
     if(btn.dataset.brcBound==='1') return;
@@ -12812,7 +12839,7 @@ function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhib
         <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="ref">BRC参考買い目</button>
         <button type="button" class="brc-ai-admin-tab" data-brc-ai-admin-tab="ev">狙い目</button>
       </div>
-      <div id="brcAiAdminPanel-final" class="brc-ai-admin-panel"><div id="brcFinalEvalMountV2" data-brc-final-eval-mount="1"></div></div>
+      <div id="brcAiAdminPanel-final" class="brc-ai-admin-panel"><div id="brcFinalEvalMountV2" data-brc-final-eval-mount="1"><div class="brc-fe-tab-loading" style="padding:18px 10px;text-align:center;color:var(--ink-soft);font-size:11px;font-weight:800;">AI最終評価を計算中…</div></div></div>
       <div id="brcAiAdminPanel-marks" class="brc-ai-admin-panel">${marksHtml}</div>
       <div id="brcAiAdminPanel-nige" class="brc-ai-admin-panel">${nigeHtml}</div>
       <div id="brcAiAdminPanel-ref" class="brc-ai-admin-panel"></div>
@@ -12840,6 +12867,14 @@ function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhib
       }
     }catch(err){ console.warn('[BRC final eval] direct refresh failed',err); }
   },0);
+  // V6: 後段の参考買い目/狙い目パネル注入後にも最終評価mountを再確認。
+  setTimeout(()=>{
+    try{
+      if(typeof window.BRC_FINAL_EVAL_V1?.refresh==='function'){
+        window.BRC_FINAL_EVAL_V1.refresh(boats,workerPrediction,localInReliability);
+      }
+    }catch(_e){}
+  },140);
 
   // 念のためAI予測エリア内の買い目カードは常に1枚に制限する。
   const recommendationCards=box.querySelectorAll('[data-brc-ai3-root], #recommendedBetsCard');
@@ -21614,7 +21649,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
     renderReferenceMonitor(boats,workerPrediction,localInReliability,exhibitionApplied,false);
 
     try{brcBindAiAdminSubTabs?.();}catch(_e){}
-    try{window.brcSetAiAdminSubTab?.(window.__brcAiAdminSubTabCurrent||'marks');}catch(_e){}
+    try{window.brcSetAiAdminSubTab?.(window.__brcAiAdminSubTabCurrent||'final');}catch(_e){}
     Promise.resolve().then(async()=>{
       await saveCurrent(boats,workerPrediction,localInReliability,exhibitionApplied);
       await brcLoadLockedSnapshotForCurrent();
@@ -21724,9 +21759,11 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 
   window.brcSetAiAdminSubTab=function(key){
     if(!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)) return;
-    const valid=['marks','nige','ref','ev'];
+    // V6: Reference Monitor側でも final を正式タブとして扱う。
+    // 以前は final が valid に無く、後段のinjectMonitorが marksへ強制的に戻していた。
+    const valid=['final','marks','nige','ref','ev'];
     const requested=key==='monitor'?'ref':key;
-    const k=valid.includes(requested)?requested:'marks';
+    const k=valid.includes(requested)?requested:'final';
     window.__brcAiAdminSubTabCurrent=k;
     document.querySelectorAll('#predictAiResult [data-brc-ai-admin-tab]').forEach(btn=>{
       const on=btn.dataset.brcAiAdminTab===k;
@@ -21737,6 +21774,14 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
       const p=document.getElementById(`brcAiAdminPanel-${x}`);
       if(p) p.classList.toggle('active',x===k);
     });
+    if(k==='final') setTimeout(()=>{
+      try{
+        const boats=Array.isArray(window.__predictBoatsCurrent)?window.__predictBoatsCurrent:[];
+        if(typeof window.BRC_FINAL_EVAL_V1?.refresh==='function' && boats.length===6){
+          window.BRC_FINAL_EVAL_V1.refresh(boats,window.__predictWorkerCurrent,window.__currentLocalInReliability);
+        }
+      }catch(err){console.warn('[BRC final eval] reference-monitor tab refresh failed',err);}
+    },0);
     if(k==='nige') setTimeout(()=>{try{brcEnsureAiReferenceOddsAfterDeadline();}catch(_e){}},0);
     if(k==='ref') setTimeout(()=>{refreshOdds();brcLoadLockedSnapshotForCurrent().catch(()=>{});},0);
     if(k==='ev') setTimeout(()=>{try{brcEnsureAiReferenceOddsAfterDeadline();}catch(_e){} try{brcRefreshAiExpectedValue();}catch(_e){}},0);
