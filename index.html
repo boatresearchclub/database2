@@ -1,3 +1,8 @@
+<!-- BRC_EXPECTED_SLIT_1M_TIMELINE_V1_20260923:
+管理者専用。START(0秒) と 1M入口(約4〜5秒後) を時間軸として左右分離して表示。
+左側にSTART想定、右側に1M入口想定を固定。両者は相対隊形のみを表し、実艇身距離ではない。
+想定スリット計算・1M入口補正式・進入変更除外・管理者専用ガードは維持。
+-->
 <!-- BRC_EXPECTED_SLIT_1M_DUAL_V1_20260923:
 管理者専用。既存の想定スリット算出は維持し、展示タイムが6艇揃った場合のみ
 1M入口相対隊形 = 想定スリットスコア + 12.5×(展示タイム-レース平均展示)
@@ -5048,33 +5053,48 @@ body.brc-admin-public-view [data-brc-admin-only="true"]{display:none !important;
 </style>
 
 
+
 <style id="brc-start-1m-dual-v1">
-/* BRC START + 1M入口：管理者専用の相対隊形表示 */
+/* BRC START → 1M入口：管理者専用の時間軸表示 */
 .brc-sl1m-chart{
-  padding:7px 6px 9px !important;
+  position:relative;
+  padding:18px 6px 10px !important;
 }
 .brc-sl1m-chart .brc-expected-slit-direction{
   justify-content:space-between;
   padding:0 7px 0 33px;
+  margin-bottom:4px;
 }
 .brc-sl1m-axis-label{
   font-size:8.5px;
   color:#55728f;
   font-weight:850;
 }
-.brc-sl1m-chart .brc-expected-slit-start-line{
-  left:58%;
-  right:auto;
-  top:25px;
-  bottom:8px;
-  width:2px;
-}
-.brc-sl1m-chart .brc-expected-slit-start-label{
-  left:58%;
-  right:auto;
-  top:3px;
+.brc-sl1m-time-label{
+  position:absolute;
+  top:2px;
   transform:translateX(-50%);
+  text-align:center;
+  color:#1769aa;
+  font-weight:950;
+  line-height:1.05;
+  z-index:6;
 }
+.brc-sl1m-time-label.start{left:26%;}
+.brc-sl1m-time-label.one-m{left:84%;}
+.brc-sl1m-time-label .big{display:block;font-size:8.8px;}
+.brc-sl1m-time-label .small{display:block;font-size:7.6px;color:#55728f;font-weight:850;margin-top:1px;}
+.brc-sl1m-time-line{
+  position:absolute;
+  top:34px;
+  bottom:10px;
+  width:2px;
+  background:#1769aa;
+  opacity:.92;
+  z-index:5;
+}
+.brc-sl1m-time-line.start{left:26%;}
+.brc-sl1m-time-line.one-m{left:84%;}
 .brc-sl1m-chart .brc-expected-slit-row{
   grid-template-columns:28px minmax(0,1fr) !important;
 }
@@ -5083,7 +5103,10 @@ body.brc-admin-public-view [data-brc-admin-only="true"]{display:none !important;
 }
 .brc-sl1m-chart .brc-expected-slit-track{
   margin-right:0 !important;
-  height:32px;
+  height:34px;
+}
+.brc-sl1m-chart .brc-expected-slit-body{
+  margin-top:18px;
 }
 .brc-sl1m-marker{
   --boat-bg:#fff;
@@ -5126,10 +5149,9 @@ body.brc-admin-public-view [data-brc-admin-only="true"]{display:none !important;
 .brc-sl1m-marker.lane4{--boat-bg:var(--lane4);--boat-fg:#fff;}
 .brc-sl1m-marker.lane5{--boat-bg:var(--lane5);--boat-fg:#172033;}
 .brc-sl1m-marker.lane6{--boat-bg:var(--lane6);--boat-fg:#fff;}
-
 .brc-sl1m-marker.start{
   z-index:2;
-  opacity:.30;
+  opacity:.32;
   box-shadow:none;
   filter:saturate(.55);
   border-style:dashed;
@@ -5150,7 +5172,7 @@ body.brc-admin-public-view [data-brc-admin-only="true"]{display:none !important;
   transform:translateY(-50%);
   z-index:1;
 }
-.brc-sl1m-move.forward::after{
+.brc-sl1m-move::after{
   content:"";
   position:absolute;
   right:-1px;
@@ -5158,15 +5180,6 @@ body.brc-admin-public-view [data-brc-admin-only="true"]{display:none !important;
   border-top:3.5px solid transparent;
   border-bottom:3.5px solid transparent;
   border-left:5px solid rgba(23,105,170,.72);
-}
-.brc-sl1m-move.back::before{
-  content:"";
-  position:absolute;
-  left:-1px;
-  top:-4px;
-  border-top:3.5px solid transparent;
-  border-bottom:3.5px solid transparent;
-  border-right:5px solid rgba(23,105,170,.72);
 }
 .brc-sl1m-legend{
   display:flex;
@@ -5233,16 +5246,21 @@ body.brc-admin-public-view [data-brc-admin-only="true"]{display:none !important;
   color:var(--ink-soft);
 }
 @media(max-width:420px){
-  .brc-sl1m-chart .brc-expected-slit-row{grid-template-columns:25px minmax(0,1fr) !important;height:31px;}
+  .brc-sl1m-chart .brc-expected-slit-row{grid-template-columns:25px minmax(0,1fr) !important;height:33px;}
   .brc-sl1m-marker{width:39px;height:17px;font-size:8.5px;}
   .brc-sl1m-marker::before{left:-5px;width:10px;height:6px;}
   .brc-sl1m-chart .brc-expected-slit-direction{padding-left:28px;padding-right:5px;font-size:8.8px;}
   .brc-sl1m-axis-label{font-size:8px;}
+  .brc-sl1m-time-label.start{left:27%;}
+  .brc-sl1m-time-label.one-m{left:84%;}
+  .brc-sl1m-time-line.start{left:27%;}
+  .brc-sl1m-time-line.one-m{left:84%;}
   .brc-sl1m-legend{gap:9px;font-size:8.2px;}
   .brc-sl1m-summary{font-size:9.5px;}
   .brc-sl1m-foot{font-size:7.8px;}
 }
 </style>
+
 
 </head>
 <body>
@@ -18330,11 +18348,19 @@ function brcExpectedOneMPressureLabel(outerAdv){
   if(d>=0.50) return {key:'some',label:'あり'};
   return {key:'weak',label:'弱'};
 }
-function brcExpectedOneMVisualX(score,anchor){
+
+function brcExpectedOneMVisualX(score,anchor,mode){
   const s=Number(score), a=Number(anchor);
-  if(!Number.isFinite(s)||!Number.isFinite(a)) return 18;
-  const capped=Math.max(-2.45,Math.min(3.35,s-a));
-  return Math.max(6,Math.min(92,58-(capped*13.5)));
+  if(!Number.isFinite(s)||!Number.isFinite(a)){
+    return mode==='oneM' ? 84 : 26;
+  }
+  const diff=Math.max(-2.35,Math.min(2.35,s-a));
+  const center=(mode==='oneM') ? 84 : 26;
+  const span=(mode==='oneM') ? 11.0 : 8.5;
+  const x=center-(diff*span);
+  const min=(mode==='oneM') ? 62 : 10;
+  const max=(mode==='oneM') ? 96 : 46;
+  return Math.max(min,Math.min(max,x));
 }
 function brcBuildExpectedSlitOneMHtml(boats,venue,liveRace){
   if(brcExpectedSlitEntryChanged(liveRace)){
@@ -18362,6 +18388,7 @@ function brcBuildExpectedSlitOneMHtml(boats,venue,liveRace){
   const oneMValid=ex.ready
     ? states.filter(x=>Number.isFinite(Number(x?.oneM))).sort((a,b)=>a.oneM-b.oneM)
     : [];
+  const oneMAnchor=oneMValid.length?Number(oneMValid[0].oneM):startAnchor;
   const oneMLead=oneMValid.length?oneMValid[0].course:'―';
 
   const in1=states.find(x=>x.course===1);
@@ -18373,31 +18400,30 @@ function brcBuildExpectedSlitOneMHtml(boats,venue,liveRace){
 
   const movementRank=ex.ready
     ? states.filter(x=>Number.isFinite(x.calc?.score)&&Number.isFinite(x.oneM))
-        .map(x=>({...x,move:Number(x.calc.score)-Number(x.oneM)}))
-        .sort((a,b)=>b.move-a.move)
+        .map(x=>({...x,moveX:brcExpectedOneMVisualX(Number(x.oneM),oneMAnchor,'oneM')-brcExpectedOneMVisualX(Number(x.calc.score),startAnchor,'start')}))
+        .sort((a,b)=>Math.abs(b.moveX)-Math.abs(a.moveX))
     : [];
-  const biggestAdvance=movementRank.length?movementRank[0]:null;
+  const biggestMove=movementRank.length?movementRank[0]:null;
 
   const rows=states.map(x=>{
     const course=x.course;
     const c=x.calc;
     if(!c || !Number.isFinite(Number(c.score))){
-      return `<div class="brc-expected-slit-row"><div class="brc-expected-slit-label"><span class="brc-expected-slit-lane lane${course}">${course}</span></div><div class="brc-expected-slit-track"><span class="brc-sl1m-marker start lane${course} no-data" style="--sl1m-x:18%">${course}</span></div></div>`;
+      return `<div class="brc-expected-slit-row"><div class="brc-expected-slit-label"><span class="brc-expected-slit-lane lane${course}">${course}</span></div><div class="brc-expected-slit-track"><span class="brc-sl1m-marker start lane${course} no-data" style="--sl1m-x:22%">${course}</span></div></div>`;
     }
-    const sx=brcExpectedOneMVisualX(Number(c.score),startAnchor);
+    const sx=brcExpectedOneMVisualX(Number(c.score),startAnchor,'start');
     if(!ex.ready || !Number.isFinite(Number(x.oneM))){
       return `<div class="brc-expected-slit-row"><div class="brc-expected-slit-label"><span class="brc-expected-slit-lane lane${course}">${course}</span></div><div class="brc-expected-slit-track"><span class="brc-sl1m-marker start lane${course}" style="--sl1m-x:${sx.toFixed(2)}%" title="START想定">${course}</span></div></div>`;
     }
-    const mx=brcExpectedOneMVisualX(Number(x.oneM),startAnchor);
+    const mx=brcExpectedOneMVisualX(Number(x.oneM),oneMAnchor,'oneM');
     const moveLeft=Math.min(sx,mx);
     const moveWidth=Math.abs(mx-sx);
-    const moveClass=mx>sx?'forward':(mx<sx?'back':'');
     const startTitle=`START想定 / 内部スコア ${Number(c.score).toFixed(2)}`;
     const oneMTitle=`1M入口想定 / 展示 ${Number(x.exhibition).toFixed(2)} / 補正後 ${Number(x.oneM).toFixed(2)} / 相対表示`;
     return `<div class="brc-expected-slit-row">
       <div class="brc-expected-slit-label"><span class="brc-expected-slit-lane lane${course}">${course}</span></div>
       <div class="brc-expected-slit-track">
-        ${moveWidth>=0.8?`<span class="brc-sl1m-move ${moveClass}" style="--move-left:${moveLeft.toFixed(2)}%;--move-width:${moveWidth.toFixed(2)}%"></span>`:''}
+        ${moveWidth>=2.0?`<span class="brc-sl1m-move" style="--move-left:${moveLeft.toFixed(2)}%;--move-width:${moveWidth.toFixed(2)}%"></span>`:''}
         <span class="brc-sl1m-marker start lane${course}" style="--sl1m-x:${sx.toFixed(2)}%" title="${startTitle}">${course}</span>
         <span class="brc-sl1m-marker one-m lane${course}" style="--sl1m-x:${mx.toFixed(2)}%" title="${oneMTitle}">${course}</span>
       </div>
@@ -18406,13 +18432,12 @@ function brcBuildExpectedSlitOneMHtml(boats,venue,liveRace){
 
   let summary='';
   if(!ex.ready){
-    summary=`STARTの想定隊形を表示中。展示タイムが6艇揃うと、同じ図に1M入口の相対隊形を追加します。`;
-  }else if(biggestAdvance && String(startLead)!==String(oneMLead)){
-    summary=`STARTでは${startLead}号艇が先行想定。展示タイムを加味すると${biggestAdvance.course}号艇が前進し、1M入口では${oneMLead}号艇が最前想定です。`;
-  }else if(biggestAdvance && biggestAdvance.move>0.12){
-    summary=`STARTでは${startLead}号艇が先行想定。${biggestAdvance.course}号艇が展示タイムで前進し、1M入口では${oneMLead}号艇が最前想定です。`;
+    summary=`左側がSTART想定位置、右側が1M入口想定位置です。展示タイムが6艇揃うと、1M入口の相対隊形を追加します。`;
+  }else if(biggestMove && Math.abs(biggestMove.moveX)>=5.5){
+    const dir = biggestMove.moveX > 0 ? '前進し' : '後方に下がり';
+    summary=`STARTでは${startLead}号艇が先行想定。${biggestMove.course}号艇が展示タイムで${dir}、1M入口では${oneMLead}号艇が最前想定です。`;
   }else{
-    summary=`STARTから1M入口まで大きな隊形変化は少なく、${oneMLead}号艇が前側の想定です。`;
+    summary=`STARTでは${startLead}号艇が先行想定。1M入口でも${oneMLead}号艇が前側の想定で、大きな隊形変化は小さめです。`;
   }
 
   const headerOneM=ex.ready
@@ -18422,20 +18447,23 @@ function brcBuildExpectedSlitOneMHtml(boats,venue,liveRace){
   return `<div class="brc-expected-slit">
     <div class="brc-expected-slit-head">
       <div>
-        <div class="brc-expected-slit-title">想定スリット・1M入口</div>
+        <div class="brc-expected-slit-title">START → 1M 想定隊形</div>
         <div class="brc-expected-slit-sub">START先行：${startLead}号艇　隊形信頼度：<span class="brc-expected-slit-confidence ${conf.key}">${conf.label}</span><br>${headerOneM}</div>
       </div>
       <div class="brc-expected-slit-meta">右が進行方向</div>
     </div>
     <div class="brc-expected-slit-chart brc-sl1m-chart">
       <div class="brc-expected-slit-direction"><span class="brc-sl1m-axis-label">後方</span><span>進行方向 →</span><span class="brc-sl1m-axis-label">前方</span></div>
-      <span class="brc-expected-slit-start-label">START</span><span class="brc-expected-slit-start-line" aria-hidden="true"></span>
+      <span class="brc-sl1m-time-label start"><span class="big">START</span><span class="small">0秒</span></span>
+      <span class="brc-sl1m-time-line start" aria-hidden="true"></span>
+      <span class="brc-sl1m-time-label one-m"><span class="big">1M入口</span><span class="small">約4〜5秒後</span></span>
+      <span class="brc-sl1m-time-line one-m" aria-hidden="true"></span>
       <div class="brc-expected-slit-body">${rows}</div>
     </div>
     <div class="brc-sl1m-legend">
-      <span class="brc-sl1m-legend-item"><i class="brc-sl1m-dot start"></i>START想定</span>
-      <span class="brc-sl1m-legend-item"><i class="brc-sl1m-dot one-m"></i>1M入口想定</span>
-      <span class="brc-sl1m-legend-item">破線＝隊形変化</span>
+      <span class="brc-sl1m-legend-item"><i class="brc-sl1m-dot start"></i>START想定位置</span>
+      <span class="brc-sl1m-legend-item"><i class="brc-sl1m-dot one-m"></i>1M入口想定位置</span>
+      <span class="brc-sl1m-legend-item">破線＝STARTから1Mまでの相対変化</span>
     </div>
     <div class="brc-sl1m-summary">${summary}</div>
     <div class="brc-sl1m-foot">
