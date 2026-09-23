@@ -1,3 +1,4 @@
+<!-- BRC_EXPECTED_SLIT_UI_CLEAN_V2_20260923: 管理者専用想定スリット。表面の内部スコア表示を廃止し、想定先行・隊形信頼度・隊形図を主表示。内部スコア/補正値は折りたたみ詳細のみ。START表記へ変更。計算ロジック・進入変更除外・展示ST/風不使用は維持。 -->
 <!-- BRC_EXPECTED_SLIT_V1_OOS_20260923: 管理者専用。進入変更レースは想定スリット対象外。通常進入のみで、当該コース1年ST順位80%＋直近10走ST順位20%を基礎とし、2024-2025通常進入で学習した会場×コース残差補正を加える。今節ST順位は取得値がある場合のみ走数別10/20/25%で反映。展示ST・風は想定スリット計算に不使用。2026-01-01〜09-22 OOSで前後関係約63.0%、最速艇一致約36.2%。予測/着率/買い目ロジック非変更 -->
 <!-- BRC_ADMIN_ST_RECENT10_V3_20260923: admin-only current-course latest-10 average ST plus average of each historical race ST rank; no current-six comparison; F/L excluded from player averages; display-only, prediction/rates/slit/bets unchanged -->
 <!-- BRC_SLIT_STRONG_BANNER_RESTORE_V1_20260923: 展示差0.10秒以上+平均ST順位差0.50位以上の強条件成立時、A/B数値行が無くても展示スリット評価バナーを表示。表示のみ、予測/着率/買い目ロジック非変更 -->
@@ -4881,11 +4882,11 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
 .brc-expected-slit-chart::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(180deg,rgba(255,255,255,.0) 0,rgba(255,255,255,.0) 30px,rgba(255,255,255,.42) 31px,rgba(255,255,255,.42) 32px);pointer-events:none;}
 .brc-expected-slit-direction{position:relative;z-index:2;height:22px;display:flex;align-items:center;justify-content:flex-end;padding-right:10px;font-size:9.5px;font-weight:900;color:#1769aa;}
 .brc-expected-slit-body{position:relative;z-index:2;}
-.brc-expected-slit-row{display:grid;grid-template-columns:72px minmax(0,1fr);align-items:center;height:34px;}
-.brc-expected-slit-label{display:flex;align-items:center;gap:5px;min-width:0;}
+.brc-expected-slit-row{display:grid;grid-template-columns:30px minmax(0,1fr);align-items:center;height:34px;}
+.brc-expected-slit-label{display:flex;align-items:center;justify-content:center;min-width:0;}
 .brc-expected-slit-lane{width:21px;height:21px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:10.5px;font-weight:950;line-height:1;border:1px solid rgba(10,31,51,.14);}
 .brc-expected-slit-lane.lane1{background:var(--lane1);color:var(--lane1-text);border-color:#718096;}.brc-expected-slit-lane.lane2{background:var(--lane2);color:var(--lane2-text);border-color:var(--lane2);}.brc-expected-slit-lane.lane3{background:var(--lane3);color:var(--lane3-text);border-color:var(--lane3);}.brc-expected-slit-lane.lane4{background:var(--lane4);color:var(--lane4-text);border-color:var(--lane4);}.brc-expected-slit-lane.lane5{background:var(--lane5);color:var(--lane5-text);border-color:#c4972d;}.brc-expected-slit-lane.lane6{background:var(--lane6);color:var(--lane6-text);border-color:var(--lane6);}
-.brc-expected-slit-rank{font-size:10.5px;font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.brc-expected-slit-rank{display:none!important;}
 .brc-expected-slit-track{position:relative;height:30px;margin-right:15px;}
 .brc-expected-slit-track::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(23,105,170,.22);transform:translateY(-50%);}
 .brc-expected-slit-start-line{position:absolute;right:15px;top:25px;bottom:8px;width:2px;background:#0877d1;z-index:3;box-shadow:0 0 0 1px rgba(255,255,255,.35);}
@@ -4895,12 +4896,25 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
 .brc-expected-slit-boat.lane1{--boat-bg:#fff;--boat-fg:#0a1f33;}.brc-expected-slit-boat.lane2{--boat-bg:var(--lane2);--boat-fg:#fff;}.brc-expected-slit-boat.lane3{--boat-bg:var(--lane3);--boat-fg:#fff;}.brc-expected-slit-boat.lane4{--boat-bg:var(--lane4);--boat-fg:#fff;}.brc-expected-slit-boat.lane5{--boat-bg:var(--lane5);--boat-fg:#172033;}.brc-expected-slit-boat.lane6{--boat-bg:var(--lane6);--boat-fg:#fff;}
 .brc-expected-slit-boat.no-data{opacity:.35;transform:translate(-28px,-50%);}
 .brc-expected-slit-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:7px 2px 0;font-size:8.8px;line-height:1.45;color:var(--ink-soft);}
+.brc-expected-slit-read{margin:8px 2px 0;font-size:10.5px;line-height:1.55;font-weight:800;color:var(--navy);}
+.brc-expected-slit-detail{margin:8px 0 0;border-top:1px dashed rgba(10,31,51,.12);padding-top:6px;}
+.brc-expected-slit-detail>summary{list-style:none;cursor:pointer;user-select:none;font-size:9.5px;font-weight:850;color:var(--ink-soft);display:flex;align-items:center;justify-content:space-between;padding:2px 2px;}
+.brc-expected-slit-detail>summary::-webkit-details-marker{display:none;}
+.brc-expected-slit-detail>summary::after{content:'＋';font-size:11px;}
+.brc-expected-slit-detail[open]>summary::after{content:'−';}
+.brc-expected-slit-detail-body{margin-top:6px;padding:7px 8px;border-radius:8px;background:rgba(10,31,51,.025);font-size:8.8px;line-height:1.55;color:var(--ink-soft);}
+.brc-expected-slit-detail-row{display:grid;grid-template-columns:24px repeat(5,minmax(0,1fr));gap:3px;align-items:center;padding:3px 0;border-top:1px solid rgba(10,31,51,.055);font-variant-numeric:tabular-nums;}
+.brc-expected-slit-detail-row:first-child{border-top:0;}
+.brc-expected-slit-detail-row strong{color:var(--navy);}
+.brc-expected-slit-detail-head{font-size:8px;font-weight:900;color:var(--ink-soft);}
+.brc-expected-slit-detail-note{margin-top:5px;font-size:8.3px;line-height:1.45;color:var(--ink-soft);}
+
 .brc-expected-slit-scale{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-weight:850;color:var(--navy);}
 .brc-expected-slit-scale-line{display:inline-block;width:46px;height:5px;border-left:1px solid rgba(10,31,51,.45);border-right:1px solid rgba(10,31,51,.45);border-bottom:1px solid rgba(10,31,51,.45);}
 @media(max-width:420px){
   .brc-admin-race-tool-tab{font-size:10.5px;padding:9px 2px;letter-spacing:-.02em;}
   .brc-admin-race-tool-panel{padding:8px 7px 9px;}
-  .brc-expected-slit-row{grid-template-columns:67px minmax(0,1fr);height:32px;}
+  .brc-expected-slit-row{grid-template-columns:28px minmax(0,1fr);height:32px;}
   .brc-expected-slit-label{gap:4px;}.brc-expected-slit-lane{width:20px;height:20px;font-size:10px;}.brc-expected-slit-rank{font-size:10px;}
   .brc-expected-slit-track{margin-right:13px;}.brc-expected-slit-start-line{right:13px;}.brc-expected-slit-start-label{right:19px;}
   .brc-expected-slit-boat{width:42px;height:18px;font-size:9px;}
@@ -18061,34 +18075,66 @@ function brcBuildExpectedSlitHtml(boats,venue,liveRace){
   const topGap=valid.length>=2?Number(valid[1].calc.score)-Number(valid[0].calc.score):null;
   const conf=brcExpectedSlitConfidence(topGap);
   const meetUsed=states.some(x=>Number(x?.calc?.meetW)>0);
+  const leadCourse=valid.length?valid[0].course:'―';
+  const secondCourse=valid.length>=2?valid[1].course:'―';
+
   const rows=states.map(x=>{
     const course=x.course, c=x.calc;
     if(!c || !Number.isFinite(Number(c.score))){
-      return `<div class="brc-expected-slit-row"><div class="brc-expected-slit-label"><span class="brc-expected-slit-lane lane${course}">${course}</span><span class="brc-expected-slit-rank">―</span></div><div class="brc-expected-slit-track"><span class="brc-expected-slit-boat lane${course} no-data">${course}</span></div></div>`;
+      return `<div class="brc-expected-slit-row"><div class="brc-expected-slit-label"><span class="brc-expected-slit-lane lane${course}">${course}</span></div><div class="brc-expected-slit-track"><span class="brc-expected-slit-boat lane${course} no-data">${course}</span></div></div>`;
     }
     const gap=Math.max(0,Number(c.score)-Number(best));
     const behindBoat=brcExpectedSlitBoatDistance(gap);
     const offsetPct=-(behindBoat*100);
-    const detail=[
-      `想定スコア ${c.score.toFixed(2)}`,
-      `1年 ${Number(c.yearRank).toFixed(2)}`,
-      c.recentUsed&&Number.isFinite(c.recentRank)?`直近10 ${c.recentRank.toFixed(2)}`:null,
-      c.meetW>0&&c.meet?`今節 ${c.meet.rank.toFixed(2)} / N=${c.meet.n} / ${Math.round(c.meetW*100)}%`:null,
-      `場×コース補正 ${c.venueCorr>=0?'+':''}${c.venueCorr.toFixed(2)}`,
-      `先頭差 ${gap.toFixed(2)} / 約${behindBoat.toFixed(2)}艇身`
-    ].filter(Boolean).join(' / ');
-    return `<div class="brc-expected-slit-row"><div class="brc-expected-slit-label"><span class="brc-expected-slit-lane lane${course}">${course}</span><span class="brc-expected-slit-rank">S ${c.score.toFixed(2)}</span></div><div class="brc-expected-slit-track"><span class="brc-expected-slit-boat lane${course}" style="--slit-offset:${offsetPct.toFixed(2)}%" title="${detail}">${course}</span></div></div>`;
+    return `<div class="brc-expected-slit-row"><div class="brc-expected-slit-label"><span class="brc-expected-slit-lane lane${course}">${course}</span></div><div class="brc-expected-slit-track"><span class="brc-expected-slit-boat lane${course}" style="--slit-offset:${offsetPct.toFixed(2)}%">${course}</span></div></div>`;
   }).join('');
-  const leadCourse=valid.length?valid[0].course:'―';
+
+  let readText='隊形差を判定できるデータが不足しています。';
+  if(Number.isFinite(topGap)){
+    if(topGap<0.10) readText=`${leadCourse}号艇がわずかに先行想定。${secondCourse}号艇との差は小さく、ほぼ横一線です。`;
+    else if(topGap<0.25) readText=`${leadCourse}号艇が先行想定ですが、${secondCourse}号艇との差は小さく、横一線に近い隊形です。`;
+    else if(topGap<0.75) readText=`${leadCourse}号艇が先行想定。${secondCourse}号艇より一歩前に出る隊形です。`;
+    else if(topGap<1.00) readText=`${leadCourse}号艇の先行がやや明確な隊形です。`;
+    else if(topGap<1.50) readText=`${leadCourse}号艇の先行が明確な隊形です。`;
+    else readText=`${leadCourse}号艇が大きく先行する想定で、隊形差も強く出ています。`;
+  }
+
+  const detailRows=states.map(x=>{
+    const c=x.calc;
+    if(!c || !Number.isFinite(Number(c.score))){
+      return `<div class="brc-expected-slit-detail-row"><strong>${x.course}</strong><span>―</span><span>―</span><span>―</span><span>―</span><span>―</span></div>`;
+    }
+    const gap=Math.max(0,Number(c.score)-Number(best));
+    const behindBoat=brcExpectedSlitBoatDistance(gap);
+    const recentTxt=c.recentUsed&&Number.isFinite(c.recentRank)?c.recentRank.toFixed(2):'―';
+    const meetTxt=c.meetW>0&&c.meet?`${c.meet.rank.toFixed(2)} (${Math.round(c.meetW*100)}%)`:'―';
+    const corrTxt=`${c.venueCorr>=0?'+':''}${c.venueCorr.toFixed(2)}`;
+    return `<div class="brc-expected-slit-detail-row"><strong>${x.course}</strong><span>${c.score.toFixed(2)}</span><span>${Number(c.yearRank).toFixed(2)}</span><span>${recentTxt}</span><span>${meetTxt}</span><span>${gap.toFixed(2)} / ${behindBoat.toFixed(2)}艇身</span></div>`;
+  }).join('');
+
   const gapText=Number.isFinite(topGap)?topGap.toFixed(2):'―';
   return `<div class="brc-expected-slit">
-    <div class="brc-expected-slit-head"><div><div class="brc-expected-slit-title">想定スリット Ver.1</div><div class="brc-expected-slit-sub">想定先行：${leadCourse}号艇　<span class="brc-expected-slit-confidence ${conf.key}">${conf.label}</span></div></div><div class="brc-expected-slit-meta">右が進行方向<br>先頭艇を基準</div></div>
+    <div class="brc-expected-slit-head">
+      <div>
+        <div class="brc-expected-slit-title">想定スリット</div>
+        <div class="brc-expected-slit-sub">想定先行：${leadCourse}号艇　<span>隊形信頼度：</span><span class="brc-expected-slit-confidence ${conf.key}">${conf.label}</span></div>
+      </div>
+      <div class="brc-expected-slit-meta">右が進行方向</div>
+    </div>
     <div class="brc-expected-slit-chart">
       <div class="brc-expected-slit-direction">進行方向 →</div>
-      <span class="brc-expected-slit-start-label">BASE</span><span class="brc-expected-slit-start-line" aria-hidden="true"></span>
+      <span class="brc-expected-slit-start-label">START</span><span class="brc-expected-slit-start-line" aria-hidden="true"></span>
       <div class="brc-expected-slit-body">${rows}</div>
     </div>
-    <div class="brc-expected-slit-foot"><span>1年80%＋直近10走20%＋場×コース補正${meetUsed?'＋今節ST':''} / 1位-2位差 ${gapText}</span><span>展示ST・風は不使用</span></div>
+    <div class="brc-expected-slit-read">${readText}</div>
+    <details class="brc-expected-slit-detail">
+      <summary>算出詳細</summary>
+      <div class="brc-expected-slit-detail-body">
+        <div class="brc-expected-slit-detail-row brc-expected-slit-detail-head"><span>艇</span><span>内部値</span><span>1年</span><span>直近10</span><span>今節</span><span>先頭差 / 艇身</span></div>
+        ${detailRows}
+        <div class="brc-expected-slit-detail-note">基本：1年80%＋直近10走20%＋場×コース補正${meetUsed?'＋今節ST':''}。1位-2位差 ${gapText}。展示ST・風は想定スリット計算に使用していません。</div>
+      </div>
+    </details>
   </div>`;
 }
 function brcSetAdminRaceToolsUi(active){
