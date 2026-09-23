@@ -32,6 +32,7 @@
 <!-- BRC_AI_PUBLIC_NIGE_ONLY_V1_20260923: public AI prediction UI exposes only the In-escape tab; admin keeps 5 research tabs; prediction/rates/bets unchanged -->
 <!-- BRC_AI_PUBLIC_NIGE_FAILCLOSED_V2_20260923: fail-closed public guard removes any late-injected admin research tabs/panels; display-only, prediction/rates/bets unchanged -->
 <!-- BRC_VENUE_BADGE_AUTH_RETRY_V1_20260923: official venue grade badge hydration retries after auth/session restore; display-only, prediction/rates/bets unchanged -->
+<!-- BRC_VENUE_GRADE_ROMAN_NORMALIZE_V1_20260923: official gradeContext only; normalize full-width/Roman GⅠ/GⅡ/GⅢ and exact officialSeries grade aliases; no title guessing; prediction/rates/bets unchanged -->
 <!DOCTYPE html>
 <!-- BRC_AI_FINAL_EVAL_V10_HEAD_REPLAY_20260922: current Workerを2026-08-26..09-16の過去番組へ再適用し、保存済みstrict OOS delta/TimeX相対差と結合。Worker+TimeX 1着率1位 vs AI頭スコア1位を直接比較する管理者検証。予測本体・着率・買い目は非変更。 -->
 <!-- BRC_AI_FINAL_EVAL_V11_HEAD_REPLAY_AUDIT_20260922: V10 historical current-Worker replay hardening. Pre-filter to strict OOS rows with complete TimeX (3,080R max), record Worker version, deterministic date-cluster bootstrap 95% CI for paired hit-rate delta, and clearly separate current-model replay from strict OOS claims. Prediction/bets unchanged. -->
@@ -16676,21 +16677,38 @@ function brcOfficialVenueBadgeFromContext(ctx){
   if(officialSource !== 'official_schedule_unique') return null;
   if(!officialTitle) return null;
 
-  const seriesRaw=String(ctx.officialSeries||'').trim().toLowerCase();
+  const seriesRaw=String(ctx.officialSeries||'').trim().normalize('NFKC').toLowerCase();
   const seriesKey=seriesRaw
     .replace(/[\s-]+/g,'_')
     .replace(/__+/g,'_');
-  const gradeRaw=String(ctx.officialGrade||'').trim().toUpperCase().replace(/\s+/g,'');
+
+  // 公式側は G3 / ＧⅢ / GⅢ / GIII のように表記が揺れるため、
+  // Unicode互換正規化後にローマ数字だけ数値へ統一する。
+  // あくまで officialGrade / officialSeries の明示値のみを使い、タイトル推測はしない。
+  let gradeRaw=String(ctx.officialGrade||'').trim().normalize('NFKC').toUpperCase().replace(/\s+/g,'');
+  gradeRaw=gradeRaw
+    .replace(/^PGI$/,'PG1')
+    .replace(/^GI$/,'G1')
+    .replace(/^GII$/,'G2')
+    .replace(/^GIII$/,'G3');
 
   // 特殊シリーズは公式 officialSeries の明示値だけで分類。
   // 未知値は推測せず、通常グレード判定へ進む。
   const womenSeries=new Set(['venus','all_ladies','ladies']);
   const rookieSeries=new Set(['rookie','rookie_series']);
   const masterSeries=new Set(['masters','masters_league','master','master_series']);
+  const sgSeries=new Set(['sg']);
+  const g1Series=new Set(['g1','gi','pg1','pgi']);
+  const g2Series=new Set(['g2','gii']);
+  const g3Series=new Set(['g3','giii']);
 
   if(womenSeries.has(seriesKey)) return brcVenueBadgeObj('女子');
   if(rookieSeries.has(seriesKey)) return brcVenueBadgeObj('ルーキー');
   if(masterSeries.has(seriesKey)) return brcVenueBadgeObj('マスター');
+  if(sgSeries.has(seriesKey)) return brcVenueBadgeObj('SG');
+  if(g1Series.has(seriesKey)) return brcVenueBadgeObj('G1');
+  if(g2Series.has(seriesKey)) return brcVenueBadgeObj('G2');
+  if(g3Series.has(seriesKey)) return brcVenueBadgeObj('G3');
 
   // グレードも公式 officialGrade だけを見る。displayGrade は使わない。
   if(gradeRaw==='SG') return brcVenueBadgeObj('SG');
