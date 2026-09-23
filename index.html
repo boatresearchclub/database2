@@ -1,59 +1,7 @@
-<!-- BRC_START_1M_DRAW_FIX_V4_20260923:
-v3座標系を維持し、舟首の基準線手前マージンを1.5%へ拡大。
-v3座標補正CSSを<style id="brc-start-1m-v3-coordinate-fix">
-  /* カード全体基準の旧縦線は使わない */
-  .brc-sl1m-time-line{display:none !important;}
-
-  /* 各コースのtrack内にSTART(22%) / 1M(82%)ラインを描画。
-     舟と同一座標系なのでズレない。背景なので舟より下。 */
-  .brc-sl1m-chart .brc-expected-slit-track{
-    background-image:
-      linear-gradient(to right,
-        transparent 0,
-        transparent calc(22% - 1px),
-        #1769aa calc(22% - 1px),
-        #1769aa calc(22% + 1px),
-        transparent calc(22% + 1px),
-        transparent 100%),
-      linear-gradient(to right,
-        transparent 0,
-        transparent calc(82% - 1px),
-        #1769aa calc(82% - 1px),
-        #1769aa calc(82% + 1px),
-        transparent calc(82% + 1px),
-        transparent 100%);
-    background-repeat:no-repeat;
-    background-size:100% 100%;
-  }
-
-  /* --sl1m-x は舟の中心ではなく「舟首(右端)」位置として扱う */
-  .brc-sl1m-marker{
-    transform:translate(-100%,-50%) !important;
-  }
-
-  /* 舟の後ろにある補助の丸もそのまま左側 */
-  .brc-sl1m-marker::before{
-    left:-6px;
-  }
-
-  /* 時刻ラベルはtrack位置と視覚的に揃える */
-  .brc-sl1m-time-label.start{left:calc(22% + 20px) !important;}
-  .brc-sl1m-time-label.one-m{left:calc(82% + 5px) !important;}
-  @media(max-width:420px){
-    .brc-sl1m-time-label.start{left:calc(22% + 18px) !important;}
-    .brc-sl1m-time-label.one-m{left:calc(82% + 4px) !important;}
-  }
-</style>
-</head>内へ正規化。START/1M算出ロジック・管理者専用・進入変更除外は変更なし。
--->
-<!-- BRC_START_1M_DRAW_FIX_V3_20260923:
-START/1M縦ラインと舟を同一のtrack座標系へ統一。
-舟のleft座標を「舟首位置」とし、translateX(-100%)で舟首が基準線を越えない描画に変更。
-縦ラインは各track背景へ描画し、常に舟の背面。算出ロジックは変更なし。
--->
-<!-- BRC_START_1M_DRAW_FIX_V2_20260923:
-表示修正のみ。START想定艇はSTART線を越えず、1M入口想定艇は1M入口線を越えない。
-各基準線は舟より背面(z-index)へ移動。想定スリット/1M入口算出・管理者専用・進入変更除外は変更なし。
+<!-- BRC_START_1M_DRAW_FIX_V5_20260923:
+正常なtimeline版から再作成。START/1M線を各track背景へ直描画し、舟と完全に同一座標系へ統一。
+舟のleft座標=舟首(右端)、translateX(-100%)。舟首最大位置を各ラインの1.5%手前に固定。
+旧カード全体縦線は非表示。計算ロジック・管理者専用・進入変更除外は変更なし。
 -->
 <!-- BRC_EXPECTED_SLIT_1M_TIMELINE_V1_20260923:
 管理者専用。START(0秒) と 1M入口(約4〜5秒後) を時間軸として左右分離して表示。
@@ -5137,8 +5085,8 @@ body.brc-admin-public-view [data-brc-admin-only="true"]{display:none !important;
   line-height:1.05;
   z-index:6;
 }
-.brc-sl1m-time-label.start{left:calc(22% + 20px);}
-.brc-sl1m-time-label.one-m{left:calc(82% + 5px);}
+.brc-sl1m-time-label.start{left:25%;}
+.brc-sl1m-time-label.one-m{left:82%;}
 .brc-sl1m-time-label .big{display:block;font-size:8.8px;}
 .brc-sl1m-time-label .small{display:block;font-size:7.6px;color:#55728f;font-weight:850;margin-top:1px;}
 .brc-sl1m-time-line{
@@ -5148,11 +5096,12 @@ body.brc-admin-public-view [data-brc-admin-only="true"]{display:none !important;
   width:2px;
   background:#1769aa;
   opacity:.92;
-  z-index:1; /* 舟の背面 */
+  z-index:0;
+  display:none;
   pointer-events:none;
 }
-.brc-sl1m-time-line.start{left:calc(22% + 20px);}
-.brc-sl1m-time-line.one-m{left:calc(82% + 5px);}
+.brc-sl1m-time-line.start{left:26%;}
+.brc-sl1m-time-line.one-m{left:84%;}
 .brc-sl1m-chart .brc-expected-slit-row{
   grid-template-columns:28px minmax(0,1fr) !important;
 }
@@ -5162,16 +5111,24 @@ body.brc-admin-public-view [data-brc-admin-only="true"]{display:none !important;
 .brc-sl1m-chart .brc-expected-slit-track{
   margin-right:0 !important;
   height:34px;
+  position:relative;
+  z-index:2;
+  background-image:
+    linear-gradient(to right,
+      transparent 0, transparent calc(22% - 1px),
+      #1769aa calc(22% - 1px), #1769aa calc(22% + 1px),
+      transparent calc(22% + 1px), transparent 100%),
+    linear-gradient(to right,
+      transparent 0, transparent calc(82% - 1px),
+      #1769aa calc(82% - 1px), #1769aa calc(82% + 1px),
+      transparent calc(82% + 1px), transparent 100%);
+  background-repeat:no-repeat;
+  background-size:100% 100%;
 }
+.brc-sl1m-chart .brc-expected-slit-track::before{z-index:0;}
 .brc-sl1m-chart .brc-expected-slit-body{
   margin-top:18px;
   position:relative;
-  z-index:2;
-}
-.brc-sl1m-chart .brc-expected-slit-track::before{
-  z-index:0;
-}
-.brc-sl1m-chart .brc-expected-slit-track{
   z-index:2;
 }
 .brc-sl1m-marker{
@@ -5182,7 +5139,7 @@ body.brc-admin-public-view [data-brc-admin-only="true"]{display:none !important;
   top:50%;
   width:42px;
   height:18px;
-  transform:translate(-50%,-50%);
+  transform:translate(-100%,-50%);
   border-radius:10px 14px 14px 10px;
   background:var(--boat-bg);
   color:var(--boat-fg);
@@ -5317,10 +5274,10 @@ body.brc-admin-public-view [data-brc-admin-only="true"]{display:none !important;
   .brc-sl1m-marker::before{left:-5px;width:10px;height:6px;}
   .brc-sl1m-chart .brc-expected-slit-direction{padding-left:28px;padding-right:5px;font-size:8.8px;}
   .brc-sl1m-axis-label{font-size:8px;}
-  .brc-sl1m-time-label.start{left:calc(22% + 20px);}
-  .brc-sl1m-time-label.one-m{left:calc(82% + 5px);}
-  .brc-sl1m-time-line.start{left:calc(22% + 20px);}
-  .brc-sl1m-time-line.one-m{left:calc(82% + 5px);}
+  .brc-sl1m-time-label.start{left:25%;}
+  .brc-sl1m-time-label.one-m{left:82%;}
+  .brc-sl1m-time-line.start{left:27%;}
+  .brc-sl1m-time-line.one-m{left:84%;}
   .brc-sl1m-legend{gap:9px;font-size:8.2px;}
   .brc-sl1m-summary{font-size:9.5px;}
   .brc-sl1m-foot{font-size:7.8px;}
@@ -18418,10 +18375,9 @@ function brcExpectedOneMPressureLabel(outerAdv){
 function brcExpectedOneMVisualX(score,anchor,mode){
   const s=Number(score), a=Number(anchor);
   const isOneM=mode==='oneM';
-  // left値は舟の中心ではなく「舟首（右端）」の位置。
-  // START/1Mラインと同じtrack座標なので、最大値をライン手前で固定できる。
+  // track内の縦ラインと同じ座標。left値は舟首（右端）。
   const linePct=isOneM?82:22;
-  const bowMaxPct=linePct-1.5; // 舟首は必ずラインの1.5%手前
+  const bowMaxPct=linePct-1.5;
   if(!Number.isFinite(s)||!Number.isFinite(a)) return bowMaxPct;
   const gap=Math.max(0,Math.min(2.60,s-a));
   const spread=isOneM?10.5:8.0;
@@ -18470,8 +18426,7 @@ function brcBuildExpectedSlitOneMHtml(boats,venue,liveRace){
         .map(x=>{
           const startGapRel=Number(x.calc.score)-Number(startAnchor);
           const oneMGapRel=Number(x.oneM)-Number(oneMAnchor);
-          // 正=相対的に前進、負=相対的に後退
-          const relativeShift=startGapRel-oneMGapRel;
+          const relativeShift=startGapRel-oneMGapRel; // 正=相対的に前進
           return {...x,relativeShift};
         })
         .sort((a,b)=>Math.abs(b.relativeShift)-Math.abs(a.relativeShift))
@@ -24999,5 +24954,3 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closePredictDetail
 </script>
 </body>
 </html>
-
-
