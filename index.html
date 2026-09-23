@@ -1,3 +1,7 @@
+<!-- BRC_START_1M_LINE_SAFE_V2_20260923:
+表示のみ修正。START想定艇はSTART線を越えず、1M入口想定艇は1M入口線を越えない。
+両縦ラインは舟より背面へ。算出式・順位・外圧判定・予測/着率/買い目は非変更。
+-->
 <!-- BRC_EXPECTED_SLIT_1M_TIMELINE_V1_20260923:
 管理者専用。START(0秒) と 1M入口(約4〜5秒後) を時間軸として左右分離して表示。
 左側にSTART想定、右側に1M入口想定を固定。両者は相対隊形のみを表し、実艇身距離ではない。
@@ -5091,7 +5095,8 @@ body.brc-admin-public-view [data-brc-admin-only="true"]{display:none !important;
   width:2px;
   background:#1769aa;
   opacity:.92;
-  z-index:5;
+  z-index:0;
+  pointer-events:none;
 }
 .brc-sl1m-time-line.start{left:26%;}
 .brc-sl1m-time-line.one-m{left:84%;}
@@ -5106,6 +5111,8 @@ body.brc-admin-public-view [data-brc-admin-only="true"]{display:none !important;
   height:34px;
 }
 .brc-sl1m-chart .brc-expected-slit-body{
+  position:relative;
+  z-index:1;
   margin-top:18px;
 }
 .brc-sl1m-marker{
@@ -18351,16 +18358,29 @@ function brcExpectedOneMPressureLabel(outerAdv){
 
 function brcExpectedOneMVisualX(score,anchor,mode){
   const s=Number(score), a=Number(anchor);
+  /*
+   * 表示座標だけを安全化。
+   * START線=26%（mobile 27%）、1M入口線=84%。
+   * 舟は中心座標で配置されるため、右端が各ラインを越えないよう
+   * 数%のクリアランスを残して上限を固定する。
+   * 算出スコア自体には一切影響しない。
+   */
   if(!Number.isFinite(s)||!Number.isFinite(a)){
-    return mode==='oneM' ? 84 : 26;
+    return mode==='oneM' ? 78.5 : 21.5;
   }
   const diff=Math.max(-2.35,Math.min(2.35,s-a));
-  const center=(mode==='oneM') ? 84 : 26;
-  const span=(mode==='oneM') ? 11.0 : 8.5;
+  if(mode==='oneM'){
+    // 1M入口エリア：最前艇でも1M入口線(84%)の手前。
+    const center=78.5;
+    const span=7.2;
+    const x=center-(diff*span);
+    return Math.max(56.0,Math.min(78.5,x));
+  }
+  // STARTエリア：最前艇でもSTART線(26/27%)の手前。
+  const center=21.5;
+  const span=5.2;
   const x=center-(diff*span);
-  const min=(mode==='oneM') ? 62 : 10;
-  const max=(mode==='oneM') ? 96 : 46;
-  return Math.max(min,Math.min(max,x));
+  return Math.max(7.0,Math.min(21.5,x));
 }
 function brcBuildExpectedSlitOneMHtml(boats,venue,liveRace){
   if(brcExpectedSlitEntryChanged(liveRace)){
@@ -18409,7 +18429,7 @@ function brcBuildExpectedSlitOneMHtml(boats,venue,liveRace){
     const course=x.course;
     const c=x.calc;
     if(!c || !Number.isFinite(Number(c.score))){
-      return `<div class="brc-expected-slit-row"><div class="brc-expected-slit-label"><span class="brc-expected-slit-lane lane${course}">${course}</span></div><div class="brc-expected-slit-track"><span class="brc-sl1m-marker start lane${course} no-data" style="--sl1m-x:22%">${course}</span></div></div>`;
+      return `<div class="brc-expected-slit-row"><div class="brc-expected-slit-label"><span class="brc-expected-slit-lane lane${course}">${course}</span></div><div class="brc-expected-slit-track"><span class="brc-sl1m-marker start lane${course} no-data" style="--sl1m-x:21.5%">${course}</span></div></div>`;
     }
     const sx=brcExpectedOneMVisualX(Number(c.score),startAnchor,'start');
     if(!ex.ready || !Number.isFinite(Number(x.oneM))){
