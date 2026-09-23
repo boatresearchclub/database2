@@ -1,3 +1,4 @@
+<!-- BRC_START_1M_FINISH_V8_20260923: START側左余白を拡大し、説明文を1M最前艇の相対前進中心へ改善。算出ロジック不変。 -->
 <!-- BRC_START_1M_LEFT_GUARD_V7_20260923: START想定艇の後方限界を右寄せし、左のコース番号領域へ侵入しない表示ガード。算出ロジック不変。 -->
 <!-- BRC_START_1M_SHIFT_RIGHT_V6_20260923: START→1M想定隊形の表示全体を少し右へシフト。計算ロジックは不変。 -->
 <!-- BRC_START_1M_DRAW_FIX_V5_20260923:
@@ -18392,7 +18393,7 @@ function brcExpectedOneMVisualX(score,anchor,mode){
   const gap=Math.max(0,Math.min(2.60,s-a));
   const spread=isOneM?10.5:8.0;
   const x=bowMaxPct-(gap*spread);
-  const min=isOneM?50.5:12.5; // START側の後方限界。左の艇番エリアへ侵入しない
+  const min=isOneM?50.5:14.5; // START側の後方限界。左の艇番エリアと十分な余白を確保
   return Math.max(min,Math.min(bowMaxPct,x));
 }
 function brcBuildExpectedSlitOneMHtml(boats,venue,liveRace){
@@ -18442,6 +18443,8 @@ function brcBuildExpectedSlitOneMHtml(boats,venue,liveRace){
         .sort((a,b)=>Math.abs(b.relativeShift)-Math.abs(a.relativeShift))
     : [];
   const biggestMove=movementRank.length?movementRank[0]:null;
+  const biggestForward=movementRank.filter(x=>x.relativeShift>0).sort((a,b)=>b.relativeShift-a.relativeShift)[0]||null;
+  const oneMLeadMove=movementRank.find(x=>String(x.course)===String(oneMLead))||null;
 
   const rows=states.map(x=>{
     const course=x.course;
@@ -18471,11 +18474,16 @@ function brcBuildExpectedSlitOneMHtml(boats,venue,liveRace){
   let summary='';
   if(!ex.ready){
     summary=`左側がSTART想定位置、右側が1M入口想定位置です。展示タイムが6艇揃うと、1M入口の相対隊形を追加します。`;
-  }else if(biggestMove && Math.abs(biggestMove.relativeShift)>=0.20){
-    const dir = biggestMove.relativeShift > 0 ? '前進し' : '後方に下がり';
-    summary=`STARTでは${startLead}号艇が先行想定。${biggestMove.course}号艇が展示タイムで${dir}、1M入口では${oneMLead}号艇が最前想定です。`;
+  }else if(String(startLead)!==String(oneMLead)){
+    if(oneMLeadMove && oneMLeadMove.relativeShift>=0.10){
+      summary=`STARTでは${startLead}号艇が先行想定。展示タイム補正で${oneMLead}号艇が相対的に前進し、1M入口では${oneMLead}号艇が最前想定です。`;
+    }else{
+      summary=`STARTでは${startLead}号艇が先行想定。展示タイム補正で隊形が変化し、1M入口では${oneMLead}号艇が最前想定です。`;
+    }
+  }else if(biggestForward && biggestForward.relativeShift>=0.20 && String(biggestForward.course)!==String(oneMLead)){
+    summary=`STARTでは${startLead}号艇が先行想定。${biggestForward.course}号艇が展示タイム補正で相対的に前進しますが、1M入口でも${oneMLead}号艇が最前想定です。`;
   }else{
-    summary=`STARTでは${startLead}号艇が先行想定。1M入口でも${oneMLead}号艇が前側の想定で、大きな隊形変化は小さめです。`;
+    summary=`STARTでは${startLead}号艇が先行想定。1M入口でも${oneMLead}号艇が最前想定で、大きな隊形変化は小さめです。`;
   }
 
   const headerOneM=ex.ready
