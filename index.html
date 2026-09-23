@@ -1,3 +1,4 @@
+<!-- BRC_START_1M_LEFT_GUARD_V7_20260923: START想定艇の後方限界を右寄せし、左のコース番号領域へ侵入しない表示ガード。算出ロジック不変。 -->
 <!-- BRC_START_1M_SHIFT_RIGHT_V6_20260923: START→1M想定隊形の表示全体を少し右へシフト。計算ロジックは不変。 -->
 <!-- BRC_START_1M_DRAW_FIX_V5_20260923:
 正常なtimeline版から再作成。START/1M線を各track背景へ直描画し、舟と完全に同一座標系へ統一。
@@ -5285,6 +5286,14 @@ body.brc-admin-public-view [data-brc-admin-only="true"]{display:none !important;
 }
 </style>
 
+
+
+<style id="brc-start-left-guard-v7">
+  /* START想定艇は左のコース番号エリアへ視覚的に侵入しない */
+  .brc-sl1m-chart .brc-expected-slit-track{overflow:visible;}
+  .brc-sl1m-marker.start{max-width:42px;}
+  @media(max-width:420px){.brc-sl1m-marker.start{max-width:39px;}}
+</style>
 
 </head>
 <body>
@@ -18376,14 +18385,14 @@ function brcExpectedOneMPressureLabel(outerAdv){
 function brcExpectedOneMVisualX(score,anchor,mode){
   const s=Number(score), a=Number(anchor);
   const isOneM=mode==='oneM';
-  // left値は舟首（右端）位置。表示全体を少し右へシフト。
+  // left値は舟首（右端）位置。START側は左のコース番号領域へ入らないよう下限を固定。
   const linePct=isOneM?84.5:24.5;
   const bowMaxPct=linePct-1.5; // 舟首は必ずラインの1.5%手前
   if(!Number.isFinite(s)||!Number.isFinite(a)) return bowMaxPct;
   const gap=Math.max(0,Math.min(2.60,s-a));
   const spread=isOneM?10.5:8.0;
   const x=bowMaxPct-(gap*spread);
-  const min=isOneM?50.5:7.0; // 左端も少し右へ
+  const min=isOneM?50.5:12.5; // START側の後方限界。左の艇番エリアへ侵入しない
   return Math.max(min,Math.min(bowMaxPct,x));
 }
 function brcBuildExpectedSlitOneMHtml(boats,venue,liveRace){
