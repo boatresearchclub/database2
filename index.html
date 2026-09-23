@@ -1,3 +1,4 @@
+<!-- BRC_START_1M_SHIFT_RIGHT_V6_20260923: START→1M想定隊形の表示全体を少し右へシフト。計算ロジックは不変。 -->
 <!-- BRC_START_1M_DRAW_FIX_V5_20260923:
 正常なtimeline版から再作成。START/1M線を各track背景へ直描画し、舟と完全に同一座標系へ統一。
 舟のleft座標=舟首(右端)、translateX(-100%)。舟首最大位置を各ラインの1.5%手前に固定。
@@ -5115,13 +5116,13 @@ body.brc-admin-public-view [data-brc-admin-only="true"]{display:none !important;
   z-index:2;
   background-image:
     linear-gradient(to right,
-      transparent 0, transparent calc(22% - 1px),
-      #1769aa calc(22% - 1px), #1769aa calc(22% + 1px),
-      transparent calc(22% + 1px), transparent 100%),
+      transparent 0, transparent calc(24.5% - 1px),
+      #1769aa calc(24.5% - 1px), #1769aa calc(24.5% + 1px),
+      transparent calc(24.5% + 1px), transparent 100%),
     linear-gradient(to right,
-      transparent 0, transparent calc(82% - 1px),
-      #1769aa calc(82% - 1px), #1769aa calc(82% + 1px),
-      transparent calc(82% + 1px), transparent 100%);
+      transparent 0, transparent calc(84.5% - 1px),
+      #1769aa calc(84.5% - 1px), #1769aa calc(84.5% + 1px),
+      transparent calc(84.5% + 1px), transparent 100%);
   background-repeat:no-repeat;
   background-size:100% 100%;
 }
@@ -18375,14 +18376,14 @@ function brcExpectedOneMPressureLabel(outerAdv){
 function brcExpectedOneMVisualX(score,anchor,mode){
   const s=Number(score), a=Number(anchor);
   const isOneM=mode==='oneM';
-  // track内の縦ラインと同じ座標。left値は舟首（右端）。
-  const linePct=isOneM?82:22;
-  const bowMaxPct=linePct-1.5;
+  // left値は舟首（右端）位置。表示全体を少し右へシフト。
+  const linePct=isOneM?84.5:24.5;
+  const bowMaxPct=linePct-1.5; // 舟首は必ずラインの1.5%手前
   if(!Number.isFinite(s)||!Number.isFinite(a)) return bowMaxPct;
   const gap=Math.max(0,Math.min(2.60,s-a));
   const spread=isOneM?10.5:8.0;
   const x=bowMaxPct-(gap*spread);
-  const min=isOneM?48:4.5;
+  const min=isOneM?50.5:7.0; // 左端も少し右へ
   return Math.max(min,Math.min(bowMaxPct,x));
 }
 function brcBuildExpectedSlitOneMHtml(boats,venue,liveRace){
@@ -18437,7 +18438,7 @@ function brcBuildExpectedSlitOneMHtml(boats,venue,liveRace){
     const course=x.course;
     const c=x.calc;
     if(!c || !Number.isFinite(Number(c.score))){
-      return `<div class="brc-expected-slit-row"><div class="brc-expected-slit-label"><span class="brc-expected-slit-lane lane${course}">${course}</span></div><div class="brc-expected-slit-track"><span class="brc-sl1m-marker start lane${course} no-data" style="--sl1m-x:18%">${course}</span></div></div>`;
+      return `<div class="brc-expected-slit-row"><div class="brc-expected-slit-label"><span class="brc-expected-slit-lane lane${course}">${course}</span></div><div class="brc-expected-slit-track"><span class="brc-sl1m-marker start lane${course} no-data" style="--sl1m-x:20.5%">${course}</span></div></div>`;
     }
     const sx=brcExpectedOneMVisualX(Number(c.score),startAnchor,'start');
     if(!ex.ready || !Number.isFinite(Number(x.oneM))){
