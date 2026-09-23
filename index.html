@@ -18,7 +18,7 @@
 <!-- BRC_VENUE_CATEGORY_BADGES_V5_STRICT_20260919: venue badges are shown ONLY after Worker official gradeContext confirms officialResolved=true and officialAmbiguous=false; no title guessing / no hardcoded schedule fallback; unresolved means no badge; uniform card width; prediction logic unchanged -->
 <!-- BRC_GRADE_PROD_INDEX_V1_20260919: official G1/G2 metadata activation for brc-api; prediction changes are Worker-gated; unrelated UI/logic unchanged -->
 <!-- BRC_PREDICT_GUIDE_TOP_V1_20260919: beginner/betting guide moved above venue/day race summary; prediction logic unchanged -->
-<!-- BRC_ADMIN_ORIGINAL_EXHIBITION_V1_20260918: 出走データ下に1周/回り足/直線/展示を管理者限定表示。live展示payloadをそのまま表示し予測ロジック非変更 -->
+<!-- BRC_ORIGINAL_EXHIBITION_PUBLIC_V2_20260923: 出走データ下の1周/回り足/直線/展示を一般公開。live展示payloadをそのまま表示し予測ロジック・着率・買い目は非変更 -->
 <!-- BRC_SPECIAL_TAB_REMOVED_20260918: 特集タブをメインメニューから非表示。特集本体/既存ロジックは保持 -->
 <!-- BRC_MOTOR7_UNIFIED_UI_V44_20260918: verified 7 venues use the same BRC motor analysis UI as Tokuyama -->
 <!-- BRC_NIGE_ALPHA_TOPRIGHT_V1_20260918: イン逃げ予測2着/3着の±αを出走データ同様の右上色付きバッジへ -->
@@ -4746,8 +4746,8 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
 
 
 <style id="brc-admin-original-exhibition-v1-style">
-/* BRC_ADMIN_ORIGINAL_EXHIBITION_V1_20260918
-   管理者確認用。表示のみでBRCタイムX・確率・AI判定・買い目には一切加点しない。 */
+/* BRC_ORIGINAL_EXHIBITION_PUBLIC_V2_20260923
+   一般公開。表示のみでBRCタイムX・確率・AI判定・買い目には一切加点しない。 */
 .brc-admin-original-exhibition{
   display:none;
   margin:12px 0 13px;
@@ -6382,8 +6382,8 @@ function brcSetAdminSocialUi(user=null){
   try{ if(typeof window.brcSetAdminWorkspaceUi==='function') window.brcSetAdminWorkspaceUi(BRC_ADMIN_ACTIVE); }catch(_e){}
   try{ if(typeof window.brcSetAdminHubUi==='function') window.brcSetAdminHubUi(BRC_ADMIN_ACTIVE); }catch(_e){}
   try{ if(typeof brcSetUxPreviewAdminUi==='function') brcSetUxPreviewAdminUi(BRC_ADMIN_ACTIVE); }catch(_e){}
-  try{ if(typeof brcSetAdminOriginalExhibitionUi==='function') brcSetAdminOriginalExhibitionUi(BRC_ADMIN_ACTIVE); }catch(_e){}
-  try{ if(BRC_ADMIN_ACTIVE && typeof brcRenderAdminOriginalExhibition==='function') brcRenderAdminOriginalExhibition(window.__currentLiveExhibition||null); }catch(_e){}
+  try{ if(typeof brcSetAdminOriginalExhibitionUi==='function') brcSetAdminOriginalExhibitionUi(true); }catch(_e){}
+  try{ if(typeof brcRenderAdminOriginalExhibition==='function') brcRenderAdminOriginalExhibition(window.__currentLiveExhibition||null); }catch(_e){}
   if(box){
     box.classList.toggle('is-visible',BRC_ADMIN_ACTIVE);
     box.setAttribute('aria-hidden',BRC_ADMIN_ACTIVE?'false':'true');
@@ -17715,7 +17715,7 @@ function brcRenderAdminOriginalExhibition(liveRace=window.__currentLiveExhibitio
   const box=document.getElementById('brcAdminOriginalExhibition');
   if(!box) return;
   box.innerHTML=brcBuildAdminOriginalExhibitionHtml(liveRace||null);
-  brcSetAdminOriginalExhibitionUi(BRC_ADMIN_ACTIVE);
+  brcSetAdminOriginalExhibitionUi(true);
 }
 
 function buildWindPanelHtml(venue){
@@ -19469,12 +19469,12 @@ async function runPredict(){
       </tbody>
     </table>
     </div>
-    <section id="brcAdminOriginalExhibition" class="brc-admin-original-exhibition brc-admin-only" aria-hidden="true"></section>
+    <section id="brcAdminOriginalExhibition" class="brc-admin-original-exhibition" aria-hidden="true"></section>
     
     ${buildWindPanelHtml(venue)}
   `;
   try{ brcRenderAdminOriginalExhibition(liveExhibitionRace); }catch(_e){}
-  try{ brcSetAdminOriginalExhibitionUi(BRC_ADMIN_ACTIVE); }catch(_e){}
+  try{ brcSetAdminOriginalExhibitionUi(true); }catch(_e){}
   try{ brcEnsureCurrentRaceResultMonitor(); }catch(_e){}
 
   renderPredictAiPanel(boats, workerPrediction, localInReliability, exhibitionApplied);
