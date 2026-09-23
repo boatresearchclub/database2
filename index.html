@@ -1,4 +1,11 @@
-<!-- BRC_EXPECTED_SLIT_UI_CLEAN_V2_20260923: 管理者専用想定スリット。表面の内部スコア表示を廃止し、想定先行・隊形信頼度・隊形図を主表示。内部スコア/補正値は折りたたみ詳細のみ。START表記へ変更。計算ロジック・進入変更除外・展示ST/風不使用は維持。 -->
+<!-- BRC_EXPECTED_SLIT_1M_DUAL_V1_20260923:
+管理者専用。既存の想定スリット算出は維持し、展示タイムが6艇揃った場合のみ
+1M入口相対隊形 = 想定スリットスコア + 12.5×(展示タイム-レース平均展示)
+を追加描画。進入変更レースは既存仕様どおり対象外。
+薄い舟=START想定、濃い舟=1M入口想定。位置は相対表示で実艇身距離を意味しない。
+予測/着率/買い目/展示スリット評価ロジックは非変更。
+-->
+<!-- BRC_EXPECTED_SLIT_UI_SAFE_HIDE_SCORE_20260923: working Ver.1 base. 管理者専用・計算ロジック不変。表面のS/内部スコア数値のみCSSで非表示。BASE表記のみSTARTへ変更。 -->
 <!-- BRC_EXPECTED_SLIT_V1_OOS_20260923: 管理者専用。進入変更レースは想定スリット対象外。通常進入のみで、当該コース1年ST順位80%＋直近10走ST順位20%を基礎とし、2024-2025通常進入で学習した会場×コース残差補正を加える。今節ST順位は取得値がある場合のみ走数別10/20/25%で反映。展示ST・風は想定スリット計算に不使用。2026-01-01〜09-22 OOSで前後関係約63.0%、最速艇一致約36.2%。予測/着率/買い目ロジック非変更 -->
 <!-- BRC_ADMIN_ST_RECENT10_V3_20260923: admin-only current-course latest-10 average ST plus average of each historical race ST rank; no current-six comparison; F/L excluded from player averages; display-only, prediction/rates/slit/bets unchanged -->
 <!-- BRC_SLIT_STRONG_BANNER_RESTORE_V1_20260923: 展示差0.10秒以上+平均ST順位差0.50位以上の強条件成立時、A/B数値行が無くても展示スリット評価バナーを表示。表示のみ、予測/着率/買い目ロジック非変更 -->
@@ -4882,11 +4889,11 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
 .brc-expected-slit-chart::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(180deg,rgba(255,255,255,.0) 0,rgba(255,255,255,.0) 30px,rgba(255,255,255,.42) 31px,rgba(255,255,255,.42) 32px);pointer-events:none;}
 .brc-expected-slit-direction{position:relative;z-index:2;height:22px;display:flex;align-items:center;justify-content:flex-end;padding-right:10px;font-size:9.5px;font-weight:900;color:#1769aa;}
 .brc-expected-slit-body{position:relative;z-index:2;}
-.brc-expected-slit-row{display:grid;grid-template-columns:30px minmax(0,1fr);align-items:center;height:34px;}
-.brc-expected-slit-label{display:flex;align-items:center;justify-content:center;min-width:0;}
+.brc-expected-slit-row{display:grid;grid-template-columns:72px minmax(0,1fr);align-items:center;height:34px;}
+.brc-expected-slit-label{display:flex;align-items:center;gap:5px;min-width:0;}
 .brc-expected-slit-lane{width:21px;height:21px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:10.5px;font-weight:950;line-height:1;border:1px solid rgba(10,31,51,.14);}
 .brc-expected-slit-lane.lane1{background:var(--lane1);color:var(--lane1-text);border-color:#718096;}.brc-expected-slit-lane.lane2{background:var(--lane2);color:var(--lane2-text);border-color:var(--lane2);}.brc-expected-slit-lane.lane3{background:var(--lane3);color:var(--lane3-text);border-color:var(--lane3);}.brc-expected-slit-lane.lane4{background:var(--lane4);color:var(--lane4-text);border-color:var(--lane4);}.brc-expected-slit-lane.lane5{background:var(--lane5);color:var(--lane5-text);border-color:#c4972d;}.brc-expected-slit-lane.lane6{background:var(--lane6);color:var(--lane6-text);border-color:var(--lane6);}
-.brc-expected-slit-rank{display:none!important;}
+.brc-expected-slit-rank{font-size:10.5px;font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums;white-space:nowrap;}
 .brc-expected-slit-track{position:relative;height:30px;margin-right:15px;}
 .brc-expected-slit-track::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(23,105,170,.22);transform:translateY(-50%);}
 .brc-expected-slit-start-line{position:absolute;right:15px;top:25px;bottom:8px;width:2px;background:#0877d1;z-index:3;box-shadow:0 0 0 1px rgba(255,255,255,.35);}
@@ -4896,25 +4903,12 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
 .brc-expected-slit-boat.lane1{--boat-bg:#fff;--boat-fg:#0a1f33;}.brc-expected-slit-boat.lane2{--boat-bg:var(--lane2);--boat-fg:#fff;}.brc-expected-slit-boat.lane3{--boat-bg:var(--lane3);--boat-fg:#fff;}.brc-expected-slit-boat.lane4{--boat-bg:var(--lane4);--boat-fg:#fff;}.brc-expected-slit-boat.lane5{--boat-bg:var(--lane5);--boat-fg:#172033;}.brc-expected-slit-boat.lane6{--boat-bg:var(--lane6);--boat-fg:#fff;}
 .brc-expected-slit-boat.no-data{opacity:.35;transform:translate(-28px,-50%);}
 .brc-expected-slit-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:7px 2px 0;font-size:8.8px;line-height:1.45;color:var(--ink-soft);}
-.brc-expected-slit-read{margin:8px 2px 0;font-size:10.5px;line-height:1.55;font-weight:800;color:var(--navy);}
-.brc-expected-slit-detail{margin:8px 0 0;border-top:1px dashed rgba(10,31,51,.12);padding-top:6px;}
-.brc-expected-slit-detail>summary{list-style:none;cursor:pointer;user-select:none;font-size:9.5px;font-weight:850;color:var(--ink-soft);display:flex;align-items:center;justify-content:space-between;padding:2px 2px;}
-.brc-expected-slit-detail>summary::-webkit-details-marker{display:none;}
-.brc-expected-slit-detail>summary::after{content:'＋';font-size:11px;}
-.brc-expected-slit-detail[open]>summary::after{content:'−';}
-.brc-expected-slit-detail-body{margin-top:6px;padding:7px 8px;border-radius:8px;background:rgba(10,31,51,.025);font-size:8.8px;line-height:1.55;color:var(--ink-soft);}
-.brc-expected-slit-detail-row{display:grid;grid-template-columns:24px repeat(5,minmax(0,1fr));gap:3px;align-items:center;padding:3px 0;border-top:1px solid rgba(10,31,51,.055);font-variant-numeric:tabular-nums;}
-.brc-expected-slit-detail-row:first-child{border-top:0;}
-.brc-expected-slit-detail-row strong{color:var(--navy);}
-.brc-expected-slit-detail-head{font-size:8px;font-weight:900;color:var(--ink-soft);}
-.brc-expected-slit-detail-note{margin-top:5px;font-size:8.3px;line-height:1.45;color:var(--ink-soft);}
-
 .brc-expected-slit-scale{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-weight:850;color:var(--navy);}
 .brc-expected-slit-scale-line{display:inline-block;width:46px;height:5px;border-left:1px solid rgba(10,31,51,.45);border-right:1px solid rgba(10,31,51,.45);border-bottom:1px solid rgba(10,31,51,.45);}
 @media(max-width:420px){
   .brc-admin-race-tool-tab{font-size:10.5px;padding:9px 2px;letter-spacing:-.02em;}
   .brc-admin-race-tool-panel{padding:8px 7px 9px;}
-  .brc-expected-slit-row{grid-template-columns:28px minmax(0,1fr);height:32px;}
+  .brc-expected-slit-row{grid-template-columns:67px minmax(0,1fr);height:32px;}
   .brc-expected-slit-label{gap:4px;}.brc-expected-slit-lane{width:20px;height:20px;font-size:10px;}.brc-expected-slit-rank{font-size:10px;}
   .brc-expected-slit-track{margin-right:13px;}.brc-expected-slit-start-line{right:13px;}.brc-expected-slit-start-label{right:19px;}
   .brc-expected-slit-boat{width:42px;height:18px;font-size:9px;}
@@ -5039,6 +5033,214 @@ body.brc-admin-public-view [data-brc-admin-only="true"]{display:none !important;
 @media(max-width:520px){
   .brc-admin-view-switch{max-width:none;}
   .brc-admin-view-restore{right:9px;bottom:10px;font-size:10.5px;padding:8px 11px;}
+}
+</style>
+
+
+<style id="brc-expected-slit-safe-score-hide">
+  /* SAFE PATCH: 想定スリットの内部スコアは計算に残し、表面だけ非表示 */
+  .brc-expected-slit-rank{display:none !important;}
+  .brc-expected-slit-label{justify-content:center !important;}
+  .brc-expected-slit-row{grid-template-columns:32px minmax(0,1fr) !important;}
+  @media(max-width:420px){
+    .brc-expected-slit-row{grid-template-columns:28px minmax(0,1fr) !important;}
+  }
+</style>
+
+
+<style id="brc-start-1m-dual-v1">
+/* BRC START + 1M入口：管理者専用の相対隊形表示 */
+.brc-sl1m-chart{
+  padding:7px 6px 9px !important;
+}
+.brc-sl1m-chart .brc-expected-slit-direction{
+  justify-content:space-between;
+  padding:0 7px 0 33px;
+}
+.brc-sl1m-axis-label{
+  font-size:8.5px;
+  color:#55728f;
+  font-weight:850;
+}
+.brc-sl1m-chart .brc-expected-slit-start-line{
+  left:58%;
+  right:auto;
+  top:25px;
+  bottom:8px;
+  width:2px;
+}
+.brc-sl1m-chart .brc-expected-slit-start-label{
+  left:58%;
+  right:auto;
+  top:3px;
+  transform:translateX(-50%);
+}
+.brc-sl1m-chart .brc-expected-slit-row{
+  grid-template-columns:28px minmax(0,1fr) !important;
+}
+.brc-sl1m-chart .brc-expected-slit-label{
+  justify-content:center !important;
+}
+.brc-sl1m-chart .brc-expected-slit-track{
+  margin-right:0 !important;
+  height:32px;
+}
+.brc-sl1m-marker{
+  --boat-bg:#fff;
+  --boat-fg:#0a1f33;
+  position:absolute;
+  left:var(--sl1m-x);
+  top:50%;
+  width:42px;
+  height:18px;
+  transform:translate(-50%,-50%);
+  border-radius:10px 14px 14px 10px;
+  background:var(--boat-bg);
+  color:var(--boat-fg);
+  border:1px solid rgba(10,31,51,.30);
+  box-shadow:0 2px 4px rgba(10,31,51,.13);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:9px;
+  font-weight:950;
+  line-height:1;
+  z-index:3;
+  transition:left .18s ease;
+}
+.brc-sl1m-marker::before{
+  content:"";
+  position:absolute;
+  left:-6px;
+  top:50%;
+  width:11px;
+  height:7px;
+  transform:translateY(-50%);
+  border-radius:50%;
+  background:rgba(255,255,255,.90);
+  box-shadow:0 1px 2px rgba(10,31,51,.12);
+}
+.brc-sl1m-marker.lane1{--boat-bg:#fff;--boat-fg:#0a1f33;}
+.brc-sl1m-marker.lane2{--boat-bg:var(--lane2);--boat-fg:#fff;}
+.brc-sl1m-marker.lane3{--boat-bg:var(--lane3);--boat-fg:#fff;}
+.brc-sl1m-marker.lane4{--boat-bg:var(--lane4);--boat-fg:#fff;}
+.brc-sl1m-marker.lane5{--boat-bg:var(--lane5);--boat-fg:#172033;}
+.brc-sl1m-marker.lane6{--boat-bg:var(--lane6);--boat-fg:#fff;}
+
+.brc-sl1m-marker.start{
+  z-index:2;
+  opacity:.30;
+  box-shadow:none;
+  filter:saturate(.55);
+  border-style:dashed;
+}
+.brc-sl1m-marker.one-m{
+  z-index:4;
+}
+.brc-sl1m-marker.no-data{
+  opacity:.20;
+}
+.brc-sl1m-move{
+  position:absolute;
+  left:var(--move-left);
+  top:50%;
+  width:var(--move-width);
+  height:0;
+  border-top:1.5px dashed rgba(23,105,170,.58);
+  transform:translateY(-50%);
+  z-index:1;
+}
+.brc-sl1m-move.forward::after{
+  content:"";
+  position:absolute;
+  right:-1px;
+  top:-4px;
+  border-top:3.5px solid transparent;
+  border-bottom:3.5px solid transparent;
+  border-left:5px solid rgba(23,105,170,.72);
+}
+.brc-sl1m-move.back::before{
+  content:"";
+  position:absolute;
+  left:-1px;
+  top:-4px;
+  border-top:3.5px solid transparent;
+  border-bottom:3.5px solid transparent;
+  border-right:5px solid rgba(23,105,170,.72);
+}
+.brc-sl1m-legend{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  margin:7px 2px 0;
+  font-size:8.8px;
+  font-weight:800;
+  color:var(--ink-soft);
+}
+.brc-sl1m-legend-item{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  white-space:nowrap;
+}
+.brc-sl1m-dot{
+  display:inline-block;
+  width:22px;
+  height:9px;
+  border-radius:6px 8px 8px 6px;
+  border:1px solid #6d7d8f;
+  background:#fff;
+}
+.brc-sl1m-dot.start{opacity:.32;border-style:dashed;}
+.brc-sl1m-dot.one-m{background:#2769b8;border-color:#205b9e;}
+.brc-sl1m-summary{
+  margin:8px 2px 0;
+  font-size:10px;
+  line-height:1.55;
+  font-weight:850;
+  color:var(--navy);
+}
+.brc-sl1m-status{
+  display:inline-flex;
+  align-items:center;
+  padding:2px 6px;
+  margin-left:4px;
+  border-radius:999px;
+  font-size:8.5px;
+  font-weight:950;
+  line-height:1;
+  vertical-align:1px;
+  border:1px solid rgba(10,31,51,.12);
+}
+.brc-sl1m-status.weak{color:#667085;background:#f2f4f7;}
+.brc-sl1m-status.some{color:#805700;background:#fff8e1;border-color:#ead9a1;}
+.brc-sl1m-status.strong{color:#b4232c;background:#fff1f2;border-color:#fecdd3;}
+.brc-sl1m-status.very-strong{color:#fff;background:#d1373f;border-color:#d1373f;}
+.brc-sl1m-wait{
+  color:#667085;
+  background:#f2f4f7;
+  border:1px solid #e1e5ea;
+}
+.brc-sl1m-foot{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:8px;
+  margin:6px 2px 0;
+  font-size:8.2px;
+  line-height:1.45;
+  color:var(--ink-soft);
+}
+@media(max-width:420px){
+  .brc-sl1m-chart .brc-expected-slit-row{grid-template-columns:25px minmax(0,1fr) !important;height:31px;}
+  .brc-sl1m-marker{width:39px;height:17px;font-size:8.5px;}
+  .brc-sl1m-marker::before{left:-5px;width:10px;height:6px;}
+  .brc-sl1m-chart .brc-expected-slit-direction{padding-left:28px;padding-right:5px;font-size:8.8px;}
+  .brc-sl1m-axis-label{font-size:8px;}
+  .brc-sl1m-legend{gap:9px;font-size:8.2px;}
+  .brc-sl1m-summary{font-size:9.5px;}
+  .brc-sl1m-foot{font-size:7.8px;}
 }
 </style>
 
@@ -18075,68 +18277,174 @@ function brcBuildExpectedSlitHtml(boats,venue,liveRace){
   const topGap=valid.length>=2?Number(valid[1].calc.score)-Number(valid[0].calc.score):null;
   const conf=brcExpectedSlitConfidence(topGap);
   const meetUsed=states.some(x=>Number(x?.calc?.meetW)>0);
-  const leadCourse=valid.length?valid[0].course:'―';
-  const secondCourse=valid.length>=2?valid[1].course:'―';
-
   const rows=states.map(x=>{
     const course=x.course, c=x.calc;
     if(!c || !Number.isFinite(Number(c.score))){
-      return `<div class="brc-expected-slit-row"><div class="brc-expected-slit-label"><span class="brc-expected-slit-lane lane${course}">${course}</span></div><div class="brc-expected-slit-track"><span class="brc-expected-slit-boat lane${course} no-data">${course}</span></div></div>`;
+      return `<div class="brc-expected-slit-row"><div class="brc-expected-slit-label"><span class="brc-expected-slit-lane lane${course}">${course}</span><span class="brc-expected-slit-rank">―</span></div><div class="brc-expected-slit-track"><span class="brc-expected-slit-boat lane${course} no-data">${course}</span></div></div>`;
     }
     const gap=Math.max(0,Number(c.score)-Number(best));
     const behindBoat=brcExpectedSlitBoatDistance(gap);
     const offsetPct=-(behindBoat*100);
-    return `<div class="brc-expected-slit-row"><div class="brc-expected-slit-label"><span class="brc-expected-slit-lane lane${course}">${course}</span></div><div class="brc-expected-slit-track"><span class="brc-expected-slit-boat lane${course}" style="--slit-offset:${offsetPct.toFixed(2)}%">${course}</span></div></div>`;
+    const detail=[
+      `想定スコア ${c.score.toFixed(2)}`,
+      `1年 ${Number(c.yearRank).toFixed(2)}`,
+      c.recentUsed&&Number.isFinite(c.recentRank)?`直近10 ${c.recentRank.toFixed(2)}`:null,
+      c.meetW>0&&c.meet?`今節 ${c.meet.rank.toFixed(2)} / N=${c.meet.n} / ${Math.round(c.meetW*100)}%`:null,
+      `場×コース補正 ${c.venueCorr>=0?'+':''}${c.venueCorr.toFixed(2)}`,
+      `先頭差 ${gap.toFixed(2)} / 約${behindBoat.toFixed(2)}艇身`
+    ].filter(Boolean).join(' / ');
+    return `<div class="brc-expected-slit-row"><div class="brc-expected-slit-label"><span class="brc-expected-slit-lane lane${course}">${course}</span><span class="brc-expected-slit-rank">S ${c.score.toFixed(2)}</span></div><div class="brc-expected-slit-track"><span class="brc-expected-slit-boat lane${course}" style="--slit-offset:${offsetPct.toFixed(2)}%" title="${detail}">${course}</span></div></div>`;
   }).join('');
-
-  let readText='隊形差を判定できるデータが不足しています。';
-  if(Number.isFinite(topGap)){
-    if(topGap<0.10) readText=`${leadCourse}号艇がわずかに先行想定。${secondCourse}号艇との差は小さく、ほぼ横一線です。`;
-    else if(topGap<0.25) readText=`${leadCourse}号艇が先行想定ですが、${secondCourse}号艇との差は小さく、横一線に近い隊形です。`;
-    else if(topGap<0.75) readText=`${leadCourse}号艇が先行想定。${secondCourse}号艇より一歩前に出る隊形です。`;
-    else if(topGap<1.00) readText=`${leadCourse}号艇の先行がやや明確な隊形です。`;
-    else if(topGap<1.50) readText=`${leadCourse}号艇の先行が明確な隊形です。`;
-    else readText=`${leadCourse}号艇が大きく先行する想定で、隊形差も強く出ています。`;
-  }
-
-  const detailRows=states.map(x=>{
-    const c=x.calc;
-    if(!c || !Number.isFinite(Number(c.score))){
-      return `<div class="brc-expected-slit-detail-row"><strong>${x.course}</strong><span>―</span><span>―</span><span>―</span><span>―</span><span>―</span></div>`;
-    }
-    const gap=Math.max(0,Number(c.score)-Number(best));
-    const behindBoat=brcExpectedSlitBoatDistance(gap);
-    const recentTxt=c.recentUsed&&Number.isFinite(c.recentRank)?c.recentRank.toFixed(2):'―';
-    const meetTxt=c.meetW>0&&c.meet?`${c.meet.rank.toFixed(2)} (${Math.round(c.meetW*100)}%)`:'―';
-    const corrTxt=`${c.venueCorr>=0?'+':''}${c.venueCorr.toFixed(2)}`;
-    return `<div class="brc-expected-slit-detail-row"><strong>${x.course}</strong><span>${c.score.toFixed(2)}</span><span>${Number(c.yearRank).toFixed(2)}</span><span>${recentTxt}</span><span>${meetTxt}</span><span>${gap.toFixed(2)} / ${behindBoat.toFixed(2)}艇身</span></div>`;
-  }).join('');
-
+  const leadCourse=valid.length?valid[0].course:'―';
   const gapText=Number.isFinite(topGap)?topGap.toFixed(2):'―';
   return `<div class="brc-expected-slit">
-    <div class="brc-expected-slit-head">
-      <div>
-        <div class="brc-expected-slit-title">想定スリット</div>
-        <div class="brc-expected-slit-sub">想定先行：${leadCourse}号艇　<span>隊形信頼度：</span><span class="brc-expected-slit-confidence ${conf.key}">${conf.label}</span></div>
-      </div>
-      <div class="brc-expected-slit-meta">右が進行方向</div>
-    </div>
+    <div class="brc-expected-slit-head"><div><div class="brc-expected-slit-title">想定スリット Ver.1</div><div class="brc-expected-slit-sub">想定先行：${leadCourse}号艇　<span class="brc-expected-slit-confidence ${conf.key}">${conf.label}</span></div></div><div class="brc-expected-slit-meta">右が進行方向<br>先頭艇を基準</div></div>
     <div class="brc-expected-slit-chart">
       <div class="brc-expected-slit-direction">進行方向 →</div>
       <span class="brc-expected-slit-start-label">START</span><span class="brc-expected-slit-start-line" aria-hidden="true"></span>
       <div class="brc-expected-slit-body">${rows}</div>
     </div>
-    <div class="brc-expected-slit-read">${readText}</div>
-    <details class="brc-expected-slit-detail">
-      <summary>算出詳細</summary>
-      <div class="brc-expected-slit-detail-body">
-        <div class="brc-expected-slit-detail-row brc-expected-slit-detail-head"><span>艇</span><span>内部値</span><span>1年</span><span>直近10</span><span>今節</span><span>先頭差 / 艇身</span></div>
-        ${detailRows}
-        <div class="brc-expected-slit-detail-note">基本：1年80%＋直近10走20%＋場×コース補正${meetUsed?'＋今節ST':''}。1位-2位差 ${gapText}。展示ST・風は想定スリット計算に使用していません。</div>
-      </div>
-    </details>
+    <div class="brc-expected-slit-foot"><span>1年80%＋直近10走20%＋場×コース補正${meetUsed?'＋今節ST':''} / 1位-2位差 ${gapText}</span><span>展示ST・風は不使用</span></div>
   </div>`;
 }
+
+function brcExpectedOneMExhibitionTimes(liveRace){
+  const source=Array.isArray(liveRace?.boats)?liveRace.boats:[];
+  const map=new Map();
+  source.forEach(b=>{
+    const boat=Number(b?.boat_no);
+    const v=Number(b?.exhibition_time);
+    if(Number.isInteger(boat)&&boat>=1&&boat<=6&&Number.isFinite(v)&&v>0) map.set(boat,v);
+  });
+  const complete=Array.from({length:6},(_,i)=>i+1).every(n=>map.has(n));
+  if(!complete) return {ready:false,map,mean:null};
+  const vals=Array.from({length:6},(_,i)=>map.get(i+1));
+  const mean=vals.reduce((a,b)=>a+b,0)/vals.length;
+  return {ready:true,map,mean};
+}
+function brcExpectedOneMPressureLabel(outerAdv){
+  const d=Number(outerAdv);
+  if(!Number.isFinite(d)) return {key:'weak',label:'判定待ち'};
+  if(d>=1.50) return {key:'very-strong',label:'かなり強'};
+  if(d>=1.00) return {key:'strong',label:'強'};
+  if(d>=0.50) return {key:'some',label:'あり'};
+  return {key:'weak',label:'弱'};
+}
+function brcExpectedOneMVisualX(score,anchor){
+  const s=Number(score), a=Number(anchor);
+  if(!Number.isFinite(s)||!Number.isFinite(a)) return 18;
+  const capped=Math.max(-2.45,Math.min(3.35,s-a));
+  return Math.max(6,Math.min(92,58-(capped*13.5)));
+}
+function brcBuildExpectedSlitOneMHtml(boats,venue,liveRace){
+  if(brcExpectedSlitEntryChanged(liveRace)){
+    return `<div class="brc-expected-slit brc-expected-slit-excluded"><div class="brc-expected-slit-excluded-title">想定スリット対象外</div><div class="brc-expected-slit-excluded-note">進入変更を確認したため、このレースは表示しません。</div></div>`;
+  }
+  const source=Array.isArray(boats)?boats:[];
+  const ex=brcExpectedOneMExhibitionTimes(liveRace);
+  const states=Array.from({length:6},(_,i)=>{
+    const course=i+1;
+    const b=source.find(x=>Number(x?.course)===course)||null;
+    const calc=b?brcExpectedSlitScoreForBoat(b,venue):null;
+    const exhibition=ex.ready?Number(ex.map.get(course)):null;
+    const oneM=(calc&&ex.ready&&Number.isFinite(exhibition))
+      ? Number(calc.score)+12.5*(exhibition-Number(ex.mean))
+      : null;
+    return {course,b,calc,exhibition,oneM};
+  });
+
+  const startValid=states.filter(x=>Number.isFinite(Number(x?.calc?.score))).sort((a,b)=>a.calc.score-b.calc.score);
+  const startAnchor=startValid.length?Number(startValid[0].calc.score):null;
+  const startGap=startValid.length>=2?Number(startValid[1].calc.score)-Number(startValid[0].calc.score):null;
+  const conf=brcExpectedSlitConfidence(startGap);
+  const startLead=startValid.length?startValid[0].course:'―';
+
+  const oneMValid=ex.ready
+    ? states.filter(x=>Number.isFinite(Number(x?.oneM))).sort((a,b)=>a.oneM-b.oneM)
+    : [];
+  const oneMLead=oneMValid.length?oneMValid[0].course:'―';
+
+  const in1=states.find(x=>x.course===1);
+  const outerBest=oneMValid.filter(x=>x.course!==1).sort((a,b)=>a.oneM-b.oneM)[0]||null;
+  const outerAdv=(ex.ready && in1 && Number.isFinite(in1.oneM) && outerBest)
+    ? Number(in1.oneM)-Number(outerBest.oneM)
+    : null;
+  const pressure=brcExpectedOneMPressureLabel(outerAdv);
+
+  const movementRank=ex.ready
+    ? states.filter(x=>Number.isFinite(x.calc?.score)&&Number.isFinite(x.oneM))
+        .map(x=>({...x,move:Number(x.calc.score)-Number(x.oneM)}))
+        .sort((a,b)=>b.move-a.move)
+    : [];
+  const biggestAdvance=movementRank.length?movementRank[0]:null;
+
+  const rows=states.map(x=>{
+    const course=x.course;
+    const c=x.calc;
+    if(!c || !Number.isFinite(Number(c.score))){
+      return `<div class="brc-expected-slit-row"><div class="brc-expected-slit-label"><span class="brc-expected-slit-lane lane${course}">${course}</span></div><div class="brc-expected-slit-track"><span class="brc-sl1m-marker start lane${course} no-data" style="--sl1m-x:18%">${course}</span></div></div>`;
+    }
+    const sx=brcExpectedOneMVisualX(Number(c.score),startAnchor);
+    if(!ex.ready || !Number.isFinite(Number(x.oneM))){
+      return `<div class="brc-expected-slit-row"><div class="brc-expected-slit-label"><span class="brc-expected-slit-lane lane${course}">${course}</span></div><div class="brc-expected-slit-track"><span class="brc-sl1m-marker start lane${course}" style="--sl1m-x:${sx.toFixed(2)}%" title="START想定">${course}</span></div></div>`;
+    }
+    const mx=brcExpectedOneMVisualX(Number(x.oneM),startAnchor);
+    const moveLeft=Math.min(sx,mx);
+    const moveWidth=Math.abs(mx-sx);
+    const moveClass=mx>sx?'forward':(mx<sx?'back':'');
+    const startTitle=`START想定 / 内部スコア ${Number(c.score).toFixed(2)}`;
+    const oneMTitle=`1M入口想定 / 展示 ${Number(x.exhibition).toFixed(2)} / 補正後 ${Number(x.oneM).toFixed(2)} / 相対表示`;
+    return `<div class="brc-expected-slit-row">
+      <div class="brc-expected-slit-label"><span class="brc-expected-slit-lane lane${course}">${course}</span></div>
+      <div class="brc-expected-slit-track">
+        ${moveWidth>=0.8?`<span class="brc-sl1m-move ${moveClass}" style="--move-left:${moveLeft.toFixed(2)}%;--move-width:${moveWidth.toFixed(2)}%"></span>`:''}
+        <span class="brc-sl1m-marker start lane${course}" style="--sl1m-x:${sx.toFixed(2)}%" title="${startTitle}">${course}</span>
+        <span class="brc-sl1m-marker one-m lane${course}" style="--sl1m-x:${mx.toFixed(2)}%" title="${oneMTitle}">${course}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  let summary='';
+  if(!ex.ready){
+    summary=`STARTの想定隊形を表示中。展示タイムが6艇揃うと、同じ図に1M入口の相対隊形を追加します。`;
+  }else if(biggestAdvance && String(startLead)!==String(oneMLead)){
+    summary=`STARTでは${startLead}号艇が先行想定。展示タイムを加味すると${biggestAdvance.course}号艇が前進し、1M入口では${oneMLead}号艇が最前想定です。`;
+  }else if(biggestAdvance && biggestAdvance.move>0.12){
+    summary=`STARTでは${startLead}号艇が先行想定。${biggestAdvance.course}号艇が展示タイムで前進し、1M入口では${oneMLead}号艇が最前想定です。`;
+  }else{
+    summary=`STARTから1M入口まで大きな隊形変化は少なく、${oneMLead}号艇が前側の想定です。`;
+  }
+
+  const headerOneM=ex.ready
+    ? `1M入口：${oneMLead}号艇　外圧：<span class="brc-sl1m-status ${pressure.key}">${pressure.label}</span>`
+    : `1M入口：<span class="brc-sl1m-status brc-sl1m-wait">展示待ち</span>`;
+
+  return `<div class="brc-expected-slit">
+    <div class="brc-expected-slit-head">
+      <div>
+        <div class="brc-expected-slit-title">想定スリット・1M入口</div>
+        <div class="brc-expected-slit-sub">START先行：${startLead}号艇　隊形信頼度：<span class="brc-expected-slit-confidence ${conf.key}">${conf.label}</span><br>${headerOneM}</div>
+      </div>
+      <div class="brc-expected-slit-meta">右が進行方向</div>
+    </div>
+    <div class="brc-expected-slit-chart brc-sl1m-chart">
+      <div class="brc-expected-slit-direction"><span class="brc-sl1m-axis-label">後方</span><span>進行方向 →</span><span class="brc-sl1m-axis-label">前方</span></div>
+      <span class="brc-expected-slit-start-label">START</span><span class="brc-expected-slit-start-line" aria-hidden="true"></span>
+      <div class="brc-expected-slit-body">${rows}</div>
+    </div>
+    <div class="brc-sl1m-legend">
+      <span class="brc-sl1m-legend-item"><i class="brc-sl1m-dot start"></i>START想定</span>
+      <span class="brc-sl1m-legend-item"><i class="brc-sl1m-dot one-m"></i>1M入口想定</span>
+      <span class="brc-sl1m-legend-item">破線＝隊形変化</span>
+    </div>
+    <div class="brc-sl1m-summary">${summary}</div>
+    <div class="brc-sl1m-foot">
+      <span>1M入口＝想定スリット＋展示タイム補正（係数12.5）</span>
+      <span>※相対位置。実艇身距離ではありません。</span>
+    </div>
+  </div>`;
+}
+
 function brcSetAdminRaceToolsUi(active){
   const box=document.getElementById('brcAdminRaceTools');
   if(!box) return;
@@ -19940,7 +20248,7 @@ async function runPredict(){
         <section id="brcAdminOriginalExhibition" class="brc-admin-original-exhibition" aria-hidden="true"></section>
       </div>
       <div class="brc-admin-race-tool-panel" data-brc-race-tool-panel="slit" data-brc-admin-only="true" aria-hidden="true">
-        ${brcBuildExpectedSlitHtml(boats,venue,liveExhibitionRace)}
+        ${brcBuildExpectedSlitOneMHtml(boats,venue,liveExhibitionRace)}
       </div>
       <div class="brc-admin-race-tool-panel" data-brc-race-tool-panel="wind">
         ${buildWindPanelHtml(venue)}
