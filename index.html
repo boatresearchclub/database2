@@ -1,3 +1,4 @@
+<!-- BRC_START_1M_VISUAL_TUNE_V9_20260923: START艇の視認性向上とSTART/1M入口ラベル位置を縦ラインへ整列。ロジック不変。 -->
 <!-- BRC_START_1M_FINISH_V8_20260923: START側左余白を拡大し、説明文を1M最前艇の相対前進中心へ改善。算出ロジック不変。 -->
 <!-- BRC_START_1M_LEFT_GUARD_V7_20260923: START想定艇の後方限界を右寄せし、左のコース番号領域へ侵入しない表示ガード。算出ロジック不変。 -->
 <!-- BRC_START_1M_SHIFT_RIGHT_V6_20260923: START→1M想定隊形の表示全体を少し右へシフト。計算ロジックは不変。 -->
@@ -5088,8 +5089,8 @@ body.brc-admin-public-view [data-brc-admin-only="true"]{display:none !important;
   line-height:1.05;
   z-index:6;
 }
-.brc-sl1m-time-label.start{left:25%;}
-.brc-sl1m-time-label.one-m{left:82%;}
+.brc-sl1m-time-label.start{left:calc(24.5% + 20px);}
+.brc-sl1m-time-label.one-m{left:calc(84.5% + 4px);}
 .brc-sl1m-time-label .big{display:block;font-size:8.8px;}
 .brc-sl1m-time-label .small{display:block;font-size:7.6px;color:#55728f;font-weight:850;margin-top:1px;}
 .brc-sl1m-time-line{
@@ -5104,7 +5105,7 @@ body.brc-admin-public-view [data-brc-admin-only="true"]{display:none !important;
   pointer-events:none;
 }
 .brc-sl1m-time-line.start{left:26%;}
-.brc-sl1m-time-line.one-m{left:84%;}
+.brc-sl1m-time-line.one-m{left:calc(84.5% + 4px);}
 .brc-sl1m-chart .brc-expected-slit-row{
   grid-template-columns:28px minmax(0,1fr) !important;
 }
@@ -5177,10 +5178,11 @@ body.brc-admin-public-view [data-brc-admin-only="true"]{display:none !important;
 .brc-sl1m-marker.lane6{--boat-bg:var(--lane6);--boat-fg:#fff;}
 .brc-sl1m-marker.start{
   z-index:2;
-  opacity:.32;
+  opacity:.52;
   box-shadow:none;
-  filter:saturate(.55);
+  filter:saturate(.82);
   border-style:dashed;
+  border-color:rgba(80,96,114,.42);
 }
 .brc-sl1m-marker.one-m{
   z-index:4;
@@ -5231,7 +5233,7 @@ body.brc-admin-public-view [data-brc-admin-only="true"]{display:none !important;
   border:1px solid #6d7d8f;
   background:#fff;
 }
-.brc-sl1m-dot.start{opacity:.32;border-style:dashed;}
+.brc-sl1m-dot.start{opacity:.52;border-style:dashed;}
 .brc-sl1m-dot.one-m{background:#2769b8;border-color:#205b9e;}
 .brc-sl1m-summary{
   margin:8px 2px 0;
@@ -5277,10 +5279,10 @@ body.brc-admin-public-view [data-brc-admin-only="true"]{display:none !important;
   .brc-sl1m-marker::before{left:-5px;width:10px;height:6px;}
   .brc-sl1m-chart .brc-expected-slit-direction{padding-left:28px;padding-right:5px;font-size:8.8px;}
   .brc-sl1m-axis-label{font-size:8px;}
-  .brc-sl1m-time-label.start{left:25%;}
-  .brc-sl1m-time-label.one-m{left:82%;}
-  .brc-sl1m-time-line.start{left:27%;}
-  .brc-sl1m-time-line.one-m{left:84%;}
+  .brc-sl1m-time-label.start{left:calc(24.5% + 18px);}
+  .brc-sl1m-time-label.one-m{left:calc(84.5% + 2px);}
+  .brc-sl1m-time-line.start{left:calc(24.5% + 18px);}
+  .brc-sl1m-time-line.one-m{left:calc(84.5% + 2px);}
   .brc-sl1m-legend{gap:9px;font-size:8.2px;}
   .brc-sl1m-summary{font-size:9.5px;}
   .brc-sl1m-foot{font-size:7.8px;}
