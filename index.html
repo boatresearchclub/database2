@@ -1,4 +1,4 @@
-<!-- BRC_RACE_VISUAL_TABS_V2_20260923: 出走データ下を「オリジナル展示 / 想定スリット / 風情報」のタブへ統合。オリジナル展示と風情報は従来どおり一般公開、想定スリットのみ管理者専用。想定スリットは現行ST順位を1.0位=スタートライン、0.1位差≈0.015艇身の実ST換算目安で実寸寄り表示。表示のみ、予測/着率/買い目/展示スリット評価ロジック非変更 -->
+<!-- BRC_EXPECTED_SLIT_V1_OOS_20260923: 管理者専用。進入変更レースは想定スリット対象外。通常進入のみで、当該コース1年ST順位80%＋直近10走ST順位20%を基礎とし、2024-2025通常進入で学習した会場×コース残差補正を加える。今節ST順位は取得値がある場合のみ走数別10/20/25%で反映。展示ST・風は想定スリット計算に不使用。2026-01-01〜09-22 OOSで前後関係約63.0%、最速艇一致約36.2%。予測/着率/買い目ロジック非変更 -->
 <!-- BRC_ADMIN_ST_RECENT10_V3_20260923: admin-only current-course latest-10 average ST plus average of each historical race ST rank; no current-six comparison; F/L excluded from player averages; display-only, prediction/rates/slit/bets unchanged -->
 <!-- BRC_SLIT_STRONG_BANNER_RESTORE_V1_20260923: 展示差0.10秒以上+平均ST順位差0.50位以上の強条件成立時、A/B数値行が無くても展示スリット評価バナーを表示。表示のみ、予測/着率/買い目ロジック非変更 -->
 <!-- BRC_SLIT_PT_BASELINE_CLARITY_V1_20260921: displayed ±pt is each boat's observed difference versus its own venue×course baseline; not direct absolute-rate comparison between the two boats; prediction unchanged -->
@@ -4866,6 +4866,16 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:950;}
 
 .brc-expected-slit-head{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin:0 1px 8px;}
 .brc-expected-slit-title{font-size:12.5px;font-weight:950;color:var(--navy);}
+.brc-expected-slit-sub{margin-top:2px;font-size:9.5px;font-weight:850;color:var(--ink-soft);}
+.brc-expected-slit-confidence{display:inline-flex;align-items:center;padding:2px 6px;border-radius:999px;font-size:8.5px;font-weight:950;line-height:1;border:1px solid rgba(10,31,51,.12);vertical-align:1px;}
+.brc-expected-slit-confidence.low{color:#667085;background:#f2f4f7;}
+.brc-expected-slit-confidence.mid{color:#805700;background:#fff8e1;border-color:#ead9a1;}
+.brc-expected-slit-confidence.midHigh{color:#1769aa;background:#eef7ff;border-color:#b9dcf6;}
+.brc-expected-slit-confidence.high,.brc-expected-slit-confidence.strong{color:#217247;background:rgba(47,143,91,.10);border-color:rgba(47,143,91,.24);}
+.brc-expected-slit-excluded{padding:18px 12px;border:1px solid rgba(209,55,63,.20);border-radius:11px;background:rgba(209,55,63,.045);text-align:center;}
+.brc-expected-slit-excluded-title{font-size:13px;font-weight:950;color:#b4232c;}
+.brc-expected-slit-excluded-note{margin-top:5px;font-size:10px;font-weight:800;color:var(--ink-soft);}
+
 .brc-expected-slit-meta{font-size:9px;font-weight:800;color:var(--ink-soft);text-align:right;line-height:1.4;}
 .brc-expected-slit-chart{position:relative;border:1px solid rgba(0,87,219,.12);border-radius:11px;background:linear-gradient(180deg,#ddf5ff 0%,#bdeaff 100%);overflow:hidden;padding:7px 8px 8px;}
 .brc-expected-slit-chart::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(180deg,rgba(255,255,255,.0) 0,rgba(255,255,255,.0) 30px,rgba(255,255,255,.42) 31px,rgba(255,255,255,.42) 32px);pointer-events:none;}
@@ -17949,27 +17959,136 @@ function brcCurrentStRankForBoat(b){
   const fallback=Number(b?.player?.avg_st_rank);
   return Number.isFinite(fallback) && fallback>=1 && fallback<=6 ? fallback : null;
 }
-function brcBuildExpectedSlitHtml(boats){
-  const BOAT_PER_RANK=0.1485405979; // RESULTS_ARCHIVE 2024-2026の実ST順位差を1艇身=0.15秒で平均換算
-    const rows=Array.from({length:6},(_,i)=>{
+
+// BRC_EXPECTED_SLIT_V1_OOS_20260923
+// 2023 warm-up / 2024-2025 build / 2026-01-01..09-22 OOS。
+// 進入変更を除外した通常進入のみ。会場×コース補正は「実ST順位 - 個人基礎スコア」の残差を縮小推定。
+const BRC_EXPECTED_SLIT_V1_VENUE_COURSE_CORR=Object.freeze({"びわこ":{"1":-0.3349,"2":-0.2026,"3":-0.029,"4":0.2669,"5":0.2275,"6":0.1902},"三国":{"1":-0.1153,"2":0.0626,"3":0.0309,"4":0.0246,"5":0.0485,"6":-0.0365},"下関":{"1":-0.1215,"2":-0.0239,"3":0.0237,"4":0.0873,"5":0.0396,"6":-0.0082},"丸亀":{"1":-0.0684,"2":0.0293,"3":0.0097,"4":-0.0078,"5":-0.0077,"6":0.0454},"住之江":{"1":0.3508,"2":0.1732,"3":-0.0686,"4":-0.2535,"5":-0.2123,"6":0.0113},"児島":{"1":-0.1644,"2":-0.0994,"3":0.0734,"4":0.1052,"5":0.059,"6":0.0312},"唐津":{"1":-0.1474,"2":-0.0707,"3":0.0249,"4":0.0614,"5":0.0925,"6":0.0169},"多摩川":{"1":0.22,"2":0.2618,"3":-0.0568,"4":-0.0205,"5":-0.2225,"6":-0.1824},"大村":{"1":-0.0867,"2":-0.0126,"3":0.0171,"4":0.0598,"5":0.0177,"6":0.0054},"宮島":{"1":-0.1907,"2":-0.0992,"3":0.0377,"4":0.1028,"5":0.0784,"6":0.071},"尼崎":{"1":0.4389,"2":0.2652,"3":-0.097,"4":-0.1118,"5":-0.219,"6":-0.2862},"常滑":{"1":-0.2594,"2":-0.1207,"3":0.0103,"4":0.1372,"5":0.1335,"6":0.0992},"平和島":{"1":-0.1569,"2":-0.0758,"3":-0.0204,"4":0.0568,"5":0.097,"6":0.1009},"徳山":{"1":-0.0737,"2":-0.0104,"3":0.0189,"4":0.0109,"5":0.0273,"6":0.0374},"戸田":{"1":-0.1694,"2":-0.088,"3":-0.009,"4":0.0721,"5":0.0966,"6":0.0963},"桐生":{"1":0.3086,"2":0.2506,"3":0.0657,"4":-0.0059,"5":-0.3739,"6":-0.2557},"江戸川":{"1":-0.3733,"2":-0.2985,"3":-0.0102,"4":0.1065,"5":0.2379,"6":0.3346},"津":{"1":-0.0653,"2":-0.0267,"3":-0.0059,"4":0.0203,"5":0.0309,"6":0.0466},"浜名湖":{"1":-0.1968,"2":-0.1036,"3":0.0102,"4":0.0937,"5":0.1098,"6":0.0867},"福岡":{"1":-0.1766,"2":-0.1215,"3":-0.0168,"4":0.2021,"5":0.1686,"6":-0.031},"芦屋":{"1":-0.1119,"2":-0.0777,"3":-0.0128,"4":0.0587,"5":0.0738,"6":0.0699},"若松":{"1":-0.0801,"2":-0.0334,"3":-0.0172,"4":0.0445,"5":0.0609,"6":0.0254},"蒲郡":{"1":-0.0852,"2":-0.0638,"3":-0.0101,"4":0.0503,"5":0.0603,"6":0.0436},"鳴門":{"1":-0.1115,"2":-0.0539,"3":-0.0041,"4":0.0399,"5":0.064,"6":0.0657}});
+
+function brcExpectedSlitVenueKey(v){
+  return String(v||'').replace(/[\s\u3000]+/g,'');
+}
+function brcExpectedSlitEntryChanged(liveRace){
+  if(liveRace?.entry_changed===true || liveRace?.entryChanged===true) return true;
+  const rows=Array.isArray(liveRace?.boats)?liveRace.boats:[];
+  const valid=rows.map(x=>({boat:Number(x?.boat_no),course:Number(x?.entry_course)}))
+    .filter(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isInteger(x.course)&&x.course>=1&&x.course<=6);
+  return valid.length===6 && valid.some(x=>x.boat!==x.course);
+}
+function brcExpectedSlitMeetStForBoat(b){
+  const reg=String(b?.player?.reg||'');
+  const course=Number(b?.course);
+  let hook=null;
+  try{
+    if(typeof window.BRC_EXPECTED_SLIT_MEET_ST==='object'){
+      hook=window.BRC_EXPECTED_SLIT_MEET_ST?.[reg]?.[String(course)] ?? window.BRC_EXPECTED_SLIT_MEET_ST?.[reg] ?? null;
+    }
+  }catch(_e){}
+  const candidates=[
+    hook,
+    b?.meetSt,b?.currentMeetSt,b?.seriesSt,b?.player?.meet_st,b?.player?.current_meet_st,
+    b?.player?.series_st,b?.exhibition?.meet_st,b?.exhibition?.current_meet_st
+  ].filter(Boolean);
+  for(const x of candidates){
+    const rank=Number(x?.avg_rank ?? x?.rank ?? x?.avgRank ?? x?.st_rank ?? x?.stRank);
+    const n=Number(x?.n ?? x?.count ?? x?.starts ?? x?.races ?? 0);
+    if(Number.isFinite(rank)&&rank>=1&&rank<=6&&Number.isFinite(n)&&n>=1) return {rank,n};
+  }
+  const directRank=Number(b?.meetStRank ?? b?.currentMeetStRank ?? b?.seriesStRank ?? b?.player?.meet_st_rank ?? b?.player?.current_meet_st_rank);
+  const directN=Number(b?.meetStN ?? b?.currentMeetStN ?? b?.seriesStN ?? b?.player?.meet_st_n ?? b?.player?.current_meet_st_n ?? 0);
+  return Number.isFinite(directRank)&&directRank>=1&&directRank<=6&&directN>=1 ? {rank:directRank,n:directN} : null;
+}
+function brcExpectedSlitMeetWeight(n){
+  const x=Number(n)||0;
+  if(x>=5) return 0.25;
+  if(x>=3) return 0.20;
+  if(x>=1) return 0.10;
+  return 0;
+}
+function brcExpectedSlitScoreForBoat(b,venue){
+  const reg=String(b?.player?.reg||'');
+  const course=Number(b?.course);
+  const yearRank=brcCurrentStRankForBoat(b);
+  const recent=typeof getSTRecent10==='function'?getSTRecent10(reg,course):null;
+  const recentRank=Number(recent?.avg_rank);
+  if(!Number.isFinite(yearRank)) return null;
+  let base=yearRank;
+  let recentUsed=false;
+  if(Number.isFinite(recentRank)&&recentRank>=1&&recentRank<=6){
+    base=0.8*yearRank+0.2*recentRank;
+    recentUsed=true;
+  }
+  const meet=brcExpectedSlitMeetStForBoat(b);
+  const meetW=meet?brcExpectedSlitMeetWeight(meet.n):0;
+  if(meetW>0) base=(1-meetW)*base+meetW*meet.rank;
+  const venueKey=brcExpectedSlitVenueKey(venue);
+  const venueCorr=Number(BRC_EXPECTED_SLIT_V1_VENUE_COURSE_CORR?.[venueKey]?.[String(course)]||0);
+  const score=base+(Number.isFinite(venueCorr)?venueCorr:0);
+  return {score,yearRank,recentRank:Number.isFinite(recentRank)?recentRank:null,recentUsed,meet,meetW,venueCorr:Number.isFinite(venueCorr)?venueCorr:0};
+}
+function brcExpectedSlitBoatDistance(scoreGap){
+  const g=Math.max(0,Number(scoreGap)||0);
+  // OOS実測の平均ST差を艇身へ落とした表示用バンド。0.1未満は横一線扱い。
+  if(g<0.10) return 0;
+  if(g<0.25) return 0.04;
+  if(g<0.50) return 0.08;
+  if(g<0.75) return 0.13;
+  if(g<1.00) return 0.19;
+  if(g<1.50) return 0.27;
+  return 0.43;
+}
+function brcExpectedSlitConfidence(topGap){
+  const g=Number(topGap);
+  if(!Number.isFinite(g)) return {key:'none',label:'判定不可'};
+  if(g>=1.50) return {key:'strong',label:'強い隊形'};
+  if(g>=1.00) return {key:'high',label:'明確'};
+  if(g>=0.75) return {key:'midHigh',label:'やや明確'};
+  if(g>=0.25) return {key:'mid',label:'中'};
+  return {key:'low',label:'低'};
+}
+function brcBuildExpectedSlitHtml(boats,venue,liveRace){
+  if(brcExpectedSlitEntryChanged(liveRace)){
+    return `<div class="brc-expected-slit brc-expected-slit-excluded"><div class="brc-expected-slit-excluded-title">想定スリット対象外</div><div class="brc-expected-slit-excluded-note">進入変更を確認したため、このレースは表示しません。</div></div>`;
+  }
+  const source=Array.isArray(boats)?boats:[];
+  const states=Array.from({length:6},(_,i)=>{
     const course=i+1;
-    const b=(Array.isArray(boats)?boats:[]).find(x=>Number(x?.course)===course)||null;
-    const rank=brcCurrentStRankForBoat(b);
-    if(rank==null){
+    const b=source.find(x=>Number(x?.course)===course)||null;
+    return {course,b,calc:b?brcExpectedSlitScoreForBoat(b,venue):null};
+  });
+  const valid=states.filter(x=>Number.isFinite(Number(x?.calc?.score))).sort((a,b)=>a.calc.score-b.calc.score);
+  const best=valid.length?Number(valid[0].calc.score):null;
+  const topGap=valid.length>=2?Number(valid[1].calc.score)-Number(valid[0].calc.score):null;
+  const conf=brcExpectedSlitConfidence(topGap);
+  const meetUsed=states.some(x=>Number(x?.calc?.meetW)>0);
+  const rows=states.map(x=>{
+    const course=x.course, c=x.calc;
+    if(!c || !Number.isFinite(Number(c.score))){
       return `<div class="brc-expected-slit-row"><div class="brc-expected-slit-label"><span class="brc-expected-slit-lane lane${course}">${course}</span><span class="brc-expected-slit-rank">―</span></div><div class="brc-expected-slit-track"><span class="brc-expected-slit-boat lane${course} no-data">${course}</span></div></div>`;
     }
-    const behindBoat=Math.max(0,(rank-1)*BOAT_PER_RANK);
+    const gap=Math.max(0,Number(c.score)-Number(best));
+    const behindBoat=brcExpectedSlitBoatDistance(gap);
     const offsetPct=-(behindBoat*100);
-    return `<div class="brc-expected-slit-row"><div class="brc-expected-slit-label"><span class="brc-expected-slit-lane lane${course}">${course}</span><span class="brc-expected-slit-rank">${rank.toFixed(1)}位</span></div><div class="brc-expected-slit-track"><span class="brc-expected-slit-boat lane${course}" style="--slit-offset:${offsetPct.toFixed(2)}%" title="${rank.toFixed(1)}位 / ラインから約${behindBoat.toFixed(2)}艇身後方">${course}</span></div></div>`;
+    const detail=[
+      `想定スコア ${c.score.toFixed(2)}`,
+      `1年 ${Number(c.yearRank).toFixed(2)}`,
+      c.recentUsed&&Number.isFinite(c.recentRank)?`直近10 ${c.recentRank.toFixed(2)}`:null,
+      c.meetW>0&&c.meet?`今節 ${c.meet.rank.toFixed(2)} / N=${c.meet.n} / ${Math.round(c.meetW*100)}%`:null,
+      `場×コース補正 ${c.venueCorr>=0?'+':''}${c.venueCorr.toFixed(2)}`,
+      `先頭差 ${gap.toFixed(2)} / 約${behindBoat.toFixed(2)}艇身`
+    ].filter(Boolean).join(' / ');
+    return `<div class="brc-expected-slit-row"><div class="brc-expected-slit-label"><span class="brc-expected-slit-lane lane${course}">${course}</span><span class="brc-expected-slit-rank">S ${c.score.toFixed(2)}</span></div><div class="brc-expected-slit-track"><span class="brc-expected-slit-boat lane${course}" style="--slit-offset:${offsetPct.toFixed(2)}%" title="${detail}">${course}</span></div></div>`;
   }).join('');
+  const leadCourse=valid.length?valid[0].course:'―';
+  const gapText=Number.isFinite(topGap)?topGap.toFixed(2):'―';
   return `<div class="brc-expected-slit">
-    <div class="brc-expected-slit-head"><div class="brc-expected-slit-title">現在ST順位からの想定隊形</div><div class="brc-expected-slit-meta">右が進行方向<br>1.0位＝スタートライン</div></div>
+    <div class="brc-expected-slit-head"><div><div class="brc-expected-slit-title">想定スリット Ver.1</div><div class="brc-expected-slit-sub">想定先行：${leadCourse}号艇　<span class="brc-expected-slit-confidence ${conf.key}">${conf.label}</span></div></div><div class="brc-expected-slit-meta">右が進行方向<br>先頭艇を基準</div></div>
     <div class="brc-expected-slit-chart">
       <div class="brc-expected-slit-direction">進行方向 →</div>
-      <span class="brc-expected-slit-start-label">START</span><span class="brc-expected-slit-start-line" aria-hidden="true"></span>
+      <span class="brc-expected-slit-start-label">BASE</span><span class="brc-expected-slit-start-line" aria-hidden="true"></span>
       <div class="brc-expected-slit-body">${rows}</div>
     </div>
-    <div class="brc-expected-slit-foot"><span>換算目安：0.1位差 ≒ 0.015艇身</span><span class="brc-expected-slit-scale"><span class="brc-expected-slit-scale-line"></span>1艇身</span></div>
+    <div class="brc-expected-slit-foot"><span>1年80%＋直近10走20%＋場×コース補正${meetUsed?'＋今節ST':''} / 1位-2位差 ${gapText}</span><span>展示ST・風は不使用</span></div>
   </div>`;
 }
 function brcSetAdminRaceToolsUi(active){
@@ -19775,7 +19894,7 @@ async function runPredict(){
         <section id="brcAdminOriginalExhibition" class="brc-admin-original-exhibition" aria-hidden="true"></section>
       </div>
       <div class="brc-admin-race-tool-panel" data-brc-race-tool-panel="slit" data-brc-admin-only="true" aria-hidden="true">
-        ${brcBuildExpectedSlitHtml(boats)}
+        ${brcBuildExpectedSlitHtml(boats,venue,liveExhibitionRace)}
       </div>
       <div class="brc-admin-race-tool-panel" data-brc-race-tool-panel="wind">
         ${buildWindPanelHtml(venue)}
