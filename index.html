@@ -1,3 +1,4 @@
+<!-- BRC_SLIT_STRONG_BANNER_RESTORE_V1_20260923: 展示差0.10秒以上+平均ST順位差0.50位以上の強条件成立時、A/B数値行が無くても展示スリット評価バナーを表示。表示のみ、予測/着率/買い目ロジック非変更 -->
 <!-- BRC_SLIT_PT_BASELINE_CLARITY_V1_20260921: displayed ±pt is each boat's observed difference versus its own venue×course baseline; not direct absolute-rate comparison between the two boats; prediction unchanged -->
 <!-- BRC_SLIT_UI_CONFLICT_GUARD_V1_20260921: pair labels hidden; if one boat is simultaneously trusted outer(+) and inner(-) from adjacent A/B pairs, suppress only that boat's conflicting display rows; data/prediction unchanged -->
 <!-- BRC_ADMIN_EXPECTED_VALUE_V1_20260921: AI予測管理者βに期待値評価を追加。現行3連単オッズから逆数正規化した1着市場支持率を算出し、AI1着率との差・期待値指数を表示。予測ロジック非変更 -->
@@ -14348,9 +14349,11 @@ function brcBuildSlitEvaluationHtml(boats,liveRace,inReliability=null){
       return `<span class="slit-rate-row" title="${r.title}">${brcSlitBoatBadgeHtml(r.boat)}<span class="slit-rate-exhibition-only">展示優位</span></span>`;
     }).join('');
 
-    // 2026-09-21: 矢印だけの強条件行は、数値行と意味が重複して見えるため非表示。
-    // 展示差の数値行（A/B）と、必要時の展示優位のみを表示する。
-    slitHtml=`${exhibitionOnlyHtml}`;
+    // BRC_SLIT_STRONG_BANNER_RESTORE_V1_20260923:
+    // 展示差0.10秒以上 + 平均ST順位差0.50位以上の強条件が成立した場合は、
+    // 展示差側のA/B数値行が無いケースでも展示スリット評価バナーを必ず表示する。
+    // strongHtml は既存の検証済み方向表示のみで、予測確率・着率・買い目ロジックは変更しない。
+    slitHtml=`${strongHtml}${exhibitionOnlyHtml}`;
   }
 
   // チルト1.0以上がいる場合は、スリット条件が非該当・待機中でも高チルト表示を優先。
