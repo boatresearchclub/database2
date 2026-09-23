@@ -30,6 +30,7 @@
 <!-- BRC_TIMEX_LAP_PENDING_FIX_V1_20260920: exhibition-time-only phase is treated as waiting, not shortened; lap_type/detail arrival separates pending from true lap-missing state; prediction math unchanged -->
 <!-- BRC_AI_TAB_ORDER_LABEL_V1_20260923: AI予測管理者βタブを 狙い目→イン逃げ→スコア→展開マトリックス→参考買い目 に整理。表示順・表示名のみ変更、予測/着率/買い目ロジック非変更 -->
 <!-- BRC_AI_PUBLIC_NIGE_ONLY_V1_20260923: public AI prediction UI exposes only the In-escape tab; admin keeps 5 research tabs; prediction/rates/bets unchanged -->
+<!-- BRC_AI_PUBLIC_NIGE_FAILCLOSED_V2_20260923: fail-closed public guard removes any late-injected admin research tabs/panels; display-only, prediction/rates/bets unchanged -->
 <!DOCTYPE html>
 <!-- BRC_AI_FINAL_EVAL_V10_HEAD_REPLAY_20260922: current Workerを2026-08-26..09-16の過去番組へ再適用し、保存済みstrict OOS delta/TimeX相対差と結合。Worker+TimeX 1着率1位 vs AI頭スコア1位を直接比較する管理者検証。予測本体・着率・買い目は非変更。 -->
 <!-- BRC_AI_FINAL_EVAL_V11_HEAD_REPLAY_AUDIT_20260922: V10 historical current-Worker replay hardening. Pre-filter to strict OOS rows with complete TimeX (3,080R max), record Worker version, deterministic date-cluster bootstrap 95% CI for paired hit-rate delta, and clearly separate current-model replay from strict OOS claims. Prediction/bets unchanged. -->
@@ -12836,6 +12837,20 @@ function brcBindAiAdminSubTabs(){
   brcSetAiAdminSubTab(window.__brcAiAdminSubTabCurrent||'final');
 }
 
+// BRC_AI_PUBLIC_NIGE_FAILCLOSED_V2_20260923
+// 一般公開（管理者の公開プレビューを含む）では、後段の管理者用フックが誤ってDOMを追加しても
+// 研究タブ/研究パネルを残さない。表示ガードのみで予測・着率・買い目計算には触れない。
+function brcEnforcePublicAiNigeOnly(){
+  const researchAdmin=!!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)
+    && !(typeof window.brcGetAdminViewMode==='function' && window.brcGetAdminViewMode()==='public');
+  if(researchAdmin) return;
+  const box=document.getElementById('predictAiResult');
+  if(!box) return;
+  box.querySelectorAll('.brc-ai-admin-tabs,[id^="brcAiAdminPanel-"]').forEach(el=>el.remove());
+  box.querySelectorAll('#brc-final-eval-v1,[data-brc-refmon-root],.brc-ev-card,.brc-mark-card').forEach(el=>el.remove());
+}
+window.brcEnforcePublicAiNigeOnly=brcEnforcePublicAiNigeOnly;
+
 function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhibitionApplied){
   const box=document.getElementById('predictAiResult');
   if(!box) return;
@@ -12885,6 +12900,7 @@ function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhib
       </div>
       <div class="brc-ai-public-panel" role="tabpanel">${nigeHtml}</div>
     `;
+    brcEnforcePublicAiNigeOnly();
   }
   // BRC_AI_FINAL_EVAL_DIRECT_MOUNT_V2_20260922:
   // AI予測本体の描画直後に直接最終評価を更新する。後段ラッパー/MutationObserverだけに依存しない。
@@ -12911,6 +12927,9 @@ function renderPredictAiPanel(boats, workerPrediction, localInReliability, exhib
   setTimeout(()=>brcEnsureAiReferenceOddsAfterDeadline(),0);
   setTimeout(()=>{ try{ brcApplyAiOutcomeMark(); }catch(_e){} },0);
   setTimeout(()=>{ try{ brcInvAutoCaptureAiPrediction(localInReliability); }catch(_e){} },0);
+  // 遅延フックが走った後にも公開側を再確認する。
+  setTimeout(()=>{ try{ brcEnforcePublicAiNigeOnly(); }catch(_e){} },0);
+  setTimeout(()=>{ try{ brcEnforcePublicAiNigeOnly(); }catch(_e){} },180);
 }
 
 // 旧：勝率タップから展開詳細を開く関数。勝率セルからの呼び出しは廃止。
