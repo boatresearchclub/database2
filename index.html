@@ -33,6 +33,8 @@
 <!-- BRC_AI_PUBLIC_NIGE_FAILCLOSED_V2_20260923: fail-closed public guard removes any late-injected admin research tabs/panels; display-only, prediction/rates/bets unchanged -->
 <!-- BRC_VENUE_BADGE_AUTH_RETRY_V1_20260923: official venue grade badge hydration retries after auth/session restore; display-only, prediction/rates/bets unchanged -->
 <!-- BRC_VENUE_GRADE_ROMAN_NORMALIZE_V1_20260923: official gradeContext only; normalize full-width/Roman GⅠ/GⅡ/GⅢ and exact officialSeries grade aliases; no title guessing; prediction/rates/bets unchanged -->
+<!-- BRC_VENUE_GRADE_RACECARD_FALLBACK_V1_20260923: if Worker official gradeContext has no badge, use the currently loaded official racecard info.grade only for SG/G1/G2/G3; no title guessing / no venue hardcode; special-series badges remain Worker-only; prediction/rates/bets unchanged -->
+<!-- BRC_VENUE_GRADE_CONTEXT_DISPLAY_FALLBACK_V1_20260923: after official schedule unique resolution only, allow gradeContext.displayGrade / plan.displayGrade as official grade fallback when officialGrade is blank; no title guessing; prediction/rates/bets unchanged -->
 <!DOCTYPE html>
 <!-- BRC_AI_FINAL_EVAL_V10_HEAD_REPLAY_20260922: current Workerを2026-08-26..09-16の過去番組へ再適用し、保存済みstrict OOS delta/TimeX相対差と結合。Worker+TimeX 1着率1位 vs AI頭スコア1位を直接比較する管理者検証。予測本体・着率・買い目は非変更。 -->
 <!-- BRC_AI_FINAL_EVAL_V11_HEAD_REPLAY_AUDIT_20260922: V10 historical current-Worker replay hardening. Pre-filter to strict OOS rows with complete TimeX (3,080R max), record Worker version, deterministic date-cluster bootstrap 95% CI for paired hit-rate delta, and clearly separate current-model replay from strict OOS claims. Prediction/bets unchanged. -->
@@ -16710,11 +16712,23 @@ function brcOfficialVenueBadgeFromContext(ctx){
   if(g2Series.has(seriesKey)) return brcVenueBadgeObj('G2');
   if(g3Series.has(seriesKey)) return brcVenueBadgeObj('G3');
 
-  // グレードも公式 officialGrade だけを見る。displayGrade は使わない。
-  if(gradeRaw==='SG') return brcVenueBadgeObj('SG');
-  if(gradeRaw==='G1' || gradeRaw==='PG1') return brcVenueBadgeObj('G1');
-  if(gradeRaw==='G2') return brcVenueBadgeObj('G2');
-  if(gradeRaw==='G3') return brcVenueBadgeObj('G3');
+  // officialGrade を最優先。公式スケジュール一意解決済みなのに officialGrade が空の場合だけ、
+  // Workerが同じ公式解決結果から作った displayGrade / plan.displayGrade を補助採用する。
+  // この関数の冒頭で officialResolved=true / officialAmbiguous=false / official_schedule_unique を
+  // 必須にしているため、タイトル推測やローカル日程推測には戻らない。
+  let resolvedGrade=gradeRaw;
+  if(!resolvedGrade){
+    resolvedGrade=String(ctx.displayGrade||ctx?.plan?.displayGrade||'').trim().normalize('NFKC').toUpperCase().replace(/\s+/g,'');
+    resolvedGrade=resolvedGrade
+      .replace(/^PGI$/,'PG1')
+      .replace(/^GI$/,'G1')
+      .replace(/^GII$/,'G2')
+      .replace(/^GIII$/,'G3');
+  }
+  if(resolvedGrade==='SG') return brcVenueBadgeObj('SG');
+  if(resolvedGrade==='G1' || resolvedGrade==='PG1') return brcVenueBadgeObj('G1');
+  if(resolvedGrade==='G2') return brcVenueBadgeObj('G2');
+  if(resolvedGrade==='G3') return brcVenueBadgeObj('G3');
 
   return null;
 }
@@ -16723,10 +16737,24 @@ function brcExtractOfficialGradeContext(result){
   return result.gradeContext || result.grade_context || result?.meta?.gradeContext || result?.result?.gradeContext || null;
 }
 
-function brcVenueCategoryBadge(_info, venue=''){
+function brcVenueRaceInfoGradeBadge(info){
+  // Workerの公式スケジュール判定を最優先にし、そこでバッジが取れなかった場合だけ
+  // 現在読み込まれている公式番組表の grade フィールドを補助ソースとして使う。
+  // タイトル文字列からは推測しない。女子/ルーキー/マスター等のシリーズ分類もここでは行わない。
+  if(!info || typeof info!=='object') return null;
+  let g=String(info.grade||'').trim().normalize('NFKC').toUpperCase().replace(/\s+/g,'');
+  g=g.replace(/^PGI$/,'PG1').replace(/^GI$/,'G1').replace(/^GII$/,'G2').replace(/^GIII$/,'G3');
+  if(g==='SG') return brcVenueBadgeObj('SG');
+  if(g==='G1' || g==='PG1') return brcVenueBadgeObj('G1');
+  if(g==='G2') return brcVenueBadgeObj('G2');
+  if(g==='G3') return brcVenueBadgeObj('G3');
+  return null;
+}
+function brcVenueCategoryBadge(info, venue=''){
   const key=String(venue||'');
-  const badge=BRC_VERIFIED_VENUE_BADGES.get(key);
-  return badge || null;
+  const verified=BRC_VERIFIED_VENUE_BADGES.get(key);
+  if(verified) return verified;
+  return brcVenueRaceInfoGradeBadge(info);
 }
 function brcVenueCategoryBadgeHtml(info, venue=''){
   const badge=brcVenueCategoryBadge(info,venue);
