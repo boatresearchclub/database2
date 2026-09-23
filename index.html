@@ -31,6 +31,7 @@
 <!-- BRC_AI_TAB_ORDER_LABEL_V1_20260923: AI予測管理者βタブを 狙い目→イン逃げ→スコア→展開マトリックス→参考買い目 に整理。表示順・表示名のみ変更、予測/着率/買い目ロジック非変更 -->
 <!-- BRC_AI_PUBLIC_NIGE_ONLY_V1_20260923: public AI prediction UI exposes only the In-escape tab; admin keeps 5 research tabs; prediction/rates/bets unchanged -->
 <!-- BRC_AI_PUBLIC_NIGE_FAILCLOSED_V2_20260923: fail-closed public guard removes any late-injected admin research tabs/panels; display-only, prediction/rates/bets unchanged -->
+<!-- BRC_VENUE_BADGE_AUTH_RETRY_V1_20260923: official venue grade badge hydration retries after auth/session restore; display-only, prediction/rates/bets unchanged -->
 <!DOCTYPE html>
 <!-- BRC_AI_FINAL_EVAL_V10_HEAD_REPLAY_20260922: current Workerを2026-08-26..09-16の過去番組へ再適用し、保存済みstrict OOS delta/TimeX相対差と結合。Worker+TimeX 1着率1位 vs AI頭スコア1位を直接比較する管理者検証。予測本体・着率・買い目は非変更。 -->
 <!-- BRC_AI_FINAL_EVAL_V11_HEAD_REPLAY_AUDIT_20260922: V10 historical current-Worker replay hardening. Pre-filter to strict OOS rows with complete TimeX (3,080R max), record Worker version, deterministic date-cluster bootstrap 95% CI for paired hit-rate delta, and clearly separate current-model replay from strict OOS claims. Prediction/bets unchanged. -->
@@ -16646,6 +16647,7 @@ const BRC_VERIFIED_VENUE_BADGES = new Map();
 let BRC_VERIFIED_VENUE_BADGE_DATE = '';
 let BRC_VERIFIED_VENUE_BADGE_PROMISE = null;
 let BRC_VERIFIED_VENUE_BADGE_RETRY = 0;
+let BRC_VERIFIED_VENUE_BADGE_RETRY_TIMER = null;
 let BRC_VERIFIED_VENUE_BADGE_SEQ = 0;
 
 function brcVenueBadgeObj(label){
@@ -16747,13 +16749,35 @@ async function brcHydrateVerifiedVenueBadges(venues,onUpdate){
     BRC_VERIFIED_VENUE_BADGE_DATE=date;
     BRC_VERIFIED_VENUE_BADGE_PROMISE=null;
     BRC_VERIFIED_VENUE_BADGE_RETRY=0;
+    if(BRC_VERIFIED_VENUE_BADGE_RETRY_TIMER){ clearTimeout(BRC_VERIFIED_VENUE_BADGE_RETRY_TIMER); BRC_VERIFIED_VENUE_BADGE_RETRY_TIMER=null; }
     // 日付切替前に飛ばした応答を無効化する。
     BRC_VERIFIED_VENUE_BADGE_SEQ++;
   }
   if(BRC_VERIFIED_VENUE_BADGE_PROMISE) return BRC_VERIFIED_VENUE_BADGE_PROMISE;
 
-  // ログインセッションが無い場合は公式Worker判定を呼べないため、バッジを推測表示しない。
-  try{ if(typeof brcGetStoredSession==='function' && !brcGetStoredSession()) return; }catch(_e){ return; }
+  // BRC_VENUE_BADGE_AUTH_RETRY_V1_20260923
+  // 初回描画が認証セッション復元より先に走ることがある。
+  // 以前はここで return したまま再試行しなかったため、ページ再読込直後だけ
+  // 会場グレードバッジが全消失することがあった。セッション復元待ちだけ軽く再試行する。
+  try{
+    if(typeof brcGetStoredSession==='function' && !brcGetStoredSession()){
+      if(BRC_VERIFIED_VENUE_BADGE_RETRY < 8 && !BRC_VERIFIED_VENUE_BADGE_RETRY_TIMER){
+        const retryNo=++BRC_VERIFIED_VENUE_BADGE_RETRY;
+        const retryDelay=Math.min(500 + (retryNo-1)*250, 2000);
+        const retryVenues=venues.slice();
+        const retryDate=date;
+        BRC_VERIFIED_VENUE_BADGE_RETRY_TIMER=setTimeout(()=>{
+          BRC_VERIFIED_VENUE_BADGE_RETRY_TIMER=null;
+          if(String(TODAY_LABEL||'')!==retryDate) return;
+          brcHydrateVerifiedVenueBadges(retryVenues,onUpdate).catch(()=>{});
+        },retryDelay);
+      }
+      return;
+    }
+  }catch(_e){ return; }
+  // セッション取得に成功したら待機回数をリセット。
+  BRC_VERIFIED_VENUE_BADGE_RETRY=0;
+  if(BRC_VERIFIED_VENUE_BADGE_RETRY_TIMER){ clearTimeout(BRC_VERIFIED_VENUE_BADGE_RETRY_TIMER); BRC_VERIFIED_VENUE_BADGE_RETRY_TIMER=null; }
 
   // 現在表示対象ではない会場の古い結果は保持しない。
   const venueSet=new Set(venues.map(v=>String(v||'')));
