@@ -1,0 +1,66 @@
+{
+  "version": "BRC_CLOUDFLARE_SPLIT_V2_SAFE",
+  "generated_at": "2026-10-06T03:35:51.251761+00:00",
+  "source_index": "index.html",
+  "index_bytes": 23649615,
+  "files": [
+    "brc-dictionary-1c-loss-trend-data-d394639d6e-001.js",
+    "brc-player-1c-recent10-data-ed56f49f9b-001.js",
+    "data-gradestats-96c1f7f5fc-001.js",
+    "data-kimarite-f62ffd2dc7-001.js",
+    "data-losecourse-48ef2ee719-001.js",
+    "data-players-3b146f12d0-001.js",
+    "data-players-3b146f12d0-002.js",
+    "data-scenario-2e41720b62-001.js",
+    "data-scenario-2e41720b62-002.js",
+    "data-st-recent10-0758c875b5-001.js",
+    "data-winner-scenario-v1-a7370443ef-001.js"
+  ],
+  "externalized": [
+    {
+      "id": "data-gradestats",
+      "bytes": 5469588,
+      "chunks": 1
+    },
+    {
+      "id": "data-players",
+      "bytes": 8127594,
+      "chunks": 2
+    },
+    {
+      "id": "data-st-recent10",
+      "bytes": 1095662,
+      "chunks": 1
+    },
+    {
+      "id": "data-winner-scenario-v1",
+      "bytes": 3073594,
+      "chunks": 1
+    },
+    {
+      "id": "data-scenario",
+      "bytes": 11991746,
+      "chunks": 2
+    },
+    {
+      "id": "data-kimarite",
+      "bytes": 821612,
+      "chunks": 1
+    },
+    {
+      "id": "data-losecourse",
+      "bytes": 743800,
+      "chunks": 1
+    },
+    {
+      "id": "brc-player-1c-recent10-data",
+      "bytes": 1084973,
+      "chunks": 1
+    },
+    {
+      "id": "brc-dictionary-1c-loss-trend-data",
+      "bytes": 3273328,
+      "chunks": 1
+    }
+  ]
+}
