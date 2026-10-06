@@ -1,8 +1,8 @@
 {
   "version": "BRC_CLOUDFLARE_SPLIT_V2_SAFE",
-  "generated_at": "2026-10-06T21:39:34.301383+00:00",
+  "generated_at": "2026-10-06T22:31:00.332513+00:00",
   "source_index": "index.html",
-  "index_bytes": 23754018,
+  "index_bytes": 23755579,
   "files": [
     "brc-dictionary-1c-loss-trend-data-d394639d6e-001.js",
     "brc-player-1c-recent10-data-ed56f49f9b-001.js",
