@@ -1,14 +1,12 @@
 {
   "version": "BRC_CLOUDFLARE_SPLIT_V2_SAFE",
-  "generated_at": "2026-10-07T22:30:52.139182+00:00",
+  "generated_at": "2026-10-07T22:43:13.125754+00:00",
   "source_index": "index.html",
-  "index_bytes": 23789219,
+  "index_bytes": 22095661,
   "files": [
     "brc-dictionary-1c-loss-trend-data-d394639d6e-001.js",
     "brc-player-1c-recent10-data-ed56f49f9b-001.js",
     "data-gradestats-96c1f7f5fc-001.js",
-    "data-kimarite-f62ffd2dc7-001.js",
-    "data-losecourse-48ef2ee719-001.js",
     "data-players-3b146f12d0-001.js",
     "data-players-3b146f12d0-002.js",
     "data-scenario-2e41720b62-001.js",
@@ -41,16 +39,6 @@
       "id": "data-scenario",
       "bytes": 11991746,
       "chunks": 2
-    },
-    {
-      "id": "data-kimarite",
-      "bytes": 821612,
-      "chunks": 1
-    },
-    {
-      "id": "data-losecourse",
-      "bytes": 743800,
-      "chunks": 1
     },
     {
       "id": "brc-player-1c-recent10-data",
