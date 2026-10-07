@@ -1,17 +1,26 @@
 {
   "version": "BRC_CLOUDFLARE_SPLIT_V2_SAFE",
-  "generated_at": "2026-10-07T22:43:13.125754+00:00",
+  "generated_at": "2026-10-07T22:50:12.607692+00:00",
   "source_index": "index.html",
-  "index_bytes": 22095661,
+  "index_bytes": 23997472,
   "files": [
+    "brc-apd8-recent-course-1y-a2227c2fb8-001.js",
     "brc-dictionary-1c-loss-trend-data-d394639d6e-001.js",
     "brc-player-1c-recent10-data-ed56f49f9b-001.js",
     "data-gradestats-96c1f7f5fc-001.js",
+    "data-kimarite-f62ffd2dc7-001.js",
+    "data-lane1weakness-a52f0dbeb1-001.js",
+    "data-lose1-417577c3ba-001.js",
+    "data-losecourse-48ef2ee719-001.js",
+    "data-motor-detail-c493224826-001.js",
+    "data-player-st365-23efc8d86b-001.js",
     "data-players-3b146f12d0-001.js",
     "data-players-3b146f12d0-002.js",
     "data-scenario-2e41720b62-001.js",
     "data-scenario-2e41720b62-002.js",
+    "data-st-course-e64b3cbf66-001.js",
     "data-st-recent10-0758c875b5-001.js",
+    "data-st-stability-df03cb6112-001.js",
     "data-winner-scenario-v1-a7370443ef-001.js"
   ],
   "externalized": [
@@ -24,6 +33,16 @@
       "id": "data-players",
       "bytes": 8127594,
       "chunks": 2
+    },
+    {
+      "id": "data-st-course",
+      "bytes": 241128,
+      "chunks": 1
+    },
+    {
+      "id": "data-player-st365",
+      "bytes": 674621,
+      "chunks": 1
     },
     {
       "id": "data-st-recent10",
@@ -39,6 +58,41 @@
       "id": "data-scenario",
       "bytes": 11991746,
       "chunks": 2
+    },
+    {
+      "id": "data-kimarite",
+      "bytes": 821612,
+      "chunks": 1
+    },
+    {
+      "id": "data-lose1",
+      "bytes": 324547,
+      "chunks": 1
+    },
+    {
+      "id": "data-losecourse",
+      "bytes": 743800,
+      "chunks": 1
+    },
+    {
+      "id": "data-lane1weakness",
+      "bytes": 341197,
+      "chunks": 1
+    },
+    {
+      "id": "data-st-stability",
+      "bytes": 459664,
+      "chunks": 1
+    },
+    {
+      "id": "data-motor-detail",
+      "bytes": 548887,
+      "chunks": 1
+    },
+    {
+      "id": "brc-apd8-recent-course-1y",
+      "bytes": 461993,
+      "chunks": 1
     },
     {
       "id": "brc-player-1c-recent10-data",
