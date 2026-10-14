@@ -1,3 +1,4 @@
+<!-- BRC_V3_ADMIN_VERIFIED_PRIOR_ARROW_20261014: validated v3 minus original pre-exhibition probabilities, display only. -->
 <!-- BRC_TIMEXV3_ADMIN_CANARY_20261014: Administrator-only four metrics; server-side auth and prior-rate audit required; all public v2 values and AI/bets are untouched. -->
 <!-- BRC_TIMEX_V3_ADMIN_PRIOR_SECOND_PRECISION_CORS_PATCH_LOCAL_20261013: 事前2着率の小数照合修正。既存v2 basePct2は変更なし。安全性検証候補。 -->
 <!-- BRC_V3_BASELINE_REFRESH_GUARD_LOCAL_20261013: Same-race base-rate changes invalidate admin v3 DOM overlay; fail-closed admin canary. -->
@@ -19114,28 +19115,33 @@ function brcV3AdminRenderDisplay(){
     if(!b)return false;
     const win=state.four.wins.get(c),second=state.four.seconds.get(c),third=state.four.thirds.get(c),top3=state.four.top3s.get(c);
     if([win,second,third,top3].some(x=>!Number.isFinite(x)))return false;
+    // Only independently SHA-256-verified pre-exhibition values; never reuse v2 TimeX deltas.
+    const preWin=Number(b.basePctFloat), preTop3=Number(b.basePct3Float);
+    if([preWin,preTop3].some(x=>!Number.isFinite(x)||x<0||x>100))return false;
     const w=document.getElementById('predict-win-cell-'+c);
     const t=document.getElementById('predict-top3-cell-'+c);
     if(!w||!t)return false;
-    displayRows.push({b,win,second,third,top3,w,t});
+    displayRows.push({b,win,second,third,top3,preWin,preTop3,w,t});
   }
   const fmt=(n)=>Math.round(n);
-  for(const {b,win,second,third,top3,w,t} of displayRows){
-    // Existing main cells are updated ONLY on screen. No reassignment of b.pctFloat/pct3Float/pct2.
-    {
-      // v3 server-side prior rates are not exposed: no unchecked v3 vs v2-base arrow.
-      w.innerHTML=brcBuildProbabilityCell(fmt(win),'<span class="prob-eval-hyphen" aria-label="新TimeX v3。事前率一致確認済・v3増減幅は未検証">v3</span>');
-      const info=document.createElement('div');
-      info.className='brc-v3-admin-four-line';
-      info.style.cssText='font-size:10px;line-height:1.4;color:#4c1d95;white-space:nowrap;font-weight:700;';
-      info.textContent='v3 2着 '+fmt(second)+'% / 3着 '+fmt(third)+'%';
-      w.append(info);
-    }
-    if(t){
-      // Deliberately suppress delta arrows until server and original pre-rates are matched.
-      t.innerHTML=brcBuildProbabilityCell(fmt(top3),'<span class="prob-eval-hyphen" aria-label="新TimeX v3。事前率一致確認済・v3増減幅は未検証">v3</span>');
-      const flag=document.createElement('div');flag.style.cssText='font-size:10px;font-weight:800;color:#4c1d95;';flag.textContent='TimeX v3';t.append(flag);
-    }
+  for(const {win,second,third,top3,preWin,preTop3,w,t} of displayRows){
+    // V3 delta = validated V3 final probability - ORIGINAL pre-exhibition prior.
+    // Both priors are validated by brcV3AdminVerifyPriorAudit() SHA-256 on the same race.
+    // Keep the original direction/threshold/SVG as V2; never use any V2 TimeX effect.
+    const arrowWin=brcBuildExhibitionProbabilityArrowIcon(win-preWin,0.75);
+    const arrowTop3=brcBuildExhibitionProbabilityArrowIcon(top3-preTop3,0.75);
+    // DOM only. No mutation of any boat's pctFloat, pct3Float, AI or bet inputs.
+    w.innerHTML=brcBuildProbabilityCell(fmt(win),arrowWin);
+    const info=document.createElement('div');
+    info.className='brc-v3-admin-four-line';
+    info.style.cssText='font-size:10px;line-height:1.4;color:#4c1d95;white-space:nowrap;font-weight:700;';
+    info.textContent='v3 2着 '+fmt(second)+'% / 3着 '+fmt(third)+'%';
+    w.append(info);
+    t.innerHTML=brcBuildProbabilityCell(fmt(top3),arrowTop3);
+    const flag=document.createElement('div');
+    flag.style.cssText='font-size:10px;font-weight:800;color:#4c1d95;';
+    flag.textContent='TimeX v3';
+    t.append(flag);
   }
   try{brcV3AdminSyncDetail();}catch(_e){}
   return true;
