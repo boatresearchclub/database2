@@ -19230,7 +19230,12 @@ function brcV3AdminAutoTry(box){
 }
 function brcV3AdminMount(venue,raceNo,liveRace){
   if(!BRC_ADMIN_ACTIVE||!BRC_MEMBER_ACTIVE){brcV3AdminUnmount();return;}
-  const host=document.getElementById('liveExhibitionCard');
+  // BRC_TIMEX_V3_ADMIN_MOUNT_ANCHOR_HOTFIX_20261014
+  // The production prediction template does not initially create liveExhibitionCard.
+  // Mount the admin-only v3 diagnostic after the existing race table instead.
+  // Avoid introducing any new public/v2 DOM nodes or changing calculation inputs.
+  const host=document.getElementById('liveExhibitionCard') ||
+    document.querySelector('#predictResult #predictTableWrap');
   if(!host||!brcV3AdminCompareCurrent(venue,raceNo,String(TODAY_LABEL||'')))return;
   const date=String(TODAY_LABEL||''),code=brcVenueCodeFromName(venue),r=Number(raceNo);
   const key=[date,code,r].join('|');
