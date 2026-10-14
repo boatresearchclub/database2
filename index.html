@@ -19205,26 +19205,66 @@ function brcV3AdminSyncDetail(course){
 }
 // END BRC_TIMEX_V3_ADMIN_DETAIL_SYNCHRONIZATION_LOCAL_20261013
 
+// BRC_TIMEX_V3_ADMIN_RECOVERY_WATCH_V1_20261014
+// Restore admin-only v3 after table rewrites, transient display clears, auth renewal,
+// and DOM recreation. Fail closed unless the CURRENT six-boat live data and priors exist.
+// This watcher does not fetch live data or mutate any v2/AI/bet calculation.
+let __brcV3RecoveryTimer=null;
 function brcV3AdminUnmount(){
+  if(__brcV3RecoveryTimer!==null){clearInterval(__brcV3RecoveryTimer);__brcV3RecoveryTimer=null;}
   brcV3AdminClearDisplay();
   ++__brcV3AdminCompareSeq;
+  __brcV3AutoStamp='';__brcV3AutoLastAt=0;
   document.getElementById('brcV3AdminCompare')?.remove();
 }
-// Admin-only AUTO attempt. Uses existing exhibition refresh; no timer or Publisher ingestion.
 let __brcV3AutoStamp='',__brcV3AutoLastAt=0;
+function brcV3AdminRecoveryTick(){
+  if(!BRC_ADMIN_ACTIVE||!BRC_MEMBER_ACTIVE){brcV3AdminUnmount();return;}
+  if(document.visibilityState==='hidden')return;
+  const selected=brcCurrentLiveExhibitionSelection();
+  if(!selected?.venue||!Number.isInteger(Number(selected.raceNo))||Number(selected.raceNo)<1||Number(selected.raceNo)>12)return;
+  if(String(TODAY_LABEL||'')!==getJstDateLabel())return;
+  const host=document.querySelector('#predictResult #predictTableWrap');
+  if(!host||!Array.isArray(window.__predictBoatsCurrent)||window.__predictBoatsCurrent.length!==6)return;
+  // Re-mount when the prediction DOM is rebuilt; re-apply verified four metrics
+  // when the legacy exhibition refresh overwrites the main cells.
+  brcV3AdminMount(selected.venue,Number(selected.raceNo),window.__currentLiveExhibition||null);
+}
+function brcV3AdminEnsureRecovery(){
+  if(__brcV3RecoveryTimer!==null)return;
+  __brcV3RecoveryTimer=setInterval(()=>{
+    try{brcV3AdminRecoveryTick();}catch(_e){}
+  },3000);
+}
 function brcV3AdminAutoTry(box){
   if(!BRC_ADMIN_ACTIVE||!BRC_MEMBER_ACTIVE||!box)return;
   const btn=box.querySelector('button');
   const status=box.querySelector('[data-brc-v3-status]');
   if(!btn||btn.disabled||!status)return;
+  const selected=brcCurrentLiveExhibitionSelection();
+  const code=brcVenueCodeFromName(selected.venue);
+  if(!brcV3AdminLiveMatches(window.__currentLiveExhibition,String(TODAY_LABEL||''),code,selected.raceNo)){
+    status.textContent='v3待機：選択レースの進入・展示データを照合中（現在はv2）';return;
+  }
   const sig=brcV3AdminLiveSignature(window.__currentLiveExhibition);
-  if(!sig){status.textContent='v3待機：進入または展示の確定待ち（現状は従来v2）';return;}
-  if(__brcV3AdminDisplay&&brcV3AdminRenderDisplay())return;
-  const stamp=String(box.dataset.key||'')+'|'+sig;
+  if(!sig){status.textContent='v3待機：進入または展示の確定待ち（現在はv2）';return;}
+  if(__brcV3AdminDisplay&&brcV3AdminRenderDisplay()){
+    status.textContent='v3適用（管理者専用）：4指標の事前着率照合済。詳細・AI・買い目内部はv2のまま。';
+    return;
+  }
+  let prior='';
+  try{prior=brcV3AdminPriorCanonical();}
+  catch(e){status.textContent='v3待機：'+String(e?.message||e)+'（現在はv2）';return;}
+  const stamp=String(box.dataset.key||'')+'|'+sig+'|'+prior;
   const now=Date.now();
-  // No more than once per 30 sec overall; retry the same race after 60 sec if still unavailable.
-  if(now-__brcV3AutoLastAt<30000)return;
-  if(stamp===__brcV3AutoStamp && now-__brcV3AutoLastAt<60000)return;
+  // Worker rate limits are respected; fresh DOM never sticks at an inaccurate
+  // 'race not registered' placeholder while within the retry cooldown.
+  const retryAt=Math.max(__brcV3AutoLastAt+30000,
+    stamp===__brcV3AutoStamp?__brcV3AutoLastAt+60000:0);
+  if(__brcV3AutoLastAt&&now<retryAt){
+    status.textContent='v3自動再照合待ち：'+Math.ceil((retryAt-now)/1000)+'秒後に再確認（現在はv2）';
+    return;
+  }
   __brcV3AutoStamp=stamp;__brcV3AutoLastAt=now;
   btn.click();
 }
@@ -19237,6 +19277,7 @@ function brcV3AdminMount(venue,raceNo,liveRace){
   const host=document.getElementById('liveExhibitionCard') ||
     document.querySelector('#predictResult #predictTableWrap');
   if(!host||!brcV3AdminCompareCurrent(venue,raceNo,String(TODAY_LABEL||'')))return;
+  brcV3AdminEnsureRecovery();
   const date=String(TODAY_LABEL||''),code=brcVenueCodeFromName(venue),r=Number(raceNo);
   const key=[date,code,r].join('|');
   let box=document.getElementById('brcV3AdminCompare');
@@ -19245,7 +19286,19 @@ function brcV3AdminMount(venue,raceNo,liveRace){
     box.style.cssText='margin:9px 0;padding:10px;border:1px solid #7c3aed;border-radius:10px;background:#faf7ff;color:#0a1f33;font-size:12px;line-height:1.55;';
     host.insertAdjacentElement('afterend',box);
   }
-  if(box.dataset.key!==key){ ++__brcV3AdminCompareSeq;brcV3AdminClearDisplay();box.dataset.key=key;box.replaceChildren(); }
+  if(box.dataset.key!==key){
+    ++__brcV3AdminCompareSeq; // cancel requests targeting the previous DOM
+    let keepVerified=false;
+    if(__brcV3AdminDisplay?.key===key){
+      try{
+        keepVerified=brcV3AdminLiveMatches(window.__currentLiveExhibition,date,code,r) &&
+          __brcV3AdminDisplay.signature===brcV3AdminLiveSignature(window.__currentLiveExhibition) &&
+          __brcV3AdminDisplay.priorCanonical===brcV3AdminPriorCanonical();
+      }catch(_e){}
+    }
+    if(!keepVerified)brcV3AdminClearDisplay();
+    box.dataset.key=key;box.replaceChildren();
+  }
   if(__brcV3AdminDisplay &&
      (__brcV3AdminDisplay.signature!==brcV3AdminLiveSignature(window.__currentLiveExhibition)||
       !brcV3AdminLiveMatches(window.__currentLiveExhibition,date,code,r))){
@@ -19258,7 +19311,7 @@ function brcV3AdminMount(venue,raceNo,liveRace){
   const info=document.createElement('div');info.textContent='4指標を自動切り替え（事前着率照合必須）。未取得時はv2維持。詳細・AI・買い目への適用は未検証。';box.append(info);
   const btn=document.createElement('button');btn.type='button';btn.textContent='新v3の4指標を取得・比較';
   btn.hidden=true;btn.style.display='none';;
-  const status=document.createElement('div');status.setAttribute('data-brc-v3-status','1');status.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;';status.textContent='v3確認待ち（レースデータ登録なし）';
+  const status=document.createElement('div');status.setAttribute('data-brc-v3-status','1');status.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;';status.textContent='v3確認待ち：展示・事前着率の照合中（現在はv2）';
   box.append(btn,status);
   btn.addEventListener('click',async()=>{
     if(btn.disabled)return;
@@ -19272,7 +19325,7 @@ function brcV3AdminMount(venue,raceNo,liveRace){
       const requestSignature=brcV3AdminLiveSignature(initialLive);
       const requestPrior=brcV3AdminPriorCanonical();
       const stillSame=()=>seq===__brcV3AdminCompareSeq&&
-        brcV3AdminCompareCurrent(venue,r,date)&&box.dataset.key===key&&
+        brcV3AdminCompareCurrent(venue,r,date)&&box.isConnected&&document.getElementById('brcV3AdminCompare')===box&&box.dataset.key===key&&
         brcV3AdminLiveMatches(window.__currentLiveExhibition,date,code,r)&&
         brcV3AdminLiveSignature(window.__currentLiveExhibition)===requestSignature;
       const session=await brcEnsureFreshSession();
