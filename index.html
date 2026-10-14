@@ -19132,16 +19132,7 @@ function brcV3AdminRenderDisplay(){
     const arrowTop3=brcBuildExhibitionProbabilityArrowIcon(top3-preTop3,0.75);
     // DOM only. No mutation of any boat's pctFloat, pct3Float, AI or bet inputs.
     w.innerHTML=brcBuildProbabilityCell(fmt(win),arrowWin);
-    const info=document.createElement('div');
-    info.className='brc-v3-admin-four-line';
-    info.style.cssText='font-size:10px;line-height:1.4;color:#4c1d95;white-space:nowrap;font-weight:700;';
-    info.textContent='v3 2着 '+fmt(second)+'% / 3着 '+fmt(third)+'%';
-    w.append(info);
     t.innerHTML=brcBuildProbabilityCell(fmt(top3),arrowTop3);
-    const flag=document.createElement('div');
-    flag.style.cssText='font-size:10px;font-weight:800;color:#4c1d95;';
-    flag.textContent='TimeX v3';
-    t.append(flag);
   }
   try{brcV3AdminSyncDetail();}catch(_e){}
   return true;
