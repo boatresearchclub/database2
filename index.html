@@ -1,3 +1,4 @@
+<!-- BRC_20261017_FOLLOWUP_V2: visible prior probabilities while v3 is pending; scenario search deadline-first column header and two extra stats. -->
 <!-- BRC_3UI_COMPACT_20261017: low sample warning red one-line; admin V3 comparison diagnostics hidden, unverified admin race four-metric cells masked; scenario race 1-row with current official racerClass and expandable detail. Public v2 and calculation algorithms unchanged. Admin AI/bet v3 internal wiring remains NOT validated. NOT DEPLOYED. -->
 <!-- BRC_V3_ADMIN_VERIFIED_PRIOR_ARROW_20261014: validated v3 minus original pre-exhibition probabilities, display only. -->
 <!-- BRC_TIMEXV3_ADMIN_CANARY_20261014: Administrator-only four metrics; server-side auth and prior-rate audit required; all public v2 values and AI/bets are untouched. -->
@@ -326,7 +327,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261017-3UI-ADMIN-V3-COMPACT">
+<meta name="brc-build" content="20261017-3UI-RATES-SEARCH-V2">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -6735,23 +6736,23 @@ body.brc-admin-home-active .brc-admin-top-race .dp-signal:not(.in){
 }
 /* ② No purple admin test card. Hidden button remains mounted for validated v3 auto-fetch. */
 #brcV3AdminCompare{display:none!important;}
-/* Until an authenticated v3 response matches the current race, hide misleading admin v2 rate cells. */
-body.brc-v3-admin-pending #predictTableWrap [id^="predict-win-cell-"] .prob-cell-stack,
-body.brc-v3-admin-pending #predictTableWrap [id^="predict-top3-cell-"] .prob-cell-stack{display:none!important;}
-body.brc-v3-admin-pending #predictTableWrap [id^="predict-win-cell-"]::after,
-body.brc-v3-admin-pending #predictTableWrap [id^="predict-top3-cell-"]::after{
- content:'―';color:#8e9aa9;font-weight:800;font-size:17px;
-}
-/* ③ one row per hit. Primary row opens the race; chevron opens the preserved metrics. */
-#scenarioSearchResults.scenario-search-results{display:grid;gap:5px;}
+/* v3 not yet verified: show only independently available pre-exhibition Worker probabilities,
+   not the previous v2 TimeX final figures. Missing prior remains '―'. */
+#predictTableWrap .brc-v3-prior-label{font-size:9px;font-weight:800;color:#915c13;white-space:nowrap;}
+#predictTableWrap .brc-v3-prior .prob-value-main{color:#78501a;}
+#predictTableWrap .brc-v3-prior .prob-eval-row{min-height:13px;}
+body.brc-v3-admin-pending #predictTableWrap .predict-timex-common{color:#915c13;}
+/* ③ 8-column headline + one race per row; first column is deadline. */
+#scenarioSearchResults.scenario-search-results{display:grid;gap:5px;
+ --ss-cols:44px 66px 22px minmax(80px,1fr) 30px 78px 66px 62px;}
 #scenarioSearchResults .scenario-search-result{padding:0!important;overflow:hidden;border-radius:9px;cursor:default;}
+#scenarioSearchResults .scenario-search-colhead{display:flex;align-items:center;gap:2px;padding:6px 7px 5px;color:#526278;background:#f0f4fa;border:1px solid #dce4f0;border-radius:8px;font-size:10px;font-weight:900;}
 #scenarioSearchResults .scenario-search-one-line{display:flex;align-items:center;min-height:46px;padding:0 7px;gap:2px;}
-#scenarioSearchResults .scenario-search-navigate{
- display:grid;grid-template-columns:82px 21px minmax(0,1fr) 27px 96px 43px;
- gap:4px;align-items:center;min-width:0;flex:1;cursor:pointer;line-height:1.15;
-}
+#scenarioSearchResults .scenario-search-navigate{display:grid;grid-template-columns:var(--ss-cols);gap:3px;align-items:center;min-width:0;flex:1;cursor:pointer;line-height:1.17;}
+#scenarioSearchResults .scenario-search-colhead .scenario-search-navigate{cursor:default;text-align:center;line-height:1.22;}
+#scenarioSearchResults .scenario-search-colhead .scenario-search-navigate span{min-width:0;white-space:normal;overflow-wrap:anywhere;}
 #scenarioSearchResults .scenario-search-navigate:focus-visible,#scenarioSearchResults .scenario-search-more:focus-visible{outline:2px solid var(--wave);outline-offset:1px;border-radius:4px;}
-#scenarioSearchResults .scenario-search-race{font-size:13px!important;font-weight:900;white-space:nowrap;}
+#scenarioSearchResults .scenario-search-race{font-size:12px!important;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:clip;}
 #scenarioSearchResults .scenario-search-boat{width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:11px;border:1px solid #bbc5d3;}
 #scenarioSearchResults .scenario-search-boat.lane1{background:#fff;color:#0a1f33;}
 #scenarioSearchResults .scenario-search-boat.lane2{background:#1a1a1a;color:#fff;}
@@ -6759,38 +6760,52 @@ body.brc-v3-admin-pending #predictTableWrap [id^="predict-top3-cell-"]::after{
 #scenarioSearchResults .scenario-search-boat.lane4{background:#1f5fb0;color:#fff;}
 #scenarioSearchResults .scenario-search-boat.lane5{background:#e3b23c;color:#192333;}
 #scenarioSearchResults .scenario-search-boat.lane6{background:#2f8f5b;color:#fff;}
-#scenarioSearchResults .scenario-search-name{font-size:12px;font-weight:800;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-#scenarioSearchResults .scenario-search-grade{border-radius:5px;font-size:10px;font-weight:900;text-align:center;padding:3px 2px;white-space:nowrap;background:#f0f2f5;color:#566579;}
+#scenarioSearchResults .scenario-search-name{font-size:11.5px;font-weight:800;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#scenarioSearchResults .scenario-search-grade{border-radius:5px;font-size:10px;font-weight:900;text-align:center;padding:3px 1px;white-space:nowrap;background:#f0f2f5;color:#566579;}
 #scenarioSearchResults .scenario-search-grade.grade-A1{background:#e6efff;color:#1557bc;}
 #scenarioSearchResults .scenario-search-grade.grade-A2{background:#e3f6ff;color:#08799a;}
-#scenarioSearchResults .scenario-search-highlight{font-size:11px;font-weight:900;color:#0057db;text-align:right;white-space:nowrap;}
-#scenarioSearchResults .scenario-search-time{font-size:10px;font-weight:800;text-align:right;color:var(--ink-soft);white-space:nowrap;font-variant-numeric:tabular-nums;}
-#scenarioSearchResults .scenario-search-more{border:0;background:transparent;color:#556a80;cursor:pointer;flex:0 0 18px;height:32px;padding:0;font-size:19px;font-weight:900;}
+#scenarioSearchResults .scenario-search-highlight{font-size:11px;font-weight:900;color:#0057db;text-align:center;white-space:nowrap;}
+#scenarioSearchResults .scenario-search-brc{font-size:11px;font-weight:900;color:#0a1f33;text-align:center;white-space:nowrap;}
+#scenarioSearchResults .scenario-search-time{font-size:11px;font-weight:800;color:#0a1f33;text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums;}
+#scenarioSearchResults .scenario-search-inrank{font-size:12px;font-weight:900;text-align:center;white-space:nowrap;color:#64748b;}
+#scenarioSearchResults .scenario-search-inrank.rank-S{color:#7c3aed;}
+#scenarioSearchResults .scenario-search-inrank.rank-A{color:#2563eb;}
+#scenarioSearchResults .scenario-search-inrank.rank-B{color:#0891b2;}
+#scenarioSearchResults .scenario-search-inrank.rank-C{color:#64748b;}
+#scenarioSearchResults .scenario-search-inrank.rank-D{color:#d97706;}
+#scenarioSearchResults .scenario-search-inrank.rank-E,#scenarioSearchResults .scenario-search-inrank.rank-reject{color:#dc2626;}
+#scenarioSearchResults .scenario-search-more,#scenarioSearchResults .scenario-search-more-place{flex:0 0 17px;}
+#scenarioSearchResults .scenario-search-more{border:0;background:transparent;color:#556a80;cursor:pointer;height:32px;padding:0;font-size:19px;font-weight:900;}
 #scenarioSearchResults .scenario-search-expand{border-top:1px solid #e2e8f0;padding:7px 9px 9px;background:#f8fafc;}
 #scenarioSearchResults .scenario-search-expand[hidden]{display:none!important;}
 #scenarioSearchResults .scenario-search-expand .scenario-search-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:0;gap:4px;}
 #scenarioSearchResults .scenario-search-expand .scenario-search-metric{padding:6px 3px;}
 #scenarioSearchResults .scenario-search-expand .scenario-search-detail{margin:5px 0 0;}
+#scenarioSearchResults .scenario-search-result.passed .scenario-search-time{color:#9ca3af;}
 @media(max-width:600px){
- #scenarioSearchResults .scenario-search-one-line{min-height:43px;padding:0 5px;gap:1px;}
- #scenarioSearchResults .scenario-search-navigate{grid-template-columns:67px 17px minmax(0,1fr) 24px 79px 37px;gap:3px;}
- #scenarioSearchResults .scenario-search-race{font-size:11px!important;}
+ #scenarioSearchResults.scenario-search-results{--ss-cols:36px 52px 18px minmax(0,1fr) 23px 51px 48px 31px;}
+ #scenarioSearchResults .scenario-search-colhead{padding:6px 5px 5px;font-size:9px;gap:2px;}
+ #scenarioSearchResults .scenario-search-one-line{min-height:43px;padding:0 5px;gap:2px;}
+ #scenarioSearchResults .scenario-search-navigate{gap:2px;}
+ #scenarioSearchResults .scenario-search-race{font-size:10px!important;letter-spacing:-.02em;}
  #scenarioSearchResults .scenario-search-boat{width:17px;height:17px;font-size:10px;}
- #scenarioSearchResults .scenario-search-name{font-size:10.5px;}
+ #scenarioSearchResults .scenario-search-name{font-size:10px;}
  #scenarioSearchResults .scenario-search-grade{font-size:9px;padding:3px 0;}
- #scenarioSearchResults .scenario-search-highlight{font-size:9.5px;}
+ #scenarioSearchResults .scenario-search-highlight,#scenarioSearchResults .scenario-search-brc{font-size:9.2px;letter-spacing:-.03em;}
  #scenarioSearchResults .scenario-search-time{font-size:9px;}
- #scenarioSearchResults .scenario-search-more{flex-basis:16px;font-size:17px;}
+ #scenarioSearchResults .scenario-search-inrank{font-size:11px;}
+ #scenarioSearchResults .scenario-search-more,#scenarioSearchResults .scenario-search-more-place{flex-basis:13px;}
+ #scenarioSearchResults .scenario-search-more{font-size:17px;}
  #scenarioSearchResults .scenario-search-expand .scenario-search-metric .k{font-size:9px;}
  #scenarioSearchResults .scenario-search-expand .scenario-search-metric .v{font-size:12px;}
 }
-@media(max-width:365px){
- #scenarioSearchResults .scenario-search-navigate{grid-template-columns:58px 16px minmax(0,1fr) 22px 72px 32px;gap:2px;}
- #scenarioSearchResults .scenario-search-race{font-size:10px!important;}
- #scenarioSearchResults .scenario-search-name{font-size:10px;}
- #scenarioSearchResults .scenario-search-highlight{font-size:9px;}
- #scenarioSearchResults .scenario-search-time{font-size:8px;}
- #scenarioSearchResults .scenario-search-more{flex-basis:13px;}
+@media(max-width:370px){
+ #scenarioSearchResults.scenario-search-results{--ss-cols:33px 46px 16px minmax(0,1fr) 21px 47px 43px 27px;}
+ #scenarioSearchResults .scenario-search-colhead{font-size:8px;}
+ #scenarioSearchResults .scenario-search-name{font-size:9px;}
+ #scenarioSearchResults .scenario-search-race{font-size:9px!important;}
+ #scenarioSearchResults .scenario-search-highlight,#scenarioSearchResults .scenario-search-brc{font-size:8.5px;}
+ #scenarioSearchResults .scenario-search-time{font-size:8.6px;}
 }
 </style>
 </head>
@@ -19163,6 +19178,43 @@ function brcV3AdminLiveMatches(r,date,code,raceNo){
 }
 // SECURITY: immediately restore the original v2 main cells when admin rights, race, or TimeX changes.
 // This restores only DOM; shared worker/AI values were never modified.
+// BRC_ADMIN_V3_PRIOR_VISIBLE_FALLBACK_20261017
+// While verified v3 is unavailable, only show PRE-EXHIBITION Worker rates clearly labelled.
+// No changes to prediction model, betting inputs, or the member/public v2 display.
+function brcV3AdminSetTableRateLabel(text){
+  const label=document.querySelector('#predictTableWrap .predict-timex-common');
+  if(label)label.textContent=text;
+}
+function brcV3AdminRenderPriorFallback(){
+  if(!BRC_ADMIN_ACTIVE || !BRC_MEMBER_ACTIVE || __brcV3AdminDisplay)return false;
+  const rows=window.__predictBoatsCurrent;
+  if(!Array.isArray(rows)||rows.length!==6)return false;
+  // Ensure there is never an unlabelled v2 rate displayed under an admin v3 heading.
+  const show=[];
+  for(let c=1;c<=6;c++){
+    const b=rows.find(x=>Number(x.course)===c);
+    const w=document.getElementById('predict-win-cell-'+c);
+    const t=document.getElementById('predict-top3-cell-'+c);
+    if(!b||!w||!t)return false;
+    const good=(v)=>v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v))&&Number(v)>=0&&Number(v)<=100;
+    show.push({w,t,win:good(b.basePctFloat)?Number(b.basePctFloat):null,
+                     top3:good(b.basePct3Float)?Number(b.basePct3Float):null});
+  }
+  for(const x of show){
+    for(const pair of [[x.w,x.win],[x.t,x.top3]]){
+      const node=pair[0],rate=pair[1];
+      node.innerHTML=rate===null?'<span class="brc-v3-prior-label" title="事前着率未取得">―</span>':
+        '<div class="prob-cell-stack brc-v3-prior" title="事前BRC着率・TimeX v3未取得。展示補正前の暫定値">'+
+        '<div class="prob-value"><span class="prob-value-main">'+Math.round(rate)+'<span class="predict-unit">%</span></span></div>'+ 
+        '<div class="prob-eval-row"><span class="brc-v3-prior-label">展示前</span></div></div>';
+    }
+  }
+  brcV3AdminSetTableRateLabel('（展示前・v3取得待ち）');
+  document.body.classList.add('brc-v3-admin-pending');
+  return true;
+}
+// END BRC_ADMIN_V3_PRIOR_VISIBLE_FALLBACK_20261017
+
 function brcV3AdminClearDisplay(){
   const hadV3=!!__brcV3AdminDisplay;
   __brcV3AdminDisplay=null;
@@ -19172,11 +19224,12 @@ function brcV3AdminClearDisplay(){
     try{brcRefreshAdminPersonalTimeXDom();}catch(_e){}
     try{brcV3AdminSyncDetail();}catch(_e){}
   }
+  try{brcV3AdminRenderPriorFallback();}catch(_e){}
 }
 function brcV3AdminRenderDisplay(){
   if(!BRC_ADMIN_ACTIVE||!BRC_MEMBER_ACTIVE){ brcV3AdminClearDisplay(); return false; }
   const state=__brcV3AdminDisplay;
-  if(!state) return false;
+  if(!state){brcV3AdminRenderPriorFallback();return false;}
   const selected=brcCurrentLiveExhibitionSelection();
   const date=String(TODAY_LABEL||''),code=brcVenueCodeFromName(selected.venue);
   const key=[date,code,Number(selected.raceNo)].join('|');
@@ -19219,6 +19272,7 @@ function brcV3AdminRenderDisplay(){
     t.innerHTML=brcBuildProbabilityCell(fmt(top3),arrowTop3);
   }
   try{brcV3AdminSyncDetail();}catch(_e){}
+  brcV3AdminSetTableRateLabel('（TimeX v3）');
   document.body.classList.remove('brc-v3-admin-pending');
   return true;
 }
@@ -19362,6 +19416,7 @@ function brcV3AdminMount(venue,raceNo,liveRace){
   const host=document.getElementById('liveExhibitionCard') ||
     document.querySelector('#predictResult #predictTableWrap');
   if(!host||!brcV3AdminCompareCurrent(venue,raceNo,String(TODAY_LABEL||'')))return;
+  if(!__brcV3AdminDisplay)brcV3AdminRenderPriorFallback();
   brcV3AdminEnsureRecovery();
   const date=String(TODAY_LABEL||''),code=brcVenueCodeFromName(venue),r=Number(raceNo);
   const key=[date,code,r].join('|');
@@ -23708,7 +23763,15 @@ async function brcScenarioHydrateBaseWin(rows){
     const pred=BRC_SCENARIO_SEARCH_PRED_CACHE.get(brcScenarioPredKey(r.venue,r.raceNo))?.pred;
     const w=pred?.wins?.find(x=>Number(x?.course)===Number(r.course));
     const p=Number(w?.pctFloat);
-    r.baseBrcPct=Number.isFinite(p)?p:null;
+    r.baseBrcPct=w && Number.isFinite(p)?p:null;
+    const inRow=pred?.wins?.find(x=>Number(x?.course)===1);
+    const inWin=Number(inRow?.pctFloat);
+    const spec=pred?.inReliability ? buildTodayRaceSpec(r.venue,r.raceNo) : null;
+    const localIr=(inRow && Number.isFinite(inWin) && spec?.apiBoats?.length===6)
+      ? classifyInReliabilityByWinPct(inWin,spec.grade,spec.apiBoats.map(b=>b.reg),pred.inReliability):null;
+    // These are exhibition-before batch figures, not unverified v3 output.
+    r.searchInRank=String(localIr?.rank||'');
+    r.searchInWin=localIr?inWin:null;
   }
   return rows;
 }
@@ -23792,7 +23855,7 @@ async function brcRenderScenarioSearch(){
   if(canUseProtectedBase){
     try{await brcScenarioHydrateBaseWin(q.rows);}catch(err){console.warn('BRC scenario base prediction failed:',err);if(count)count.textContent='取得エラー';box.innerHTML='<div class="scenario-search-empty">展示前BRC1着率を取得できませんでした。再検索してください。</div>';return;}
   }else{
-    q.rows.forEach(r=>{r.baseBrcPct=null;});
+    q.rows.forEach(r=>{r.baseBrcPct=null;r.searchInRank='';r.searchInWin=null;});
     if(q.brcMin!==null){
       if(count)count.textContent='条件エラー';
       box.innerHTML='<div class="scenario-search-empty">展示前BRC1着率の絞り込みは会員ログイン時のみ利用できます。BRC1着率を「指定なし」にすると、決まり手・ST・N条件で一般検索できます。</div>';
@@ -23804,7 +23867,13 @@ async function brcRenderScenarioSearch(){
   if(count) count.textContent=`該当 ${rows.length}レース`;
   if(!rows.length){box.innerHTML='<div class="scenario-search-empty">該当レースなし</div>';return;}
   const escapeScenario=(v)=>String(v==null?'':v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  box.innerHTML=rows.map((r,i)=>{
+  const headHtml=`<div class="scenario-search-colhead" aria-label="検索結果の項目見出し">
+    <div class="scenario-search-navigate">
+      <span>締切</span><span>会場</span><span>枠</span><span>名前</span><span>級</span>
+      <span>決まり手率</span><span>BRC1着率</span><span>イン信頼度</span>
+    </div><span class="scenario-search-more-place"></span>
+  </div>`;
+  box.innerHTML=headHtml+rows.map((r,i)=>{
     const passed=isRaceDeadlinePassed(r.deadline);
     const stValue=r.st?.attack?`${r.st.attack.avg.toFixed(1)}位`:'―';
     let stSub=r.st?.attack?.n?`N=${r.st.attack.n}`:'&nbsp;';
@@ -23815,15 +23884,20 @@ async function brcRenderScenarioSearch(){
     const racerClass=/^(A1|A2|B1|B2)$/.test(officialClass)?officialClass:'―';
     const detailId=`brc-scenario-detail-${i}`;
     const base=Number(r.baseBrcPct),hasBase=r.baseBrcPct!==null && r.baseBrcPct!==undefined && Number.isFinite(base);
+    const searchRank=String(r.searchInRank||'');
+    const shortRank=searchRank==='強イン否定'?'否':(/^[SABCDE]$/.test(searchRank)?searchRank:'―');
+    const searchRankCss=/^[SABCDE]$/.test(shortRank)?'rank-'+shortRank:shortRank==='否'?'rank-reject':'rank-unknown';
     return `<div class="scenario-search-result${passed?' passed':''}">
       <div class="scenario-search-one-line">
         <div class="scenario-search-navigate" data-scenario-venue="${escapeScenario(r.venue)}" data-scenario-race="${r.raceNo}" role="button" tabindex="0" aria-label="${escapeScenario(r.venue)}${r.raceNo}R、${r.course}号艇 ${escapeScenario(r.attackName)}、出走表を開く">
+          <span class="scenario-search-time" title="締切 ${escapeScenario(r.deadline||'未取得')}">${escapeScenario(r.deadline||'―')}</span>
           <span class="scenario-search-race">${escapeScenario(r.venue)}${r.raceNo}R</span>
           <span class="scenario-search-boat lane${r.course}" aria-label="${r.course}号艇">${r.course}</span>
           <span class="scenario-search-name">${escapeScenario(r.attackName)}</span>
           <span class="scenario-search-grade grade-${racerClass==='―'?'unknown':racerClass}" title="級別（当日公式番組表）">${racerClass}</span>
-          <span class="scenario-search-highlight" title="${escapeScenario(r.keys.kindLabel)}率">${escapeScenario(r.keys.kindLabel)}${r.attackPct.toFixed(1)}%</span>
-          <span class="scenario-search-time" title="締切 ${escapeScenario(r.deadline||'未取得')}">${escapeScenario(r.deadline||'―')}</span>
+          <span class="scenario-search-highlight" title="${escapeScenario(r.keys.kindLabel)}率（展示前の検索条件）">${r.attackPct.toFixed(1)}%</span>
+          <span class="scenario-search-brc" title="展示前BRC1着率（TimeX未反映）">${hasBase?base.toFixed(1)+'%':'―'}</span>
+          <span class="scenario-search-inrank ${searchRankCss}" title="イン逃げ信頼度（展示前BRC1着率に基づく${searchRank?'：'+escapeScenario(searchRank):'・会員ログインで取得'}）">${shortRank}</span>
         </div>
         <button type="button" class="scenario-search-more" data-scenario-more="${detailId}" aria-controls="${detailId}" aria-expanded="false" aria-label="${escapeScenario(r.venue)}${r.raceNo}R の詳細を展開">⌄</button>
       </div>
@@ -23834,7 +23908,7 @@ async function brcRenderScenarioSearch(){
           <div class="scenario-search-metric"><div class="k">${r.course}号艇 ${escapeScenario(r.keys.attackLabel)}</div><div class="v">${r.attackPct.toFixed(1)}%</div><div class="n">N=${r.attackN}</div></div>
           <div class="scenario-search-metric"><div class="k">ST順位</div><div class="v">${stValue}</div><div class="n">${stSub}</div></div>
         </div>
-        <div class="scenario-search-detail">行をタップで出走表へ。検索は展示前条件、TimeX反映後の数値は出走表で確認。</div>
+        <div class="scenario-search-detail">検索結果のBRC1着率・イン信頼度は展示前の参考値（会員のみ）。TimeX反映後は出走表で確認。</div>
       </div>
     </div>`;
   }).join('');
