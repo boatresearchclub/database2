@@ -1,3 +1,4 @@
+<!-- BRC_3UI_COMPACT_20261017: low sample warning red one-line; admin V3 comparison diagnostics hidden, unverified admin race four-metric cells masked; scenario race 1-row with current official racerClass and expandable detail. Public v2 and calculation algorithms unchanged. Admin AI/bet v3 internal wiring remains NOT validated. NOT DEPLOYED. -->
 <!-- BRC_V3_ADMIN_VERIFIED_PRIOR_ARROW_20261014: validated v3 minus original pre-exhibition probabilities, display only. -->
 <!-- BRC_TIMEXV3_ADMIN_CANARY_20261014: Administrator-only four metrics; server-side auth and prior-rate audit required; all public v2 values and AI/bets are untouched. -->
 <!-- BRC_TIMEX_V3_ADMIN_PRIOR_SECOND_PRECISION_CORS_PATCH_LOCAL_20261013: 事前2着率の小数照合修正。既存v2 basePct2は変更なし。安全性検証候補。 -->
@@ -325,7 +326,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261014-V3-ADMIN-4METRIC-CANARY">
+<meta name="brc-build" content="20261017-3UI-ADMIN-V3-COMPACT">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -6709,6 +6710,87 @@ body.brc-admin-home-active .brc-admin-top-race .dp-signal:not(.in){
 @media(max-width:640px){
   #raceConditionBannerSlot .brc-condition-exhibition{padding:9px 10px;}
   #raceConditionBannerSlot .brc-condition-exhibition .direct-info-banner-note{flex-basis:100%;font-size:11px;}
+}
+</style>
+<style id="brc-3ui-compact-20261017">
+/* ① explicit single-row red warning, both phones and desktops. */
+#raceConditionBannerSlot .brc-low-sample-warning,
+#predictResult .brc-low-sample-warning{
+ display:flex!important;align-items:center!important;flex-wrap:nowrap!important;
+ gap:6px!important;width:100%;min-width:0;max-width:100%;
+ padding:8px 10px!important;margin:4px 0 10px!important;
+ border:1px solid #d84a45!important;border-radius:9px!important;
+ background:#fff0ed!important;color:#b42323!important;
+ box-shadow:inset 0 0 0 1px #f9d2cc!important;white-space:nowrap!important;
+}
+.brc-low-sample-warning .direct-info-banner-label{color:#b42323!important;font-weight:900!important;font-size:12px!important;white-space:nowrap!important;}
+.brc-low-sample-warning .direct-info-banner-items{gap:2px!important;flex:0 0 auto!important;}
+.brc-low-sample-warning .slit-eval-boat{width:19px!important;height:19px!important;font-size:10px!important;}
+.brc-low-sample-warning .direct-info-banner-note{margin-left:auto!important;color:#b42323!important;font-weight:800!important;font-size:11px!important;white-space:nowrap!important;}
+@media(max-width:420px){
+ .brc-low-sample-warning{gap:3px!important;padding:7px 6px!important;}
+ .brc-low-sample-warning .direct-info-banner-label{font-size:10.5px!important;}
+ .brc-low-sample-warning .direct-info-banner-note{font-size:9.5px!important;}
+ .brc-low-sample-warning .slit-eval-boat{width:17px!important;height:17px!important;font-size:9px!important;}
+}
+/* ② No purple admin test card. Hidden button remains mounted for validated v3 auto-fetch. */
+#brcV3AdminCompare{display:none!important;}
+/* Until an authenticated v3 response matches the current race, hide misleading admin v2 rate cells. */
+body.brc-v3-admin-pending #predictTableWrap [id^="predict-win-cell-"] .prob-cell-stack,
+body.brc-v3-admin-pending #predictTableWrap [id^="predict-top3-cell-"] .prob-cell-stack{display:none!important;}
+body.brc-v3-admin-pending #predictTableWrap [id^="predict-win-cell-"]::after,
+body.brc-v3-admin-pending #predictTableWrap [id^="predict-top3-cell-"]::after{
+ content:'―';color:#8e9aa9;font-weight:800;font-size:17px;
+}
+/* ③ one row per hit. Primary row opens the race; chevron opens the preserved metrics. */
+#scenarioSearchResults.scenario-search-results{display:grid;gap:5px;}
+#scenarioSearchResults .scenario-search-result{padding:0!important;overflow:hidden;border-radius:9px;cursor:default;}
+#scenarioSearchResults .scenario-search-one-line{display:flex;align-items:center;min-height:46px;padding:0 7px;gap:2px;}
+#scenarioSearchResults .scenario-search-navigate{
+ display:grid;grid-template-columns:82px 21px minmax(0,1fr) 27px 96px 43px;
+ gap:4px;align-items:center;min-width:0;flex:1;cursor:pointer;line-height:1.15;
+}
+#scenarioSearchResults .scenario-search-navigate:focus-visible,#scenarioSearchResults .scenario-search-more:focus-visible{outline:2px solid var(--wave);outline-offset:1px;border-radius:4px;}
+#scenarioSearchResults .scenario-search-race{font-size:13px!important;font-weight:900;white-space:nowrap;}
+#scenarioSearchResults .scenario-search-boat{width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:11px;border:1px solid #bbc5d3;}
+#scenarioSearchResults .scenario-search-boat.lane1{background:#fff;color:#0a1f33;}
+#scenarioSearchResults .scenario-search-boat.lane2{background:#1a1a1a;color:#fff;}
+#scenarioSearchResults .scenario-search-boat.lane3{background:#d1373f;color:#fff;}
+#scenarioSearchResults .scenario-search-boat.lane4{background:#1f5fb0;color:#fff;}
+#scenarioSearchResults .scenario-search-boat.lane5{background:#e3b23c;color:#192333;}
+#scenarioSearchResults .scenario-search-boat.lane6{background:#2f8f5b;color:#fff;}
+#scenarioSearchResults .scenario-search-name{font-size:12px;font-weight:800;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#scenarioSearchResults .scenario-search-grade{border-radius:5px;font-size:10px;font-weight:900;text-align:center;padding:3px 2px;white-space:nowrap;background:#f0f2f5;color:#566579;}
+#scenarioSearchResults .scenario-search-grade.grade-A1{background:#e6efff;color:#1557bc;}
+#scenarioSearchResults .scenario-search-grade.grade-A2{background:#e3f6ff;color:#08799a;}
+#scenarioSearchResults .scenario-search-highlight{font-size:11px;font-weight:900;color:#0057db;text-align:right;white-space:nowrap;}
+#scenarioSearchResults .scenario-search-time{font-size:10px;font-weight:800;text-align:right;color:var(--ink-soft);white-space:nowrap;font-variant-numeric:tabular-nums;}
+#scenarioSearchResults .scenario-search-more{border:0;background:transparent;color:#556a80;cursor:pointer;flex:0 0 18px;height:32px;padding:0;font-size:19px;font-weight:900;}
+#scenarioSearchResults .scenario-search-expand{border-top:1px solid #e2e8f0;padding:7px 9px 9px;background:#f8fafc;}
+#scenarioSearchResults .scenario-search-expand[hidden]{display:none!important;}
+#scenarioSearchResults .scenario-search-expand .scenario-search-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:0;gap:4px;}
+#scenarioSearchResults .scenario-search-expand .scenario-search-metric{padding:6px 3px;}
+#scenarioSearchResults .scenario-search-expand .scenario-search-detail{margin:5px 0 0;}
+@media(max-width:600px){
+ #scenarioSearchResults .scenario-search-one-line{min-height:43px;padding:0 5px;gap:1px;}
+ #scenarioSearchResults .scenario-search-navigate{grid-template-columns:67px 17px minmax(0,1fr) 24px 79px 37px;gap:3px;}
+ #scenarioSearchResults .scenario-search-race{font-size:11px!important;}
+ #scenarioSearchResults .scenario-search-boat{width:17px;height:17px;font-size:10px;}
+ #scenarioSearchResults .scenario-search-name{font-size:10.5px;}
+ #scenarioSearchResults .scenario-search-grade{font-size:9px;padding:3px 0;}
+ #scenarioSearchResults .scenario-search-highlight{font-size:9.5px;}
+ #scenarioSearchResults .scenario-search-time{font-size:9px;}
+ #scenarioSearchResults .scenario-search-more{flex-basis:16px;font-size:17px;}
+ #scenarioSearchResults .scenario-search-expand .scenario-search-metric .k{font-size:9px;}
+ #scenarioSearchResults .scenario-search-expand .scenario-search-metric .v{font-size:12px;}
+}
+@media(max-width:365px){
+ #scenarioSearchResults .scenario-search-navigate{grid-template-columns:58px 16px minmax(0,1fr) 22px 72px 32px;gap:2px;}
+ #scenarioSearchResults .scenario-search-race{font-size:10px!important;}
+ #scenarioSearchResults .scenario-search-name{font-size:10px;}
+ #scenarioSearchResults .scenario-search-highlight{font-size:9px;}
+ #scenarioSearchResults .scenario-search-time{font-size:8px;}
+ #scenarioSearchResults .scenario-search-more{flex-basis:13px;}
 }
 </style>
 </head>
@@ -19084,6 +19166,8 @@ function brcV3AdminLiveMatches(r,date,code,raceNo){
 function brcV3AdminClearDisplay(){
   const hadV3=!!__brcV3AdminDisplay;
   __brcV3AdminDisplay=null;
+  // Admin must not see provisional v2 values in the v3 four-metric cells.
+  document.body.classList.toggle('brc-v3-admin-pending',!!(BRC_ADMIN_ACTIVE&&BRC_MEMBER_ACTIVE));
   if(hadV3){
     try{brcRefreshAdminPersonalTimeXDom();}catch(_e){}
     try{brcV3AdminSyncDetail();}catch(_e){}
@@ -19135,6 +19219,7 @@ function brcV3AdminRenderDisplay(){
     t.innerHTML=brcBuildProbabilityCell(fmt(top3),arrowTop3);
   }
   try{brcV3AdminSyncDetail();}catch(_e){}
+  document.body.classList.remove('brc-v3-admin-pending');
   return true;
 }
 // END BRC_TIMEX_V3_ADMIN_ONLY_FOUR_DISPLAY_SWITCH_LOCAL_20261012
@@ -19208,11 +19293,13 @@ function brcV3AdminSyncDetail(course){
 // This watcher does not fetch live data or mutate any v2/AI/bet calculation.
 let __brcV3RecoveryTimer=null;
 function brcV3AdminUnmount(){
+  document.body.classList.remove('brc-v3-admin-pending');
   if(__brcV3RecoveryTimer!==null){clearInterval(__brcV3RecoveryTimer);__brcV3RecoveryTimer=null;}
   brcV3AdminClearDisplay();
   ++__brcV3AdminCompareSeq;
   __brcV3AutoStamp='';__brcV3AutoLastAt=0;
   document.getElementById('brcV3AdminCompare')?.remove();
+  document.body.classList.remove('brc-v3-admin-pending');
 }
 let __brcV3AutoStamp='',__brcV3AutoLastAt=0;
 function brcV3AdminRecoveryTick(){
@@ -19267,6 +19354,7 @@ function brcV3AdminAutoTry(box){
 }
 function brcV3AdminMount(venue,raceNo,liveRace){
   if(!BRC_ADMIN_ACTIVE||!BRC_MEMBER_ACTIVE){brcV3AdminUnmount();return;}
+  if(!__brcV3AdminDisplay)document.body.classList.add('brc-v3-admin-pending');
   // BRC_TIMEX_V3_ADMIN_MOUNT_ANCHOR_HOTFIX_20261014
   // The production prediction template does not initially create liveExhibitionCard.
   // Mount the admin-only v3 diagnostic after the existing race table instead.
@@ -19280,7 +19368,7 @@ function brcV3AdminMount(venue,raceNo,liveRace){
   let box=document.getElementById('brcV3AdminCompare');
   if(!box){
     box=document.createElement('section');box.id='brcV3AdminCompare';
-    box.style.cssText='margin:9px 0;padding:10px;border:1px solid #7c3aed;border-radius:10px;background:#faf7ff;color:#0a1f33;font-size:12px;line-height:1.55;';
+    box.style.cssText='display:none!important;';
     host.insertAdjacentElement('afterend',box);
   }
   if(box.dataset.key!==key){
@@ -22118,7 +22206,7 @@ function brcBuildLowSampleBannerHtml(boats){
   const seen=new Set();
   const items=low.map(b=>Number(b?.course)).filter(course=>Number.isFinite(course) && course>=1 && course<=6 && !seen.has(course) && seen.add(course)).map(course=>brcSlitBoatBadgeHtml(course)).join('');
   if(!items) return '';
-  return `<div class="slit-eval-compact direct-info-banner"><span class="direct-info-banner-label">データ不足</span><span class="direct-info-banner-items">${items}</span><span class="direct-info-banner-note">※このレースは精度低下しています。</span></div>`;
+  return `<div class="slit-eval-compact direct-info-banner brc-low-sample-warning" role="status" aria-label="警告：データ不足 ${low.length}艇。予測精度低下のため過信に注意"><span class="direct-info-banner-label">⚠ データ不足</span><span class="direct-info-banner-items">${items}</span><span class="direct-info-banner-note">精度低下・過信注意</span></div>`;
 }
 
 function brcOriginalExhibitionTimeText(v){
@@ -23715,27 +23803,56 @@ async function brcRenderScenarioSearch(){
   brcSortScenarioRows(rows);
   if(count) count.textContent=`該当 ${rows.length}レース`;
   if(!rows.length){box.innerHTML='<div class="scenario-search-empty">該当レースなし</div>';return;}
-  box.innerHTML=rows.map(r=>{
+  const escapeScenario=(v)=>String(v==null?'':v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  box.innerHTML=rows.map((r,i)=>{
     const passed=isRaceDeadlinePassed(r.deadline);
     const stValue=r.st?.attack?`${r.st.attack.avg.toFixed(1)}位`:'―';
     let stSub=r.st?.attack?.n?`N=${r.st.attack.n}`:'&nbsp;';
     if(r.st?.gap!==null && r.st?.gap!==undefined && Number.isFinite(Number(r.st.gap))){const gap=Number(r.st.gap),ref=r.st.refCourse===0?'6艇平均':`${r.st.refCourse}号艇`;stSub=`vs ${ref} / 差${gap>=0?'+':''}${gap.toFixed(1)} / N=${r.st.attack.n}`;}
-    return `<div class="scenario-search-result${passed?' passed':''}" data-scenario-venue="${r.venue}" data-scenario-race="${r.raceNo}" tabindex="0" role="button">
-      <div class="scenario-search-result-top"><div class="scenario-search-race">${r.venue}${r.raceNo}R</div><div class="scenario-search-deadline">${r.deadline?`締切 ${r.deadline}`:'締切 ―'}</div></div>
-      <div class="scenario-search-target"><span class="scenario-search-target-badge">${r.course}号艇 ${r.keys.kindLabel}</span><span class="scenario-search-target-name">${r.attackName}</span></div>
-      <div class="scenario-search-metrics">
-        <div class="scenario-search-metric"><div class="k">展示前BRC1着率</div><div class="v">${Number.isFinite(Number(r.baseBrcPct))?`${Number(r.baseBrcPct).toFixed(1)}%`:'―'}</div><div class="n">${Number.isFinite(Number(r.baseBrcPct))?'TimeX未反映':'一般検索'}</div></div>
-        <div class="scenario-search-metric"><div class="k">①${r.keys.inLabel}</div><div class="v">${r.inPct.toFixed(1)}%</div><div class="n">N=${r.inN}</div></div>
-        <div class="scenario-search-metric"><div class="k">${r.course}号艇 ${r.keys.attackLabel}</div><div class="v">${r.attackPct.toFixed(1)}%</div><div class="n">N=${r.attackN}</div></div>
-        <div class="scenario-search-metric"><div class="k">ST順位</div><div class="v">${stValue}</div><div class="n">${stSub}</div></div>
+    // The official, TODAY racecard supplies the current A1/A2/B1/B2 class.
+    // Never guess an athlete grade from past results or silently substitute historic data.
+    const officialClass=String(RACE_CLASS_TODAY?.[r.venue]?.[String(r.raceNo)]?.[r.course-1]||'').trim().toUpperCase();
+    const racerClass=/^(A1|A2|B1|B2)$/.test(officialClass)?officialClass:'―';
+    const detailId=`brc-scenario-detail-${i}`;
+    const base=Number(r.baseBrcPct),hasBase=r.baseBrcPct!==null && r.baseBrcPct!==undefined && Number.isFinite(base);
+    return `<div class="scenario-search-result${passed?' passed':''}">
+      <div class="scenario-search-one-line">
+        <div class="scenario-search-navigate" data-scenario-venue="${escapeScenario(r.venue)}" data-scenario-race="${r.raceNo}" role="button" tabindex="0" aria-label="${escapeScenario(r.venue)}${r.raceNo}R、${r.course}号艇 ${escapeScenario(r.attackName)}、出走表を開く">
+          <span class="scenario-search-race">${escapeScenario(r.venue)}${r.raceNo}R</span>
+          <span class="scenario-search-boat lane${r.course}" aria-label="${r.course}号艇">${r.course}</span>
+          <span class="scenario-search-name">${escapeScenario(r.attackName)}</span>
+          <span class="scenario-search-grade grade-${racerClass==='―'?'unknown':racerClass}" title="級別（当日公式番組表）">${racerClass}</span>
+          <span class="scenario-search-highlight" title="${escapeScenario(r.keys.kindLabel)}率">${escapeScenario(r.keys.kindLabel)}${r.attackPct.toFixed(1)}%</span>
+          <span class="scenario-search-time" title="締切 ${escapeScenario(r.deadline||'未取得')}">${escapeScenario(r.deadline||'―')}</span>
+        </div>
+        <button type="button" class="scenario-search-more" data-scenario-more="${detailId}" aria-controls="${detailId}" aria-expanded="false" aria-label="${escapeScenario(r.venue)}${r.raceNo}R の詳細を展開">⌄</button>
       </div>
-      <div class="scenario-search-detail">展示前条件で抽出。タップして出走データを開き、展示スリット・TimeX反映後の変化を確認。</div>
+      <div class="scenario-search-expand" id="${detailId}" hidden>
+        <div class="scenario-search-metrics">
+          <div class="scenario-search-metric"><div class="k">展示前BRC1着率</div><div class="v">${hasBase?`${base.toFixed(1)}%`:'―'}</div><div class="n">${hasBase?'TimeX未反映':'一般検索'}</div></div>
+          <div class="scenario-search-metric"><div class="k">①${escapeScenario(r.keys.inLabel)}</div><div class="v">${r.inPct.toFixed(1)}%</div><div class="n">N=${r.inN}</div></div>
+          <div class="scenario-search-metric"><div class="k">${r.course}号艇 ${escapeScenario(r.keys.attackLabel)}</div><div class="v">${r.attackPct.toFixed(1)}%</div><div class="n">N=${r.attackN}</div></div>
+          <div class="scenario-search-metric"><div class="k">ST順位</div><div class="v">${stValue}</div><div class="n">${stSub}</div></div>
+        </div>
+        <div class="scenario-search-detail">行をタップで出走表へ。検索は展示前条件、TimeX反映後の数値は出走表で確認。</div>
+      </div>
     </div>`;
   }).join('');
   box.querySelectorAll('[data-scenario-venue]').forEach(el=>{
     const open=()=>openTodayPickRace(el.dataset.scenarioVenue,el.dataset.scenarioRace);
     el.addEventListener('click',open);
     el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});
+  });
+  box.querySelectorAll('[data-scenario-more]').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      const detail=document.getElementById(btn.dataset.scenarioMore);
+      if(!detail)return;
+      const next=detail.hidden;
+      detail.hidden=!next;
+      btn.setAttribute('aria-expanded',String(next));
+      btn.textContent=next?'⌃':'⌄';
+    });
   });
 }
 function brcResetScenarioSearch(){
