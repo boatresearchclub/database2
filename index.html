@@ -1,3 +1,4 @@
+<!-- BRC_ADMIN_V3_REGRESSION_REPAIR_20261017_R1: restores the prior established TimeX rate display after incorrect pre-exhibition DOM overwrite; v3 overlay still only on strict validated response. Do not call v2 rates v3. ①③ retained. -->
 <!-- BRC_20261017_FOLLOWUP_V2: visible prior probabilities while v3 is pending; scenario search deadline-first column header and two extra stats. -->
 <!-- BRC_3UI_COMPACT_20261017: low sample warning red one-line; admin V3 comparison diagnostics hidden, unverified admin race four-metric cells masked; scenario race 1-row with current official racerClass and expandable detail. Public v2 and calculation algorithms unchanged. Admin AI/bet v3 internal wiring remains NOT validated. NOT DEPLOYED. -->
 <!-- BRC_V3_ADMIN_VERIFIED_PRIOR_ARROW_20261014: validated v3 minus original pre-exhibition probabilities, display only. -->
@@ -327,7 +328,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261017-3UI-RATES-SEARCH-V2">
+<meta name="brc-build" content="20261017-V3-RESTORE-UI3-R1">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -6736,12 +6737,10 @@ body.brc-admin-home-active .brc-admin-top-race .dp-signal:not(.in){
 }
 /* ② No purple admin test card. Hidden button remains mounted for validated v3 auto-fetch. */
 #brcV3AdminCompare{display:none!important;}
-/* v3 not yet verified: show only independently available pre-exhibition Worker probabilities,
-   not the previous v2 TimeX final figures. Missing prior remains '―'. */
-#predictTableWrap .brc-v3-prior-label{font-size:9px;font-weight:800;color:#915c13;white-space:nowrap;}
-#predictTableWrap .brc-v3-prior .prob-value-main{color:#78501a;}
-#predictTableWrap .brc-v3-prior .prob-eval-row{min-height:13px;}
-body.brc-v3-admin-pending #predictTableWrap .predict-timex-common{color:#915c13;}
+/* Pending v3: preserve the already-calculated TimeX presentation with an explicit
+   v2 reference label. Never represent a legacy TimeX rate as verified v3. */
+#predictTableWrap .predict-timex-common.brc-v3-v2-reference{color:#ac5705!important;font-weight:900!important;}
+#predictTableWrap .predict-timex-common.brc-v3-verified{color:#08754a!important;font-weight:900!important;}
 /* ③ 8-column headline + one race per row; first column is deadline. */
 #scenarioSearchResults.scenario-search-results{display:grid;gap:5px;
  --ss-cols:44px 66px 22px minmax(80px,1fr) 30px 78px 66px 62px;}
@@ -17043,6 +17042,9 @@ async function brcFetchLiveExhibition(venue, raceNo){
     const res = await fetch(`${BRC_LIVE_EXHIBITION_API_URL}/live-exhibition?${qs.toString()}`, {
       method:'GET', cache:'no-store', headers:{'Accept':'application/json'}
     });
+    window.__brcV3LiveFetchStatus={date,venue_code:code,race_no:r,http:res.status,
+      reason:res.status===404?'展示APIにこのレースの保存データなし':res.ok?'応答あり':'展示API HTTP '+res.status,
+      checkedAt:new Date().toISOString()};
     if(res.status === 404) return null;
     if(!res.ok) throw new Error(`live_exhibition_http_${res.status}`);
     const obj = await res.json();
@@ -19178,58 +19180,68 @@ function brcV3AdminLiveMatches(r,date,code,raceNo){
 }
 // SECURITY: immediately restore the original v2 main cells when admin rights, race, or TimeX changes.
 // This restores only DOM; shared worker/AI values were never modified.
-// BRC_ADMIN_V3_PRIOR_VISIBLE_FALLBACK_20261017
-// While verified v3 is unavailable, only show PRE-EXHIBITION Worker rates clearly labelled.
-// No changes to prediction model, betting inputs, or the member/public v2 display.
-function brcV3AdminSetTableRateLabel(text){
+// BRC_V3_ROLLBACK_WRONG_PRIOR_OVERWRITE_20261017_R1
+// The former prior-only fallback unexpectedly overwrote the existing TimeX result table.
+// Reuse its original rendered rate logic; never fabricate a v3 value or hide the source.
+function brcV3AdminSetTableRateLabel(text,mode=''){
   const label=document.querySelector('#predictTableWrap .predict-timex-common');
-  if(label)label.textContent=text;
+  if(!label)return;
+  label.textContent=text;
+  label.classList.toggle('brc-v3-v2-reference',mode==='legacy');
+  label.classList.toggle('brc-v3-verified',mode==='v3');
 }
-function brcV3AdminRenderPriorFallback(){
-  if(!BRC_ADMIN_ACTIVE || !BRC_MEMBER_ACTIVE || __brcV3AdminDisplay)return false;
-  const rows=window.__predictBoatsCurrent;
-  if(!Array.isArray(rows)||rows.length!==6)return false;
-  // Ensure there is never an unlabelled v2 rate displayed under an admin v3 heading.
-  const show=[];
-  for(let c=1;c<=6;c++){
-    const b=rows.find(x=>Number(x.course)===c);
-    const w=document.getElementById('predict-win-cell-'+c);
-    const t=document.getElementById('predict-top3-cell-'+c);
-    if(!b||!w||!t)return false;
-    const good=(v)=>v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v))&&Number(v)>=0&&Number(v)<=100;
-    show.push({w,t,win:good(b.basePctFloat)?Number(b.basePctFloat):null,
-                     top3:good(b.basePct3Float)?Number(b.basePct3Float):null});
+function brcV3AdminRestoreExistingTimeX(force=false){
+  if(!BRC_ADMIN_ACTIVE||!BRC_MEMBER_ACTIVE||__brcV3AdminDisplay)return false;
+  const host=document.querySelector('#predictResult #predictTableWrap');
+  const boats=window.__predictBoatsCurrent;
+  if(!host||!Array.isArray(boats)||boats.length!==6)return false;
+  // Recovery watcher polls every three seconds: avoid needlessly rewriting the table.
+  if(force||host.dataset.brcV3RateMode!=='legacy'){
+    brcRefreshAdminPersonalTimeXDom();
+    host.dataset.brcV3RateMode='legacy';
   }
-  for(const x of show){
-    for(const pair of [[x.w,x.win],[x.t,x.top3]]){
-      const node=pair[0],rate=pair[1];
-      node.innerHTML=rate===null?'<span class="brc-v3-prior-label" title="事前着率未取得">―</span>':
-        '<div class="prob-cell-stack brc-v3-prior" title="事前BRC着率・TimeX v3未取得。展示補正前の暫定値">'+
-        '<div class="prob-value"><span class="prob-value-main">'+Math.round(rate)+'<span class="predict-unit">%</span></span></div>'+ 
-        '<div class="prob-eval-row"><span class="brc-v3-prior-label">展示前</span></div></div>';
-    }
-  }
-  brcV3AdminSetTableRateLabel('（展示前・v3取得待ち）');
-  document.body.classList.add('brc-v3-admin-pending');
+  brcV3AdminSetTableRateLabel('（v2参考・v3未適用）','legacy');
   return true;
 }
-// END BRC_ADMIN_V3_PRIOR_VISIBLE_FALLBACK_20261017
+window.brcV3AdminDiagnostics=function(){
+  const selected=typeof brcCurrentLiveExhibitionSelection==='function'?brcCurrentLiveExhibitionSelection():{};
+  const live=window.__currentLiveExhibition||null;
+  const current=String(TODAY_LABEL||'');
+  const code=selected.venue?brcVenueCodeFromName(selected.venue):'';
+  const same=!!live && String(live.date||'')===current &&
+    String(live.venue_code||'').padStart(2,'0')===String(code).padStart(2,'0') &&
+    Number(live.race_no)===Number(selected.raceNo);
+  return {
+    build:document.querySelector('meta[name="brc-build"]')?.content||'',
+    admin:!!BRC_ADMIN_ACTIVE, member:!!BRC_MEMBER_ACTIVE,
+    selectedRace:selected.venue?selected.venue+' '+selected.raceNo+'R':'未選択',
+    date:current,
+    tableReady:!!document.querySelector('#predictResult #predictTableWrap'),
+    livePresent:!!live,liveBoats:Array.isArray(live?.boats)?live.boats.length:0,
+    sameRaceLive:same,strictExhibition:brcV3AdminStrictEntry(live),
+    v3Verified:!!__brcV3AdminDisplay,
+    displayedRates:__brcV3AdminDisplay?'TimeX v3（照合済み）':'既存TimeX v2（参考）',
+    v3Status:document.querySelector('#brcV3AdminCompare [data-brc-v3-status]')?.textContent||'検証パネル未生成',
+    liveFetch:window.__brcV3LiveFetchStatus||null,
+    workerFailure:window.__brcV3LastError||null
+  };
+};
+// END BRC_V3_ROLLBACK_WRONG_PRIOR_OVERWRITE_20261017_R1
 
 function brcV3AdminClearDisplay(){
   const hadV3=!!__brcV3AdminDisplay;
   __brcV3AdminDisplay=null;
-  // Admin must not see provisional v2 values in the v3 four-metric cells.
-  document.body.classList.toggle('brc-v3-admin-pending',!!(BRC_ADMIN_ACTIVE&&BRC_MEMBER_ACTIVE));
-  if(hadV3){
-    try{brcRefreshAdminPersonalTimeXDom();}catch(_e){}
-    try{brcV3AdminSyncDetail();}catch(_e){}
-  }
-  try{brcV3AdminRenderPriorFallback();}catch(_e){}
+  const host=document.querySelector('#predictResult #predictTableWrap');
+  if(host&&hadV3)delete host.dataset.brcV3RateMode;
+  // Recover the existing computed TimeX cells after removing a previously verified overlay.
+  // The original/personalized rendering handles the six boats and their arrows.
+  try{brcV3AdminRestoreExistingTimeX(hadV3);}catch(_e){}
+  if(hadV3){try{brcV3AdminSyncDetail();}catch(_e){}}
 }
 function brcV3AdminRenderDisplay(){
   if(!BRC_ADMIN_ACTIVE||!BRC_MEMBER_ACTIVE){ brcV3AdminClearDisplay(); return false; }
   const state=__brcV3AdminDisplay;
-  if(!state){brcV3AdminRenderPriorFallback();return false;}
+  if(!state){brcV3AdminRestoreExistingTimeX();return false;}
   const selected=brcCurrentLiveExhibitionSelection();
   const date=String(TODAY_LABEL||''),code=brcVenueCodeFromName(selected.venue);
   const key=[date,code,Number(selected.raceNo)].join('|');
@@ -19272,8 +19284,9 @@ function brcV3AdminRenderDisplay(){
     t.innerHTML=brcBuildProbabilityCell(fmt(top3),arrowTop3);
   }
   try{brcV3AdminSyncDetail();}catch(_e){}
-  brcV3AdminSetTableRateLabel('（TimeX v3）');
-  document.body.classList.remove('brc-v3-admin-pending');
+  brcV3AdminSetTableRateLabel('（TimeX v3・照合済）','v3');
+  const host=document.querySelector('#predictResult #predictTableWrap');
+  if(host)host.dataset.brcV3RateMode='v3';
   return true;
 }
 // END BRC_TIMEX_V3_ADMIN_ONLY_FOUR_DISPLAY_SWITCH_LOCAL_20261012
@@ -19347,13 +19360,11 @@ function brcV3AdminSyncDetail(course){
 // This watcher does not fetch live data or mutate any v2/AI/bet calculation.
 let __brcV3RecoveryTimer=null;
 function brcV3AdminUnmount(){
-  document.body.classList.remove('brc-v3-admin-pending');
   if(__brcV3RecoveryTimer!==null){clearInterval(__brcV3RecoveryTimer);__brcV3RecoveryTimer=null;}
   brcV3AdminClearDisplay();
   ++__brcV3AdminCompareSeq;
   __brcV3AutoStamp='';__brcV3AutoLastAt=0;
   document.getElementById('brcV3AdminCompare')?.remove();
-  document.body.classList.remove('brc-v3-admin-pending');
 }
 let __brcV3AutoStamp='',__brcV3AutoLastAt=0;
 function brcV3AdminRecoveryTick(){
@@ -19382,17 +19393,17 @@ function brcV3AdminAutoTry(box){
   const selected=brcCurrentLiveExhibitionSelection();
   const code=brcVenueCodeFromName(selected.venue);
   if(!brcV3AdminLiveMatches(window.__currentLiveExhibition,String(TODAY_LABEL||''),code,selected.raceNo)){
-    status.textContent='v3待機：選択レースの進入・展示データを照合中（現在はv2）';return;
+    status.textContent='v3待機：選択レースの進入・展示データを照合中（v2参考表示）';return;
   }
   const sig=brcV3AdminLiveSignature(window.__currentLiveExhibition);
-  if(!sig){status.textContent='v3待機：進入または展示の確定待ち（現在はv2）';return;}
+  if(!sig){status.textContent='v3待機：進入または展示の確定待ち（v2参考表示）';return;}
   if(__brcV3AdminDisplay&&brcV3AdminRenderDisplay()){
     status.textContent='v3適用（管理者専用）：4指標の事前着率照合済。詳細・AI・買い目内部はv2のまま。';
     return;
   }
   let prior='';
   try{prior=brcV3AdminPriorCanonical();}
-  catch(e){status.textContent='v3待機：'+String(e?.message||e)+'（現在はv2）';return;}
+  catch(e){status.textContent='v3待機：'+String(e?.message||e)+'（v2参考表示）';return;}
   const stamp=String(box.dataset.key||'')+'|'+sig+'|'+prior;
   const now=Date.now();
   // Worker rate limits are respected; fresh DOM never sticks at an inaccurate
@@ -19400,7 +19411,7 @@ function brcV3AdminAutoTry(box){
   const retryAt=Math.max(__brcV3AutoLastAt+30000,
     stamp===__brcV3AutoStamp?__brcV3AutoLastAt+60000:0);
   if(__brcV3AutoLastAt&&now<retryAt){
-    status.textContent='v3自動再照合待ち：'+Math.ceil((retryAt-now)/1000)+'秒後に再確認（現在はv2）';
+    status.textContent='v3自動再照合待ち：'+Math.ceil((retryAt-now)/1000)+'秒後に再確認（v2参考表示）';
     return;
   }
   __brcV3AutoStamp=stamp;__brcV3AutoLastAt=now;
@@ -19408,7 +19419,6 @@ function brcV3AdminAutoTry(box){
 }
 function brcV3AdminMount(venue,raceNo,liveRace){
   if(!BRC_ADMIN_ACTIVE||!BRC_MEMBER_ACTIVE){brcV3AdminUnmount();return;}
-  if(!__brcV3AdminDisplay)document.body.classList.add('brc-v3-admin-pending');
   // BRC_TIMEX_V3_ADMIN_MOUNT_ANCHOR_HOTFIX_20261014
   // The production prediction template does not initially create liveExhibitionCard.
   // Mount the admin-only v3 diagnostic after the existing race table instead.
@@ -19416,7 +19426,7 @@ function brcV3AdminMount(venue,raceNo,liveRace){
   const host=document.getElementById('liveExhibitionCard') ||
     document.querySelector('#predictResult #predictTableWrap');
   if(!host||!brcV3AdminCompareCurrent(venue,raceNo,String(TODAY_LABEL||'')))return;
-  if(!__brcV3AdminDisplay)brcV3AdminRenderPriorFallback();
+  if(!__brcV3AdminDisplay)brcV3AdminRestoreExistingTimeX();
   brcV3AdminEnsureRecovery();
   const date=String(TODAY_LABEL||''),code=brcVenueCodeFromName(venue),r=Number(raceNo);
   const key=[date,code,r].join('|');
@@ -19444,14 +19454,14 @@ function brcV3AdminMount(venue,raceNo,liveRace){
       !brcV3AdminLiveMatches(window.__currentLiveExhibition,date,code,r))){
     brcV3AdminClearDisplay();
     const v3status=box.querySelector('[data-brc-v3-status]');
-    if(v3status)v3status.textContent='v3再取得待機：展示情報が更新されました（現在はv2表示）';
+    if(v3status)v3status.textContent='v3再取得待機：展示情報が更新されました（現在はv2参考表示）';
   }
   if(box.querySelector('button')){brcV3AdminRenderDisplay();brcV3AdminAutoTry(box);return;}
   const title=document.createElement('strong');title.textContent='通常TimeX：v3（管理者限定・検証中）';box.append(title);
-  const info=document.createElement('div');info.textContent='4指標を自動切り替え（事前着率照合必須）。未取得時はv2維持。詳細・AI・買い目への適用は未検証。';box.append(info);
+  const info=document.createElement('div');info.textContent='4指標を自動切り替え（事前着率照合必須）。未取得時はv2参考値と明示。詳細・AI・買い目への適用は未検証。';box.append(info);
   const btn=document.createElement('button');btn.type='button';btn.textContent='新v3の4指標を取得・比較';
   btn.hidden=true;btn.style.display='none';;
-  const status=document.createElement('div');status.setAttribute('data-brc-v3-status','1');status.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;';status.textContent='v3確認待ち：展示・事前着率の照合中（現在はv2）';
+  const status=document.createElement('div');status.setAttribute('data-brc-v3-status','1');status.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;';status.textContent='v3確認待ち：展示・事前着率の照合中（v2参考表示）';
   box.append(btn,status);
   btn.addEventListener('click',async()=>{
     if(btn.disabled)return;
@@ -19484,6 +19494,7 @@ function brcV3AdminMount(venue,raceNo,liveRace){
         return;
       }
       if(!res.ok||data?.status!=='ready'){
+        window.__brcV3LastError={at:new Date().toISOString(),http:res.status,status:String(data?.status||data?.error||'not_ready')};
         brcV3AdminClearDisplay();
         try{brcRefreshAdminPersonalTimeXDom();}catch(_e){}
         const codeText=String(data?.status||data?.error||('HTTP '+res.status));
@@ -19506,10 +19517,12 @@ function brcV3AdminMount(venue,raceNo,liveRace){
       }
       if(!stillSame())throw Error('レース・展示更新後の古い応答を破棄しました');
       __brcV3AdminDisplay={key,signature,four,priorCanonical:requestPrior};
+      window.__brcV3LastError=null;
       if(!brcV3AdminRenderDisplay())throw Error('4指標の画面反映条件が不一致です');
       result.push('v3適用（管理者専用）：4指標の事前着率照合済。詳細・AI・買い目内部はv2のまま。');
       status.textContent=result.join('\n');
     }catch(e){
+      window.__brcV3LastError={at:new Date().toISOString(),error:String(e?.message||e)};
       if(seq===__brcV3AdminCompareSeq&&brcV3AdminCompareCurrent(venue,r,date)){
         brcV3AdminClearDisplay();try{brcRefreshAdminPersonalTimeXDom();}catch(_e){}
         status.textContent='新v3未適用：'+String(e?.message||e);
