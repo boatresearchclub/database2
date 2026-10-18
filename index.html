@@ -330,7 +330,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261018-ADMIN-V3-DIAG-R3-DEME-INFO">
+<meta name="brc-build" content="20261018-ADMIN-V3-DIAG-R3-DEME-INFO-UIFIX">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -36925,7 +36925,7 @@ body.brc-admin-home-active .brc-admin-top-race .dp-boat-no{
 })();
 </script>
 
-<!-- BRC_DEME_INFO_REVIEW_20261017: Admin UI integration candidate / published only by manual PUSH -->
+<!-- BRC_DEME_INFO_REVIEW_20261017_UI_FIX_20261018: Admin UI integration candidate / published only by manual PUSH -->
 <style id="brcDemeInfoStyle">
 /* BRC_DEME_INFO_REVIEW_20261017: 管理者専用・読み取り専用 */
 #brcDemeInfoTab{display:none}
@@ -36951,7 +36951,10 @@ body.brc-admin-public-view #brcDemeInfoTab{display:none!important}
 .brc-deme th:first-child{background:#edf3fb;z-index:3}
 .brc-deme td.low{color:#975000}
 .brc-deme .note{font-size:11px;color:#64748b;margin-top:9px}
-@media(max-width:600px){.brc-deme{padding:8px}.brc-deme .filters{display:grid;grid-template-columns:1fr 1fr}.brc-deme select{width:100%}}
+.brc-deme .deme-combo,.brc-deme .deme-combo .brc-ref-combo-chip{display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+.brc-deme .deme-combo .brc-ref-combo-boat{width:22px;height:22px;border-radius:5px;font-size:11px}
+.brc-deme .deme-combo .brc-ref-combo-sep{font-size:11px;color:#64748b;font-weight:700;line-height:1}
+@media(max-width:600px){.brc-deme{padding:8px}.brc-deme .filters{display:grid;grid-template-columns:1fr 1fr}.brc-deme select{width:100%}.brc-deme .deme-combo .brc-ref-combo-boat{width:20px;height:20px;font-size:10px}}
 </style>
 <script id="brcDemeInfoData" type="application/json"></script>
 <script src="data/brcDemeInfoData-54f94c69e4-001.js"></script>
@@ -36983,8 +36986,14 @@ function venue(){
  for(const [key,label] of Object.entries(d.venues||{}))if(label===raw)return Number(key);
  return null;
 }
-function fmt(num,max=1){return (num!==null && num!==undefined && num!=='' && Number.isFinite(Number(num))?Number(num).toLocaleString('ja-JP',{maximumFractionDigits:max}):'—');}
+function fmt(num,max=1){return (num!==null && num!==undefined && num!=='' && Number.isFinite(Number(num))?Number(num).toLocaleString('ja-JP',{minimumFractionDigits:max,maximumFractionDigits:max}):'—');}
+function fmtInt(num){return (num!==null && num!==undefined && num!=='' && Number.isFinite(Number(num))?Number(num).toLocaleString('ja-JP',{maximumFractionDigits:0}):'—');}
 function htmlEscape(v){return String(v).replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));}
+function renderCombo(combo){
+ const nums=String(combo||'').split('-').map(v=>Number(v)).filter(v=>Number.isInteger(v)&&v>=1&&v<=6);
+ if(!nums.length)return htmlEscape(combo);
+ return `<span class="deme-combo"><span class="brc-ref-combo-chip">${nums.map((n,i)=>`${i?'<span class=\"brc-ref-combo-sep\">-</span>':''}<span class=\"brc-ref-combo-boat lane${n}\">${n}</span>`).join('')}</span></span>`;
+}
 function render(){
  const body=byId('brcDemeInfo');if(!body)return;
  if(!allowed()){body.textContent='';return;}
@@ -37000,9 +37009,9 @@ function render(){
  list.sort((a,b)=>Number(b[col]??-Infinity)-Number(a[col]??-Infinity)||a[2].localeCompare(b[2]));
  const flag=list.some(r=>r[9]===1);
  const all=d.rows.find(r=>r[0]===code&&String(r[1])===kind);
- const tbl=list.map(r=>`<tr><td>${htmlEscape(r[2])}</td><td>${fmt(r[3],0)}</td><td>${fmt(r[5],3)}%</td><td>${fmt(r[6],0)}円</td><td>${fmt(r[7],0)}円</td><td class="${r[3]<5?'low':''}">${fmt(r[8],1)}%</td></tr>`).join('');
+ const tbl=list.map(r=>`<tr><td>${renderCombo(r[2])}</td><td>${fmtInt(r[3])}</td><td>${fmt(r[5],1)}%</td><td>${fmtInt(r[6])}円</td><td>${fmtInt(r[7])}円</td><td class="${r[3]<5?'low':''}">${fmt(r[8],1)}%</td></tr>`).join('');
  body.innerHTML=`<h3>情報 ＞ 出目確率｜${htmlEscape(name)}</h3>
- <div class="hint">集計 ${htmlEscape(d.period[0])} ～ ${htmlEscape(d.period[1])} ／ ${all?fmt(all[4],0):'—'}R ／ ${kind==='0'?'2連単':'3連単'}（固定集計・自動更新なし）</div>
+ <div class="hint">集計 ${htmlEscape(d.period[0])} ～ ${htmlEscape(d.period[1])} ／ ${all?fmtInt(all[4]):'—'}R ／ ${kind==='0'?'2連単':'3連単'}（固定集計・自動更新なし）</div>
  <div class="caution">集計期間を固定した過去実績です。回収率は将来の的中や利益を保証しません。${flag?'この会場・券種は元の出現数と払戻確認件数に差がある区分です。出現確率は着順出現回数の合計を分母としています。平均配当・参考回収率は払戻未確認の影響が残る可能性があります。':''}</div>
  <div class="filters" id="brcDemeControls">
  <label>券種<select id="brcDemeKind"><option value="0" ${kind==='0'?'selected':''}>2連単</option><option value="1" ${kind==='1'?'selected':''}>3連単</option></select></label>
