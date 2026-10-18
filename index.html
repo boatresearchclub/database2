@@ -330,7 +330,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261017-ADMIN-V3-DIAG-UI-R3">
+<meta name="brc-build" content="20261018-ADMIN-V3-DIAG-R3-DEME-INFO">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -7444,6 +7444,7 @@ body.brc-admin-home-active .brc-admin-top-race .dp-signal:not(.in){
           <button type="button" class="predict-main-tab active" data-predict-main-tab="data">出走データ</button>
           <button type="button" class="predict-main-tab" data-predict-main-tab="odds">オッズ</button>
           <button type="button" class="predict-main-tab" data-predict-main-tab="ai">AI予測</button>
+          <button type="button" id="brcDemeInfoTab" class="predict-main-tab brc-admin-deme-tab" data-predict-main-tab="info" aria-hidden="true">情報</button>
           <button type="button" id="brcInvestmentTab" class="predict-main-tab brc-admin-invest-tab" data-predict-main-tab="invest" aria-hidden="true">投資管理</button>
         </div>
         <div class="predict-main-panel active" id="predictMainPanel-data">
@@ -7520,6 +7521,7 @@ body.brc-admin-home-active .brc-admin-top-race .dp-signal:not(.in){
         <div class="predict-main-panel" id="predictMainPanel-ai">
           <div id="predictAiResult" class="predict-ai-wrap"></div>
         </div>
+        <div class="predict-main-panel" id="predictMainPanel-info" aria-hidden="true"><div class="brc-deme" id="brcDemeInfo"></div></div>
         <div class="predict-main-panel" id="predictMainPanel-invest" aria-hidden="true">
           <div id="brcInvestmentManager" class="brc-invest-wrap"></div>
         </div>
@@ -13197,9 +13199,9 @@ function brcEnsureAiReferenceOddsAfterDeadline(){
 
 // 出走表AI：3タブ切り替え
 function setPredictMainTab(key){
-  const valid=['data','odds','ai','invest'];
+  const valid=['data','odds','ai','info','invest'];
   let k=valid.includes(key)?key:'data';
-  if(k==='invest' && (!(typeof BRC_ADMIN_ACTIVE!=='undefined' && BRC_ADMIN_ACTIVE)
+  if((k==='invest'||k==='info') && (!(typeof BRC_ADMIN_ACTIVE!=='undefined' && BRC_ADMIN_ACTIVE)
     || (typeof window.brcGetAdminViewMode==='function' && window.brcGetAdminViewMode()==='public'))) k='data';
   document.querySelectorAll('.predict-main-tab').forEach(btn=>{
     const on=btn.dataset.predictMainTab===k;
@@ -13210,7 +13212,7 @@ function setPredictMainTab(key){
     const panel=document.getElementById(`predictMainPanel-${x}`);
     if(panel){
       panel.classList.toggle('active',x===k);
-      if(x==='invest') panel.setAttribute('aria-hidden',x===k?'false':'true');
+      if(x==='invest'||x==='info') panel.setAttribute('aria-hidden',x===k?'false':'true');
     }
   });
   window.__predictMainTabCurrent=k;
@@ -13228,6 +13230,7 @@ function setPredictMainTab(key){
     }catch(_e){}
     setTimeout(()=>brcEnsureAiReferenceOddsAfterDeadline(),0);
   }
+  if(k==='info' && typeof window.brcRenderAdminDeme==='function') setTimeout(()=>window.brcRenderAdminDeme(),0);
   if(k==='invest' && typeof brcRenderInvestmentManager==='function') setTimeout(()=>brcRenderInvestmentManager(),0);
 }
 
@@ -36922,5 +36925,118 @@ body.brc-admin-home-active .brc-admin-top-race .dp-boat-no{
 })();
 </script>
 
+<!-- BRC_DEME_INFO_REVIEW_20261017: Admin UI integration candidate / published only by manual PUSH -->
+<style id="brcDemeInfoStyle">
+/* BRC_DEME_INFO_REVIEW_20261017: 管理者専用・読み取り専用 */
+#brcDemeInfoTab{display:none}
+.predict-main-tabs.brc-admin-deme-enabled{grid-template-columns:repeat(5,minmax(0,1fr))}
+body.brc-admin-public-view #brcDemeInfoTab{display:none!important}
+@media(max-width:420px){.predict-main-tabs.brc-admin-deme-enabled .predict-main-tab{font-size:11px;padding-left:1px;padding-right:1px}}
+#brcDemeInfoTab.is-visible{display:block}
+#page-predict .predict-main-tabs.brc-admin-invest-enabled{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:560px){#page-predict .predict-main-tabs.brc-admin-invest-enabled .predict-main-tab{font-size:11px;padding-left:2px;padding-right:2px}}
+#predictMainPanel-info{min-height:calc(100svh - 110px);background:#f7f9fc}
+.brc-deme{padding:14px;line-height:1.5;color:#14293b}
+.brc-deme h3{margin:4px 0 4px;font-size:19px}
+.brc-deme .hint{color:#62758c;font-size:12px}
+.brc-deme .caution{background:#fff5e1;border:1px solid #e5bb60;border-radius:10px;padding:10px 12px;margin:10px 0;font-size:12px;color:#714616}
+.brc-deme .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin:12px 0}
+.brc-deme label{font-size:12px;font-weight:700;display:flex;flex-direction:column;gap:4px}
+.brc-deme select{font:inherit;font-size:13px;padding:8px;border-radius:7px;background:white;border:1px solid #cbd5e1;min-width:95px;max-width:100%}
+.brc-deme .tablewrap{overflow:auto;border:1px solid #d9e2ee;border-radius:10px;background:white;max-height:65vh}
+.brc-deme table{border-collapse:collapse;width:100%;min-width:660px;font-variant-numeric:tabular-nums}
+.brc-deme th{position:sticky;top:0;background:#edf3fb;padding:9px 8px;text-align:right;font-size:12px;white-space:nowrap;z-index:1}
+.brc-deme td{padding:8px;border-top:1px solid #e8edf5;text-align:right;font-size:12px;white-space:nowrap}
+.brc-deme td:first-child,.brc-deme th:first-child{text-align:left;position:sticky;left:0;background:#fff;z-index:2}
+.brc-deme th:first-child{background:#edf3fb;z-index:3}
+.brc-deme td.low{color:#975000}
+.brc-deme .note{font-size:11px;color:#64748b;margin-top:9px}
+@media(max-width:600px){.brc-deme{padding:8px}.brc-deme .filters{display:grid;grid-template-columns:1fr 1fr}.brc-deme select{width:100%}}
+</style>
+<script id="brcDemeInfoData" type="application/json"></script>
+<script src="data/brcDemeInfoData-54f94c69e4-001.js"></script>
+<script id="brcDemeInfoLogic">
+// BRC_DEME_INFO_REVIEW_20261017
+// 表示機能だけ。元のAI予測/TimeX/データ取得/認証ロジックは変更しない。
+(function(){
+'use strict';
+const ID='brcDemeInfoTab';
+const allowed=()=>!!(typeof BRC_ADMIN_ACTIVE!=='undefined' && BRC_ADMIN_ACTIVE)
+ && !(typeof window.brcGetAdminViewMode==='function' && window.brcGetAdminViewMode()==='public');
+let cache=null, lastVenue='', lastMode='';
+function byId(id){return document.getElementById(id);}
+function source(){
+ if(cache)return cache;
+ const node=byId('brcDemeInfoData');
+ if(!node)return null;
+ try{
+   const d=JSON.parse(node.textContent);
+   if(!d||!Array.isArray(d.rows)||d.rows.length!==3600)throw new Error('件数不一致');
+   cache=d;return d;
+ }catch(e){console.error('[BRC出目確率] 集計データを読み込めません',e);return null;}
+}
+function venue(){
+ const d=source();if(!d)return null;
+ const raw=String(byId('predictRaceDay')?.value||byId('predictVenue')?.value||window.__currentVenueLabel||'').trim();
+ if(!raw)return null;
+ const num=Number(raw); if(Number.isInteger(num)&&num>=1&&num<=24)return num;
+ for(const [key,label] of Object.entries(d.venues||{}))if(label===raw)return Number(key);
+ return null;
+}
+function fmt(num,max=1){return (num!==null && num!==undefined && num!=='' && Number.isFinite(Number(num))?Number(num).toLocaleString('ja-JP',{maximumFractionDigits:max}):'—');}
+function htmlEscape(v){return String(v).replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));}
+function render(){
+ const body=byId('brcDemeInfo');if(!body)return;
+ if(!allowed()){body.textContent='';return;}
+ const d=source();if(!d){body.textContent='出目確率データを読み込めません。';return;}
+ const code=venue();const name=d.venues[String(code)]||'';
+ if(!code||!name){body.textContent='出走表の会場を選択してください。';return;}
+ const controls=byId('brcDemeControls');
+ const kind=controls?.querySelector('#brcDemeKind')?.value||'0';
+ const head=controls?.querySelector('#brcDemeHead')?.value||'all';
+ const order=controls?.querySelector('#brcDemeOrder')?.value||'prob';
+ let list=d.rows.filter(r=>r[0]===code&&String(r[1])===kind&&(head==='all'||r[2].startsWith(head+'-')));
+ const col=order==='roi'?8:order==='mean'?6:order==='count'?3:5;
+ list.sort((a,b)=>Number(b[col]??-Infinity)-Number(a[col]??-Infinity)||a[2].localeCompare(b[2]));
+ const flag=list.some(r=>r[9]===1);
+ const all=d.rows.find(r=>r[0]===code&&String(r[1])===kind);
+ const tbl=list.map(r=>`<tr><td>${htmlEscape(r[2])}</td><td>${fmt(r[3],0)}</td><td>${fmt(r[5],3)}%</td><td>${fmt(r[6],0)}円</td><td>${fmt(r[7],0)}円</td><td class="${r[3]<5?'low':''}">${fmt(r[8],1)}%</td></tr>`).join('');
+ body.innerHTML=`<h3>情報 ＞ 出目確率｜${htmlEscape(name)}</h3>
+ <div class="hint">集計 ${htmlEscape(d.period[0])} ～ ${htmlEscape(d.period[1])} ／ ${all?fmt(all[4],0):'—'}R ／ ${kind==='0'?'2連単':'3連単'}（固定集計・自動更新なし）</div>
+ <div class="caution">集計期間を固定した過去実績です。回収率は将来の的中や利益を保証しません。${flag?'この会場・券種は元の出現数と払戻確認件数に差がある区分です。出現確率は着順出現回数の合計を分母としています。平均配当・参考回収率は払戻未確認の影響が残る可能性があります。':''}</div>
+ <div class="filters" id="brcDemeControls">
+ <label>券種<select id="brcDemeKind"><option value="0" ${kind==='0'?'selected':''}>2連単</option><option value="1" ${kind==='1'?'selected':''}>3連単</option></select></label>
+ <label>1着艇<select id="brcDemeHead"><option value="all" ${head==='all'?'selected':''}>全体</option>${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${head===String(n)?'selected':''}>${n}号艇</option>`).join('')}</select></label>
+ <label>並び順<select id="brcDemeOrder">${[['prob','出現確率順'],['count','出現回数順'],['roi','参考回収率順'],['mean','平均配当順']].map(([k,v])=>`<option value="${k}" ${order===k?'selected':''}>${v}</option>`).join('')}</select></label>
+ </div><div class="tablewrap"><table><thead><tr><th>出目</th><th>出現回数</th><th>出現確率</th><th>平均配当</th><th>中央値</th><th>参考回収率</th></tr></thead><tbody>${tbl}</tbody></table></div>
+ <div class="note">回収率＝100円ずつ当該出目を1点購入した場合の過去標本からの参考試算。的中しなかったレースも購入対象。少数標本には注意（出現回数5回未満は色付き）。出現回数0回の配当は「—」表示。元CSVの払戻未照合は別途精査が必要です。</div>`;
+ for(const id of ['brcDemeKind','brcDemeHead','brcDemeOrder'])byId(id)?.addEventListener('change',()=>render());
+ lastVenue=String(code);lastMode=kind;
+}
+window.brcRenderAdminDeme=render;
+window.brcSetAdminDemeUi=function(active){
+ const show=!!active&&allowed();const tab=byId(ID);
+  document.querySelector('#page-predict .predict-main-tabs')?.classList.toggle('brc-admin-deme-enabled',show);
+ if(tab){tab.classList.toggle('is-visible',show);tab.style.display=show?'':'none';tab.setAttribute('aria-hidden',show?'false':'true');}
+ if(!show){
+   byId('brcDemeInfo')?.replaceChildren();
+   if(window.__predictMainTabCurrent==='info'&&typeof setPredictMainTab==='function')setPredictMainTab('data');
+ }else if(window.__predictMainTabCurrent==='info'){render();}
+};
+// 会場選択が内部関数でプログラムから更新される場合も表示を追従する。
+setInterval(()=>{
+ if(!byId(ID))return;
+ const show=allowed();const tab=byId(ID);
+ if(tab.classList.contains('is-visible')!==show)window.brcSetAdminDemeUi(show);
+ if(show&&window.__predictMainTabCurrent==='info'){
+   const v=String(venue()||'');
+   if(v!==lastVenue)render();
+ }
+},1000);
+['predictRaceDay','predictVenue','predictRaceNo'].forEach(id=>byId(id)?.addEventListener('change',()=>{
+ if(window.__predictMainTabCurrent==='info')render();
+}));
+})();
+</script>
 </body>
 </html>
