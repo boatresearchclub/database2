@@ -330,7 +330,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261020-ADMIN-V3-DIAG-R3-DEME-RECONCILED-MERGE-D09-ADMINONLY">
+<meta name="brc-build" content="20261020-ADMIN-V3-DIAG-R3-DEME-RACE12-MERGE-D10-ADMINONLY">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -37002,9 +37002,13 @@ body.brc-admin-public-view #brcDemeInfoTab{display:none!important}
   .brc-deme .deme-combo .brc-ref-combo-boat{width:17px;height:18px;font-size:10px}
   .brc-deme .deme-combo .brc-ref-combo-sep{font-size:9px}
 }
+
+/* 選択フィルターを3項目に拡張。小画面は2列＋1着艇を全幅。 */
+.brc-deme .filters{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:600px){.brc-deme .filters{grid-template-columns:repeat(2,minmax(0,1fr))}.brc-deme .filters label:last-child{grid-column:1/-1}}
 </style>
 <script id="brcDemeInfoData" type="application/json"></script>
-<script src="data/brcDemeInfoData-4cf029b0e5-001.js"></script>
+<script src="data/brcDemeInfoData-e3fdccce0e-001.js"></script>
 <script id="brcDemeInfoLogic">
 // BRC_DEME_INFO_REVIEW_20261017
 // 表示機能だけ。元のAI予測/TimeX/データ取得/認証ロジックは変更しない。
@@ -37051,8 +37055,12 @@ function render(){
  const controls=byId('brcDemeControls');
  const kind=controls?.querySelector('#brcDemeKind')?.value||'0';
  const head=controls?.querySelector('#brcDemeHead')?.value||'all';
+ const selectedRace=controls?.querySelector('#brcDemeRaceNo')?.value||'all';
  const order=sortKey;
- let list=d.rows.filter(r=>r[0]===code&&String(r[1])===kind&&(head==='all'||r[2].startsWith(head+'-')));
+ const raceSelected=selectedRace!=='all';
+ // Race arrays are normalized to existing field indices for shared sorting/rendering.
+ let list=(raceSelected ? d.race_rows.filter(r=>r[0]===code&&String(r[1])===selectedRace&&String(r[2])===kind).map(r=>[r[0],r[2],r[3],r[4],r[5],r[6],null,r[7],r[8],r[9]]) : d.rows.filter(r=>r[0]===code&&String(r[1])===kind))
+ .filter(r=>head==='all'||r[2].startsWith(head+'-'));
  const col=({count:3,prob:5,median:7,roi:8})[order];
  list.sort((a,b)=>{
    if(order==='combo')return (sortDirection==='asc'?1:-1)*a[2].localeCompare(b[2],'ja');
@@ -37071,20 +37079,24 @@ function render(){
    return `<th scope="col" aria-sort="${aria}"><button type="button" class="deme-sort-btn" data-deme-sort="${key}" aria-label="${label}で並び替え${current?', 現在'+(sortDirection==='desc'?'降順':'昇順'):''}"><span>${label}</span><span class="deme-sort-arrow" aria-hidden="true">${arrow}</span></button></th>`;
  }).join('');
  const audit=d.settlement_stats?.[`${code}:${kind}`]||null;
- const all=d.rows.find(r=>r[0]===code&&String(r[1])===kind);
+ const all=list.length?list[0]:null;
+ const thisCounts=raceSelected?d.race_counts.find(r=>r[0]===code&&String(r[2])===selectedRace&&((r[3]==='2連単'?'0':'1')===kind)):null;
+ const denominator=raceSelected?(thisCounts?.[5]??0):(d.rows.find(r=>r[0]===code&&String(r[1])===kind)?.[4]??0);
+ const specialRaces=raceSelected?(thisCounts?.[6]??0):(audit?.['特払いレース数']??0);
  const tbl=list.map(r=>`<tr><td>${renderCombo(r[2])}</td><td>${fmtInt(r[3])}</td><td>${fmt(r[5],1)}%</td><td>${fmtInt(r[7])}</td><td class="${r[3]<5?'low':''}">${fmt(r[8],1)}%</td></tr>`).join('');
  body.innerHTML=`<div class="deme-titleline"><h3>出目確率 <span class="deme-venue">${htmlEscape(name)}</span></h3><span class="deme-admin-flag">管理者専用</span></div>
- <p class="hint">${htmlEscape(d.period[0])} ～ ${htmlEscape(d.period[1])}　|　${all?fmtInt(all[4]):'—'}R　|　固定集計</p>
+ <p class="hint">${htmlEscape(d.period[0])} ～ ${htmlEscape(d.period[1])}　|　${fmtInt(denominator)}R　|　${raceSelected?selectedRace+'R':'会場全体'}　|　固定集計</p>
  <details class="audit-box"><summary>レース単位で照合済み · 集計条件を見る</summary>
- <div class="audit-detail">着順と払戻記録のレース単位照合を実施済みです。確率＝当該出目の的中レース数 ÷ 券種別の成立レース数。${audit?`この区分は成立${fmtInt(audit['成立レース数'])}R、同着による複数的中${fmtInt(audit['同着複数的中レース数'])}R、成立対象外${fmtInt(audit['払戻対象外レース数'])}R。`:''}同着は1レースで複数の出目が的中する場合があるため、出目別確率の合計が100%をわずかに超えることがあります。${kind==='0'&&code===8?'常滑2026年5月14日4Rの2連単特払い70円は、出目の的中回数に含めず各出目の参考回収率へ加算しています。':''}配当中央値は的中時の払戻金だけから算出。参考回収率は、成立レース（特払い発生時はそのレースも含む）で毎回当該出目へ100円投票した場合の払い戻し合計 ÷ 投票額で計算。取消・不成立などで有効な出目がないレースは分母から除いています。過去実績は将来の的中や利益を保証しません。</div></details>
+ <div class="audit-detail">着順と払戻記録のレース単位照合を実施済みです。確率＝当該出目の的中レース数 ÷ 券種別・レース番号別の成立レース数。${raceSelected&&thisCounts?`選択中の${selectedRace}Rは成立${fmtInt(thisCounts[5])}R、同着による複数的中${fmtInt(thisCounts[8])}R、特払い${fmtInt(thisCounts[6])}R、対象外${fmtInt(thisCounts[7])}R。`:audit?`会場全体は成立${fmtInt(audit['成立レース数'])}R、同着による複数的中${fmtInt(audit['同着複数的中レース数'])}R、成立対象外${fmtInt(audit['払戻対象外レース数'])}R。`:''}同着は1レースで複数の出目が的中する場合があるため、出目別確率の合計が100%をわずかに超えることがあります。${kind==='0'&&code===8?'常滑2026年5月14日4Rの2連単特払い70円は、出目の的中回数に含めず各出目の参考回収率へ加算しています。':''}各レース番号の標本数は会場全体より少ないため、特に3連単の小標本の確率・回収率には注意。配当中央値は的中時の払戻金だけから算出。参考回収率は、成立レース（特払い発生時はそのレースも含む）で毎回当該出目へ100円投票した場合の払い戻し合計 ÷ 投票額で計算。取消・不成立などで有効な出目がないレースは分母から除いています。過去実績は将来の的中や利益を保証しません。</div></details>
  <div class="filters" id="brcDemeControls">
  <label>券種<select id="brcDemeKind"><option value="0" ${kind==='0'?'selected':''}>2連単</option><option value="1" ${kind==='1'?'selected':''}>3連単</option></select></label>
+ <label>対象レース<select id="brcDemeRaceNo"><option value="all" ${selectedRace==='all'?'selected':''}>会場全体</option>${Array.from({length:12},(_,i)=>i+1).map(n=>`<option value="${n}" ${selectedRace===String(n)?'selected':''}>${n}R</option>`).join('')}</select></label>
  <label>1着艇<select id="brcDemeHead"><option value="all" ${head==='all'?'selected':''}>全体</option>${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${head===String(n)?'selected':''}>${n}号艇</option>`).join('')}</select></label>
  </div>
  <div class="sort-guide"><span>項目名をタップして並び替え</span><span class="sort-active">${[['combo','出目'],['count','回数'],['prob','確率'],['median','中央値'],['roi','回収率']].find(item=>item[0]===order)?.[1]||'確率'} ${sortDirection==='desc'?'▼':'▲'}</span></div>
  <div class="tablewrap"><table><thead><tr>${headHtml}</tr></thead><tbody>${tbl}</tbody></table></div>
  <div class="note">配当中央値は的中時の払戻金額（円）。参考回収率は成立レース毎に100円投票した場合の総払戻から計算（中央値を回収率の計算には使用しません）。特払いは実際の払戻分を反映。出現5回未満は参考扱い、0回の中央値は「—」。元データの各レース・払戻と照合済み。</div>`;
- for(const id of ['brcDemeKind','brcDemeHead'])byId(id)?.addEventListener('change',()=>render());
+ for(const id of ['brcDemeKind','brcDemeRaceNo','brcDemeHead'])byId(id)?.addEventListener('change',()=>render());
  body.querySelectorAll('[data-deme-sort]').forEach(btn=>btn.addEventListener('click',()=>{
    const key=btn.getAttribute('data-deme-sort');
    if(key===sortKey){sortDirection=sortDirection==='desc'?'asc':'desc';}

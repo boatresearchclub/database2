@@ -1,14 +1,14 @@
 {
   "version": "BRC_CLOUDFLARE_SPLIT_V2_SAFE",
-  "generated_at": "2026-10-19T16:51:06.362113+00:00",
+  "generated_at": "2026-10-19T17:23:51.820742+00:00",
   "source_index": "index.html",
-  "index_bytes": 24078885,
+  "index_bytes": 24080599,
   "files": [
     "brc-apd8-recent-course-1y-a2227c2fb8-001.js",
     "brc-d08-model-9af8b5d6fa-001.js",
     "brc-dictionary-1c-loss-trend-data-d394639d6e-001.js",
     "brc-player-1c-recent10-data-ed56f49f9b-001.js",
-    "brcDemeInfoData-4cf029b0e5-001.js",
+    "brcDemeInfoData-e3fdccce0e-001.js",
     "data-gradestats-96c1f7f5fc-001.js",
     "data-kimarite-f62ffd2dc7-001.js",
     "data-lane1weakness-a52f0dbeb1-001.js",
@@ -114,7 +114,7 @@
     },
     {
       "id": "brcDemeInfoData",
-      "bytes": 218658,
+      "bytes": 2120301,
       "chunks": 1
     },
     {
