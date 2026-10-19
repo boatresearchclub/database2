@@ -330,7 +330,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261020-ADMIN-V3-DIAG-R3-DEME-RACE12-MERGE-D10-ADMINONLY">
+<meta name="brc-build" content="20261020-ADMIN-V3-DIAG-R3-DEME-RACE-VS-VENUE-ADMINONLY">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -37006,123 +37006,190 @@ body.brc-admin-public-view #brcDemeInfoTab{display:none!important}
 /* 選択フィルターを3項目に拡張。小画面は2列＋1着艇を全幅。 */
 .brc-deme .filters{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media(max-width:600px){.brc-deme .filters{grid-template-columns:repeat(2,minmax(0,1fr))}.brc-deme .filters label:last-child{grid-column:1/-1}}
+
+/* BRC_DEME_RACE_VS_VENUE_AUTO_20261020: race-select sync only, admin UI; statistics unchanged */
+/* Comparing the selected race with its venue, no 1R–12R dropdown */
+.brc-deme .filters{grid-template-columns:repeat(2,minmax(0,1fr))}
+.brc-deme .filters label:last-child{grid-column:auto}
+.brc-deme .deme-compare-line{display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin:1px 0 11px;font-size:12px;font-weight:800;color:var(--deme-ink)}
+.brc-deme .deme-compare-label{display:inline-flex;align-items:center;border:1px solid #cedef4;border-radius:7px;background:#ecf4ff;color:#1251ae;padding:3px 7px}
+.brc-deme .deme-vs{color:var(--deme-soft);font-size:11px}
+.brc-deme .deme-comparison-note{font-size:10px;color:var(--deme-soft);font-weight:650;margin-left:auto}
+.brc-deme .deme-metric-tabs{display:flex;gap:5px;margin:2px 0 10px;padding:3px;border:1px solid #dbe4f0;background:#f5f8fc;border-radius:10px}
+.brc-deme .deme-metric-btn{flex:1;min-width:0;min-height:34px;border:0;border-radius:7px;padding:6px 3px;font:inherit;font-size:11px;font-weight:800;background:transparent;color:var(--deme-soft);cursor:pointer;touch-action:manipulation}
+.brc-deme .deme-metric-btn.active{background:#fff;box-shadow:0 1px 4px rgba(10,31,51,.12);color:var(--deme-blue)}
+.brc-deme .deme-metric-btn:focus-visible{outline:2px solid var(--deme-blue);outline-offset:1px}
+.brc-deme .deme-stat-main{display:block;white-space:nowrap;line-height:1.25;font-variant-numeric:tabular-nums}
+.brc-deme .deme-stat-count{display:block;white-space:nowrap;font-size:9px;font-weight:600;color:var(--deme-soft);margin-top:2px}
+.brc-deme table th:nth-child(1),.brc-deme table td:nth-child(1){width:31%}
+.brc-deme table th:nth-child(2),.brc-deme table td:nth-child(2){width:23%}
+.brc-deme table th:nth-child(3),.brc-deme table td:nth-child(3){width:23%}
+.brc-deme table th:nth-child(4),.brc-deme table td:nth-child(4){width:23%}
+.brc-deme .tablewrap table td{height:42px;font-size:12px}
+.brc-deme .deme-delta-up{color:#136c49!important;font-weight:800}
+.brc-deme .deme-delta-down{color:#b04437!important;font-weight:800}
+.brc-deme .deme-delta-low{color:#748496!important}
+.brc-deme .deme-delta-note{margin:7px 0 1px;color:var(--deme-soft);font-size:10px;line-height:1.55}
+@media(max-width:420px){
+ .brc-deme .filters{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .brc-deme .deme-comparison-note{flex-basis:100%;margin-left:0}
+ .brc-deme .tablewrap table td{font-size:11px}
+ .brc-deme .deme-stat-count{font-size:9px}
+ .brc-deme th{font-size:10px}
+ .brc-deme table th:nth-child(1),.brc-deme table td:nth-child(1){width:31%}
+ .brc-deme table th:nth-child(2),.brc-deme table td:nth-child(2){width:23%}
+ .brc-deme table th:nth-child(3),.brc-deme table td:nth-child(3){width:23%}
+ .brc-deme table th:nth-child(4),.brc-deme table td:nth-child(4){width:23%}
+}
+@media(max-width:360px){
+ .brc-deme .tablewrap table td{font-size:10px}
+ .brc-deme .deme-stat-count{font-size:8px}
+ .brc-deme .deme-combo .brc-ref-combo-boat{width:17px;height:18px;font-size:10px}
+}
 </style>
 <script id="brcDemeInfoData" type="application/json"></script>
 <script src="data/brcDemeInfoData-e3fdccce0e-001.js"></script>
 <script id="brcDemeInfoLogic">
-// BRC_DEME_INFO_REVIEW_20261017
-// 表示機能だけ。元のAI予測/TimeX/データ取得/認証ロジックは変更しない。
+// BRC_DEME_RACE_VS_VENUE_AUTO_20261020: 管理者情報タブのみ変更。予測/TimeX/着率は不変更。
 (function(){
 'use strict';
 const ID='brcDemeInfoTab';
-const allowed=()=>!!(typeof BRC_ADMIN_ACTIVE!=='undefined' && BRC_ADMIN_ACTIVE)
- && !(typeof window.brcGetAdminViewMode==='function' && window.brcGetAdminViewMode()==='public');
-let cache=null, lastVenue='', lastMode='';
-let sortKey='prob', sortDirection='desc'; // 列クリック時は同じ列なら方向反転、別列なら既定方向
+const allowed=()=>!!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)
+ && !(typeof window.brcGetAdminViewMode==='function'&&window.brcGetAdminViewMode()==='public');
+let cache=null,lastVenue='',lastRace='',lastMode='';
+let sortKey='selected',sortDirection='desc',compareMetric='prob';
 function byId(id){return document.getElementById(id);}
 function source(){
  if(cache)return cache;
- const node=byId('brcDemeInfoData');
- if(!node)return null;
- try{
-   const d=JSON.parse(node.textContent);
-   if(!d||!Array.isArray(d.rows)||d.rows.length!==3600)throw new Error('件数不一致');
-   cache=d;return d;
- }catch(e){console.error('[BRC出目確率] 集計データを読み込めません',e);return null;}
+ const node=byId('brcDemeInfoData');if(!node)return null;
+ try{const d=JSON.parse(node.textContent);
+  if(!d||!Array.isArray(d.rows)||d.rows.length!==3600||!Array.isArray(d.race_rows)||d.race_rows.length!==43200||!Array.isArray(d.race_counts)||d.race_counts.length!==576)throw new Error('集計件数不一致');
+  cache=d;return d;
+ }catch(e){console.error('[BRC出目確率] 集計データ読込失敗',e);return null;}
 }
 function venue(){
  const d=source();if(!d)return null;
  const raw=String(byId('predictRaceDay')?.value||byId('predictVenue')?.value||window.__currentVenueLabel||'').trim();
  if(!raw)return null;
- const num=Number(raw); if(Number.isInteger(num)&&num>=1&&num<=24)return num;
- for(const [key,label] of Object.entries(d.venues||{}))if(label===raw)return Number(key);
+ const num=Number(raw);if(Number.isInteger(num)&&num>=1&&num<=24)return num;
+ for(const [key,label]of Object.entries(d.venues||{}))if(label===raw)return Number(key);
  return null;
 }
-function fmt(num,max=1){return (num!==null && num!==undefined && num!=='' && Number.isFinite(Number(num))?Number(num).toLocaleString('ja-JP',{minimumFractionDigits:max,maximumFractionDigits:max}):'—');}
-function fmtInt(num){return (num!==null && num!==undefined && num!=='' && Number.isFinite(Number(num))?Number(num).toLocaleString('ja-JP',{maximumFractionDigits:0}):'—');}
+function race(){
+ const num=Number(byId('predictRaceNo')?.value||0);
+ return Number.isInteger(num)&&num>=1&&num<=12?num:null;
+}
+function fmt(x,digits=1){return x!==null&&x!==undefined&&x!==''&&Number.isFinite(Number(x))?Number(x).toLocaleString('ja-JP',{minimumFractionDigits:digits,maximumFractionDigits:digits}):'—';}
+function fmtInt(x){return x!==null&&x!==undefined&&x!==''&&Number.isFinite(Number(x))?Number(x).toLocaleString('ja-JP',{maximumFractionDigits:0}):'—';}
 function htmlEscape(v){return String(v).replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));}
 function renderCombo(combo){
- const nums=String(combo||'').split('-').map(v=>Number(v)).filter(v=>Number.isInteger(v)&&v>=1&&v<=6);
+ const nums=String(combo||'').split('-').map(Number).filter(n=>Number.isInteger(n)&&n>=1&&n<=6);
  if(!nums.length)return htmlEscape(combo);
- return `<span class="deme-combo"><span class="brc-ref-combo-chip">${nums.map((n,i)=>`${i?'<span class=\"brc-ref-combo-sep\">-</span>':''}<span class=\"brc-ref-combo-boat lane${n}\">${n}</span>`).join('')}</span></span>`;
+ return `<span class="deme-combo"><span class="brc-ref-combo-chip">${nums.map((n,i)=>`${i?'<span class="brc-ref-combo-sep">-</span>':''}<span class="brc-ref-combo-boat lane${n}">${n}</span>`).join('')}</span></span>`;
+}
+function value(p,side){
+ const r=side==='selected'?p.selected:p.all;
+ return r?(compareMetric==='prob'?r.prob:compareMetric==='median'?r.median:r.roi):null;
+}
+function showValue(n,side){
+ if(n===null||n===undefined||!Number.isFinite(Number(n)))return '—';
+ return compareMetric==='median'?fmtInt(n):fmt(n,1)+(compareMetric==='prob'||compareMetric==='roi'?'%':'');
+}
+function showDiff(n){
+ if(n===null||n===undefined||!Number.isFinite(Number(n)))return '—';
+ const v=Number(n),prefix=v>0?'+':v<0?'−':'';
+ const amount=compareMetric==='median'?fmtInt(Math.abs(v)):fmt(Math.abs(v),1);
+ return prefix+amount+(compareMetric==='median'?'円':'pt');
 }
 function render(){
  const body=byId('brcDemeInfo');if(!body)return;
  if(!allowed()){body.textContent='';return;}
  const d=source();if(!d){body.textContent='出目確率データを読み込めません。';return;}
- const code=venue();const name=d.venues[String(code)]||'';
+ const code=venue(),name=d.venues[String(code)]||'';
  if(!code||!name){body.textContent='出走表の会場を選択してください。';return;}
+ const raceNo=race();
+ if(!raceNo){body.textContent='出走表で1R〜12Rを選択すると、会場全体との比較が表示されます。';return;}
  const controls=byId('brcDemeControls');
  const kind=controls?.querySelector('#brcDemeKind')?.value||'0';
  const head=controls?.querySelector('#brcDemeHead')?.value||'all';
- const selectedRace=controls?.querySelector('#brcDemeRaceNo')?.value||'all';
- const order=sortKey;
- const raceSelected=selectedRace!=='all';
- // Race arrays are normalized to existing field indices for shared sorting/rendering.
- let list=(raceSelected ? d.race_rows.filter(r=>r[0]===code&&String(r[1])===selectedRace&&String(r[2])===kind).map(r=>[r[0],r[2],r[3],r[4],r[5],r[6],null,r[7],r[8],r[9]]) : d.rows.filter(r=>r[0]===code&&String(r[1])===kind))
- .filter(r=>head==='all'||r[2].startsWith(head+'-'));
- const col=({count:3,prob:5,median:7,roi:8})[order];
- list.sort((a,b)=>{
-   if(order==='combo')return (sortDirection==='asc'?1:-1)*a[2].localeCompare(b[2],'ja');
-   const av=a[col],bv=b[col];
-   // 出現回数0回等の中央値なしは、昇順でも降順でも末尾へ。
-   if(av==null&&bv!=null)return 1;
-   if(bv==null&&av!=null)return -1;
-   const delta=Number(av??0)-Number(bv??0);
-   return (sortDirection==='asc'?delta:-delta)||a[2].localeCompare(b[2],'ja');
+ const rr=d.race_rows.filter(r=>r[0]===code&&r[1]===raceNo&&String(r[2])===kind);
+ const ar=d.rows.filter(r=>r[0]===code&&String(r[1])===kind);
+ const byCombo=new Map(ar.map(r=>[r[2],r]));
+ let list=rr.filter(r=>head==='all'||String(r[3]).startsWith(head+'-')).map(r=>{
+  const a=byCombo.get(r[3]);
+  return {combo:r[3],selected:{count:r[4],denom:r[5],prob:r[6],median:r[7],roi:r[8]},all:a?{count:a[3],denom:a[4],prob:a[5],median:a[7],roi:a[8]}:null};
  });
- const headings=[['combo','出目'],['count','回数'],['prob','確率'],['median','中央値'],['roi','回収率']];
+ // Compare in original (unrounded) precision; round only once at presentation time.
+ list.sort((a,b)=>{
+  if(sortKey==='combo')return (sortDirection==='asc'?1:-1)*a.combo.localeCompare(b.combo,'ja');
+  const measure=p=>sortKey==='diff'?(value(p,'selected')==null||value(p,'all')==null?null:value(p,'selected')-value(p,'all')):value(p,sortKey);
+  const av=measure(a),bv=measure(b);
+  if(av==null&&bv!=null)return 1;
+  if(bv==null&&av!=null)return -1;
+  const delta=Number(av??0)-Number(bv??0);
+  return (sortDirection==='asc'?delta:-delta)||a.combo.localeCompare(b.combo,'ja');
+ });
+ const headings=[['combo','出目'],['selected',raceNo+'R'],['all','会場全体'],['diff','差']];
  const headHtml=headings.map(([key,label])=>{
-   const current=order===key;
-   const arrow=current?(sortDirection==='desc'?'▼':'▲'):'⇅';
-   const aria=current?(sortDirection==='desc'?'descending':'ascending'):'none';
-   return `<th scope="col" aria-sort="${aria}"><button type="button" class="deme-sort-btn" data-deme-sort="${key}" aria-label="${label}で並び替え${current?', 現在'+(sortDirection==='desc'?'降順':'昇順'):''}"><span>${label}</span><span class="deme-sort-arrow" aria-hidden="true">${arrow}</span></button></th>`;
+  const current=sortKey===key,arrow=current?(sortDirection==='desc'?'▼':'▲'):'⇅';
+  const aria=current?(sortDirection==='desc'?'descending':'ascending'):'none';
+  return `<th scope="col" aria-sort="${aria}"><button type="button" class="deme-sort-btn" data-deme-sort="${key}" aria-label="${label}で並び替え"><span>${htmlEscape(label)}</span><span class="deme-sort-arrow" aria-hidden="true">${arrow}</span></button></th>`;
  }).join('');
+ const counts=d.race_counts.find(r=>r[0]===code&&r[2]===raceNo&&((r[3]==='2連単'?'0':'1')===kind));
+ const rN=Number(counts?.[5]??rr[0]?.[5]??0),venueN=Number(ar[0]?.[4]??0);
  const audit=d.settlement_stats?.[`${code}:${kind}`]||null;
- const all=list.length?list[0]:null;
- const thisCounts=raceSelected?d.race_counts.find(r=>r[0]===code&&String(r[2])===selectedRace&&((r[3]==='2連単'?'0':'1')===kind)):null;
- const denominator=raceSelected?(thisCounts?.[5]??0):(d.rows.find(r=>r[0]===code&&String(r[1])===kind)?.[4]??0);
- const specialRaces=raceSelected?(thisCounts?.[6]??0):(audit?.['特払いレース数']??0);
- const tbl=list.map(r=>`<tr><td>${renderCombo(r[2])}</td><td>${fmtInt(r[3])}</td><td>${fmt(r[5],1)}%</td><td>${fmtInt(r[7])}</td><td class="${r[3]<5?'low':''}">${fmt(r[8],1)}%</td></tr>`).join('');
+ const tbl=list.map(p=>{
+  const a=value(p,'selected'),b=value(p,'all'),diff=a!=null&&b!=null?a-b:null;
+  const observed=p.selected.count>=5,dir=diff===null?'':!observed?'deme-delta-low':diff>0?'deme-delta-up':diff<0?'deme-delta-down':'';
+  return `<tr><td>${renderCombo(p.combo)}</td>
+ <td><span class="deme-stat-main">${showValue(a,'selected')}</span><small class="deme-stat-count">${fmtInt(p.selected.count)}回</small></td>
+ <td><span class="deme-stat-main">${showValue(b,'all')}</span><small class="deme-stat-count">${fmtInt(p.all?.count??0)}回</small></td>
+ <td class="${dir}" title="${htmlEscape(raceNo+'R － 会場全体')} ">${showDiff(diff)}</td></tr>`;
+ }).join('');
+ const label=compareMetric==='prob'?'確率':compareMetric==='median'?'配当中央値':'回収率';
  body.innerHTML=`<div class="deme-titleline"><h3>出目確率 <span class="deme-venue">${htmlEscape(name)}</span></h3><span class="deme-admin-flag">管理者専用</span></div>
- <p class="hint">${htmlEscape(d.period[0])} ～ ${htmlEscape(d.period[1])}　|　${fmtInt(denominator)}R　|　${raceSelected?selectedRace+'R':'会場全体'}　|　固定集計</p>
- <details class="audit-box"><summary>レース単位で照合済み · 集計条件を見る</summary>
- <div class="audit-detail">着順と払戻記録のレース単位照合を実施済みです。確率＝当該出目の的中レース数 ÷ 券種別・レース番号別の成立レース数。${raceSelected&&thisCounts?`選択中の${selectedRace}Rは成立${fmtInt(thisCounts[5])}R、同着による複数的中${fmtInt(thisCounts[8])}R、特払い${fmtInt(thisCounts[6])}R、対象外${fmtInt(thisCounts[7])}R。`:audit?`会場全体は成立${fmtInt(audit['成立レース数'])}R、同着による複数的中${fmtInt(audit['同着複数的中レース数'])}R、成立対象外${fmtInt(audit['払戻対象外レース数'])}R。`:''}同着は1レースで複数の出目が的中する場合があるため、出目別確率の合計が100%をわずかに超えることがあります。${kind==='0'&&code===8?'常滑2026年5月14日4Rの2連単特払い70円は、出目の的中回数に含めず各出目の参考回収率へ加算しています。':''}各レース番号の標本数は会場全体より少ないため、特に3連単の小標本の確率・回収率には注意。配当中央値は的中時の払戻金だけから算出。参考回収率は、成立レース（特払い発生時はそのレースも含む）で毎回当該出目へ100円投票した場合の払い戻し合計 ÷ 投票額で計算。取消・不成立などで有効な出目がないレースは分母から除いています。過去実績は将来の的中や利益を保証しません。</div></details>
+ <p class="hint">${htmlEscape(d.period[0])} ～ ${htmlEscape(d.period[1])} ｜ ${raceNo}R ${fmtInt(rN)}R・会場全体 ${fmtInt(venueN)}R ｜ 固定集計</p>
+ <div class="deme-compare-line"><span class="deme-compare-label">${raceNo}R</span><span class="deme-vs">vs</span><span class="deme-compare-label">会場全体</span><span class="deme-comparison-note">出走表の選択Rに自動追従</span></div>
+ <details class="audit-box"><summary>レース単位で照合済み · 比較条件を見る</summary>
+ <div class="audit-detail">この比較は選択中の${raceNo}Rと同じ会場の全レースです。会場全体のデータには${raceNo}Rも含まれるため、独立した2群の比較ではありません。確率の分母は各券種の成立レース数（選択R ${fmtInt(rN)}R、会場全体 ${fmtInt(venueN)}R）。${counts?`選択Rの同着による複数的中${fmtInt(counts[8])}R、特払い${fmtInt(counts[6])}R、対象外${fmtInt(counts[7])}R。`:''}${audit?`会場全体は成立${fmtInt(audit['成立レース数'])}R。`:''} 出目別の的中回数は同着をそれぞれ計上するため確率の合計が100%をわずかに超える場合があります。配当中央値は的中したときの実払戻金から算出、回収率は各成立レースでその出目に100円ずつ投票した想定で実払戻を合算し、特払いがあれば加算します。標本が少ない出目では大きな差が生じやすく、将来の的中や利益を保証しません。</div></details>
  <div class="filters" id="brcDemeControls">
  <label>券種<select id="brcDemeKind"><option value="0" ${kind==='0'?'selected':''}>2連単</option><option value="1" ${kind==='1'?'selected':''}>3連単</option></select></label>
- <label>対象レース<select id="brcDemeRaceNo"><option value="all" ${selectedRace==='all'?'selected':''}>会場全体</option>${Array.from({length:12},(_,i)=>i+1).map(n=>`<option value="${n}" ${selectedRace===String(n)?'selected':''}>${n}R</option>`).join('')}</select></label>
- <label>1着艇<select id="brcDemeHead"><option value="all" ${head==='all'?'selected':''}>全体</option>${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${head===String(n)?'selected':''}>${n}号艇</option>`).join('')}</select></label>
- </div>
- <div class="sort-guide"><span>項目名をタップして並び替え</span><span class="sort-active">${[['combo','出目'],['count','回数'],['prob','確率'],['median','中央値'],['roi','回収率']].find(item=>item[0]===order)?.[1]||'確率'} ${sortDirection==='desc'?'▼':'▲'}</span></div>
+ <label>1着艇<select id="brcDemeHead"><option value="all" ${head==='all'?'selected':''}>全体</option>${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${head===String(n)?'selected':''}>${n}号艇</option>`).join('')}</select></label></div>
+ <div class="deme-metric-tabs" role="group" aria-label="比較指標">
+ ${[['prob','出現確率'],['median','配当中央値'],['roi','参考回収率']].map(([v,t])=>`<button type="button" class="deme-metric-btn ${compareMetric===v?'active':''}" data-deme-metric="${v}" aria-pressed="${compareMetric===v}">${t}</button>`).join('')}</div>
+ <div class="sort-guide"><span>見出しタップで昇降順</span><span class="sort-active">${label} ｜ ${headings.find(x=>x[0]===sortKey)?.[1]||raceNo+'R'} ${sortDirection==='desc'?'▼':'▲'}</span></div>
  <div class="tablewrap"><table><thead><tr>${headHtml}</tr></thead><tbody>${tbl}</tbody></table></div>
- <div class="note">配当中央値は的中時の払戻金額（円）。参考回収率は成立レース毎に100円投票した場合の総払戻から計算（中央値を回収率の計算には使用しません）。特払いは実際の払戻分を反映。出現5回未満は参考扱い、0回の中央値は「—」。元データの各レース・払戻と照合済み。</div>`;
- for(const id of ['brcDemeKind','brcDemeRaceNo','brcDemeHead'])byId(id)?.addEventListener('change',()=>render());
- body.querySelectorAll('[data-deme-sort]').forEach(btn=>btn.addEventListener('click',()=>{
-   const key=btn.getAttribute('data-deme-sort');
-   if(key===sortKey){sortDirection=sortDirection==='desc'?'asc':'desc';}
-   else {sortKey=key;sortDirection=(key==='combo'?'asc':'desc');}
-   render();
+ <div class="deme-delta-note">差＝${raceNo}R − 会場全体。確率・回収率の差はpt、中央値の差は円。各数値の下は出現回数。差は丸め前の値で算出するため、表示値との差が0.1ptずれる場合があります。5回未満の出目の差は薄色表示します。</div>
+ <div class="note">過去1年間の実績であり、会場全体との違いは選手・進入・番組構成などの影響も受けます。固定集計・自動更新なし。</div>`;
+ for(const id of ['brcDemeKind','brcDemeHead'])byId(id)?.addEventListener('change',render);
+ body.querySelectorAll('[data-deme-metric]').forEach(btn=>btn.addEventListener('click',()=>{
+  const metric=btn.getAttribute('data-deme-metric');if(!['prob','median','roi'].includes(metric))return;
+  compareMetric=metric;sortKey='selected';sortDirection='desc';render();
  }));
- lastVenue=String(code);lastMode=kind;
+ body.querySelectorAll('[data-deme-sort]').forEach(btn=>btn.addEventListener('click',()=>{
+  const key=btn.getAttribute('data-deme-sort');
+  if(key===sortKey)sortDirection=sortDirection==='desc'?'asc':'desc';
+  else{sortKey=key;sortDirection=key==='combo'?'asc':'desc';}
+  render();
+ }));
+ lastVenue=String(code);lastRace=String(raceNo);lastMode=kind;
 }
 window.brcRenderAdminDeme=render;
 window.brcSetAdminDemeUi=function(active){
- const show=!!active&&allowed();const tab=byId(ID);
-  document.querySelector('#page-predict .predict-main-tabs')?.classList.toggle('brc-admin-deme-enabled',show);
+ const show=!!active&&allowed(),tab=byId(ID);
+ document.querySelector('#page-predict .predict-main-tabs')?.classList.toggle('brc-admin-deme-enabled',show);
  if(tab){tab.classList.toggle('is-visible',show);tab.style.display=show?'':'none';tab.setAttribute('aria-hidden',show?'false':'true');}
- if(!show){
-   byId('brcDemeInfo')?.replaceChildren();
-   if(window.__predictMainTabCurrent==='info'&&typeof setPredictMainTab==='function')setPredictMainTab('data');
- }else if(window.__predictMainTabCurrent==='info'){render();}
+ if(!show){byId('brcDemeInfo')?.replaceChildren();if(window.__predictMainTabCurrent==='info'&&typeof setPredictMainTab==='function')setPredictMainTab('data');}
+ else if(window.__predictMainTabCurrent==='info')render();
 };
-// 会場選択が内部関数でプログラムから更新される場合も表示を追従する。
+// Race selector changes may not always fire DOM change when replaced programmatically; compare actual values while info is open.
 setInterval(()=>{
  if(!byId(ID))return;
- const show=allowed();const tab=byId(ID);
+ const show=allowed(),tab=byId(ID);
  if(tab.classList.contains('is-visible')!==show)window.brcSetAdminDemeUi(show);
  if(show&&window.__predictMainTabCurrent==='info'){
-   const v=String(venue()||'');
-   if(v!==lastVenue)render();
+  const v=String(venue()||''),r=String(race()||'');
+  if(v!==lastVenue||r!==lastRace)render();
  }
 },1000);
 ['predictRaceDay','predictVenue','predictRaceNo'].forEach(id=>byId(id)?.addEventListener('change',()=>{
