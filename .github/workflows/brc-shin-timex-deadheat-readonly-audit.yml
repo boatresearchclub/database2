@@ -1,0 +1,33 @@
+name: BRC True TimeX - dead heat read-only audit
+on:
+  push:
+    branches: [research/shin-timex-readonly-probe-20261020]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Inspect legacy D1 result and related public read paths
+        run: |
+          python3 - <<'PY'
+          import json,urllib.parse,urllib.request,urllib.error
+          base='https://brc-live-exhibition.sk48159212.workers.dev'
+          races=[('2026-08-31','20',8,'wakamatsu_8R'),('2026-09-14','04',6,'heiwajima_6R')]
+          paths=['/live-result','/live-result-v2','/live-result-special-status-v2','/live-result-top3-observation-v2']
+          for date,venue,race,label in races:
+            for path in paths:
+              q=urllib.parse.urlencode({'date':date,'venue_code':venue,'race_no':race})
+              req=urllib.request.Request(base+path+'?'+q,headers={'Cache-Control':'no-store'})
+              try:
+                with urllib.request.urlopen(req,timeout=12) as response:
+                  obj=json.load(response)
+                  print(json.dumps({'race':label,'path':path,'http':response.status,'confirmed':obj.get('confirmed'),
+                    'result_present':isinstance(obj.get('result'),dict),'store':obj.get('store')},ensure_ascii=False))
+              except urllib.error.HTTPError as e:
+                print(json.dumps({'race':label,'path':path,'http':e.code}))
+              except Exception as e:
+                print(json.dumps({'race':label,'path':path,'error':type(e).__name__}))
+          print('READ ONLY. No secrets, no writes, no raw response bodies.')
+          PY
