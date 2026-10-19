@@ -1,0 +1,36 @@
+name: BRC True TimeX - route inspection (read-only)
+on:
+  push:
+    branches: [research/shin-timex-readonly-probe-20261020]
+permissions:
+  contents: read
+jobs:
+  route-inspection:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Public GET route status only
+        shell: bash
+        run: |
+          set -uo pipefail
+          timex='https://brc-timex-v3-test.sk48159212.workers.dev'
+          live='https://brc-live-exhibition.sk48159212.workers.dev'
+          probe() {
+            label="$1"; url="$2"
+            code=$(curl --silent --show-error --connect-timeout 8 --max-time 15 \
+              --max-redirs 0 --output /dev/null --write-out '%{http_code}' \
+              --header 'Cache-Control: no-store' -- "$url") || {
+                echo "$label transport_error"; return 0;
+              }
+            echo "$label http=$code"
+          }
+          probe 'v3_root' "$timex/"
+          probe 'v3_predict_route_noauth_GET' "$timex/predict-timex-v3"
+          probe 'v3_ingest_context_route_noauth_GET' "$timex/ingest-race-context"
+          probe 'live_root' "$live/"
+          probe 'live_health' "$live/health"
+          probe 'live_exhibition_missing_query' "$live/live-exhibition"
+          probe 'live_schedule_missing_query' "$live/live-schedule"
+          probe 'live_result_missing_query' "$live/live-result"
+          probe 'live_v2_missing_query' "$live/live-result-v2"
+          echo 'GET only; no auth, no request body, no response body stored or printed'
