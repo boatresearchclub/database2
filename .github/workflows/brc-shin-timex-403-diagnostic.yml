@@ -1,0 +1,38 @@
+name: BRC True TimeX - 403 scope diagnostic
+on:
+  push:
+    branches: [research/shin-timex-readonly-probe-20261020]
+permissions:
+  contents: read
+jobs:
+  read-only-403:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Compare health, normal results and dead heats without credentials
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import urllib.request,urllib.parse,urllib.error,json
+          base='https://brc-live-exhibition.sk48159212.workers.dev'
+          targets=[
+            ('health','/health',None),
+            ('normal_20261014','/live-result',{'date':'2026-10-14','venue_code':'04','race_no':1}),
+            ('normal_20261014_ashiya','/live-result',{'date':'2026-10-14','venue_code':'21','race_no':1}),
+            ('deadheat_wakamatsu','/live-result',{'date':'2026-08-31','venue_code':'20','race_no':8}),
+            ('deadheat_heiwajima','/live-result',{'date':'2026-09-14','venue_code':'04','race_no':6}),
+            ('v2_noauth','/live-result-v2',{'date':'2026-10-14','venue_code':'04','race_no':1}),
+          ]
+          for label,path,params in targets:
+            url=base+path+('?' + urllib.parse.urlencode(params) if params else '')
+            req=urllib.request.Request(url,headers={'Cache-Control':'no-store','User-Agent':'BRC-ReadOnly-Diagnostic/1.0'})
+            try:
+              with urllib.request.urlopen(req,timeout=12) as resp:
+                obj=json.load(resp)
+                print(json.dumps({'label':label,'http':resp.status,'confirmed':obj.get('confirmed'),'phase':obj.get('phase')},ensure_ascii=False))
+            except urllib.error.HTTPError as e:
+              print(json.dumps({'label':label,'http':e.code,'cf_ray_present':bool(e.headers.get('cf-ray')),'server':e.headers.get('server')}))
+            except Exception as e:
+              print(json.dumps({'label':label,'error':type(e).__name__}))
+          print('Read-only GET; no body/header secrets, no writes.')
+          PY
