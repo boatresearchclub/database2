@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Public GET route status only
+      - name: Safe staging API read-only inspection
         shell: bash
         run: |
           set -uo pipefail
@@ -24,13 +24,15 @@ jobs:
               }
             echo "$label http=$code"
           }
-          probe 'v3_root' "$timex/"
-          probe 'v3_predict_route_noauth_GET' "$timex/predict-timex-v3"
-          probe 'v3_ingest_context_route_noauth_GET' "$timex/ingest-race-context"
-          probe 'live_root' "$live/"
+          probe 'v3_noauth_predict' "$timex/predict-timex-v3"
           probe 'live_health' "$live/health"
-          probe 'live_exhibition_missing_query' "$live/live-exhibition"
-          probe 'live_schedule_missing_query' "$live/live-schedule"
-          probe 'live_result_missing_query' "$live/live-result"
-          probe 'live_v2_missing_query' "$live/live-result-v2"
-          echo 'GET only; no auth, no request body, no response body stored or printed'
+          probe 'live_current_result_v1_invalid_query' "$live/live-result"
+          probe 'live_candidate_v2_missing_query' "$live/live-result-v2"
+          probe 'live_candidate_v2_valid_query_noauth' "$live/live-result-v2?date=2026-10-20&venue_code=21&race_no=1"
+          probe 'live_candidate_special_status_v22' "$live/live-result-special-status-v2"
+          probe 'live_candidate_partial_observation_v21' "$live/live-result-top3-observation-v2"
+          echo 'Health metadata, explicitly allowlisted keys only:'
+          curl --silent --show-error --max-time 15 --fail "$live/health" | \
+            python3 -c 'import json,sys; d=json.load(sys.stdin); allowed=("ok","service","phase","mode","result_store","result_store_bound"); print({k:d.get(k) for k in allowed if k in d})' || \
+            echo 'health_metadata_unavailable'
+          echo 'GET only; no auth, no writes, no result/prediction bodies retained'
