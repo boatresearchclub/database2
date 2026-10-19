@@ -1,0 +1,53 @@
+name: BRC True TimeX - D1 one-day read-only coverage
+on:
+  push:
+    branches: [research/shin-timex-readonly-probe-20261020]
+permissions:
+  contents: read
+jobs:
+  historical-d1-coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Count read-only D1 result coverage (2026-10-14)
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from concurrent.futures import ThreadPoolExecutor
+          import urllib.request, urllib.parse, urllib.error, json
+          DAY='2026-10-14'
+          VENUES=['04','06','11','12','13','14','15','18','19','20','21','22','24']
+          BASE='https://brc-live-exhibition.sk48159212.workers.dev/live-result'
+          targets=[(v,n) for v in VENUES for n in range(1,13)]
+          def probe(t):
+            v,n=t
+            q=urllib.parse.urlencode({'date':DAY,'venue_code':v,'race_no':n})
+            req=urllib.request.Request(BASE+'?'+q,headers={'User-Agent':'BRC-ReadOnly-D1-Coverage/1.0','Cache-Control':'no-store'})
+            try:
+              with urllib.request.urlopen(req,timeout=15) as resp:
+                body=json.load(resp)
+                if not body.get('ok') or body.get('date')!=DAY or body.get('venue_code')!=v or body.get('race_no')!=n:
+                  return v,n,'invalid_response'
+                if body.get('confirmed') is True and isinstance(body.get('result'),dict):
+                  return v,n,'confirmed'
+                if body.get('confirmed') is False and body.get('result') is None:
+                  return v,n,'unconfirmed'
+                return v,n,'unexpected_response'
+            except urllib.error.HTTPError as ex:
+              return v,n,'http_'+str(ex.code)
+            except Exception as ex:
+              return v,n,'network_or_parse_'+type(ex).__name__
+          with ThreadPoolExecutor(max_workers=3) as pool:
+            results=list(pool.map(probe,targets))
+          for v in VENUES:
+            rs=[(n,status) for vv,n,status in results if vv==v]
+            c=sum(s=='confirmed' for n,s in rs)
+            missing=[n for n,s in rs if s=='unconfirmed']
+            errors=[str(n)+':'+s for n,s in rs if s not in ('confirmed','unconfirmed')]
+            print(json.dumps({'venue_code':v,'confirmed':c,'unconfirmed_race_numbers':missing,
+              'errors':errors},ensure_ascii=False))
+          counts={key:sum(status==key for v,n,status in results) for key in ('confirmed','unconfirmed')}
+          failed=[{'venue':v,'race':n,'status':s} for v,n,s in results if s not in counts]
+          print('ONE_DAY_D1_SUMMARY='+json.dumps({'date':DAY,'total':len(results),**counts,'errors':failed},ensure_ascii=False))
+          print('Read-only GET, no auth, no account access, no mutation.')
+          PY
