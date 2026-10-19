@@ -53,3 +53,30 @@ jobs:
           options_probe cors_expected https://brcdatabase.pages.dev
           options_probe cors_unexpected https://example.invalid
           echo 'Unauthenticated network contract only. No POST, no credentials, no deployment, no D1 access.'
+      - name: Check public health flags and KV schedule status without writes
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request, urllib.error
+          base='https://brc-live-exhibition.sk48159212.workers.dev'
+          def query(path):
+              try:
+                  with urllib.request.urlopen(urllib.request.Request(base+path,method='GET'),timeout=15) as r:
+                      status=r.status
+                      raw=r.read(2_000_000)
+                      return status,json.loads(raw)
+              except urllib.error.HTTPError as e:
+                  return e.code,{}
+              except Exception:
+                  return 'TRANSPORT_ERROR',{}
+          status,data=query('/health')
+          keys=['ok','service','phase','result_store','result_store_bound','schedule','result']
+          safe={k:data[k] for k in keys if k in data and isinstance(data[k],(str,bool,int,float))}
+          print('live_health_details',json.dumps({'http':status,'fields':safe},ensure_ascii=False,sort_keys=True))
+          for date in ('2026-10-19','2026-10-20'):
+              status,data=query('/live-schedule?date='+date)
+              schedule=data.get('schedule') if isinstance(data,dict) else None
+              shape=type(schedule).__name__ if schedule is not None else 'none'
+              print('live_schedule_details',json.dumps({'date':date,'http':status,'schedule_type':shape,'schedule_size':len(schedule) if isinstance(schedule,(dict,list)) else None}))
+          print('GET result endpoint intentionally excluded: archived Worker may execute CREATE TABLE IF NOT EXISTS.')
+          PY
