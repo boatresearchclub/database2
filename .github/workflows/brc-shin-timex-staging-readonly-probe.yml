@@ -1,0 +1,33 @@
+name: BRC True TimeX - staging reachability (read-only)
+on:
+  push:
+    branches:
+      - research/shin-timex-readonly-probe-20261020
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  unauthenticated-reachability:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check public access path, no credentials, no writes
+        shell: bash
+        env:
+          STAGING_V3_URL: https://brc-timex-v3-test.sk48159212.workers.dev/
+          STAGING_LIVE_URL: https://brc-live-exhibition.sk48159212.workers.dev/
+        run: |
+          set -uo pipefail
+          for label in timex-v3 live-exhibition; do
+            if [ "$label" = timex-v3 ]; then url="$STAGING_V3_URL"; else url="$STAGING_LIVE_URL"; fi
+            code=$(curl --silent --show-error --location --max-redirs 0 --connect-timeout 8 --max-time 15 \
+              --output /dev/null --write-out '%{http_code}' -- "$url") || {
+              echo "$label transport_error (no service-status inference)"
+              continue
+            }
+            case "$code" in
+              200|400|401|403|404|405|422) echo "$label reachable_http=$code" ;;
+              *) echo "$label unexpected_http=$code" ;;
+            esac
+          done
+          echo 'Reachability only. Does not prove deployed source hash, auth, bindings, or official v3 outputs.'
