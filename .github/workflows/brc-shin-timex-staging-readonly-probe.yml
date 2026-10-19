@@ -7,27 +7,49 @@ on:
 permissions:
   contents: read
 jobs:
-  unauthenticated-reachability:
+  unauthenticated-contract:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Check public access path, no credentials, no writes
+      - name: Check unauthenticated GET and CORS OPTIONS only
         shell: bash
         env:
-          STAGING_V3_URL: https://brc-timex-v3-test.sk48159212.workers.dev/
-          STAGING_LIVE_URL: https://brc-live-exhibition.sk48159212.workers.dev/
+          STAGING_V3_URL: https://brc-timex-v3-test.sk48159212.workers.dev
+          STAGING_LIVE_URL: https://brc-live-exhibition.sk48159212.workers.dev
         run: |
           set -uo pipefail
-          for label in timex-v3 live-exhibition; do
-            if [ "$label" = timex-v3 ]; then url="$STAGING_V3_URL"; else url="$STAGING_LIVE_URL"; fi
-            code=$(curl --silent --show-error --location --max-redirs 0 --connect-timeout 8 --max-time 15 \
-              --output /dev/null --write-out '%{http_code}' -- "$url") || {
-              echo "$label transport_error (no service-status inference)"
-              continue
+          get_probe () {
+            label="$1"; url="$2"
+            result=$(curl --silent --show-error --max-redirs 0 --connect-timeout 8 --max-time 15 --retry 0 --output /dev/null --write-out '%{http_code} %{content_type}' -- "$url") || {
+              echo "$label transport_error (not a service health verdict)"
+              return
             }
-            case "$code" in
-              200|400|401|403|404|405|422) echo "$label reachable_http=$code" ;;
-              *) echo "$label unexpected_http=$code" ;;
+            echo "$label HTTP=$result"
+          }
+          options_probe () {
+            label="$1"; origin="$2"
+            headers=$(mktemp)
+            status=$(curl --silent --show-error --max-redirs 0 --connect-timeout 8 --max-time 15 --retry 0 --output /dev/null --dump-header "$headers" --write-out '%{http_code}' \
+              --request OPTIONS --header "Origin: $origin" --header 'Access-Control-Request-Method: POST' \
+              -- "$STAGING_V3_URL/predict-timex-v3") || {
+              echo "$label transport_error"
+              rm -f "$headers"
+              return
+            }
+            allowed=$(grep -i '^access-control-allow-origin:' "$headers" | head -1 | tr -d '\r' | cut -d':' -f2- | sed 's/^ *//' || true)
+            case "$allowed" in
+              https://brcdatabase.pages.dev) summary='configured_public_origin' ;;
+              '') summary='missing_acao' ;;
+              *) summary='other_acao' ;;
             esac
-          done
-          echo 'Reachability only. Does not prove deployed source hash, auth, bindings, or official v3 outputs.'
+            echo "$label HTTP=$status ACAO=$summary"
+            rm -f "$headers"
+          }
+          get_probe stage_root "$STAGING_V3_URL/"
+          get_probe stage_predict_get "$STAGING_V3_URL/predict-timex-v3"
+          get_probe live_root "$STAGING_LIVE_URL/"
+          get_probe live_health "$STAGING_LIVE_URL/health"
+          get_probe live_exhibition_missing_args "$STAGING_LIVE_URL/live-exhibition"
+          options_probe cors_expected https://brcdatabase.pages.dev
+          options_probe cors_unexpected https://example.invalid
+          echo 'Unauthenticated network contract only. No POST, no credentials, no deployment, no D1 access.'
