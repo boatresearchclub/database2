@@ -330,7 +330,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261020-ADMIN-V3-DIAG-R3-DEME-RECONCILED-MERGE">
+<meta name="brc-build" content="20261020-ADMIN-V3-DIAG-R3-DEME-RECONCILED-MERGE-D09-ADMINONLY">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -37116,6 +37116,423 @@ setInterval(()=>{
 ['predictRaceDay','predictVenue','predictRaceNo'].forEach(id=>byId(id)?.addEventListener('change',()=>{
  if(window.__predictMainTabCurrent==='info')render();
 }));
+})();
+</script>
+
+<!-- BRC_D_V09_ADMIN_CONDITIONAL_THIRD_RESEARCH_20261020; NOT DEPLOYED; original rates and TimeX unchanged -->
+<script type="application/json" id="brc-d08-model"></script>
+<script src="data/brc-d08-model-9af8b5d6fa-001.js"></script>
+<script type="text/plain" id="brc-d08-core">
+/* BRC conditional 3rd research only; no mutation of existing prediction values.
+   Input: generated counts from 2023, tunings frozen from 2024.
+   Produces P(third | first, second, technique), NOT direct trifecta predictions. */
+(function(root,factory){
+  const v=factory();
+  if(typeof module==='object'&&module.exports) module.exports=v;
+  else root.BRC_SCENARIO_SHADOW_CORE=v;
+})(typeof window!=='undefined'?window:globalThis,function(){
+  'use strict';
+  const METHODS=['全体','差し','まくり','まくり差し'];
+  const number=(v)=>{const n=Number(v);return Number.isFinite(n)?n:null;};
+  const pair=(scope,key)=>scope?.[key]||[0,0];
+  const nz=(x)=>Math.max(1e-12,Number.isFinite(Number(x))?Number(x):0);
+  function calculate(model,{tab,venue,first,second,roster}){
+    if(!model||!METHODS.includes(tab)) throw Error('unknown model/tab');
+    first=Number(first);second=Number(second);
+    if(first===second || first<1||first>6||second<1||second>6) throw Error('invalid first-second');
+    const p=model.params?.[tab],d=model.data?.[tab];
+    if(!p||!d) throw Error('missing tab model');
+    if(!Array.isArray(roster)||roster.length!==6||new Set(roster.map(x=>Number(x.course))).size!==6) throw Error('roster must have 6 courses');
+    const candidates=roster.filter(b=>Number(b.course)!==first&&Number(b.course)!==second).sort((a,b)=>a.course-b.course);
+    if(candidates.length!==4) throw Error('invalid candidate list');
+    const rows=candidates.map(b=>{
+      const c=Number(b.course),reg=String(b.reg),nk=first+'|'+second+'|'+c;
+      const [nn,nx]=pair(d.nat,nk),[vn,vx]=pair(d.venue,[venue,first,second,c].join('|'));
+      const [pn,px]=pair(d.pool,[reg,c,first].join('|'));
+      const [qn,qx]=pair(d.pair,[reg,c,first,second].join('|'));
+      const national=(nx+0.5)/(nn+2);
+      const venuePrior=(vx+model.kvenue*national)/(vn+model.kvenue);
+      const broad=(px+p.kpool*venuePrior)/(pn+p.kpool);
+      const fine=(qx+p.kpair*broad)/(qn+p.kpair);
+      return {course:c,reg,reg_name:String(b.name||''),n_national:nn,n_venue:vn,n_broad:pn,n_strict:qn,
+              national,venue_prior:venuePrior,broad,fine};
+    });
+    const nsum=rows.reduce((sum,x)=>sum+x.n_strict,0);
+    const fineEnabled=!!p.personal_enabled && nsum>=p.gate;
+    const sum=rows.reduce((s,x)=>s+nz(fineEnabled?x.fine:x.broad),0);
+    const normalized=rows.map(x=>({...x,prob:nz(fineEnabled?x.fine:x.broad)/sum}));
+    const total=normalized.reduce((s,x)=>s+x.prob,0);
+    if(Math.abs(total-1)>1e-10) throw Error('bad normalized conditional distribution');
+    return {tab,venue,first,second,n_sum:nsum,fine_enabled:fineEnabled,
+            national_pair_n:rows[0].n_national,venue_pair_n:rows[0].n_venue,
+            model_version:model.version,rows:normalized};
+  }
+  function normalizeLegacy(rows){
+    if(!Array.isArray(rows)||rows.length!==4) return {valid:false,reason:'expected 4 other boats',rows:[]};
+    const nums=rows.map(x=>number(x.rate_before_timex));
+    if(nums.some(x=>x===null||x<0||x>100))return {valid:false,reason:'invalid legacy rates',rows:[]};
+    const total=nums.reduce((a,b)=>a+b,0);
+    if(total<=0)return {valid:false,reason:'legacy total 0',rows:[]};
+    return {valid:true,sum_raw:total,rows:rows.map((x,i)=>({...x,legacy_normalized:nums[i]/total}))};
+  }
+  return {METHODS,calculate,normalizeLegacy};
+});
+
+</script>
+<script type="text/plain" id="brc-d08-capture">
+/* Admin-only local research snapshot for EXISTING player detail > 展開 tab.
+   No API upload, no Worker mutation, no autotracking, no results retrieval.
+   Captures all 6 winning courses × 4 technique tabs × 5 second courses × 4 remaining 3rds.
+   Strictly before today's official deadline; pre-TimeX only for head-to-head scoring.
+*/
+(function(){
+ 'use strict';
+ const core=window.BRC_SCENARIO_SHADOW_CORE;
+ const model=window.BRC_SCENARIO_SHADOW_MODEL;
+ const ROUND=(x)=>Math.round(Number(x)*100000000)/100000000;
+ function metadata(){
+   const date=String(typeof TODAY_LABEL!=='undefined'?TODAY_LABEL:'');
+   const venue=String(document.getElementById('predictRaceDay')?.value||document.getElementById('predictVenue')?.value||'').trim();
+   const raceNo=Number(document.getElementById('predictRaceNo')?.value||0);
+   const deadline=String((typeof RACE_INFO_TODAY!=='undefined'?RACE_INFO_TODAY[venue]:null)?.deadlines?.[String(raceNo)]||'');
+   const venueCode=typeof brcVenueCodeFromName==='function'?String(brcVenueCodeFromName(venue)||''):'';
+   const raceCode=/^\d{4}-\d{2}-\d{2}$/.test(date)&&venueCode?date.replace(/-/g,'')+String(Number(venueCode)).padStart(2,'0')+String(raceNo).padStart(2,'0'):'';
+   const match=deadline.match(/^(\d{1,2}):(\d{2})$/);
+   const deadlineMs=match&&/^\d{4}-\d{2}-\d{2}$/.test(date)?Date.parse(`${date}T${match[1].padStart(2,'0')}:${match[2]}:00+09:00`):NaN;
+   const beforeDeadline=typeof getJstDateLabel==='function'&&date===getJstDateLabel()&&Number.isFinite(deadlineMs)&&Date.now()<deadlineMs;
+   return {date,venue,venue_code:venueCode,race_no:raceNo,race_code:raceCode,deadline_jst:deadline,before_deadline:beforeDeadline,
+           captured_at_utc:new Date().toISOString(),mins_to_deadline:Number.isFinite(deadlineMs)?ROUND((deadlineMs-Date.now())/60000):null,
+           brc_build:document.querySelector('meta[name="brc-build"]')?.content||'',
+           worker_prediction_version:window.__predictWorkerCurrent?.version||'',
+           scenario_version:window.__predictWorkerCurrent?.scenarioAssist?.version||''};
+ }
+ function boatlist(){
+   const boats=Array.isArray(window.__predictBoatsCurrent)?window.__predictBoatsCurrent:[];
+   const b=boats.map(x=>({course:Number(x?.course),reg:String(x?.player?.reg||''),name:String(x?.player?.name||''),
+      timex_applied:!!x?.exhibitionApplied,
+      second_delta_pt:Number.isFinite(Number(x.exhibitionSecondDeltaPt))?Number(x.exhibitionSecondDeltaPt):null,
+      third_delta_pt:Number.isFinite(Number(x.exhibitionThirdDeltaPt))?Number(x.exhibitionThirdDeltaPt):null})).sort((a,b)=>a.course-b.course);
+   if(b.length!==6||new Set(b.map(x=>x.course)).size!==6||b.some(x=>!x.reg||x.reg==='0'))throw Error('Six valid racers required');
+   return b;
+ }
+ // 保存する公式番組6艇と、予測エンジンの6艇が一致することを必須にする。
+ // レースを切り替えた直後や非同期更新中の混在データは絶対に保存しない。
+ function verifyOfficialRaceCard(meta,roster){
+   const dayVenue=String(document.getElementById('predictRaceDay')?.value||'').trim();
+   const hiddenVenue=String(document.getElementById('predictVenue')?.value||'').trim();
+   if(dayVenue && hiddenVenue && dayVenue!==hiddenVenue) throw Error('会場選択が不一致です。保存不可');
+   // The legacy 展開 tab reads __currentVenueLabel first, if present.
+   // Reject a differing legacy render context instead of silently comparing two venues.
+   const trendVenue=String(window.__currentVenueLabel||'').trim();
+   if(trendVenue && trendVenue!==meta.venue) throw Error('展開タブの表示会場と選択会場が不一致です。保存不可');
+   const card=(typeof RACE_CARDS_TODAY!=='undefined' && RACE_CARDS_TODAY?.[meta.venue]?.[String(meta.race_no)])||null;
+   if(!Array.isArray(card)||card.length!==6) throw Error('公式番組表の6艇が未取得です。保存不可');
+   const normalize=(v)=>String(Number(v));
+   if(card.some((reg,i)=>!Number.isInteger(Number(reg))||Number(reg)<=0||normalize(reg)!==normalize(roster[i]?.reg)))
+     throw Error('選択中の公式番組表と予測選手が一致しません。再読込してください');
+   const api=Array.isArray(window.__predictApiBoatsCurrent)?window.__predictApiBoatsCurrent:null;
+   if(!api || api.length!==6 || api.some((b,i)=>normalize(b?.reg)!==normalize(card[i])))
+     throw Error('公式番組表とWorker入力選手が確認できません。保存不可');
+   if(typeof brcRaceCancelled==='function' && brcRaceCancelled(meta.venue,meta.race_no))
+     throw Error('中止・順延レースは保存できません');
+   return {card_roster_regs:card.map(normalize),official_card_roster_verified:true,
+           worker_input_roster_verified:true};
+ }
+ function legacyRow(winner,boat,tab,venue,winnerReg){
+   const b=window.__predictBoatsCurrent.find(x=>Number(x.course)===boat.course);
+   const src=(SCENARIO_DATA[boat.reg]||[]).filter(r=>Number(r.sc)===boat.course&&Number(r.wc)===winner);
+   const target=tab==='全体'?src:src.filter(r=>r.k===tab);
+   const agg=brcAggregatePredictScenarioRows(target);
+   const ctx={venue,winnerReg,winnerCourse:winner,oppReg:boat.reg,oppCourse:boat.course,selected:tab};
+   const s=agg?brcScenarioIntegratedRatesV1(agg,ctx):brcScenarioEstimateN0RatesV1(ctx);
+   if(!s)throw Error('legacy scenario unavailable: '+boat.course+' '+tab);
+   const t2=Number(s.t2),t3=Number(s.t3);
+   return {course:boat.course,reg:boat.reg,name:boat.name,n:Math.max(0,Number(s.n)||0),estimated:!!s.estimated,
+     second_before_timex:ROUND(t2),rate_before_timex:ROUND(t3),
+     second_as_displayed:ROUND(brcBuildScenarioAdjustedRate(t2,b,'second')),
+     third_as_displayed:ROUND(brcBuildScenarioAdjustedRate(t3,b,'third'))};
+ }
+ function finalGuard(meta,roster){
+   const end=metadata();
+   if(!end.before_deadline || end.race_code!==meta.race_code || end.venue!==meta.venue || end.deadline_jst!==meta.deadline_jst)
+     throw Error('比較計算中に締切到達・対象レース変更・締切情報更新が発生しました。保存不可');
+   verifyOfficialRaceCard(end,roster);
+   const finalRoster=boatlist();
+   if(finalRoster.some((b,i)=>b.reg!==roster[i].reg||b.course!==roster[i].course||b.timex_applied))
+     throw Error('比較計算中に出走選手またはTimeX状態が変化しました。保存不可');
+   if(typeof BRC_ADMIN_ACTIVE==='undefined'||!BRC_ADMIN_ACTIVE)throw Error('管理者ログインが必要です');
+   if(String(window.__predictWorkerCurrent?.version||'')!==String(meta.worker_prediction_version||''))
+     throw Error('計算中にWorkerの予測版が切り替わりました。保存不可');
+   return end;
+ }
+ function capture(){
+   if(typeof BRC_ADMIN_ACTIVE==='undefined'||!BRC_ADMIN_ACTIVE)throw Error('管理者ログインが必要です');
+   if(!core||!model)throw Error('研究用モデルを読み込めません');
+   const meta=metadata();
+   if(!meta.venue||!meta.race_no||!meta.race_code)throw Error('会場・R・レースIDを確認してください');
+   if(!meta.before_deadline)throw Error('締切前の当日レースのみ保存できます。時刻・締切情報を確認してください');
+   const roster=boatlist();
+   const cardVerification=verifyOfficialRaceCard(meta,roster);
+   if(roster.some(b=>b.timex_applied))throw Error('TimeX反映後の総合着率との公平比較は未検証です。今回は未反映時のみ保存できます');
+   const cases=[];
+   for(let winner=1;winner<=6;winner++){
+     const wr=roster.find(x=>x.course===winner),others=roster.filter(x=>x.course!==winner);
+     for(const tab of core.METHODS){
+       const legacy=others.map(b=>legacyRow(winner,b,tab,meta.venue,wr.reg));
+       for(const second of others.map(x=>x.course)){
+         const four=legacy.filter(x=>x.course!==second);
+         const ln=core.normalizeLegacy(four);
+         if(!ln.valid)throw Error('現行着率が比較できません: '+tab+' '+winner+'-'+second+' '+ln.reason);
+         const conditional=core.calculate(model,{tab,venue:meta.venue,first:winner,second,roster});
+         const rows=conditional.rows.map(x=>{
+           const l=ln.rows.find(z=>z.course===x.course);
+           return {third:x.course,reg:x.reg,legacy_raw_third_pct:l.rate_before_timex,
+             legacy_norm_third_probability:ROUND(l.legacy_normalized),candidate_conditional_probability:ROUND(x.prob),
+             candidate_conditional_probability_exact:x.prob,legacy_probability_exact:l.legacy_normalized,
+             n_legacy:l.n,n_candidate_strict:x.n_strict,n_candidate_broad:x.n_broad,n_candidate_venue:x.n_venue};
+         });
+         cases.push({tab,winner,second,legacy_raw_sum_four:ROUND(ln.sum_raw),
+            n_condition_total:conditional.n_sum,n_national:conditional.national_pair_n,n_venue:conditional.venue_pair_n,
+            personal_pair_used:conditional.fine_enabled,rows});
+       }
+     }
+   }
+   if(cases.length!==120||cases.some(x=>x.rows.length!==4))throw Error('Expected 120 4-outcome cases');
+   const end=finalGuard(meta,roster);
+   return {...meta,...cardVerification,completed_at_utc:end.captured_at_utc,completed_before_deadline:true,
+       timing_guard_version:'BRC_SHADOW_TIMING_GUARD_V3_20261015',capture_guard_version:'BRC_SHADOW_ROSTER_GUARD_V2_20261014',source:'manual_admin_qa_existing_exhibition_tab',phase:'TIME_X_NOT_APPLIED',
+       model_version:model.version,model_train:'2023',model_tuning:'2024',model_comparison_is_held_out:false,
+       caveat:'Conditional matrix is a shadow estimator with actual first and second assumed, not pre-race trifecta probability.',
+       roster,cases};
+ }
+ function download(data){
+   const file=`BRC_SCENARIO_SHADOW_${data.race_code}_${Date.now()}.json`;
+   const blob=new Blob([JSON.stringify(data)],{type:'application/json;charset=utf-8'});
+   const uri=URL.createObjectURL(blob),a=document.createElement('a');
+   a.href=uri;a.download=file;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(uri),1200);
+ }
+ // v0.3: SHADOW capture is an internal dependency; avoid duplicate capture buttons.
+ window.BRC_SCENARIO_SHADOW_CAPTURE_FOR_QA=capture;
+ window.BRC_SCENARIO_SHADOW_FINAL_GUARD_FOR_QA=finalGuard;
+
+})();
+
+</script>
+<script type="text/plain" id="brc-d08-gate">
+/* V0.5 / not deployed. D: selector based ONLY on the hypothetical 2nd course + current scenario tab.
+   A = normalize live legacy 3rd among four eligible boats.
+   B = 2023-fitted conditional model. Never mutates live second/third rates.
+   2025 selection was exploratory and A_replay was not the actual BRC baseline. */
+(function(root,factory){
+ const value=factory();
+ if(typeof module==='object' && module.exports)module.exports=value;
+ else root.BRC_SCENARIO_D_GATE_CORE=value;
+})(typeof window!=='undefined'?window:globalThis,function(){
+ 'use strict';
+ const VERSION='BRC_D_2ND_COURSE_RESEARCH_GATE_20261017_V05';
+ const RULES=Object.freeze({
+   '全体':Object.freeze({1:'A',2:'B',3:'B',4:'B',5:'B',6:'B'}),
+   '差し':Object.freeze({1:'A',2:'A',3:'B',4:'B',5:'B',6:'B'}),
+   'まくり':Object.freeze({1:'A',2:'A',3:'A',4:'A',5:'A',6:'A'}),
+   'まくり差し':Object.freeze({1:'A',2:'B',3:'B',4:'B',5:'B',6:'B'})
+ });
+ function choice(tab,second){
+   const method=RULES[tab],c=Number(second);
+   if(!method || !Number.isInteger(c) || c<1 || c>6)throw Error('unsupported D gate tab/second');
+   return method[c];
+ }
+ function selectCase(c){
+   if(!c || !Array.isArray(c.rows) || c.rows.length!==4)throw Error('D expects four third candidates');
+   const first=Number(c.winner),second=Number(c.second),method=choice(c.tab,second);
+   if(!Number.isInteger(first)||first<1||first>6||first===second)throw Error('invalid winning course');
+   const courses=c.rows.map(r=>Number(r.third));
+   if(new Set(courses).size!==4 || courses.some(x=>!Number.isInteger(x)||x<1||x>6||x===first||x===second))
+     throw Error('invalid third candidates');
+   let sum=0;
+   const rows=c.rows.map(r=>{
+     const a=Number(r.legacy_probability_exact),b=Number(r.candidate_conditional_probability_exact);
+     if(!Number.isFinite(a)||a<=0||a>1||!Number.isFinite(b)||b<=0||b>1)
+       throw Error('invalid model probability');
+     const d=method==='A'?a:b;sum+=d;
+     return {...r,d_conditional_probability_exact:d};
+   });
+   if(Math.abs(sum-1)>1e-8)throw Error('D selected distribution does not sum to 1');
+   return {...c,d_selected:method,d_gate_version:VERSION,rows};
+ }
+ function enrich(snapshot){
+   if(!snapshot||!Array.isArray(snapshot.cases)||snapshot.cases.length!==120)throw Error('D capture expects 120 cases');
+   const cases=snapshot.cases.map(selectCase);
+   const seen=new Set();
+   for(const c of cases){
+      const key=[c.tab,c.winner,c.second].join('|');
+      if(seen.has(key))throw Error('D duplicated case');seen.add(key);
+   }
+   if(seen.size!==120)throw Error('D case count mismatch');
+   return {...snapshot,d_gate_version:VERSION,d_rules_selected_2025_using_A_replay:true,
+      d_gate_is_final_approved:false,d_baseline_description:'A=live legacy third normalized over 4 eligible boats; B=2023-fit conditional research model',
+      cases};
+ }
+ return {VERSION,RULES,choice,selectCase,enrich};
+});
+
+</script>
+<script type="text/plain" id="brc-d08-preview">
+/* Admin only: append D preview inside EXISTING player detail -> 展開 tab. No server writes.
+   It does not override existing displayed second/third/top3/TimeX values. */
+(function(){
+ 'use strict';
+ const dc=window.BRC_SCENARIO_D_GATE_CORE,sc=window.BRC_SCENARIO_SHADOW_CORE,model=window.BRC_SCENARIO_SHADOW_MODEL;
+ if(!dc||!sc||!model){console.warn('[BRC D] missing dependency');return;}
+ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const num=x=>Number(x);
+ const percent=x=>(100*x).toFixed(1)+'%';
+ function rosterNow(){
+   const v=Array.isArray(window.__predictBoatsCurrent)?window.__predictBoatsCurrent:[];
+   const sorted=v.map(b=>({course:num(b.course),reg:String(b?.player?.reg||''),name:String(b?.player?.name||'')})).sort((a,b)=>a.course-b.course);
+   if(sorted.length!==6||sorted.some((b,i)=>b.course!==i+1 || !/^\d+$/.test(b.reg)))throw Error('予測6選手が未確定');
+   return sorted;
+ }
+ function rates(winner,tab,venue,roster){
+   const w=roster.find(b=>b.course===winner);
+   if(!w)throw Error('1着艇が未確定');
+   return roster.filter(b=>b.course!==winner).map(b=>{
+     const all=Array.isArray(SCENARIO_DATA?.[b.reg])?SCENARIO_DATA[b.reg]:[];
+     const rows=all.filter(r=>num(r.sc)===b.course&&num(r.wc)===winner);
+     const selected=tab==='全体'?rows:rows.filter(r=>r.k===tab);
+     const agg=brcAggregatePredictScenarioRows(selected);
+     const ctx={venue,winnerReg:w.reg,winnerCourse:winner,oppReg:b.reg,oppCourse:b.course,selected:tab};
+     const s=agg?brcScenarioIntegratedRatesV1(agg,ctx):brcScenarioEstimateN0RatesV1(ctx);
+     if(!s || ![s.t2,s.t3].every(x=>Number.isFinite(num(x))&&num(x)>=0&&num(x)<=100))throw Error('現行総合率の取得不可');
+     return {...b,n:num(s.n)||0,second:num(s.t2),third:num(s.t3)};
+   });
+ }
+ function calcPreview(winner,tab){
+   const venue=String(document.getElementById('predictRaceDay')?.value||document.getElementById('predictVenue')?.value||'').trim();
+   if(!venue||window.__currentVenueLabel&&window.__currentVenueLabel!==venue)throw Error('会場コンテキスト不一致');
+   const roster=rosterNow(),original=rates(winner,tab,venue,roster),cases=[];
+   for(const secondBoat of original){
+     const four=original.filter(b=>b.course!==secondBoat.course);
+     const baseline=sc.normalizeLegacy(four.map(x=>({course:x.course,reg:x.reg,rate_before_timex:x.third})));
+     if(!baseline.valid)throw Error('現行総合率を正規化できません');
+     const conditional=sc.calculate(model,{tab,venue,first:winner,second:secondBoat.course,roster});
+     const c={tab,winner,second:secondBoat.course,rows:conditional.rows.map(b=>{
+       const a=baseline.rows.find(x=>x.course===b.course);
+       return {third:b.course,legacy_probability_exact:a.legacy_normalized,candidate_conditional_probability_exact:b.prob,n_candidate_strict:b.n_strict};
+     })};
+     cases.push(dc.selectCase(c));
+   }
+   return {original,cases};
+ }
+ function renderPanel(winner){
+   const parent=document.getElementById('predict-sc-box-'+winner);
+   if(!parent||typeof BRC_ADMIN_ACTIVE==='undefined'||!BRC_ADMIN_ACTIVE)return;
+   const block=document.createElement('section');
+   block.className='brc-d-v05-panel';
+   block.style.cssText='margin:12px 0;padding:10px 8px;border:1px solid #a7c8e5;border-radius:10px;background:#fff';
+   const heading='<div style="font-size:13px;font-weight:800;color:#123149">2着別3着率｜D方式・管理者研究</div>';
+   const text='<p style="margin:4px 0 9px;font-size:10px;color:#64748b">現行の2着率・総合3着率は変更しません。2着列ごとに A（現行3着率の4艇構成比）／B（2着別研究推定）を固定切替。</p>';
+   if((Array.isArray(window.__predictBoatsCurrent)?window.__predictBoatsCurrent:[]).some(b=>!!b.exhibitionApplied)){
+      block.innerHTML=heading+text+'<div style="font-size:11px;color:#92400e">TimeX反映後の比較は未検証のため表示を停止しています。</div>';
+      parent.appendChild(block);return;
+   }
+   const tab=sc.METHODS.includes(window.__predictScenarioKimariteCurrent)?window.__predictScenarioKimariteCurrent:'全体';
+   try{
+     const {original,cases}=calcPreview(winner,tab);
+     const titles=cases.map((c,i)=>`<th style="padding:5px 4px;white-space:nowrap;text-align:center;font-size:10px">${winner}-${c.second}<small style="display:block;color:${c.d_selected==='B'?'#2563eb':'#64748b'}">${c.d_selected}方式</small><small style="display:block;font-size:9px;color:#64748b">2着 ${original[i].second.toFixed(1)}%</small></th>`).join('');
+     const cells=original.map(r=>`<tr><th style="padding:5px 4px;white-space:nowrap;font-size:11px">${r.course}<small style="display:block;font-size:9px;color:#64748b">総合3着 ${r.third.toFixed(1)}%</small></th>`+
+       cases.map(c=>{if(c.second===r.course)return '<td style="text-align:center;background:#f2f5f8;color:#94a3b8">―</td>';
+          const v=c.rows.find(x=>x.third===r.course);
+          return `<td style="padding:5px 3px;text-align:center;white-space:nowrap;font-size:11px;font-weight:800">${percent(v.d_conditional_probability_exact)}<small style="display:block;color:#64748b;font-size:9px;font-weight:400">N=${v.n_candidate_strict}</small></td>`;
+       }).join('')+'</tr>').join('');
+     block.innerHTML=heading+text+`<div style="overflow-x:auto;max-width:100%;"><table style="border-collapse:collapse;min-width:440px;width:100%"><thead><tr><th style="font-size:10px">3着＼2着</th>${titles}</tr></thead><tbody>${cells}</tbody></table></div>`+
+       '<div style="font-size:10px;color:#64748b;margin-top:7px">各2着列の残り4艇＝100%。Nは本人の厳密条件。研究値であり精度改善は未証明。</div>';
+   }catch(e){block.innerHTML=heading+text+'<div style="color:#a33;font-size:11px">研究表示停止：'+esc(e.message)+'</div>';}
+   const foot=document.createElement('div');foot.style.cssText='margin-top:8px;border-top:1px dashed #ddd;padding-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center';
+   const btn=document.createElement('button');btn.type='button';btn.textContent='A・B・D 比較JSONを保存';
+   btn.style.cssText='font-size:11px;font-weight:700;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:7px;padding:7px 10px;cursor:pointer';
+   const status=document.createElement('span');status.style.cssText='font-size:10px;color:#64748b';status.textContent='当日締切前・TimeX未反映限定';
+   btn.addEventListener('click',()=>{try{const data=captureD();download(data);status.textContent='保存要求済：'+data.race_code;}
+     catch(e){status.textContent='保存不可：'+String(e.message||e);}});
+   foot.append(btn,status);block.appendChild(foot);parent.appendChild(block);
+ }
+ function captureD(){
+   // V04 capture enforces before-deadline and official 6-regs, no Timex, admin, race identity and worker version.
+   const raw=window.BRC_SCENARIO_SHADOW_CAPTURE_FOR_QA();
+   const enriched=dc.enrich(raw);
+   // Enrichment may take time, so enforce the same safety gates again at completion.
+   const roster=(Array.isArray(window.__predictBoatsCurrent)?window.__predictBoatsCurrent:[]).map(b=>({course:num(b.course),reg:String(b?.player?.reg||''),timex_applied:!!b.exhibitionApplied})).sort((a,b)=>a.course-b.course);
+   const completed=window.BRC_SCENARIO_SHADOW_FINAL_GUARD_FOR_QA(raw,roster);
+   return {...enriched,completed_at_utc:completed.captured_at_utc,source:'manual_admin_qa_existing_exhibition_tab',
+      d_capture_version:'BRC_D_V05_20261017',d_note:'D selected only using hypothetical second course and tab; not verified against actual live BRC baseline, not a trifecta probability.'};
+ }
+ function download(data){
+    const blob=new Blob([JSON.stringify(data)],{type:'application/json;charset=utf-8'}),uri=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=uri;a.download=`BRC_SCENARIO_D_V05_${data.race_code}_${Date.now()}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(uri),1200);
+ }
+ const old=window.renderInlinePredictScenario;
+ if(typeof old!=='function'||old.__brc_d_v05_wrapped)return;
+ function wrapped(course){const value=old.apply(this,arguments);try{renderPanel(Number(course));}catch(e){console.warn('[BRC D]',e);}return value;}
+ Object.defineProperty(wrapped,'__brc_d_v05_wrapped',{value:true});
+ window.renderInlinePredictScenario=wrapped;
+ window.BRC_SCENARIO_D_CAPTURE_FOR_QA=captureD;
+ window.BRC_SCENARIO_D_PREVIEW_FOR_QA=calcPreview;
+})();
+
+</script>
+<script data-brc-d-v09="admin-only-review">
+/* BRC D V09 research: admin-only activation; no rate, TimeX, bet or API writes. */
+(function(){
+ 'use strict';
+ if(window.__BRC_D09_LOADER_INSTALLED)return;
+ window.__BRC_D09_LOADER_INSTALLED=true;
+ const SOURCE_IDS=['brc-d08-core','brc-d08-capture','brc-d08-gate','brc-d08-preview'];
+ let installed=false, working=false;
+ function admin(){try{return typeof BRC_ADMIN_ACTIVE!=='undefined' && BRC_ADMIN_ACTIVE===true;}catch(_){return false;}}
+ function removePanels(){document.querySelectorAll('.brc-d-v05-panel').forEach(e=>e.remove());}
+ function boot(){
+   if(working||installed||!admin()||typeof window.renderInlinePredictScenario!=='function')return;
+   if(!document.getElementById('predictVenue'))return;
+   working=true;
+   try{
+      const node=document.getElementById('brc-d08-model');
+      if(!node)throw Error('D model data not bundled');
+      const model=JSON.parse(node.textContent);
+      if(!model || !model.version || !model.params)throw Error('D model metadata mismatch');
+      window.BRC_SCENARIO_SHADOW_MODEL=model;
+      for(const id of SOURCE_IDS){
+        const source=document.getElementById(id);
+        if(!source)throw Error('D research module missing: '+id);
+        if(!admin())throw Error('admin session ended during activation');
+        const element=document.createElement('script');
+        element.setAttribute('data-brc-d08-runtime',id);
+        element.textContent=source.textContent;
+        document.head.appendChild(element);
+        element.remove();
+      }
+      if(window.renderInlinePredictScenario.__brc_d_v05_wrapped!==true)throw Error('D render hook did not attach');
+      installed=true;
+      window.__BRC_D09_READY=true;
+      // When research boot completes after the existing tab was already rendered, refresh only
+      // the visible scenario box, and leave all old calculation/display functions untouched.
+      for(const box of document.querySelectorAll('[id^="predict-sc-box-"]')){
+        const m=/^predict-sc-box-([1-6])$/.exec(box.id);
+        if(m && box.children.length && box.getClientRects().length){
+          window.renderInlinePredictScenario(Number(m[1]));break;
+        }
+      }
+   }catch(e){
+      window.__BRC_D09_ERROR=String(e&&e.message||e);
+      console.warn('[BRC D admin research] activated=false',e);
+   }finally{working=false;}
+ }
+ // The original login/auth logic owns BRC_ADMIN_ACTIVE. No impersonation or credential changes.
+ document.addEventListener('click',()=>{setTimeout(boot,0);},true);
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
+ else boot();
+ setInterval(()=>{
+   if(!admin()){removePanels();return;}
+   if(!installed&&!window.__BRC_D09_ERROR)boot();
+ },1300);
 })();
 </script>
 </body>
