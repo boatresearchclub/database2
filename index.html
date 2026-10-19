@@ -36947,6 +36947,14 @@ body.brc-admin-public-view #brcDemeInfoTab{display:none!important}
 .brc-deme h3{margin:0;font-size:19px;line-height:1.35;font-weight:800;letter-spacing:-.025em;color:var(--deme-ink)}
 .brc-deme .deme-venue{color:var(--deme-blue)}
 .brc-deme .deme-admin-flag{display:inline-flex;align-items:center;flex:0 0 auto;min-height:24px;padding:3px 8px;border:1px solid var(--deme-line);border-radius:6px;background:#fff;color:var(--deme-soft);font-size:10px;font-weight:700;white-space:nowrap}
+.brc-deme .deme-racehero{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin:0 0 10px}
+.brc-deme .deme-racehero-main{min-width:0}
+.brc-deme .deme-raceplace{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 2px;color:#53677f;font-size:15px;font-weight:800;line-height:1.35}
+.brc-deme .deme-race-mainline{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;color:var(--deme-ink)}
+.brc-deme .deme-raceno{font-size:34px;line-height:1;font-weight:900;letter-spacing:-.03em;color:var(--deme-ink)}
+.brc-deme .deme-race-deadline{font-size:22px;line-height:1.15;font-weight:850;color:var(--deme-ink)}
+.brc-deme .deme-race-grade{font-size:20px;line-height:1.15;font-weight:850;color:var(--deme-blue)}
+.brc-deme .deme-meta-mini{margin:0 0 8px;color:var(--deme-soft);font-size:11px;line-height:1.5;font-variant-numeric:tabular-nums}
 .brc-deme .hint{margin:0 0 9px;font-size:11px;line-height:1.65;color:var(--deme-soft);font-variant-numeric:tabular-nums}
 .brc-deme .audit-box{margin:0 0 12px;border:1px solid #d5dfeb;border-radius:9px;background:#f6f9fd;overflow:hidden;color:var(--deme-soft)}
 .brc-deme .audit-box.flagged{border-color:#e6bf75;background:#fff7e9;color:#79501b}
@@ -36958,7 +36966,7 @@ body.brc-admin-public-view #brcDemeInfoTab{display:none!important}
 .brc-deme .filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0 0 12px}
 .brc-deme .filters label{display:flex;flex-direction:column;gap:5px;min-width:0;color:var(--deme-ink);font-size:12px;font-weight:800}
 .brc-deme .filters select{display:block;width:100%;min-width:0;height:42px;padding:7px 9px;border-radius:9px;border:1px solid #cbd6e4;background:#fff;color:var(--deme-ink);font-family:inherit;font-size:14px;font-weight:700;line-height:1.25;outline-offset:2px}
-.brc-deme .sort-guide{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 6px;font-size:10px;font-weight:700;color:var(--deme-soft)}
+.brc-deme .sort-guide{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin:0 0 6px;font-size:10px;font-weight:700;color:var(--deme-soft)}
 .brc-deme .sort-guide .sort-active{color:var(--deme-blue);font-variant-numeric:tabular-nums}
 .brc-deme .tablewrap{width:100%;max-width:100%;overflow-x:hidden;overflow-y:auto;max-height:min(65vh,820px);border:1px solid #d9e2ee;border-radius:11px;background:#fff;-webkit-overflow-scrolling:touch}
 .brc-deme table{border-collapse:collapse;width:100%;max-width:100%;min-width:0;table-layout:fixed;font-variant-numeric:tabular-nums}
@@ -36987,6 +36995,10 @@ body.brc-admin-public-view #brcDemeInfoTab{display:none!important}
 @media(max-width:600px){
   .brc-deme{padding:12px 9px 20px}
   .brc-deme h3{font-size:18px}
+  .brc-deme .deme-raceno{font-size:28px}
+  .brc-deme .deme-race-deadline{font-size:19px}
+  .brc-deme .deme-race-grade{font-size:18px}
+  .brc-deme .deme-raceplace{font-size:14px}
   .brc-deme .filters{gap:9px}
   .brc-deme th{font-size:10px;padding-left:2px;padding-right:2px}
   .brc-deme td{padding-left:2px;padding-right:2px;font-size:11.5px}
@@ -36995,6 +37007,10 @@ body.brc-admin-public-view #brcDemeInfoTab{display:none!important}
 @media(max-width:350px){
   .brc-deme{padding:10px 6px 18px}
   .brc-deme h3{font-size:17px}
+  .brc-deme .deme-raceno{font-size:26px}
+  .brc-deme .deme-race-deadline{font-size:17px}
+  .brc-deme .deme-race-grade{font-size:16px}
+  .brc-deme .deme-raceplace{font-size:13px}
   .brc-deme .deme-admin-flag{padding:2px 6px;font-size:9px}
   .brc-deme td{font-size:10px;padding-left:1px;padding-right:1px}
   .brc-deme th{font-size:9.5px;padding-left:1px;padding-right:1px}
@@ -37106,6 +37122,15 @@ function race(){
  const num=Number(byId('predictRaceNo')?.value||0);
  return Number.isInteger(num)&&num>=1&&num<=12?num:null;
 }
+function currentRaceMeta(venueName,raceNo){
+ const info=(window.RACE_INFO_TODAY&&window.RACE_INFO_TODAY[venueName])||null;
+ const selectedOption=byId('predictRaceNo')?.selectedOptions?.[0]?.textContent||'';
+ let deadline=info?.deadlines?.[String(raceNo)]||'';
+ if(!deadline){ const m=String(selectedOption).match(/締切\s*([0-9]{1,2}:[0-9]{2})/); if(m) deadline=m[1]; }
+ const dayLabel=info && typeof resolveRaceDayLabel==='function' ? resolveRaceDayLabel(info) : '';
+ const grade=info?.grade||'';
+ return {dayLabel,deadline,grade};
+}
 function fmt(x,digits=1){return x!==null&&x!==undefined&&x!==''&&Number.isFinite(Number(x))?Number(x).toLocaleString('ja-JP',{minimumFractionDigits:digits,maximumFractionDigits:digits}):'—';}
 function fmtInt(x){return x!==null&&x!==undefined&&x!==''&&Number.isFinite(Number(x))?Number(x).toLocaleString('ja-JP',{maximumFractionDigits:0}):'—';}
 function htmlEscape(v){return String(v).replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));}
@@ -37174,20 +37199,18 @@ function render(){
  <td class="${dir}" title="${htmlEscape(raceNo+'R － 会場全体')}${!observed?'（1R出現5回未満の参考値）':''}"><span class="deme-diff-value">${showDiff(diff)}</span>${!observed?'<small class="deme-diff-low-label">少数</small>':''}</td></tr>`;
  }).join('');
  const label=compareMetric==='prob'?'確率':compareMetric==='median'?'配当中央値':'回収率';
- body.innerHTML=`<div class="deme-titleline"><h3>出目確率 <span class="deme-venue">${htmlEscape(name)}</span></h3><span class="deme-admin-flag">管理者専用</span></div>
- <p class="hint">${htmlEscape(d.period[0])} ～ ${htmlEscape(d.period[1])} ｜ ${raceNo}R ${fmtInt(rN)}R・会場全体 ${fmtInt(venueN)}R ｜ 固定集計</p>
- <div class="deme-compare-line"><span class="deme-compare-label">${raceNo}R</span><span class="deme-vs">vs</span><span class="deme-compare-label">会場全体</span><span class="deme-comparison-note">出走表の選択Rに自動追従</span></div>
- <details class="audit-box"><summary>レース単位で照合済み · 比較条件を見る</summary>
- <div class="audit-detail">この比較は選択中の${raceNo}Rと同じ会場の全レースです。会場全体のデータには${raceNo}Rも含まれるため、独立した2群の比較ではありません。確率の分母は各券種の成立レース数（選択R ${fmtInt(rN)}R、会場全体 ${fmtInt(venueN)}R）。${counts?`選択Rの同着による複数的中${fmtInt(counts[8])}R、特払い${fmtInt(counts[6])}R、対象外${fmtInt(counts[7])}R。`:''}${audit?`会場全体は成立${fmtInt(audit['成立レース数'])}R。`:''} 出目別の的中回数は同着をそれぞれ計上するため確率の合計が100%をわずかに超える場合があります。配当中央値は的中したときの実払戻金から算出、回収率は各成立レースでその出目に100円ずつ投票した想定で実払戻を合算し、特払いがあれば加算します。標本が少ない出目では大きな差が生じやすく、将来の的中や利益を保証しません。</div></details>
+ const meta=currentRaceMeta(name,raceNo);
+ body.innerHTML=`<div class="deme-racehero"><div class="deme-racehero-main"><div class="deme-raceplace"><span class="deme-venue">${htmlEscape(name)}</span>${meta.dayLabel?`<span>${htmlEscape(meta.dayLabel)}</span>`:''}</div><div class="deme-race-mainline"><span class="deme-raceno">${raceNo}R</span>${meta.deadline?`<span class="deme-race-deadline">締切${htmlEscape(meta.deadline)}</span>`:''}${meta.grade?`<span class="deme-race-grade">${htmlEscape(meta.grade)}</span>`:''}</div></div><span class="deme-admin-flag">管理者専用</span></div>
+ <div class="deme-meta-mini">${htmlEscape(d.period[0])} ～ ${htmlEscape(d.period[1])} ｜ ${raceNo}R ${fmtInt(rN)}R ｜ 会場全体 ${fmtInt(venueN)}R</div>
+ <div class="deme-compare-line"><span class="deme-compare-label">${raceNo}R</span><span class="deme-vs">vs</span><span class="deme-compare-label">会場全体</span></div>
  <div class="filters" id="brcDemeControls">
  <label>券種<select id="brcDemeKind"><option value="0" ${kind==='0'?'selected':''}>2連単</option><option value="1" ${kind==='1'?'selected':''}>3連単</option></select></label>
  <label>1着艇<select id="brcDemeHead"><option value="all" ${head==='all'?'selected':''}>全体</option>${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${head===String(n)?'selected':''}>${n}号艇</option>`).join('')}</select></label></div>
  <div class="deme-metric-tabs" role="group" aria-label="比較指標">
  ${[['prob','出現確率'],['median','配当中央値'],['roi','参考回収率']].map(([v,t])=>`<button type="button" class="deme-metric-btn ${compareMetric===v?'active':''}" data-deme-metric="${v}" aria-pressed="${compareMetric===v}">${t}</button>`).join('')}</div>
- <div class="sort-guide"><span>見出しタップで昇降順</span><span class="sort-active">${label} ｜ ${headings.find(x=>x[0]===sortKey)?.[1]||raceNo+'R'} ${sortDirection==='desc'?'▼':'▲'}</span></div>
+ <div class="sort-guide"><span class="sort-active">${label} ｜ ${headings.find(x=>x[0]===sortKey)?.[1]||raceNo+'R'} ${sortDirection==='desc'?'▼':'▲'}</span></div>
  <div class="tablewrap"><table><thead><tr>${headHtml}</tr></thead><tbody>${tbl}</tbody></table></div>
- <div class="deme-delta-note">差＝${raceNo}R − 会場全体。確率・回収率の差はpt、中央値の差は円。各数値の下は出現回数。差は丸め前の値で算出するため、表示値との差が0.1ptずれる場合があります。1Rの出現回数が5回未満の出目は、差をグレーで示し「少数」と表示します。</div>
- <div class="note">過去1年間の実績であり、会場全体との違いは選手・進入・番組構成などの影響も受けます。固定集計・自動更新なし。</div>`;
+ <div class="note">少数 = ${raceNo}Rの出現回数5回未満</div>`;
  for(const id of ['brcDemeKind','brcDemeHead'])byId(id)?.addEventListener('change',render);
  body.querySelectorAll('[data-deme-metric]').forEach(btn=>btn.addEventListener('click',()=>{
   const metric=btn.getAttribute('data-deme-metric');if(!['prob','median','roi'].includes(metric))return;
