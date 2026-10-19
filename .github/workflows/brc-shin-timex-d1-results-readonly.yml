@@ -1,0 +1,42 @@
+name: BRC True TimeX - D1 result read-only sample
+on:
+  push:
+    branches: [research/shin-timex-readonly-probe-20261020]
+permissions:
+  contents: read
+jobs:
+  result-sample:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Read-only historical result endpoint - no credentials
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import urllib.request, urllib.parse, json, urllib.error
+          root='https://brc-live-exhibition.sk48159212.workers.dev/live-result'
+          samples=[
+             ('2026-10-14','04',1,'heiwajima_1'),
+             ('2026-10-14','21',1,'ashiya_1'),
+             ('2026-10-14','24',1,'omura_1'),
+             ('2026-10-14','14',10,'naruto_special_10'),
+             ('2026-08-31','20',8,'wakamatsu_third_tie'),
+             ('2026-09-14','04',6,'heiwajima_third_tie'),
+             ('2026-10-19','21',1,'ashiya_recent')
+          ]
+          for date,venue,race,label in samples:
+            query=urllib.parse.urlencode({'date':date,'venue_code':venue,'race_no':race})
+            req=urllib.request.Request(root+'?'+query,headers={'Cache-Control':'no-store','User-Agent':'BRC-readonly-audit/1.0'})
+            try:
+              with urllib.request.urlopen(req,timeout=12) as response:
+                payload=json.load(response)
+                result=payload.get('result') or {}
+                print(json.dumps({'label':label,'http':response.status,'confirmed':payload.get('confirmed'),
+                  'store':payload.get('store'),'combination':result.get('combination'),
+                  'payout_yen':result.get('payout_yen'),'kimarite':result.get('kimarite')},ensure_ascii=False))
+            except urllib.error.HTTPError as ex:
+              print(json.dumps({'label':label,'http':ex.code,'error':'http_error'}))
+            except Exception as ex:
+              print(json.dumps({'label':label,'error':'transport_or_parse_error','kind':type(ex).__name__}))
+          print('All requests are GET without authentication, no writes, no member data')
+          PY
