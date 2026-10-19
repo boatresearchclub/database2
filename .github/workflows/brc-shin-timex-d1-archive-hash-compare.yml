@@ -1,0 +1,57 @@
+name: BRC True TimeX - historical D1 values vs archive digests
+on:
+  push:
+    branches: [research/shin-timex-readonly-probe-20261020]
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Compare legacy D1 outcomes to private archived digest without uploading archive
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from concurrent.futures import ThreadPoolExecutor
+          import hashlib,json,urllib.parse,urllib.request,urllib.error
+          # Only non-reversible, per-venue SHA256 digests of 12 public race outcomes.
+          EXPECTED={"11":"4d1305fa42824b77841542f854fd128fea515cfc7b0e0c9894680de95ab7a72e","12":"5d40e23e37c94d8531306274ff5972fb047bf6db40a94445bf7d01565ff86acb","13":"ba40f5fadcd3e26367cf5b05d876e640ff8fcb69d2bfbbf6ff6e6b6658c12310","14":"1f47c6a943468052b5480fbdfa9b2b9d6e46ef89a12bb6f3c25fb2c8ef314fd2","15":"8a47320fcc14c83a3a8026613743db6a7ade1e85e4cd03b58f598ad9e33c2338","18":"c510798f74144f38833a9b16ea3f3225806dc65461009373e08258a82ad320b3","19":"4fb00d5358936da8753b28081d477f852fc1b1daa40200c664800ba889bd25da","20":"217cb19bb649772fa4656c860d8fa1c0573376fff719104d64daf3616c86fb6c","21":"831ab5e41085f2c2d2874588a0d943e118db5cd6f141c7ed12cc4a183424b53d","22":"0f807387afad8dea008501687c8d47c9059d68826ee14dbad0288867675de3cd","24":"e933e02d5fac93803b3f8c228d7f5b9e8da6c044745bd93120f2ed0fec0f5753","04":"fd2e325e0bdf395bec7e3c3a4b3aa4ba6d502d0a5555afc181f5f6a4ff50495d","06":"c3cf8214cc6a809d895bb16e67e95fa12de222f35ccf488aec75c4a3a3a464a8"}
+          DAY='2026-10-14'
+          BASE='https://brc-live-exhibition.sk48159212.workers.dev/live-result'
+          targets=[(v,n) for v in sorted(EXPECTED) for n in range(1,13)]
+          def probe(v_n):
+            venue,race=v_n
+            params=urllib.parse.urlencode({'date':DAY,'venue_code':venue,'race_no':race})
+            req=urllib.request.Request(BASE+'?'+params,headers={'Cache-Control':'no-store','User-Agent':'BRC-ReadOnly-ResultDigest/1.0'})
+            try:
+              with urllib.request.urlopen(req,timeout=15) as resp: body=json.load(resp)
+              if body.get('confirmed') is not True or body.get('date')!=DAY or body.get('venue_code')!=venue or body.get('race_no')!=race:
+                return venue,race,None,'not_confirmed_or_identity_mismatch'
+              result=body.get('result')
+              if not isinstance(result,dict):return venue,race,None,'missing_result'
+              p=result.get('payout_yen')
+              if not isinstance(p,int):return venue,race,None,'invalid_payout_type'
+              line=f"{venue}{race:02d}|{result.get('combination')}|{p}|{result.get('kimarite')}"
+              return venue,race,line,None
+            except Exception as ex:
+              return venue,race,None,'transport_or_parse_'+type(ex).__name__
+          with ThreadPoolExecutor(max_workers=3) as pool:
+            rows=list(pool.map(probe,targets))
+          matches=0
+          for v in sorted(EXPECTED):
+            relevant=sorted(((race,line,err) for venue,race,line,err in rows if venue==v))
+            errs=[f'{race}:{err}' for race,line,err in relevant if err]
+            if errs:
+              print(json.dumps({'venue':v,'status':'INCOMPLETE','errors':errs}))
+              continue
+            payload='\n'.join(line for race,line,err in relevant).encode('utf-8')
+            digest=hashlib.sha256(payload).hexdigest()
+            match=digest==EXPECTED[v]
+            matches+=int(match)
+            print(json.dumps({'venue':v,'status':'MATCH' if match else 'MISMATCH','count':len(relevant),'sha256':digest}))
+          print('HASH_COMPARISON_SUMMARY='+json.dumps({'date':DAY,'total_venues':len(EXPECTED),
+            'matched_venues':matches,'nonmatching_venues':len(EXPECTED)-matches,
+            'scope':'archive collector CSV vs current legacy D1; not independent official verification'}))
+          print('GET only, no credentials, no raw archive uploaded or result bodies printed')
+          PY
