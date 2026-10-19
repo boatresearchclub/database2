@@ -330,7 +330,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261019-ADMIN-V3-DIAG-R3-DEME-CLICK-SORT">
+<meta name="brc-build" content="20261019-ADMIN-V3-DIAG-R3-DEME-ADMIN-UX">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -36925,65 +36925,83 @@ body.brc-admin-home-active .brc-admin-top-race .dp-boat-no{
 })();
 </script>
 
+<!-- BRC_DEME_ADMIN_UX_20261019: UI磨き込み・並び順プルダウン削除・管理者限定継続。集計/予測/TimeX値は無変更。 -->
 <!-- BRC_DEME_CLICK_SORT_20261019: 出目確率の各列タップで昇順・降順切替。TimeXや予測・集計データは変更なし。 -->
 <!-- BRC_DEME_INFO_REVIEW_20261017_UI_FIX_20261018: Admin UI integration candidate / published only by manual PUSH -->
 <style id="brcDemeInfoStyle">
-/* BRC_DEME_INFO_REVIEW_20261017: 管理者専用・読み取り専用 */
+/* BRC管理者専用「情報」タブ：見た目のみの調整。公開UIと既存計算への干渉なし。 */
 #brcDemeInfoTab{display:none}
 .predict-main-tabs.brc-admin-deme-enabled{grid-template-columns:repeat(5,minmax(0,1fr))}
 body.brc-admin-public-view #brcDemeInfoTab{display:none!important}
-@media(max-width:420px){.predict-main-tabs.brc-admin-deme-enabled .predict-main-tab{font-size:11px;padding-left:1px;padding-right:1px}}
 #brcDemeInfoTab.is-visible{display:block}
 #page-predict .predict-main-tabs.brc-admin-invest-enabled{grid-template-columns:repeat(5,minmax(0,1fr))}
-@media(max-width:560px){#page-predict .predict-main-tabs.brc-admin-invest-enabled .predict-main-tab{font-size:11px;padding-left:2px;padding-right:2px}}
-#predictMainPanel-info{min-height:calc(100svh - 110px);background:#f7f9fc}
-.brc-deme{padding:14px;line-height:1.5;color:#14293b}
-.brc-deme h3{margin:4px 0 4px;font-size:19px}
-.brc-deme .hint{color:#62758c;font-size:12px}
-.brc-deme .caution{background:#fff5e1;border:1px solid #e5bb60;border-radius:10px;padding:10px 12px;margin:10px 0;font-size:12px;color:#714616}
-.brc-deme .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin:12px 0}
-.brc-deme label{font-size:12px;font-weight:700;display:flex;flex-direction:column;gap:4px}
-.brc-deme select{font:inherit;font-size:13px;padding:8px;border-radius:7px;background:white;border:1px solid #cbd5e1;min-width:95px;max-width:100%}
-.brc-deme .tablewrap{overflow-x:hidden;overflow-y:auto;width:100%;max-width:100%;border:1px solid #d9e2ee;border-radius:10px;background:white;max-height:65vh}
+@media(max-width:560px){
+  #page-predict .predict-main-tabs.brc-admin-deme-enabled .predict-main-tab,
+  #page-predict .predict-main-tabs.brc-admin-invest-enabled .predict-main-tab{font-size:11px;padding-left:2px;padding-right:2px}
+}
+#predictMainPanel-info{min-height:calc(100svh - 110px);background:var(--bg,#f6f8fb)}
+.brc-deme{--deme-ink:var(--navy,#0a1f33);--deme-soft:var(--ink-soft,#4c5f76);--deme-line:rgba(10,31,51,.12);--deme-blue:var(--wave,#0057db);padding:14px 13px 24px;color:var(--deme-ink);line-height:1.5}
+.brc-deme *{box-sizing:border-box}
+.brc-deme .deme-titleline{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;min-width:0;margin:0 0 7px}
+.brc-deme h3{margin:0;font-size:19px;line-height:1.35;font-weight:800;letter-spacing:-.025em;color:var(--deme-ink)}
+.brc-deme .deme-venue{color:var(--deme-blue)}
+.brc-deme .deme-admin-flag{display:inline-flex;align-items:center;flex:0 0 auto;min-height:24px;padding:3px 8px;border:1px solid var(--deme-line);border-radius:6px;background:#fff;color:var(--deme-soft);font-size:10px;font-weight:700;white-space:nowrap}
+.brc-deme .hint{margin:0 0 9px;font-size:11px;line-height:1.65;color:var(--deme-soft);font-variant-numeric:tabular-nums}
+.brc-deme .audit-box{margin:0 0 12px;border:1px solid #d5dfeb;border-radius:9px;background:#f6f9fd;overflow:hidden;color:var(--deme-soft)}
+.brc-deme .audit-box.flagged{border-color:#e6bf75;background:#fff7e9;color:#79501b}
+.brc-deme .audit-box summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;list-style:none;cursor:pointer;font-size:11px;line-height:1.5;font-weight:700}
+.brc-deme .audit-box summary::-webkit-details-marker{display:none}
+.brc-deme .audit-box summary::after{content:'＋';color:inherit;font-size:14px;line-height:1;font-weight:800;flex:0 0 auto}
+.brc-deme .audit-box[open] summary::after{content:'−'}
+.brc-deme .audit-box .audit-detail{padding:0 10px 10px;font-size:11px;line-height:1.7}
+.brc-deme .filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0 0 12px}
+.brc-deme .filters label{display:flex;flex-direction:column;gap:5px;min-width:0;color:var(--deme-ink);font-size:12px;font-weight:800}
+.brc-deme .filters select{display:block;width:100%;min-width:0;height:42px;padding:7px 9px;border-radius:9px;border:1px solid #cbd6e4;background:#fff;color:var(--deme-ink);font-family:inherit;font-size:14px;font-weight:700;line-height:1.25;outline-offset:2px}
+.brc-deme .sort-guide{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 6px;font-size:10px;font-weight:700;color:var(--deme-soft)}
+.brc-deme .sort-guide .sort-active{color:var(--deme-blue);font-variant-numeric:tabular-nums}
+.brc-deme .tablewrap{width:100%;max-width:100%;overflow-x:hidden;overflow-y:auto;max-height:min(65vh,820px);border:1px solid #d9e2ee;border-radius:11px;background:#fff;-webkit-overflow-scrolling:touch}
 .brc-deme table{border-collapse:collapse;width:100%;max-width:100%;min-width:0;table-layout:fixed;font-variant-numeric:tabular-nums}
-.brc-deme th{position:sticky;top:0;background:#edf3fb;padding:9px 4px;text-align:right;font-size:11px;white-space:nowrap;z-index:1;overflow:hidden}
-.brc-deme td{padding:8px 3px;border-top:1px solid #e8edf5;text-align:right;font-size:12px;white-space:nowrap;overflow:hidden}
-.brc-deme td:first-child,.brc-deme th:first-child{text-align:left}
-.brc-deme th:first-child{background:#edf3fb;z-index:2}
+.brc-deme th{position:sticky;top:0;padding:0 3px;text-align:right;background:#edf3fb;color:#455a72;font-size:11px;white-space:nowrap;z-index:1;overflow:hidden;border-bottom:1px solid #cbd8e7;letter-spacing:0;user-select:none}
+.brc-deme th:first-child{text-align:left}
+.brc-deme td{height:35px;padding:7px 3px;border-top:1px solid #e8edf5;text-align:right;font-size:12px;line-height:1.3;white-space:nowrap;overflow:hidden;color:var(--deme-ink)}
+.brc-deme tbody tr:nth-child(even){background:#fbfcfe}
+.brc-deme tbody tr:hover td{background:rgba(0,87,219,.035)}
+.brc-deme td:first-child{text-align:left}
 .brc-deme table th:nth-child(1),.brc-deme table td:nth-child(1){width:30%}
 .brc-deme table th:nth-child(2),.brc-deme table td:nth-child(2){width:12%}
 .brc-deme table th:nth-child(3),.brc-deme table td:nth-child(3){width:14%}
 .brc-deme table th:nth-child(4),.brc-deme table td:nth-child(4){width:23%}
 .brc-deme table th:nth-child(5),.brc-deme table td:nth-child(5){width:21%}
-.brc-deme td.low{color:#975000}
-.brc-deme .note{font-size:11px;color:#64748b;margin-top:9px}
-.brc-deme .deme-combo,.brc-deme .deme-combo .brc-ref-combo-chip{display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
-.brc-deme .deme-combo .brc-ref-combo-boat{width:22px;height:22px;border-radius:5px;font-size:11px}
-.brc-deme .deme-combo .brc-ref-combo-sep{font-size:11px;color:#64748b;font-weight:700;line-height:1}
+.brc-deme td.low{color:#8a5900}
+.brc-deme .deme-combo,.brc-deme .deme-combo .brc-ref-combo-chip{display:inline-flex;align-items:center;gap:2px;white-space:nowrap}
+.brc-deme .deme-combo .brc-ref-combo-boat{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;padding:0;border-radius:5px;font-size:11px;line-height:1;font-weight:800;flex:0 0 auto}
+.brc-deme .deme-combo .brc-ref-combo-sep{font-size:10px;color:#8393a8;font-weight:700;line-height:1}
+.brc-deme th .deme-sort-btn{appearance:none;width:100%;min-width:0;min-height:40px;padding:2px 0;border:0;border-radius:3px;background:transparent;color:inherit;font:inherit;font-weight:800;display:inline-flex;align-items:center;justify-content:flex-end;gap:2px;white-space:nowrap;cursor:pointer;touch-action:manipulation}
+.brc-deme th:first-child .deme-sort-btn{justify-content:flex-start}
+.brc-deme th .deme-sort-btn .deme-sort-arrow{font-size:11px;line-height:1;color:#90a0b4;flex:0 0 auto}
+.brc-deme th .deme-sort-btn:focus-visible{outline:2px solid var(--deme-blue);outline-offset:-2px}
+.brc-deme th[aria-sort="ascending"] .deme-sort-btn,.brc-deme th[aria-sort="descending"] .deme-sort-btn{color:var(--deme-blue)}
+.brc-deme th[aria-sort="ascending"] .deme-sort-arrow,.brc-deme th[aria-sort="descending"] .deme-sort-arrow{color:var(--deme-blue)}
+.brc-deme .note{margin:9px 1px 0;color:var(--deme-soft);font-size:10px;line-height:1.7}
 @media(max-width:600px){
- .brc-deme{padding:8px}
- .brc-deme .filters{display:grid;grid-template-columns:1fr 1fr}
- .brc-deme select{width:100%}
- .brc-deme .deme-combo .brc-ref-combo-boat{width:20px;height:20px;font-size:10px}
- .brc-deme th{font-size:10.5px;padding:9px 2px}
- .brc-deme td{font-size:11.5px;padding:7px 2px}
- .brc-deme .deme-combo,.brc-deme .deme-combo .brc-ref-combo-chip{gap:2px}
+  .brc-deme{padding:12px 9px 20px}
+  .brc-deme h3{font-size:18px}
+  .brc-deme .filters{gap:9px}
+  .brc-deme th{font-size:10px;padding-left:2px;padding-right:2px}
+  .brc-deme td{padding-left:2px;padding-right:2px;font-size:11.5px}
+  .brc-deme .deme-combo .brc-ref-combo-boat{width:20px;height:20px;font-size:10px}
 }
 @media(max-width:350px){
- .brc-deme{padding:5px}
- .brc-deme th{font-size:10px;padding:8px 1px}
- .brc-deme td{font-size:10px;padding:7px 1px}
- .brc-deme table th:nth-child(1),.brc-deme table td:nth-child(1){width:31%}
- .brc-deme table th:nth-child(2),.brc-deme table td:nth-child(2){width:11%}
- .brc-deme .deme-combo .brc-ref-combo-boat{width:17px;height:18px;font-size:10px}
- .brc-deme .deme-combo .brc-ref-combo-sep{font-size:9px}
+  .brc-deme{padding:10px 6px 18px}
+  .brc-deme h3{font-size:17px}
+  .brc-deme .deme-admin-flag{padding:2px 6px;font-size:9px}
+  .brc-deme td{font-size:10px;padding-left:1px;padding-right:1px}
+  .brc-deme th{font-size:9.5px;padding-left:1px;padding-right:1px}
+  .brc-deme table th:nth-child(1),.brc-deme table td:nth-child(1){width:31%}
+  .brc-deme table th:nth-child(2),.brc-deme table td:nth-child(2){width:11%}
+  .brc-deme .deme-combo .brc-ref-combo-boat{width:17px;height:18px;font-size:10px}
+  .brc-deme .deme-combo .brc-ref-combo-sep{font-size:9px}
 }
-.brc-deme th .deme-sort-btn{appearance:none;border:0;background:transparent;color:inherit;font:inherit;font-weight:800;padding:0;display:inline-flex;align-items:center;justify-content:flex-end;gap:2px;white-space:nowrap;max-width:100%;min-width:0;cursor:pointer;touch-action:manipulation}
-.brc-deme th:first-child .deme-sort-btn{justify-content:flex-start}
-.brc-deme th .deme-sort-btn:focus-visible{outline:2px solid var(--wave,#0057db);outline-offset:2px;border-radius:2px}
-.brc-deme th .deme-sort-btn .deme-sort-arrow{font-size:10px;line-height:1;color:#8a99af;flex:0 0 auto}
-.brc-deme th[aria-sort="ascending"] .deme-sort-btn,.brc-deme th[aria-sort="descending"] .deme-sort-btn{color:#0057db}
-.brc-deme th[aria-sort="ascending"] .deme-sort-btn .deme-sort-arrow,.brc-deme th[aria-sort="descending"] .deme-sort-btn .deme-sort-arrow{color:#0057db}
 </style>
 <script id="brcDemeInfoData" type="application/json"></script>
 <script src="data/brcDemeInfoData-54f94c69e4-001.js"></script>
@@ -37048,28 +37066,25 @@ function render(){
  const headings=[['combo','出目'],['count','回数'],['prob','確率'],['median','中央値'],['roi','回収率']];
  const headHtml=headings.map(([key,label])=>{
    const current=order===key;
-   const arrow=current?(sortDirection==='desc'?'▼':'▲'):'↕';
+   const arrow=current?(sortDirection==='desc'?'▼':'▲'):'⇅';
    const aria=current?(sortDirection==='desc'?'descending':'ascending'):'none';
    return `<th scope="col" aria-sort="${aria}"><button type="button" class="deme-sort-btn" data-deme-sort="${key}" aria-label="${label}で並び替え${current?', 現在'+(sortDirection==='desc'?'降順':'昇順'):''}"><span>${label}</span><span class="deme-sort-arrow" aria-hidden="true">${arrow}</span></button></th>`;
  }).join('');
  const flag=list.some(r=>r[9]===1);
  const all=d.rows.find(r=>r[0]===code&&String(r[1])===kind);
  const tbl=list.map(r=>`<tr><td>${renderCombo(r[2])}</td><td>${fmtInt(r[3])}</td><td>${fmt(r[5],1)}%</td><td>${fmtInt(r[7])}</td><td class="${r[3]<5?'low':''}">${fmt(r[8],1)}%</td></tr>`).join('');
- body.innerHTML=`<h3>情報 ＞ 出目確率｜${htmlEscape(name)}</h3>
- <div class="hint">集計 ${htmlEscape(d.period[0])} ～ ${htmlEscape(d.period[1])} ／ ${all?fmtInt(all[4]):'—'}R ／ ${kind==='0'?'2連単':'3連単'}（固定集計・自動更新なし）</div>
- <div class="caution">集計期間を固定した過去実績です。回収率は将来の的中や利益を保証しません。${flag?'この会場・券種は元の出現数と払戻確認件数に差がある区分です。出現確率は着順出現回数の合計を分母としています。配当中央値・参考回収率は払戻未確認の影響が残る可能性があります。':''}</div>
+ body.innerHTML=`<div class="deme-titleline"><h3>出目確率 <span class="deme-venue">${htmlEscape(name)}</span></h3><span class="deme-admin-flag">管理者専用</span></div>
+ <p class="hint">${htmlEscape(d.period[0])} ～ ${htmlEscape(d.period[1])}　|　${all?fmtInt(all[4]):'—'}R　|　固定集計</p>
+ <details class="audit-box ${flag?'flagged':''}"><summary>${flag?'払戻未照合のある区分です · 数値は参考値':'過去実績の参考集計です · 注意事項を見る'}</summary>
+ <div class="audit-detail">集計期間を固定した過去実績です。回収率は将来の的中や利益を保証しません。${flag?'この会場・券種は出現数と払戻確認件数に差があります。出現確率は着順出現回数の合計を分母とし、配当中央値・参考回収率には払戻未確認の影響が残る可能性があります。':''}</div></details>
  <div class="filters" id="brcDemeControls">
  <label>券種<select id="brcDemeKind"><option value="0" ${kind==='0'?'selected':''}>2連単</option><option value="1" ${kind==='1'?'selected':''}>3連単</option></select></label>
  <label>1着艇<select id="brcDemeHead"><option value="all" ${head==='all'?'selected':''}>全体</option>${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${head===String(n)?'selected':''}>${n}号艇</option>`).join('')}</select></label>
- <label>並び順<select id="brcDemeOrder">${[['prob','出現確率順'],['count','出現回数順'],['roi','参考回収率順'],['median','配当中央値順'],['combo','出目順']].map(([k,v])=>`<option value="${k}" ${order===k?'selected':''}>${v}</option>`).join('')}</select></label>
- </div><div class="tablewrap"><table><thead><tr>${headHtml}</tr></thead><tbody>${tbl}</tbody></table></div>
- <div class="note">中央値は当該出目の的中時配当（円）の中央値。回収率は実際の過去払戻に基づき、毎レース当該出目を100円ずつ購入した場合の参考試算です（中央値からは算出しません）。出現回数5回未満は参考扱い、0回の中央値は「—」。払戻未照合分は別途精査が必要です。</div>`;
+ </div>
+ <div class="sort-guide"><span>項目名をタップして並び替え</span><span class="sort-active">${[['combo','出目'],['count','回数'],['prob','確率'],['median','中央値'],['roi','回収率']].find(item=>item[0]===order)?.[1]||'確率'} ${sortDirection==='desc'?'▼':'▲'}</span></div>
+ <div class="tablewrap"><table><thead><tr>${headHtml}</tr></thead><tbody>${tbl}</tbody></table></div>
+ <div class="note">配当中央値は的中時の払戻金額（円）。回収率は毎レース当該出目を100円購入した場合の過去実績（中央値からは計算しません）。出現5回未満は参考扱い、0回の中央値は「—」。未照合分は引き続き精査が必要です。</div>`;
  for(const id of ['brcDemeKind','brcDemeHead'])byId(id)?.addEventListener('change',()=>render());
- byId('brcDemeOrder')?.addEventListener('change',ev=>{
-   sortKey=ev.target.value;
-   sortDirection=(sortKey==='combo'?'asc':'desc');
-   render();
- });
  body.querySelectorAll('[data-deme-sort]').forEach(btn=>btn.addEventListener('click',()=>{
    const key=btn.getAttribute('data-deme-sort');
    if(key===sortKey){sortDirection=sortDirection==='desc'?'asc':'desc';}
