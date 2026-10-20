@@ -37308,7 +37308,7 @@ function getValue(entry,basis,key){
 }
 function valueHtml(value,key,isDiff){
  if(value==null||!Number.isFinite(Number(value)))return '—';
- if(!isDiff)return key==='median'?fmtInt(value):fmt(value,1)+'%';
+ if(!isDiff)return key==='median'?fmtInt(value)+'円':fmt(value,1)+'%';
  const v=Number(value),roundUnit=key==='median'?0.5:0.05;
  const zeroish=Math.abs(v)<roundUnit;
  const sign=zeroish?'':v>0?'+':'−';
