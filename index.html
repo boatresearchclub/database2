@@ -1,3 +1,4 @@
+<!-- BRC_DEADLINE_TIMEX_FINAL_ARROW_SYNC_20261020: 直前サインは出走データ同一の個人補正込み最終1着率差ptと0.1pt丸め済み三本矢印で判定。v2/v3実数値、予測ロジック、スリット判定は変更しない。 -->
 <!-- BRC_PIN_SORT_20261020: admin-only pin list can switch venue-code order / deadline-ascending order; storage and pin records unchanged. -->
 <!-- BRC_ADMIN_TIMEX_HEAD_ORIGINAL_20261020: Restore BRC TimeX visible caption without changing v2/v3 switch, diagnostics, numbers or authorization. -->
 <!-- BRC_ADMIN_SEARCH_PINS_COMPACT_R1_20261020: list layout display only; saved values, member rights, calculations and navigation unchanged. -->
@@ -946,6 +947,8 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 
   .picker-row.empty-row{color:var(--ink-soft); font-size:14px; padding:8px 4px;}
 
+  /* BRC_DEADLINE_WIN_15PT_STAR_INDEPENDENT_V1: ★のみ強調。既存サインの位置・余白は変更しない */
+  .dp-signal.brc-15pt-star{color:#a46b00;font-weight:900;}
   /* ---- 締切一覧：会場・レースと同じ横スクロールカード ---- */
   .deadline-scroll-row{
     display:flex; gap:8px; overflow-x:auto; overflow-y:hidden; padding:2px 2px 8px;
@@ -20881,6 +20884,10 @@ function scrollDeadlineRaceToPredictData(){
   }));
 }
 
+// BRC_DEADLINE_WIN_15PT_STAR_INDEPENDENT_V1_20261020:
+// ★は「TimeXの最終1着率変化」または「展示スリット評価の1着pt」をそれぞれ単独で判定。
+// 2つの効果、あるいは3連対ptを合算しない。+15.0pt以上で各表示の◎を★に昇格。
+// 従来の直前◎/×・スリット◎/○/×および取得・認証・予測ロジックは維持。
 // BRC_DEADLINE_COMPACT_SIGNALS_V1_20261003
 // 締切カードへ「既存判定の要約」だけを追加する。カード用の新しい予測ロジックは作らない。
 // ・イン信頼：展示反映後の確定版 classifyInReliabilityByWinPct
@@ -20907,12 +20914,17 @@ function brcAdminTopSignalSummaryHtml(rawHtml){
   const nodes=Array.from(tmp.querySelectorAll('.dp-signal'));
   const inSig=nodes.find(n=>n.classList.contains('in'));
   const signs=nodes.filter(n=>!n.classList.contains('in') &&
-    /(?:直前|スリット|SL|直)[◎○×]/.test(String(n.textContent||'')));
+    /(?:直前|スリット|SL|直)[◎○×★]/.test(String(n.textContent||'')));
   const out=[];
   if(inSig) out.push(inSig.outerHTML);
-  for(const node of signs.slice(0,4)){
+  // 独立判定の★を、通常◎/○/×より前に並べる（表示上限4件のため）。
+  const prioritizedSigns=[
+    ...signs.filter(n=>n.classList.contains('brc-15pt-star')),
+    ...signs.filter(n=>!n.classList.contains('brc-15pt-star'))
+  ];
+  for(const node of prioritizedSigns.slice(0,4)){
     const text=String(node.textContent||'');
-    const mark=(text.match(/[◎○×]/)||[])[0];
+    const mark=(text.match(/[◎○×★]/)||[])[0];
     if(!mark) continue;
     const label=Array.from(node.children).find(e=>e.tagName==='SPAN' && !e.classList.contains('dp-boat-no'));
     if(!label) continue;
@@ -21023,11 +21035,21 @@ function brcDeadlineSlitSignals(spec,boats,liveRace){
   // BRC_DEADLINE_SLIT_SINGLE_SOURCE_V3_20261007:
   // 上段「展示スリット評価」と全く同じ brcCollectSlitEvaluationRows() を使う。
   // ここでは行を再計算せず、同一行の1着/3連対ptをカード記号へ変換するだけ。
-  const out={good:[],mid:[],bad:[]};
+  const out={good:[],mid:[],bad:[],star:[]};
   if(!spec||!Array.isArray(boats)||boats.length!==6) return out;
   const rows=brcCollectSlitEvaluationRows(boats,liveRace,String(spec.venue||''));
   for(const r of rows){
-    const vals=[Number(r?.metrics?.win),Number(r?.metrics?.top3)].filter(Number.isFinite);
+    // 「展示スリット評価」の1着ptだけで判定。TimeXや3連対ptは加算しない。
+    // null/未取得はゼロと解釈せず、必ず明示された数値だけを使う。
+    const slitWin=r?.metrics?.win;
+    if(slitWin!==null && slitWin!==undefined && slitWin!=='' &&
+       Number.isFinite(Number(slitWin)) && Number(slitWin)>=15){
+      const boatNo=Number(r.boat);
+      if(Number.isInteger(boatNo)&&boatNo>=1&&boatNo<=6&&!out.star.includes(boatNo)) out.star.push(boatNo);
+    }
+    const vals=[r?.metrics?.win,r?.metrics?.top3]
+      .filter(v=>v!==null && v!==undefined && v!=='' && Number.isFinite(Number(v)))
+      .map(Number);
     if(!vals.length) continue;
     const plus=vals.some(v=>v>=10);
     const minus=vals.some(v=>v<=-10);
@@ -21040,6 +21062,7 @@ function brcDeadlineSlitSignals(spec,boats,liveRace){
   out.good.sort((a,b)=>a-b);
   out.mid.sort((a,b)=>a-b);
   out.bad.sort((a,b)=>a-b);
+  out.star.sort((a,b)=>a-b);
   return out;
 }
 
@@ -21058,8 +21081,8 @@ function brcDeadlineSignalData(spec,pred,liveRace){
   }
 
   const boats=brcDeadlineBuildBoats(spec,pred,liveRace);
-  const directGood=[],directBad=[];
-  let slit={good:[],mid:[],bad:[]};
+  const directGood=[],directBad=[],directStar=[];
+  let slit={good:[],mid:[],bad:[],star:[]};
   let timexApplied=false;
   if(boats.length===6){
     const exhibitionApplied=brcApplyExhibitionAdjustmentsToBoats(boats,liveRace);
@@ -21071,16 +21094,32 @@ function brcDeadlineSignalData(spec,pred,liveRace){
       }catch(_e){}
     }
     if(exhibitionApplied){
+      // BRC_DEADLINE_TIMEX_FINAL_ARROW_SYNC_20261020:
+      // 出走データと同じ「個人補正込み最終1着率の差pt」を締切サインにも使用。
+      // 必ず当該レースの6艇を渡す。画面で開いている別レースのグローバルboatsは参照しない。
+      const personalizedWin=(typeof brcTimeXAdminPersonalizedWinMap==='function')
+        ? brcTimeXAdminPersonalizedWinMap(boats) : null;
       for(const b of boats){
-        const ds=[Number(b.exhibitionWinDeltaPt),Number(b.exhibitionTop3DeltaPt)].filter(Number.isFinite);
-        const plus=ds.some(v=>v>=BRC_TIMEX_ARROW_TRIPLE_PT),minus=ds.some(v=>v<=-BRC_TIMEX_ARROW_TRIPLE_PT);
+        const view=personalizedWin?.[Number(b.course)];
+        const finalWinDelta=(view && Number.isFinite(Number(view.deltaPt)))
+          ? Number(view.deltaPt) : Number(b.exhibitionWinDeltaPt);
+        // ★は「TimeX反映後の1着率－反映前の1着率」を単独評価。
+        // 3連対ptとも展示スリットとも合算しない。表示矢印と同じ0.1pt丸め。
+        if(Number.isFinite(finalWinDelta) && brcTimeXArrowRoundedPt(finalWinDelta)>=15){
+          directStar.push(Number(b.course));
+        }
+        const ds=[finalWinDelta,Number(b.exhibitionTop3DeltaPt)].filter(Number.isFinite);
+        // 表示矢印と同じ0.1pt丸め＋同じしきい値で三本矢印を判定する。
+        const arrows=ds.map(v=>brcProbabilityArrow(v));
+        const plus=arrows.includes('↑↑↑'),minus=arrows.includes('↓↓↓');
         if(plus&&!minus) directGood.push(Number(b.course));
         if(minus&&!plus) directBad.push(Number(b.course));
       }
     }
     slit=brcDeadlineSlitSignals(spec,boats,liveRace);
   }
-  return {rank:String(rel?.rank||''),directGood,directBad,slitGood:slit.good||[],slitMid:slit.mid||[],slitBad:slit.bad||[],timexApplied};
+  return {rank:String(rel?.rank||''),directGood,directBad,directStar,
+    slitGood:slit.good||[],slitMid:slit.mid||[],slitBad:slit.bad||[],slitStar:slit.star||[],timexApplied};
 }
 function brcDeadlineSignalHtml(data){
   if(!data) return '';
@@ -21094,9 +21133,19 @@ function brcDeadlineSignalHtml(data){
       parts.push(`<span class="dp-signal in rank-${safeRank}" title="イン逃げ信頼度 ${brcDeadlineEsc(rank)}">イン逃 <span class="dp-in-rank">${brcDeadlineEsc(rank)}</span></span>`);
     }
   }
-  for(const n of data.directGood||[]) parts.push(`<span class="dp-signal good" title="BRCタイムX 三本上向き（+15pt以上）">${brcCircledBoatNo(n)}<span>直前◎</span></span>`);
+  // ★判定は「1着率＋15pt」専用。従来の3連対率のみ三本上昇は直前◎のまま。
+  const directStar=new Set(data.directStar||[]);
+  for(const n of Array.from(new Set([...(data.directGood||[]),...directStar])).sort((a,b)=>a-b)){
+    const star=directStar.has(n);
+    parts.push(`<span class="dp-signal good${star?' brc-15pt-star':''}" title="${star?'BRC TimeX：1着率単独＋15pt以上（他指標との合算なし）':'BRC TimeX：1着率・3連対率の上昇判定'}">${brcCircledBoatNo(n)}<span>直前${star?'★':'◎'}</span></span>`);
+  }
   for(const n of data.directBad||[]) parts.push(`<span class="dp-signal bad" title="BRCタイムX 三本下向き（-15pt以下）">${brcCircledBoatNo(n)}<span>直前×</span></span>`);
-  for(const n of data.slitGood||[]) parts.push(`<span class="dp-signal good" title="展示スリット評価 +10pt以上">${brcCircledBoatNo(n)}<span>スリット◎</span></span>`);
+  // 展示スリットの★は検証済み「1着pt」単独で＋15pt以上。
+  const slitStar=new Set(data.slitStar||[]);
+  for(const n of Array.from(new Set([...(data.slitGood||[]),...slitStar])).sort((a,b)=>a-b)){
+    const star=slitStar.has(n);
+    parts.push(`<span class="dp-signal good${star?' brc-15pt-star':''}" title="${star?'展示スリット評価：1着pt単独＋15pt以上（TimeXとの合算なし）':'展示スリット評価：1着・3連対の既存判定'}">${brcCircledBoatNo(n)}<span>スリット${star?'★':'◎'}</span></span>`);
+  }
   for(const n of data.slitMid||[]) parts.push(`<span class="dp-signal good" title="展示スリット評価 0pt超〜+10pt未満">${brcCircledBoatNo(n)}<span>スリット○</span></span>`);
   for(const n of data.slitBad||[]) parts.push(`<span class="dp-signal bad" title="展示スリット評価 -10pt以下">${brcCircledBoatNo(n)}<span>スリット×</span></span>`);
   return parts.join('');
