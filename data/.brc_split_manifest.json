@@ -1,8 +1,8 @@
 {
   "version": "BRC_CLOUDFLARE_SPLIT_V2_SAFE",
-  "generated_at": "2026-10-20T01:59:32.349361+00:00",
+  "generated_at": "2026-10-20T02:54:59.100954+00:00",
   "source_index": "index.html",
-  "index_bytes": 24114098,
+  "index_bytes": 24048709,
   "files": [
     "brc-apd8-recent-course-1y-a2227c2fb8-001.js",
     "brc-d08-model-9af8b5d6fa-001.js",
@@ -24,6 +24,7 @@
     "data-st-course-e64b3cbf66-001.js",
     "data-st-recent10-0758c875b5-001.js",
     "data-st-stability-df03cb6112-001.js",
+    "data-venuegradestats-3fe0d1ac2a-001.js",
     "data-winner-scenario-v1-a7370443ef-001.js"
   ],
   "externalized": [
@@ -40,6 +41,11 @@
     {
       "id": "data-player-profile-seed",
       "bytes": 93693,
+      "chunks": 1
+    },
+    {
+      "id": "data-venuegradestats",
+      "bytes": 78303,
       "chunks": 1
     },
     {
