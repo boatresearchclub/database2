@@ -1,3 +1,4 @@
+<!-- BRC_ADMIN_SEARCH_PINS_COMPACT_R1_20261020: list layout display only; saved values, member rights, calculations and navigation unchanged. -->
 <!-- BRC_ADMIN_SEARCH_PINS_V1_20261020: local admin-only race snapshots; no prediction/permission changes; scenario beta label removed. -->
 <!-- BRC_VENUE_GRADE_UNIFIED_V8_20261020: one badge resolver TOP/venue picker/Info; explicitly verified official racecard grade outranks general fallback; same-day cached confirmed badge; transient Worker failures do not erase; presentation-only. -->
 <!-- BRC_VENUE_GRADE_V7_20261020: Daily date-scoped programme title CSV verified grade badges; official Worker precedence; 2026-10-20 official snapshot; unknown is not 一般; display-only, auth/predictions unchanged. -->
@@ -336,7 +337,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261020-RACE-SEARCH-ADMIN-PINS-V1">>
+<meta name="brc-build" content="20261020-ADMIN-PINS-COMPACT-R1">>
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -6881,6 +6882,34 @@ body.brc-admin-home-active .brc-admin-top-race .dp-signal:not(.in){
   #scenarioSearchResults .scenario-search-one-line .brc-pin-toggle{min-width:21px;flex-basis:21px;font-size:15px;}
   .brc-pinned-card{padding:9px 9px;gap:5px;}
   .brc-pinned-actions{gap:4px;}
+}
+</style>
+
+<style id="brc-admin-pin-compact-r1-20261020">
+/* 1件2行に圧縮：タイトル+締切／検索結果の要点。保存データと押下操作はそのまま */
+#brcPinnedList .brc-pinned-list{gap:6px;}
+#brcPinnedList .brc-pinned-card{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;
+  min-height:65px;padding:9px 11px;align-items:center;border-radius:10px;
+}
+#brcPinnedList .brc-pinned-data{min-width:0;}
+#brcPinnedList .brc-pinned-top{display:flex;align-items:baseline;gap:6px 12px;flex-wrap:wrap;line-height:1.25;}
+#brcPinnedList .brc-pinned-name{font-size:15px;font-weight:900;line-height:1.25;white-space:nowrap;}
+#brcPinnedList .brc-pinned-deadline{font-size:12px;color:#53637a;font-weight:700;white-space:nowrap;}
+#brcPinnedList .brc-pinned-date{color:#8490a2;font-size:10px;font-weight:600;white-space:nowrap;}
+#brcPinnedList .brc-pinned-summary{margin-top:5px;color:#45556b;font-size:12px;line-height:1.35;font-weight:700;overflow-wrap:anywhere;}
+#brcPinnedList .brc-pinned-actions{flex-direction:row;align-items:center;gap:5px;}
+#brcPinnedList .brc-pinned-action{font-size:11px;padding:6px 8px;min-height:31px;white-space:nowrap;}
+#brcPinnedList .brc-pinned-action.remove{min-width:30px;padding:6px;line-height:1;font-size:15px;}
+@media(max-width:420px){
+  #brcPinnedList .brc-pinned-card{padding:8px 8px;gap:5px;min-height:61px;}
+  #brcPinnedList .brc-pinned-name{font-size:14px;}
+  #brcPinnedList .brc-pinned-deadline{font-size:11px;}
+  #brcPinnedList .brc-pinned-summary{font-size:11px;}
+  #brcPinnedList .brc-pinned-top{gap:4px 8px;}
+  #brcPinnedList .brc-pinned-actions{gap:4px;}
+  #brcPinnedList .brc-pinned-action{font-size:10px;padding:5px 7px;min-height:30px;}
+  #brcPinnedList .brc-pinned-action.remove{font-size:14px;min-width:28px;padding:5px;}
 }
 </style>
 <!-- BRC_GUEST_LANDING_MEMBER_HOME_20261020: guest opens login/free-2R; valid member opens 24-venue TOP; auth/rights untouched -->
@@ -24249,18 +24278,24 @@ function brcPinRender(){
   const list=brcPinRead();if(count)count.textContent=String(list.length);
   if(!box)return;
   if(!list.length){box.innerHTML='<div class="brc-pinned-empty">まだピン留めしたレースはありません。<br>本日厳選・展開検索の☆から保存できます。</div>';return;}
-  const labels={'picks-iron':'本日厳選・イン有力','picks-reject':'本日厳選・イン否定',scenario:'展開検索'};
   const today=brcPinToday();
   box.innerHTML='<div class="brc-pinned-list">'+list.map(e=>{
     const old=e.date!==today;
-    const savedRate=e.rate===null?'':` / ${e.source==='scenario'?'展示前BRC1着率':'イン逃げ予測'} ${brcPinEsc(e.rate.toFixed(1))}%`;
+    // 保存値には触れず、表示時のみ四捨五入（例: 22.6→23%, 29.4→29%）
+    const rate=e.rate===null?'':` BRC1着率${brcPinEsc(Math.round(e.rate))}%`;
+    const note=e.source==='scenario'?`${e.course}号艇${rate}`
+      :(e.source==='picks-reject'?'イン否定':'イン有力');
     return `<div class="brc-pinned-card${old?' is-old':''}">
-      <div class="brc-pinned-data"><div class="brc-pinned-name">${brcPinEsc(e.venue)} ${e.raceNo}R ${e.course?`<small> ${e.course}号艇</small>`:''}</div>
-      <div class="brc-pinned-meta">${brcPinEsc(e.date)} / ${brcPinEsc(labels[e.source]||'検索')} / 締切${brcPinEsc(e.deadline||'―')}</div>
-      <div class="brc-pinned-meta">${e.name?brcPinEsc(e.name)+' / ':''}${e.className?brcPinEsc(e.className):''}${savedRate}${e.rank?' / イン信頼度 '+brcPinEsc(e.rank):''}${old?' / 過去の記録':''}</div></div>
+      <div class="brc-pinned-data">
+        <div class="brc-pinned-top"><span class="brc-pinned-name">${brcPinEsc(e.venue)} ${e.raceNo}R</span>
+          <span class="brc-pinned-deadline">締切${brcPinEsc(e.deadline||'―')}</span>
+          ${old?`<span class="brc-pinned-date">${brcPinEsc(e.date)}</span>`:''}
+        </div>
+        <div class="brc-pinned-summary">${brcPinEsc(note)}</div>
+      </div>
       <div class="brc-pinned-actions">
-        <button class="brc-pinned-action" type="button" data-brc-pin-open="${brcPinEsc(brcPinId(e))}" ${old?'disabled title="過去の日付のレースは出走表に移動できません"':''}>出走表へ</button>
-        <button class="brc-pinned-action remove" type="button" data-brc-pin-remove="${brcPinEsc(brcPinId(e))}">解除</button>
+        <button class="brc-pinned-action" type="button" aria-label="${brcPinEsc(e.venue)}${e.raceNo}Rの出走表を開く" data-brc-pin-open="${brcPinEsc(brcPinId(e))}" ${old?'disabled title="過去の日付のレースは出走表に移動できません"':''}>開く</button>
+        <button class="brc-pinned-action remove" type="button" aria-label="${brcPinEsc(e.venue)}${e.raceNo}Rをピン留め解除" title="解除" data-brc-pin-remove="${brcPinEsc(brcPinId(e))}">×</button>
       </div>
     </div>`;
   }).join('')+'</div>';
@@ -24275,7 +24310,6 @@ function brcPinRender(){
     if(row && row.date===brcPinToday())openTodayPickRace(row.venue,row.raceNo);
   }));
 }
-
 let SCENARIO_SEARCH_SORT='deadline';
 let SCENARIO_SEARCH_HAS_RUN=false;
 
