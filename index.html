@@ -1,3 +1,5 @@
+<!-- BRC_VENUE_GRADE_UNIFIED_V8_20261020: one badge resolver TOP/venue picker/Info; explicitly verified official racecard grade outranks general fallback; same-day cached confirmed badge; transient Worker failures do not erase; presentation-only. -->
+<!-- BRC_VENUE_GRADE_V7_20261020: Daily date-scoped programme title CSV verified grade badges; official Worker precedence; 2026-10-20 official snapshot; unknown is not 一般; display-only, auth/predictions unchanged. -->
 <!-- BRC_DEME_LABEL_LEFT_VALUE_RIGHT_20261020: median/ROI label left, value right; display-only -->
 <!-- BRC_SCENARIO_COURSE_BRC_ONLY_20261020: form simplification and optional winning method; Member/admin batch auth unchanged. -->
 <!-- BRC_DEME_PROBABILITY_VISUAL_HIERARCHY_20261020: 1R percentage emphasized, venue % secondary, occurrences small, low-N explicit. Original calculations and admin-only guard untouched. -->
@@ -6621,6 +6623,7 @@ table.brc-dict-venue-table th{font-size:10px;} table.brc-dict-venue-table{font-s
 .brc-admin-top-race .dp-boat-no.lane6{background:var(--lane6);color:var(--lane6-text);border-color:var(--lane6);}
 .brc-admin-top-venue .vp-badge{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;min-width:19px;height:15px;padding:0 3px;border-radius:999px;font-size:7px;font-weight:900;line-height:1;letter-spacing:-.02em;white-space:nowrap;border:1px solid transparent;}
 .brc-admin-top-venue .vp-badge.general{color:#6b7788;background:#f5f7fa;border-color:#d8dee7;}
+.brc-admin-top-venue .vp-badge.unverified{color:#7c8799;background:#f7f9fc;border-color:#e1e6ee;}
 .brc-admin-top-venue .vp-badge.sg{color:#b4232c;background:#fff1f2;border-color:#fecdd3;}
 .brc-admin-top-venue .vp-badge.g1{color:#6d28d9;background:#f5f3ff;border-color:#ddd6fe;}
 .brc-admin-top-venue .vp-badge.g2{color:#1d4ed8;background:#eff6ff;border-color:#bfdbfe;}
@@ -20588,7 +20591,9 @@ function populateDaySelect(){
   daySel.innerHTML = '<option value="">当日レースから選択…</option>' +
     todayVenues.map(v=>{
       const info = RACE_INFO_TODAY[v];
-      return `<option value="${v}">${v}（${info.grade}${info.grade?' / ':''}${resolveRaceDayLabel(info)}）</option>`;
+      // Display-only: official/date-scoped verified grade, not a title-inferred grade.
+      const displayGrade=typeof brcVenueCardBadge==='function' ? brcVenueCardBadge(info,v).label : '確認中';
+      return `<option value="${v}">${v}（${displayGrade} / ${resolveRaceDayLabel(info)}）</option>`;
     }).join('');
   raceNoSel.innerHTML = '<option value="">R番号</option>';
   raceNoSel.disabled = true;
@@ -21326,22 +21331,273 @@ function brcVenueRaceInfoGradeBadge(info){
   if(g==='G3') return brcVenueBadgeObj('G3');
   return null;
 }
-function brcVenueCategoryBadge(info, venue=''){
-  const verified=BRC_VERIFIED_VENUE_BADGES.get(String(venue||''));
-  const raceGrade=brcVenueRaceInfoGradeBadge(info);
-  if(!verified) return brcVenueBadgeGroup([raceGrade]);
-  const items=verified.badges||[verified];
-  // The already loaded official racecard grade can supplement a *series-only* Worker result.
-  // Never override a grade verified by the Worker with a conflicting racecard value.
-  const hasGrade=items.some(b=>['sg','g1','g2','g3'].includes(b.cls));
-  return brcVenueBadgeGroup([...(raceGrade && !hasGrade ? [raceGrade] : []),...items]);
+// BRC_VENUE_GRADE_V7_20261020
+// NOTE: This independent map is for badges only. NEVER change prediction grades here.
+const BRC_TITLE_CSV_GRADE_BADGES = new Map();
+let BRC_TITLE_CSV_GRADE_DATE = '';
+let BRC_TITLE_CSV_GRADE_LOADING = null;
+let BRC_TITLE_CSV_GRADE_SUCCESS_AT = 0;
+let BRC_TITLE_CSV_GRADE_LAST_TRY = 0;
+
+// 2026-10-20 official confirmations (BOAT RACE official race index + Miyajima/Tokuyama
+// official 2026-10-20 offsite venue grade lists). This date-limited snapshot never
+// applies to another day; upcoming dates use daily title.csv instead.
+const BRC_OFFICIAL_GRADE_SNAPSHOT_20261020 = Object.freeze({
+  '桐生':'IP','江戸川':'IP','常滑':'IP','津':'IP','三国':'IP',
+  '住之江':'G3','尼崎':'IP','児島':'IP','宮島':'IP','徳山':'IP',
+  '下関':'IP','唐津':'G1'
+});
+function brcTitleCsvNormalizeGrade(input){
+  const g=String(input||'').normalize('NFKC').trim().toUpperCase().replace(/[\s　._-]/g,'');
+  if(g==='SG') return 'SG';
+  if(['G1','GI','PG1','PGI'].includes(g)) return 'G1';
+  if(['G2','GII'].includes(g)) return 'G2';
+  if(['G3','GIII'].includes(g)) return 'G3';
+  if(['IP','一般','一般戦'].includes(g)) return 'IP';
+  return '';
 }
-function brcVenueCardBadge(info, venue=''){
-  return brcVenueCategoryBadge(info,venue) || brcVenueBadgeGroup([{label:'一般',cls:'general'}]);
+function brcTitleCsvGradeBadge(g){
+  if(g==='IP') return {label:'一般',cls:'general'};
+  return brcVenueBadgeObj(g);
 }
-function brcVenueCategoryBadgeHtml(info, venue=''){
+function brcTitleCsvGradeGroup(g,venue='',date=''){
+  const extra=(date==='2026-10-20' && venue==='住之江' && g==='G3')
+    ? brcVenueBadgeObj('女子') : null; // Official Oct 20: G3 all-ladies.
+  return brcVenueBadgeGroup([brcTitleCsvGradeBadge(g),extra]);
+}
+// Parse quoted CSV safely (commas and quoted newlines in titles). No remote JS.
+function brcTitleCsvParseRows(text){
+  const out=[];let row=[],field='',quote=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(quote){
+      if(c==='"' && text[i+1]==='"'){field+='"';i++;}
+      else if(c==='"'){quote=false;}
+      else field+=c;
+    }else if(c==='"'){quote=true;}
+    else if(c===','){row.push(field);field='';}
+    else if(c==='\n'){row.push(field.replace(/\r$/,''));if(row.some(x=>x.trim()))out.push(row);row=[];field='';}
+    else field+=c;
+  }
+  if(quote) throw new Error('CSV unclosed quoted field');
+  if(field || row.length){row.push(field.replace(/\r$/,''));if(row.some(x=>x.trim()))out.push(row);}
+  return out;
+}
+function brcTitleCsvExtractGrades(csv,date){
+  const rows=brcTitleCsvParseRows(String(csv||''));
+  if(rows.length<2 || rows.length>5000) throw new Error('CSV invalid number of rows');
+  const h=rows[0].map(x=>String(x||'').replace(/^\uFEFF/,'').trim());
+  const codeIdx=h.indexOf('レースコード'),gradeIdx=h.indexOf('グレード');
+  const venueIdx=h.indexOf('レース場コード'),dayIdx=h.indexOf('レース日');
+  if(codeIdx<0 || gradeIdx<0 || venueIdx<0 || dayIdx<0) throw new Error('CSV missing grade fields');
+  const compactDate=date.replace(/-/g,'');
+  const found=new Map(), conflicted=new Set(),seenCodes=new Set();
+  for(const row of rows.slice(1)){
+    const code=String(row[codeIdx]||'').trim();
+    if(!/^\d{12}$/.test(code) || code.slice(0,8)!==compactDate) continue;
+    const rawDate=String(row[dayIdx]||'').trim().replace(/\//g,'-');
+    if(rawDate!==date && rawDate!==compactDate) continue;
+    const vCode=String(row[venueIdx]||'').trim().padStart(2,'0');
+    if(vCode!==code.slice(8,10)) continue;
+    if(seenCodes.has(code)) continue;
+    seenCodes.add(code);
+    const venue=BOAT_VENUE_CODE[vCode];
+    const grade=brcTitleCsvNormalizeGrade(row[gradeIdx]);
+    if(!venue || !grade) continue;
+    if(found.has(venue) && found.get(venue)!==grade) conflicted.add(venue);
+    else found.set(venue,grade);
+  }
+  for(const venue of conflicted) found.delete(venue);
+  if(found.size<3) throw new Error('CSV has too few verified venues');
+  return found;
+}
+// Does not require login. CSV columns are a grade *label* source, not a new source
+// for race data/probability computation. Fail closed on malformed, stale, missing CSV.
+function brcHydrateTitleCsvVenueGrades(venues,onUpdate){
+  const date=String(typeof TODAY_LABEL!=='undefined'?TODAY_LABEL:'');
+  if(date!==getJstDateLabel() || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return Promise.resolve();
+  if(BRC_TITLE_CSV_GRADE_DATE!==date){
+    BRC_TITLE_CSV_GRADE_DATE=date;
+    BRC_TITLE_CSV_GRADE_BADGES.clear();
+    BRC_TITLE_CSV_GRADE_SUCCESS_AT=0;
+    BRC_TITLE_CSV_GRADE_LAST_TRY=0;
+    BRC_TITLE_CSV_GRADE_LOADING=null;
+    if(date==='2026-10-20'){
+      for(const [venue,g] of Object.entries(BRC_OFFICIAL_GRADE_SNAPSHOT_20261020)){
+        BRC_TITLE_CSV_GRADE_BADGES.set(venue,brcTitleCsvGradeGroup(g,venue,date));
+      }
+    }
+  }
+  const now=Date.now();
+  if(BRC_TITLE_CSV_GRADE_LOADING) return BRC_TITLE_CSV_GRADE_LOADING;
+  if(BRC_TITLE_CSV_GRADE_SUCCESS_AT && now-BRC_TITLE_CSV_GRADE_SUCCESS_AT<60*60*1000) return Promise.resolve();
+  if(now-BRC_TITLE_CSV_GRADE_LAST_TRY<5*60*1000) return Promise.resolve();
+  BRC_TITLE_CSV_GRADE_LAST_TRY=now;
+  const yyyy=date.slice(0,4),mm=date.slice(5,7),dd=date.slice(8,10);
+  const base=`data/programs/title/${yyyy}/${mm}/${dd}.csv`;
+  const urls=[`https://boatracecsv.github.io/${base}`,`https://raw.githubusercontent.com/BoatraceCSV/boatracecsv.github.io/main/${base}`];
+  const task=(async()=>{
+    for(const url of urls){
+      if(String(TODAY_LABEL||'')!==date) return;
+      const ctrl=new AbortController();
+      const t=setTimeout(()=>ctrl.abort(),9000);
+      try{
+        const res=await fetch(url,{cache:'no-store',signal:ctrl.signal});
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        const text=await res.text();
+        if(text.length>3000000 || /^\s*<!doctype|^\s*<html/i.test(text)) throw new Error('unexpected CSV body');
+        const grades=brcTitleCsvExtractGrades(text,date);
+        if(String(TODAY_LABEL||'')!==date || getJstDateLabel()!==date) return;
+        let changed=false;
+        for(const [venue,g] of grades){
+          if(!venues.includes(venue)) continue;
+          const group=brcTitleCsvGradeGroup(g,venue,date);
+          brcRememberConfirmedVenueGrade(venue,group,'csv');
+          const old=BRC_TITLE_CSV_GRADE_BADGES.get(venue);
+          if(brcVenueBadgeSignature(old)!==brcVenueBadgeSignature(group)){
+            BRC_TITLE_CSV_GRADE_BADGES.set(venue,group);changed=true;
+          }
+        }
+        BRC_TITLE_CSV_GRADE_SUCCESS_AT=Date.now();
+        if(changed){
+          try{brcSyncVerifiedVenueGradeLabels();}catch(_e){}
+          if(typeof onUpdate==='function') onUpdate();
+        }
+        return;
+      }catch(err){
+        console.warn('[BRC TOP GRADE] verified CSV not available; unverified grade stays unknown',url,String(err?.message||err));
+      }finally{clearTimeout(t);}
+    }
+  })();
+  BRC_TITLE_CSV_GRADE_LOADING=task;
+  task.finally(()=>{if(BRC_TITLE_CSV_GRADE_LOADING===task)BRC_TITLE_CSV_GRADE_LOADING=null;});
+  return task;
+}
+// BRC_VENUE_GRADE_UNIFIED_V8_20261020
+// Remember date-scoped official confirmations only; never carry grades across dates.
+const BRC_GRADE_CONFIRMED_CACHE = new Map();
+let BRC_GRADE_CONFIRMED_CACHE_DATE = '';
+function brcCachedVenueGradeGroup(rec){
+  if(!rec || !Array.isArray(rec.labels)) return null;
+  const items=[];
+  for(const label of rec.labels.slice(0,4)){
+    if(label==='一般') items.push({label:'一般',cls:'general'});
+    else items.push(brcVenueBadgeObj(label));
+  }
+  return brcVenueBadgeGroup(items);
+}
+function brcLoadConfirmedVenueGradeCache(){
+  const date=String(typeof TODAY_LABEL!=='undefined'?TODAY_LABEL:'');
+  if(date===BRC_GRADE_CONFIRMED_CACHE_DATE) return;
+  BRC_GRADE_CONFIRMED_CACHE.clear();
+  BRC_GRADE_CONFIRMED_CACHE_DATE=date;
+  if(date!==getJstDateLabel()) return;
+  try{
+    const data=JSON.parse(localStorage.getItem('brc_venue_grades_verified_v8')||'null');
+    if(!data || data.date!==date || !Number.isFinite(data.storedAt) ||
+       data.storedAt>Date.now()+60000 || Date.now()-data.storedAt>86400000 ||
+       !Array.isArray(data.entries) || data.entries.length>24) return;
+    for(const rec of data.entries){
+      const venue=String(rec?.venue||'');
+      const rank=Number(rec?.rank||0);
+      const group=brcCachedVenueGradeGroup(rec);
+      if(!venue || !Object.values(BOAT_VENUE_CODE).includes(venue) ||
+         ![2,3].includes(rank) || !group) continue;
+      BRC_GRADE_CONFIRMED_CACHE.set(venue,{rank,group});
+    }
+  }catch(_e){/* storage unavailable on some iOS/PWA contexts; memory still works */}
+}
+function brcRememberConfirmedVenueGrade(venue,group,source){
+  if(String(typeof TODAY_LABEL!=='undefined'?TODAY_LABEL:'')!==getJstDateLabel()) return;
+  brcLoadConfirmedVenueGradeCache();
+  const rank=source==='worker'?3:source==='csv'?2:0;
+  if(!rank || !group || !group.badges || !group.badges.length) return;
+  const labels=group.badges.map(x=>x.label).filter(x=>['SG','G1','G2','G3','一般','女子','ルーキー','マスター'].includes(x));
+  if(!labels.length || !labels.some(x=>['SG','G1','G2','G3','一般'].includes(x))) return;
+  const old=BRC_GRADE_CONFIRMED_CACHE.get(venue);
+  if(old && old.rank>rank) return;
+  const next=brcVenueBadgeGroup(labels.map(x=>x==='一般'?{label:'一般',cls:'general'}:brcVenueBadgeObj(x)));
+  if(!next) return;
+  if(old && old.rank===rank && brcVenueBadgeSignature(old.group)===brcVenueBadgeSignature(next))return;
+  BRC_GRADE_CONFIRMED_CACHE.set(venue,{rank,group:next});
+  try{
+    localStorage.setItem('brc_venue_grades_verified_v8',JSON.stringify({
+      date:String(TODAY_LABEL||''),storedAt:Date.now(),
+      entries:Array.from(BRC_GRADE_CONFIRMED_CACHE,([v,r])=>({venue:v,rank:r.rank,labels:r.group.badges.map(x=>x.label)}))
+    }));
+  }catch(_e){/* UI continues when storage is disabled */}
+}
+function brcVenueCategoryBadge(info,venue=''){
+  // TOP / venue picker / Info all resolve the same date-scoped badge group.
+  const key=String(venue||'');
+  brcLoadConfirmedVenueGradeCache();
+  const worker=BRC_VERIFIED_VENUE_BADGES.get(key);
+  const csv=(BRC_TITLE_CSV_GRADE_DATE===String(TODAY_LABEL||'')) ? BRC_TITLE_CSV_GRADE_BADGES.get(key) : null;
+  const remembered=BRC_GRADE_CONFIRMED_CACHE.get(key)?.group||null;
+  const workerItems=worker?.badges||(worker?[worker]:[]);
+  const csvItems=csv?.badges||(csv?[csv]:[]);
+  const savedItems=remembered?.badges||(remembered?[remembered]:[]);
+  const isSpecial=b=>b&&['sg','g1','g2','g3'].includes(b.cls);
+  const workerGrade=workerItems.find(isSpecial);
+  const officialRaceGrade=brcVenueRaceInfoGradeBadge(info);
+  const csvGrade=csvItems.find(isSpecial);
+  const confirmedGrade=savedItems.find(isSpecial);
+  // A currently verified G1/G2/G3/SG is never downgraded to '一般'
+  // merely because another source could not identify a grade.
+  const general=csvItems.find(b=>b.cls==='general')||savedItems.find(b=>b.cls==='general');
+  const grade=workerGrade||officialRaceGrade||csvGrade||confirmedGrade||general;
+  const workerSeries=workerItems.filter(b=>['women','rookie','master'].includes(b.cls));
+  const csvSeries=csvItems.filter(b=>['women','rookie','master'].includes(b.cls));
+  const savedSeries=savedItems.filter(b=>['women','rookie','master'].includes(b.cls));
+  return brcVenueBadgeGroup([grade,...workerSeries,...csvSeries,...savedSeries]);
+}
+function brcVenueCardBadge(info,venue=''){
+  return brcVenueCategoryBadge(info,venue) || brcVenueBadgeGroup([{label:'確認中',cls:'unverified'}]);
+}
+function brcVenueCategoryBadgeHtml(info,venue=''){
   const group=brcVenueCardBadge(info,venue);
-  return group.badges.map(b=>`<span class="vp-badge ${b.cls}" title="${b.cls==='general'?'一般開催':'公式開催情報で確認済み'}">${b.label}</span>`).join('');
+  return group.badges.map(b=>`<span class="vp-badge ${b.cls}" title="${b.cls==='unverified'?'開催グレードの確認中':b.cls==='general'?'一般開催（開催データ照合済み）':'開催データで確認したグレード'}">${b.label}</span>`).join('');
+}
+
+function brcSyncVerifiedVenueGradeLabels(){
+  // Update grade *text only* in the visible race selector; do not change the
+  // selected venue/race, invoke select.change or touch live prediction inputs.
+  const select=document.getElementById('predictRaceDay');
+  if(select && String(TODAY_LABEL||'')===getJstDateLabel()){
+    for(const opt of Array.from(select.options||[])){
+      const venue=String(opt.value||'');
+      const info=RACE_INFO_TODAY?.[venue];
+      if(!venue||!info) continue;
+      const group=brcVenueCardBadge(info,venue);
+      opt.textContent=`${venue}（${group.label} / ${resolveRaceDayLabel(info)}）`;
+    }
+  }
+  // Picker cards and TOP 24 cards show exactly the same group immediately,
+  // including updates arriving after the initial render.
+  try{
+    for(const btn of document.querySelectorAll('#venueTabRow .venue-pill[data-venue]')){
+      const venue=String(btn.dataset.venue||'');
+      const info=RACE_INFO_TODAY?.[venue];
+      const main=btn.querySelector('.vp-main');
+      if(info && main){
+        const html=brcVenueCategoryBadgeHtml(info,venue);
+        if(main.innerHTML!==html) main.innerHTML=html;
+      }
+    }
+    for(const btn of document.querySelectorAll('#brcAdminLoginTopPreviewGrid .brc-admin-top-venue[data-venue]')){
+      const venue=String(btn.dataset.venue||'');
+      const info=RACE_INFO_TODAY?.[venue];
+      const head=btn.querySelector('.brc-admin-top-venue-head');
+      if(!info || !head) continue;
+      const html=brcVenueCategoryBadgeHtml(info,venue);
+      const current=Array.from(head.querySelectorAll('.vp-badge')).map(n=>n.outerHTML).join('');
+      if(current!==html){
+        head.querySelectorAll('.vp-badge').forEach(n=>n.remove());
+        head.insertAdjacentHTML('beforeend',html);
+      }
+    }
+  }catch(_e){}
+  try{window.brcRenderAdminDeme?.();}catch(_e){}
 }
 
 function brcVenueBadgeBuildSpec(venue){
@@ -21416,9 +21672,9 @@ async function brcHydrateVerifiedVenueBadges(venues,onUpdate){
 
   const specs=venues.map(brcVenueBadgeBuildSpec).filter(Boolean);
   const specVenueSet=new Set(specs.map(s=>String(s.venue||'')));
-  for(const v of venues){
-    if(!specVenueSet.has(String(v||''))) BRC_VERIFIED_VENUE_BADGES.delete(String(v||''));
-  }
+  // No race specification yet may simply mean official racecards are still loading;
+  // never erase an already confirmed grade for the same day for this reason.
+  // The normal new-date reset above is retained.
   if(!specs.length) return;
 
   const requestDate=date;
@@ -21450,10 +21706,9 @@ async function brcHydrateVerifiedVenueBadges(venues,onUpdate){
       const old=BRC_VERIFIED_VENUE_BADGES.get(spec.venue)||null;
       if(badge){
         BRC_VERIFIED_VENUE_BADGES.set(spec.venue,badge);
+        brcRememberConfirmedVenueGrade(spec.venue,badge,'worker');
         if(brcVenueBadgeSignature(old)!==brcVenueBadgeSignature(badge)) changed=true;
-      }else{
-        if(old){ BRC_VERIFIED_VENUE_BADGES.delete(spec.venue); changed=true; }
-      }
+      } // Ambiguous/unavailable response is not grounds to erase same-day confirmation.
     }
 
     // /predict-batch が gradeContext を返さない環境だけ、各会場1レースを通常 /predict で確認。
@@ -21465,13 +21720,15 @@ async function brcHydrateVerifiedVenueBadges(venues,onUpdate){
       const old=BRC_VERIFIED_VENUE_BADGES.get(spec.venue)||null;
       if(badge){
         BRC_VERIFIED_VENUE_BADGES.set(spec.venue,badge);
+        brcRememberConfirmedVenueGrade(spec.venue,badge,'worker');
         if(brcVenueBadgeSignature(old)!==brcVenueBadgeSignature(badge)) changed=true;
-      }else if(old){
-        BRC_VERIFIED_VENUE_BADGES.delete(spec.venue); changed=true;
-      }
+      } // A network failure does not invalidate a confirmed grade.
     }
 
-    if(changed && BRC_VERIFIED_VENUE_BADGE_DATE===requestDate && BRC_VERIFIED_VENUE_BADGE_SEQ===requestSeq && typeof onUpdate==='function') onUpdate();
+    if(changed && BRC_VERIFIED_VENUE_BADGE_DATE===requestDate && BRC_VERIFIED_VENUE_BADGE_SEQ===requestSeq){
+      try{brcSyncVerifiedVenueGradeLabels();}catch(_e){}
+      if(typeof onUpdate==='function') onUpdate();
+    }
   })();
 
   BRC_VERIFIED_VENUE_BADGE_PROMISE=requestPromise;
@@ -36378,13 +36635,16 @@ Worker / 買い目 / AI内部値は変更しない。個人込み最終1着率�
     // 8/3埋込サンプルや前日データは、ロード待機中でも今日の開催場として表示しない。
     const ready=String(typeof TODAY_LABEL!=='undefined'?TODAY_LABEL:'')===getJstDateLabel()
       && !!(typeof RACE_INFO_TODAY!=='undefined' && RACE_INFO_TODAY && Object.keys(RACE_INFO_TODAY).length);
+    if(ready && typeof brcHydrateTitleCsvVenueGrades==='function'){
+      void brcHydrateTitleCsvVenueGrades(VENUES,()=>{lastSignature='';void render(true);});
+    }
     const recs=VENUES.map(v=>[v,ready?nextRace(v):{state:'off'}]);
     const open=recs.filter(([,r])=>r.state==='open').length;
     const held=recs.filter(([,r])=>r.state!=='off').length;
     const minute=Math.floor(Date.now()/60000);
     // live-scheduleで時刻だけが後から埋まった場合も、同じ分内でTOPを再描画。
     const clockSig=recs.map(([v,r])=>`${v}:${r.state}:${r.raceNo||''}:${r.timeStr||''}`).join('|');
-    const sig=`${String(typeof TODAY_LABEL!=='undefined'?TODAY_LABEL:'')}:${ready?'ready':'waiting'}:${minute}:${open}:${held}:${clockSig}:${typeof BRC_VERIFIED_VENUE_BADGES!=='undefined'&&BRC_VERIFIED_VENUE_BADGES?BRC_VERIFIED_VENUE_BADGES.size:0}`;
+    const sig=`${String(typeof TODAY_LABEL!=='undefined'?TODAY_LABEL:'')}:${ready?'ready':'waiting'}:${minute}:${open}:${held}:${clockSig}:${recs.map(([v,r])=>v+':'+String(r.info?.grade||'')).join(';')}:${typeof BRC_VERIFIED_VENUE_BADGES!=='undefined'&&BRC_VERIFIED_VENUE_BADGES?Array.from(BRC_VERIFIED_VENUE_BADGES.entries()).map(([v,b])=>v+':'+brcVenueBadgeSignature(b)).join(';'):''}:${Array.from(BRC_TITLE_CSV_GRADE_BADGES.entries()).map(([v,b])=>v+':'+brcVenueBadgeSignature(b)).join(';')}`;
     if(!force && sig===lastSignature) return;
     busy=true;
     try{
@@ -37289,7 +37549,12 @@ function currentRaceMeta(venueName,raceNo){
  let deadline=info?.deadlines?.[String(raceNo)]||'';
  if(!deadline){const m=String(opt).match(/締切\s*([0-9]{1,2}:[0-9]{2})/);if(m)deadline=m[1];}
  const dayLabel=info&&typeof resolveRaceDayLabel==='function'?resolveRaceDayLabel(info):'';
- return {dayLabel:String(dayLabel||''),deadline:String(deadline||''),grade:String(info?.grade||'')};
+ let displayGrade='確認中';
+ try{
+   const badges=typeof brcVenueCardBadge==='function' ? brcVenueCardBadge(info,venueName) : null;
+   displayGrade=String(badges?.label||'確認中');
+ }catch(_e){}
+ return {dayLabel:String(dayLabel||''),deadline:String(deadline||''),grade:displayGrade};
 }
 function fmt(x,digits=1){return x!==null&&x!==undefined&&x!==''&&Number.isFinite(Number(x))?Number(x).toLocaleString('ja-JP',{minimumFractionDigits:digits,maximumFractionDigits:digits}):'—';}
 function fmtInt(x){return x!==null&&x!==undefined&&x!==''&&Number.isFinite(Number(x))?Number(x).toLocaleString('ja-JP',{maximumFractionDigits:0}):'—';}
