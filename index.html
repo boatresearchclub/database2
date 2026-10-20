@@ -1,3 +1,4 @@
+<!-- BRC_ADMIN_TIMEX_HEAD_ORIGINAL_20261020: Restore BRC TimeX visible caption without changing v2/v3 switch, diagnostics, numbers or authorization. -->
 <!-- BRC_ADMIN_SEARCH_PINS_COMPACT_R1_20261020: list layout display only; saved values, member rights, calculations and navigation unchanged. -->
 <!-- BRC_ADMIN_SEARCH_PINS_V1_20261020: local admin-only race snapshots; no prediction/permission changes; scenario beta label removed. -->
 <!-- BRC_VENUE_GRADE_UNIFIED_V8_20261020: one badge resolver TOP/venue picker/Info; explicitly verified official racecard grade outranks general fallback; same-day cached confirmed badge; transient Worker failures do not erase; presentation-only. -->
@@ -6915,7 +6916,8 @@ body.brc-admin-home-active .brc-admin-top-race .dp-signal:not(.in){
 <!-- BRC_GUEST_LANDING_MEMBER_HOME_20261020: guest opens login/free-2R; valid member opens 24-venue TOP; auth/rights untouched -->
 <style id="brc-guest-landing-member-home-20261020">
 /* 2枚目のログイン画面を初期表示。認証後には既存TOPロゴを再表示。 */
-body.brc-landing-guest .brc-brand-header{display:none !important;}
+/* Guestにもログイン後と同じBRCブランド画像を表示。表示制御のみ変更。 */
+body.brc-landing-guest .brc-brand-header{display:block !important;}
 body.brc-landing-guest .wrap{padding-top:12px;}
 body.brc-landing-guest .page-tabs{margin-top:0;}
 </style>
@@ -19377,9 +19379,10 @@ function brcV3AdminLiveMatches(r,date,code,raceNo){
 function brcV3AdminSetTableRateLabel(text,mode=''){
   const label=document.querySelector('#predictTableWrap .predict-timex-common');
   if(!label)return;
-  label.textContent=text;
-  label.classList.toggle('brc-v3-v2-reference',mode==='legacy');
-  label.classList.toggle('brc-v3-verified',mode==='v3');
+  // ユーザー表示は従来のBRCタイムXに統一。
+  // 実際のv2/v3適用状態・照合・切替・診断情報は変更しない。
+  label.textContent='（BRCタイムX）';
+  label.classList.remove('brc-v3-v2-reference','brc-v3-verified');
 }
 function brcV3AdminRestoreExistingTimeX(force=false){
   if(!BRC_ADMIN_ACTIVE||!BRC_MEMBER_ACTIVE||__brcV3AdminDisplay)return false;
