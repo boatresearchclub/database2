@@ -1,3 +1,4 @@
+<!-- BRC_VENUE_GRADE_MONTHLY_FALLBACK_V9_20261021: Early-morning month schedule official grade for TOP/picker/Info; cache date-scoped; special grades protected; prediction/auth untouched. -->
 <!-- BRC_PIN_TODAY_ONLY_20261021: Only today's saved pins appear/count in the pinned tab; previous-day records are retained in storage, hidden from current list. JST midnight/focus/visibility auto-sync. Existing scope/sort/auth/predictions unchanged. -->
 <!-- BRC_PUBLIC_RACE_SEARCH_ACCESS_20261020: 全利用者へレース検索3タブと個別ピン機能を開放。管理者ピンの保存キーは維持。Worker認証・予測数式は変更なし。 -->
 <!-- BRC_DEADLINE_TIMEX_FINAL_ARROW_SYNC_20261020: 直前サインは出走データ同一の個人補正込み最終1着率差ptと0.1pt丸め済み三本矢印で判定。v2/v3実数値、予測ロジック、スリット判定は変更しない。 -->
@@ -21626,6 +21627,98 @@ function brcHydrateTitleCsvVenueGrades(venues,onUpdate){
   task.finally(()=>{if(BRC_TITLE_CSV_GRADE_LOADING===task)BRC_TITLE_CSV_GRADE_LOADING=null;});
   return task;
 }
+// BRC_VENUE_GRADE_MONTHLY_FALLBACK_V9_20261021
+// The per-race title CSV may be unpublished before morning start. Use the independently
+// published monthly programme schedule (explicit grade and date range) for display ONLY.
+// No guesses from names; no changes to prediction, TimeX, auth, race grade inputs.
+const BRC_MONTHLY_GRADE_BADGES = new Map();
+let BRC_MONTHLY_GRADE_DATE = '';
+let BRC_MONTHLY_GRADE_LOADING = null;
+let BRC_MONTHLY_GRADE_LAST_TRY = 0;
+let BRC_MONTHLY_GRADE_SUCCESS_AT = 0;
+function brcMonthlyExtractVenueGrades(csv, date){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('monthly grade date invalid');
+  const rows=brcTitleCsvParseRows(String(csv||''));
+  if(rows.length<2 || rows.length>2000) throw new Error('monthly CSV row count invalid');
+  const header=rows[0].map(x=>String(x||'').replace(/^\uFEFF/,'').trim());
+  const vIdx=header.indexOf('場コード');
+  const startIdx=header.indexOf('節開始日');
+  const endIdx=header.indexOf('節終了日');
+  const gradeIdx=header.indexOf('グレード');
+  if([vIdx,startIdx,endIdx,gradeIdx].some(x=>x<0)) throw new Error('monthly CSV fields missing');
+  const grades=new Map(),conflicted=new Set();
+  for(const row of rows.slice(1)){
+    const from=String(row[startIdx]||'').trim();
+    const to=String(row[endIdx]||'').trim();
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to) ||
+       from>date || to<date || from>to) continue;
+    const code=String(row[vIdx]||'').trim().padStart(2,'0');
+    const venue=BOAT_VENUE_CODE[code];
+    const grade=brcTitleCsvNormalizeGrade(row[gradeIdx]);
+    if(!venue || !grade) continue;
+    // Overlapping (possibly amended) meetings must not be silently assigned.
+    if(grades.has(venue)) conflicted.add(venue);
+    else grades.set(venue,grade);
+  }
+  for(const venue of conflicted) grades.delete(venue);
+  if(grades.size<1) throw new Error('monthly CSV contains no matching venues');
+  return grades;
+}
+function brcHydrateMonthlyVenueGrades(venues,onUpdate){
+  const date=String(typeof TODAY_LABEL!=='undefined'?TODAY_LABEL:'');
+  if(date!==getJstDateLabel() || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return Promise.resolve();
+  if(BRC_MONTHLY_GRADE_DATE!==date){
+    BRC_MONTHLY_GRADE_BADGES.clear();
+    BRC_MONTHLY_GRADE_DATE=date;
+    BRC_MONTHLY_GRADE_LAST_TRY=0;
+    BRC_MONTHLY_GRADE_SUCCESS_AT=0;
+    BRC_MONTHLY_GRADE_LOADING=null;
+  }
+  const now=Date.now();
+  if(BRC_MONTHLY_GRADE_LOADING) return BRC_MONTHLY_GRADE_LOADING;
+  if(BRC_MONTHLY_GRADE_SUCCESS_AT && now-BRC_MONTHLY_GRADE_SUCCESS_AT<3600000) return Promise.resolve();
+  if(now-BRC_MONTHLY_GRADE_LAST_TRY<300000) return Promise.resolve();
+  BRC_MONTHLY_GRADE_LAST_TRY=now;
+  const yy=date.slice(0,4),mm=date.slice(5,7);
+  const base=`data/programs/monthly_schedule/${yy}/${mm}.csv`;
+  const urls=[`https://boatracecsv.github.io/${base}`,`https://raw.githubusercontent.com/BoatraceCSV/boatracecsv.github.io/main/${base}`];
+  const task=(async()=>{
+    for(const url of urls){
+      if(String(TODAY_LABEL||'')!==date || getJstDateLabel()!==date) return;
+      const ctrl=new AbortController();
+      const timer=setTimeout(()=>ctrl.abort(),9000);
+      try{
+        const response=await fetch(url,{cache:'no-store',signal:ctrl.signal});
+        if(!response.ok) throw new Error('monthly CSV HTTP '+response.status);
+        const body=await response.text();
+        if(body.length>2000000 || /^\s*<!doctype|^\s*<html/i.test(body)) throw new Error('monthly CSV invalid response');
+        const grades=brcMonthlyExtractVenueGrades(body,date);
+        if(String(TODAY_LABEL||'')!==date || getJstDateLabel()!==date) return;
+        let changed=false;
+        for(const [venue,grade] of grades){
+          if(!venues.includes(venue) || !RACE_INFO_TODAY?.[venue]) continue;
+          const group=brcTitleCsvGradeGroup(grade,venue,date);
+          const prev=BRC_MONTHLY_GRADE_BADGES.get(venue);
+          if(brcVenueBadgeSignature(prev)!==brcVenueBadgeSignature(group)){
+            BRC_MONTHLY_GRADE_BADGES.set(venue,group);changed=true;
+          }
+          brcRememberConfirmedVenueGrade(venue,group,'monthly');
+        }
+        BRC_MONTHLY_GRADE_SUCCESS_AT=Date.now();
+        if(changed){
+          try{brcSyncVerifiedVenueGradeLabels();}catch(_e){}
+          if(typeof onUpdate==='function') onUpdate();
+        }
+        return;
+      }catch(err){
+        console.warn('[BRC TOP GRADE] monthly schedule unavailable',String(err?.message||err));
+      }finally{clearTimeout(timer);}
+    }
+  })();
+  BRC_MONTHLY_GRADE_LOADING=task;
+  task.finally(()=>{if(BRC_MONTHLY_GRADE_LOADING===task) BRC_MONTHLY_GRADE_LOADING=null;});
+  return task;
+}
 // BRC_VENUE_GRADE_UNIFIED_V8_20261020
 // Remember date-scoped official confirmations only; never carry grades across dates.
 const BRC_GRADE_CONFIRMED_CACHE = new Map();
@@ -21655,7 +21748,7 @@ function brcLoadConfirmedVenueGradeCache(){
       const rank=Number(rec?.rank||0);
       const group=brcCachedVenueGradeGroup(rec);
       if(!venue || !Object.values(BOAT_VENUE_CODE).includes(venue) ||
-         ![2,3].includes(rank) || !group) continue;
+         ![1,2,3].includes(rank) || !group) continue;
       BRC_GRADE_CONFIRMED_CACHE.set(venue,{rank,group});
     }
   }catch(_e){/* storage unavailable on some iOS/PWA contexts; memory still works */}
@@ -21663,7 +21756,7 @@ function brcLoadConfirmedVenueGradeCache(){
 function brcRememberConfirmedVenueGrade(venue,group,source){
   if(String(typeof TODAY_LABEL!=='undefined'?TODAY_LABEL:'')!==getJstDateLabel()) return;
   brcLoadConfirmedVenueGradeCache();
-  const rank=source==='worker'?3:source==='csv'?2:0;
+  const rank=source==='worker'?3:source==='csv'?2:source==='monthly'?1:0;
   if(!rank || !group || !group.badges || !group.badges.length) return;
   const labels=group.badges.map(x=>x.label).filter(x=>['SG','G1','G2','G3','一般','女子','ルーキー','マスター'].includes(x));
   if(!labels.length || !labels.some(x=>['SG','G1','G2','G3','一般'].includes(x))) return;
@@ -21686,19 +21779,22 @@ function brcVenueCategoryBadge(info,venue=''){
   brcLoadConfirmedVenueGradeCache();
   const worker=BRC_VERIFIED_VENUE_BADGES.get(key);
   const csv=(BRC_TITLE_CSV_GRADE_DATE===String(TODAY_LABEL||'')) ? BRC_TITLE_CSV_GRADE_BADGES.get(key) : null;
+  const monthly=(BRC_MONTHLY_GRADE_DATE===String(TODAY_LABEL||'')) ? BRC_MONTHLY_GRADE_BADGES.get(key) : null;
   const remembered=BRC_GRADE_CONFIRMED_CACHE.get(key)?.group||null;
   const workerItems=worker?.badges||(worker?[worker]:[]);
   const csvItems=csv?.badges||(csv?[csv]:[]);
+  const monthItems=monthly?.badges||(monthly?[monthly]:[]);
   const savedItems=remembered?.badges||(remembered?[remembered]:[]);
   const isSpecial=b=>b&&['sg','g1','g2','g3'].includes(b.cls);
   const workerGrade=workerItems.find(isSpecial);
   const officialRaceGrade=brcVenueRaceInfoGradeBadge(info);
   const csvGrade=csvItems.find(isSpecial);
+  const monthGrade=monthItems.find(isSpecial);
   const confirmedGrade=savedItems.find(isSpecial);
-  // A currently verified G1/G2/G3/SG is never downgraded to '一般'
-  // merely because another source could not identify a grade.
-  const general=csvItems.find(b=>b.cls==='general')||savedItems.find(b=>b.cls==='general');
-  const grade=workerGrade||officialRaceGrade||csvGrade||confirmedGrade||general;
+  // Never downgrade a verified special grade to '一般' due to early-morning
+  // availability or asynchronous ordering of the per-race and monthly sources.
+  const general=csvItems.find(b=>b.cls==='general')||monthItems.find(b=>b.cls==='general')||savedItems.find(b=>b.cls==='general');
+  const grade=workerGrade||officialRaceGrade||csvGrade||monthGrade||confirmedGrade||general;
   const workerSeries=workerItems.filter(b=>['women','rookie','master'].includes(b.cls));
   const csvSeries=csvItems.filter(b=>['women','rookie','master'].includes(b.cls));
   const savedSeries=savedItems.filter(b=>['women','rookie','master'].includes(b.cls));
@@ -37007,13 +37103,16 @@ Worker / 買い目 / AI内部値は変更しない。個人込み最終1着率�
     if(ready && typeof brcHydrateTitleCsvVenueGrades==='function'){
       void brcHydrateTitleCsvVenueGrades(VENUES,()=>{lastSignature='';void render(true);});
     }
+    if(ready && typeof brcHydrateMonthlyVenueGrades==='function'){
+      void brcHydrateMonthlyVenueGrades(VENUES,()=>{lastSignature='';void render(true);});
+    }
     const recs=VENUES.map(v=>[v,ready?nextRace(v):{state:'off'}]);
     const open=recs.filter(([,r])=>r.state==='open').length;
     const held=recs.filter(([,r])=>r.state!=='off').length;
     const minute=Math.floor(Date.now()/60000);
     // live-scheduleで時刻だけが後から埋まった場合も、同じ分内でTOPを再描画。
     const clockSig=recs.map(([v,r])=>`${v}:${r.state}:${r.raceNo||''}:${r.timeStr||''}`).join('|');
-    const sig=`${String(typeof TODAY_LABEL!=='undefined'?TODAY_LABEL:'')}:${ready?'ready':'waiting'}:${minute}:${open}:${held}:${clockSig}:${recs.map(([v,r])=>v+':'+String(r.info?.grade||'')).join(';')}:${typeof BRC_VERIFIED_VENUE_BADGES!=='undefined'&&BRC_VERIFIED_VENUE_BADGES?Array.from(BRC_VERIFIED_VENUE_BADGES.entries()).map(([v,b])=>v+':'+brcVenueBadgeSignature(b)).join(';'):''}:${Array.from(BRC_TITLE_CSV_GRADE_BADGES.entries()).map(([v,b])=>v+':'+brcVenueBadgeSignature(b)).join(';')}`;
+    const sig=`${String(typeof TODAY_LABEL!=='undefined'?TODAY_LABEL:'')}:${ready?'ready':'waiting'}:${minute}:${open}:${held}:${clockSig}:${recs.map(([v,r])=>v+':'+String(r.info?.grade||'')).join(';')}:${typeof BRC_VERIFIED_VENUE_BADGES!=='undefined'&&BRC_VERIFIED_VENUE_BADGES?Array.from(BRC_VERIFIED_VENUE_BADGES.entries()).map(([v,b])=>v+':'+brcVenueBadgeSignature(b)).join(';'):''}:${Array.from(BRC_TITLE_CSV_GRADE_BADGES.entries()).map(([v,b])=>v+':'+brcVenueBadgeSignature(b)).join(';')}:${Array.from(BRC_MONTHLY_GRADE_BADGES.entries()).map(([v,b])=>v+':'+brcVenueBadgeSignature(b)).join(';')}`;
     if(!force && sig===lastSignature) return;
     busy=true;
     try{
