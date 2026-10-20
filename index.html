@@ -1,3 +1,4 @@
+<!-- BRC_PIN_TODAY_ONLY_20261021: Only today's saved pins appear/count in the pinned tab; previous-day records are retained in storage, hidden from current list. JST midnight/focus/visibility auto-sync. Existing scope/sort/auth/predictions unchanged. -->
 <!-- BRC_PUBLIC_RACE_SEARCH_ACCESS_20261020: 全利用者へレース検索3タブと個別ピン機能を開放。管理者ピンの保存キーは維持。Worker認証・予測数式は変更なし。 -->
 <!-- BRC_DEADLINE_TIMEX_FINAL_ARROW_SYNC_20261020: 直前サインは出走データ同一の個人補正込み最終1着率差ptと0.1pt丸め済み三本矢印で判定。v2/v3実数値、予測ロジック、スリット判定は変更しない。 -->
 <!-- BRC_PIN_SORT_20261020: admin-only pin list can switch venue-code order / deadline-ascending order; storage and pin records unchanged. -->
@@ -24319,6 +24320,12 @@ function brcPinSortedList(list){
 function brcPinIsAdmin(){return typeof BRC_ADMIN_ACTIVE!=='undefined' && BRC_ADMIN_ACTIVE===true;}
 function brcPinEnabled(){return true;}
 function brcPinToday(){return getJstDateLabel();}
+// ピン留めは当日使うレースの一覧。過去分は端末に保持したまま当日ビューから除外する。
+// 表示する日付は、ページで過去日を選んでも実際の日本時間の「今日」を基準にする。
+function brcPinTodayList(){
+  const today=brcPinToday();
+  return brcPinRead().filter(e=>e.date===today);
+}
 function brcPinEsc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 function brcPinClean(v,max=60){return String(v??'').slice(0,max);}
 function brcPinId(e){return [e.date,e.source,e.venue,Number(e.raceNo),Number(e.course||0)].join('|');}
@@ -24353,7 +24360,7 @@ function brcPinWrite(rows){
   catch(err){console.warn('BRC pin storage failed',err);return false;}
 }
 function brcPinButtonHtml(entry){
-  if(!brcPinEnabled())return '';
+  if(!brcPinEnabled()||String(TODAY_LABEL||'')!==brcPinToday())return '';
   const e=brcPinNormalize({...entry,date:brcPinToday()});
   if(!e)return '';
   const id=brcPinId(e),saved=brcPinRead().some(x=>brcPinId(x)===id);
@@ -24374,6 +24381,10 @@ function brcPinRefreshButtons(){
 }
 function brcPinToggleFromButton(btn){
   if(!brcPinEnabled())return;
+  if(String(TODAY_LABEL||'')!==brcPinToday()){
+    brcPinSetMessage('表示日が前日です。当日の番組表を読み込んでください。');
+    return;
+  }
   let raw=null;
   try{raw=JSON.parse(decodeURIComponent(btn.dataset.brcPinEntry||''));}catch(_e){return;}
   const e=brcPinNormalize({...raw,date:brcPinToday(),savedAt:Date.now()});
@@ -24397,7 +24408,7 @@ function brcPinRender(){
   if(!brcPinEnabled()){
     if(box)box.textContent='';if(count)count.textContent='0';return;
   }
-  const list=brcPinSortedList(brcPinRead());if(count)count.textContent=String(list.length);
+  const list=brcPinSortedList(brcPinTodayList());if(count)count.textContent=String(list.length);
   const mode=brcPinCurrentSort();
   document.querySelectorAll('[data-brc-pin-sort]').forEach(btn=>{
     const active=btn.dataset.brcPinSort===mode;
@@ -24405,24 +24416,21 @@ function brcPinRender(){
     btn.setAttribute('aria-pressed',String(active));
   });
   if(!box)return;
-  if(!list.length){box.innerHTML='<div class="brc-pinned-empty">まだピン留めしたレースはありません。<br>本日厳選・展開検索の☆から保存できます。</div>';return;}
-  const today=brcPinToday();
+  if(!list.length){box.innerHTML='<div class="brc-pinned-empty">今日のピン留めはありません。<br>本日厳選・展開検索の☆から保存できます。</div>';return;}
   box.innerHTML='<div class="brc-pinned-list">'+list.map(e=>{
-    const old=e.date!==today;
     // 保存値には触れず、表示時のみ四捨五入（例: 22.6→23%, 29.4→29%）
     const rate=e.rate===null?'':` BRC1着率${brcPinEsc(Math.round(e.rate))}%`;
     const note=e.source==='scenario'?`${e.course}号艇${rate}`
       :(e.source==='picks-reject'?'イン否定':'イン有力');
-    return `<div class="brc-pinned-card${old?' is-old':''}">
+    return `<div class="brc-pinned-card">
       <div class="brc-pinned-data">
         <div class="brc-pinned-top"><span class="brc-pinned-name">${brcPinEsc(e.venue)} ${e.raceNo}R</span>
           <span class="brc-pinned-deadline">締切${brcPinEsc(e.deadline||'―')}</span>
-          ${old?`<span class="brc-pinned-date">${brcPinEsc(e.date)}</span>`:''}
         </div>
         <div class="brc-pinned-summary">${brcPinEsc(note)}</div>
       </div>
       <div class="brc-pinned-actions">
-        <button class="brc-pinned-action" type="button" aria-label="${brcPinEsc(e.venue)}${e.raceNo}Rの出走表を開く" data-brc-pin-open="${brcPinEsc(brcPinId(e))}" ${old?'disabled title="過去の日付のレースは出走表に移動できません"':''}>開く</button>
+        <button class="brc-pinned-action" type="button" aria-label="${brcPinEsc(e.venue)}${e.raceNo}Rの出走表を開く" data-brc-pin-open="${brcPinEsc(brcPinId(e))}">開く</button>
         <button class="brc-pinned-action remove" type="button" aria-label="${brcPinEsc(e.venue)}${e.raceNo}Rをピン留め解除" title="解除" data-brc-pin-remove="${brcPinEsc(brcPinId(e))}">×</button>
       </div>
     </div>`;
@@ -24438,6 +24446,20 @@ function brcPinRender(){
     if(row && row.date===brcPinToday())openTodayPickRace(row.venue,row.raceNo);
   }));
 }
+// iPhoneのPWAを日付跨ぎで開いたままにしても、翌日分に自動切替する。
+// 通常時は60秒間隔で日付だけ確認し、復帰・再フォーカス時にも即座に同期する。
+let BRC_PIN_RENDERED_JST_DATE=brcPinToday();
+function brcPinSyncOnJstDateChange(){
+  const today=brcPinToday();
+  if(today===BRC_PIN_RENDERED_JST_DATE)return;
+  BRC_PIN_RENDERED_JST_DATE=today;
+  brcPinRender();
+  brcPinRefreshButtons();
+  brcPinSetMessage('');
+}
+setInterval(brcPinSyncOnJstDateChange,60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)brcPinSyncOnJstDateChange();});
+window.addEventListener('focus',brcPinSyncOnJstDateChange);
 let SCENARIO_SEARCH_SORT='deadline';
 let SCENARIO_SEARCH_HAS_RUN=false;
 
