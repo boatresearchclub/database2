@@ -1,3 +1,4 @@
+<!-- BRC_PIN_SORT_20261020: admin-only pin list can switch venue-code order / deadline-ascending order; storage and pin records unchanged. -->
 <!-- BRC_ADMIN_TIMEX_HEAD_ORIGINAL_20261020: Restore BRC TimeX visible caption without changing v2/v3 switch, diagnostics, numbers or authorization. -->
 <!-- BRC_ADMIN_SEARCH_PINS_COMPACT_R1_20261020: list layout display only; saved values, member rights, calculations and navigation unchanged. -->
 <!-- BRC_ADMIN_SEARCH_PINS_V1_20261020: local admin-only race snapshots; no prediction/permission changes; scenario beta label removed. -->
@@ -6913,6 +6914,16 @@ body.brc-admin-home-active .brc-admin-top-race .dp-signal:not(.in){
   #brcPinnedList .brc-pinned-action.remove{font-size:14px;min-width:28px;padding:5px;}
 }
 </style>
+<style id="brc-admin-pin-sort-20261020">
+/* ピン留め画面だけの表示順操作。保存済みのレースと認証・予測処理は変更しない。 */
+.brc-pinned-head{flex-wrap:wrap;}
+.brc-pinned-sort{display:inline-flex;align-items:center;gap:3px;margin-left:auto;padding:3px;border:1px solid #d6dfeb;border-radius:9px;background:#eff3f8;}
+.brc-pinned-sort-btn{appearance:none;border:0;background:transparent;color:#526278;font-family:inherit;font-size:12px;font-weight:800;line-height:1.2;padding:7px 9px;border-radius:7px;cursor:pointer;white-space:nowrap;}
+.brc-pinned-sort-btn.active{background:#fff;color:#0057db;box-shadow:0 1px 4px rgba(10,31,51,.09);}
+.brc-pinned-sort-btn:focus-visible{outline:2px solid #0057db;outline-offset:2px;}
+#brcPinStatus:not(:empty){flex:1 0 100%;text-align:right;}
+@media(max-width:420px){.brc-pinned-sort-btn{font-size:11px;padding:6px 8px;}}
+</style>
 <!-- BRC_GUEST_LANDING_MEMBER_HOME_20261020: guest opens login/free-2R; valid member opens 24-venue TOP; auth/rights untouched -->
 <style id="brc-guest-landing-member-home-20261020">
 /* 2枚目のログイン画面を初期表示。認証後には既存TOPロゴを再表示。 */
@@ -7809,7 +7820,7 @@ body.brc-landing-guest .page-tabs{margin-top:0;}
       <div class="race-search-tabs" role="tablist" aria-label="レース検索の切り替え">
         <button type="button" class="race-search-tab active" data-race-search-mode="picks">本日厳選</button>
         <button type="button" class="race-search-tab" data-race-search-mode="scenario">展開検索</button>
-        <button type="button" class="race-search-tab brc-pin-admin-only" data-race-search-mode="pinned" hidden>★ ピン留め <span id="brcPinCount" class="brc-pin-count">0</span></button>
+        <button type="button" class="race-search-tab brc-pin-admin-only" data-race-search-mode="pinned" hidden>📌ピン留め <span id="brcPinCount" class="brc-pin-count">0</span></button>
       </div>
 
       <div id="raceSearchPanelPicks" class="race-search-panel active">
@@ -7898,7 +7909,12 @@ body.brc-landing-guest .page-tabs{margin-top:0;}
       </div>
       <div id="raceSearchPanelPinned" class="race-search-panel brc-pin-admin-only" hidden aria-label="保存したレース">
         <div class="brc-pinned-head">
-          <strong>★ ピン留め</strong><span id="brcPinStatus" role="status" aria-live="polite"></span>
+          <strong>📌ピン留め</strong>
+          <div class="brc-pinned-sort" role="group" aria-label="ピン留め表示順">
+            <button type="button" class="brc-pinned-sort-btn active" data-brc-pin-sort="deadline" aria-pressed="true">締切順</button>
+            <button type="button" class="brc-pinned-sort-btn" data-brc-pin-sort="venue" aria-pressed="false">会場順</button>
+          </div>
+          <span id="brcPinStatus" role="status" aria-live="polite"></span>
         </div>
         <div id="brcPinnedList"></div>
         <p class="brc-pin-footnote">この端末のブラウザに保存します。別端末とは同期されません。過去の日付のレースは記録のみ確認できます。</p>
@@ -24198,6 +24214,43 @@ let RACE_SEARCH_MODE='picks';
 // BRC_ADMIN_SEARCH_PINS_V1_20261020: 本日厳選と展開検索の「レース単位」の管理者専用端末保存。
 // 認証は既存の BRC_ADMIN_ACTIVE のみを参照。Worker/サーバー側の権限、出走データ、予測数式は変更しない。
 const BRC_PIN_STORAGE_KEY='brc_admin_race_pins_v1';
+const BRC_PIN_SORT_STORAGE_KEY='brc_admin_race_pin_sort_v1';
+let BRC_PIN_SORT_MODE=null;
+function brcPinCurrentSort(){
+  if(BRC_PIN_SORT_MODE==='deadline'||BRC_PIN_SORT_MODE==='venue')return BRC_PIN_SORT_MODE;
+  if(!brcPinIsAdmin())return 'deadline';
+  try{BRC_PIN_SORT_MODE=localStorage.getItem(BRC_PIN_SORT_STORAGE_KEY)==='venue'?'venue':'deadline';}
+  catch(_e){BRC_PIN_SORT_MODE='deadline';}
+  return BRC_PIN_SORT_MODE;
+}
+function brcPinSetSort(mode){
+  if(!brcPinIsAdmin()||!['deadline','venue'].includes(mode))return;
+  BRC_PIN_SORT_MODE=mode;
+  try{localStorage.setItem(BRC_PIN_SORT_STORAGE_KEY,mode);}catch(_e){}
+  brcPinRender();
+}
+// 会場順はTOPと同じ24場の公式会場コード順。締切順は早い時刻から表示。
+function brcPinSortedList(list){
+  const mode=brcPinCurrentSort();
+  const venueCode=e=>{const code=VENUE_ORDER.indexOf(e.venue);return code===-1?99:code;};
+  const deadlineMinutes=e=>{
+    const matched=/^([01]?\d|2[0-3]):([0-5]\d)$/.exec(String(e.deadline||'').trim());
+    return matched?Number(matched[1])*60+Number(matched[2]):Infinity;
+  };
+  return [...list].sort((a,b)=>{
+    // 今日・直近の日付を先にし、過去の日付の記録は最後にまとめる。
+    if(a.date!==b.date)return b.date.localeCompare(a.date);
+    const va=venueCode(a),vb=venueCode(b),ta=deadlineMinutes(a),tb=deadlineMinutes(b);
+    if(mode==='venue'){
+      if(va!==vb)return va-vb;
+      if(ta!==tb)return ta-tb;
+    }else{
+      if(ta!==tb)return ta-tb;
+      if(va!==vb)return va-vb;
+    }
+    return a.raceNo-b.raceNo||a.course-b.course||brcPinId(a).localeCompare(brcPinId(b),'ja');
+  });
+}
 function brcPinIsAdmin(){return typeof BRC_ADMIN_ACTIVE!=='undefined' && BRC_ADMIN_ACTIVE===true;}
 function brcPinToday(){return getJstDateLabel();}
 function brcPinEsc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
@@ -24278,7 +24331,13 @@ function brcPinRender(){
   if(!brcPinIsAdmin()){
     if(box)box.textContent='';if(count)count.textContent='0';return;
   }
-  const list=brcPinRead();if(count)count.textContent=String(list.length);
+  const list=brcPinSortedList(brcPinRead());if(count)count.textContent=String(list.length);
+  const mode=brcPinCurrentSort();
+  document.querySelectorAll('[data-brc-pin-sort]').forEach(btn=>{
+    const active=btn.dataset.brcPinSort===mode;
+    btn.classList.toggle('active',active);
+    btn.setAttribute('aria-pressed',String(active));
+  });
   if(!box)return;
   if(!list.length){box.innerHTML='<div class="brc-pinned-empty">まだピン留めしたレースはありません。<br>本日厳選・展開検索の☆から保存できます。</div>';return;}
   const today=brcPinToday();
@@ -24627,6 +24686,7 @@ function initTodayPicksPage(){
     document.getElementById('scenarioSearchKimarite')?.addEventListener('change',brcSyncScenarioSearchLabels);
     ['scenarioSearchBrcMin','scenarioSearchInMin','scenarioSearchAttackMin','scenarioSearchNMin','scenarioSearchStGapMin'].forEach(id=>document.getElementById(id)?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();brcRenderScenarioSearch();}}));
     document.querySelectorAll('[data-scenario-sort]').forEach(btn=>btn.addEventListener('click',()=>brcSetScenarioSearchSort(btn.dataset.scenarioSort)));
+    document.querySelectorAll('[data-brc-pin-sort]').forEach(btn=>btn.addEventListener('click',()=>brcPinSetSort(btn.dataset.brcPinSort)));
     brcSyncScenarioSearchLabels();
     brcSyncScenarioSortButtons();
     window.__raceSearchRendered=true;
