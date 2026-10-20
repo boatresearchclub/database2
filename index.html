@@ -1,3 +1,5 @@
+<!-- BRC_DEME_LABEL_LEFT_VALUE_RIGHT_20261020: median/ROI label left, value right; display-only -->
+<!-- BRC_SCENARIO_COURSE_BRC_ONLY_20261020: form simplification and optional winning method; Member/admin batch auth unchanged. -->
 <!-- BRC_DEME_PROBABILITY_VISUAL_HIERARCHY_20261020: 1R percentage emphasized, venue % secondary, occurrences small, low-N explicit. Original calculations and admin-only guard untouched. -->
 <!-- BRC_V3_OPERATOR_DIAGNOSTIC_UI_R3_20261017: 管理者の管理 > 検証でv3状態・停止理由をオンスクリーン表示。公開・着率・API・認証変更なし。 -->
 <!-- BRC_ADMIN_V3_AUTOSTART_R2_20261017: admin v3 independent init, live-context readiness and exact diagnostics, faster first race, bounded fetch, fail closed on worker or SHA mismatch. Public v2 unchanged; Worker dependency remains. -->
@@ -6809,6 +6811,29 @@ body.brc-admin-home-active .brc-admin-top-race .dp-signal:not(.in){
  #scenarioSearchResults .scenario-search-highlight,#scenarioSearchResults .scenario-search-brc{font-size:8.5px;}
  #scenarioSearchResults .scenario-search-time{font-size:8.6px;}
 }
+
+/* BRC_SCENARIO_SEARCH_COURSE_BRC_ONLY_UI_20261020: compact optional filters, no predicted-rate calculation changes */
+#raceSearchPanelScenario .scenario-search-form{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:11px}
+#raceSearchPanelScenario .scenario-search-primary-brc{grid-column:2;grid-row:1}
+#raceSearchPanelScenario .scenario-search-kind{grid-column:1;grid-row:2}
+#raceSearchPanelScenario .scenario-search-more-filters{grid-column:1/-1;min-width:0;border:1px solid rgba(10,31,51,.12);border-radius:9px;background:rgba(255,255,255,.55)}
+#raceSearchPanelScenario .scenario-search-more-filters>summary{list-style:none;padding:10px 12px;cursor:pointer;color:#53657e;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:space-between}
+#raceSearchPanelScenario .scenario-search-more-filters>summary::-webkit-details-marker{display:none}
+#raceSearchPanelScenario .scenario-search-more-filters>summary::after{content:'＋';font-size:16px;color:#718096}
+#raceSearchPanelScenario .scenario-search-more-filters[open]>summary::after{content:'－'}
+#raceSearchPanelScenario .scenario-search-more-inner{padding:0 10px 11px;display:grid;gap:8px}
+#raceSearchPanelScenario .scenario-search-more-inner .scenario-search-thresholds{grid-template-columns:repeat(2,minmax(0,1fr))}
+#raceSearchPanelScenario .scenario-search-more-inner .scenario-search-field.full{grid-column:1/-1}
+#raceSearchPanelScenario .scenario-search-primary-brc .scenario-search-input{font-size:17px;font-weight:800}
+#scenarioSearchResults.scenario-search-results.brc-scenario-brconly{--ss-cols:44px 66px 22px minmax(80px,1fr) 30px 76px 62px}
+#scenarioSearchResults.brc-scenario-brconly .scenario-search-brc{color:#0057db;font-size:13px}
+@media(max-width:600px){
+  #raceSearchPanelScenario .scenario-search-form{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  #raceSearchPanelScenario .scenario-search-primary-brc{grid-column:2;grid-row:1}
+  #scenarioSearchResults.scenario-search-results.brc-scenario-brconly{--ss-cols:36px 52px 18px minmax(0,1fr) 23px 55px 31px}
+  #scenarioSearchResults.brc-scenario-brconly .scenario-search-brc{font-size:11px}
+}
+@media(max-width:370px){#scenarioSearchResults.scenario-search-results.brc-scenario-brconly{--ss-cols:33px 46px 16px minmax(0,1fr) 21px 51px 27px}}
 </style>
 </head>
 <body class="brc-admin-home-active">
@@ -7720,11 +7745,6 @@ body.brc-admin-home-active .brc-admin-top-race .dp-signal:not(.in){
         </div>
 
         <div id="raceSearchScenarioAdmin" class="scenario-search-admin is-visible" aria-hidden="false">
-          <div class="scenario-search-admin-head">
-            <div class="scenario-search-admin-title">展開検索</div>
-            <span class="scenario-search-admin-badge">β</span>
-          </div>
-          <div class="scenario-search-admin-sub">狙いたい展開が起こりそうなレースを、本日の開催から探します。</div>
           <div class="scenario-search-form">
             <div class="scenario-search-field">
               <label class="scenario-search-label" for="scenarioSearchCourse">狙う艇</label>
@@ -7733,22 +7753,26 @@ body.brc-admin-home-active .brc-admin-top-race .dp-signal:not(.in){
                 <option value="2">2号艇</option><option value="3">3号艇</option><option value="4">4号艇</option><option value="5">5号艇</option><option value="6">6号艇</option>
               </select>
             </div>
-            <div class="scenario-search-field">
-              <label class="scenario-search-label" for="scenarioSearchKimarite">決まり手</label>
+            <div class="scenario-search-field scenario-search-kind">
+              <label class="scenario-search-label" for="scenarioSearchKimarite">決まり手（任意）</label>
               <select id="scenarioSearchKimarite" class="scenario-search-select">
                 <option value="">指定なし</option>
                 <option value="sashi">差し</option><option value="makuri">まくり</option><option value="makurizashi">まくり差し</option>
               </select>
             </div>
-            <div class="scenario-search-field full">
+            <div class="scenario-search-field scenario-search-primary-brc">
+              <label class="scenario-search-label" for="scenarioSearchBrcMin">展示前BRC1着率</label>
+              <div class="scenario-search-unit"><input id="scenarioSearchBrcMin" class="scenario-search-input" type="number" inputmode="decimal" min="0" max="100" step="0.1" value="" placeholder="指定なし"><span>%</span></div>
+            </div>
+            <details class="scenario-search-more-filters">
+              <summary>詳細条件（任意）</summary>
+              <div class="scenario-search-more-inner">
               <div class="scenario-search-thresholds">
-                <div><label class="scenario-search-label" for="scenarioSearchBrcMin">展示前BRC1着率</label><div class="scenario-search-unit"><input id="scenarioSearchBrcMin" class="scenario-search-input" type="number" inputmode="decimal" min="0" max="100" step="0.1" value="" placeholder="指定なし"><span>%</span></div></div>
                 <div><label id="scenarioSearchInMinLabel" class="scenario-search-label" for="scenarioSearchInMin">①被決まり手率</label><div class="scenario-search-unit"><input id="scenarioSearchInMin" class="scenario-search-input" type="number" inputmode="decimal" min="0" max="100" step="0.1" value="" placeholder="指定なし"><span>%</span></div></div>
                 <div><label id="scenarioSearchAttackMinLabel" class="scenario-search-label" for="scenarioSearchAttackMin">狙い艇 決まり手率</label><div class="scenario-search-unit"><input id="scenarioSearchAttackMin" class="scenario-search-input" type="number" inputmode="decimal" min="0" max="100" step="0.1" value="" placeholder="指定なし"><span>%</span></div></div>
                 <div><label class="scenario-search-label" for="scenarioSearchNMin">N数</label><div class="scenario-search-unit"><input id="scenarioSearchNMin" class="scenario-search-input" type="number" inputmode="numeric" min="1" max="999" step="1" value="" placeholder="指定なし"><span>N</span></div></div>
                 <div><label class="scenario-search-label" for="scenarioSearchStGapMin">ST順位差</label><div class="scenario-search-unit"><input id="scenarioSearchStGapMin" class="scenario-search-input" type="number" inputmode="decimal" min="0" max="5" step="0.1" value="" placeholder="指定なし"><span>位</span></div></div>
               </div>
-            </div>
             <div class="scenario-search-field full">
               <label class="scenario-search-label" for="scenarioSearchSt">ST条件</label>
               <select id="scenarioSearchSt" class="scenario-search-select">
@@ -7757,8 +7781,9 @@ body.brc-admin-home-active .brc-admin-top-race .dp-signal:not(.in){
                 <option value="inner">内隣艇より早い</option>
                 <option value="avg">6艇平均より早い</option>
               </select>
-              <div class="scenario-search-note">BRC1着率は展示前（TimeX未反映）のWorker値。ST順位差は「狙う艇が比較対象より何位分早いか」の最低差です。ST順位差だけ入力した場合は、直内艇（3号艇なら2号艇）との比較を自動適用します。</div>
             </div>
+              </div>
+            </details>
             <div class="scenario-search-action">
               <button type="button" id="scenarioSearchRun" class="scenario-search-btn">検索</button>
               <button type="button" id="scenarioSearchReset" class="scenario-search-btn secondary">リセット</button>
@@ -7771,7 +7796,7 @@ body.brc-admin-home-active .brc-admin-top-race .dp-signal:not(.in){
               <button type="button" class="scenario-search-sort-btn" data-scenario-sort="venue">会場</button>
             </div>
           </div>
-          <div id="scenarioSearchResults" class="scenario-search-results"><div class="scenario-search-empty">条件を選んで検索</div></div>
+          <div id="scenarioSearchResults" class="scenario-search-results"><div class="scenario-search-empty">検索条件を指定してください</div></div>
         </div>
       </div>
     </section>
@@ -23890,30 +23915,34 @@ async function brcScenarioHydrateBaseWin(rows){
 function brcBuildScenarioSearchRows(){
   const course=Number(document.getElementById('scenarioSearchCourse')?.value||0);
   const kind=String(document.getElementById('scenarioSearchKimarite')?.value||'');
-  if(!Number.isInteger(course)||course<2||course>6||!['sashi','makuri','makurizashi'].includes(kind)) return {rows:[],error:'狙う艇と決まり手を選択してください。'};
+  if(!Number.isInteger(course)||course<2||course>6) return {rows:[],error:'狙う艇を選択してください。'};
+  const withKind=['sashi','makuri','makurizashi'].includes(kind);
   const brcMin=brcScenarioOptionalNumber('scenarioSearchBrcMin',0);
   const inMin=brcScenarioOptionalNumber('scenarioSearchInMin',0);
   const attackMin=brcScenarioOptionalNumber('scenarioSearchAttackMin',0);
   const nMin=brcScenarioOptionalNumber('scenarioSearchNMin',1);
   const stGapMin=brcScenarioOptionalNumber('scenarioSearchStGapMin',0);
   const stMode=document.getElementById('scenarioSearchSt')?.value||'none';
-  const keys=brcScenarioMetricKeys(kind), rows=[];
+  if(!withKind && (inMin!==null||attackMin!==null||nMin!==null))return {rows:[],error:'被決まり手率・狙い艇決まり手率・N数を指定する場合は、決まり手も選択してください。'};
+  const keys=withKind?brcScenarioMetricKeys(kind):null, rows=[];
   for(const venue of sortVenuesNorthToSouth(Object.keys(RACE_CARDS_TODAY||{}))){
     const races=RACE_CARDS_TODAY?.[venue]||{};
     for(const raceNo of Object.keys(races).map(Number).sort((a,b)=>a-b)){
       if(brcRaceCancelled(venue,raceNo)) continue;
       const regs=(races[String(raceNo)]||[]).map(String);
       if(regs.length<6) continue;
-      const inD=LOSE1_DATA?.[regs[0]]?.recent;
-      const atD=LOSE_COURSE_DATA?.[regs[course-1]]?.[String(course)];
-      if(!inD || !atD) continue;
-      const inN=Number(inD.n||0), attackN=Number(atD.n||0);
-      if(nMin!==null&&(inN<nMin||attackN<nMin)) continue;
-      const inPct=brcScenarioPct(inD[keys.inKey]);
-      const attackPct=brcScenarioPct(atD[keys.attackKey]);
-      if(!Number.isFinite(inPct)||!Number.isFinite(attackPct)) continue;
-      if(inMin!==null&&inPct<inMin) continue;
-      if(attackMin!==null&&attackPct<attackMin) continue;
+      // No decided winning technique: candidate generation must NOT require technique statistics.
+      // The authenticated Worker supplies the BRC 1st-place probability later.
+      const inD=withKind?LOSE1_DATA?.[regs[0]]?.recent:null;
+      const atD=withKind?LOSE_COURSE_DATA?.[regs[course-1]]?.[String(course)]:null;
+      if(withKind&&(!inD||!atD)) continue;
+      const inN=withKind?Number(inD.n||0):null, attackN=withKind?Number(atD.n||0):null;
+      if(withKind&&nMin!==null&&(inN<nMin||attackN<nMin)) continue;
+      const inPct=withKind?brcScenarioPct(inD[keys.inKey]):null;
+      const attackPct=withKind?brcScenarioPct(atD[keys.attackKey]):null;
+      if(withKind&&(!Number.isFinite(inPct)||!Number.isFinite(attackPct))) continue;
+      if(withKind&&inMin!==null&&inPct<inMin) continue;
+      if(withKind&&attackMin!==null&&attackPct<attackMin) continue;
       const st=brcScenarioStPass(stMode,regs,course,nMin,stGapMin);
       if(!st.pass) continue;
       const deadline=RACE_INFO_TODAY?.[venue]?.deadlines?.[String(raceNo)]||'';
@@ -23957,7 +23986,7 @@ async function brcRenderScenarioSearch(){
   SCENARIO_SEARCH_HAS_RUN=true;
   brcSyncScenarioSortButtons();
   const q=brcBuildScenarioSearchRows();
-  if(q.error){if(count)count.textContent='未検索';box.innerHTML=`<div class="scenario-search-empty">${q.error}</div>`;return;}
+  if(q.error){if(count)count.textContent='未検索';box.classList.remove('brc-scenario-brconly');box.innerHTML=`<div class="scenario-search-empty">${q.error}</div>`;return;}
   if(count) count.textContent='検索中…';
   box.innerHTML='<div class="scenario-search-empty">展示前BRC1着率を確認中…</div>';
   // 一般公開ではローカル条件（決まり手/ST/N）は誰でも検索可能。
@@ -23974,15 +24003,17 @@ async function brcRenderScenarioSearch(){
       return;
     }
   }
-  const rows=q.rows.filter(r=>q.brcMin===null || (Number.isFinite(Number(r.baseBrcPct))&&Number(r.baseBrcPct)>=q.brcMin));
+  const rows=q.rows.filter(r=>q.brcMin===null || (r.baseBrcPct!==null && r.baseBrcPct!==undefined && Number.isFinite(Number(r.baseBrcPct)) && Number(r.baseBrcPct)>=q.brcMin));
   brcSortScenarioRows(rows);
   if(count) count.textContent=`該当 ${rows.length}レース`;
   if(!rows.length){box.innerHTML='<div class="scenario-search-empty">該当レースなし</div>';return;}
   const escapeScenario=(v)=>String(v==null?'':v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const withKind=!!q.keys;
+  box.classList.toggle('brc-scenario-brconly',!withKind);
   const headHtml=`<div class="scenario-search-colhead" aria-label="検索結果の項目見出し">
     <div class="scenario-search-navigate">
       <span>締切</span><span>会場</span><span>枠</span><span>名前</span><span>級</span>
-      <span>決まり手率</span><span>BRC1着率</span><span>イン信頼度</span>
+      ${withKind?'<span>決まり手率</span>':''}<span>BRC1着率</span><span>イン信頼度</span>
     </div><span class="scenario-search-more-place"></span>
   </div>`;
   box.innerHTML=headHtml+rows.map((r,i)=>{
@@ -24007,7 +24038,7 @@ async function brcRenderScenarioSearch(){
           <span class="scenario-search-boat lane${r.course}" aria-label="${r.course}号艇">${r.course}</span>
           <span class="scenario-search-name">${escapeScenario(r.attackName)}</span>
           <span class="scenario-search-grade grade-${racerClass==='―'?'unknown':racerClass}" title="級別（当日公式番組表）">${racerClass}</span>
-          <span class="scenario-search-highlight" title="${escapeScenario(r.keys.kindLabel)}率（展示前の検索条件）">${r.attackPct.toFixed(1)}%</span>
+          ${withKind?`<span class="scenario-search-highlight" title="${escapeScenario(r.keys.kindLabel)}率（展示前の検索条件）">${r.attackPct.toFixed(1)}%</span>`:''}
           <span class="scenario-search-brc" title="展示前BRC1着率（TimeX未反映）">${hasBase?base.toFixed(1)+'%':'―'}</span>
           <span class="scenario-search-inrank ${searchRankCss}" title="イン逃げ信頼度（展示前BRC1着率に基づく${searchRank?'：'+escapeScenario(searchRank):'・会員ログインで取得'}）">${shortRank}</span>
         </div>
@@ -24016,8 +24047,8 @@ async function brcRenderScenarioSearch(){
       <div class="scenario-search-expand" id="${detailId}" hidden>
         <div class="scenario-search-metrics">
           <div class="scenario-search-metric"><div class="k">展示前BRC1着率</div><div class="v">${hasBase?`${base.toFixed(1)}%`:'―'}</div><div class="n">${hasBase?'TimeX未反映':'一般検索'}</div></div>
-          <div class="scenario-search-metric"><div class="k">①${escapeScenario(r.keys.inLabel)}</div><div class="v">${r.inPct.toFixed(1)}%</div><div class="n">N=${r.inN}</div></div>
-          <div class="scenario-search-metric"><div class="k">${r.course}号艇 ${escapeScenario(r.keys.attackLabel)}</div><div class="v">${r.attackPct.toFixed(1)}%</div><div class="n">N=${r.attackN}</div></div>
+          ${withKind?`<div class="scenario-search-metric"><div class="k">①${escapeScenario(r.keys.inLabel)}</div><div class="v">${r.inPct.toFixed(1)}%</div><div class="n">N=${r.inN}</div></div>
+          <div class="scenario-search-metric"><div class="k">${r.course}号艇 ${escapeScenario(r.keys.attackLabel)}</div><div class="v">${r.attackPct.toFixed(1)}%</div><div class="n">N=${r.attackN}</div></div>`:''}
           <div class="scenario-search-metric"><div class="k">ST順位</div><div class="v">${stValue}</div><div class="n">${stSub}</div></div>
         </div>
         <div class="scenario-search-detail">検索結果のBRC1着率・イン信頼度は展示前の参考値（会員のみ）。TimeX反映後は出走表で確認。</div>
@@ -24049,7 +24080,7 @@ function brcResetScenarioSearch(){
   brcSyncScenarioSortButtons();
   brcSyncScenarioSearchLabels();
   const c=document.getElementById('scenarioSearchCount');if(c)c.textContent='未検索';
-  const r=document.getElementById('scenarioSearchResults');if(r)r.innerHTML='<div class="scenario-search-empty">条件を選んで検索</div>';
+  const r=document.getElementById('scenarioSearchResults');if(r){r.classList.remove('brc-scenario-brconly');r.innerHTML='<div class="scenario-search-empty">検索条件を指定してください</div>';}
 }
 function brcSyncRaceSearchAccess(){
   const publicBox=document.getElementById('raceSearchScenarioPublic');
@@ -37110,8 +37141,9 @@ body.brc-admin-public-view #brcDemeInfoTab{display:none!important}
 .brc-deme .deme-compact-table td:nth-child(3) .deme-entry-prob{font-size:14.5px;color:#3d5067}
 .brc-deme .deme-compact-table td:nth-child(4) .deme-entry-prob{font-size:12px}
 .brc-deme .deme-entry-extras{margin-top:6px;padding-top:4px;border-top:1px solid #edf0f6;display:grid;gap:3px}
-.brc-deme .deme-extra{display:flex;align-items:baseline;justify-content:flex-end;gap:3px;white-space:nowrap;font-size:11px;line-height:1.2;font-weight:750;color:#33465d}
-.brc-deme .deme-extra-key{font-size:9px;font-weight:700;color:#7b8a9f}
+.brc-deme .deme-extra{display:flex;align-items:baseline;justify-content:space-between;gap:2px;width:100%;white-space:nowrap;font-size:11px;line-height:1.2;font-weight:750;color:#33465d}
+.brc-deme .deme-extra-key{font-size:9px;font-weight:700;color:#7b8a9f;flex:0 0 auto;text-align:left;margin-right:auto}
+.brc-deme .deme-extra > span:last-child{flex:0 1 auto;min-width:0;margin-left:auto;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 .brc-deme .deme-compact-table td:nth-child(3) .deme-extra{color:#52667c}
 .brc-deme .deme-compact-table td:nth-child(4) .deme-extra{font-size:10px}
 .brc-deme .deme-entry-prob.deme-delta-up,.brc-deme .deme-extra.deme-delta-up{color:#126747!important}
@@ -37143,6 +37175,33 @@ body.brc-admin-public-view #brcDemeInfoTab{display:none!important}
  .brc-deme .deme-sortmetric{font-size:9px;padding:5px 4px}
 }
 
+
+/* BRC_DEME_HEADER_MATCH_RACEDATA_AND_LABELS_20261020: display-only. */
+/* 出走データのレース見出し（会場13px、R17px、締切/種別12px）と同じ階層に統一 */
+.brc-deme .deme-racehero{margin-bottom:6px;align-items:flex-start;gap:8px}
+.brc-deme .deme-raceplace{font-size:13px;line-height:1.35;font-weight:800;gap:8px;margin:0 0 2px}
+.brc-deme .deme-raceplace .deme-venue{color:var(--deme-ink)}
+.brc-deme .deme-raceplace span:not(.deme-venue){color:var(--deme-soft);font-weight:700}
+.brc-deme .deme-race-mainline{align-items:baseline;gap:10px}
+.brc-deme .deme-raceno{font-size:17px;line-height:1.3;font-weight:800;letter-spacing:0}
+.brc-deme .deme-race-deadline{font-size:12px;line-height:1.3;font-weight:800}
+.brc-deme .deme-race-grade{font-size:12px;line-height:1.3;font-weight:800}
+.brc-deme .deme-admin-flag{font-size:9px;min-height:22px;padding:2px 7px}
+/* 「中」「回」を正式名称で表示。横幅の小さなセルではラベルを値の上へ配置 */
+.brc-deme .deme-extra{gap:2px;font-size:10px;letter-spacing:-.015em}
+.brc-deme .deme-extra-key{font-size:8px;letter-spacing:-.03em;white-space:nowrap;flex:0 0 auto}
+.brc-deme .deme-compact-table td:nth-child(4) .deme-extra{font-size:9px;gap:2px}
+@media(max-width:420px){
+ .brc-deme .deme-extra{font-size:9px;gap:2px}
+ .brc-deme .deme-extra-key{font-size:8px}
+ .brc-deme .deme-compact-table td:nth-child(4) .deme-extra{font-size:8.5px}
+}
+@media(max-width:360px){
+ .brc-deme .deme-extra{flex-direction:row;justify-content:space-between;align-items:baseline;gap:1px;line-height:1.1}
+ .brc-deme .deme-extra-key{font-size:7px;letter-spacing:-.05em}
+ .brc-deme .deme-extra{font-size:7.7px}
+ .brc-deme .deme-compact-table td:nth-child(4) .deme-extra{font-size:7.5px}
+}
 </style>
 <script id="brcDemeInfoData" type="application/json"></script>
 <script src="data/brcDemeInfoData-e3fdccce0e-001.js"></script>
@@ -37251,7 +37310,7 @@ function render(){
   const roi=getValue(entry,basis,'roi');
   const cssFor=x=>isDiff?(low?'deme-delta-low':x>0?'deme-delta-up':x<0?'deme-delta-down':''):'';
   const main=`<div class="deme-entry-prob ${cssFor(p)}"><span>${valueHtml(p,'prob',isDiff)}</span>${basis==='selected'?`<small>${fmtInt(entry.selected.count)}回</small>`:basis==='all'?`<small>${fmtInt(entry.all?.count??0)}回</small>`:low?'<small class="deme-low-label">少数</small>':''}</div>`;
-  const second=`<div class="deme-entry-extras"><div class="deme-extra ${cssFor(m)}"><span class="deme-extra-key">中</span><span>${valueHtml(m,'median',isDiff)}</span></div><div class="deme-extra ${cssFor(roi)}"><span class="deme-extra-key">回</span><span>${valueHtml(roi,'roi',isDiff)}</span></div></div>`;
+  const second=`<div class="deme-entry-extras"><div class="deme-extra ${cssFor(m)}"><span class="deme-extra-key">中央値</span><span>${valueHtml(m,'median',isDiff)}</span></div><div class="deme-extra ${cssFor(roi)}"><span class="deme-extra-key">回収率</span><span>${valueHtml(roi,'roi',isDiff)}</span></div></div>`;
   return main+second;
  }
  const tbl=list.map(entry=>`<tr><td class="deme-outcome">${renderCombo(entry.combo)}</td><td>${metricRows(entry,'selected')}</td><td>${metricRows(entry,'all')}</td><td>${metricRows(entry,'diff')}</td></tr>`).join('');
@@ -37263,7 +37322,7 @@ function render(){
  <label>1着艇<select id="brcDemeHead"><option value="all" ${head==='all'?'selected':''}>全体</option>${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${head===String(n)?'selected':''}>${n}号艇</option>`).join('')}</select></label></div>
  <div class="deme-sorttoolbar" role="group" aria-label="並び替える指標"><span class="deme-sortcaption">並び替え</span>${[['prob','確率'],['median','中央値'],['roi','回収率']].map(([key,title])=>`<button type="button" data-deme-metric="${key}" class="deme-sortmetric ${sortMetric===key&&sortBasis!=='combo'?'active':''}" aria-pressed="${sortMetric===key&&sortBasis!=='combo'}">${title}<span class="deme-sortmetric-arrow" aria-hidden="true">${sortMetric===key&&sortBasis!=='combo'?(sortDirection==='desc'?'▼':'▲'):'↕'}</span></button>`).join('')}</div>
  <div class="tablewrap"><table class="deme-compact-table"><thead><tr>${headHtml}</tr></thead><tbody>${tbl}</tbody></table></div>
- <div class="deme-compact-foot">中：配当中央値（円）　回：参考回収率（％）　少数：${raceNo}Rの出現回数5回未満</div>`;
+ <div class="deme-compact-foot">少数：${raceNo}Rの出現回数5回未満</div>`;
  for(const id of ['brcDemeKind','brcDemeHead'])byId(id)?.addEventListener('change',render);
  root.querySelectorAll('[data-deme-metric]').forEach(btn=>btn.addEventListener('click',()=>{
   const metric=btn.getAttribute('data-deme-metric');if(!['prob','median','roi'].includes(metric))return;
