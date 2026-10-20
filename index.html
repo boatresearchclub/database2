@@ -1,3 +1,4 @@
+<!-- BRC_PUBLIC_RACE_SEARCH_ACCESS_20261020: 全利用者へレース検索3タブと個別ピン機能を開放。管理者ピンの保存キーは維持。Worker認証・予測数式は変更なし。 -->
 <!-- BRC_DEADLINE_TIMEX_FINAL_ARROW_SYNC_20261020: 直前サインは出走データ同一の個人補正込み最終1着率差ptと0.1pt丸め済み三本矢印で判定。v2/v3実数値、予測ロジック、スリット判定は変更しない。 -->
 <!-- BRC_PIN_SORT_20261020: admin-only pin list can switch venue-code order / deadline-ascending order; storage and pin records unchanged. -->
 <!-- BRC_ADMIN_TIMEX_HEAD_ORIGINAL_20261020: Restore BRC TimeX visible caption without changing v2/v3 switch, diagnostics, numbers or authorization. -->
@@ -6847,10 +6848,10 @@ body.brc-admin-home-active .brc-admin-top-race .dp-signal:not(.in){
 </style>
 
 <style id="brc-admin-pin-style-20261020">
-/* 管理者専用レースピン留め：表や判定の数式には影響させない */
-.brc-pin-admin-only[hidden], .brc-pin-toggle[hidden]{display:none!important;}
-.race-search-tabs.brc-pin-tabs-admin{grid-template-columns:repeat(3,minmax(0,1fr));}
-.race-search-tabs.brc-pin-tabs-admin .race-search-tab{padding:10px 4px;white-space:nowrap;}
+/* 公開レースピン留め：計算に影響させず、保存先をログイン単位で分離 */
+.brc-pin-open-access[hidden], .brc-pin-toggle[hidden]{display:none!important;}
+.race-search-tabs.brc-pin-tabs-public{grid-template-columns:repeat(3,minmax(0,1fr));}
+.race-search-tabs.brc-pin-tabs-public .race-search-tab{padding:10px 4px;white-space:nowrap;}
 .brc-pin-count{display:inline-block;font-size:10px;padding:1px 5px;border-radius:999px;background:#edf3ff;color:#0057db;vertical-align:middle;}
 .brc-pin-toggle{display:inline-flex;align-items:center;justify-content:center;min-width:29px;min-height:32px;margin:0;padding:2px;border:1px solid #ccd7e6;border-radius:8px;background:#fff;color:#718096;font-size:20px;font-weight:900;line-height:1;cursor:pointer;touch-action:manipulation;}
 .brc-pin-toggle.is-saved{background:#fff8e4;border-color:#d7a83c;color:#b97800;}
@@ -6877,7 +6878,7 @@ body.brc-admin-home-active .brc-admin-top-race .dp-signal:not(.in){
 .brc-pin-footnote{font-size:11px;color:#607086;margin:10px 2px;line-height:1.55;}
 .brc-pinned-empty{font-size:13px;text-align:center;color:#6b788c;border:1px dashed #ced8e5;background:#fff;padding:25px 10px;border-radius:9px;}
 @media(max-width:420px){
-  .race-search-tabs.brc-pin-tabs-admin .race-search-tab{font-size:12px;padding:9px 2px;}
+  .race-search-tabs.brc-pin-tabs-public .race-search-tab{font-size:12px;padding:9px 2px;}
   .today-picks-table.brc-pin-enabled th:nth-child(1){width:25%;}
   .today-picks-table.brc-pin-enabled th:nth-child(2){width:22%;}
   .today-picks-table.brc-pin-enabled th:nth-child(3){width:27%;}
@@ -7823,7 +7824,7 @@ body.brc-landing-guest .page-tabs{margin-top:0;}
       <div class="race-search-tabs" role="tablist" aria-label="レース検索の切り替え">
         <button type="button" class="race-search-tab active" data-race-search-mode="picks">本日厳選</button>
         <button type="button" class="race-search-tab" data-race-search-mode="scenario">展開検索</button>
-        <button type="button" class="race-search-tab brc-pin-admin-only" data-race-search-mode="pinned" hidden>📌ピン留め <span id="brcPinCount" class="brc-pin-count">0</span></button>
+        <button type="button" class="race-search-tab brc-pin-open-access" data-race-search-mode="pinned" hidden>📌ピン留め <span id="brcPinCount" class="brc-pin-count">0</span></button>
       </div>
 
       <div id="raceSearchPanelPicks" class="race-search-panel active">
@@ -7910,7 +7911,7 @@ body.brc-landing-guest .page-tabs{margin-top:0;}
           <div id="scenarioSearchResults" class="scenario-search-results"><div class="scenario-search-empty">検索条件を指定してください</div></div>
         </div>
       </div>
-      <div id="raceSearchPanelPinned" class="race-search-panel brc-pin-admin-only" hidden aria-label="保存したレース">
+      <div id="raceSearchPanelPinned" class="race-search-panel brc-pin-open-access" hidden aria-label="保存したレース">
         <div class="brc-pinned-head">
           <strong>📌ピン留め</strong>
           <div class="brc-pinned-sort" role="group" aria-label="ピン留め表示順">
@@ -24219,7 +24220,7 @@ async function renderTodayPicks(force=false){
 
   const upcoming=rows.filter(r=>!isRaceDeadlinePassed(r.deadline));
   const finished=rows.filter(r=>isRaceDeadlinePassed(r.deadline));
-  const pinAdmin=brcPinIsAdmin();
+  const pinAdmin=brcPinEnabled();
   const tableHtml=(items)=>`<div class="today-picks-table-wrap"><table class="today-picks-table${pinAdmin?' brc-pin-enabled':''}">
     <thead><tr>
       <th class="today-sortable${TODAY_PICKS_SORT.key==='venue'?' is-active':''}" data-today-sort="venue" aria-sort="${TODAY_PICKS_SORT.key==='venue'?(TODAY_PICKS_SORT.dir==='asc'?'ascending':'descending'):'none'}"><span class="today-sort-head">会場 <span class="today-sort-icon">${todaySortIcon('venue')}</span></span></th>
@@ -24260,22 +24261,37 @@ async function renderTodayPicks(force=false){
 }
 
 let RACE_SEARCH_MODE='picks';
-// BRC_ADMIN_SEARCH_PINS_V1_20261020: 本日厳選と展開検索の「レース単位」の管理者専用端末保存。
-// 認証は既存の BRC_ADMIN_ACTIVE のみを参照。Worker/サーバー側の権限、出走データ、予測数式は変更しない。
+// BRC_PUBLIC_SEARCH_PINS_V2_20261020: 本日厳選・展開検索・📌ピン留めの表示制限を開放。
+// 管理者の従来ピンを保持し、会員別・未ログイン別に端末保存先を分離。
+ // Workerの認証・有料会員向け予測情報・予測数式・OOS管理ツールは変更しない。
 const BRC_PIN_STORAGE_KEY='brc_admin_race_pins_v1';
 const BRC_PIN_SORT_STORAGE_KEY='brc_admin_race_pin_sort_v1';
-let BRC_PIN_SORT_MODE=null;
+// 管理者の既存11件をそのまま維持。他ユーザーから管理者の保存一覧が見えないようにする。
+function brcPinScope(){
+  if(brcPinIsAdmin())return 'admin';
+  try{
+    if(typeof BRC_MEMBER_ACTIVE!=='undefined' && BRC_MEMBER_ACTIVE && typeof brcGetStoredSession==='function'){
+      const id=String(brcGetStoredSession()?.user?.id||'').trim();
+      if(/^[a-zA-Z0-9-]{1,80}$/.test(id))return 'member_'+id;
+    }
+  }catch(_e){}
+  return 'guest';
+}
+function brcPinStorageKey(){
+  const scope=brcPinScope();
+  return scope==='admin'?BRC_PIN_STORAGE_KEY:'brc_public_race_pins_v1_'+scope;
+}
+function brcPinSortStorageKey(){
+  const scope=brcPinScope();
+  return scope==='admin'?BRC_PIN_SORT_STORAGE_KEY:'brc_public_race_pin_sort_v1_'+scope;
+}
 function brcPinCurrentSort(){
-  if(BRC_PIN_SORT_MODE==='deadline'||BRC_PIN_SORT_MODE==='venue')return BRC_PIN_SORT_MODE;
-  if(!brcPinIsAdmin())return 'deadline';
-  try{BRC_PIN_SORT_MODE=localStorage.getItem(BRC_PIN_SORT_STORAGE_KEY)==='venue'?'venue':'deadline';}
-  catch(_e){BRC_PIN_SORT_MODE='deadline';}
-  return BRC_PIN_SORT_MODE;
+  try{return localStorage.getItem(brcPinSortStorageKey())==='venue'?'venue':'deadline';}
+  catch(_e){return 'deadline';}
 }
 function brcPinSetSort(mode){
-  if(!brcPinIsAdmin()||!['deadline','venue'].includes(mode))return;
-  BRC_PIN_SORT_MODE=mode;
-  try{localStorage.setItem(BRC_PIN_SORT_STORAGE_KEY,mode);}catch(_e){}
+  if(!brcPinEnabled()||!['deadline','venue'].includes(mode))return;
+  try{localStorage.setItem(brcPinSortStorageKey(),mode);}catch(_e){}
   brcPinRender();
 }
 // 会場順はTOPと同じ24場の公式会場コード順。締切順は早い時刻から表示。
@@ -24301,6 +24317,7 @@ function brcPinSortedList(list){
   });
 }
 function brcPinIsAdmin(){return typeof BRC_ADMIN_ACTIVE!=='undefined' && BRC_ADMIN_ACTIVE===true;}
+function brcPinEnabled(){return true;}
 function brcPinToday(){return getJstDateLabel();}
 function brcPinEsc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 function brcPinClean(v,max=60){return String(v??'').slice(0,max);}
@@ -24321,9 +24338,9 @@ function brcPinNormalize(raw){
   return e;
 }
 function brcPinRead(){
-  if(!brcPinIsAdmin())return [];
+  if(!brcPinEnabled())return [];
   try{
-    const entries=JSON.parse(localStorage.getItem(BRC_PIN_STORAGE_KEY)||'[]');
+    const entries=JSON.parse(localStorage.getItem(brcPinStorageKey())||'[]');
     if(!Array.isArray(entries))return [];
     const byId=new Map();
     entries.slice(0,300).forEach(raw=>{const e=brcPinNormalize(raw);if(e)byId.set(brcPinId(e),e);});
@@ -24331,12 +24348,12 @@ function brcPinRead(){
   }catch(_e){return [];}
 }
 function brcPinWrite(rows){
-  if(!brcPinIsAdmin())return false;
-  try{localStorage.setItem(BRC_PIN_STORAGE_KEY,JSON.stringify(rows.slice(0,300)));return true;}
+  if(!brcPinEnabled())return false;
+  try{localStorage.setItem(brcPinStorageKey(),JSON.stringify(rows.slice(0,300)));return true;}
   catch(err){console.warn('BRC pin storage failed',err);return false;}
 }
 function brcPinButtonHtml(entry){
-  if(!brcPinIsAdmin())return '';
+  if(!brcPinEnabled())return '';
   const e=brcPinNormalize({...entry,date:brcPinToday()});
   if(!e)return '';
   const id=brcPinId(e),saved=brcPinRead().some(x=>brcPinId(x)===id);
@@ -24344,7 +24361,7 @@ function brcPinButtonHtml(entry){
 }
 function brcPinSetMessage(msg){const el=document.getElementById('brcPinStatus');if(el)el.textContent=msg;}
 function brcPinRefreshButtons(){
-  const on=brcPinIsAdmin(),ids=new Set(brcPinRead().map(brcPinId));
+  const on=brcPinEnabled(),ids=new Set(brcPinRead().map(brcPinId));
   document.querySelectorAll('[data-brc-pin-entry]').forEach(el=>{
     el.hidden=!on;
     const saved=ids.has(el.dataset.brcPinId);
@@ -24356,7 +24373,7 @@ function brcPinRefreshButtons(){
   });
 }
 function brcPinToggleFromButton(btn){
-  if(!brcPinIsAdmin())return;
+  if(!brcPinEnabled())return;
   let raw=null;
   try{raw=JSON.parse(decodeURIComponent(btn.dataset.brcPinEntry||''));}catch(_e){return;}
   const e=brcPinNormalize({...raw,date:brcPinToday(),savedAt:Date.now()});
@@ -24368,7 +24385,7 @@ function brcPinToggleFromButton(btn){
   brcPinSetMessage(has?'ピン留めを解除しました':'ピン留めしました');
 }
 function brcPinBindButtons(scope){
-  if(!brcPinIsAdmin()||!scope)return;
+  if(!brcPinEnabled()||!scope)return;
   scope.querySelectorAll('[data-brc-pin-entry]').forEach(btn=>{
     btn.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();brcPinToggleFromButton(btn);});
     btn.addEventListener('keydown',event=>{event.stopPropagation();});
@@ -24377,7 +24394,7 @@ function brcPinBindButtons(scope){
 function brcPinRender(){
   const box=document.getElementById('brcPinnedList');
   const count=document.getElementById('brcPinCount');
-  if(!brcPinIsAdmin()){
+  if(!brcPinEnabled()){
     if(box)box.textContent='';if(count)count.textContent='0';return;
   }
   const list=brcPinSortedList(brcPinRead());if(count)count.textContent=String(list.length);
@@ -24411,12 +24428,12 @@ function brcPinRender(){
     </div>`;
   }).join('')+'</div>';
   box.querySelectorAll('[data-brc-pin-remove]').forEach(btn=>btn.addEventListener('click',()=>{
-    if(!brcPinIsAdmin())return;
+    if(!brcPinEnabled())return;
     const next=brcPinRead().filter(e=>brcPinId(e)!==btn.dataset.brcPinRemove);
     if(brcPinWrite(next)){brcPinRender();brcPinRefreshButtons();brcPinSetMessage('解除しました');}
   }));
   box.querySelectorAll('[data-brc-pin-open]').forEach(btn=>btn.addEventListener('click',()=>{
-    if(!brcPinIsAdmin())return;
+    if(!brcPinEnabled())return;
     const row=brcPinRead().find(e=>brcPinId(e)===btn.dataset.brcPinOpen);
     if(row && row.date===brcPinToday())openTodayPickRace(row.venue,row.raceNo);
   }));
@@ -24611,7 +24628,7 @@ async function brcRenderScenarioSearch(){
   if(!rows.length){box.innerHTML='<div class="scenario-search-empty">該当レースなし</div>';return;}
   const escapeScenario=(v)=>String(v==null?'':v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const withKind=!!q.keys;
-  const pinAdmin=brcPinIsAdmin();
+  const pinAdmin=brcPinEnabled();
   box.classList.toggle('brc-scenario-brconly',!withKind);
   const headHtml=`<div class="scenario-search-colhead" aria-label="検索結果の項目見出し">
     <div class="scenario-search-navigate">
@@ -24699,28 +24716,28 @@ function brcSyncRaceSearchAccess(){
   const brcMinLabel=document.querySelector('label[for="scenarioSearchBrcMin"]');
   if(brcMin){brcMin.disabled=!canUseProtectedBase;brcMin.title=canUseProtectedBase?'':'一般公開では決まり手・ST・N条件を利用できます。展示前BRC1着率の一括取得は既存Worker認証が必要です。';if(!canUseProtectedBase)brcMin.value='';}
   if(brcMinLabel)brcMinLabel.textContent=canUseProtectedBase?'展示前BRC1着率':'展示前BRC1着率（会員）';
-  const pinIsAdmin=brcPinIsAdmin();
+  const pinEnabled=brcPinEnabled();
   const pinTab=document.querySelector('.race-search-tab[data-race-search-mode="pinned"]');
   const pinPanel=document.getElementById('raceSearchPanelPinned');
   const tabBar=document.querySelector('.race-search-tabs');
-  if(pinTab)pinTab.hidden=!pinIsAdmin;
-  if(tabBar)tabBar.classList.toggle('brc-pin-tabs-admin',pinIsAdmin);
-  if(!pinIsAdmin && RACE_SEARCH_MODE==='pinned')RACE_SEARCH_MODE='picks';
+  if(pinTab)pinTab.hidden=!pinEnabled;
+  if(tabBar)tabBar.classList.toggle('brc-pin-tabs-public',pinEnabled);
+  if(!pinEnabled && RACE_SEARCH_MODE==='pinned')RACE_SEARCH_MODE='picks';
   document.querySelectorAll('.race-search-tab').forEach(btn=>btn.classList.toggle('active',btn.dataset.raceSearchMode===RACE_SEARCH_MODE));
-  if(pinPanel){pinPanel.hidden=!pinIsAdmin;pinPanel.classList.toggle('active',pinIsAdmin&&RACE_SEARCH_MODE==='pinned');}
-  if(!pinIsAdmin)document.querySelectorAll('[data-brc-pin-entry]').forEach(el=>el.hidden=true);
+  if(pinPanel){pinPanel.hidden=!pinEnabled;pinPanel.classList.toggle('active',pinEnabled&&RACE_SEARCH_MODE==='pinned');}
+  if(!pinEnabled)document.querySelectorAll('[data-brc-pin-entry]').forEach(el=>el.hidden=true);
   else brcPinRefreshButtons();
-  if(pinIsAdmin)brcPinRender();else brcPinRender();
+  brcPinRender();
   const picksPanel=document.getElementById('raceSearchPanelPicks');if(picksPanel)picksPanel.classList.toggle('active',RACE_SEARCH_MODE==='picks');
   const scenarioPanel=document.getElementById('raceSearchPanelScenario');if(scenarioPanel)scenarioPanel.classList.toggle('active',RACE_SEARCH_MODE==='scenario');
 }
 function brcSetRaceSearchMode(mode){
-  RACE_SEARCH_MODE=(mode==='pinned'&&brcPinIsAdmin())?'pinned':(mode==='scenario'?'scenario':'picks');
+  RACE_SEARCH_MODE=(mode==='pinned'&&brcPinEnabled())?'pinned':(mode==='scenario'?'scenario':'picks');
   document.querySelectorAll('.race-search-tab').forEach(btn=>btn.classList.toggle('active',btn.dataset.raceSearchMode===RACE_SEARCH_MODE));
   const p=document.getElementById('raceSearchPanelPicks'),s=document.getElementById('raceSearchPanelScenario'),pin=document.getElementById('raceSearchPanelPinned');
   if(p)p.classList.toggle('active',RACE_SEARCH_MODE==='picks');
   if(s)s.classList.toggle('active',RACE_SEARCH_MODE==='scenario');
-  if(pin)pin.classList.toggle('active',brcPinIsAdmin()&&RACE_SEARCH_MODE==='pinned');
+  if(pin)pin.classList.toggle('active',brcPinEnabled()&&RACE_SEARCH_MODE==='pinned');
   brcSyncRaceSearchAccess();
   if(RACE_SEARCH_MODE==='picks'){ brcTodayStartResultTimer(); renderTodayPicks(); }
 }
