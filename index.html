@@ -6835,8 +6835,15 @@ body.brc-admin-home-active .brc-admin-top-race .dp-signal:not(.in){
 }
 @media(max-width:370px){#scenarioSearchResults.scenario-search-results.brc-scenario-brconly{--ss-cols:33px 46px 16px minmax(0,1fr) 21px 51px 27px}}
 </style>
+<!-- BRC_GUEST_LANDING_MEMBER_HOME_20261020: guest opens login/free-2R; valid member opens 24-venue TOP; auth/rights untouched -->
+<style id="brc-guest-landing-member-home-20261020">
+/* 2枚目のログイン画面を初期表示。認証後には既存TOPロゴを再表示。 */
+body.brc-landing-guest .brc-brand-header{display:none !important;}
+body.brc-landing-guest .wrap{padding-top:12px;}
+body.brc-landing-guest .page-tabs{margin-top:0;}
+</style>
 </head>
-<body class="brc-admin-home-active">
+<body class="brc-landing-guest">
 <!-- BRC_TOP_STRAY_NEWLINE_GUARD_V1_20260926: body直下に誤表示される\n文字列だけを除去。UI/予測ロジック非変更。 -->
 <script>
 (function(){
@@ -6847,7 +6854,17 @@ body.brc-admin-home-active .brc-admin-top-race .dp-signal:not(.in){
         var n=nodes[i];
         if(n && n.nodeType===3){
           var v=String(n.nodeValue||'');
-          if(v.indexOf('\\n')!==-1 && /^[\s\\n]+$/.test(v)) n.parentNode && n.parentNode.removeChild(n);
+          if((v.indexOf('\\n')!==-1 && /^[\s\\n]+$/.test(v)) || /^\s*>\s*$/.test(v)) n.parentNode && n.parentNode.removeChild(n);
+        }
+      }
+      // モバイルでロゴの直前に紛れ込む単独の「>」だけ取り除く。
+      var wrap=document.querySelector('body > .wrap');
+      if(wrap){
+        var first=wrap.firstChild;
+        while(first && !(first.nodeType===1 && first.classList && first.classList.contains('brc-brand-header'))){
+          var next=first.nextSibling;
+          if(first.nodeType===3 && /^\s*>\s*$/.test(String(first.nodeValue||''))) wrap.removeChild(first);
+          first=next;
         }
       }
     }catch(_e){}
@@ -6866,7 +6883,7 @@ body.brc-admin-home-active .brc-admin-top-race .dp-signal:not(.in){
   </header>
 
   <div class="page-tabs" role="tablist" aria-label="メインメニュー">
-    <button class="page-tab" data-page="predict" id="brcPredictTab">出走表AI</button>
+    <button class="page-tab active" data-page="predict" id="brcPredictTab">出走表AI</button>
     <button class="page-tab" data-page="today">レース検索</button>
     <button class="page-tab" data-page="database">データ辞典</button>
     <button class="page-tab brc-admin-research-tab" data-page="research" id="brcResearchTab" aria-hidden="false">BRC研究室</button>
@@ -6874,7 +6891,7 @@ body.brc-admin-home-active .brc-admin-top-race .dp-signal:not(.in){
   </div>
 
   <!-- BRC_PUBLIC_TOP_V1: 24会場TOPを未ログイン・無料・会員・管理者へ公開 -->
-  <div id="page-home" aria-hidden="false">
+  <div id="page-home" style="display:none;" aria-hidden="true">
     <div id="brcAdminLoginHomeMount"></div>
   </div><!-- /page-home -->
 
@@ -7223,7 +7240,7 @@ body.brc-admin-home-active .brc-admin-top-race .dp-signal:not(.in){
   </div><!-- /page-venue -->
   </div><!-- /page-database -->
 
-  <div id="page-predict" style="display:none;">
+  <div id="page-predict">
 
     <section id="brcAdminHub" class="brc-admin-hub" aria-hidden="true">
       <div class="brc-admin-hub-head">
@@ -9467,7 +9484,12 @@ function brcSetAuthMessage(message='', tone='error'){
   el.style.color = tone==='ok' ? '#217247' : (tone==='info' ? 'var(--ink-soft)' : '#b42318');
 }
 function brcRenderGate(state='login', user=null){
-  if(state==='login') window.__brcAdminLoginHomeOpened=false;
+  if(state==='login'){
+    const wasAuthenticatedHome=!!window.__brcMemberLoginHomeOpened;
+    window.__brcMemberLoginHomeOpened=false;
+    window.__brcAdminLoginHomeOpened=false;
+    if(wasAuthenticatedHome) setTimeout(()=>{ try{ window.brcOpenGuestLanding?.(); }catch(_e){} },0);
+  }
   BRC_MEMBER_ACTIVE = false;
   try{ brcSetAdminSocialUi(null); }catch(_e){}
   BRC_FREE_PREVIEW_ACTIVE = null;
@@ -9516,11 +9538,17 @@ function brcRenderMember(user){
   if(badge) badge.textContent='BRC MEMBER';
   brcSetAuthMessage('');
   try{ brcSetAdminSocialUi(user); }catch(_e){}
-  // では、ログイン/保存済みセッション復元直後の最初の画面をTOPにする。
-  // 会員権限の定期再確認では毎回TOPへ戻さないよう、ページ内で一度だけ実行する。
-  if(BRC_ADMIN_ACTIVE && !window.__brcAdminLoginHomeOpened){
+  // 会員・1DAY・管理者のログイン成功 / 有効セッション復元後に共通24会場TOPへ。
+  // 定期認証更新やタブ移動では毎回TOPへ戻さない。
+  if(!window.__brcMemberLoginHomeOpened){
+    window.__brcMemberLoginHomeOpened=true;
     window.__brcAdminLoginHomeOpened=true;
-    setTimeout(()=>{ try{ window.brcOpenAdminLoginHome?.({fromAuth:true}); }catch(_e){} },0);
+    document.body?.classList.remove('brc-landing-guest');
+    setTimeout(()=>{
+      try{ window.brcOpenAdminLoginHome?.({fromAuth:true,scroll:false}); }
+      catch(_e){}
+      try{ window.scrollTo({top:0,behavior:'instant'}); }catch(_e){}
+    },0);
   }
   // 認証復元前に締切カードが描画済みでも、会員化直後に直前サインを取得する。
   setTimeout(()=>{ try{ renderDeadlineSchedule(); }catch(_e){} },0);
@@ -9728,6 +9756,7 @@ async function brcLogout(){
   }catch(_){ /* ローカル側は必ずログアウト */ }
   brcClearSession();
   brcRenderGate('login');
+  try{ window.brcOpenGuestLanding?.(); }catch(_e){}
   setTimeout(()=>brcLoadFreePreview(false),0);
   const pw=document.getElementById('brcLoginPassword'); if(pw) pw.value='';
 }
@@ -28715,6 +28744,7 @@ body.brc-admin-home-active .brc-admin-login-top-preview-note{display:none;}
   function openHome(opts={}){
     if(!isAdmin()) return false;
     mount();
+    document.body?.classList.remove('brc-landing-guest');
     qa('.page-tabs > .page-tab').forEach(b=>b.classList.remove('active'));
     // ホーム画面はメイン画像から開くため、メニュータブは選択しない。
     const ids=(typeof PAGE_IDS!=='undefined'&&Array.isArray(PAGE_IDS))?PAGE_IDS:['home','predict','today','special','database','research','admin'];
@@ -28782,6 +28812,22 @@ body.brc-admin-home-active .brc-admin-login-top-preview-note{display:none;}
     }
   }
 
+  function openGuestLanding(){
+    document.body?.classList.remove('brc-admin-home-active');
+    document.body?.classList.add('brc-landing-guest');
+    qa('.page-tabs > .page-tab').forEach(btn=>btn.classList.toggle('active',btn.dataset.page==='predict'));
+    const ids=(typeof PAGE_IDS!=='undefined'&&Array.isArray(PAGE_IDS))?PAGE_IDS:['home','predict','today','special','database','research','admin'];
+    ids.forEach(id=>{
+      const el=document.getElementById('page-'+id);
+      if(!el)return;
+      el.style.display=id==='predict'?'':'none';
+      if(id==='home')el.setAttribute('aria-hidden','true');
+    });
+    requestAnimationFrame(()=>{ try{ syncPageTabsStickyHeight(); }catch(_e){} });
+    try{ window.scrollTo({top:0,behavior:'instant'}); }catch(_e){}
+    return true;
+  }
+  window.brcOpenGuestLanding=openGuestLanding;
   window.brcOpenAdminLoginHome=openHome;
   window.brcMountAdminLoginHome=mount;
   window.brcSyncAdminLoginHomeUi=syncAdminState;
