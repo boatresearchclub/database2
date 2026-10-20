@@ -22760,7 +22760,7 @@ window.__windSelection = window.__windSelection || {dir:'', speed:''};
 // スタートラインから1Mへ向かう艇を基準にした風向区分。
 // 表示専用で、1着率・2着率・3着率やその他のBRC予測値には加算しない。
 const BRC_WIND_RELATIVE_MAP = {
-  '桐生': {'北西':'追い風','北':'追い風','北東':'追い風','南東':'向かい風','南':'向かい風','南西':'向かい風','東':'左横風','西':'右横風'},
+  '桐生': {'北西':'追い風','北':'追い風','北東':'左横風','南東':'向かい風','南':'向かい風','南西':'向かい風','東':'向かい風','西':'追い風'},
   '戸田': {'南西':'追い風','西':'追い風','北西':'追い風','北東':'向かい風','東':'向かい風','南東':'向かい風','北':'左横風','南':'右横風'},
   '江戸川': {'南東':'追い風','南':'追い風','南西':'追い風','北西':'向かい風','北':'向かい風','北東':'向かい風','西':'左横風','東':'右横風'},
   '平和島': {'南東':'追い風','南':'追い風','南西':'追い風','北西':'向かい風','北':'向かい風','北東':'向かい風','西':'左横風','東':'右横風'},
@@ -22773,8 +22773,8 @@ const BRC_WIND_RELATIVE_MAP = {
   'びわこ': {'北西':'追い風','北':'追い風','北東':'追い風','南東':'向かい風','南':'向かい風','南西':'向かい風','東':'左横風','西':'右横風'},
   '住之江': {'北西':'追い風','北':'追い風','北東':'追い風','南東':'向かい風','南':'向かい風','南西':'向かい風','東':'左横風','西':'右横風'},
   '尼崎': {'北東':'追い風','東':'追い風','南東':'追い風','南西':'向かい風','西':'向かい風','北西':'向かい風','南':'左横風','北':'右横風'},
-  '鳴門': {'西':'追い風','北西':'追い風','北':'追い風','東':'向かい風','南東':'向かい風','南':'向かい風','北東':'左横風','南西':'右横風'},
-  '丸亀': {'南東':'追い風','南':'追い風','北西':'向かい風','北':'向かい風','南西':'左横風','西':'左横風','北東':'右横風','東':'右横風'},
+  '鳴門': {'西':'追い風','北西':'追い風','北':'左横風','東':'向かい風','南東':'向かい風','南':'右横風','北東':'向かい風','南西':'追い風'},
+  '丸亀': {'南東':'追い風','南':'追い風','北西':'向かい風','北':'向かい風','南西':'左横風','西':'向かい風','北東':'右横風','東':'追い風'},
   '児島': {'北西':'追い風','北':'追い風','北東':'追い風','南東':'向かい風','南':'向かい風','南西':'向かい風','東':'左横風','西':'右横風'},
   '宮島': {'北東':'追い風','東':'追い風','南西':'向かい風','西':'向かい風','南東':'左横風','南':'左横風','北西':'右横風','北':'右横風'},
   '徳山': {'東':'追い風','南東':'追い風','南':'追い風','西':'向かい風','北西':'向かい風','北':'向かい風','南西':'左横風','北東':'右横風'},
@@ -22783,7 +22783,7 @@ const BRC_WIND_RELATIVE_MAP = {
   '芦屋': {'南西':'追い風','西':'追い風','北西':'追い風','北東':'向かい風','東':'向かい風','南東':'向かい風','北':'左横風','南':'右横風'},
   '福岡': {'南西':'追い風','西':'追い風','北西':'追い風','北東':'向かい風','東':'向かい風','南東':'向かい風','北':'左横風','南':'右横風'},
   '唐津': {'北':'追い風','北東':'追い風','東':'追い風','南':'向かい風','南西':'向かい風','西':'向かい風','南東':'左横風','北西':'右横風'},
-  '大村': {'南西':'追い風','西':'追い風','北東':'向かい風','東':'向かい風','北西':'左横風','北':'左横風','南東':'右横風','南':'右横風'}
+  '大村': {'南西':'追い風','西':'追い風','北東':'向かい風','東':'向かい風','北西':'左横風','北':'向かい風','南東':'右横風','南':'追い風'}
 };
 function brcNormalizeOfficialWindQuality(v){
   const s=String(v||'').replace(/[\s　]+/g,'').trim();
@@ -22792,14 +22792,20 @@ function brcNormalizeOfficialWindQuality(v){
   if(['追い風','向かい風','左横風','右横風','無風'].includes(s)) return s;
   return '';
 }
+// 未観測17組は公式風区分がない場合のみ分類を保留する。
+const BRC_WIND_UNOBSERVED_17 = new Set([["桐生","南西"],["常滑","北"],["常滑","北西"],["津","北"],["津","北東"],["津","南西"],["住之江","東"],["住之江","南西"],["住之江","西"],["住之江","北西"],["児島","東"],["児島","西"],["宮島","西"],["宮島","北西"],["福岡","西"],["唐津","東"],["唐津","南東"]].map(v=>v.join('|')));
 function brcWindRelativeLabel(venue,dir,speed,officialQuality=''){
-  if(Number(speed)===0 || dir==='無風') return '無風';
+  if(speed===null || speed===undefined || String(speed).trim()==='') return '風向参考';
+  const speedValue=Number(speed);
+  if(!Number.isFinite(speedValue)) return '風向参考';
+  if(speedValue===0 || dir==='無風') return '無風';
   const official=brcNormalizeOfficialWindQuality(officialQuality);
   if(official) return official;
+  if(BRC_WIND_UNOBSERVED_17.has(String(venue)+'|'+String(dir))) return '分類要確認';
   return BRC_WIND_RELATIVE_MAP?.[venue]?.[dir] || '風向参考';
 }
 function brcWindRelativeBadgeHtml(label,dir=''){
-  const cls=label==='追い風'?'tail':label==='向かい風'?'head':label==='左横風'?'left':label==='右横風'?'right':'calm';
+  const cls=label==='追い風'?'tail':label==='向かい風'?'head':label==='左横風'?'left':label==='右横風'?'right':label==='無風'?'calm':'unknown';
   const compass=(dir && dir!=='無風') ? `（${dir}）` : '';
   return `<span class="wind-relative-badge ${cls}">${label}${compass}</span>`;
 }
@@ -23357,7 +23363,7 @@ function brcBindAdminRaceToolsTabs(){
 function buildWindPanelHtml(venue){
   const sel=window.__windSelection||{dir:'',speed:''};
   const dirs=['北','北東','東','南東','南','南西','西','北西'];
-  const dirOpts=[`<option value="">選択</option>`].concat(dirs.map(d=>{const relative=BRC_WIND_RELATIVE_MAP?.[venue]?.[d]||'風向参考';return `<option value="${d}"${sel.dir===d?' selected':''}>${relative}（${d}）</option>`;})).join('');
+  const dirOpts=[`<option value="">選択</option>`].concat(dirs.map(d=>{const relative=brcWindRelativeLabel(venue,d,1);return `<option value="${d}"${sel.dir===d?' selected':''}>${relative}（${d}）</option>`;})).join('');
   const speedOpts=[`<option value="">選択</option>`].concat(Array.from({length:16},(_,i)=>`<option value="${i}"${String(sel.speed)===String(i)?' selected':''}>${i}m</option>`)).join('');
   return `<div id="windPanel">
     <div class="wind-panel-head"><span class="wind-current-label">現在の風</span><span id="windAutoStatus">展示後に自動取得</span></div>
@@ -23374,7 +23380,9 @@ function buildWindPanelHtml(venue){
 function brcNormalizeLiveWind(liveRace){
   const w=liveRace?.weather;
   if(!w || typeof w!=='object') return null;
-  const speedRaw=Number(w.wind_speed_m);
+  const rawWindSpeed=w.wind_speed_m;
+  if(rawWindSpeed===null || rawWindSpeed===undefined || String(rawWindSpeed).trim()==='') return null;
+  const speedRaw=Number(rawWindSpeed);
   if(!Number.isFinite(speedRaw)) return null;
   const speed=Math.max(0,Math.round(speedRaw));
   if(speed>15) return null;
@@ -23459,7 +23467,7 @@ function renderWindRef(venue, dir, speed, officialQuality=''){
   const effectiveDir = speedKey === '0' ? '無風' : dir;
   const officialRelative=brcNormalizeOfficialWindQuality(officialQuality);
   const relative = brcWindRelativeLabel(venue,effectiveDir,Number(speedKey),officialRelative);
-  const relativeSource = officialRelative ? '風区分：BOAT RACE公式' : '風区分：会場方向から参考判定';
+  const relativeSource = officialRelative ? '風区分：BOAT RACE公式' : (relative==='分類要確認' ? '風区分：未観測のため分類保留' : '風区分：会場方向から参考判定');
   const relativeBadge = brcWindRelativeBadgeHtml(relative,effectiveDir);
   const combo = WIND_COMBO_REF?.[venue]?.[effectiveDir]?.[speedKey];
 
