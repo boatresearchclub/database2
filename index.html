@@ -1,3 +1,4 @@
+<!-- BRC_V3_TABLE_DRIFT_GUARDED_V3_20261021: admin v3 6-boat atomic display and post-verification DOM repair; ineligible races not masked; no Worker, AI, bets changes -->
 <!-- BRC_V3_DETAIL_SINGLE_SOURCE_V1_20261021: fix v3 KPI late legacy personal & delta overwrite; display only -->
 <!-- BRC_WIND_175_17_REINTEGRATED_R1_20261021: 11 verified wind classifications restored; 17 no-observation cases held; previous UI changes retained. No rates or prediction algorithm changes. -->
 <!-- BRC_PIN_SUCCESS_MESSAGE_SILENT_20261021: Save/remove only update UI, no success status text; storage errors remain visible. -->
@@ -346,7 +347,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261021-V3-DETAIL-STABLE-WIND-R1">>
+<meta name="brc-build" content="20261021-V3-TABLE-DRIFT-GUARDED-WIND-R3">>
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -19381,6 +19382,129 @@ function brcV3AdminValidateFour(payload,date,code,raceNo){
 // BRC_TIMEX_V3_ADMIN_ONLY_FOUR_DISPLAY_SWITCH_LOCAL_20261012
 // Read-only presentation overlay. Never mutate boats/worker values or send race contexts.
 let __brcV3AdminDisplay=null;
+// BRC_V3_TABLE_ATOMIC_GATE_V3_20261021: staging display-only gate for admin table.
+// Prevent intermediate v2/personal values from appearing before verified v3 response.
+// Gate applies to the two rate columns only, not the underlying calculations.
+let __brcV3TableGateMode='pending';
+let __brcV3TableGateFallbackKey='';
+let __brcV3TableGateFallbackSnapshot='';
+let __brcV3TableGateObserver=null;
+function brcV3TableGateSet(mode){
+  if(!['pending','verified','fallback'].includes(mode))return;
+  __brcV3TableGateMode=mode;
+  if(mode==='fallback'){
+    try {
+      const selected=brcCurrentLiveExhibitionSelection();
+      const date=String(TODAY_LABEL||'');
+      const code=selected?.venue?brcVenueCodeFromName(selected.venue):'';
+      __brcV3TableGateFallbackKey=[date,code,Number(selected?.raceNo)].join('|');
+      // A retry must resume after a changed exhibition or changed canonical prior.
+      const sig=brcV3AdminLiveSignature(window.__currentLiveExhibition);
+      let prior='';try{prior=brcV3AdminPriorCanonical();}catch(_){}
+      __brcV3TableGateFallbackSnapshot=sig+'#'+prior;
+    }catch(_){__brcV3TableGateFallbackKey='';__brcV3TableGateFallbackSnapshot='';}
+  }else{
+    __brcV3TableGateFallbackKey='';__brcV3TableGateFallbackSnapshot='';
+  }
+  brcV3TableGateRefresh();
+}
+function brcV3TableGateRefresh(){
+  const host=document.querySelector('#predictResult #predictTableWrap');
+  if(!host)return;
+  const selected=brcCurrentLiveExhibitionSelection();
+  const active=!!(BRC_ADMIN_ACTIVE&&BRC_MEMBER_ACTIVE&&selected?.venue&&Number(selected.raceNo)>=1&&Number(selected.raceNo)<=12);
+  const date=String(TODAY_LABEL||''),code=selected?.venue?brcVenueCodeFromName(selected.venue):'';
+  const key=[date,code,Number(selected?.raceNo)].join('|');
+  // Do not allow the verified gate from a previous race to unlock this race.
+  const verified=active&&__brcV3AdminDisplay?.key===key&&
+    __brcV3AdminDisplay?.signature===brcV3AdminLiveSignature(window.__currentLiveExhibition)&&
+    (()=>{try{return __brcV3AdminDisplay.priorCanonical===brcV3AdminPriorCanonical();}catch(_){return false;}})();
+  // Do not hide normal values for historical, before-exhibition, cancelled,
+  // Edogawa, or incomplete-prior races. Only a truly eligible current race waits.
+  let eligible=false, liveSig='', prior='';
+  if(active&&date===getJstDateLabel()&&code&&code!=='03'){
+    try{
+      eligible=brcV3AdminLiveBlockReason(window.__currentLiveExhibition,date,code,Number(selected.raceNo))==='READY';
+      if(eligible){liveSig=brcV3AdminLiveSignature(window.__currentLiveExhibition);prior=brcV3AdminPriorCanonical();}
+      eligible=!!(eligible&&liveSig&&prior);
+    }catch(_){eligible=false;}
+  }
+  const fallback=eligible&&__brcV3TableGateMode==='fallback'&&
+    __brcV3TableGateFallbackKey===key&&__brcV3TableGateFallbackSnapshot===(liveSig+'#'+prior);
+  const pending=eligible&&!verified&&!fallback;
+  host.dataset.brcV3GateKey=key;
+  host.classList.toggle('brc-v3-rates-pending',pending);
+  if(pending){
+    for(let c=1;c<=6;c++)for(const kind of ['win','top3']){
+      const cell=document.getElementById('predict-'+kind+'-cell-'+c);
+      if(cell)cell.setAttribute('aria-label','TimeX v3 照合中');
+    }
+  }else{
+    for(let c=1;c<=6;c++)for(const kind of ['win','top3']){
+      document.getElementById('predict-'+kind+'-cell-'+c)?.removeAttribute('aria-label');
+    }
+  }
+}
+// BRC_V3_TABLE_DOM_DRIFT_REPAIR_V3_20261021
+// Repair legacy late writes in the observer microtask, before a later 3s recovery tick.
+let __brcV3TableRepairing=false;
+function brcV3TableVerifiedDrift(){
+  if(!__brcV3AdminDisplay || !BRC_ADMIN_ACTIVE || !BRC_MEMBER_ACTIVE)return false;
+  const state=__brcV3AdminDisplay;
+  const selected=brcCurrentLiveExhibitionSelection();
+  const date=String(TODAY_LABEL||''),code=brcVenueCodeFromName(selected?.venue||'');
+  if(state.key!==[date,code,Number(selected?.raceNo)].join('|'))return false;
+  if(!brcV3AdminLiveMatches(window.__currentLiveExhibition,date,code,selected?.raceNo))return false;
+  if(state.signature!==brcV3AdminLiveSignature(window.__currentLiveExhibition))return false;
+  try{if(state.priorCanonical!==brcV3AdminPriorCanonical())return false;}catch(_){return false;}
+  const boats=window.__predictBoatsCurrent;
+  if(!Array.isArray(boats)||boats.length!==6)return false;
+  for(let c=1;c<=6;c++){
+    const b=boats.find(x=>Number(x.course)===c);
+    if(!b)return false;
+    const win=state.four?.wins?.get(c),top3=state.four?.top3s?.get(c);
+    const preWin=Number(b.basePctFloat),preTop3=Number(b.basePct3Float);
+    if([win,top3,preWin,preTop3].some(x=>!Number.isFinite(x)||x<0||x>100))return false;
+    const w=document.getElementById('predict-win-cell-'+c);
+    const t=document.getElementById('predict-top3-cell-'+c);
+    if(!w||!t)return false;
+    const expectedWin=brcBuildProbabilityCell(Math.round(win),brcBuildExhibitionProbabilityArrowIcon(win-preWin,0.75));
+    const expectedTop3=brcBuildProbabilityCell(Math.round(top3),brcBuildExhibitionProbabilityArrowIcon(top3-preTop3,0.75));
+    if(w.innerHTML!==expectedWin||t.innerHTML!==expectedTop3)return true;
+  }
+  return false;
+}
+function brcV3TableGateObservedMutation(records){
+  if(__brcV3TableRepairing)return;
+  // A parent redraw may replace the table; catch both table descendant mutations
+  // and a new #predictTableWrap node, without inspecting unrelated live panels.
+  const relevant=(records||[]).some(record=>{
+    const node=record.target?.nodeType===1?record.target:record.target?.parentElement;
+    if(node?.closest?.('#predictTableWrap'))return true;
+    return Array.from(record.addedNodes||[]).some(child=>
+      child?.nodeType===1&&(child.id==='predictTableWrap'||!!child.querySelector?.('#predictTableWrap')));
+  });
+  if(!relevant)return;
+  brcV3TableGateRefresh();
+  try{
+    if(brcV3TableVerifiedDrift()){
+      __brcV3TableRepairing=true;
+      try{brcV3AdminRenderDisplay();}finally{__brcV3TableRepairing=false;}
+    }
+  }catch(_){}
+}
+function brcV3TableGateInit(){
+  if(__brcV3TableGateObserver)return;
+  const css=document.createElement('style');css.id='brcV3AtomicGateStyle';
+  css.textContent='#predictResult #predictTableWrap.brc-v3-rates-pending [id^="predict-win-cell-"],#predictResult #predictTableWrap.brc-v3-rates-pending [id^="predict-top3-cell-"]{font-size:0!important;color:transparent!important}#predictResult #predictTableWrap.brc-v3-rates-pending [id^="predict-win-cell-"]::after,#predictResult #predictTableWrap.brc-v3-rates-pending [id^="predict-top3-cell-"]::after{content:"照合中";font-size:12px;color:#68768b;white-space:nowrap}#predictResult #predictTableWrap.brc-v3-rates-pending [id^="predict-win-cell-"] *,#predictResult #predictTableWrap.brc-v3-rates-pending [id^="predict-top3-cell-"] *{visibility:hidden!important}';
+  document.head.appendChild(css);
+  __brcV3TableGateObserver=new MutationObserver(brcV3TableGateObservedMutation);
+  const target=document.getElementById('predictResult');
+  if(target)__brcV3TableGateObserver.observe(target,{childList:true,subtree:true,characterData:true});
+  brcV3TableGateRefresh();
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',brcV3TableGateInit,{once:true});
+else brcV3TableGateInit();
 
 // BRC_V3_DETAIL_SINGLE_SOURCE_V1_20261021: let only verified current-v3 own detail values and deltas.
 function brcV3VerifiedDetailVisible() {
@@ -19472,6 +19596,7 @@ window.brcV3AdminDiagnostics=function(){
 // END BRC_V3_ROLLBACK_WRONG_PRIOR_OVERWRITE_20261017_R1
 
 function brcV3AdminClearDisplay(){
+  brcV3TableGateSet('pending');
   const hadV3=!!__brcV3AdminDisplay;
   __brcV3AdminDisplay=null;
   const host=document.querySelector('#predictResult #predictTableWrap');
@@ -19530,6 +19655,7 @@ function brcV3AdminRenderDisplay(){
   brcV3AdminSetTableRateLabel('（TimeX v3・照合済）','v3');
   const host=document.querySelector('#predictResult #predictTableWrap');
   if(host)host.dataset.brcV3RateMode='v3';
+  brcV3TableGateSet('verified');
   return true;
 }
 // END BRC_TIMEX_V3_ADMIN_ONLY_FOUR_DISPLAY_SWITCH_LOCAL_20261012
@@ -19645,7 +19771,7 @@ function brcV3AdminRecoveryTick(){
   if(document.visibilityState==='hidden')return;
   const selected=brcCurrentLiveExhibitionSelection();
   if(!selected?.venue||!Number.isInteger(Number(selected.raceNo))||Number(selected.raceNo)<1||Number(selected.raceNo)>12)return;
-  if(String(TODAY_LABEL||'')!==getJstDateLabel())return;
+  if(String(TODAY_LABEL||'')!==getJstDateLabel()){brcV3TableGateSet('fallback');return;}
   const host=document.querySelector('#predictResult #predictTableWrap');
   if(!host||!Array.isArray(window.__predictBoatsCurrent)||window.__predictBoatsCurrent.length!==6)return;
   // Re-mount when the prediction DOM is rebuilt; re-apply verified four metrics
@@ -19701,6 +19827,7 @@ function brcV3AdminAutoTry(box){
     return;
   }
   __brcV3AutoStamp=stamp;__brcV3AutoLastAt=now;
+  brcV3TableGateSet('pending');
   brcV3AdminRecordPhase('REQUESTING_WORKER');
   btn.click();
 }
@@ -19727,6 +19854,7 @@ function brcV3AdminMount(venue,raceNo,liveRace){
     document.querySelector('#predictResult #predictTableWrap');
   if(!host||!brcV3AdminCompareCurrent(venue,raceNo,String(TODAY_LABEL||'')))return;
   if(!__brcV3AdminDisplay)brcV3AdminRestoreExistingTimeX();
+  brcV3TableGateRefresh();
   brcV3AdminEnsureRecovery();
   const date=String(TODAY_LABEL||''),code=brcVenueCodeFromName(venue),r=Number(raceNo);
   const key=[date,code,r].join('|');
@@ -19809,6 +19937,7 @@ function brcV3AdminMount(venue,raceNo,liveRace){
         brcV3AdminRecordPhase('WORKER_NOT_READY',res.status+' '+remoteStatus);
         brcV3AdminClearDisplay();
         try{brcRefreshAdminPersonalTimeXDom();}catch(_e){}
+        brcV3TableGateSet('fallback');
         const codeText=String(data?.status||data?.error||('HTTP '+res.status));
         status.textContent='新v3未適用：'+codeText+'。公式確認データの登録・展示条件等を確認してください。';return;
       }
@@ -19841,6 +19970,7 @@ function brcV3AdminMount(venue,raceNo,liveRace){
       brcV3AdminRecordPhase('ERROR',reason);
       if(seq===__brcV3AdminCompareSeq&&brcV3AdminCompareCurrent(venue,r,date)){
         brcV3AdminClearDisplay();try{brcRefreshAdminPersonalTimeXDom();}catch(_e){}
+        brcV3TableGateSet('fallback');
         status.textContent='新v3未適用：'+reason;
       }
     }finally{btn.disabled=false;}
