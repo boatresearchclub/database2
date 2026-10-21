@@ -1,3 +1,4 @@
+<!-- BRC_V3_DETAIL_SINGLE_SOURCE_V1_20261021: fix v3 KPI late legacy personal & delta overwrite; display only -->
 <!-- BRC_WIND_175_17_REINTEGRATED_R1_20261021: 11 verified wind classifications restored; 17 no-observation cases held; previous UI changes retained. No rates or prediction algorithm changes. -->
 <!-- BRC_PIN_SUCCESS_MESSAGE_SILENT_20261021: Save/remove only update UI, no success status text; storage errors remain visible. -->
 <!-- BRC_VENUE_GRADE_MONTHLY_FALLBACK_V9_20261021: Early-morning month schedule official grade for TOP/picker/Info; cache date-scoped; special grades protected; prediction/auth untouched. -->
@@ -345,7 +346,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261021-WIND-175-17-REINTEGRATED-R1">>
+<meta name="brc-build" content="20261021-V3-DETAIL-STABLE-WIND-R1">>
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -19380,6 +19381,25 @@ function brcV3AdminValidateFour(payload,date,code,raceNo){
 // BRC_TIMEX_V3_ADMIN_ONLY_FOUR_DISPLAY_SWITCH_LOCAL_20261012
 // Read-only presentation overlay. Never mutate boats/worker values or send race contexts.
 let __brcV3AdminDisplay=null;
+
+// BRC_V3_DETAIL_SINGLE_SOURCE_V1_20261021: let only verified current-v3 own detail values and deltas.
+function brcV3VerifiedDetailVisible() {
+  try {
+    if(!BRC_ADMIN_ACTIVE || !BRC_MEMBER_ACTIVE || !__brcV3AdminDisplay) return false;
+    const s=__brcV3AdminDisplay;
+    const pick=brcCurrentLiveExhibitionSelection();
+    const date=String(TODAY_LABEL||''), code=brcVenueCodeFromName(pick.venue);
+    if(s.key!==[date,code,Number(pick.raceNo)].join('|')) return false;
+    const live=window.__currentLiveExhibition;
+    if(!brcV3AdminLiveMatches(live,date,code,pick.raceNo)) return false;
+    if(s.signature!==brcV3AdminLiveSignature(live)) return false;
+    if(s.priorCanonical!==brcV3AdminPriorCanonical()) return false;
+    // State is verified even before player detail markup is upgraded to v3.
+    // Guard legacy writers by SAME-RACE verified state, never by a label they can overwrite.
+    return true;
+  } catch(_) { return false; }
+}
+
 // Keep the exact raw TimeX, lap, entry and selected race identity in this fingerprint.
 // The Worker never supplies a live fingerprint, so independent server-data equality
 // still requires a future authenticated integration test.
@@ -19573,6 +19593,36 @@ function brcV3AdminSyncDetail(course){
   // Preserve ST and motor KPIs after the newly added 2nd/3rd rate cards.
   t.insertAdjacentElement('afterend',make('新TimeX v3 3着率',values[2]));
   t.insertAdjacentElement('afterend',make('新TimeX v3 2着率',values[1]));
+
+  // Keep the v3 delta and the v3 displayed integer from the SAME verified response.
+  // Never use exhibitionWinDeltaPt or exhibitionTop3DeltaPt (legacy/v2 values) here.
+  const selectedBoat=Array.isArray(window.__predictBoatsCurrent)
+    ? window.__predictBoatsCurrent.find(x=>Number(x?.course)===c) : null;
+  const appendV3Delta=(node,before,now)=>{
+    if(before===null||before===undefined||before===''||
+       now===null||now===undefined||now==='')return;
+    const b=Number(before),n=Number(now);
+    if(!Number.isFinite(b)||!Number.isFinite(n)||b<0||b>100||n<0||n>100)return;
+    const delta=Math.round((n-b)*10)/10;
+    const sign=delta>0?'+':delta<0?'−':'';
+    const direction=delta>0?'↑':delta<0?'↓':'→';
+    const badge=document.createElement('div');
+    badge.className='brc-apd8-delta brc-v3-verified-delta';
+    badge.dataset.source='v3-verified';
+    const prior=document.createElement('span');
+    prior.className='before';
+    prior.textContent='展示前'+Math.round(b)+'%';
+    const sep=document.createElement('span');sep.className='sep';sep.textContent='→';
+    const effect=document.createElement('span');
+    effect.className=delta>0?'up':delta<0?'down':'flat';
+    effect.textContent=direction+' '+sign+Math.abs(delta).toFixed(1).replace(/\.0$/,'')+'pt';
+    badge.append(prior,sep,effect);
+    node.appendChild(badge);
+  };
+  if(selectedBoat){
+    appendV3Delta(p,selectedBoat.basePctFloat,values[0]);
+    appendV3Delta(t,selectedBoat.basePct3Float,values[3]);
+  }
   return true;
 }
 // END BRC_TIMEX_V3_ADMIN_DETAIL_SYNCHRONIZATION_LOCAL_20261013
@@ -31866,6 +31916,7 @@ body.brc-admin-home-active .brc-admin-login-top-preview-note{display:none;}
   }
 
   function applyTopDeltas(course){
+    if(typeof brcV3VerifiedDetailVisible==='function'&&brcV3VerifiedDetailVisible()) return;
     if(!isAdmin()) return;
     const body=document.getElementById('predictDetailBody');
     const shell=body?.querySelector('.brc-apd2-shell');
@@ -32881,6 +32932,7 @@ V8〜V10のコンパクト化で消えていた「個人傾向 / 選手特性」
   }
 
   function refresh(course){
+    if(typeof brcV3VerifiedDetailVisible==='function'&&brcV3VerifiedDetailVisible()) return;
     if(!isAdmin()) return;
     const body=document.getElementById('predictDetailBody');
     const shell=body?.querySelector('.brc-apd2-shell');
@@ -36578,6 +36630,7 @@ Worker / 買い目 / AI内部値は変更しない。個人込み最終1着率�
   }
   function syncDetail(course){
     try{
+      if(typeof brcV3VerifiedDetailVisible==='function'&&brcV3VerifiedDetailVisible()) return;
       if(!enabled()) return;
       const c=Number(course);
       if(!Number.isFinite(c)) return;
@@ -36618,8 +36671,20 @@ Worker / 買い目 / AI内部値は変更しない。個人込み最終1着率�
     window.openPredictUnifiedDetail=function(course,initialTab='player'){
       window.__brcTimexPersonalDetailCourse=Number(course);
       const out=previousOpen.apply(this,arguments);
+      // This is the last detail-open wrapper. Display the already-verified v3
+      // snapshot synchronously before first paint, after any legacy render.
+      try{
+        if(typeof brcV3VerifiedDetailVisible==='function' && brcV3VerifiedDetailVisible() &&
+           typeof brcV3AdminSyncDetail==='function') brcV3AdminSyncDetail(course);
+      }catch(_e){}
       try{syncDetail(course);}catch(_e){}
-      setTimeout(()=>{try{syncDetail(course);}catch(_e){}},0);
+      setTimeout(()=>{
+        try{
+          if(typeof brcV3VerifiedDetailVisible==='function' && brcV3VerifiedDetailVisible() &&
+             typeof brcV3AdminSyncDetail==='function') brcV3AdminSyncDetail(course);
+          else syncDetail(course);
+        }catch(_e){}
+      },0);
       return out;
     };
     try{openPredictUnifiedDetail=window.openPredictUnifiedDetail;}catch(_e){}
