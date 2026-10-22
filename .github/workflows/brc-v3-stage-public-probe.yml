@@ -1,6 +1,9 @@
 name: BRC V3 Stage Public Route Probe (NO TOKEN, NO WRITES)
 on:
   workflow_dispatch:
+  schedule:
+    # Daily 11:20 JST independent of motor audit.
+    - cron: '20 2 * * *'
   push:
     paths:
       - '.github/workflows/brc-v3-stage-public-probe.yml'
@@ -54,6 +57,8 @@ jobs:
                   results.append({'probe':label,'error_type':type(err).__name__,
                      'transport_failure':True})
           probe=results[0]
+          stage=results[1]
+          live_probe=results[3]
           report={
             'scope':'unauthenticated read-only routes; no secrets, KV access or writes',
             'date_jst':day,
@@ -62,6 +67,10 @@ jobs:
             'worker_version_verified':False,
             'kv_contents_verified':False,
             'authenticated_prediction_verified':False,
+            'stage_auth_protection_observed':stage.get('http') in (401,403),
+            'stage_endpoint_reachable':isinstance(stage.get('http'),int),
+            'exhibition_endpoint_reachable':isinstance(live_probe.get('http'),int),
+            'next_diagnostic':'Authenticated Worker/KV functional test still required for v3Verified; this public probe cannot establish v3 readiness',
             'note':'401 alone is not proof of code version or KV content; HTTP 404 for exhibition can be normal.'
           }
           Path('v3_public_route_audit.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
