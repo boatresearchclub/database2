@@ -215,7 +215,17 @@ jobs:
                               'K_derived_n':derived,'diff':delta,'cycle':meta['cycle_start'],
                               'excluded_current_meet_start':meta['event_start'],
                               'statuses':{st:status_counts.get((vname,mno,st),0) for st in ('F','S0','S1','S2')}})
-          report={'status_totals':{st:sum(n for (v,m,s),n in status_counts.items() if s==st) for st in sorted({k[2] for k in status_counts})},
+          # Machine-readable release gates: never infer permission to publish
+          # from the highest-scoring retrospective counting policy.
+          validation_gates={
+              'official_days_complete':days_good==(end-start).days+1 and not missing and not errors,
+              'all_baseline_motor_counts_match':candidate_residual_samples==[],
+              'counting_policy_independently_validated':False,
+              'finals_and_wins_verified':False,
+              'all_24_venues_cycle_verified':False,
+          }
+          validation_gates['can_publish_motor_detail']=all(validation_gates.values())
+          report={'validation_gates':validation_gates,{st:sum(n for (v,m,s),n in status_counts.items() if s==st) for st in sorted({k[2] for k in status_counts})},
               'other_status_totals':{st:sum(n for (v,m,s),n in other_start_counts.items() if s==st) for st in sorted({k[2] for k in other_start_counts})},
               'candidate_n_definitions':variants,
               'candidate_policy_residual_by_venue':candidate_residual_by_venue,
