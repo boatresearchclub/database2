@@ -145,6 +145,23 @@ jobs:
                       n=counts.get((vname,mno),0)+sum(status_counts.get((vname,mno,st),0)+other_start_counts.get((vname,mno,st),0) for st in allowed)
                       count+=1;good+=int(n==int(record['n']));distance+=abs(n-int(record['n']))
               variants['subset_'+('_'.join(sorted(allowed)) if allowed else 'none')]={'exact':good,'total':count,'absolute_difference_sum':distance}
+          # Independent holdout diagnostics: a retrospective best fit is NOT
+          # evidence that the counting policy is valid for future releases.
+          candidate={'F','L1','NF_F','NF_S1','NF_S2','S1','S2'}
+          candidate_residual_by_venue={}
+          candidate_residual_samples=[]
+          for vname,meta in base['venues'].items():
+              if meta['cycle_start']<start.isoformat():continue
+              for mno,record in meta['motors'].items():
+                  derived=counts.get((vname,mno),0)+sum(
+                      status_counts.get((vname,mno,st),0)+other_start_counts.get((vname,mno,st),0)
+                      for st in candidate)
+                  delta=derived-int(record['n'])
+                  if delta:
+                      item=candidate_residual_by_venue.setdefault(vname,{'motors':0,'signed_delta_sum':0,'absolute_delta_sum':0})
+                      item['motors']+=1;item['signed_delta_sum']+=delta;item['absolute_delta_sum']+=abs(delta)
+                      if len(candidate_residual_samples)<120:
+                          candidate_residual_samples.append({'venue':vname,'motor':mno,'baseline_n':record['n'],'candidate_n':derived,'delta':delta,'cycle_start':meta['cycle_start'],'excluded_meet_start':meta['event_start']})
           best_variants=sorted(({'policy':key,**val} for key,val in variants.items()),
               key=lambda x:(x['absolute_difference_sum'],-x['exact']))[:12]
           # Venue-specific diagnostic: independent best subset is useful for
@@ -186,6 +203,9 @@ jobs:
           report={'status_totals':{st:sum(n for (v,m,s),n in status_counts.items() if s==st) for st in sorted({k[2] for k in status_counts})},
               'other_status_totals':{st:sum(n for (v,m,s),n in other_start_counts.items() if s==st) for st in sorted({k[2] for k in other_start_counts})},
               'candidate_n_definitions':variants,
+              'candidate_policy_residual_by_venue':candidate_residual_by_venue,
+              'candidate_policy_residual_samples':candidate_residual_samples,
+              'candidate_policy_not_approved':True,
               'best_candidate_N_policies':best_variants,
               'per_venue_research_best_status_policy':per_venue_best,
               'per_venue_policy_warning':'Retrospective fit on 2026-09-05 only. Do not apply to production N.',
