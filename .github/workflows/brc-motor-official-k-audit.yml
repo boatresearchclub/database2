@@ -185,21 +185,41 @@ jobs:
                           candidate_residual_samples.append({'venue':vname,'motor':mno,'baseline_n':record['n'],'candidate_n':derived,'delta':delta,'cycle_start':meta['cycle_start'],'excluded_meet_start':meta['event_start']})
           # Hypothesis test only: some baseline records may include the
           # snapshot-day meet opener. Never fold boundary counts into release.
-          boundary_inclusion_test={'fixed':0,'still_missing':0,'overcounted':0,
-              'never_had_boundary_entries':0,'candidate_examples':[]}
+          # Boundary diagnosis must respect the frozen 2026-09-05 snapshot.
+          # Do not treat a later meeting's first day as part of that snapshot.
+          boundary_inclusion_test={
+              'inapplicable_meet_after_snapshot':0,
+              'eligible_meet_on_or_before_snapshot':0,
+              'eligible_fixed':0,'eligible_still_missing':0,
+              'eligible_overcounted':0,'eligible_no_boundary_events':0,
+              'eligible_samples':[],
+              'warning':'Exploratory only: opening-day events do not prove BRC reference includes an entire meeting.'
+          }
           for item in candidate_residual_samples:
+              if item['excluded_meet_start']>base['date']:
+                  boundary_inclusion_test['inapplicable_meet_after_snapshot']+=1
+                  continue
+              boundary_inclusion_test['eligible_meet_on_or_before_snapshot']+=1
               key=(item['venue'],item['motor'])
               n_boundary=boundary_finishes[key]+boundary_special[key]
               if not n_boundary:
-                  boundary_inclusion_test['never_had_boundary_entries']+=1
+                  boundary_inclusion_test['eligible_no_boundary_events']+=1
               delta_new=item['delta']+n_boundary
-              label='fixed' if delta_new==0 else 'still_missing' if delta_new<0 else 'overcounted'
+              label=('eligible_fixed' if delta_new==0 else
+                  'eligible_still_missing' if delta_new<0 else 'eligible_overcounted')
               boundary_inclusion_test[label]+=1
-              if n_boundary and len(boundary_inclusion_test['candidate_examples'])<35:
-                  boundary_inclusion_test['candidate_examples'].append({
-                      'venue':item['venue'],'motor':item['motor'],'event_start':item['excluded_meet_start'],
-                      'missing_original':-item['delta'],'opening_day_numeric':boundary_finishes[key],
-                      'opening_day_non_numeric':boundary_special[key], 'remaining_delta':delta_new})
+              if n_boundary and len(boundary_inclusion_test['eligible_samples'])<35:
+                  boundary_inclusion_test['eligible_samples'].append({
+                      'venue':item['venue'],'motor':item['motor'],
+                      'event_start':item['excluded_meet_start'],
+                      'baseline_date':base['date'],
+                      'missing_original':-item['delta'],
+                      'opening_day_numeric':boundary_finishes[key],
+                      'opening_day_non_numeric':boundary_special[key],
+                      'remaining_delta':delta_new})
+          assert (boundary_inclusion_test['inapplicable_meet_after_snapshot']+
+                  boundary_inclusion_test['eligible_meet_on_or_before_snapshot']==
+                  len(candidate_residual_samples))
           # Diagnostic hypotheses only: identify whether residuals cluster
           # at the baseline meeting boundary, and their exact magnitudes.
           candidate_residual_delta_histogram={}
