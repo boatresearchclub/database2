@@ -21,6 +21,7 @@ def build(files, today):
     counts = collections.Counter()
     status_counts = collections.Counter()
     processed = 0
+    validated_races = 0
     race_days = set()
     by_date = {}
     valid_codes = {f'{i:02d}' for i in range(1, 25)}
@@ -32,8 +33,16 @@ def build(files, today):
         if file is None:
             missing.append(day.isoformat())
             continue
+        # Validate official K's embedded target date, venue/race structure and
+        # numeric result consistency before allowing any motor row into research.
+        confirmed_events, confirmed_races, _ = official.load_k(file, day)
+        if confirmed_races < 1 or not confirmed_events:
+            raise ValueError(f"Official K contains no validated races for {day}")
         rows = motor_k.read_k(file)
+        if len(rows) < len(confirmed_events):
+            raise ValueError(f"Motor rows missing from official K for {day}")
         processed += 1
+        validated_races += confirmed_races
         for venue_code, motor, racer, reg, status in rows:
             if venue_code not in valid_codes:
                 raise ValueError("Unrecognized venue code")
@@ -62,6 +71,7 @@ def build(files, today):
         "older_days_missing_requiring_investigation": missing_older,
         "days_complete_through_previous_to_yesterday": len(missing_older) == 0,
         "venue_days_with_entries": len(race_days),
+        "official_K_validated_races": validated_races,
         "official_numeric_finisher_starts_by_venue_motor": observed,
         "special_status_occurrences": dict(status_counts),
         "rows_per_day_last_7": {(end-timedelta(days=i)).isoformat(): by_date.get((end-timedelta(days=i)).isoformat()) for i in range(6,-1,-1)},
