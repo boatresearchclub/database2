@@ -95,12 +95,18 @@ def official_k_events(content: str, target: date):
             if not finishing:
                 ignored+=1
                 return
-            if len([r for r in finishing if r[3]==1])!=1:
-                raise ValueError(f'Incomplete result: {expected} venue={venue} race={race} rank_entries={len(finishing)}')
+            if not any(r[3]==1 for r in finishing):
+                raise ValueError(f'Missing first place: {expected} venue={venue} race={race}')
             boatnums=[r[0] for r in rows]
             positions=[r[3] for r in finishing]
-            if len(boatnums)!=len(set(boatnums)) or len(positions)!=len(set(positions)):
-                raise ValueError(f'Duplicate boat/rank {expected} {venue} {race}R rows={rows}')
+            if len(boatnums)!=len(set(boatnums)):
+                raise ValueError(f'Duplicate boat: {expected} venue={venue} race={race} rows={rows}')
+            # Standard competition ties are legal: e.g. 1,2,3,3,5,6.
+            next_rank=1
+            for rank in sorted(set(positions)):
+                if rank!=next_rank:
+                    raise ValueError(f'Invalid tie ranking {expected} {venue} {race}R ranks={positions}')
+                next_rank+=positions.count(rank)
             if len(rows)>6:raise ValueError(f'Excess entries {expected} {venue} {race}R')
             actual_entries+=len(finishing)
             for boat,reg,course,rank in finishing:
