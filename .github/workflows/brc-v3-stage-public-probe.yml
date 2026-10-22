@@ -75,6 +75,13 @@ jobs:
           }
           Path('v3_public_route_audit.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
           print(json.dumps(report,ensure_ascii=False))
+          import os
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf8') as f:
+              f.write('## TimeX v3 stage: NOT VERIFIED\n')
+              for item in results:
+                  f.write(f"- {item['probe']}: HTTP {item.get('http','transport error')}\n")
+              f.write('### Still required: authenticated 422 diagnosis, validated KV context, v3 calculation and admin UI confirmation.\n')
+
           PY
       - name: Store sanitized result as artifact
         if: always()
