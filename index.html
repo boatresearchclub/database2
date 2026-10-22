@@ -1,3 +1,5 @@
+<!-- BRC_MOTOR_PREVIOUS_VERIFIED_V8_LATEST_20261022: built from latest uploaded 144353 index (SHA256 matched V6); includes independently verified previous user/date/venue/motor only, no stale cumulative stats. -->
+<!-- BRC_MOTOR_PREVIOUS_VERIFIED_FEED_V7_20261022: official K verified prior racer/date/motor feed, separate from stale cumulative N/finals. Admin diagnostic remains honest. No prediction math changes. -->
 <!-- BRC_DICTIONARY_PLAYER_DAILY_AUDIT_V6_20261022: admin-only visible freshness check for static dictionary and racer details. No data-generation, prediction or public view modification. -->
 <!-- BRC_PUBLIC_PREVIEW_V3_GATE_FIX_V4_20261022: member preview must never mask existing v2 rates as admin-only v3 verification pending; actual admin v3 gate preserved. -->
 <!-- BRC_PUBLIC_DIAGNOSTIC_VISIBILITY_V3_20261022: public/member preview hides admin-only motor freshness and D research; authorized admin view remains intact. -->
@@ -296,7 +298,6 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <!-- BRC_HEAD_ROLE_V4_ALL_BANDS_SHADOW_AUDIT_20260928: D帯の頭選定を「攻める頭（非イン収束1〜2艇）／残す頭（1号艇）／相手役割」に分離するShadow監査を、既存2026-08-26〜09-16 current Worker＋TimeX replayへ追加。loose/base/strictを同時比較し、現行D=1+外1艇で落とす第2外頭の回収件数を計測。公開予測/着率/買い目は変更なし。 -->
 <!-- BRC_PUBLIC_POSTRACE_EXPECTED_SLIT_FIX_V1_20261005: 非ログインの締切後レースで想定スリットを確実に表示。post-race DOMクラスだけでなく、BRC_POST_RACE_ACTIVE・選択レース締切時刻でも公開判定。締切前の非会員は従来どおり非表示。予測/着率/買い目/想定スリット算出ロジック非変更。 -->
 <!-- BRC_EXPECTED_SLIT_LIVE_REFRESH_V1_20261006: TimeXのlive展示自動ポーリング更新時に、選択中レースのSTART→1M想定隊形も同一payloadで自動再描画。締切カード/会場Rの再クリック不要。想定スリット算出式・TimeX・予測・着率・買い目ロジックは変更なし。 -->
-<!-- BRC_5TASKS_SINGLE_INDEX_PUSH_20261022: 21 embedded data blocks SHA-matched to 23 existing external chunks. -->
 <!DOCTYPE html>
 <!-- BRC_SLIT_DISPLAY_V10_20260924: 2023-2026再検証済み展示スリット2段階表示。展示+ST成立時は展示差のみを抑止。A/Bの1着・3連対ptのみ表示。強条件STは過去365日前日までの再現可能定義。予測着率/買い目は非変更。 -->
 
@@ -357,7 +358,8 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <!-- BRC_SCENARIO_SEARCH_PUBLIC_V1_20260911 -->
 <html lang="ja">
 <head>
-<meta name="brc-build" content="20261022-DICTIONARY-V6-V3-422-DIAG-R1">
+<!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
+<meta name="brc-build" content="20261022-MOTOR-PREVIOUS-VERIFIED-V8-LATEST">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -6995,6 +6997,12 @@ body:not(.brc-admin-diagnostics-visible) #predictResult details.predict-guide{ma
 body:not(.brc-admin-diagnostics-visible) #predictResult details.predict-guide:not([open])>summary{font-size:11px;min-height:0;padding:6px 10px;line-height:1.35;}
 body:not(.brc-admin-diagnostics-visible) .brc-dp-race-alert.is-partial{font-size:9px;line-height:1.2;}
 </style>
+<style id="brc-motor-previous-verified-v7-style">
+.brc-motor-verified-prev-card{margin:8px 0 12px;padding:11px 12px;border:1px solid rgba(10,31,51,.11);border-radius:11px;background:#fff;line-height:1.5}
+.brc-motor-verified-prev-title{font-size:11px;font-weight:800;color:#64748b}
+.brc-motor-verified-prev-name{font-size:14px;font-weight:850;color:#0a1f33;margin-top:3px}
+.brc-motor-verified-prev-period{font-size:11px;font-weight:650;color:#64748b;margin-top:3px}
+</style>
 </head>
 <body class="brc-landing-guest">
 <!-- BRC_TOP_STRAY_NEWLINE_GUARD_V1_20260926: body直下に誤表示される\n文字列だけを除去。UI/予測ロジック非変更。 -->
@@ -7453,6 +7461,7 @@ body:not(.brc-admin-diagnostics-visible) .brc-dp-race-alert.is-partial{font-size
             <p class="brc-v3-operator-help">閲覧中のブラウザが受信できたデータの日付を確認します。INDEXのプッシュだけでは、日次JSONの生成やD1保存までは実行されません。</p>
             <div id="brcAdminDailySourceCourse" class="brc-v3-operator-state" style="margin-bottom:7px" aria-live="polite">選手365日成績：確認中</div>
             <div id="brcAdminDailySourceMotor" class="brc-v3-operator-state" aria-live="polite">モーター履歴：確認中</div>
+            <div id="brcAdminDailySourceMotorPrevious" class="brc-v3-operator-state" style="margin-top:7px" aria-live="polite">モーター前回使用者：確認中</div>
             <div id="brcAdminDailySourceDictionary" class="brc-v3-operator-state" style="margin-top:7px" aria-live="polite">データ辞典・選手詳細：確認中</div>
             <p class="brc-v3-operator-help" style="margin-top:8px">結果取得・D1保存、風データの生成状況はこのINDEXだけでは判定できません。別途バックエンドの処理ログを照合してください。</p>
             <div class="brc-v3-operator-actions">
@@ -8159,56 +8168,41 @@ body:not(.brc-admin-diagnostics-visible) .brc-dp-race-alert.is-partial{font-size
 
 <script type="application/json" id="data-gradestats"></script>
 <script src="data/data-gradestats-96c1f7f5fc-001.js"></script>
-
 <script type="application/json" id="data-players"></script>
 <script src="data/data-players-3b146f12d0-001.js"></script>
 <script src="data/data-players-3b146f12d0-002.js"></script>
-
 <script type="application/json" id="data-player-profile-seed"></script>
 <script src="data/data-player-profile-seed-98469868b0-001.js"></script>
-
 <script type="application/json" id="data-venue-course-national">{"桐生":{"1":{"n":8384,"win":51.35,"top2":69.63,"top3":78.83},"2":{"n":8384,"win":12.52,"top2":36.86,"top3":54.97},"3":{"n":8384,"win":12.99,"top2":34.58,"top3":54.65},"4":{"n":8383,"win":13.09,"top2":28.32,"top3":48.13},"5":{"n":8382,"win":7.89,"top2":21.92,"top3":41.55},"6":{"n":8293,"win":2.17,"top2":8.78,"top3":22.09}},"戸田":{"1":{"n":8545,"win":43.29,"top2":61.25,"top3":72.44},"2":{"n":8545,"win":16.55,"top2":39.79,"top3":57.98},"3":{"n":8545,"win":15.9,"top2":36.23,"top3":53.88},"4":{"n":8545,"win":14.53,"top2":31.63,"top3":50.83},"5":{"n":8544,"win":7.22,"top2":21.06,"top3":40.13},"6":{"n":8434,"win":2.53,"top2":10.16,"top3":25.02}},"江戸川":{"1":{"n":7617,"win":47.13,"top2":66.94,"top3":77.41},"2":{"n":7620,"win":17.95,"top2":41.09,"top3":59.25},"3":{"n":7621,"win":14.04,"top2":34.37,"top3":53.37},"4":{"n":7621,"win":11.99,"top2":27.19,"top3":44.97},"5":{"n":7617,"win":6.52,"top2":19.21,"top3":37.77},"6":{"n":7458,"win":2.43,"top2":11.48,"top3":27.8}},"平和島":{"1":{"n":7886,"win":45.03,"top2":63.67,"top3":75.18},"2":{"n":7886,"win":16.74,"top2":39.79,"top3":58.7},"3":{"n":7886,"win":14.73,"top2":33.87,"top3":51.95},"4":{"n":7885,"win":12.82,"top2":30.88,"top3":49.23},"5":{"n":7886,"win":7.52,"top2":20.53,"top3":37.66},"6":{"n":7764,"win":3.19,"top2":11.42,"top3":27.64}},"多摩川":{"1":{"n":8451,"win":53.27,"top2":70.13,"top3":79.29},"2":{"n":8451,"win":14.73,"top2":39.89,"top3":57.95},"3":{"n":8451,"win":12.73,"top2":33.55,"top3":53.38},"4":{"n":8451,"win":10.9,"top2":27.77,"top3":47.11},"5":{"n":8449,"win":6.44,"top2":19.6,"top3":38.48},"6":{"n":8360,"win":1.93,"top2":9.14,"top3":23.96}},"浜名湖":{"1":{"n":8943,"win":52.4,"top2":70.52,"top3":79.06},"2":{"n":8944,"win":14.27,"top2":39.17,"top3":56.97},"3":{"n":8944,"win":14.23,"top2":35.48,"top3":55.72},"4":{"n":8943,"win":10.66,"top2":27.55,"top3":47.55},"5":{"n":8942,"win":6.84,"top2":19.66,"top3":39.77},"6":{"n":8805,"win":1.64,"top2":7.77,"top3":21.29}},"蒲郡":{"1":{"n":8784,"win":56.34,"top2":72.6,"top3":81.91},"2":{"n":8785,"win":11.71,"top2":36.16,"top3":54.92},"3":{"n":8786,"win":12.43,"top2":34.51,"top3":54.25},"4":{"n":8786,"win":11.94,"top2":30.41,"top3":51.92},"5":{"n":8785,"win":5.77,"top2":19.48,"top3":37.85},"6":{"n":8671,"win":1.82,"top2":6.91,"top3":19.31}},"常滑":{"1":{"n":8940,"win":57.94,"top2":73.79,"top3":82.52},"2":{"n":8940,"win":12.16,"top2":36.95,"top3":55.87},"3":{"n":8940,"win":10.62,"top2":32.61,"top3":52.37},"4":{"n":8940,"win":11.04,"top2":28.65,"top3":48.65},"5":{"n":8938,"win":6.38,"top2":19.79,"top3":38.77},"6":{"n":8856,"win":1.89,"top2":8.31,"top3":22.02}},"津":{"1":{"n":8233,"win":56.54,"top2":74.03,"top3":82.57},"2":{"n":8233,"win":13.93,"top2":40.59,"top3":59.24},"3":{"n":8233,"win":11.72,"top2":32.24,"top3":53.26},"4":{"n":8231,"win":10.08,"top2":27.49,"top3":47.93},"5":{"n":8232,"win":5.94,"top2":18.16,"top3":36.14},"6":{"n":8139,"win":1.77,"top2":7.53,"top3":21.06}},"三国":{"1":{"n":8165,"win":53.01,"top2":71.81,"top3":80.24},"2":{"n":8164,"win":15.51,"top2":41.94,"top3":60.31},"3":{"n":8165,"win":14.04,"top2":35.38,"top3":55.11},"4":{"n":8164,"win":10.25,"top2":27.2,"top3":48.41},"5":{"n":8162,"win":5.7,"top2":16.67,"top3":34.91},"6":{"n":8064,"win":1.51,"top2":7.07,"top3":21.29}},"びわこ":{"1":{"n":8117,"win":54.06,"top2":72.39,"top3":81.22},"2":{"n":8119,"win":14.24,"top2":39.4,"top3":58.27},"3":{"n":8119,"win":13.25,"top2":34.82,"top3":54.55},"4":{"n":8119,"win":10.67,"top2":27.31,"top3":47.84},"5":{"n":8119,"win":6.06,"top2":18.72,"top3":37.07},"6":{"n":8017,"win":1.76,"top2":7.47,"top3":21.33}},"住之江":{"1":{"n":8628,"win":58.51,"top2":74.83,"top3":83.34},"2":{"n":8628,"win":13.57,"top2":38.73,"top3":57.34},"3":{"n":8628,"win":11.65,"top2":34.68,"top3":55.61},"4":{"n":8628,"win":9.46,"top2":27.8,"top3":48.01},"5":{"n":8628,"win":5.23,"top2":16.94,"top3":34.7},"6":{"n":8529,"win":1.58,"top2":7.08,"top3":21.16}},"尼崎":{"1":{"n":8177,"win":58.8,"top2":74.89,"top3":83.34},"2":{"n":8176,"win":11.85,"top2":36.34,"top3":54.56},"3":{"n":8178,"win":11.8,"top2":33.35,"top3":54.0},"4":{"n":8178,"win":10.25,"top2":28.44,"top3":49.6},"5":{"n":8175,"win":5.55,"top2":19.2,"top3":37.13},"6":{"n":8088,"win":1.77,"top2":7.9,"top3":21.64}},"鳴門":{"1":{"n":7959,"win":47.77,"top2":66.2,"top3":76.14},"2":{"n":7959,"win":14.88,"top2":39.13,"top3":57.08},"3":{"n":7959,"win":15.53,"top2":35.65,"top3":54.19},"4":{"n":7959,"win":11.76,"top2":29.19,"top3":48.91},"5":{"n":7957,"win":7.9,"top2":20.74,"top3":39.69},"6":{"n":7847,"win":2.19,"top2":9.24,"top3":24.38}},"丸亀":{"1":{"n":8416,"win":56.63,"top2":74.69,"top3":82.76},"2":{"n":8415,"win":13.62,"top2":38.91,"top3":57.77},"3":{"n":8416,"win":12.06,"top2":33.06,"top3":52.92},"4":{"n":8416,"win":9.59,"top2":26.97,"top3":48.78},"5":{"n":8415,"win":5.87,"top2":17.85,"top3":34.31},"6":{"n":8318,"win":2.24,"top2":8.61,"top3":23.61}},"児島":{"1":{"n":8400,"win":56.06,"top2":73.55,"top3":82.14},"2":{"n":8400,"win":12.82,"top2":38.0,"top3":56.05},"3":{"n":8400,"win":12.48,"top2":32.75,"top3":52.43},"4":{"n":8400,"win":10.56,"top2":28.95,"top3":50.05},"5":{"n":8400,"win":5.96,"top2":17.61,"top3":35.75},"6":{"n":8297,"win":2.15,"top2":9.26,"top3":23.88}},"宮島":{"1":{"n":8799,"win":56.14,"top2":72.69,"top3":81.09},"2":{"n":8800,"win":12.69,"top2":37.73,"top3":57.06},"3":{"n":8800,"win":12.68,"top2":35.9,"top3":56.16},"4":{"n":8800,"win":10.07,"top2":26.67,"top3":46.36},"5":{"n":8800,"win":6.6,"top2":19.31,"top3":38.11},"6":{"n":8675,"win":1.84,"top2":7.82,"top3":21.52}},"徳山":{"1":{"n":8478,"win":63.46,"top2":79.83,"top3":86.79},"2":{"n":8478,"win":13.18,"top2":41.51,"top3":60.34},"3":{"n":8478,"win":9.94,"top2":32.4,"top3":54.06},"4":{"n":8478,"win":7.95,"top2":24.77,"top3":46.57},"5":{"n":8478,"win":4.36,"top2":15.64,"top3":33.95},"6":{"n":8374,"win":1.12,"top2":5.92,"top3":18.59}},"下関":{"1":{"n":8423,"win":60.14,"top2":77.3,"top3":85.46},"2":{"n":8423,"win":11.3,"top2":36.6,"top3":56.0},"3":{"n":8423,"win":11.2,"top2":34.63,"top3":55.76},"4":{"n":8423,"win":9.7,"top2":25.68,"top3":46.38},"5":{"n":8423,"win":5.5,"top2":17.61,"top3":35.05},"6":{"n":8312,"win":2.18,"top2":8.28,"top3":21.6}},"若松":{"1":{"n":8498,"win":57.5,"top2":74.35,"top3":83.27},"2":{"n":8498,"win":12.01,"top2":36.27,"top3":55.97},"3":{"n":8498,"win":11.96,"top2":34.5,"top3":55.0},"4":{"n":8498,"win":10.43,"top2":27.68,"top3":46.99},"5":{"n":8497,"win":5.99,"top2":18.25,"top3":35.64},"6":{"n":8403,"win":2.12,"top2":9.03,"top3":23.35}},"芦屋":{"1":{"n":8569,"win":59.38,"top2":75.68,"top3":83.98},"2":{"n":8569,"win":10.46,"top2":33.78,"top3":52.79},"3":{"n":8569,"win":10.96,"top2":33.61,"top3":53.1},"4":{"n":8569,"win":10.78,"top2":28.94,"top3":48.22},"5":{"n":8568,"win":6.28,"top2":19.9,"top3":39.44},"6":{"n":8478,"win":2.17,"top2":8.17,"top3":22.65}},"福岡":{"1":{"n":8364,"win":56.86,"top2":74.22,"top3":83.13},"2":{"n":8364,"win":14.61,"top2":42.11,"top3":61.74},"3":{"n":8364,"win":14.9,"top2":38.3,"top3":57.58},"4":{"n":8364,"win":8.52,"top2":24.95,"top3":47.02},"5":{"n":8362,"win":4.09,"top2":15.63,"top3":34.35},"6":{"n":8239,"win":1.02,"top2":4.85,"top3":16.42}},"唐津":{"1":{"n":8497,"win":55.02,"top2":73.73,"top3":82.77},"2":{"n":8497,"win":14.56,"top2":40.84,"top3":59.28},"3":{"n":8497,"win":12.6,"top2":34.55,"top3":55.31},"4":{"n":8497,"win":10.14,"top2":26.27,"top3":47.33},"5":{"n":8495,"win":5.99,"top2":17.99,"top3":36.99},"6":{"n":8372,"win":1.68,"top2":6.69,"top3":18.5}},"大村":{"1":{"n":8840,"win":61.65,"top2":78.46,"top3":86.13},"2":{"n":8840,"win":12.34,"top2":38.57,"top3":57.99},"3":{"n":8840,"win":10.88,"top2":34.98,"top3":55.31},"4":{"n":8840,"win":8.7,"top2":24.39,"top3":45.25},"5":{"n":8840,"win":5.05,"top2":16.86,"top3":35.02},"6":{"n":8766,"win":1.36,"top2":6.76,"top3":20.4}}}</script>
 <script type="application/json" id="data-venuelane">{"桐生":{"lanes":{"1":{"n":8153,"win":51.4,"top2":69.8,"top3":79.0},"2":{"n":7582,"win":12.5,"top2":37.2,"top3":55.4},"3":{"n":7370,"win":12.9,"top2":34.5,"top3":54.6},"4":{"n":7011,"win":12.9,"top2":28.1,"top3":48.1},"5":{"n":6592,"win":7.6,"top2":21.5,"top3":41.4},"6":{"n":6902,"win":2.2,"top2":9.1,"top3":23.0}},"kimarite":{"逃げ":49.0,"まくり":18.8,"まくり差し":13.9,"差し":11.3,"抜き":6.1,"恵まれ":0.8},"kimarite_note":"全レース対象（進入変更含む・新CSV kimarite列）"},"戸田":{"lanes":{"1":{"n":8447,"win":43.4,"top2":61.3,"top3":72.5},"2":{"n":8142,"win":16.6,"top2":39.8,"top3":58.1},"3":{"n":7989,"win":15.7,"top2":36.0,"top3":53.6},"4":{"n":7662,"win":14.2,"top2":31.3,"top3":50.3},"5":{"n":7209,"win":7.1,"top2":20.8,"top3":39.9},"6":{"n":7387,"win":2.5,"top2":10.4,"top3":26.1}},"kimarite":{"逃げ":40.6,"まくり":26.0,"まくり差し":11.7,"差し":13.6,"抜き":7.3,"恵まれ":0.8},"kimarite_note":"全レース対象（進入変更含む・新CSV kimarite列）"},"江戸川":{"lanes":{"1":{"n":7590,"win":47.1,"top2":66.9,"top3":77.4},"2":{"n":7565,"win":18.0,"top2":41.1,"top3":59.2},"3":{"n":7537,"win":14.0,"top2":34.4,"top3":53.4},"4":{"n":7514,"win":12.0,"top2":27.2,"top3":44.8},"5":{"n":7485,"win":6.6,"top2":19.1,"top3":37.6},"6":{"n":7452,"win":2.4,"top2":11.5,"top3":27.8}},"kimarite":{"逃げ":43.7,"まくり":19.9,"まくり差し":9.7,"差し":15.0,"抜き":10.3,"恵まれ":1.4},"kimarite_note":"全レース対象（進入変更含む・新CSV kimarite列）"},"平和島":{"lanes":{"1":{"n":7815,"win":45.1,"top2":63.7,"top3":75.2},"2":{"n":7450,"win":16.5,"top2":39.7,"top3":58.8},"3":{"n":7333,"win":14.6,"top2":33.8,"top3":51.8},"4":{"n":7039,"win":12.5,"top2":30.5,"top3":48.7},"5":{"n":6574,"win":7.4,"top2":20.3,"top3":37.3},"6":{"n":6724,"win":3.0,"top2":11.5,"top3":28.4}},"kimarite":{"逃げ":42.1,"まくり":18.4,"まくり差し":12.5,"差し":18.1,"抜き":7.7,"恵まれ":1.2},"kimarite_note":"全レース対象（進入変更含む・新CSV kimarite列）"},"多摩川":{"lanes":{"1":{"n":8403,"win":53.3,"top2":70.2,"top3":79.4},"2":{"n":8070,"win":14.6,"top2":39.9,"top3":58.1},"3":{"n":7910,"win":12.4,"top2":33.2,"top3":53.1},"4":{"n":7559,"win":10.9,"top2":27.5,"top3":46.8},"5":{"n":7124,"win":6.2,"top2":19.4,"top3":37.9},"6":{"n":7333,"win":1.9,"top2":9.4,"top3":24.8}},"kimarite":{"逃げ":51.1,"まくり":17.2,"まくり差し":11.6,"差し":13.1,"抜き":6.2,"恵まれ":0.8},"kimarite_note":"全レース対象（進入変更含む・新CSV kimarite列）"},"浜名湖":{"lanes":{"1":{"n":8747,"win":52.3,"top2":70.6,"top3":79.1},"2":{"n":8204,"win":14.0,"top2":38.8,"top3":56.5},"3":{"n":7905,"win":14.1,"top2":35.4,"top3":55.5},"4":{"n":7338,"win":10.4,"top2":27.2,"top3":47.2},"5":{"n":6819,"win":6.4,"top2":19.1,"top3":39.1},"6":{"n":7097,"win":1.6,"top2":8.1,"top3":22.8}},"kimarite":{"逃げ":49.6,"まくり":14.3,"まくり差し":15.3,"差し":12.5,"抜き":7.0,"恵まれ":1.3},"kimarite_note":"全レース対象（進入変更含む・新CSV kimarite列）"},"蒲郡":{"lanes":{"1":{"n":8628,"win":56.4,"top2":72.7,"top3":82.0},"2":{"n":8090,"win":11.6,"top2":36.0,"top3":54.8},"3":{"n":7768,"win":11.9,"top2":34.1,"top3":53.8},"4":{"n":7329,"win":11.6,"top2":30.0,"top3":51.3},"5":{"n":6964,"win":5.4,"top2":18.7,"top3":37.2},"6":{"n":7295,"win":1.7,"top2":7.1,"top3":20.1}},"kimarite":{"逃げ":54.4,"まくり":16.5,"まくり差し":13.8,"差し":9.2,"抜き":5.3,"恵まれ":0.8},"kimarite_note":"全レース対象（進入変更含む・新CSV kimarite列）"},"常滑":{"lanes":{"1":{"n":8799,"win":58.0,"top2":73.9,"top3":82.6},"2":{"n":8232,"win":12.0,"top2":36.8,"top3":55.9},"3":{"n":7996,"win":10.2,"top2":32.4,"top3":52.1},"4":{"n":7420,"win":10.6,"top2":28.1,"top3":47.7},"5":{"n":6867,"win":5.9,"top2":18.8,"top3":37.8},"6":{"n":7154,"win":1.9,"top2":8.8,"top3":23.5}},"kimarite":{"逃げ":55.4,"まくり":15.8,"まくり差し":11.6,"差し":10.4,"抜き":5.8,"恵まれ":1.0},"kimarite_note":"全レース対象（進入変更含む・新CSV kimarite列）"},"津":{"lanes":{"1":{"n":8187,"win":56.6,"top2":74.1,"top3":82.7},"2":{"n":7911,"win":13.9,"top2":40.8,"top3":59.4},"3":{"n":7785,"win":11.4,"top2":32.1,"top3":53.3},"4":{"n":7524,"win":9.8,"top2":26.9,"top3":47.4},"5":{"n":7059,"win":5.4,"top2":17.5,"top3":35.1},"6":{"n":7197,"win":1.7,"top2":7.6,"top3":21.6}},"kimarite":{"逃げ":53.9,"まくり":12.2,"まくり差し":12.5,"差し":13.9,"抜き":6.5,"恵まれ":1.1},"kimarite_note":"全レース対象（進入変更含む・新CSV kimarite列）"},"三国":{"lanes":{"1":{"n":8047,"win":53.0,"top2":71.8,"top3":80.3},"2":{"n":7675,"win":15.3,"top2":41.8,"top3":60.2},"3":{"n":7493,"win":14.0,"top2":35.5,"top3":54.9},"4":{"n":6984,"win":9.7,"top2":26.9,"top3":48.1},"5":{"n":6296,"win":5.2,"top2":15.8,"top3":34.1},"6":{"n":6488,"win":1.5,"top2":7.4,"top3":22.4}},"kimarite":{"逃げ":50.3,"まくり":14.1,"まくり差し":11.8,"差し":16.2,"抜き":6.8,"恵まれ":0.9},"kimarite_note":"全レース対象（進入変更含む・新CSV kimarite列）"},"びわこ":{"lanes":{"1":{"n":8091,"win":54.1,"top2":72.5,"top3":81.3},"2":{"n":7796,"win":14.1,"top2":39.3,"top3":58.3},"3":{"n":7681,"win":12.9,"top2":34.7,"top3":54.7},"4":{"n":7534,"win":10.2,"top2":26.7,"top3":47.1},"5":{"n":7326,"win":6.0,"top2":18.3,"top3":36.3},"6":{"n":7447,"win":1.7,"top2":7.4,"top3":21.5}},"kimarite":{"逃げ":51.9,"まくり":14.5,"まくり差し":12.7,"差し":13.9,"抜き":6.3,"恵まれ":0.7},"kimarite_note":"全レース対象（進入変更含む・新CSV kimarite列）"},"住之江":{"lanes":{"1":{"n":8554,"win":58.5,"top2":74.9,"top3":83.4},"2":{"n":8079,"win":13.6,"top2":38.7,"top3":57.4},"3":{"n":7821,"win":11.5,"top2":34.8,"top3":55.6},"4":{"n":7412,"win":9.3,"top2":27.5,"top3":47.3},"5":{"n":7042,"win":5.0,"top2":16.3,"top3":33.7},"6":{"n":7275,"win":1.5,"top2":7.3,"top3":22.1}},"kimarite":{"逃げ":56.0,"まくり":14.4,"まくり差し":10.3,"差し":12.4,"抜き":6.0,"恵まれ":0.8},"kimarite_note":"全レース対象（進入変更含む・新CSV kimarite列）"},"尼崎":{"lanes":{"1":{"n":8133,"win":58.8,"top2":74.9,"top3":83.4},"2":{"n":7805,"win":11.6,"top2":36.4,"top3":54.8},"3":{"n":7639,"win":11.7,"top2":33.2,"top3":54.0},"4":{"n":7286,"win":10.0,"top2":28.1,"top3":49.3},"5":{"n":6934,"win":5.3,"top2":18.5,"top3":35.9},"6":{"n":7094,"win":1.8,"top2":8.2,"top3":22.5}},"kimarite":{"逃げ":56.9,"まくり":14.2,"まくり差し":12.0,"差し":10.7,"抜き":5.6,"恵まれ":0.7},"kimarite_note":"全レース対象（進入変更含む・新CSV kimarite列）"},"鳴門":{"lanes":{"1":{"n":7894,"win":47.9,"top2":66.3,"top3":76.2},"2":{"n":7544,"win":14.7,"top2":39.0,"top3":57.1},"3":{"n":7415,"win":15.3,"top2":35.4,"top3":53.9},"4":{"n":7183,"win":11.6,"top2":28.7,"top3":48.4},"5":{"n":6803,"win":7.3,"top2":20.0,"top3":39.0},"6":{"n":6984,"win":2.1,"top2":9.5,"top3":25.2}},"kimarite":{"逃げ":45.1,"まくり":18.6,"まくり差し":13.8,"差し":14.0,"抜き":7.8,"恵まれ":0.7},"kimarite_note":"全レース対象（進入変更含む・新CSV kimarite列）"},"丸亀":{"lanes":{"1":{"n":8342,"win":56.8,"top2":74.8,"top3":82.9},"2":{"n":7891,"win":13.4,"top2":39.1,"top3":58.0},"3":{"n":7705,"win":11.8,"top2":33.1,"top3":53.1},"4":{"n":7372,"win":9.1,"top2":26.2,"top3":47.8},"5":{"n":6983,"win":5.4,"top2":17.0,"top3":33.6},"6":{"n":7176,"win":2.1,"top2":8.7,"top3":24.4}},"kimarite":{"逃げ":54.5,"まくり":12.5,"まくり差し":12.7,"差し":14.0,"抜き":5.4,"恵まれ":0.9},"kimarite_note":"全レース対象（進入変更含む・新CSV kimarite列）"},"児島":{"lanes":{"1":{"n":8328,"win":56.0,"top2":73.6,"top3":82.1},"2":{"n":7929,"win":12.7,"top2":38.0,"top3":56.1},"3":{"n":7730,"win":12.3,"top2":32.9,"top3":52.4},"4":{"n":7399,"win":10.0,"top2":28.2,"top3":49.8},"5":{"n":6961,"win":5.6,"top2":17.0,"top3":34.7},"6":{"n":7209,"win":2.2,"top2":9.6,"top3":25.0}},"kimarite":{"逃げ":53.3,"まくり":12.3,"まくり差し":13.3,"差し":13.6,"抜き":6.7,"恵まれ":0.8},"kimarite_note":"全レース対象（進入変更含む・新CSV kimarite列）"},"宮島":{"lanes":{"1":{"n":8715,"win":56.3,"top2":72.9,"top3":81.2},"2":{"n":8146,"win":12.4,"top2":37.7,"top3":57.3},"3":{"n":7943,"win":12.2,"top2":35.6,"top3":56.0},"4":{"n":7675,"win":9.7,"top2":26.1,"top3":45.8},"5":{"n":7281,"win":6.1,"top2":18.8,"top3":37.4},"6":{"n":7559,"win":1.8,"top2":8.0,"top3":22.3}},"kimarite":{"逃げ":53.9,"まくり":16.8,"まくり差し":11.8,"差し":10.8,"抜き":6.1,"恵まれ":0.6},"kimarite_note":"全レース対象（進入変更含む・新CSV kimarite列）"},"徳山":{"lanes":{"1":{"n":8395,"win":63.5,"top2":79.9,"top3":86.9},"2":{"n":7994,"win":13.1,"top2":41.4,"top3":60.2},"3":{"n":7839,"win":9.7,"top2":32.2,"top3":53.9},"4":{"n":7533,"win":7.4,"top2":24.4,"top3":46.2},"5":{"n":6999,"win":3.8,"top2":14.6,"top3":32.7},"6":{"n":7194,"win":1.1,"top2":6.1,"top3":19.6}},"kimarite":{"逃げ":60.7,"まくり":11.1,"まくり差し":8.3,"差し":12.6,"抜き":6.8,"恵まれ":0.4},"kimarite_note":"全レース対象（進入変更含む・新CSV kimarite列）"},"下関":{"lanes":{"1":{"n":8295,"win":60.3,"top2":77.4,"top3":85.5},"2":{"n":7790,"win":11.0,"top2":36.4,"top3":56.0},"3":{"n":7584,"win":10.9,"top2":34.6,"top3":55.9},"4":{"n":7211,"win":9.3,"top2":25.1,"top3":45.7},"5":{"n":6773,"win":4.8,"top2":16.6,"top3":33.9},"6":{"n":7010,"win":2.1,"top2":8.6,"top3":22.7}},"kimarite":{"逃げ":57.3,"まくり":13.0,"まくり差し":11.4,"差し":10.8,"抜き":6.7,"恵まれ":0.7},"kimarite_note":"全レース対象（進入変更含む・新CSV kimarite列）"},"若松":{"lanes":{"1":{"n":8379,"win":57.7,"top2":74.5,"top3":83.5},"2":{"n":7849,"win":11.6,"top2":35.9,"top3":56.0},"3":{"n":7610,"win":11.7,"top2":34.5,"top3":55.3},"4":{"n":7146,"win":10.1,"top2":26.8,"top3":46.0},"5":{"n":6785,"win":5.3,"top2":17.4,"top3":34.2},"6":{"n":6989,"win":2.0,"top2":9.3,"top3":24.3}},"kimarite":{"逃げ":54.3,"まくり":14.9,"まくり差し":10.5,"差し":11.8,"抜き":7.7,"恵まれ":0.8},"kimarite_note":"全レース対象（進入変更含む・新CSV kimarite列）"},"芦屋":{"lanes":{"1":{"n":8487,"win":59.6,"top2":75.8,"top3":84.1},"2":{"n":7934,"win":10.4,"top2":33.8,"top3":53.1},"3":{"n":7729,"win":10.6,"top2":33.5,"top3":52.9},"4":{"n":7435,"win":10.3,"top2":28.5,"top3":47.7},"5":{"n":7215,"win":5.8,"top2":19.2,"top3":38.5},"6":{"n":7446,"win":2.1,"top2":8.1,"top3":23.2}},"kimarite":{"逃げ":56.2,"まくり":14.9,"まくり差し":11.9,"差し":9.1,"抜き":7.0,"恵まれ":0.9},"kimarite_note":"全レース対象（進入変更含む・新CSV kimarite列）"},"福岡":{"lanes":{"1":{"n":8292,"win":57.0,"top2":74.3,"top3":83.1},"2":{"n":7877,"win":14.3,"top2":42.1,"top3":61.9},"3":{"n":7695,"win":14.8,"top2":38.2,"top3":57.5},"4":{"n":7435,"win":8.1,"top2":24.5,"top3":46.6},"5":{"n":7026,"win":3.6,"top2":14.9,"top3":33.5},"6":{"n":7244,"win":1.0,"top2":4.8,"top3":17.0}},"kimarite":{"逃げ":53.6,"まくり":18.1,"まくり差し":7.4,"差し":12.0,"抜き":8.3,"恵まれ":0.6},"kimarite_note":"全レース対象（進入変更含む・新CSV kimarite列）"},"唐津":{"lanes":{"1":{"n":8256,"win":55.2,"top2":74.0,"top3":83.0},"2":{"n":7638,"win":14.3,"top2":40.7,"top3":59.2},"3":{"n":7476,"win":12.1,"top2":34.3,"top3":55.4},"4":{"n":7128,"win":9.9,"top2":25.7,"top3":46.6},"5":{"n":6595,"win":5.7,"top2":17.4,"top3":36.3},"6":{"n":6882,"win":1.6,"top2":6.7,"top3":19.0}},"kimarite":{"逃げ":52.3,"まくり":13.9,"まくり差し":12.1,"差し":13.5,"抜き":7.2,"恵まれ":0.9},"kimarite_note":"全レース対象（進入変更含む・新CSV kimarite列）"},"大村":{"lanes":{"1":{"n":8791,"win":61.7,"top2":78.5,"top3":86.2},"2":{"n":8342,"win":12.0,"top2":38.6,"top3":57.9},"3":{"n":8180,"win":10.7,"top2":34.9,"top3":55.3},"4":{"n":7960,"win":8.2,"top2":23.7,"top3":44.6},"5":{"n":7632,"win":4.6,"top2":16.1,"top3":34.0},"6":{"n":7808,"win":1.4,"top2":6.9,"top3":21.2}},"kimarite":{"逃げ":59.0,"まくり":11.4,"まくり差し":11.4,"差し":11.0,"抜き":6.1,"恵まれ":1.0},"kimarite_note":"全レース対象（進入変更含む・新CSV kimarite列）"}}</script>
 <script type="application/json" id="data-venuegradestats"></script>
 <script src="data/data-venuegradestats-3fe0d1ac2a-001.js"></script>
-
 <script type="application/json" id="data-st-course"></script>
 <script src="data/data-st-course-e64b3cbf66-001.js"></script>
-
 <script type="application/json" id="data-player-st365"></script>
 <script src="data/data-player-st365-23efc8d86b-001.js"></script>
-
 <script type="application/json" id="data-st-recent10"></script>
 <script src="data/data-st-recent10-0758c875b5-001.js"></script>
-
 <script type="application/json" id="data-nige">{"overall":{"total_races":103991,"dist_pct":{"2":34.0,"3":29.2,"4":19.7,"5":11.9,"6":5.2}},"by_venue":{"びわこ":{"total_races":4162,"dist_pct":{"2":34.8,"3":29.1,"4":19.3,"5":11.8,"6":4.9}},"三国":{"total_races":4022,"dist_pct":{"2":36.0,"3":28.2,"4":20.2,"5":10.8,"6":4.8}},"下関":{"total_races":4717,"dist_pct":{"2":33.2,"3":30.7,"4":19.0,"5":11.6,"6":5.4}},"丸亀":{"total_races":4489,"dist_pct":{"2":34.6,"3":28.0,"4":20.9,"5":11.0,"6":5.5}},"住之江":{"total_races":4752,"dist_pct":{"2":33.0,"3":31.5,"4":20.1,"5":10.5,"6":4.8}},"児島":{"total_races":4395,"dist_pct":{"2":33.1,"3":27.1,"4":22.2,"5":11.1,"6":6.5}},"唐津":{"total_races":4370,"dist_pct":{"2":36.1,"3":29.5,"4":18.4,"5":11.9,"6":4.2}},"多摩川":{"total_races":4233,"dist_pct":{"2":35.0,"3":28.0,"4":18.9,"5":12.1,"6":6.1}},"大村":{"total_races":5133,"dist_pct":{"2":34.5,"3":31.1,"4":17.5,"5":12.1,"6":4.7}},"宮島":{"total_races":4656,"dist_pct":{"2":33.4,"3":30.9,"4":18.7,"5":12.0,"6":5.0}},"尼崎":{"total_races":4549,"dist_pct":{"2":33.1,"3":27.6,"4":21.1,"5":12.8,"6":5.5}},"常滑":{"total_races":4873,"dist_pct":{"2":33.2,"3":28.9,"4":19.9,"5":12.5,"6":5.5}},"平和島":{"total_races":3254,"dist_pct":{"2":30.8,"3":27.4,"4":21.5,"5":13.5,"6":6.8}},"徳山":{"total_races":5056,"dist_pct":{"2":37.0,"3":29.2,"4":19.1,"5":10.5,"6":4.1}},"戸田":{"total_races":3403,"dist_pct":{"2":33.3,"3":28.1,"4":19.9,"5":12.7,"6":6.1}},"桐生":{"total_races":4040,"dist_pct":{"2":34.1,"3":30.2,"4":18.1,"5":12.4,"6":5.0}},"江戸川":{"total_races":3294,"dist_pct":{"2":32.7,"3":28.3,"4":17.8,"5":13.4,"6":7.9}},"津":{"total_races":4363,"dist_pct":{"2":35.8,"3":27.1,"4":19.8,"5":12.0,"6":5.3}},"浜名湖":{"total_races":4349,"dist_pct":{"2":34.6,"3":27.6,"4":19.8,"5":12.8,"6":5.2}},"福岡":{"total_races":4393,"dist_pct":{"2":37.5,"3":31.3,"4":17.6,"5":10.8,"6":2.8}},"芦屋":{"total_races":4715,"dist_pct":{"2":30.3,"3":30.4,"4":21.3,"5":13.3,"6":4.6}},"若松":{"total_races":4523,"dist_pct":{"2":32.5,"3":31.0,"4":20.2,"5":10.9,"6":5.4}},"蒲郡":{"total_races":4729,"dist_pct":{"2":32.4,"3":29.4,"4":21.3,"5":12.7,"6":4.2}},"鳴門":{"total_races":3521,"dist_pct":{"2":33.6,"3":27.7,"4":20.5,"5":12.1,"6":6.2}}}}</script>
 <script type="application/json" id="data-winner-scenario-v1"></script>
 <script src="data/data-winner-scenario-v1-a7370443ef-001.js"></script>
-
 <script type="application/json" id="data-course-kimarite-opp"></script>
 <script src="data/data-course-kimarite-opp-61ced472f9-001.js"></script>
-
 <script type="application/json" id="data-scenario"></script>
 <script src="data/data-scenario-2e41720b62-001.js"></script>
 <script src="data/data-scenario-2e41720b62-002.js"></script>
-
 <script type="application/json" id="data-kimarite"></script>
 <script src="data/data-kimarite-f62ffd2dc7-001.js"></script>
-
 <script type="application/json" id="data-lose1"></script>
 <script src="data/data-lose1-417577c3ba-001.js"></script>
-
 <script type="application/json" id="data-losecourse"></script>
 <script src="data/data-losecourse-48ef2ee719-001.js"></script>
-
 <script type="application/json" id="data-lane1weakness"></script>
 <script src="data/data-lane1weakness-a52f0dbeb1-001.js"></script>
 
 
-
 <script type="application/json" id="data-st-stability"></script>
 <script src="data/data-st-stability-df03cb6112-001.js"></script>
-
 
 <script>
 const DATA = {"generated_from": {"n_files": 1307, "n_races": 192310, "n_entries": 1149382}, "categories": {"全体": {"n_races_all": 192310, "n_races_excl": 152110, "course_change_rate": 20.9, "course_all": {"1": {"n": 191086, "win": 54.4, "top2": 72.1, "top3": 81.1}, "2": {"n": 191750, "win": 14.1, "top2": 38.8, "top3": 57.4}, "3": {"n": 191602, "win": 12.8, "top2": 34.2, "top3": 54.0}, "4": {"n": 191625, "win": 10.2, "top2": 26.5, "top3": 46.1}, "5": {"n": 191667, "win": 5.9, "top2": 18.0, "top3": 35.6}, "6": {"n": 191652, "win": 3.1, "top2": 11.2, "top3": 26.9}}, "course_excl": {"1": {"n": 151238, "win": 56.4, "top2": 73.8, "top3": 82.5}, "2": {"n": 151715, "win": 13.7, "top2": 39.0, "top3": 57.7}, "3": {"n": 151576, "win": 12.5, "top2": 34.5, "top3": 54.4}, "4": {"n": 151608, "win": 10.3, "top2": 27.0, "top3": 47.1}, "5": {"n": 151648, "win": 5.7, "top2": 18.1, "top3": 36.4}, "6": {"n": 151626, "win": 1.9, "top2": 8.3, "top3": 23.0}}}, "一般": {"n_races_all": 151850, "n_races_excl": 118580, "course_change_rate": 21.9, "course_all": {"1": {"n": 150923, "win": 54.1, "top2": 71.9, "top3": 81.0}, "2": {"n": 151443, "win": 14.0, "top2": 38.7, "top3": 57.3}, "3": {"n": 151329, "win": 12.7, "top2": 34.1, "top3": 54.1}, "4": {"n": 151339, "win": 10.3, "top2": 26.6, "top3": 46.1}, "5": {"n": 151359, "win": 6.0, "top2": 18.1, "top3": 35.6}, "6": {"n": 151337, "win": 3.2, "top2": 11.4, "top3": 27.1}}, "course_excl": {"1": {"n": 117928, "win": 56.2, "top2": 73.7, "top3": 82.4}, "2": {"n": 118308, "win": 13.6, "top2": 38.9, "top3": 57.6}, "3": {"n": 118190, "win": 12.5, "top2": 34.4, "top3": 54.4}, "4": {"n": 118214, "win": 10.4, "top2": 27.2, "top3": 47.2}, "5": {"n": 118232, "win": 5.9, "top2": 18.2, "top3": 36.5}, "6": {"n": 118208, "win": 1.9, "top2": 8.3, "top3": 22.9}}}, "SG": {"n_races_all": 3258, "n_races_excl": 2750, "course_change_rate": 15.6, "course_all": {"1": {"n": 3241, "win": 61.6, "top2": 76.6, "top3": 83.4}, "2": {"n": 3248, "win": 12.6, "top2": 39.2, "top3": 56.7}, "3": {"n": 3246, "win": 11.7, "top2": 33.6, "top3": 54.0}, "4": {"n": 3248, "win": 8.0, "top2": 25.7, "top3": 45.6}, "5": {"n": 3246, "win": 4.6, "top2": 16.6, "top3": 35.5}, "6": {"n": 3249, "win": 2.0, "top2": 9.2, "top3": 25.9}}, "course_excl": {"1": {"n": 2736, "win": 63.3, "top2": 78.2, "top3": 84.9}, "2": {"n": 2743, "win": 12.3, "top2": 39.8, "top3": 57.1}, "3": {"n": 2741, "win": 10.8, "top2": 33.4, "top3": 53.6}, "4": {"n": 2744, "win": 8.0, "top2": 25.4, "top3": 45.6}, "5": {"n": 2744, "win": 4.5, "top2": 16.4, "top3": 35.5}, "6": {"n": 2742, "win": 1.4, "top2": 7.5, "top3": 24.5}}}, "G1G2": {"n_races_all": 10955, "n_races_excl": 9318, "course_change_rate": 14.9, "course_all": {"1": {"n": 10876, "win": 61.8, "top2": 77.6, "top3": 85.1}, "2": {"n": 10922, "win": 12.1, "top2": 37.9, "top3": 56.1}, "3": {"n": 10917, "win": 11.6, "top2": 33.5, "top3": 52.3}, "4": {"n": 10916, "win": 7.9, "top2": 24.9, "top3": 45.6}, "5": {"n": 10929, "win": 5.2, "top2": 17.5, "top3": 35.9}, "6": {"n": 10926, "win": 2.0, "top2": 9.6, "top3": 26.3}}, "course_excl": {"1": {"n": 9260, "win": 63.5, "top2": 79.2, "top3": 86.3}, "2": {"n": 9290, "win": 11.4, "top2": 37.9, "top3": 56.1}, "3": {"n": 9288, "win": 11.3, "top2": 33.4, "top3": 52.5}, "4": {"n": 9286, "win": 7.8, "top2": 25.2, "top3": 46.4}, "5": {"n": 9295, "win": 5.1, "top2": 17.4, "top3": 36.0}, "6": {"n": 9296, "win": 1.4, "top2": 7.8, "top3": 23.9}}}, "G3": {"n_races_all": 12472, "n_races_excl": 10392, "course_change_rate": 16.7, "course_all": {"1": {"n": 12380, "win": 51.8, "top2": 70.2, "top3": 79.8}, "2": {"n": 12429, "win": 15.8, "top2": 40.3, "top3": 59.2}, "3": {"n": 12418, "win": 13.6, "top2": 35.0, "top3": 54.5}, "4": {"n": 12420, "win": 10.6, "top2": 26.4, "top3": 46.0}, "5": {"n": 12423, "win": 5.6, "top2": 18.1, "top3": 35.5}, "6": {"n": 12435, "win": 3.1, "top2": 10.9, "top3": 26.4}}, "course_excl": {"1": {"n": 10323, "win": 53.3, "top2": 71.2, "top3": 80.6}, "2": {"n": 10358, "win": 15.5, "top2": 40.6, "top3": 59.4}, "3": {"n": 10352, "win": 13.6, "top2": 35.2, "top3": 54.8}, "4": {"n": 10352, "win": 10.7, "top2": 27.1, "top3": 47.0}, "5": {"n": 10356, "win": 5.5, "top2": 18.2, "top3": 35.9}, "6": {"n": 10365, "win": 2.0, "top2": 8.7, "top3": 23.5}}}, "ヴィーナス": {"n_races_all": 6070, "n_races_excl": 4963, "course_change_rate": 18.2, "course_all": {"1": {"n": 6029, "win": 51.2, "top2": 69.5, "top3": 80.7}, "2": {"n": 6036, "win": 16.9, "top2": 42.3, "top3": 61.5}, "3": {"n": 6030, "win": 14.6, "top2": 36.2, "top3": 55.5}, "4": {"n": 6036, "win": 10.3, "top2": 26.9, "top3": 46.3}, "5": {"n": 6038, "win": 4.7, "top2": 16.1, "top3": 33.8}, "6": {"n": 6040, "win": 3.0, "top2": 10.2, "top3": 23.8}}, "course_excl": {"1": {"n": 4931, "win": 52.5, "top2": 70.8, "top3": 81.5}, "2": {"n": 4934, "win": 16.4, "top2": 42.3, "top3": 61.6}, "3": {"n": 4933, "win": 14.3, "top2": 35.8, "top3": 55.3}, "4": {"n": 4936, "win": 10.6, "top2": 27.4, "top3": 47.3}, "5": {"n": 4937, "win": 4.8, "top2": 16.8, "top3": 35.9}, "6": {"n": 4940, "win": 1.9, "top2": 8.0, "top3": 19.9}}}, "ルーキー": {"n_races_all": 5294, "n_races_excl": 4304, "course_change_rate": 18.7, "course_all": {"1": {"n": 5242, "win": 53.6, "top2": 70.7, "top3": 79.8}, "2": {"n": 5267, "win": 14.2, "top2": 37.5, "top3": 55.8}, "3": {"n": 5257, "win": 13.6, "top2": 35.3, "top3": 54.5}, "4": {"n": 5262, "win": 10.6, "top2": 26.9, "top3": 46.6}, "5": {"n": 5267, "win": 5.4, "top2": 19.0, "top3": 36.8}, "6": {"n": 5261, "win": 3.2, "top2": 12.0, "top3": 28.6}}, "course_excl": {"1": {"n": 4267, "win": 55.1, "top2": 72.0, "top3": 80.9}, "2": {"n": 4284, "win": 14.0, "top2": 37.7, "top3": 56.3}, "3": {"n": 4274, "win": 13.2, "top2": 35.8, "top3": 55.0}, "4": {"n": 4280, "win": 11.2, "top2": 27.7, "top3": 47.9}, "5": {"n": 4285, "win": 5.0, "top2": 18.9, "top3": 37.2}, "6": {"n": 4277, "win": 2.1, "top2": 9.2, "top3": 24.6}}}, "マスターズ": {"n_races_all": 2411, "n_races_excl": 1803, "course_change_rate": 25.2, "course_all": {"1": {"n": 2395, "win": 53.8, "top2": 72.0, "top3": 81.0}, "2": {"n": 2405, "win": 14.1, "top2": 38.1, "top3": 56.4}, "3": {"n": 2405, "win": 12.3, "top2": 33.6, "top3": 53.2}, "4": {"n": 2404, "win": 10.1, "top2": 26.2, "top3": 45.4}, "5": {"n": 2405, "win": 6.3, "top2": 18.9, "top3": 36.0}, "6": {"n": 2404, "win": 3.8, "top2": 11.9, "top3": 29.1}}, "course_excl": {"1": {"n": 1793, "win": 56.7, "top2": 74.7, "top3": 82.7}, "2": {"n": 1798, "win": 13.4, "top2": 38.2, "top3": 56.7}, "3": {"n": 1798, "win": 12.2, "top2": 34.1, "top3": 54.5}, "4": {"n": 1796, "win": 10.3, "top2": 26.9, "top3": 46.1}, "5": {"n": 1799, "win": 6.1, "top2": 18.2, "top3": 35.5}, "6": {"n": 1798, "win": 1.7, "top2": 8.7, "top3": 25.6}}}, "女子戦全体": {"n_races_all": 13414, "n_races_excl": 11381, "course_change_rate": 15.2, "course_all": {"1": {"n": 13312, "win": 51.4, "top2": 69.8, "top3": 80.4}, "2": {"n": 13345, "win": 16.9, "top2": 41.8, "top3": 61.1}, "3": {"n": 13339, "win": 14.3, "top2": 35.8, "top3": 55.2}, "4": {"n": 13344, "win": 10.5, "top2": 26.9, "top3": 46.2}, "5": {"n": 13345, "win": 4.8, "top2": 16.7, "top3": 34.2}, "6": {"n": 13356, "win": 2.8, "top2": 10.2, "top3": 24.5}}, "course_excl": {"1": {"n": 11297, "win": 52.5, "top2": 70.8, "top3": 80.9}, "2": {"n": 11320, "win": 16.6, "top2": 41.8, "top3": 61.0}, "3": {"n": 11324, "win": 14.0, "top2": 35.6, "top3": 55.2}, "4": {"n": 11327, "win": 10.7, "top2": 27.6, "top3": 47.1}, "5": {"n": 11326, "win": 4.9, "top2": 17.1, "top3": 35.6}, "6": {"n": 11337, "win": 1.9, "top2": 8.3, "top3": 21.7}}}}, "venues": [{"venue": "浜名湖", "n_races": 8788, "cc": 2486, "cc_rate": 28.3}, {"venue": "常滑", "n_races": 8579, "cc": 2424, "cc_rate": 28.3}, {"venue": "住之江", "n_races": 8484, "cc": 1891, "cc_rate": 22.3}, {"venue": "戸田", "n_races": 8376, "cc": 1528, "cc_rate": 18.2}, {"venue": "唐津", "n_races": 8352, "cc": 2319, "cc_rate": 27.8}, {"venue": "徳山", "n_races": 8310, "cc": 1672, "cc_rate": 20.1}, {"venue": "宮島", "n_races": 8288, "cc": 1780, "cc_rate": 21.5}, {"venue": "多摩川", "n_races": 8270, "cc": 1466, "cc_rate": 17.7}, {"venue": "児島", "n_races": 8244, "cc": 1623, "cc_rate": 19.7}, {"venue": "桐生", "n_races": 8240, "cc": 2237, "cc_rate": 27.1}, {"venue": "津", "n_races": 8089, "cc": 1303, "cc_rate": 16.1}, {"venue": "蒲郡", "n_races": 8033, "cc": 2161, "cc_rate": 26.9}, {"venue": "福岡", "n_races": 8030, "cc": 1567, "cc_rate": 19.5}, {"venue": "びわこ", "n_races": 8023, "cc": 901, "cc_rate": 11.2}, {"venue": "三国", "n_races": 8008, "cc": 2167, "cc_rate": 27.1}, {"venue": "尼崎", "n_races": 7998, "cc": 1381, "cc_rate": 17.3}, {"venue": "鳴門", "n_races": 7827, "cc": 1284, "cc_rate": 16.4}, {"venue": "大村", "n_races": 7768, "cc": 1355, "cc_rate": 17.4}, {"venue": "平和島", "n_races": 7694, "cc": 1466, "cc_rate": 19.1}, {"venue": "丸亀", "n_races": 7687, "cc": 1637, "cc_rate": 21.3}, {"venue": "若松", "n_races": 7658, "cc": 2016, "cc_rate": 26.3}, {"venue": "江戸川", "n_races": 7525, "cc": 132, "cc_rate": 1.8}, {"venue": "芦屋", "n_races": 7126, "cc": 1658, "cc_rate": 23.3}, {"venue": "下関", "n_races": 6913, "cc": 1746, "cc_rate": 25.3}], "monthly": [{"ym": "2023-01", "n_races": 4874, "cc_rate": 22.5}, {"ym": "2023-02", "n_races": 4119, "cc_rate": 22.2}, {"ym": "2023-03", "n_races": 4485, "cc_rate": 22.3}, {"ym": "2023-04", "n_races": 4402, "cc_rate": 23.6}, {"ym": "2023-05", "n_races": 4637, "cc_rate": 20.9}, {"ym": "2023-06", "n_races": 4599, "cc_rate": 22.4}, {"ym": "2023-07", "n_races": 4660, "cc_rate": 22.2}, {"ym": "2023-08", "n_races": 4855, "cc_rate": 23.1}, {"ym": "2023-09", "n_races": 4223, "cc_rate": 21.4}, {"ym": "2023-10", "n_races": 4171, "cc_rate": 20.9}, {"ym": "2023-11", "n_races": 3779, "cc_rate": 20.8}, {"ym": "2023-12", "n_races": 4732, "cc_rate": 21.4}, {"ym": "2024-01", "n_races": 4848, "cc_rate": 21.0}, {"ym": "2024-02", "n_races": 4302, "cc_rate": 22.1}, {"ym": "2024-03", "n_races": 4333, "cc_rate": 21.7}, {"ym": "2024-04", "n_races": 4319, "cc_rate": 24.2}, {"ym": "2024-05", "n_races": 4659, "cc_rate": 21.5}, {"ym": "2024-06", "n_races": 4567, "cc_rate": 19.5}, {"ym": "2024-07", "n_races": 4766, "cc_rate": 23.5}, {"ym": "2024-08", "n_races": 4712, "cc_rate": 22.3}, {"ym": "2024-09", "n_races": 4179, "cc_rate": 18.8}, {"ym": "2024-10", "n_races": 4246, "cc_rate": 19.1}, {"ym": "2024-11", "n_races": 3824, "cc_rate": 17.5}, {"ym": "2024-12", "n_races": 4822, "cc_rate": 19.6}, {"ym": "2025-01", "n_races": 4872, "cc_rate": 19.5}, {"ym": "2025-02", "n_races": 4227, "cc_rate": 20.8}, {"ym": "2025-03", "n_races": 4320, "cc_rate": 20.6}, {"ym": "2025-04", "n_races": 4037, "cc_rate": 21.6}, {"ym": "2025-05", "n_races": 4899, "cc_rate": 21.3}, {"ym": "2025-06", "n_races": 4666, "cc_rate": 20.2}, {"ym": "2025-07", "n_races": 4987, "cc_rate": 21.4}, {"ym": "2025-08", "n_races": 4910, "cc_rate": 19.9}, {"ym": "2025-09", "n_races": 4125, "cc_rate": 19.0}, {"ym": "2025-10", "n_races": 4036, "cc_rate": 20.6}, {"ym": "2025-11", "n_races": 3819, "cc_rate": 19.7}, {"ym": "2025-12", "n_races": 4661, "cc_rate": 20.0}, {"ym": "2026-01", "n_races": 5034, "cc_rate": 19.9}, {"ym": "2026-02", "n_races": 4056, "cc_rate": 19.1}, {"ym": "2026-03", "n_races": 4503, "cc_rate": 20.4}, {"ym": "2026-04", "n_races": 4152, "cc_rate": 19.9}, {"ym": "2026-05", "n_races": 4620, "cc_rate": 19.8}, {"ym": "2026-06", "n_races": 4498, "cc_rate": 19.9}, {"ym": "2026-07", "n_races": 4775, "cc_rate": 19.6}]}
@@ -11529,104 +11523,9 @@ function renderPredictUnifiedST(reg,course,target){
     <div class="st-detail-note">1年平均ST順位は選手×今回コースの過去365日データ、1年平均STと安定度は当該区分（スロー/ダッシュ）の直近1年データです。直近10走は最近の状態確認用で、表示のみ・予測値への再加点はしていません。</div>`;
 }
 
-// BRC_MOTOR_PREVIOUS_OFFICIAL_K_VIEW_V1_20261022
-// Separate, K-matched previous-racer feed. NEVER reuse as N/rate/finals/foot-traits.
-let __brcPreviousMotorFeed=null;
-let __brcPreviousMotorPending=null;
-let __brcPreviousMotorLastRequest=0;
-let __brcPreviousMotorError='';
-function brcVerifiedPreviousMotorAge(dateLabel){
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(dateLabel||'')))return Infinity;
-  const day=(typeof brcMotorJstToday==='function')?brcMotorJstToday():'';
-  const now=Date.parse(day+'T00:00:00Z'),prior=Date.parse(dateLabel+'T00:00:00Z');
-  return Number.isFinite(now)&&Number.isFinite(prior)?Math.round((now-prior)/86400000):Infinity;
-}
-function brcVerifiedPreviousMotorFeedValid(data){
-  return !!(data && data.version==='BRC-Motor-Previous-Official-K-Verified-V1' &&
-    data.cumulative_motor_stats_available===false &&
-    Number(data.official_K_matched_count)>=1400 &&
-    data.venues && Object.keys(data.venues).length===24 &&
-    brcVerifiedPreviousMotorAge(data.date)>=0 && brcVerifiedPreviousMotorAge(data.date)<=2);
-}
-function brcVerifiedPreviousMotorRow(venue,motorNo){
-  const data=__brcPreviousMotorFeed;
-  if(!brcVerifiedPreviousMotorFeedValid(data))return null;
-  const id=Number(motorNo);
-  if(!Number.isInteger(id)||id<1||id>100)return null;
-  const row=data.venues?.[String(venue||'')]?.motors?.[String(id)];
-  if(!row||row.verification!=='motor_venue_racer_and_date_in_official_K')return null;
-  const p=row.previous;
-  if(!p || !/^\d{4}-\d{2}-\d{2}$/.test(String(p.start||'')) ||
-     !/^\d{4}-\d{2}-\d{2}$/.test(String(p.end||'')) ||
-     p.start>p.end || p.end>data.date || !Array.isArray(p.users) || !p.users.length)return null;
-  const reset=(typeof brcMotorCycleResetDate==='function')?brcMotorCycleResetDate(venue):'';
-  // Reused motor number from a previous cycle must never be called recent.
-  if(reset && p.end<reset)return null;
-  return {previous:p,date:data.date,sourceMeetEnd:data.venues[venue].source_meet_end};
-}
-function brcVerifiedPreviousMotorHtml(venue,motorNo){
-  const row=brcVerifiedPreviousMotorRow(venue,motorNo);
-  if(!row)return '';
-  const prev=row.previous;
-  const names=prev.users.map(u=>escMotor(u.name)).join('・');
-  const span=fmtMotorDate(prev.start)+'〜'+fmtMotorDate(prev.end);
-  const source=fmtMotorDate(row.sourceMeetEnd);
-  const checked=escMotor(row.date);
-  return `<section class="brc-motor-insight-section brc-kverified-previous" style="border:1px solid rgba(22,101,52,.24);background:#f0fdf4;padding:12px;border-radius:10px;margin:8px 0 10px;">
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:5px;"><strong style="color:#166534;font-size:13px;">直近の確定済み使用履歴</strong><span style="font-size:10px;font-weight:700;color:#166534;">公式Kで号機・選手名を照合</span></div>
-    <div style="font-size:14px;color:#153d2c;font-weight:800;">${names}</div>
-    <div style="font-size:12px;color:#234a37;">使用期間 ${escMotor(span)} ／ 開催終了 ${escMotor(source)}</div>
-    <div style="margin-top:5px;font-size:10px;color:#486659;line-height:1.5;">前節参考データ基準日：${checked}。累計走数・優出歴・着順一覧は別検証中のため、この欄では表示しません。</div>
-    </section>`;
-}
-async function brcFetchVerifiedPreviousMotor(force=false){
-  if(__brcPreviousMotorPending)return __brcPreviousMotorPending;
-  if(!force && __brcPreviousMotorFeed && brcVerifiedPreviousMotorFeedValid(__brcPreviousMotorFeed))return __brcPreviousMotorFeed;
-  if(Date.now()-__brcPreviousMotorLastRequest<180000)return __brcPreviousMotorFeed;
-  __brcPreviousMotorLastRequest=Date.now();
-  const task=(async()=>{
-    const paths=['racecards/motor_previous_daily.json',
-      'https://raw.githubusercontent.com/boatresearchclub/database2/main/racecards/motor_previous_daily.json'];
-    for(const path of paths){
-      const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),9000);
-      try{
-        const res=await fetch(path+(path.includes('?')?'&':'?')+'v='+Date.now(),
-          {cache:'no-store',credentials:path.startsWith('https://')?'omit':'same-origin',signal:controller.signal});
-        if(!res.ok)throw Error('HTTP '+res.status);
-        const candidate=await res.json();
-        if(!brcVerifiedPreviousMotorFeedValid(candidate))throw Error('outdated/incomplete previous motor JSON');
-        if(!__brcPreviousMotorFeed || String(candidate.date)>=String(__brcPreviousMotorFeed.date)){
-          __brcPreviousMotorFeed=candidate;__brcPreviousMotorError='';
-          document.dispatchEvent(new CustomEvent('brc-motor-previous-updated',{detail:{date:candidate.date}}));
-        }
-        return __brcPreviousMotorFeed;
-      }catch(e){__brcPreviousMotorError=String(e?.message||e).slice(0,150);}
-      finally{clearTimeout(timer);}
-    }
-    return __brcPreviousMotorFeed;
-  })();
-  __brcPreviousMotorPending=task;
-  try{return await task;}finally{__brcPreviousMotorPending=null;}
-}
-window.brcVerifiedMotorPreviousStatus=()=>({as_of:__brcPreviousMotorFeed?.date||'',
-  is_fresh:brcVerifiedPreviousMotorFeedValid(__brcPreviousMotorFeed),
-  venues:__brcPreviousMotorFeed?.venues?Object.keys(__brcPreviousMotorFeed.venues).length:0,
-  verified_motors:__brcPreviousMotorFeed?.official_K_matched_count||0,
-  last_error:__brcPreviousMotorError});
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>brcFetchVerifiedPreviousMotor().catch(()=>{}),{once:true});
-else setTimeout(()=>brcFetchVerifiedPreviousMotor().catch(()=>{}),0);
-window.addEventListener('focus',()=>brcFetchVerifiedPreviousMotor(true).catch(()=>{}));
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)brcFetchVerifiedPreviousMotor(true).catch(()=>{});});
-document.addEventListener('brc-motor-previous-updated',()=>{
-  const bd=document.getElementById('predictDetailBackdrop');
-  if(!bd?.classList.contains('open'))return;
-  const panel=bd.querySelector('.predict-unified-panel[data-predict-unified-panel="motor"].active');
-  const match=String(panel?.id||'').match(/predict-unified-motor-(\d+)/);
-  if(match)try{renderPredictUnifiedMotor(Number(match[1]),panel);}catch(_e){}
-});
-
 function renderPredictUnifiedMotor(course,target){
   if(!target) return;
+  if(!__brcVerifiedPrevData)brcFetchMotorPreviousVerified().catch(()=>{});
   if(!__motorDetailLiveLoaded){
     brcMotorRequestFreshHistory().then(()=>{
       if(__motorDetailLiveLoaded && target && target.isConnected) renderPredictUnifiedMotor(course,target);
@@ -11643,7 +11542,6 @@ function renderPredictUnifiedMotor(course,target){
   const staleCycle=cycleResetActive && typeof brcMotorDetailCycleIsFresh==='function' && !brcMotorDetailCycleIsFresh(venue,venueMeta);
   const d=getMotorDetail(venue,b.motorNo,b.motor2);
   const gcol=MOTOR_GRADE_COLOR[b.motorGrade]||'var(--ink-soft)';
-  const verifiedPrevHtml=!d?brcVerifiedPreviousMotorHtml(venue,b.motorNo):'';
   if(!d){
     // 当日番組表の2連対率・相対評価は現サイクル値として残す。
     // 一方、旧サイクル由来のN/優出/優勝/前回使用者/長期足傾向は渡さない。
@@ -11656,10 +11554,10 @@ function renderPredictUnifiedMotor(course,target){
     const adminTraitHtml=brcBuildAdminTokuyamaMotorTraitHtml(venue,b.motorNo,publicInfo);
     if(BRC_MOTOR_PUBLIC_VENUES.has(String(venue||''))){
       const newBadge=staleCycle?`<div style="display:flex;align-items:center;gap:8px;margin:0 0 10px;flex-wrap:wrap;">${brcNewMotorBadgeHtml()}<strong style="font-size:12px;">${fmtMotorDate(resetDate)}から現モーターサイクル</strong></div>`:'';
-      target.innerHTML=newBadge+verifiedPrevHtml+(verifiedPrevHtml?'':brcMotorHistoryNoticeHtml(md,false))+(adminTraitHtml||'<div class="predict-unified-empty">BRCモーター分析データがありません。</div>');
+      target.innerHTML=newBadge+brcMotorHistoryNoticeHtml(md,false)+brcMotorVerifiedPreviousCardHtml(venue,b.motorNo)+(adminTraitHtml||'<div class="predict-unified-empty">BRCモーター分析データがありません。</div>');
       return;
     }
-    target.innerHTML=verifiedPrevHtml+`<div class="motor-detail-topstats"><div class="motor-detail-stat"><b style="color:${gcol};">${escMotor(b.motorGrade||'―')}</b><span>相対評価</span></div><div class="motor-detail-stat"><b>${Number.isFinite(Number(b.motor2))?Math.round(Number(b.motor2))+'%':'―'}</b><span>2連対率</span></div><div class="motor-detail-stat"><b>${escMotor(b.motorNo)}</b><span>号機</span></div><div class="motor-detail-stat"><b>―</b><span>履歴N</span></div></div><div class="predict-unified-empty">現モーターサイクルの機歴を蓄積中です。</div>`;
+    target.innerHTML=`<div class="motor-detail-topstats"><div class="motor-detail-stat"><b style="color:${gcol};">${escMotor(b.motorGrade||'―')}</b><span>相対評価</span></div><div class="motor-detail-stat"><b>${Number.isFinite(Number(b.motor2))?Math.round(Number(b.motor2))+'%':'―'}</b><span>2連対率</span></div><div class="motor-detail-stat"><b>${escMotor(b.motorNo)}</b><span>号機</span></div><div class="motor-detail-stat"><b>―</b><span>履歴N</span></div></div>${brcMotorVerifiedPreviousCardHtml(venue,b.motorNo)}<div class="predict-unified-empty">現モーターサイクルの累計履歴を蓄積中です。</div>`;
     return;
   }
   const prev=d.previous;
@@ -17428,11 +17326,7 @@ async function brcFetchLiveExhibition(venue, raceNo){
       reason:res.status===404?'展示APIにこのレースの保存データなし':res.ok?'応答あり':'展示API HTTP '+res.status,
       checkedAt:new Date().toISOString()};
     if(res.status === 404){
-      if(BRC_ADMIN_ACTIVE){
-        const currentSelection=brcCurrentLiveExhibitionSelection();
-        if(currentSelection.venue===venue && Number(currentSelection.raceNo)===r)
-          brcV3AdminRecordPhase('LIVE_API_404',date+' '+code+' '+r+'R');
-      }
+      if(BRC_ADMIN_ACTIVE)brcV3AdminRecordPhase('LIVE_API_404',date+' '+code+' '+r+'R');
       return null;
     }
     if(!res.ok) throw new Error(`live_exhibition_http_${res.status}`);
@@ -19517,30 +19411,6 @@ function brcV3AdminLiveBlockReason(r,date,code,raceNo){
   }
   return 'READY';
 }
-// BRC_V3_422_DIAGNOSTICS_SAFE_V2: validated status tokens only; never log response body.
-function brcV3SafeReasonToken(value){
-  if(typeof value!=='string'||value.length>100)return '';
-  return /^[A-Za-z0-9_.:-]{1,90}$/.test(value)?value:'';
-}
-function brcV3SafeWorkerError(data,date,code,r,http){
-  const obj=data && typeof data==='object' && !Array.isArray(data)?data:{};
-  const keys=['reason_code','reasonCode','reason','error_code','errorCode','code','detail_code'];
-  let reasonCode='';
-  for(const k of keys){
-    const value=brcV3SafeReasonToken(obj[k]);
-    if(value){reasonCode=value;break;}
-  }
-  const fieldNames=Object.keys(obj).filter(k=>/^[a-zA-Z][a-zA-Z0-9_]{0,35}$/.test(k)&&!/(token|secret|auth|cookie|header|session|email|password|name|personal|racer|player|user)/i.test(k)).slice(0,18);
-  return {at:new Date().toISOString(),date:String(date),venue_code:String(code),race_no:Number(r),
-    http:Number(http)||null,
-    status:brcV3SafeReasonToken(obj.status)||brcV3SafeReasonToken(obj.error)||'not_ready',
-    reasonCode,replyFields:fieldNames};
-}
-function brcV3DiagnosticMatchesSelected(entry,selectedKey){
-  if(!entry||typeof entry!=='object')return false;
-  const context=[String(entry.date||''),String(entry.venue_code||'').padStart(2,'0'),Number(entry.race_no)].join('|');
-  return context===selectedKey;
-}
 function brcV3AdminRecordPhase(phase,detail=''){
   const selected=brcCurrentLiveExhibitionSelection();
   const key=[String(TODAY_LABEL||''),brcVenueCodeFromName(selected.venue),Number(selected.raceNo)].join('|');
@@ -19812,9 +19682,9 @@ window.brcV3AdminDiagnostics=function(){
     v3Verified:!!__brcV3AdminDisplay,
     displayedRates:__brcV3AdminDisplay?'TimeX v3（照合済み）':'既存TimeX v2（参考）',
     v3Status:document.querySelector('#brcV3AdminCompare [data-brc-v3-status]')?.textContent||'検証パネル未生成',
-    liveFetch:(()=>{const v=window.__brcV3LiveFetchStatus;return brcV3DiagnosticMatchesSelected(v,[current,code,Number(selected.raceNo)].join('|'))?v:null;})(),
-    workerFailure:(()=>{const v=window.__brcV3LastError;return brcV3DiagnosticMatchesSelected(v,[current,code,Number(selected.raceNo)].join('|'))?v:null;})(),
-    progress:(()=>{const v=window.__brcV3Progress;return v&&v.key===[current,code,Number(selected.raceNo)].join('|')?v:null;})(),
+    liveFetch:window.__brcV3LiveFetchStatus||null,
+    workerFailure:window.__brcV3LastError||null,
+    progress:window.__brcV3Progress||null,
     liveBlockReason:brcV3AdminLiveBlockReason(live,current,code,selected.raceNo),
     priorReadiness:(()=>{try{return {ready:true, canonicalEntries:brcV3AdminPriorCanonical().split('|').length};}catch(e){return {ready:false,reason:String(e.message||e)};}})(),
     workerEndpoint:BRC_V3_ADMIN_COMPARE_URL+'/predict-timex-v3',
@@ -20154,8 +20024,8 @@ function brcV3AdminMount(venue,raceNo,liveRace){
           body:JSON.stringify({date,venue_code:code,race_no:r})
         });
       }finally{clearTimeout(timeoutId);}
+      brcV3AdminRecordPhase('WORKER_HTTP',String(res.status));
       let data=null;try{data=await res.json();}catch(_e){}
-      if(stillSame())brcV3AdminRecordPhase('WORKER_HTTP',String(res.status));
       if(!stillSame()){
         if(seq===__brcV3AdminCompareSeq){
           brcV3AdminClearDisplay();
@@ -20164,9 +20034,8 @@ function brcV3AdminMount(venue,raceNo,liveRace){
         return;
       }
       if(!res.ok||data?.status!=='ready'){
-        const failure=brcV3SafeWorkerError(data,date,code,r,res.status);
-        const remoteStatus=failure.status;
-        window.__brcV3LastError=failure;
+        const remoteStatus=String(data?.status||data?.error||'not_ready').slice(0,120);
+        window.__brcV3LastError={at:new Date().toISOString(),http:res.status,status:remoteStatus};
         brcV3AdminRecordPhase('WORKER_NOT_READY',res.status+' '+remoteStatus);
         brcV3AdminClearDisplay();
         try{brcRefreshAdminPersonalTimeXDom();}catch(_e){}
@@ -20199,8 +20068,7 @@ function brcV3AdminMount(venue,raceNo,liveRace){
       status.textContent=result.join('\n');
     }catch(e){
       const reason=e?.name==='AbortError'?'WORKER_TIMEOUT_20S':String(e?.message||e);
-      window.__brcV3LastError={at:new Date().toISOString(),date,venue_code:code,race_no:r,
-        error:brcV3SafeReasonToken(reason)||'CLIENT_ERROR'};
+      window.__brcV3LastError={at:new Date().toISOString(),error:reason};
       brcV3AdminRecordPhase('ERROR',reason);
       if(seq===__brcV3AdminCompareSeq&&brcV3AdminCompareCurrent(venue,r,date)){
         brcV3AdminClearDisplay();try{brcRefreshAdminPersonalTimeXDom();}catch(_e){}
@@ -22815,7 +22683,6 @@ async function autoLoadHostedRaceCardToday(_opts={}){
     renderRaceCardModeUi();
     saveRaceCardForToday(`auto:${sourceName}`);
     populateDaySelect();
-    try{setTimeout(()=>brcRefreshLiveScheduleStatus('racecard-load'),0);}catch(_e){}
     try{ brcRenderPostRaceCards(); }catch(_e){}
     collapseRaceCardFold();
     invalidateTodayPicks(true);
@@ -22829,8 +22696,6 @@ async function autoLoadHostedRaceCardToday(_opts={}){
       statusBox.textContent = `本日の公式番組表を自動読込: ${sourceName}（${Object.keys(RACE_INFO_TODAY).length}会場）`;
       statusBox.style.color = '';
     }
-    // 既にTOP表示中でも当日情報反映を待たずに再描画。
-    try{if(typeof window.brcRenderAdminLoginTopPreview==='function') void window.brcRenderAdminLoginTopPreview(true);}catch(_e){}
     return true;
   }catch(e){
     console.warn('本日の番組表自動読込に失敗しました', e);
@@ -26414,7 +26279,6 @@ window.__playersRendered = true;
 <!-- BRC_MOTOR_HISTORY_DAILY_LIVE_20260906 -->
 <script type="application/json" id="data-motor-detail"></script>
 <script src="data/data-motor-detail-c493224826-001.js"></script>
-
 <div id="predictDetailBackdrop" class="motor-detail-backdrop predict-detail-backdrop" aria-hidden="true" onclick="if(event.target===this) closePredictDetail();">
   <div class="motor-detail-sheet" role="dialog" aria-modal="true" aria-labelledby="predictDetailTitle">
     <div id="predictDetailBody"></div>
@@ -26993,6 +26857,120 @@ function brcBuildAdminTokuyamaMotorTraitHtml(venue,motorNo,publicInfo=null){
   }
   return `<div class="brc-admin-motor-trait"><div class="brc-motor-lab-head"><div class="brc-motor-lab-head-top"><div class="brc-motor-lab-brand"><div class="brc-admin-motor-trait-title">BRCモーター分析</div></div>${headerMetaHtml}</div></div><div class="brc-motor-lab-body">${overviewHtml}<section class="brc-motor-one-section"><div class="brc-motor-one-section-head"><div class="brc-motor-one-section-title">今節の状態</div></div><div id="brc-admin-motor-current-${no}" class="brc-admin-motor-trait-current">${brcBuildAdminTokuyamaCurrentHtml(no,{n:0,ready:false,venue:v},t)}</div></section>${publicHistoryHtml}${historySection}${verifyHtml}</div></div>`;
 }
+/* BRC_MOTOR_PREVIOUS_VERIFIED_FEED_V7_20261022
+ * Verified previous-racer identity/date only. The validated official-K public feed
+ * does NOT contain cumulative N, finals, wins, race order or foot grades.
+ * Keep its readiness separate from brcMotorHistoryStatus.
+ */
+let __brcVerifiedPrevData=null;
+let __brcVerifiedPrevSource='';
+let __brcVerifiedPrevLastAttempt=0;
+let __brcVerifiedPrevLastSuccess='';
+let __brcVerifiedPrevLastError='';
+let __brcVerifiedPrevPromise=null;
+const BRC_VERIFIED_PREVIOUS_FEEDS=[
+  {url:'racecards/motor_previous_daily.json',source:'site'},
+  {url:'https://raw.githubusercontent.com/boatresearchclub/database2/main/racecards/motor_previous_daily.json',source:'database2'}
+];
+function brcVerifiedPrevCheck(payload){
+  if(!payload || payload.version!=='BRC-Motor-Previous-Official-K-Verified-V1' ||
+     payload.cumulative_motor_stats_available!==false ||
+     !/^\d{4}-\d{2}-\d{2}$/.test(String(payload.date||'')) ||
+     !payload.venues || typeof payload.venues!=='object' || Array.isArray(payload.venues))return false;
+  const days=brcMotorAgeDays(payload.date);
+  if(!Number.isFinite(days)||days<0||days>2)return false;
+  const venues=Object.entries(payload.venues);
+  if(venues.length!==24 || !Number.isInteger(Number(payload.official_K_matched_count)))return false;
+  let verified=0;
+  for(const [name,v] of venues){
+    if(!name || !v || typeof v!=='object' || !v.motors || typeof v.motors!=='object')return false;
+    const rows=Object.entries(v.motors);
+    if(rows.length<35)return false;
+    for(const [motor,rec] of rows){
+      const prev=rec?.previous;
+      if(!/^\d{1,3}$/.test(motor) || rec?.verification!=='motor_venue_racer_and_date_in_official_K' ||
+         !prev || !/^\d{4}-\d{2}-\d{2}$/.test(String(prev.start||'')) ||
+         !/^\d{4}-\d{2}-\d{2}$/.test(String(prev.end||'')) ||
+         prev.start>prev.end || prev.end>payload.date ||
+         !Array.isArray(prev.users) || !prev.users.length ||
+         prev.users.some(u=>!u||typeof u.name!=='string'||!u.name.trim()||u.name.length>50))return false;
+      verified++;
+    }
+  }
+  return verified===Number(payload.official_K_matched_count) && verified>=1400;
+}
+function brcMotorPreviousVerifiedStatus(){
+  const p=__brcVerifiedPrevData;
+  return Object.freeze({
+    as_of:String(p?.date||''),venue_count:p?.venues?Object.keys(p.venues).length:0,
+    is_fresh:!!p && brcVerifiedPrevCheck(p),
+    verified_motor_count:Number(p?.official_K_matched_count)||0,
+    scope:'previous_user_and_period_only',
+    cumulative_stats_available:false,
+    source:__brcVerifiedPrevSource || 'not_loaded',
+    last_attempt_at:__brcVerifiedPrevLastAttempt?new Date(__brcVerifiedPrevLastAttempt).toISOString():'',
+    last_success_at:__brcVerifiedPrevLastSuccess,last_error:__brcVerifiedPrevLastError
+  });
+}
+window.brcMotorPreviousVerifiedStatus=brcMotorPreviousVerifiedStatus;
+function brcMotorPreviousVerifiedRecord(venue,motorNo){
+  if(!__brcVerifiedPrevData || !brcVerifiedPrevCheck(__brcVerifiedPrevData))return null;
+  const m=__brcVerifiedPrevData.venues?.[String(venue||'')]?.motors?.[String(Number(motorNo))];
+  if(m?.verification!=='motor_venue_racer_and_date_in_official_K')return null;
+  const prev=m.previous;
+  if(!prev || !Array.isArray(prev.users) || !prev.users.length)return null;
+  // Never join a previous cycle to a newly replaced motor bearing the same number.
+  const reset=typeof brcMotorCycleResetDate==='function'?brcMotorCycleResetDate(venue):'';
+  if(reset && typeof brcIsNewMotorCycle==='function' && brcIsNewMotorCycle(venue) && String(prev.start)<String(reset))return null;
+  return prev;
+}
+function brcMotorVerifiedPreviousCardHtml(venue,motorNo){
+  const p=brcMotorPreviousVerifiedRecord(venue,motorNo);
+  if(!p)return '';
+  const users=p.users.map(u=>escMotor(u.name.trim())).join('・');
+  const period=fmtMotorDate(p.start)+'〜'+fmtMotorDate(p.end);
+  // Display only official-K-verified fields; do not show unverified grade/title/order/finals/N.
+  return '<section class="brc-motor-verified-prev-card" aria-label="前回使用者">'+
+    '<div class="brc-motor-verified-prev-title">前回使用者</div>'+
+    '<div class="brc-motor-verified-prev-name">'+users+'</div>'+
+    '<div class="brc-motor-verified-prev-period">'+escMotor(period)+'</div></section>';
+}
+async function brcFetchMotorPreviousVerified(force=false){
+  if(__brcVerifiedPrevPromise)return __brcVerifiedPrevPromise;
+  if(!force && __brcVerifiedPrevData && brcVerifiedPrevCheck(__brcVerifiedPrevData))return __brcVerifiedPrevData;
+  if(!force && Date.now()-__brcVerifiedPrevLastAttempt<60000)return __brcVerifiedPrevData;
+  __brcVerifiedPrevLastAttempt=Date.now();
+  const task=(async()=>{
+    const errors=[];
+    for(const item of BRC_VERIFIED_PREVIOUS_FEEDS){
+      try{
+        // An absolute raw-GitHub fallback also works where the page's relative base differs.
+        const res=await fetch(item.url,{cache:'no-store'});
+        if(!res.ok)throw Error('HTTP '+res.status);
+        const p=await res.json();
+        if(!brcVerifiedPrevCheck(p))throw Error('previous-feed date/coverage/verification mismatch');
+        if(__brcVerifiedPrevData && String(p.date)<String(__brcVerifiedPrevData.date))continue;
+        __brcVerifiedPrevData=p;
+        __brcVerifiedPrevSource=item.source;
+        __brcVerifiedPrevLastSuccess=new Date().toISOString();
+        __brcVerifiedPrevLastError='';
+        document.dispatchEvent(new CustomEvent('brc-motor-previous-updated',{detail:{date:p.date}}));
+        // Refresh an already-open motor panel, without claiming that cumulative history was refreshed.
+        document.dispatchEvent(new CustomEvent('brc-motor-detail-updated',{detail:{previousOnly:true}}));
+        return p;
+      }catch(e){errors.push(item.source+': '+String(e?.message||e));}
+    }
+    __brcVerifiedPrevLastError=errors.join(' / ').slice(0,200);
+    return __brcVerifiedPrevData;
+  })();
+  __brcVerifiedPrevPromise=task;
+  try{return await task;}finally{__brcVerifiedPrevPromise=null;}
+}
+window.brcMotorPreviousVerifiedRefresh=()=>brcFetchMotorPreviousVerified(true);
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>brcFetchMotorPreviousVerified().catch(()=>{}),{once:true});
+else brcFetchMotorPreviousVerified().catch(()=>{});
+window.addEventListener('focus',()=>{if(!document.hidden)brcFetchMotorPreviousVerified().catch(()=>{});});
+
 // BRC_MOTOR_LATEST_SOURCE_FRESHNESS_V3_20261022
 // The HTML's 2026-09-05 payload is retained only for compatibility; NEVER show stale history as current.
 // This browser-side guard does not create or publish the daily motor-detail.json file.
@@ -27039,73 +27017,27 @@ function motorDetailData(){
   }catch(e){ console.warn('モーター履歴データ読込失敗',e); __motorDetailCache={}; }
   return __motorDetailCache;
 }
-// BRC_MOTOR_DUAL_SOURCE_VALIDATED_20261022
-// No history data is fabricated here. Both URL roots are read-only sources.
-// An incomplete or stale motor feed can never replace current data.
-let __brcMotorLiveSource='embedded';
-function brcMotorSchemaValid(data){
-  if(!brcMotorPayloadFresh(data))return false;
-  const venues=Object.values(data.venues||{});
-  if(venues.length<20||venues.length>24)return false;
-  let motorCount=0;
-  for(const venue of venues){
-    if(!venue||typeof venue!=='object'||!venue.motors||typeof venue.motors!=='object')return false;
-    const cycles=String(venue.cycle_start||'');
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(cycles)||brcMotorAgeDays(cycles)<0)return false;
-    for(const record of Object.values(venue.motors)){
-      if(!record||typeof record!=='object')return false;
-      const n=Number(record.n),rate=Number(record.rate);
-      if(!Number.isInteger(n)||n<0||n>3000||!Number.isFinite(rate)||rate<0||rate>100)return false;
-      const wins=Number(record.wins_count||0),finals=Number(record.finals_count||0);
-      if(!Number.isInteger(wins)||!Number.isInteger(finals)||wins<0||finals<0||wins>finals)return false;
-      if(record.previous!=null){
-        if(!Array.isArray(record.previous.ranks)||!Array.isArray(record.previous.users))return false;
-        if(String(record.previous.end||'')>String(data.date))return false;
-      }
-      motorCount++;
-    }
-  }
-  return motorCount>=1000&&motorCount<=2200;
-}
 async function brcLoadMotorDetailLive(force=false){
-  if(__motorDetailLivePromise)return __motorDetailLivePromise;
-  if(__motorDetailLiveLoaded&&!force&&brcMotorPayloadFresh(__motorDetailCache))return __motorDetailCache;
+  if(__motorDetailLivePromise) return __motorDetailLivePromise;
+  if(__motorDetailLiveLoaded && !force && brcMotorPayloadFresh(__motorDetailCache)) return __motorDetailCache;
   __brcMotorLastRequest=Date.now();
   const task=(async()=>{
     try{
       const day=brcMotorJstToday();
-      const paths=[
-        {url:'racecards/motor-detail.json',source:'site'},
-        {url:'https://raw.githubusercontent.com/boatresearchclub/database2/main/racecards/motor-detail.json',source:'database2'}
-      ];
-      let best=null,failures=[];
-      for(const path of paths){
-        const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),8500);
-        try{
-          const sep=path.url.includes('?')?'&':'?';
-          const url=path.url+sep+'v='+encodeURIComponent(day)+'&t='+Date.now();
-          const response=await fetch(url,{cache:'no-store',credentials:path.source==='site'?'same-origin':'omit',signal:ctl.signal});
-          if(!response.ok)throw Error('HTTP '+response.status);
-          const data=await response.json();
-          if(!brcMotorSchemaValid(data))throw Error('invalid/incomplete/stale motor feed '+String(data?.date||''));
-          if(!best||String(data.date)>String(best.data.date))best={data,source:path.source};
-          // An as-of-today/previous-day same-origin verified feed needs no fallthrough.
-          if(best.source==='site'&&brcMotorAgeDays(best.data.date)<=1)break;
-        }catch(e){failures.push(path.source+': '+String(e?.message||e).slice(0,100));}
-        finally{clearTimeout(timer);}
-      }
-      if(!best)throw Error(failures.join('; ')||'motor feed unavailable');
+      const res=await fetch(`racecards/motor-detail.json?v=${encodeURIComponent(day)}&t=${Date.now()}`,{cache:'no-store'});
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data=await res.json();
+      if(!brcMotorPayloadFresh(data)) throw new Error('motor-detail JSON is missing, incomplete, future dated or stale: '+String(data?.date||'missing'));
+      // Reject a regressing snapshot even when both versions fall inside the freshness window.
       const old=motorDetailData();
-      if(brcMotorPayloadFresh(old)&&String(best.data.date)<String(old.date))return old;
-      const changed=!__motorDetailLiveLoaded||String(best.data.date)!==String(old.date)||__brcMotorLiveSource!==best.source;
-      __motorDetailCache=best.data;
+      if(brcMotorPayloadFresh(old) && String(data.date)<String(old.date)) return old;
+      __motorDetailCache=data;
       __motorDetailLiveLoaded=true;
-      __brcMotorLiveSource=best.source;
       __brcMotorLastSuccess=new Date().toISOString();__brcMotorLastError='';
-      if(changed)document.dispatchEvent(new CustomEvent('brc-motor-detail-updated',{detail:{date:best.data.date,source:best.source}}));
-      return best.data;
+      document.dispatchEvent(new CustomEvent('brc-motor-detail-updated',{detail:{date:data.date||''}}));
+      return data;
     }catch(e){
-      __brcMotorLastError=String(e?.message||e).slice(0,240);
+      __brcMotorLastError=String(e?.message||e).slice(0,200);
       console.warn('新しいモーター履歴を取得できません。古い履歴は表示しません。',e);
       return motorDetailData();
     }finally{__motorDetailLivePromise=null;}
@@ -27116,7 +27048,7 @@ async function brcLoadMotorDetailLive(force=false){
 window.brcMotorHistoryStatus=()=>{
   const data=motorDetailData(),age=brcMotorAgeDays(data?.date);
   return Object.freeze({as_of:String(data?.date||''),age_days:Number.isFinite(age)?age:null,
-    is_fresh:brcMotorPayloadFresh(data),source:__motorDetailLiveLoaded?__brcMotorLiveSource:'embedded',
+    is_fresh:brcMotorPayloadFresh(data),source:__motorDetailLiveLoaded?'site':'embedded',
     venue_count:data?.venues&&typeof data.venues==='object'?Object.keys(data.venues).length:0,
     last_attempt_at:__brcMotorLastRequest?new Date(__brcMotorLastRequest).toISOString():'',
     last_success_at:__brcMotorLastSuccess,last_error:__brcMotorLastError});
@@ -32284,7 +32216,6 @@ body.brc-admin-home-active .brc-admin-login-top-preview-note{display:none;}
 <script type="application/json" id="brc-apd8-recent-course-1y"></script>
 <script src="data/brc-apd8-recent-course-1y-a2227c2fb8-001.js"></script>
 
-
 <!-- BRC_PLAYER_COURSE365_DAILY_DISPLAY_V2_20261022:
      Display-only daily snapshot consumer. The embedded 2025-09-23..2026-09-22 snapshot remains
      a dated, explicitly labelled fallback until a *real* updated full-year feed is published.
@@ -35285,7 +35216,6 @@ MEMBERS/管理者の履歴詳細へ本人着順を追加し、敗戦時に2〜6�
 </style>
 <script type="application/json" id="brc-player-1c-recent10-data"></script>
 <script src="data/brc-player-1c-recent10-data-ed56f49f9b-001.js"></script>
-
 <script>
 (function(){
   const VERSION='BRC_PLAYER_BASIC_RECENT10_MEMBER_V2_20261001';
@@ -35467,7 +35397,6 @@ MEMBERS/管理者の履歴詳細へ本人着順を追加し、敗戦時に2〜6�
 
 <script type="application/json" id="brc-dictionary-1c-loss-trend-data"></script>
 <script src="data/brc-dictionary-1c-loss-trend-data-d394639d6e-001.js"></script>
-
 <script>
 (function(){
   const VERSION='BRC_DICTIONARY_1C_LOSS_TREND_V1_20260930';
@@ -38441,11 +38370,7 @@ body.brc-admin-home-active .brc-admin-top-race .dp-boat-no{
       displayedRates:String(d.displayedRates||''),liveBlockReason:String(d.liveBlockReason||''),
       priorReady:!!d.priorReadiness?.ready,priorIssue:String(d.priorReadiness?.reason||''),
       workerHttp:w?.http??null,workerStatus:String(w?.status||w?.error||'').slice(0,160),
-      workerReasonCode:String(w?.reasonCode||'').slice(0,90),
-      workerReplyFields:Array.isArray(w?.replyFields)?w.replyFields:[],
-      workerRace:w?.race_no?String(w.date)+' '+String(w.venue_code)+' '+String(w.race_no)+'R':'',
       liveApiHttp:f?.http??null,liveApiReason:String(f?.reason||'').slice(0,160),
-      liveApiRace:f?.race_no?String(f.date)+' '+String(f.venue_code)+' '+String(f.race_no)+'R':'',
       phase:String(p?.phase||''),phaseDetail:String(p?.detail||'').slice(0,160),
       nextAutoRetrySec:Number(d.nextAutoRetrySec)||0,
       checkedAt:new Date().toISOString()
@@ -38463,7 +38388,7 @@ body.brc-admin-home-active .brc-admin-top-race .dp-boat-no{
     }
     if(s.liveBlockReason&&s.liveBlockReason!=='READY')return {status:'v3未適用：展示照合条件',detail:translations[s.liveBlockReason]||s.liveBlockReason,ready:false};
     if(!s.priorReady)return {status:'v3未適用：事前着率照合',detail:s.priorIssue||'事前着率の取得・照合が必要です。',ready:false};
-    if(s.workerHttp&&s.workerHttp!==200)return {status:'v3未適用：Worker '+s.workerHttp,detail:'Worker応答: '+(s.workerStatus||'不明')+(s.workerReasonCode?' ／ 原因コード: '+s.workerReasonCode:''),ready:false};
+    if(s.workerHttp&&s.workerHttp!==200)return {status:'v3未適用：Worker '+s.workerHttp,detail:'Worker応答: '+(s.workerStatus||'不明'),ready:false};
     if(s.workerStatus)return {status:'v3未適用：Worker / 照合',detail:s.workerStatus,ready:false};
     if(s.phase==='ERROR')return {status:'v3未適用：内部処理エラー',detail:s.phaseDetail,ready:false};
     if(s.phase==='THROTTLED')return {status:'v3再取得待ち',detail:'自動再取得まで約'+s.nextAutoRetrySec+'秒です。',ready:false};
@@ -38761,7 +38686,6 @@ body.brc-admin-public-view #brcDemeInfoTab{display:none!important}
 </style>
 <script id="brcDemeInfoData" type="application/json"></script>
 <script src="data/brcDemeInfoData-e3fdccce0e-001.js"></script>
-
 <script id="brcDemeInfoLogic">
 // BRC_DEME_ALL_METRICS_COMPACT_PREVIEW_20261020: administrator-only UI; underlying historical statistics unchanged.
 (function(){
@@ -38932,7 +38856,6 @@ setInterval(()=>{
 <!-- BRC_D_V09_ADMIN_CONDITIONAL_THIRD_RESEARCH_20261020; NOT DEPLOYED; original rates and TimeX unchanged -->
 <script type="application/json" id="brc-d08-model"></script>
 <script src="data/brc-d08-model-9af8b5d6fa-001.js"></script>
-
 <script type="text/plain" id="brc-d08-core">
 /* BRC conditional 3rd research only; no mutation of existing prediction values.
    Input: generated counts from 2023, tunings frozen from 2024.
@@ -40031,7 +39954,7 @@ setInterval(()=>{
   const $=id=>document.getElementById(id);
   const panel=$('brcAdminDailySourceHealth');
   if(!panel)return;
-  const courseEl=$('brcAdminDailySourceCourse'),motorEl=$('brcAdminDailySourceMotor'),dictionaryEl=$('brcAdminDailySourceDictionary');
+  const courseEl=$('brcAdminDailySourceCourse'),motorEl=$('brcAdminDailySourceMotor'),dictionaryEl=$('brcAdminDailySourceDictionary'),motorPreviousEl=$('brcAdminDailySourceMotorPrevious');
   const brief=$('brcAdminDailySourceBrief'),feedback=$('brcAdminDailySourceFeedback');
   const refresh=$('brcAdminDailySourceRefresh'),check=$('brcAdminDailySourceCheck'),copy=$('brcAdminDailySourceCopy');
   let running=false,latest=null;
@@ -40044,12 +39967,14 @@ setInterval(()=>{
   function clean(s){return String(s??'').slice(0,200);}
   function snapshot(){
     if(!authorized())return null;
-    let course=null,motor=null;
+    let course=null,motor=null,motorPrevious=null;
     try{course=typeof window.brcPlayerCourse365Status==='function'?window.brcPlayerCourse365Status():null;}
     catch(e){course={last_error:clean(e?.message||e)};}
     try{motor=typeof window.brcMotorHistoryStatus==='function'?window.brcMotorHistoryStatus():null;}
     catch(e){motor={last_error:clean(e?.message||e)};}
-    return {build:'BRC_ADMIN_DATA_HEALTH_V1_20261022',checked_at:new Date().toISOString(),
+    try{motorPrevious=typeof window.brcMotorPreviousVerifiedStatus==='function'?window.brcMotorPreviousVerifiedStatus():null;}
+    catch(e){motorPrevious={last_error:clean(e?.message||e)};}
+    return {build:'BRC_ADMIN_DATA_HEALTH_V2_20261022',checked_at:new Date().toISOString(),
       course365:course?{as_of:clean(course.as_of),window_start:clean(course.window_start),
         is_fresh:course.is_fresh===true,source:clean(course.source),last_attempt_at:clean(course.last_attempt_at),
         last_success_at:clean(course.last_success_at),last_error:clean(course.last_error)}:null,
@@ -40057,6 +39982,14 @@ setInterval(()=>{
         is_fresh:motor.is_fresh===true,venue_count:Number(motor.venue_count)||0,
         source:clean(motor.source),last_attempt_at:clean(motor.last_attempt_at),
         last_success_at:clean(motor.last_success_at),last_error:clean(motor.last_error)}:null,
+      motor_previous_verified:motorPrevious?{
+        as_of:clean(motorPrevious.as_of),is_fresh:motorPrevious.is_fresh===true,
+        venue_count:Number(motorPrevious.venue_count)||0,
+        verified_motor_count:Number(motorPrevious.verified_motor_count)||0,
+        scope:'前回使用者と使用期間のみ（累計走数・優出歴・優勝歴を含まない）',
+        source:clean(motorPrevious.source),last_attempt_at:clean(motorPrevious.last_attempt_at),
+        last_success_at:clean(motorPrevious.last_success_at),last_error:clean(motorPrevious.last_error)
+      }:null,
       dictionary_player:{
         grade_and_venue:{last_aggregated_period:'2026/07',source:'INDEX embedded snapshot',daily_update_verified:false},
         course_st:{last_aggregated_date:'2026-09-22',source:'INDEX embedded ST archive',daily_update_verified:false},
@@ -40085,7 +40018,8 @@ setInterval(()=>{
     if(!d){panel.open=false;panel.hidden=true;latest=null;return;}
     panel.hidden=false;latest=d;
     courseEl.textContent=textFor('選手・コース別365日成績',d.course365,true);
-    motorEl.textContent=textFor('モーター前節・累計履歴',d.motor,false);
+    motorEl.textContent=textFor('モーター累計走数・優出／優勝歴',d.motor,false);
+    if(motorPreviousEl)motorPreviousEl.textContent=textFor('公式K照合済み・前回使用者のみ（累計走数・優出歴なし）',d.motor_previous_verified,false);
     if(dictionaryEl){
       const course=d.dictionary_player?.player_course365;
       dictionaryEl.textContent=[
@@ -40111,6 +40045,7 @@ setInterval(()=>{
       const tasks=[];
       if(typeof window.brcPlayerCourse365Refresh==='function')tasks.push(Promise.resolve().then(()=>window.brcPlayerCourse365Refresh()));
       if(typeof brcLoadMotorDetailLive==='function')tasks.push(Promise.resolve().then(()=>brcLoadMotorDetailLive(true)));
+      if(typeof window.brcMotorPreviousVerifiedRefresh==='function')tasks.push(Promise.resolve().then(()=>window.brcMotorPreviousVerifiedRefresh()));
       if(!tasks.length)throw Error('日次データ取得関数がありません');
       await Promise.allSettled(tasks);
       if(!authorized())return;
@@ -40125,6 +40060,7 @@ setInterval(()=>{
     catch(_){if(authorized())feedback.textContent='コピー不可。HTTPSのブラウザで確認してください';}
   });
   document.addEventListener('brc-motor-detail-updated',()=>{if(authorized())paint();});
+  document.addEventListener('brc-motor-previous-updated',()=>{if(authorized())paint();});
   window.addEventListener('brc:player-course365-updated',()=>{if(authorized())paint();});
   // Only update in admin view; no background fetches and no changes to timers in data consumers.
   setInterval(()=>{if(!document.hidden&&authorized())paint();else if(!authorized()&&latest)paint();},15000);
