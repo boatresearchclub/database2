@@ -143,6 +143,18 @@ def build(files: dict[date, Path], today: date):
         "from_date":START.isoformat(), "through_date":end.isoformat(),
         "days_expected":(end-START).days+1, "days_missing":missing,
         "championship_races_explicitly_labelled":len(championship),
+        "championships_by_venue":dict(sorted(collections.Counter(x["venue"] for x in championship).items())),
+        "championships_by_race_number":dict(sorted(collections.Counter(str(x["race"]) for x in championship).items())),
+        "candidate_race_ids":[{"date":x["date"],"venue":x["venue"],
+                                "race":x["race"],"winning_motor":x["winning_motor"]}
+                               for x in championship],
+        "championship_entrant_count":sum(len(x["motors"]) for x in championship),
+        "championship_winner_count":len(championship),
+        "championship_validation_assertions":{
+            "each_final_has_six_unique_motors":all(len(x["motors"])==len(set(x["motors"]))==6 for x in championship),
+            "one_winner_per_final":sum(v["final_wins"] for v in counts.values())==len(championship),
+            "six_final_appearances_per_final":sum(v["final_appearances"] for v in counts.values())==6*len(championship)
+        },
         "research_final_appearances_and_wins":per_venue,
         "sample_championships":championship[-20:],
         "finals_verified":False, "wins_verified":False,
