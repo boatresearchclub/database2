@@ -349,7 +349,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261022-ABSENCE-DEADLINE-STATUS-R1">>
+<meta name="brc-build" content="20261022-COURSE365-DAILY-V2-ABSENCE-R1">>
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -31956,6 +31956,120 @@ body.brc-admin-home-active .brc-admin-login-top-preview-note{display:none;}
 <script type="application/json" id="brc-apd8-recent-course-1y"></script>
 <script src="data/brc-apd8-recent-course-1y-a2227c2fb8-001.js"></script>
 
+<!-- BRC_PLAYER_COURSE365_DAILY_DISPLAY_V2_20261022:
+     Display-only daily snapshot consumer. The embedded 2025-09-23..2026-09-22 snapshot remains
+     a dated, explicitly labelled fallback until a *real* updated full-year feed is published.
+     Prediction, TimeX, ST, venue, grade, other rolling analytics, and auth are unchanged.
+     Contract: /data/player_course_1y_daily.json,
+     {schema_version:1,window_start:'YYYY-MM-DD',window_end:'YYYY-MM-DD',as_of:'YYYY-MM-DD',
+      players:{reg:{course:{n,win,top2,top3}}}}.
+-->
+<script id="brc-player-course365-daily-bridge">
+(function(){
+  'use strict';
+  const VERSION='BRC_PLAYER_COURSE365_DAILY_DISPLAY_V2_20261022';
+  const PATH='/data/player_course_1y_daily.json';
+  const SNAPSHOT_START='2025-09-23', SNAPSHOT_END='2026-09-22';
+  const DATA_NODE=document.getElementById('brc-apd8-recent-course-1y');
+  let snapshot=Object.create(null);
+  try{snapshot=JSON.parse(DATA_NODE?.textContent||'{}');}catch(e){console.warn(VERSION,'bad embedded snapshot',e);}
+  let current=snapshot;
+  let meta={start:SNAPSHOT_START,end:SNAPSHOT_END,source:'embedded'};
+  let running=null, checkedDay='', lastAttempt=0;
+  const dayMs=86400000;
+  const isoDay=(value)=>{
+    const d=new Date(value);
+    return Number.isFinite(d.getTime())?d.toISOString().slice(0,10):'';
+  };
+  function jstToday(){return new Date(Date.now()+9*3600000).toISOString().slice(0,10);}
+  function previousJstDay(){return isoDay(Date.parse(jstToday()+'T00:00:00Z')-dayMs);}
+  function fmt(d){const m=String(d).match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?`${m[1]}/${Number(m[2])}/${Number(m[3])}`:String(d);}
+  function isIsoDate(s){return /^\d{4}-\d{2}-\d{2}$/.test(s)&&isoDay(s+'T00:00:00Z')===s;}
+  function get(reg,course){return current?.[String(reg)]?.[String(course)]||null;}
+  function label(){return `${fmt(meta.start)}〜${fmt(meta.end)}${meta.end<previousJstDay()?'（未更新）':''}`;}
+  function isFresh(){return meta.end===previousJstDay();}
+  window.brcPlayerCourse365Get=get;
+  window.brcPlayerCourse365PeriodLabel=label;
+  window.brcPlayerCourse365Status=()=>Object.freeze({as_of:meta.end,window_start:meta.start,source:meta.source,is_fresh:isFresh()});
+  window.brcPlayerCourse365Map=()=>current;
+  function validRecord(v){
+    if(!v||Array.isArray(v)||typeof v!=='object')return false;
+    const n=Number(v.n),w=Number(v.win),t2=Number(v.top2),t3=Number(v.top3);
+    return Number.isInteger(n)&&n>=0&&n<=2000&&[w,t2,t3].every(x=>Number.isFinite(x)&&x>=0&&x<=100)&&w<=t2+0.12&&t2<=t3+0.12;
+  }
+  function checkPayload(p){
+    if(!p||p.schema_version!==1||!p.players||typeof p.players!=='object'||Array.isArray(p.players))throw Error('schema mismatch');
+    const a=String(p.as_of||''),start=String(p.window_start||''),end=String(p.window_end||'');
+    if(![a,start,end].every(isIsoDate)||a!==end)throw Error('bad as-of dates');
+    if(isoDay(Date.parse(end+'T00:00:00Z')-364*dayMs)!==start)throw Error('rolling period is not 365 days');
+    if(end<SNAPSHOT_END||end>previousJstDay())throw Error('future/older data rejected');
+    const keys=Object.keys(p.players);
+    if(keys.length<1500||keys.length>3000)throw Error('incomplete player coverage: '+keys.length);
+    let cells=0;
+    for(const reg of keys){
+      if(!/^\d{4}$/.test(reg))throw Error('invalid racer number');
+      const courses=p.players[reg];
+      if(!courses||typeof courses!=='object'||Array.isArray(courses))throw Error('bad course map');
+      for(const c of Object.keys(courses)){
+        if(!/^[1-6]$/.test(c)||!validRecord(courses[c]))throw Error('invalid course record');
+        cells++;
+      }
+    }
+    if(cells<5000)throw Error('missing course coverage');
+    return {start,end};
+  }
+  function syncVisibleRows(){
+    // Reuse the BRC modal renderer; it owns the entire player tab and its wrappers.
+    // Never reconstruct percentages in a second UI-specific formatter.
+    const boats=Array.isArray(window.__predictBoatsCurrent)?window.__predictBoatsCurrent:[];
+    const renderer=window.renderInlinePredictPlayer;
+    if(typeof renderer!=='function')return;
+    const venue=document.getElementById('predictVenue')?.value||'';
+    for(let c=1;c<=6;c++){
+      const box=document.getElementById('predict-pl-box-'+c);
+      if(!box||!box.isConnected||!box.children.length)continue;
+      const b=boats.find(x=>Number(x?.course)===c);
+      const reg=String(b?.player?.reg||b?.reg||'');
+      if(!/^\d{4}$/.test(reg))continue;
+      try{renderer(reg,c,venue);}catch(e){console.warn(VERSION,'refresh visible row',c,e);}
+    }
+  }
+  async function checkDaily(force){
+    const today=jstToday();
+    if(running)return running;
+    if(!force&&checkedDay===today&&isFresh())return;
+    if(!force&&Date.now()-lastAttempt<30*60000)return;
+    lastAttempt=Date.now();
+    running=(async()=>{
+      try{
+        const response=await fetch(PATH+'?day='+encodeURIComponent(today),{cache:'no-store',credentials:'same-origin'});
+        if(!response.ok)throw Error('HTTP '+response.status);
+        const payload=await response.json();
+        const dates=checkPayload(payload);
+        if(dates.end<meta.end)throw Error('older than current feed');
+        current=payload.players;meta={...dates,source:'daily'};
+        checkedDay=today;
+        // The two existing low-sample guards parse this node on demand.
+        if(DATA_NODE)DATA_NODE.textContent=JSON.stringify(current);
+        syncVisibleRows();
+        window.dispatchEvent(new CustomEvent('brc:player-course365-updated',{detail:{as_of:meta.end}}));
+      }catch(e){
+        // Do not advance the displayed period or silently substitute percentages.
+        console.info('['+VERSION+'] keeping dated snapshot:',String(e));
+        syncVisibleRows();
+      }finally{running=null;}
+    })();
+    return running;
+  }
+  window.brcPlayerCourse365Refresh=()=>checkDaily(true);
+  window.addEventListener('focus',()=>{void checkDaily(false);});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)void checkDaily(false);});
+  setInterval(()=>{void checkDaily(false);},30*60000);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{void checkDaily(false);},{once:true});
+  else void checkDaily(false);
+})();
+</script>
+
 <style id="brc-admin-player-detail-v8-clean">
   .brc-apd6-ai-check{display:none!important}
   .brc-apd4-impact{display:none!important}
@@ -32225,7 +32339,7 @@ body.brc-admin-home-active .brc-admin-login-top-preview-note{display:none;}
   function statsBlock(reg,course,venue){
     const p=(typeof playerList!=='undefined')?playerList.find(x=>String(x.reg)===String(reg)):null;
     const all=p?.lane_excl?.[String(course)]||null;
-    const recent=RECENT1Y?.[String(reg)]?.[String(course)]||null;
+    const recent=window.brcPlayerCourse365Get?.(reg,course)||null;
 
     const va=p?.venue_course?.[String(venue)]?.[String(course)];
     const venueData=Array.isArray(va)&&Number(va[0])?{n:Number(va[0]),win:va[1],top2:va[2],top3:va[3]}:null;
@@ -32235,7 +32349,7 @@ body.brc-admin-home-active .brc-admin-login-top-preview-note{display:none;}
 
     const rows=[
       row(`${course}C 全期間`,'進入変更除外',all,'main'),
-      row(`${course}C 直近1年`,'2025/9/23〜2026/9/22',recent,'recent'),
+      row(`${course}C 直近1年`,window.brcPlayerCourse365PeriodLabel(),recent,'recent'),
       venueData?row(`${venue} × ${course}C`,'当該会場',venueData,'venue'):'',
       gd?row(`${gradeLabel(g)} × ${course}C`,'今回グレード',gd,'grade'):''
     ].join('');
@@ -32430,7 +32544,7 @@ body.brc-admin-home-active .brc-admin-login-top-preview-note{display:none;}
   function statsBlock(reg,course,venue){
     const p=(typeof playerList!=='undefined')?playerList.find(x=>String(x.reg)===String(reg)):null;
     const all=p?.lane_excl?.[String(course)]||null;
-    const recent=RECENT1Y?.[String(reg)]?.[String(course)]||null;
+    const recent=window.brcPlayerCourse365Get?.(reg,course)||null;
 
     const va=p?.venue_course?.[String(venue)]?.[String(course)];
     const venueData=Array.isArray(va)&&Number(va[0]) ? {n:Number(va[0]),win:va[1],top2:va[2],top3:va[3]} : null;
@@ -32440,7 +32554,7 @@ body.brc-admin-home-active .brc-admin-login-top-preview-note{display:none;}
 
     const rows=[
       statsRow('全期間','進入変更除外',all,'main'),
-      statsRow('直近1年','2025/9/23〜2026/9/22',recent,'recent'),
+      statsRow('直近1年',window.brcPlayerCourse365PeriodLabel(),recent,'recent'),
       venueData ? statsRow(`${venue}`,'当該会場',venueData,'venue') : '',
       gd ? statsRow(`${gradeLabel(g)}`,'今回グレード',gd,'grade') : ''
     ].join('');
@@ -32619,7 +32733,7 @@ V9でスコープ外参照になって消えた「1コース敗因」「苦手�
   function statsBlock(reg,course,venue){
     const p=(typeof playerList!=='undefined') ? playerList.find(x=>String(x.reg)===String(reg)) : null;
     const all=p?.lane_excl?.[String(course)]||null;
-    const recent=RECENT1Y?.[String(reg)]?.[String(course)]||null;
+    const recent=window.brcPlayerCourse365Get?.(reg,course)||null;
 
     const va=p?.venue_course?.[String(venue)]?.[String(course)];
     const venueData=Array.isArray(va)&&Number(va[0])
@@ -32633,7 +32747,7 @@ V9でスコープ外参照になって消えた「1コース敗因」「苦手�
 
     const rows=[
       statsRow('全期間','進入変更除外',all,'main'),
-      statsRow('直近1年','2025/9/23〜2026/9/22',recent,'recent'),
+      statsRow('直近1年',window.brcPlayerCourse365PeriodLabel(),recent,'recent'),
       venueData ? statsRow(`${venue}`,'当該会場',venueData,'venue') : '',
       gd ? statsRow(`${gradeLabel(g)}`,'今回グレード',gd,'grade') : ''
     ].join('');
@@ -33084,7 +33198,7 @@ V8〜V10のコンパクト化で消えていた「個人傾向 / 選手特性」
 
   function recent1yMap(){
     try{
-      return JSON.parse(document.getElementById('brc-apd8-recent-course-1y')?.textContent||'{}');
+      return window.brcPlayerCourse365Map?.()||{};
     }catch(_e){
       return {};
     }
@@ -34515,7 +34629,7 @@ V20/V21の多重上書きを廃止し、表示不変問題を解消。
 
   function recent1yMap(){
     try{
-      return JSON.parse(document.getElementById('brc-apd8-recent-course-1y')?.textContent||'{}');
+      return window.brcPlayerCourse365Map?.()||{};
     }catch(_e){
       return {};
     }
