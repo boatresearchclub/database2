@@ -23,6 +23,7 @@ def build(files, today):
     processed = 0
     race_days = set()
     by_date = {}
+    valid_codes = {f'{i:02d}' for i in range(1, 25)}
     if end < START:
         raise ValueError("Target precedes original motor reference")
     for offset in range((end - START).days + 1):
@@ -33,16 +34,9 @@ def build(files, today):
             continue
         rows = motor_k.read_k(file)
         processed += 1
-        unique = set()
         for venue_code, motor, racer, reg, status in rows:
-            if venue_code not in {f"{i:02d}" for i in range(1, 25)}:
+            if venue_code not in valid_codes:
                 raise ValueError("Unrecognized venue code")
-            key = (venue_code, motor, reg, status)
-            if key in unique:
-                # A racer can race twice in a day, so these rows are NOT
-                # de-duplicated: only the separate entries are counted.
-                pass
-            unique.add(key)
             if status.isdigit() and 1 <= int(status) <= 6:
                 counts[(venue_code, motor)] += 1
             else:
@@ -64,7 +58,7 @@ def build(files, today):
         "venue_days_with_entries": len(race_days),
         "official_numeric_finisher_starts_by_venue_motor": observed,
         "special_status_occurrences": dict(status_counts),
-        "rows_per_day_last_7": dict(sorted(by_date.items())[-7:]),
+        "rows_per_day_last_7": {(end-timedelta(days=i)).isoformat(): by_date.get((end-timedelta(days=i)).isoformat()) for i in range(6,-1,-1)},
         "full_cycle_n_verified": False, "motor_cycle_rollovers_verified": False,
         "finals_verified": False, "wins_verified": False,
         "release_decision": "NO_GO",
