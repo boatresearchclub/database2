@@ -41,6 +41,18 @@ class ChampionshipResearchTests(unittest.TestCase):
                 rows=mod.scan_day(p,date(2026,9,6))
             self.assertEqual(rows,[])
 
+    def test_semifinal_is_not_a_championship(self):
+        with TemporaryDirectory() as tmp:
+            p=pathlib.Path(tmp)/'K260906.TXT'
+            p.write_text(sample().replace('優勝戦','準優勝戦'),encoding='cp932')
+            with patch.object(mod.official,'load_k',return_value=([],0,{})):
+                self.assertEqual(mod.scan_day(p,date(2026,9,6)),[])
+
+    def test_semifinal_pattern_does_not_match(self):
+        self.assertIsNone(mod.CHAMPIONSHIP.search('準優勝戦'))
+        self.assertIsNotNone(mod.CHAMPIONSHIP.search('優勝戦'))
+        self.assertIsNotNone(mod.CHAMPIONSHIP.search('優勝決定戦'))
+
     def test_no_publication_even_complete(self):
         with patch.object(mod,'scan_day',return_value=[{
             'date':'2026-09-06','venue':'桐生','motors':['11','12','13','14','15','16'],
