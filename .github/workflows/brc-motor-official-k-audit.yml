@@ -182,6 +182,17 @@ jobs:
               candidate_residual_boundary_groups[bucket]['motors']+=1
               candidate_residual_boundary_groups[bucket]['abs_delta']+=abs(delta)
           # Expose concise actionable examples without needing artifact download.
+          residual_status_diagnostics=[]
+          for sample in candidate_residual_samples:
+              key=(sample['venue'],sample['motor'])
+              statuses={st:status_counts.get((*key,st),0)+other_start_counts.get((*key,st),0)
+                  for st in ['F','S0','S1','S2','L0','L1','NF_F','NF_S0','NF_S1','NF_S2']}
+              residual_status_diagnostics.append({
+                  'venue':key[0],'motor':key[1],'delta':sample['delta'],
+                  'excluded_status_counts':{k:v for k,v in statuses.items() if k not in candidate and v},
+                  'included_status_counts':{k:v for k,v in statuses.items() if k in candidate and v},
+                  'possible_S0_accounting_gap':statuses['S0']+statuses['NF_S0'],
+              })
           residual_event_traces=[]
           for sample in candidate_residual_samples:
               key=(sample['venue'],sample['motor'])
@@ -247,6 +258,7 @@ jobs:
               'candidate_policy_residual_by_venue':candidate_residual_by_venue,
               'candidate_policy_residual_samples':candidate_residual_samples,
               'candidate_residual_event_traces':residual_event_traces,
+              'candidate_residual_status_diagnostics':residual_status_diagnostics,
               'candidate_policy_not_approved':True,
               'candidate_residual_delta_histogram':candidate_residual_delta_histogram,
               'candidate_residual_boundary_groups':candidate_residual_boundary_groups,
