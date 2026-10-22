@@ -181,6 +181,7 @@ jobs:
                   'meet_start_after_snapshot' if meet>base['date'] else 'other')
               candidate_residual_boundary_groups[bucket]['motors']+=1
               candidate_residual_boundary_groups[bucket]['abs_delta']+=abs(delta)
+          # Expose concise actionable examples without needing artifact download.
           residual_event_traces=[]
           for sample in candidate_residual_samples:
               key=(sample['venue'],sample['motor'])
@@ -277,6 +278,10 @@ jobs:
               f.write("### Meeting-boundary cohorts\n")
               for group,info in candidate_residual_boundary_groups.items():
                   f.write(f"- {group}: {info['motors']} motors / {info['abs_delta']} starts\n")
+              f.write("### Residual examples (research only)\n")
+              for item in residual_event_traces[:12]:
+                  f.write(f"- {item['venue']} motor {item['motor']}: delta {item['delta']}; "
+                          f"first {item['first_events'][:1]}; last {item['last_events'][-1:]}\n")
               f.write(f"### Release decision: {'GO' if validation_gates['can_publish_motor_detail'] else 'NO GO'}\n")
           PY
       - name: Save research-only motor K audit
