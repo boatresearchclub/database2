@@ -70,6 +70,13 @@ jobs:
             'stage_auth_protection_observed':stage.get('http') in (401,403),
             'stage_endpoint_reachable':isinstance(stage.get('http'),int),
             'exhibition_endpoint_reachable':isinstance(live_probe.get('http'),int),
+            'classification':(
+                'NETWORK_OR_WORKER_UNREACHABLE' if not isinstance(stage.get('http'),int)
+                else 'AUTH_REQUIRED_EXPECTED' if stage.get('http') in (401,403)
+                else 'UNEXPECTED_UNAUTHENTICATED_RESPONSE'
+            ),
+            'known_app_reported_failure':'HTTP 422 unavailable: NOT reproduced without authenticated request',
+            'read_only_422_evidence_observed':any(x.get('http')==422 for x in results),
             'next_diagnostic':'Authenticated Worker/KV functional test still required for v3Verified; this public probe cannot establish v3 readiness',
             'note':'401 alone is not proof of code version or KV content; HTTP 404 for exhibition can be normal.'
           }
