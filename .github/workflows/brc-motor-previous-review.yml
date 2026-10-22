@@ -7,6 +7,7 @@ on:
       - '.github/workflows/brc-motor-previous-review.yml'
       - 'scripts/BRC_MOTOR_PREVIOUS_FEED_V1.py'
       - 'scripts/test_motor_previous_feed_v1.py'
+      - 'scripts/BRC_MOTOR_PREVIOUS_VERIFY_K_V1.py'
   schedule:
     - cron: '25 2 * * *'
 
@@ -33,11 +34,26 @@ jobs:
         run: |
           python scripts/BRC_MOTOR_PREVIOUS_FEED_V1.py \
             --output .cache/motor_previous_review.json
+      - name: Restore verified daily official K archive
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-motor-previous-k-readonly
+          restore-keys: |
+            brc-course365-k-
+      - name: Cross-check motor/racer/date against official K archive
+        shell: bash
+        run: |
+          python scripts/BRC_MOTOR_PREVIOUS_VERIFY_K_V1.py \
+            --feed .cache/motor_previous_review.json \
+            --output .cache/motor_previous_official_K_audit.json
       - name: Preserve review for human verification only
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: brc-motor-previous-review-no-publish
-          path: .cache/motor_previous_review.json
+          path: |
+            .cache/motor_previous_review.json
+            .cache/motor_previous_official_K_audit.json
           if-no-files-found: ignore
           retention-days: 14
