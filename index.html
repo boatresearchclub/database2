@@ -1,3 +1,4 @@
+<!-- BRC_PUBLIC_DIAGNOSTIC_VISIBILITY_V3_20261022: public/member preview hides admin-only motor freshness and D research; authorized admin view remains intact. -->
 <!-- BRC_MOTOR_RESTORE_PUBLIC_CLEAN_ADMIN_DIAG_V1_20261022: restores established motor overview and historical cards for verified live records, keeps daily freshness/rollover guards, places stale/verification notices in admin only, no motor/prediction recalculation. -->
 <!-- BRC_MEMBER_LOGIN_PREVIEW_V2_20261022: admin session retained; member-only visualization matched, member slit preserved; no auth changes. -->
 <!-- BRC_ADMIN_DATA_HEALTH_V1_20261022: UI diagnostics only; existing data ingestion, TimeX, predictions, member rights unaffected. -->
@@ -354,7 +355,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261022-MEMBER-LOGIN-PREVIEW-V2">
+<meta name="brc-build" content="20261022-PUBLIC-CLEAN-DIAGNOSTICS-V3">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -5475,7 +5476,11 @@ body.brc-admin-public-view #brcOosAdminFold,
 body.brc-admin-public-view #brcOosAdminTools,
 body.brc-admin-public-view .brc-invest-admin-badge,
 body.brc-admin-public-view .brc-admin-only,
-body.brc-admin-public-view [data-brc-admin-only="true"]{display:none !important;}
+body.brc-admin-public-view [data-brc-admin-only="true"],
+body.brc-admin-public-view .brc-d-v05-panel,
+body.brc-admin-public-view .brc-d-v3-post-shadow,
+body.brc-admin-public-view .brc-motor-freshness-note,
+body.brc-admin-public-view .brc-motor-admin-verify{display:none !important;}
 @media(max-width:520px){
   .brc-admin-view-switch{max-width:none;}
   .brc-admin-view-restore{right:9px;bottom:10px;font-size:11px;padding:8px 11px;}
@@ -26797,7 +26802,7 @@ function brcBuildAdminTokuyamaMotorTraitHtml(venue,motorNo,publicInfo=null){
   const recentText=recent.label;
   const prevRuns=Number(t.prevN)||0;
   const historyComment=brcMotorHistoryPlainComment(t,long,recent);
-  const isAdmin=(typeof BRC_ADMIN_ACTIVE!=='undefined' && BRC_ADMIN_ACTIVE);
+  const isAdmin=(typeof BRC_ADMIN_ACTIVE!=='undefined' && BRC_ADMIN_ACTIVE && !document.body?.classList.contains('brc-admin-public-view'));
   const verifyHtml=(isAdmin && baseFresh)?`<details class="brc-motor-admin-verify"><summary>管理者向け検証データ</summary><div class="brc-motor-admin-verify-body"><div class="brc-motor-verify-grid"><div class="brc-motor-verify-card"><div class="k">長期伸び指数</div><div class="v">${brcMotorTraitSigned(t.longStretch)}</div><div class="sub">N=${Number(t.n)||0}</div></div><div class="brc-motor-verify-card"><div class="k">直近10走指数</div><div class="v">${brcMotorTraitSigned(t.recent10)}</div><div class="sub">表示参考</div></div><div class="brc-motor-verify-card"><div class="k">前回使用期間</div><div class="v">${prevPeriod}</div><div class="sub">${prevRuns?`${prevRuns}走`:'データなし'}</div></div><div class="brc-motor-verify-card"><div class="k">開催前データ</div><div class="v">${t.first&&t.last?`${fmtMotorDate(t.first)}〜${fmtMotorDate(t.last)}`:'―'}</div><div class="sub">確定済み履歴</div></div></div><div class="brc-motor-rule-box"><strong>全国仕様：</strong> 1走=判定前、2走=A〜E暫定、3走以降=本判定。A〜E境界は +0.60 / +0.20 / -0.20 / -0.60。標準22場の足色信頼は「今節タイプ差＋長期傾向」の2024-2025学習→2026 OOS確率で、75%未満=特徴未確定、C=75-80%、B=80-85%、B+=85-90%、A=90-95%、A+=95%以上。欠測時は通常展示へフォールバック。桐生は足色参考、江戸川は足色判定なし。<br><strong>予測への扱い：</strong> 現時点ではAI予測・展開・買い目への自動加点は行わず、予想判断材料として表示。</div></div></details>`:'';
   setTimeout(()=>brcRefreshAdminTokuyamaMotorTrait(v,no).catch(()=>{}),0);
   let historySection='';
@@ -26849,7 +26854,7 @@ function brcMotorFootRowFresh(row){
   return d>=0 && d<=BRC_MOTOR_FOOT_MAX_AGE_DAYS;
 }
 function brcMotorHistoryNoticeHtml(data,hasMotorRecord=false){
-  if(typeof BRC_ADMIN_ACTIVE==='undefined'||BRC_ADMIN_ACTIVE!==true) return '';
+  if(typeof BRC_ADMIN_ACTIVE==='undefined'||BRC_ADMIN_ACTIVE!==true || document.body?.classList.contains('brc-admin-public-view')) return '';
   const date=String(data?.date||'');
   if(brcMotorPayloadFresh(data) && !hasMotorRecord) return `<div class="brc-motor-freshness-note is-stale">このモーターの履歴は未取得です（配信JSON基準日：${escMotor(date)}）。前回使用者・優出歴は表示しません。</div>`;
   if(brcMotorPayloadFresh(data)) return `<div class="brc-motor-freshness-note is-current">モーター履歴データ基準日：${escMotor(date)}（前回使用者・優出歴）</div>`;
@@ -39001,7 +39006,7 @@ setInterval(()=>{
  }
  function renderPanel(winner){
    const parent=document.getElementById('predict-sc-box-'+winner);
-   if(!parent||typeof BRC_ADMIN_ACTIVE==='undefined'||!BRC_ADMIN_ACTIVE)return;
+   if(!parent||typeof BRC_ADMIN_ACTIVE==='undefined'||!BRC_ADMIN_ACTIVE || document.body?.classList.contains('brc-admin-public-view'))return;
    const block=document.createElement('section');
    block.className='brc-d-v05-panel';
    block.style.cssText='margin:12px 0;padding:10px 8px;border:1px solid #a7c8e5;border-radius:10px;background:#fff';
@@ -39715,7 +39720,7 @@ setInterval(()=>{
   }
   function render(w,winner){
     const parent=w.document.getElementById('predict-sc-box-'+winner);
-    if(!parent||!admin(w))return;
+    if(!parent||!admin(w)||w.document.body?.classList.contains('brc-admin-public-view'))return;
     // Do not modify the existing pre-exhibition research matrix.
     if(w.__currentExhibitionApplied!==true)return;
     const old=parent.querySelector('.brc-d-v05-panel');
