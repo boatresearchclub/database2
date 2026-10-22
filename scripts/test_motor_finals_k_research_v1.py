@@ -54,7 +54,8 @@ class ChampionshipResearchTests(unittest.TestCase):
         self.assertIsNotNone(mod.CHAMPIONSHIP.search('優勝決定戦'))
 
     def test_no_publication_even_complete(self):
-        with patch.object(mod,'scan_day',return_value=[{
+        with patch.object(mod,'championship_label_audit',return_value=[]), \
+                patch.object(mod,'scan_day',return_value=[{
             'date':'2026-09-06','venue':'桐生','race':12,'motors':['11','12','13','14','15','16'],
             'winning_motor':'11'}]):
             data=mod.build({date(2026,9,6):pathlib.Path('unused')},date(2026,9,7))
@@ -65,7 +66,8 @@ class ChampionshipResearchTests(unittest.TestCase):
         self.assertFalse(data['app_data_published'])
 
     def test_championship_reconciliation_and_venue_coverage(self):
-        with patch.object(mod,'scan_day',return_value=[{
+        with patch.object(mod,'championship_label_audit',return_value=[]), \
+                patch.object(mod,'scan_day',return_value=[{
             'date':'2026-09-06','venue':'桐生','race':12,
             'motors':['11','12','13','14','15','16'],'winning_motor':'11'}]):
             data=mod.build({date(2026,9,6):pathlib.Path('unused')},date(2026,9,7))
@@ -78,9 +80,25 @@ class ChampionshipResearchTests(unittest.TestCase):
     def test_duplicate_final_event_rejected(self):
         item={'date':'2026-09-06','venue':'桐生','race':12,
               'motors':['11','12','13','14','15','16'],'winning_motor':'11'}
-        with patch.object(mod,'scan_day',return_value=[item,item]):
+        with patch.object(mod,'championship_label_audit',return_value=[]), \
+                patch.object(mod,'scan_day',return_value=[item,item]):
             with self.assertRaisesRegex(ValueError,'Duplicate championship'):
                 mod.build({date(2026,9,6):pathlib.Path('unused')},date(2026,9,7))
+
+    def test_unclassified_championship_label_is_reported(self):
+        with TemporaryDirectory() as tmp:
+            p=pathlib.Path(tmp)/'K260906.TXT'
+            p.write_text(sample().replace('優勝戦','優勝特別'),encoding='cp932')
+            labels=mod.championship_label_audit(p,date(2026,9,6))
+            self.assertEqual(len(labels),1)
+            self.assertEqual(labels[0]['kind'],'unclassified')
+
+    def test_semifinal_label_is_not_final(self):
+        with TemporaryDirectory() as tmp:
+            p=pathlib.Path(tmp)/'K260906.TXT'
+            p.write_text(sample().replace('優勝戦','準優勝戦'),encoding='cp932')
+            labels=mod.championship_label_audit(p,date(2026,9,6))
+            self.assertEqual(labels[0]['kind'],'semifinal')
 
     def test_duplicate_motor_rejected(self):
         with TemporaryDirectory() as tmp:
