@@ -199,6 +199,16 @@ jobs:
               'S0_events_in_residual_motors':sum(x['possible_S0_accounting_gap'] for x in residual_status_diagnostics),
               'motors_exactly_explained_if_S0_added':sum(x['possible_S0_accounting_gap']==-x['delta'] for x in residual_status_diagnostics),
           }
+          residual_s0_delta_histogram={}
+          residual_s0_remainder_histogram={}
+          for item in residual_status_diagnostics:
+              s0=item['possible_S0_accounting_gap']
+              if s0:
+                  key=str(s0)
+                  residual_s0_delta_histogram[key]=residual_s0_delta_histogram.get(key,0)+1
+              remainder=item['delta']+s0
+              key=str(remainder)
+              residual_s0_remainder_histogram[key]=residual_s0_remainder_histogram.get(key,0)+1
           residual_event_traces=[]
           for sample in candidate_residual_samples:
               key=(sample['venue'],sample['motor'])
@@ -266,6 +276,8 @@ jobs:
               'candidate_residual_event_traces':residual_event_traces,
               'candidate_residual_status_diagnostics':residual_status_diagnostics,
               'candidate_residual_s0_summary':residual_s0_summary,
+              'candidate_residual_s0_count_histogram':residual_s0_delta_histogram,
+              'candidate_residual_after_s0_histogram':residual_s0_remainder_histogram,
               'candidate_policy_not_approved':True,
               'candidate_residual_delta_histogram':candidate_residual_delta_histogram,
               'candidate_residual_boundary_groups':candidate_residual_boundary_groups,
