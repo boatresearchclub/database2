@@ -159,6 +159,13 @@ def build(files: dict[date, Path], today: date):
             continue
         championship.extend(scan_day(files[day],day))
         all_win_labels.extend(championship_label_audit(files[day],day))
+    labelled_ids = {(x["date"],x["venue"],x["race"]) for x in all_win_labels
+                    if x["kind"]=="explicit_championship"}
+    extracted_ids = {(x["date"],x["venue"],x["race"]) for x in championship}
+    if labelled_ids != extracted_ids:
+        raise ValueError(f"Championship label/extraction mismatch: "
+                         f"only labels {sorted(labelled_ids-extracted_ids)[:5]}, "
+                         f"only extracted {sorted(extracted_ids-labelled_ids)[:5]}")
     counts = collections.defaultdict(lambda: {"final_appearances":0,"final_wins":0})
     for race in championship:
         for motor in race["motors"]:
