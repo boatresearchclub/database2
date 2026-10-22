@@ -356,7 +356,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261022-PUBLIC-RATES-FIX-V4">
+<meta name="brc-build" content="20261022-PUBLIC-COMPACT-V5">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -6979,6 +6979,21 @@ body.brc-landing-guest .brc-brand-header{display:block !important;}
 body.brc-landing-guest .wrap{padding-top:12px;}
 body.brc-landing-guest .page-tabs{margin-top:0;}
 </style>
+
+<style id="brc-public-compact-v5-style">
+/* Member-facing information hierarchy: keep status but not operator diagnostics. */
+.brc-compact-admin{display:none!important;}
+body.brc-admin-diagnostics-visible .brc-compact-admin{display:inline!important;}
+body.brc-admin-diagnostics-visible .brc-compact-public{display:none!important;}
+.brc-compact-public{display:inline;font-size:12px;font-weight:800;white-space:normal;}
+.brc-compact-public small{font-size:10px;font-weight:700;color:var(--ink-soft);}
+body:not(.brc-admin-diagnostics-visible) .brc-dp-race-sub{display:none!important;}
+body:not(.brc-admin-diagnostics-visible) #predictResult .predict-player-tap-hint{display:none!important;}
+body:not(.brc-admin-diagnostics-visible) #predictResult .brc-condition-banner{padding:7px 10px;margin-bottom:8px;min-height:0;flex-wrap:wrap;gap:5px;white-space:normal;}
+body:not(.brc-admin-diagnostics-visible) #predictResult details.predict-guide{margin-bottom:8px;}
+body:not(.brc-admin-diagnostics-visible) #predictResult details.predict-guide:not([open])>summary{font-size:11px;min-height:0;padding:6px 10px;line-height:1.35;}
+body:not(.brc-admin-diagnostics-visible) .brc-dp-race-alert.is-partial{font-size:9px;line-height:1.2;}
+</style>
 </head>
 <body class="brc-landing-guest">
 <!-- BRC_TOP_STRAY_NEWLINE_GUARD_V1_20260926: body直下に誤表示される\n文字列だけを除去。UI/予測ロジック非変更。 -->
@@ -8638,6 +8653,8 @@ function brcSetMemberAdminUi(active){
 function brcSetAdminSocialUi(user=null){
   const box=document.getElementById('brcAdminSocial');
   BRC_ADMIN_ACTIVE=!!(user && brcIsAdminUser(user) && BRC_MEMBER_ACTIVE);
+  // Public compact view: never expose verbose admin diagnostics to member UI.
+  document.body?.classList.toggle('brc-admin-diagnostics-visible', BRC_ADMIN_ACTIVE && !document.body?.classList.contains('brc-admin-public-view'));
   // V3 admin comparison lifecycle. Never change existing public prediction flow.
   if(!BRC_ADMIN_ACTIVE){try{brcV3AdminUnmount();}catch(_e){}}
   else {try{const x=brcCurrentLiveExhibitionSelection();if(x.venue&&x.raceNo)brcV3AdminMount(x.venue,x.raceNo,window.__currentLiveExhibition||null);}catch(_e){}}
@@ -21201,7 +21218,7 @@ function brcDeadlineRaceStatusSync(key,liveRace,venue='',raceNo=0){
 }
 function brcDeadlineRaceStatusHtml(status){
   if(status?.kind==='unavailable'){
-    return '<span class="brc-dp-race-alert is-partial" role="status" title="BRC展示連携に対象レースの応答なし。公式の展示公開・欠場確定とは別の状態です">BRC直前データ未同期</span><span class="brc-dp-race-sub is-partial">公式の展示状況とは別</span>';
+    return '<span class="brc-dp-race-alert is-partial" role="status" title="BRC展示連携に対象レースの応答なし。公式の展示公開・欠場確定とは別の状態です"><span class="brc-compact-public">直前情報未取得</span><span class="brc-compact-admin">BRC直前データ未同期</span></span><span class="brc-dp-race-sub is-partial">公式の展示状況とは別</span>';
   }
   if(!status || !Array.isArray(status.boats) || !status.boats.length) return '';
   const boats=status.boats.filter(n=>Number.isInteger(n)&&n>=1&&n<=6);
@@ -23198,14 +23215,14 @@ function brcBuildRaceConditionBannerHtml(liveRace,venue='',raceNo=0){
   if(key) brcDeadlineRaceStatusSync(key,liveRace,venue,raceNo);
   const saved=key?BRC_DEADLINE_RACE_STATUS_CACHE.get(key):null;
   if(!liveRace && saved?.kind==='unavailable'){
-    return '<div class="slit-eval-compact direct-info-banner brc-condition-banner brc-condition-exhibition brc-condition-lap" role="status"><span class="direct-info-banner-label">BRC直前データ未同期</span><span class="direct-info-banner-note">公式の展示公開状況とは別です。BRC側でまだ展示・欠場情報を受信できていないため、欠場か取得遅延かは断定できません。</span></div>';
+    return '<div class="slit-eval-compact direct-info-banner brc-condition-banner brc-condition-exhibition brc-condition-lap" role="status" title="BRCの展示・欠場情報を未受信。公式の展示公開状況とは異なり、欠場確定を意味しません。"><span class="brc-compact-public">直前情報未取得 <small>（BRC）</small></span><span class="brc-compact-admin direct-info-banner-label">BRC直前データ未同期</span><span class="brc-compact-admin direct-info-banner-note">公式の展示公開状況とは別です。BRC側でまだ展示・欠場情報を受信できていないため、欠場か取得遅延かは断定できません。</span></div>';
   }
   if(!liveRace && saved?.kind!=='absent') return '';
   const absent=saved?.kind==='absent'?saved.boats:
     [...brcCollectConfirmedAbsentBoats(liveRace)].sort((a,b)=>a-b);
   if(absent.length){
     const items=absent.map(n=>brcSlitBoatBadgeHtml(n)).join('');
-    blocks.push(`<div class="slit-eval-compact direct-info-banner brc-condition-banner brc-condition-absence brc-condition-exhibition" role="alert"><span class="direct-info-banner-label">⚠ 欠場・取消</span><span class="direct-info-banner-items">${items}</span><span class="direct-info-banner-note">6艇前提の表示着率・AI予測・参考買い目は欠場反映済みではありません。BRC TimeXの直前補正も対象外です。</span></div>`);
+    blocks.push(`<div class="slit-eval-compact direct-info-banner brc-condition-banner brc-condition-absence brc-condition-exhibition" role="alert"><span class="direct-info-banner-label">⚠ 欠場・取消</span><span class="direct-info-banner-items">${items}</span><span class="brc-compact-public">予測は欠場未反映</span><span class="brc-compact-admin direct-info-banner-note">6艇前提の表示着率・AI予測・参考買い目は欠場反映済みではありません。BRC TimeXの直前補正も対象外です。</span></div>`);
   }else{
     const missing=brcExhibitionMissingBoats(liveRace);
     if(missing.length){
@@ -23216,7 +23233,7 @@ function brcBuildRaceConditionBannerHtml(liveRace,venue='',raceNo=0){
       const message=closed
         ? '号艇の展示情報をBRC側で未受信です。欠場と断定せず、BRC TimeXの直前補正も未反映です。'
         : '号艇の展示情報をBRC側で未受信です。欠場確定情報ではありません。';
-      blocks.push(`<div class="slit-eval-compact direct-info-banner brc-condition-banner brc-condition-exhibition ${closed?'brc-condition-absence':'brc-condition-lap'}" role="status"><span class="direct-info-banner-label">直前情報一部未取得</span><span class="direct-info-banner-items">${items}</span><span class="direct-info-banner-note">${message}</span></div>`);
+      blocks.push(`<div class="slit-eval-compact direct-info-banner brc-condition-banner brc-condition-exhibition ${closed?'brc-condition-absence':'brc-condition-lap'}" role="status"><span class="direct-info-banner-label">直前情報一部未取得</span><span class="direct-info-banner-items">${items}</span><span class="brc-compact-public">直前補正未反映</span><span class="brc-compact-admin direct-info-banner-note">${message}</span></div>`);
     }
   }
 
@@ -23230,7 +23247,7 @@ function brcBuildRaceConditionBannerHtml(liveRace,venue='',raceNo=0){
       blocks.push(`<div class="slit-eval-compact direct-info-banner brc-condition-banner brc-condition-shortened"><span class="direct-info-banner-label">周回短縮</span><span class="direct-info-banner-note">BRCタイムX対象外</span></div>`);
     }else if(lap.partial){
       const items=lap.missing.map(n=>brcSlitBoatBadgeHtml(n)).join('');
-      blocks.push(`<div class="slit-eval-compact direct-info-banner brc-condition-banner brc-condition-lap brc-condition-exhibition"><span class="direct-info-banner-label">ラップ未取得</span><span class="direct-info-banner-items">${items}</span><span class="direct-info-banner-note">${closed?'このレースはBRCタイムXの直前補正を反映できません。':'該当艇のラップタイムが未取得のため、BRCタイムXの反映を待っています。'}</span></div>`);
+      blocks.push(`<div class="slit-eval-compact direct-info-banner brc-condition-banner brc-condition-lap brc-condition-exhibition"><span class="direct-info-banner-label">ラップ未取得</span><span class="direct-info-banner-items">${items}</span><span class="brc-compact-public">直前補正未反映</span><span class="brc-compact-admin direct-info-banner-note">${closed?'このレースはBRCタイムXの直前補正を反映できません。':'該当艇のラップタイムが未取得のため、BRCタイムXの反映を待っています。'}</span></div>`);
     }
   }
   return blocks.join('');
@@ -25746,7 +25763,7 @@ async function runPredict(){
   if(!brcPredictRequestIsCurrent(requestCtx)) return;
   box.innerHTML = `
 <details class="predict-guide">
-      <summary>初めての方・舟券に迷った方へ</summary>
+      <summary>使い方・データの見方</summary>
       <div class="predict-guide-body">
 
         <div class="predict-guide-lead">
@@ -29575,6 +29592,7 @@ https://brcdatabase.pages.dev/
     adminViewMode=(mode==='public')?'public':'admin';
     try{ localStorage.setItem(ADMIN_VIEW_STORAGE_KEY,adminViewMode); }catch(_e){}
     document.body?.classList.toggle('brc-admin-public-view',adminViewMode==='public' && isAdmin());
+    document.body?.classList.toggle('brc-admin-diagnostics-visible',isAdmin() && adminViewMode!=='public');
     // 会員プレビュー中は管理者専用v3の実値オーバーレイを表に残さない。
     if(isAdmin() && adminViewMode==='public'){try{brcV3AdminClearDisplay();}catch(_e){}}
     // Reevaluate the v3 pending mask on every view switch; do not leave
