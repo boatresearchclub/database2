@@ -133,6 +133,14 @@ def build(files: dict[date, Path], today: date):
         for motor in race["motors"]:
             counts[(race["venue"],motor)]["final_appearances"] += 1
         counts[(race["venue"],race["winning_motor"])]["final_wins"] += 1
+    # Structural consistency gates only; these DO NOT validate completeness,
+    # cycle transitions, or independent final classifications.
+    if sum(x["final_appearances"] for x in counts.values()) != 6 * len(championship):
+        raise ValueError("Final participant counts do not reconcile")
+    if sum(x["final_wins"] for x in counts.values()) != len(championship):
+        raise ValueError("Final winner counts do not reconcile")
+    if len({(x["date"],x["venue"],x["race"]) for x in championship}) != len(championship):
+        raise ValueError("Duplicate championship final recorded")
     per_venue = {v:{} for v in VENUES}
     for (v,m), values in sorted(counts.items()):
         per_venue[v][m] = values
