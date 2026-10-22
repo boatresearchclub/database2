@@ -1,0 +1,40 @@
+name: BRC Motor Freshness Readonly Audit
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/BRC_MOTOR_FRESHNESS_READONLY_V1.py'
+      - '.github/workflows/brc-motor-freshness-readonly.yml'
+  schedule:
+    - cron: '45 2 * * *'
+permissions:
+  contents: read
+jobs:
+  motor-freshness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Audit motor freshness without publishing
+        shell: bash
+        run: |
+          set +e
+          python scripts/BRC_MOTOR_FRESHNESS_READONLY_V1.py > motor_freshness_report.json
+          result=$?
+          cat motor_freshness_report.json
+          if [ "$result" -eq 2 ]; then
+            echo 'Motor detail or previous feed is stale: NO PUBLISH' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          exit "$result"
+      - name: Preserve freshness audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: brc-motor-freshness-readonly
+          path: motor_freshness_report.json
+          if-no-files-found: ignore
+          retention-days: 14
