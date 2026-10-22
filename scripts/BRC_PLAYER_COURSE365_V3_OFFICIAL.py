@@ -29,7 +29,7 @@ RE_VENUE_START = re.compile(r'^\s*(\d{2})KBGN\s*$')
 RE_VENUE_END = re.compile(r'^\s*(\d{2})KEND\s*$')
 RE_RACE = re.compile(r'^\s*(\d{1,2})R\s+.*?H\s*\d{3,4}m(?:\s|$)', re.I)
 RE_DATE = re.compile(r'(20\d\d)\s*/\s*(\d{1,2})\s*/\s*(\d{1,2})')
-RE_ENTRY = re.compile(r'^\s*(\S{1,2})\s+([1-6])\s+(\d{4})\s+(.+)$')
+RE_ENTRY = re.compile(r'^\s*(0[1-6]|[1-6]|F|L|K|S[0-2]|[転失妨落欠不返沈エ])\s+([1-6])\s+(\d{4})\s+(.+)$')
 # Racing record after player name: motor number, boat part, exhibition time, entry course.
 RE_COURSE = re.compile(r'\s+\d{1,3}\s+\d{1,3}\s+\d(?:\.\d{1,2})?\s+([1-6])\s+')
 RE_KNAME = re.compile(r'^k(\d{6})(?:\.txt|\.lzh)?$',re.I)
