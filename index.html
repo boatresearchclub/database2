@@ -1,3 +1,7 @@
+<!-- BRC_MOTOR_PREVIOUS_K_MATCHED_CARD_V1_20261022: previous-owner feed is date/venue/motor/racer K-matched; no motor N/finals/prediction updates. -->
+<!-- BRC_5TASKS_SINGLE_INDEX_PUSH_20261022: 21 embedded JSON blocks match all 23 existing database2 data chunks by SHA256 prefixes; INDEX only. -->
+<!-- BRC_5TASKS_20261022: user-restored source; course365 verified upstream, dual-source motor read, v3/TrueTimeX/expansion existing strict admin gates untouched. -->
+<!-- BRC_ADMIN_DATA_HEALTH_V1_20261022: admin Verify panel status for course365 and motor daily feeds. UI diagnostics only; existing data ingestion, TimeX, predictions, member rights unaffected. -->
 <!-- BRC_COURSE365_DUAL_SOURCE_SAFE_V1_20261022: prefer same-site daily JSON, fall back to database2 raw file; choose newer verified 365-day snapshot. No TimeX/predictions changes. -->
 <!-- BRC_MOTOR_LATEST_SOURCE_FRESHNESS_V3_20261022: motor history requires recent day-stamped JSON, current on-focus reload, no stale previous-user / finals / fixed foot history claims. Existing TimeX/course365/absence fixes retained. -->
 <!-- BRC_ABSENCE_UNAVAILABLE_LABEL_CLARITY_V2_20261022: Live API unavailable means BRC data not synchronized, NOT confirmed absence or absence of official exhibition. No inference from missing boats. -->
@@ -350,8 +354,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <!-- BRC_SCENARIO_SEARCH_PUBLIC_V1_20260911 -->
 <html lang="ja">
 <head>
-<!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261022-COURSE365-MOTOR-FRESH-V3">>
+<meta name="brc-build" content="20261022-MOTOR-PREV-KVERIFIED-V1">>
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -7420,6 +7423,23 @@ body.brc-landing-guest .page-tabs{margin-top:0;}
           </div>
         </details>
 
+        <!-- BRC_ADMIN_DATA_HEALTH_V1_20261022: read-only daily source diagnostics -->
+        <details id="brcAdminDailySourceHealth" class="brc-v3-operator" aria-label="BRC日次データ更新診断">
+          <summary><span>日次データ更新診断</span><span id="brcAdminDailySourceBrief" style="margin-left:auto;font-size:11px;color:#64748b;">確認中</span><span class="brc-v3-op-arrow">⌄</span></summary>
+          <div class="brc-v3-operator-body">
+            <p class="brc-v3-operator-help">閲覧中のブラウザが受信できたデータの日付を確認します。INDEXのプッシュだけでは、日次JSONの生成やD1保存までは実行されません。</p>
+            <div id="brcAdminDailySourceCourse" class="brc-v3-operator-state" style="margin-bottom:7px" aria-live="polite">選手365日成績：確認中</div>
+            <div id="brcAdminDailySourceMotor" class="brc-v3-operator-state" aria-live="polite">モーター履歴：確認中</div>
+            <p class="brc-v3-operator-help" style="margin-top:8px">結果取得・D1保存、風データの生成状況はこのINDEXだけでは判定できません。別途バックエンドの処理ログを照合してください。</p>
+            <div class="brc-v3-operator-actions">
+              <button type="button" id="brcAdminDailySourceRefresh">再取得して確認</button>
+              <button type="button" id="brcAdminDailySourceCheck">表示を更新</button>
+              <button type="button" id="brcAdminDailySourceCopy">診断結果をコピー</button>
+            </div>
+            <div id="brcAdminDailySourceFeedback" class="brc-v3-operator-feedback" role="status" aria-live="polite"></div>
+          </div>
+        </details>
+
         <div class="brc-admin-hub-actions">
           <button type="button" class="brc-admin-hub-action primary" data-brc-admin-action="investment"><div class="top"><span class="icon">📈</span><span class="arrow">→</span></div><strong>投資管理・検証</strong><span class="copy">運用判定、実績、月次、検証テーブル</span></button>
           <button type="button" class="brc-admin-hub-action" data-brc-admin-action="ai"><div class="top"><span class="icon">🧪</span><span class="arrow">→</span></div><strong>AI予測・参考買い目</strong><span class="copy">管理者β、参考買い目モニターを確認</span></button>
@@ -11468,6 +11488,102 @@ function renderPredictUnifiedST(reg,course,target){
     <div class="st-detail-note">1年平均ST順位は選手×今回コースの過去365日データ、1年平均STと安定度は当該区分（スロー/ダッシュ）の直近1年データです。直近10走は最近の状態確認用で、表示のみ・予測値への再加点はしていません。</div>`;
 }
 
+// BRC_MOTOR_PREVIOUS_OFFICIAL_K_VIEW_V1_20261022
+// Separate, K-matched previous-racer feed. NEVER reuse as N/rate/finals/foot-traits.
+let __brcPreviousMotorFeed=null;
+let __brcPreviousMotorPending=null;
+let __brcPreviousMotorLastRequest=0;
+let __brcPreviousMotorError='';
+function brcVerifiedPreviousMotorAge(dateLabel){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(dateLabel||'')))return Infinity;
+  const day=(typeof brcMotorJstToday==='function')?brcMotorJstToday():'';
+  const now=Date.parse(day+'T00:00:00Z'),prior=Date.parse(dateLabel+'T00:00:00Z');
+  return Number.isFinite(now)&&Number.isFinite(prior)?Math.round((now-prior)/86400000):Infinity;
+}
+function brcVerifiedPreviousMotorFeedValid(data){
+  return !!(data && data.version==='BRC-Motor-Previous-Official-K-Verified-V1' &&
+    data.cumulative_motor_stats_available===false &&
+    Number(data.official_K_matched_count)>=1400 &&
+    data.venues && Object.keys(data.venues).length===24 &&
+    brcVerifiedPreviousMotorAge(data.date)>=0 && brcVerifiedPreviousMotorAge(data.date)<=2);
+}
+function brcVerifiedPreviousMotorRow(venue,motorNo){
+  const data=__brcPreviousMotorFeed;
+  if(!brcVerifiedPreviousMotorFeedValid(data))return null;
+  const id=Number(motorNo);
+  if(!Number.isInteger(id)||id<1||id>100)return null;
+  const row=data.venues?.[String(venue||'')]?.motors?.[String(id)];
+  if(!row||row.verification!=='motor_venue_racer_and_date_in_official_K')return null;
+  const p=row.previous;
+  if(!p || !/^\d{4}-\d{2}-\d{2}$/.test(String(p.start||'')) ||
+     !/^\d{4}-\d{2}-\d{2}$/.test(String(p.end||'')) ||
+     p.start>p.end || p.end>data.date || !Array.isArray(p.users) || !p.users.length)return null;
+  const reset=(typeof brcMotorCycleResetDate==='function')?brcMotorCycleResetDate(venue):'';
+  // Reused motor number from a previous cycle must never be called recent.
+  if(reset && p.end<reset)return null;
+  return {previous:p,date:data.date,sourceMeetEnd:data.venues[venue].source_meet_end};
+}
+function brcVerifiedPreviousMotorHtml(venue,motorNo){
+  const row=brcVerifiedPreviousMotorRow(venue,motorNo);
+  if(!row)return '';
+  const prev=row.previous;
+  const names=prev.users.map(u=>escMotor(u.name)).join('・');
+  const span=fmtMotorDate(prev.start)+'〜'+fmtMotorDate(prev.end);
+  const source=fmtMotorDate(row.sourceMeetEnd);
+  const checked=escMotor(row.date);
+  return `<section class="brc-motor-insight-section brc-kverified-previous" style="border:1px solid rgba(22,101,52,.24);background:#f0fdf4;padding:12px;border-radius:10px;margin:8px 0 10px;">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:5px;"><strong style="color:#166534;font-size:13px;">直近の確定済み使用履歴</strong><span style="font-size:10px;font-weight:700;color:#166534;">公式Kで号機・選手名を照合</span></div>
+    <div style="font-size:14px;color:#153d2c;font-weight:800;">${names}</div>
+    <div style="font-size:12px;color:#234a37;">使用期間 ${escMotor(span)} ／ 開催終了 ${escMotor(source)}</div>
+    <div style="margin-top:5px;font-size:10px;color:#486659;line-height:1.5;">前節参考データ基準日：${checked}。累計走数・優出歴・着順一覧は別検証中のため、この欄では表示しません。</div>
+    </section>`;
+}
+async function brcFetchVerifiedPreviousMotor(force=false){
+  if(__brcPreviousMotorPending)return __brcPreviousMotorPending;
+  if(!force && __brcPreviousMotorFeed && brcVerifiedPreviousMotorFeedValid(__brcPreviousMotorFeed))return __brcPreviousMotorFeed;
+  if(Date.now()-__brcPreviousMotorLastRequest<180000)return __brcPreviousMotorFeed;
+  __brcPreviousMotorLastRequest=Date.now();
+  const task=(async()=>{
+    const paths=['racecards/motor_previous_daily.json',
+      'https://raw.githubusercontent.com/boatresearchclub/database2/main/racecards/motor_previous_daily.json'];
+    for(const path of paths){
+      const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),9000);
+      try{
+        const res=await fetch(path+(path.includes('?')?'&':'?')+'v='+Date.now(),
+          {cache:'no-store',credentials:path.startsWith('https://')?'omit':'same-origin',signal:controller.signal});
+        if(!res.ok)throw Error('HTTP '+res.status);
+        const candidate=await res.json();
+        if(!brcVerifiedPreviousMotorFeedValid(candidate))throw Error('outdated/incomplete previous motor JSON');
+        if(!__brcPreviousMotorFeed || String(candidate.date)>=String(__brcPreviousMotorFeed.date)){
+          __brcPreviousMotorFeed=candidate;__brcPreviousMotorError='';
+          document.dispatchEvent(new CustomEvent('brc-motor-previous-updated',{detail:{date:candidate.date}}));
+        }
+        return __brcPreviousMotorFeed;
+      }catch(e){__brcPreviousMotorError=String(e?.message||e).slice(0,150);}
+      finally{clearTimeout(timer);}
+    }
+    return __brcPreviousMotorFeed;
+  })();
+  __brcPreviousMotorPending=task;
+  try{return await task;}finally{__brcPreviousMotorPending=null;}
+}
+window.brcVerifiedMotorPreviousStatus=()=>({as_of:__brcPreviousMotorFeed?.date||'',
+  is_fresh:brcVerifiedPreviousMotorFeedValid(__brcPreviousMotorFeed),
+  venues:__brcPreviousMotorFeed?.venues?Object.keys(__brcPreviousMotorFeed.venues).length:0,
+  verified_motors:__brcPreviousMotorFeed?.official_K_matched_count||0,
+  last_error:__brcPreviousMotorError});
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>brcFetchVerifiedPreviousMotor().catch(()=>{}),{once:true});
+else setTimeout(()=>brcFetchVerifiedPreviousMotor().catch(()=>{}),0);
+window.addEventListener('focus',()=>brcFetchVerifiedPreviousMotor(true).catch(()=>{}));
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)brcFetchVerifiedPreviousMotor(true).catch(()=>{});});
+document.addEventListener('brc-motor-previous-updated',()=>{
+  const bd=document.getElementById('predictDetailBackdrop');
+  if(!bd?.classList.contains('open'))return;
+  const panel=bd.querySelector('.predict-unified-panel[data-predict-unified-panel="motor"].active');
+  const match=String(panel?.id||'').match(/predict-unified-motor-(\d+)/);
+  if(match)try{renderPredictUnifiedMotor(Number(match[1]),panel);}catch(_e){}
+});
+
 function renderPredictUnifiedMotor(course,target){
   if(!target) return;
   if(!__motorDetailLiveLoaded){
@@ -11486,6 +11602,7 @@ function renderPredictUnifiedMotor(course,target){
   const staleCycle=cycleResetActive && typeof brcMotorDetailCycleIsFresh==='function' && !brcMotorDetailCycleIsFresh(venue,venueMeta);
   const d=getMotorDetail(venue,b.motorNo,b.motor2);
   const gcol=MOTOR_GRADE_COLOR[b.motorGrade]||'var(--ink-soft)';
+  const verifiedPrevHtml=!d?brcVerifiedPreviousMotorHtml(venue,b.motorNo):'';
   if(!d){
     // 当日番組表の2連対率・相対評価は現サイクル値として残す。
     // 一方、旧サイクル由来のN/優出/優勝/前回使用者/長期足傾向は渡さない。
@@ -11498,10 +11615,10 @@ function renderPredictUnifiedMotor(course,target){
     const adminTraitHtml=brcBuildAdminTokuyamaMotorTraitHtml(venue,b.motorNo,publicInfo);
     if(BRC_MOTOR_PUBLIC_VENUES.has(String(venue||''))){
       const newBadge=staleCycle?`<div style="display:flex;align-items:center;gap:8px;margin:0 0 10px;flex-wrap:wrap;">${brcNewMotorBadgeHtml()}<strong style="font-size:12px;">${fmtMotorDate(resetDate)}から現モーターサイクル</strong></div>`:'';
-      target.innerHTML=newBadge+brcMotorHistoryNoticeHtml(md,false)+(adminTraitHtml||'<div class="predict-unified-empty">BRCモーター分析データがありません。</div>');
+      target.innerHTML=newBadge+verifiedPrevHtml+(verifiedPrevHtml?'':brcMotorHistoryNoticeHtml(md,false))+(adminTraitHtml||'<div class="predict-unified-empty">BRCモーター分析データがありません。</div>');
       return;
     }
-    target.innerHTML=`<div class="motor-detail-topstats"><div class="motor-detail-stat"><b style="color:${gcol};">${escMotor(b.motorGrade||'―')}</b><span>相対評価</span></div><div class="motor-detail-stat"><b>${Number.isFinite(Number(b.motor2))?Math.round(Number(b.motor2))+'%':'―'}</b><span>2連対率</span></div><div class="motor-detail-stat"><b>${escMotor(b.motorNo)}</b><span>号機</span></div><div class="motor-detail-stat"><b>―</b><span>履歴N</span></div></div><div class="predict-unified-empty">現モーターサイクルの機歴を蓄積中です。</div>`;
+    target.innerHTML=verifiedPrevHtml+`<div class="motor-detail-topstats"><div class="motor-detail-stat"><b style="color:${gcol};">${escMotor(b.motorGrade||'―')}</b><span>相対評価</span></div><div class="motor-detail-stat"><b>${Number.isFinite(Number(b.motor2))?Math.round(Number(b.motor2))+'%':'―'}</b><span>2連対率</span></div><div class="motor-detail-stat"><b>${escMotor(b.motorNo)}</b><span>号機</span></div><div class="motor-detail-stat"><b>―</b><span>履歴N</span></div></div><div class="predict-unified-empty">現モーターサイクルの機歴を蓄積中です。</div>`;
     return;
   }
   const prev=d.previous;
@@ -22618,6 +22735,7 @@ async function autoLoadHostedRaceCardToday(_opts={}){
     renderRaceCardModeUi();
     saveRaceCardForToday(`auto:${sourceName}`);
     populateDaySelect();
+    try{setTimeout(()=>brcRefreshLiveScheduleStatus('racecard-load'),0);}catch(_e){}
     try{ brcRenderPostRaceCards(); }catch(_e){}
     collapseRaceCardFold();
     invalidateTodayPicks(true);
@@ -22631,6 +22749,8 @@ async function autoLoadHostedRaceCardToday(_opts={}){
       statusBox.textContent = `本日の公式番組表を自動読込: ${sourceName}（${Object.keys(RACE_INFO_TODAY).length}会場）`;
       statusBox.style.color = '';
     }
+    // 既にTOP表示中でも当日情報反映を待たずに再描画。
+    try{if(typeof window.brcRenderAdminLoginTopPreview==='function') void window.brcRenderAdminLoginTopPreview(true);}catch(_e){}
     return true;
   }catch(e){
     console.warn('本日の番組表自動読込に失敗しました', e);
@@ -26801,6 +26921,7 @@ let __motorDetailCache = null;
 let __motorDetailLiveLoaded = false;
 let __motorDetailLivePromise = null;
 let __brcMotorLastRequest=0;
+let __brcMotorLastSuccess='',__brcMotorLastError='';
 function brcMotorJstToday(){
   const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
   const field=t=>parts.find(x=>x.type===t)?.value||'';
@@ -26836,24 +26957,73 @@ function motorDetailData(){
   }catch(e){ console.warn('モーター履歴データ読込失敗',e); __motorDetailCache={}; }
   return __motorDetailCache;
 }
+// BRC_MOTOR_DUAL_SOURCE_VALIDATED_20261022
+// No history data is fabricated here. Both URL roots are read-only sources.
+// An incomplete or stale motor feed can never replace current data.
+let __brcMotorLiveSource='embedded';
+function brcMotorSchemaValid(data){
+  if(!brcMotorPayloadFresh(data))return false;
+  const venues=Object.values(data.venues||{});
+  if(venues.length<20||venues.length>24)return false;
+  let motorCount=0;
+  for(const venue of venues){
+    if(!venue||typeof venue!=='object'||!venue.motors||typeof venue.motors!=='object')return false;
+    const cycles=String(venue.cycle_start||'');
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(cycles)||brcMotorAgeDays(cycles)<0)return false;
+    for(const record of Object.values(venue.motors)){
+      if(!record||typeof record!=='object')return false;
+      const n=Number(record.n),rate=Number(record.rate);
+      if(!Number.isInteger(n)||n<0||n>3000||!Number.isFinite(rate)||rate<0||rate>100)return false;
+      const wins=Number(record.wins_count||0),finals=Number(record.finals_count||0);
+      if(!Number.isInteger(wins)||!Number.isInteger(finals)||wins<0||finals<0||wins>finals)return false;
+      if(record.previous!=null){
+        if(!Array.isArray(record.previous.ranks)||!Array.isArray(record.previous.users))return false;
+        if(String(record.previous.end||'')>String(data.date))return false;
+      }
+      motorCount++;
+    }
+  }
+  return motorCount>=1000&&motorCount<=2200;
+}
 async function brcLoadMotorDetailLive(force=false){
-  if(__motorDetailLivePromise) return __motorDetailLivePromise;
-  if(__motorDetailLiveLoaded && !force && brcMotorPayloadFresh(__motorDetailCache)) return __motorDetailCache;
+  if(__motorDetailLivePromise)return __motorDetailLivePromise;
+  if(__motorDetailLiveLoaded&&!force&&brcMotorPayloadFresh(__motorDetailCache))return __motorDetailCache;
+  __brcMotorLastRequest=Date.now();
   const task=(async()=>{
     try{
       const day=brcMotorJstToday();
-      const res=await fetch(`racecards/motor-detail.json?v=${encodeURIComponent(day)}&t=${Date.now()}`,{cache:'no-store'});
-      if(!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data=await res.json();
-      if(!brcMotorPayloadFresh(data)) throw new Error('motor-detail JSON is missing, incomplete, future dated or stale: '+String(data?.date||'missing'));
-      // Reject a regressing snapshot even when both versions fall inside the freshness window.
+      const paths=[
+        {url:'racecards/motor-detail.json',source:'site'},
+        {url:'https://raw.githubusercontent.com/boatresearchclub/database2/main/racecards/motor-detail.json',source:'database2'}
+      ];
+      let best=null,failures=[];
+      for(const path of paths){
+        const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),8500);
+        try{
+          const sep=path.url.includes('?')?'&':'?';
+          const url=path.url+sep+'v='+encodeURIComponent(day)+'&t='+Date.now();
+          const response=await fetch(url,{cache:'no-store',credentials:path.source==='site'?'same-origin':'omit',signal:ctl.signal});
+          if(!response.ok)throw Error('HTTP '+response.status);
+          const data=await response.json();
+          if(!brcMotorSchemaValid(data))throw Error('invalid/incomplete/stale motor feed '+String(data?.date||''));
+          if(!best||String(data.date)>String(best.data.date))best={data,source:path.source};
+          // An as-of-today/previous-day same-origin verified feed needs no fallthrough.
+          if(best.source==='site'&&brcMotorAgeDays(best.data.date)<=1)break;
+        }catch(e){failures.push(path.source+': '+String(e?.message||e).slice(0,100));}
+        finally{clearTimeout(timer);}
+      }
+      if(!best)throw Error(failures.join('; ')||'motor feed unavailable');
       const old=motorDetailData();
-      if(brcMotorPayloadFresh(old) && String(data.date)<String(old.date)) return old;
-      __motorDetailCache=data;
+      if(brcMotorPayloadFresh(old)&&String(best.data.date)<String(old.date))return old;
+      const changed=!__motorDetailLiveLoaded||String(best.data.date)!==String(old.date)||__brcMotorLiveSource!==best.source;
+      __motorDetailCache=best.data;
       __motorDetailLiveLoaded=true;
-      document.dispatchEvent(new CustomEvent('brc-motor-detail-updated',{detail:{date:data.date||''}}));
-      return data;
+      __brcMotorLiveSource=best.source;
+      __brcMotorLastSuccess=new Date().toISOString();__brcMotorLastError='';
+      if(changed)document.dispatchEvent(new CustomEvent('brc-motor-detail-updated',{detail:{date:best.data.date,source:best.source}}));
+      return best.data;
     }catch(e){
+      __brcMotorLastError=String(e?.message||e).slice(0,240);
       console.warn('新しいモーター履歴を取得できません。古い履歴は表示しません。',e);
       return motorDetailData();
     }finally{__motorDetailLivePromise=null;}
@@ -26861,6 +27031,14 @@ async function brcLoadMotorDetailLive(force=false){
   __motorDetailLivePromise=task;
   return task;
 }
+window.brcMotorHistoryStatus=()=>{
+  const data=motorDetailData(),age=brcMotorAgeDays(data?.date);
+  return Object.freeze({as_of:String(data?.date||''),age_days:Number.isFinite(age)?age:null,
+    is_fresh:brcMotorPayloadFresh(data),source:__motorDetailLiveLoaded?__brcMotorLiveSource:'embedded',
+    venue_count:data?.venues&&typeof data.venues==='object'?Object.keys(data.venues).length:0,
+    last_attempt_at:__brcMotorLastRequest?new Date(__brcMotorLastRequest).toISOString():'',
+    last_success_at:__brcMotorLastSuccess,last_error:__brcMotorLastError});
+};
 function brcMotorRequestFreshHistory(){
   const now=Date.now();
   if(__motorDetailLivePromise) return __motorDetailLivePromise;
@@ -32046,6 +32224,7 @@ body.brc-admin-home-active .brc-admin-login-top-preview-note{display:none;}
   let current=snapshot;
   let meta={start:SNAPSHOT_START,end:SNAPSHOT_END,source:'embedded'};
   let running=null, checkedDay='', lastAttempt=0;
+  let lastSuccessAt='',lastError='';
   const dayMs=86400000;
   const isoDay=(value)=>{
     const d=new Date(value);
@@ -32060,7 +32239,7 @@ body.brc-admin-home-active .brc-admin-login-top-preview-note{display:none;}
   function isFresh(){return meta.end===previousJstDay();}
   window.brcPlayerCourse365Get=get;
   window.brcPlayerCourse365PeriodLabel=label;
-  window.brcPlayerCourse365Status=()=>Object.freeze({as_of:meta.end,window_start:meta.start,source:meta.source,is_fresh:isFresh()});
+  window.brcPlayerCourse365Status=()=>Object.freeze({as_of:meta.end,window_start:meta.start,source:meta.source,is_fresh:isFresh(),last_attempt_at:lastAttempt?new Date(lastAttempt).toISOString():'',last_success_at:lastSuccessAt,last_error:lastError});
   window.brcPlayerCourse365Map=()=>current;
   function validRecord(v){
     if(!v||Array.isArray(v)||typeof v!=='object')return false;
@@ -32132,6 +32311,7 @@ body.brc-admin-home-active .brc-admin-login-top-preview-note{display:none;}
         if(!chosen)throw(lastError||Error('daily source unavailable'));
         current=chosen.payload.players;
         meta={...chosen.dates,source:chosen.source};
+        lastSuccessAt=new Date().toISOString();lastError='';
         checkedDay=today;
         // The two existing low-sample guards parse this node on demand.
         if(DATA_NODE)DATA_NODE.textContent=JSON.stringify(current);
@@ -32139,6 +32319,7 @@ body.brc-admin-home-active .brc-admin-login-top-preview-note{display:none;}
         window.dispatchEvent(new CustomEvent('brc:player-course365-updated',{detail:{as_of:meta.end}}));
       }catch(e){
         // Do not advance the displayed period or silently substitute percentages.
+        lastError=String(e?.message||e).slice(0,200);
         console.info('['+VERSION+'] keeping dated snapshot:',String(e));
         syncVisibleRows();
       }finally{running=null;}
@@ -39206,7 +39387,8 @@ setInterval(()=>{
       try{await navigator.clipboard.writeText(JSON.stringify(data,null,2));button.textContent='コピーしました';}
       catch(_){button.textContent='コピーできません（HTTPS環境をご確認ください）';}
     });root.appendChild(button);
-    const host=document.getElementById('brcResearchAdminPanel') || document.getElementById('brcMemberAdmin') || document.body;
+    const host=document.querySelector('#brcAdminHub [data-brc-admin-hub-panel="verify"]') || document.getElementById('brcMemberAdmin');
+    if(!host)return;
     host.appendChild(root);
   }
   function unmount(){if(root)root.remove();root=null;fields=null;}
@@ -39722,6 +39904,119 @@ setInterval(()=>{
   return {BUILD,calculate,install,renderRows};
 });
 
+</script>
+
+<style id="brc-admin-daily-source-health-style-v1">
+#brcAdminDailySourceHealth{margin:10px 0 14px;border:1px solid #c6d6eb;border-radius:12px;background:#fff;overflow:hidden;color:#0a1f33;}
+#brcAdminDailySourceHealth>summary{display:flex;align-items:center;gap:8px;list-style:none;padding:12px 13px;cursor:pointer;font-size:13px;font-weight:800;}
+#brcAdminDailySourceHealth>summary::-webkit-details-marker{display:none;}
+#brcAdminDailySourceHealth .brc-v3-op-arrow{font-size:18px;font-weight:700;color:#64748b;}
+#brcAdminDailySourceHealth[open] .brc-v3-op-arrow{transform:rotate(180deg);}
+#brcAdminDailySourceHealth .brc-v3-operator-body{padding:0 12px 12px;}
+#brcAdminDailySourceHealth .brc-v3-operator-help{font-size:11px;line-height:1.6;color:#475569;margin:1px 0 9px;}
+#brcAdminDailySourceHealth .brc-v3-operator-state{padding:10px;background:#f2f6ff;border:1px solid #d5e2f7;border-radius:9px;font-size:12px;font-weight:650;line-height:1.65;overflow-wrap:anywhere;white-space:pre-line;}
+#brcAdminDailySourceHealth .brc-v3-operator-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:9px;}
+#brcAdminDailySourceHealth .brc-v3-operator-actions button{min-width:0;padding:8px 2px;border:1px solid #bcd0ea;border-radius:8px;font:inherit;font-size:11px;font-weight:800;background:#fff;color:#144d93;cursor:pointer;}
+#brcAdminDailySourceHealth .brc-v3-operator-actions button:disabled{opacity:.6;cursor:wait;}
+#brcAdminDailySourceHealth .brc-v3-operator-feedback{font-size:11px;margin-top:6px;color:#355f8c;min-height:13px;}
+#brcAdminDailySourceHealth.brc-v3-op-ready{border-color:#8ad5b3;}
+#brcAdminDailySourceHealth.brc-v3-op-blocked{border-color:#efc4a1;}
+@media(max-width:420px){#brcAdminDailySourceHealth>summary{padding:10px 9px;}#brcAdminDailySourceHealth .brc-v3-operator-actions button{font-size:10px;}}
+</style>
+<script id="brc-admin-daily-source-health-v1">
+/* BRC_ADMIN_DATA_HEALTH_V1_20261022
+ * Admin Verify-panel diagnostics. No edits to model, auth, membership, source data or publishing.
+ * HTTP success proves a fetched JSON was usable; it does not prove the upstream generator is scheduled.
+ */
+(function(){
+  'use strict';
+  if(window.__BRC_ADMIN_DAILY_SOURCE_HEALTH_V1)return;
+  window.__BRC_ADMIN_DAILY_SOURCE_HEALTH_V1=true;
+  const $=id=>document.getElementById(id);
+  const panel=$('brcAdminDailySourceHealth');
+  if(!panel)return;
+  const courseEl=$('brcAdminDailySourceCourse'),motorEl=$('brcAdminDailySourceMotor');
+  const brief=$('brcAdminDailySourceBrief'),feedback=$('brcAdminDailySourceFeedback');
+  const refresh=$('brcAdminDailySourceRefresh'),check=$('brcAdminDailySourceCheck'),copy=$('brcAdminDailySourceCopy');
+  let running=false,latest=null;
+  const authorized=()=>{
+    try{return typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE===true&&
+      typeof BRC_MEMBER_ACTIVE!=='undefined'&&BRC_MEMBER_ACTIVE===true&&
+      !(typeof window.brcGetAdminViewMode==='function'&&window.brcGetAdminViewMode()==='public');}
+    catch(_){return false;}
+  };
+  function clean(s){return String(s??'').slice(0,200);}
+  function snapshot(){
+    if(!authorized())return null;
+    let course=null,motor=null;
+    try{course=typeof window.brcPlayerCourse365Status==='function'?window.brcPlayerCourse365Status():null;}
+    catch(e){course={last_error:clean(e?.message||e)};}
+    try{motor=typeof window.brcMotorHistoryStatus==='function'?window.brcMotorHistoryStatus():null;}
+    catch(e){motor={last_error:clean(e?.message||e)};}
+    return {build:'BRC_ADMIN_DATA_HEALTH_V1_20261022',checked_at:new Date().toISOString(),
+      course365:course?{as_of:clean(course.as_of),window_start:clean(course.window_start),
+        is_fresh:course.is_fresh===true,source:clean(course.source),last_attempt_at:clean(course.last_attempt_at),
+        last_success_at:clean(course.last_success_at),last_error:clean(course.last_error)}:null,
+      motor:motor?{as_of:clean(motor.as_of),age_days:motor.age_days??null,
+        is_fresh:motor.is_fresh===true,venue_count:Number(motor.venue_count)||0,
+        source:clean(motor.source),last_attempt_at:clean(motor.last_attempt_at),
+        last_success_at:clean(motor.last_success_at),last_error:clean(motor.last_error)}:null,
+      external_jobs:{daily_json_generation:'not_verified_by_index',race_results_d1:'not_verified_by_index'}
+    };
+  }
+  window.BRC_ADMIN_DAILY_SOURCE_DIAGNOSTICS=snapshot;
+  function textFor(title,d,period){
+    if(!d)return title+'：診断取得不可\n状態：未接続';
+    const ok=d.is_fresh===true;
+    const src=d.source==='site'?'同サイトJSON':d.source==='database2'?'database2 JSON':d.source==='embedded'?'HTML内の保存済みデータ':clean(d.source||'不明');
+    const date=d.as_of||'不明';
+    return title+'：'+(ok?'日付基準に合格':'未更新・要確認')+'\n基準日：'+date+
+      (period&&d.window_start?'（開始 '+d.window_start+'）':'')+
+      '\n使用データ：'+src+
+      (d.age_days!==null&&d.age_days!==undefined?' ／ 経過 '+d.age_days+'日':'')+
+      (d.venue_count?' ／ '+d.venue_count+'場':'')+
+      '\n最終取得成功：'+(d.last_success_at||'この画面では未確認')+
+      (d.last_error?'\n取得エラー：'+d.last_error:'');
+  }
+  function paint(){
+    const d=snapshot();
+    if(!d){panel.open=false;panel.hidden=true;latest=null;return;}
+    panel.hidden=false;latest=d;
+    courseEl.textContent=textFor('選手・コース別365日成績',d.course365,true);
+    motorEl.textContent=textFor('モーター前節・累計履歴',d.motor,false);
+    const ok=d.course365?.is_fresh===true&&d.motor?.is_fresh===true;
+    brief.textContent=ok?'2系統：日付確認済み':'更新状況：要確認';
+    panel.classList.toggle('brc-v3-op-ready',ok);
+    panel.classList.toggle('brc-v3-op-blocked',!ok);
+  }
+  check?.addEventListener('click',()=>{if(!authorized()){paint();return;}paint();feedback.textContent='画面内の最新状態を確認しました';});
+  refresh?.addEventListener('click',async()=>{
+    if(!authorized()){paint();return;}
+    if(running)return;
+    running=true;refresh.disabled=true;feedback.textContent='JSONを再取得して確認しています';
+    try{
+      const tasks=[];
+      if(typeof window.brcPlayerCourse365Refresh==='function')tasks.push(Promise.resolve().then(()=>window.brcPlayerCourse365Refresh()));
+      if(typeof brcLoadMotorDetailLive==='function')tasks.push(Promise.resolve().then(()=>brcLoadMotorDetailLive(true)));
+      if(!tasks.length)throw Error('日次データ取得関数がありません');
+      await Promise.allSettled(tasks);
+      if(!authorized())return;
+      paint();feedback.textContent='再取得を実行しました。基準日・取得エラー欄を確認してください';
+    }catch(e){if(authorized())feedback.textContent='再取得エラー：'+clean(e?.message||e);}
+    finally{running=false;refresh.disabled=false;}
+  });
+  copy?.addEventListener('click',async()=>{
+    if(!authorized()){paint();return;}
+    const d=snapshot();if(!d)return;
+    try{await navigator.clipboard.writeText(JSON.stringify(d,null,2));if(authorized())feedback.textContent='診断結果をコピーしました';}
+    catch(_){if(authorized())feedback.textContent='コピー不可。HTTPSのブラウザで確認してください';}
+  });
+  document.addEventListener('brc-motor-detail-updated',()=>{if(authorized())paint();});
+  window.addEventListener('brc:player-course365-updated',()=>{if(authorized())paint();});
+  // Only update in admin view; no background fetches and no changes to timers in data consumers.
+  setInterval(()=>{if(!document.hidden&&authorized())paint();else if(!authorized()&&latest)paint();},15000);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',paint,{once:true});else paint();
+})();
 </script>
 </body>
 </html>
