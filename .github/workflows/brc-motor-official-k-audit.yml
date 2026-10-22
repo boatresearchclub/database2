@@ -225,7 +225,7 @@ jobs:
               'all_24_venues_cycle_verified':False,
           }
           validation_gates['can_publish_motor_detail']=all(validation_gates.values())
-          report={'validation_gates':validation_gates,{st:sum(n for (v,m,s),n in status_counts.items() if s==st) for st in sorted({k[2] for k in status_counts})},
+          report={'validation_gates':validation_gates,'status_totals':{st:sum(n for (v,m,s),n in status_counts.items() if s==st) for st in sorted({k[2] for k in status_counts})},
               'other_status_totals':{st:sum(n for (v,m,s),n in other_start_counts.items() if s==st) for st in sorted({k[2] for k in other_start_counts})},
               'candidate_n_definitions':variants,
               'candidate_policy_residual_by_venue':candidate_residual_by_venue,
