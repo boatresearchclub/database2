@@ -1,11 +1,17 @@
 name: BRC Motor Official K Historical Audit (NO PUBLISH)
 on:
   workflow_dispatch:
+  schedule:
+    # Daily 13:15 JST, after official K course365 processing window.
+    - cron: '15 4 * * *'
   push:
     paths:
       - '.github/workflows/brc-motor-official-k-audit.yml'
 permissions:
   contents: read
+concurrency:
+  group: brc-motor-official-k-readonly
+  cancel-in-progress: false
 jobs:
   historical-motor-audit:
     runs-on: ubuntu-latest
