@@ -1,4 +1,5 @@
-<!-- BRC_MOTOR_FOUR_SECTION_SPLIT_V1_20261023: UI only; TimeX v3, worker, math and rights untouched. -->
+<!-- BRC_V3_422_ADMIN_REASON_DIAG_V1_20261023: admin-only Worker failure code/reason diagnostics; no math or request changes. -->
+<!-- BRC_MOTOR_FOUR_SECTION_ORDER_SAFE_V1_20261023: details/current/past/previous order; no motor arithmetic, TimeX, worker, or member rights changes. -->
 <!-- BRC_MOTOR_PREVIOUS_VERIFIED_V8_LATEST_20261022: built from latest uploaded 144353 index (SHA256 matched V6); includes independently verified previous user/date/venue/motor only, no stale cumulative stats. -->
 <!-- BRC_MOTOR_PREVIOUS_VERIFIED_FEED_V7_20261022: official K verified prior racer/date/motor feed, separate from stale cumulative N/finals. Admin diagnostic remains honest. No prediction math changes. -->
 <!-- BRC_DICTIONARY_PLAYER_DAILY_AUDIT_V6_20261022: admin-only visible freshness check for static dictionary and racer details. No data-generation, prediction or public view modification. -->
@@ -360,7 +361,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261023-MOTOR-FOUR-SECTIONS-SPLIT-V1">
+<meta name="brc-build" content="20261023-MOTOR4-V3-422-DIAG-V1">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -20036,8 +20037,13 @@ function brcV3AdminMount(venue,raceNo,liveRace){
       }
       if(!res.ok||data?.status!=='ready'){
         const remoteStatus=String(data?.status||data?.error||'not_ready').slice(0,120);
-        window.__brcV3LastError={at:new Date().toISOString(),http:res.status,status:remoteStatus};
-        brcV3AdminRecordPhase('WORKER_NOT_READY',res.status+' '+remoteStatus);
+        // BRC_V3_422_ADMIN_REASON_DIAG_V1: bounded admin-only server reason.
+        // Never retain tokens, request headers, or an unfiltered response body.
+        const diagnosticCode=String(data?.code||data?.reason_code||'').slice(0,80);
+        const diagnosticReason=String(data?.reason||data?.message||data?.detail||'').slice(0,180);
+        window.__brcV3LastError={at:new Date().toISOString(),http:res.status,status:remoteStatus,
+          code:diagnosticCode,reason:diagnosticReason};
+        brcV3AdminRecordPhase('WORKER_NOT_READY',res.status+' '+remoteStatus+(diagnosticCode?' code='+diagnosticCode:'')+(diagnosticReason?' reason='+diagnosticReason:''));
         brcV3AdminClearDisplay();
         try{brcRefreshAdminPersonalTimeXDom();}catch(_e){}
         brcV3TableGateSet('fallback');
