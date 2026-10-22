@@ -1,3 +1,4 @@
+<!-- BRC_MOTOR_LATEST_SOURCE_FRESHNESS_V3_20261022: motor history requires recent day-stamped JSON, current on-focus reload, no stale previous-user / finals / fixed foot history claims. Existing TimeX/course365/absence fixes retained. -->
 <!-- BRC_ABSENCE_UNAVAILABLE_LABEL_CLARITY_V2_20261022: Live API unavailable means BRC data not synchronized, NOT confirmed absence or absence of official exhibition. No inference from missing boats. -->
 <!-- BRC_ABSENCE_STATUS_ALERT_V1_20261022: Confirmed absence overrides cached deadline signs; partial exhibition is labeled without inferring a scratch; TOP and race banner share the same state; predictions/odds/TimeX computation unchanged. -->
 <!-- BRC_V3_TABLE_DRIFT_GUARDED_V3_20261021: admin v3 6-boat atomic display and post-verification DOM repair; ineligible races not masked; no Worker, AI, bets changes -->
@@ -349,7 +350,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261022-COURSE365-DAILY-V2-ABSENCE-R1">>
+<meta name="brc-build" content="20261022-COURSE365-MOTOR-FRESH-V3">>
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -11417,6 +11418,7 @@ function openPredictUnifiedDetail(course, initialTab='player'){
 
   body.querySelectorAll('.predict-unified-tab').forEach(btn=>btn.addEventListener('click',()=>setPredictUnifiedTab(btn.dataset.predictUnifiedTab)));
   setPredictUnifiedTab(initialTab);
+  if(initialTab==='motor') brcMotorRequestFreshHistory().catch(()=>{});
   bd.classList.add('open');
   bd.setAttribute('aria-hidden','false');
   document.body.style.overflow='hidden';
@@ -11433,6 +11435,7 @@ function setPredictUnifiedTab(tab){
     btn.setAttribute('aria-selected',active?'true':'false');
   });
   body.querySelectorAll('.predict-unified-panel').forEach(panel=>panel.classList.toggle('active',panel.dataset.predictUnifiedPanel===key));
+  if(key==='motor') brcMotorRequestFreshHistory().catch(()=>{});
 }
 
 function buildSTYearOverviewHtml(reg,course,d,seg,segLabel,g){
@@ -11466,7 +11469,7 @@ function renderPredictUnifiedST(reg,course,target){
 function renderPredictUnifiedMotor(course,target){
   if(!target) return;
   if(!__motorDetailLiveLoaded){
-    brcLoadMotorDetailLive().then(()=>{
+    brcMotorRequestFreshHistory().then(()=>{
       if(__motorDetailLiveLoaded && target && target.isConnected) renderPredictUnifiedMotor(course,target);
     }).catch(()=>{});
   }
@@ -11474,7 +11477,8 @@ function renderPredictUnifiedMotor(course,target){
   const b=boats.find(x=>Number(x.course)===Number(course));
   if(!b||b.motorNo==null){ target.innerHTML='<div class="predict-unified-empty">モーターデータがありません。</div>'; return; }
   const venue=document.getElementById('predictVenue')?.value||'';
-  const md=motorDetailData(); const venueMeta=md.venues?.[venue]||{};
+  const md=motorDetailData(); const venueMeta=brcMotorPayloadFresh(md)?(md.venues?.[venue]||{}):{};
+  if(!brcMotorPayloadFresh(md)) brcMotorRequestFreshHistory().catch(()=>{});
   const resetDate=(typeof brcMotorCycleResetDate==='function')?brcMotorCycleResetDate(venue):'';
   const cycleResetActive=!!(resetDate && typeof brcIsNewMotorCycle==='function' && brcIsNewMotorCycle(venue));
   const staleCycle=cycleResetActive && typeof brcMotorDetailCycleIsFresh==='function' && !brcMotorDetailCycleIsFresh(venue,venueMeta);
@@ -11485,14 +11489,14 @@ function renderPredictUnifiedMotor(course,target){
     // 一方、旧サイクル由来のN/優出/優勝/前回使用者/長期足傾向は渡さない。
     const publicInfo={
       grade:b.motorGrade,gradeColor:gcol,motor2:b.motor2,motorNo:b.motorNo,
-      finalsCount:undefined,winsCount:undefined,n:undefined,
+      finalsCount:undefined,winsCount:undefined,n:undefined,historyUnavailable:true,
       cycleStart:staleCycle?resetDate:(venueMeta.cycle_start||''),
       prevUsers:[],prevRegs:[],prevStart:'',prevEnd:'',prevRanks:[],finals:[]
     };
     const adminTraitHtml=brcBuildAdminTokuyamaMotorTraitHtml(venue,b.motorNo,publicInfo);
     if(BRC_MOTOR_PUBLIC_VENUES.has(String(venue||''))){
       const newBadge=staleCycle?`<div style="display:flex;align-items:center;gap:8px;margin:0 0 10px;flex-wrap:wrap;">${brcNewMotorBadgeHtml()}<strong style="font-size:12px;">${fmtMotorDate(resetDate)}から現モーターサイクル</strong></div>`:'';
-      target.innerHTML=newBadge+(adminTraitHtml||'<div class="predict-unified-empty">BRCモーター分析データがありません。</div>');
+      target.innerHTML=newBadge+brcMotorHistoryNoticeHtml(md,false)+(adminTraitHtml||'<div class="predict-unified-empty">BRCモーター分析データがありません。</div>');
       return;
     }
     target.innerHTML=`<div class="motor-detail-topstats"><div class="motor-detail-stat"><b style="color:${gcol};">${escMotor(b.motorGrade||'―')}</b><span>相対評価</span></div><div class="motor-detail-stat"><b>${Number.isFinite(Number(b.motor2))?Math.round(Number(b.motor2))+'%':'―'}</b><span>2連対率</span></div><div class="motor-detail-stat"><b>${escMotor(b.motorNo)}</b><span>号機</span></div><div class="motor-detail-stat"><b>―</b><span>履歴N</span></div></div><div class="predict-unified-empty">現モーターサイクルの機歴を蓄積中です。</div>`;
@@ -11508,7 +11512,7 @@ function renderPredictUnifiedMotor(course,target){
   const adminTraitHtml=brcBuildAdminTokuyamaMotorTraitHtml(venue,b.motorNo,publicInfo);
   if(BRC_MOTOR_PUBLIC_VENUES.has(String(venue||''))){
     // 全国24場は新BRCモーター分析へ一本化。旧モーター詳細は重複するため表示しない。
-    target.innerHTML=adminTraitHtml||'<div class="predict-unified-empty">BRCモーター分析データがありません。</div>';
+    target.innerHTML=brcMotorHistoryNoticeHtml(md,true)+(adminTraitHtml||'<div class="predict-unified-empty">BRCモーター分析データがありません。</div>');
     return;
   }
   // フォールバック保険（通常は24場すべて上でreturn）。
@@ -26196,6 +26200,11 @@ window.__playersRendered = true;
     vertical-align:top;
   }
 </style>
+<style id="brc-motor-freshness-ui-20261022">
+.brc-motor-freshness-note{margin:5px 0 12px;padding:9px 10px;border-radius:9px;font-size:11px;line-height:1.6;font-weight:750;white-space:normal;overflow-wrap:anywhere;}
+.brc-motor-freshness-note.is-stale{border:1px solid #fed7aa;background:#fff7ed;color:#9a3412;}
+.brc-motor-freshness-note.is-current{border:1px solid #bbf7d0;background:#f0fdf4;color:#166534;}
+</style>
 <!-- BRC_MOTOR_HISTORY_24VENUE_20260824 -->
 <!-- BRC_MOTOR_HISTORY_DAILY_LIVE_20260906 -->
 <script type="application/json" id="data-motor-detail"></script>
@@ -26693,15 +26702,16 @@ function brcBuildMotorPublicOverviewHtml(info){
   const grade=info.grade!=null?escMotor(info.grade):'―';
   const gradeColor=info.gradeColor||'var(--navy)';
   const motor2=Number.isFinite(Number(info.motor2))?`${Math.round(Number(info.motor2))}%`:'―';
-  const finals=Number.isFinite(Number(info.finalsCount))?Number(info.finalsCount):'―';
-  const wins=Number.isFinite(Number(info.winsCount))?Number(info.winsCount):'―';
+  const finals=info.finalsCount!=null && Number.isFinite(Number(info.finalsCount))?Number(info.finalsCount):'―';
+  const wins=info.winsCount!=null && Number.isFinite(Number(info.winsCount))?Number(info.winsCount):'―';
   return `<div class="brc-motor-public-overview"><div class="brc-motor-public-stats"><div class="brc-motor-public-stat"><div class="v" style="color:${gradeColor};">${grade}</div><div class="k">相対評価</div></div><div class="brc-motor-public-stat"><div class="v">${motor2}</div><div class="k">2連対率</div></div><div class="brc-motor-public-stat"><div class="v">${finals}</div><div class="k">優出</div></div><div class="brc-motor-public-stat"><div class="v">${wins}</div><div class="k">優勝</div></div></div></div>`;
 }
 function brcBuildMotorPublicHistoryHtml(info){
   if(!info) return '';
   const motorNo=info.motorNo!=null?`${escMotor(info.motorNo)}号機`:'モーター';
   const cycle=info.cycleStart?escMotor(info.cycleStart):'―';
-  const n=Number.isFinite(Number(info.n))?Number(info.n):0;
+  const n=info.n!=null && Number.isFinite(Number(info.n))?Number(info.n):'―';
+  if(info.historyUnavailable) return `<div class="brc-motor-freshness-note is-stale">モーター履歴は未更新です。前回使用者・累計走数・優出・優勝は確認できるまで表示を保留します。</div>`;
   const users=Array.isArray(info.prevUsers)&&info.prevUsers.length?info.prevUsers.map(escMotor).join('・'):'履歴なし';
   const pstart=info.prevStart?fmtMotorDate(info.prevStart):'';
   const pend=info.prevEnd?fmtMotorDate(info.prevEnd):'';
@@ -26719,12 +26729,13 @@ function brcMotorLabShortCycleDate(v){
 function brcBuildMotorLabHeaderMetaHtml(info,motorNo){
   const no=Number.isFinite(Number(motorNo))?`${Number(motorNo)}号機`:'モーター';
   const cycle=brcMotorLabShortCycleDate(info?.cycleStart||'');
-  const n=Number.isFinite(Number(info?.n))?`${Number(info.n)}走`:'―';
+  const n=info?.n!=null && Number.isFinite(Number(info.n))?`${Number(info.n)}走`:'―';
   return `<div class="brc-motor-lab-head-meta"><strong>${no}</strong><span>使用開始 ${escMotor(cycle)}</span><span>N=${n}</span></div>`;
 }
 function brcBuildMotorLabIntegratedOfficialHtml(info){
   if(!info) return '';
   const overview=brcBuildMotorPublicOverviewHtml(info);
+  if(info.historyUnavailable) return `${overview}<div class="brc-motor-freshness-note is-stale">前回使用者・優出歴・優勝歴は最新履歴が届くまで表示しません。</div>`;
   const users=Array.isArray(info.prevUsers)&&info.prevUsers.length?info.prevUsers.map(escMotor).join('・'):'履歴なし';
   const pstart=info.prevStart?fmtMotorDate(info.prevStart):'';
   const pend=info.prevEnd?fmtMotorDate(info.prevEnd):'';
@@ -26744,7 +26755,8 @@ function brcBuildAdminTokuyamaMotorTraitHtml(venue,motorNo,publicInfo=null){
   // 管理者向けの生指数・検証条件は各内部ブロックで BRC_ADMIN_ACTIVE を再判定する。
   const v=String(venue||''); if(!BRC_MOTOR_PUBLIC_VENUES.has(v)) return '';
   const no=Number(motorNo),rawBase=brcMotorBaseForVenue(v)?.[String(no)]||null;
-  const t=rawBase||{n:0,longStretch:null,recent10:null,recent20:null,first:'',last:'',prevType:'判定不能',prevN:0,prevStart:'',prevEnd:'',prevStretch:null,prevTurn:null};
+  const baseFresh=brcMotorFootRowFresh(rawBase);
+  const t=(baseFresh?rawBase:null)||{n:0,longStretch:null,recent10:null,recent20:null,first:'',last:'',prevType:'判定不能',prevN:0,prevStart:'',prevEnd:'',prevStretch:null,prevTurn:null};
   const overviewHtml=brcBuildMotorPublicOverviewHtml(publicInfo);
   const publicHistoryHtml=brcBuildMotorPublicHistoryHtml(publicInfo);
   const headerMetaHtml=brcBuildMotorLabHeaderMetaHtml(publicInfo,no);
@@ -26756,28 +26768,61 @@ function brcBuildAdminTokuyamaMotorTraitHtml(venue,motorNo,publicInfo=null){
   const prevRuns=Number(t.prevN)||0;
   const historyComment=brcMotorHistoryPlainComment(t,long,recent);
   const isAdmin=(typeof BRC_ADMIN_ACTIVE!=='undefined' && BRC_ADMIN_ACTIVE);
-  const verifyHtml=isAdmin?`<details class="brc-motor-admin-verify"><summary>管理者向け検証データ</summary><div class="brc-motor-admin-verify-body"><div class="brc-motor-verify-grid"><div class="brc-motor-verify-card"><div class="k">長期伸び指数</div><div class="v">${brcMotorTraitSigned(t.longStretch)}</div><div class="sub">N=${Number(t.n)||0}</div></div><div class="brc-motor-verify-card"><div class="k">直近10走指数</div><div class="v">${brcMotorTraitSigned(t.recent10)}</div><div class="sub">表示参考</div></div><div class="brc-motor-verify-card"><div class="k">前回使用期間</div><div class="v">${prevPeriod}</div><div class="sub">${prevRuns?`${prevRuns}走`:'データなし'}</div></div><div class="brc-motor-verify-card"><div class="k">開催前データ</div><div class="v">${t.first&&t.last?`${fmtMotorDate(t.first)}〜${fmtMotorDate(t.last)}`:'―'}</div><div class="sub">確定済み履歴</div></div></div><div class="brc-motor-rule-box"><strong>全国仕様：</strong> 1走=判定前、2走=A〜E暫定、3走以降=本判定。A〜E境界は +0.60 / +0.20 / -0.20 / -0.60。標準22場の足色信頼は「今節タイプ差＋長期傾向」の2024-2025学習→2026 OOS確率で、75%未満=特徴未確定、C=75-80%、B=80-85%、B+=85-90%、A=90-95%、A+=95%以上。欠測時は通常展示へフォールバック。桐生は足色参考、江戸川は足色判定なし。<br><strong>予測への扱い：</strong> 現時点ではAI予測・展開・買い目への自動加点は行わず、予想判断材料として表示。</div></div></details>`:'';
+  const verifyHtml=(isAdmin && baseFresh)?`<details class="brc-motor-admin-verify"><summary>管理者向け検証データ</summary><div class="brc-motor-admin-verify-body"><div class="brc-motor-verify-grid"><div class="brc-motor-verify-card"><div class="k">長期伸び指数</div><div class="v">${brcMotorTraitSigned(t.longStretch)}</div><div class="sub">N=${Number(t.n)||0}</div></div><div class="brc-motor-verify-card"><div class="k">直近10走指数</div><div class="v">${brcMotorTraitSigned(t.recent10)}</div><div class="sub">表示参考</div></div><div class="brc-motor-verify-card"><div class="k">前回使用期間</div><div class="v">${prevPeriod}</div><div class="sub">${prevRuns?`${prevRuns}走`:'データなし'}</div></div><div class="brc-motor-verify-card"><div class="k">開催前データ</div><div class="v">${t.first&&t.last?`${fmtMotorDate(t.first)}〜${fmtMotorDate(t.last)}`:'―'}</div><div class="sub">確定済み履歴</div></div></div><div class="brc-motor-rule-box"><strong>全国仕様：</strong> 1走=判定前、2走=A〜E暫定、3走以降=本判定。A〜E境界は +0.60 / +0.20 / -0.20 / -0.60。標準22場の足色信頼は「今節タイプ差＋長期傾向」の2024-2025学習→2026 OOS確率で、75%未満=特徴未確定、C=75-80%、B=80-85%、B+=85-90%、A=90-95%、A+=95%以上。欠測時は通常展示へフォールバック。桐生は足色参考、江戸川は足色判定なし。<br><strong>予測への扱い：</strong> 現時点ではAI予測・展開・買い目への自動加点は行わず、予想判断材料として表示。</div></div></details>`:'';
   setTimeout(()=>brcRefreshAdminTokuyamaMotorTrait(v,no).catch(()=>{}),0);
   let historySection='';
   if(v==='江戸川'){
     historySection=`<section class="brc-motor-insight-section"><div class="brc-motor-one-section-head"><div class="brc-motor-one-section-title">評価方式</div><span class="brc-motor-insight-badge">江戸川専用</span></div><div class="brc-motor-history-comment">通常展示タイムの6艇相対値から機力A〜Eを評価します。オリジナル展示の足色分解データがないため、伸び／出足・回り足の判定は行いません。</div>${integratedOfficialHtml}</section>`;
   }else if(v==='桐生'){
     historySection=`<section class="brc-motor-insight-section"><div class="brc-motor-one-section-head"><div class="brc-motor-one-section-title">評価方式</div><span class="brc-motor-insight-badge">桐生専用</span></div><div class="brc-motor-history-comment">通常展示・直線・回り足から機力A〜Eを評価します。直線寄り／回り足寄りは参考表示とし、標準22場のA〜A+信頼ランクは付けません。</div>${integratedOfficialHtml}</section>`;
-  }else if(!rawBase){
+  }else if(!rawBase || !baseFresh){
     const resetDate=(typeof brcMotorCycleResetDate==='function')?brcMotorCycleResetDate(v):'';
     const resetActive=!!(resetDate && typeof brcIsNewMotorCycle==='function' && brcIsNewMotorCycle(v));
     const resetNote=resetActive
       ? `新モーターへ切り替わったため、${fmtMotorDate(resetDate)}より前の同番号モーター履歴は完全にリセットしています。長期・直近・前回の足傾向は現サイクル分だけで再蓄積します。`
-      : '現モーターサイクルの長期傾向はまだ蓄積中です。';
-    historySection=`<section class="brc-motor-insight-section"><div class="brc-motor-one-section-head"><div class="brc-motor-one-section-title">BRC 足傾向</div><span class="brc-motor-insight-badge">履歴蓄積中</span></div><div class="brc-motor-history-comment">${resetNote} 今節A〜Eは実測から評価し、足色信頼は長期履歴がない分だけ保守的に計算します。</div>${integratedOfficialHtml}</section>`;
+      : (!baseFresh && rawBase ? `固定のBRC足傾向の最終収録日 ${escMotor(rawBase.last||'不明')}。現在の直近10走・前回足色としては使用せず、履歴更新待ちとしています。` : '現モーターサイクルの長期傾向はまだ蓄積中です。');
+    historySection=`<section class="brc-motor-insight-section"><div class="brc-motor-one-section-head"><div class="brc-motor-one-section-title">BRC 足傾向</div><span class="brc-motor-insight-badge">${rawBase&&!baseFresh?'履歴更新待ち':'履歴蓄積中'}</span></div><div class="brc-motor-history-comment">${resetNote} 今節の評価は従来の算出処理を維持し、ここでは過去の長期・直近・前回足色の表示だけを保留しています。</div>${integratedOfficialHtml}</section>`;
   }else{
     historySection=`<section class="brc-motor-insight-section"><div class="brc-motor-one-section-head"><div class="brc-motor-one-section-title">BRC 足傾向</div><span class="brc-motor-insight-badge">BRC独自分析</span></div><div class="brc-motor-history-flow"><div class="brc-motor-history-row"><div class="role">長期の伸び傾向</div><div class="value ${long.cls}">${longText}</div><div class="meta">${Number(t.n)||0}走</div></div><div class="brc-motor-history-row"><div class="role">最近の伸び傾向</div><div class="value ${recent.cls}">${recentText}</div><div class="meta">直近10走</div></div><div class="brc-motor-history-row"><div class="role">前回の足色</div><div class="value">${t.prevType||'判定不能'}</div><div class="meta">${prevPeriod}${prevRuns?`（${prevRuns}走）`:''}</div></div></div><div class="brc-motor-history-comment">${historyComment}</div>${integratedOfficialHtml}</section>`;
   }
   return `<div class="brc-admin-motor-trait"><div class="brc-motor-lab-head"><div class="brc-motor-lab-head-top"><div class="brc-motor-lab-brand"><div class="brc-admin-motor-trait-title">BRCモーター分析</div></div>${headerMetaHtml}</div></div><div class="brc-motor-lab-body"><section class="brc-motor-one-section"><div class="brc-motor-one-section-head"><div class="brc-motor-one-section-title">今節の状態</div></div><div id="brc-admin-motor-current-${no}" class="brc-admin-motor-trait-current">${brcBuildAdminTokuyamaCurrentHtml(no,{n:0,ready:false,venue:v},t)}</div></section>${historySection}${verifyHtml}</div></div>`;
 }
+// BRC_MOTOR_LATEST_SOURCE_FRESHNESS_V3_20261022
+// The HTML's 2026-09-05 payload is retained only for compatibility; NEVER show stale history as current.
+// This browser-side guard does not create or publish the daily motor-detail.json file.
+const BRC_MOTOR_HISTORY_MAX_AGE_DAYS=2;
+const BRC_MOTOR_FOOT_MAX_AGE_DAYS=14;
 let __motorDetailCache = null;
 let __motorDetailLiveLoaded = false;
 let __motorDetailLivePromise = null;
+let __brcMotorLastRequest=0;
+function brcMotorJstToday(){
+  const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+  const field=t=>parts.find(x=>x.type===t)?.value||'';
+  return `${field('year')}-${field('month')}-${field('day')}`;
+}
+function brcMotorAgeDays(value){
+  const v=String(value||'');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(v)) return Infinity;
+  const epoch=Date.parse(v+'T00:00:00Z');
+  const today=Date.parse(brcMotorJstToday()+'T00:00:00Z');
+  if(!Number.isFinite(epoch) || new Date(epoch).toISOString().slice(0,10)!==v) return Infinity;
+  return Math.round((today-epoch)/86400000);
+}
+function brcMotorPayloadFresh(data){
+  const d=brcMotorAgeDays(data?.date);
+  return d>=0 && d<=BRC_MOTOR_HISTORY_MAX_AGE_DAYS && data?.venues && Object.keys(data.venues).length>=20;
+}
+function brcMotorFootRowFresh(row){
+  const d=brcMotorAgeDays(row?.last);
+  return d>=0 && d<=BRC_MOTOR_FOOT_MAX_AGE_DAYS;
+}
+function brcMotorHistoryNoticeHtml(data,hasMotorRecord=false){
+  const date=String(data?.date||'');
+  if(brcMotorPayloadFresh(data) && !hasMotorRecord) return `<div class="brc-motor-freshness-note is-stale">このモーターの履歴は未取得です（配信JSON基準日：${escMotor(date)}）。前回使用者・優出歴は表示しません。</div>`;
+  if(brcMotorPayloadFresh(data)) return `<div class="brc-motor-freshness-note is-current">モーター履歴データ基準日：${escMotor(date)}（前回使用者・優出歴）</div>`;
+  return `<div class="brc-motor-freshness-note is-stale">モーター履歴更新待ち${/^\d{4}-\d{2}-\d{2}$/.test(date)?`（取得できた最終データ：${escMotor(date)}）`:''}。前回使用者・優出歴・累計走数は最新未確認のため非表示です。</div>`;
+}
 function motorDetailData(){
   if(__motorDetailCache) return __motorDetailCache;
   try{
@@ -26787,51 +26832,64 @@ function motorDetailData(){
   return __motorDetailCache;
 }
 async function brcLoadMotorDetailLive(force=false){
-  if(__motorDetailLiveLoaded && !force) return __motorDetailCache;
-  if(__motorDetailLivePromise && !force) return __motorDetailLivePromise;
+  if(__motorDetailLivePromise) return __motorDetailLivePromise;
+  if(__motorDetailLiveLoaded && !force && brcMotorPayloadFresh(__motorDetailCache)) return __motorDetailCache;
   const task=(async()=>{
     try{
-      const day=new Date().toISOString().slice(0,10);
-      const res=await fetch(`racecards/motor-detail.json?v=${encodeURIComponent(day)}`,{cache:'no-store'});
+      const day=brcMotorJstToday();
+      const res=await fetch(`racecards/motor-detail.json?v=${encodeURIComponent(day)}&t=${Date.now()}`,{cache:'no-store'});
       if(!res.ok) throw new Error(`HTTP ${res.status}`);
       const data=await res.json();
-      if(!data || !data.venues || Object.keys(data.venues).length<20) throw new Error('invalid motor-detail payload');
+      if(!brcMotorPayloadFresh(data)) throw new Error('motor-detail JSON is missing, incomplete, future dated or stale: '+String(data?.date||'missing'));
+      // Reject a regressing snapshot even when both versions fall inside the freshness window.
+      const old=motorDetailData();
+      if(brcMotorPayloadFresh(old) && String(data.date)<String(old.date)) return old;
       __motorDetailCache=data;
       __motorDetailLiveLoaded=true;
       document.dispatchEvent(new CustomEvent('brc-motor-detail-updated',{detail:{date:data.date||''}}));
       return data;
     }catch(e){
-      // 公開JSON取得に失敗した場合は埋め込みスナップショットをそのまま使用する。
-      console.warn('モーター履歴の日次JSON取得失敗。埋め込みデータを使用します。',e);
+      console.warn('新しいモーター履歴を取得できません。古い履歴は表示しません。',e);
       return motorDetailData();
-    }finally{
-      __motorDetailLivePromise=null;
-    }
+    }finally{__motorDetailLivePromise=null;}
   })();
   __motorDetailLivePromise=task;
   return task;
 }
-if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded',()=>{ brcLoadMotorDetailLive().catch(()=>{}); },{once:true});
-}else{
-  brcLoadMotorDetailLive().catch(()=>{});
+function brcMotorRequestFreshHistory(){
+  const now=Date.now();
+  if(__motorDetailLivePromise) return __motorDetailLivePromise;
+  // A failed request is throttled too, so iOS focus/visibility events do not flood the endpoint.
+  if(now-__brcMotorLastRequest<60000) return Promise.resolve(motorDetailData());
+  __brcMotorLastRequest=now;
+  return brcLoadMotorDetailLive(true);
 }
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',()=>{brcMotorRequestFreshHistory().catch(()=>{});},{once:true});
+}else{
+  brcMotorRequestFreshHistory().catch(()=>{});
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)brcMotorRequestFreshHistory().catch(()=>{});});
+window.addEventListener('focus',()=>brcMotorRequestFreshHistory().catch(()=>{}));
+setInterval(()=>{if(!document.hidden)brcMotorRequestFreshHistory().catch(()=>{});},10*60*1000);
+document.addEventListener('brc-motor-detail-updated',()=>{
+  const bd=document.getElementById('predictDetailBackdrop');
+  if(!bd?.classList.contains('open'))return;
+  const panel=bd.querySelector('.predict-unified-panel[data-predict-unified-panel="motor"].active');
+  if(!panel)return;
+  const match=String(panel.id||'').match(/predict-unified-motor-(\d+)/);
+  const course=match?Number(match[1]):NaN;
+  if(Number.isFinite(course)&&course>=1&&course<=6)try{renderPredictUnifiedMotor(course,panel);}catch(_e){}
+});
 function getMotorDetail(venue,motorNo,motor2){
   if(motorNo==null) return null;
   const data=motorDetailData();
-  // 機歴は同一モーター期の「会場＋モーター番号」で照合する。
-  // 2連対率は開催日ごとに変動するため、一致条件に使わない。
-  if(!data || !data.venues) return null;
+  // Date guard FIRST. Motor number is not sufficient to prove a new owner's history.
+  if(!brcMotorPayloadFresh(data)) return null;
   const venueData=data.venues?.[venue]||null;
   if(!venueData) return null;
-
-  // 新モーター切替後に、古いmotor-detail.json/埋め込みスナップショットが残っていても
-  // cycle_startが交換日より古ければ旧サイクルとして丸ごと遮断する。
   if(typeof brcMotorDetailCycleIsFresh==='function' && !brcMotorDetailCycleIsFresh(venue,venueData)) return null;
-
-  const x=venueData?.motors?.[String(motorNo)] || null;
-  if(!x) return null;
-  return x;
+  return venueData.motors?.[String(motorNo)]||null;
 }
 function buildMotorCellHtml(b,venue){
   const gcol=MOTOR_GRADE_COLOR[b.motorGrade]||'var(--ink-soft)';
