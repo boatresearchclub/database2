@@ -20,6 +20,30 @@ class RollingKTests(unittest.TestCase):
         self.assertEqual(result['release_decision'], 'NO_GO')
         self.assertFalse(result['app_data_published'])
 
+    def test_missing_official_day_is_retried_without_fabricating_data(self):
+        from tempfile import TemporaryDirectory
+        with TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            result_file = root / 'K260908.TXT'
+            result_file.write_text('sample', encoding='utf-8')
+            with patch.object(research.official, 'official_k_download',
+                              side_effect=lambda day, directory, timeout: result_file) as download:
+                files = {date(2026,9,6):pathlib.Path('old')}
+                attempts = research.fetch_recent_missing_k(files, root, date(2026,9,9))
+            self.assertEqual(len(attempts),2)
+            self.assertEqual([x['result'] for x in attempts], ['downloaded','downloaded'])
+            self.assertEqual(download.call_count,2)
+            self.assertIn(date(2026,9,8),files)
+
+    def test_unavailable_official_file_is_not_accepted(self):
+        with patch.object(research.official, 'official_k_download',
+                          side_effect=ValueError('source not published')):
+            files={}
+            attempts=research.fetch_recent_missing_k(files, pathlib.Path('.'),date(2026,9,7))
+        self.assertEqual(len(attempts),1)
+        self.assertEqual(attempts[0]['result'],'unavailable')
+        self.assertNotIn(date(2026,9,6), files)
+
     def test_complete_window_remains_not_approved(self):
         with patch.object(research.motor_k, 'read_k', return_value=[]):
             result = research.build({date(2026,9,6):pathlib.Path('unused')}, date(2026,9,7))
