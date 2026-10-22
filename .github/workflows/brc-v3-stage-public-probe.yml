@@ -1,0 +1,77 @@
+name: BRC V3 Stage Public Route Probe (NO TOKEN, NO WRITES)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/brc-v3-stage-public-probe.yml'
+permissions:
+  contents: read
+jobs:
+  read-only-stage-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check unauthenticated stage routes without reading secrets
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json,urllib.request,urllib.error,urllib.parse
+          from datetime import datetime,timedelta,timezone
+          from pathlib import Path
+          now=datetime.now(timezone(timedelta(hours=9)))
+          day=now.date().isoformat()
+          base='https://brc-timex-v3-test.sk48159212.workers.dev'
+          live='https://brc-live-exhibition.sk48159212.workers.dev'
+          params=urllib.parse.urlencode({'date':day,'venue_code':'05','race_no':1})
+          checks=[
+           ('stage_context_presence',base+'/stage-context-presence?'+params,'GET',None),
+           ('stage_predict_no_auth',base+'/predict-timex-v3','POST',{'date':day,'venue_code':'05','race_no':1}),
+           ('live_schedule',live+'/live-schedule?date='+day,'GET',None),
+           ('live_exhibition',live+'/live-exhibition?'+params,'GET',None)
+          ]
+          results=[]
+          for label,url,method,payload in checks:
+              data=json.dumps(payload).encode() if payload else None
+              req=urllib.request.Request(url,method=method,data=data,
+                 headers={'Accept':'application/json','User-Agent':'BRC-V3-ROUTE-READONLY',
+                  **({'Content-Type':'application/json'} if data else {})})
+              try:
+                  try:
+                      with urllib.request.urlopen(req,timeout=12) as resp:
+                          status=resp.status;body=resp.read(4096)
+                  except urllib.error.HTTPError as err:
+                      status=err.code;body=err.read(4096)
+                  try:obj=json.loads(body.decode('utf8'))
+                  except Exception:obj={}
+                  row={'probe':label,'http':status}
+                  if isinstance(obj,dict):
+                      for k in ('probe_version','status','error','code','reason'):
+                          v=obj.get(k)
+                          if isinstance(v,str) and len(v)<=90 and all(ch.isalnum() or ch in '_.-' for ch in v):
+                              row[k]=v
+                  results.append(row)
+              except Exception as err:
+                  results.append({'probe':label,'error_type':type(err).__name__,
+                     'transport_failure':True})
+          probe=results[0]
+          report={
+            'scope':'unauthenticated read-only routes; no secrets, KV access or writes',
+            'date_jst':day,
+            'results':results,
+            'stage_route_fingerprint':'RECOGNIZED_V3_PROBE' if probe.get('probe_version')=='BRC_V3_STAGE_KV_READONLY_V3' else 'NOT_CONFIRMED',
+            'worker_version_verified':False,
+            'kv_contents_verified':False,
+            'authenticated_prediction_verified':False,
+            'note':'401 alone is not proof of code version or KV content; HTTP 404 for exhibition can be normal.'
+          }
+          Path('v3_public_route_audit.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+          print(json.dumps(report,ensure_ascii=False))
+          PY
+      - name: Store sanitized result as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: brc-v3-public-route-readonly
+          path: v3_public_route_audit.json
+          if-no-files-found: warn
+          retention-days: 14
