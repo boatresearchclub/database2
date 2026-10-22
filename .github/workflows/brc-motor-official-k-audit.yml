@@ -45,7 +45,7 @@ jobs:
           root=pathlib.Path('.cache/brc-course365-k')
           official_files=official.discover_k(root) if root.exists() else {}
           start=date(2025,9,23);end=date(2026,9,5);day=start
-          counts=collections.Counter();missing=[];errors=[];days_good=0;joined=0
+          counts=collections.Counter();status_counts=collections.Counter();missing=[];errors=[];days_good=0;joined=0
           motor_pat=re.compile(r'\s+(\d{1,3})\s+\d{1,3}\s+\d(?:\.\d{1,2})?\s+[1-6]\s+')
           venue_pat=official.RE_VENUE_START;end_pat=official.RE_VENUE_END
           while day<=end:
@@ -56,6 +56,7 @@ jobs:
                   content=file.read_text(encoding='cp932',errors='strict')
                   events,n_races,_=official.official_k_events(content,day)
                   expected={(v,r,b,reg,rank) for _,v,r,b,reg,_,rank in events}
+                  completed={(v,r) for _,v,r,b,reg,_,rank in events}
                   matches={};venue=None;race=None
                   for line in content.splitlines():
                       v=venue_pat.match(line)
@@ -68,7 +69,15 @@ jobs:
                       m=official.RE_ENTRY.match(line)
                       if not m:continue
                       rank_s,boat_s,reg,body=m.groups()
-                      if not rank_s.isdigit() or not 1<=int(rank_s)<=6:continue
+                      if not rank_s.isdigit():
+                          if (venue,race) in completed:
+                              stat_motor=motor_pat.search(body)
+                              if stat_motor is not None:
+                                  vname=venue_by_code[venue];meta=base['venues'][vname]
+                                  if meta['cycle_start']<=day.isoformat()<meta['event_start']:
+                                      status_counts[(vname,str(int(stat_motor.group(1))),rank_s)]+=1
+                          continue
+                      if not 1<=int(rank_s)<=6:continue
                       key=(venue,race,int(boat_s),reg,int(rank_s))
                       if key not in expected:continue
                       mm=motor_pat.search(body)
@@ -85,7 +94,7 @@ jobs:
               except Exception as err:
                   if len(errors)<35:errors.append(f'{day} {type(err).__name__}: {str(err)[:160]}')
               day+=timedelta(days=1)
-          exact=0;compared=0;examples=[]
+          exact=0;compared=0;examples=[];variants={}
           for venue,meta in base['venues'].items():
               if meta['cycle_start']<start.isoformat():continue
               for motor,record in meta['motors'].items():
@@ -93,7 +102,23 @@ jobs:
                   if got==expected_n:exact+=1
                   elif len(examples)<30:
                       examples.append({'venue':venue,'motor':motor,'old_n':expected_n,'official_numeric_finishes':got})
-          report={'snapshot_reference':'2026-09-05','period_start':start.isoformat(),
+          for label,accepted in [
+              ('numeric_only',set()),('plus_F_L',{'F','L'}),
+              ('plus_S',{'S0','S1','S2'}),
+              ('plus_F_L_S',{'F','L','S0','S1','S2'}),
+              ('plus_accidents',{'転','失','妨','落','沈','エ'}),
+              ('plus_F_L_accidents',{'F','L','転','失','妨','落','沈','エ'}),
+              ('all_nonabsent',{'F','L','S0','S1','S2','転','失','妨','落','沈','エ'})]:
+              total=0;matches=0;mae=0
+              for vname,meta in base['venues'].items():
+                  if meta['cycle_start']<start.isoformat():continue
+                  for mno,record in meta['motors'].items():
+                      n=counts.get((vname,mno),0)+sum(status_counts.get((vname,mno,st),0) for st in accepted)
+                      total+=1;matches+=int(n==int(record['n']));mae+=abs(n-int(record['n']))
+              variants[label]={'exact':matches,'total':total,'absolute_difference_sum':mae}
+          report={'status_totals':{st:sum(n for (v,m,s),n in status_counts.items() if s==st) for st in sorted({k[2] for k in status_counts})},
+              'candidate_n_definitions':variants,
+              'snapshot_reference':'2026-09-05','period_start':start.isoformat(),
               'days_expected':(end-start).days+1,'days_parsed':days_good,
               'days_missing':len(missing),'missing_examples':missing[:20],
               'days_parse_errors':len(errors),'parse_errors':errors,
