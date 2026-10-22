@@ -23,7 +23,7 @@ import BRC_MOTOR_PREVIOUS_VERIFY_K_V1 as motor_k
 START = date(2026, 9, 6)
 JST = timezone(timedelta(hours=9))
 # Exact championship labels only. Generic "優勝" could occur in a meet title.
-CHAMPIONSHIP = re.compile(r"優勝戦|優勝決定戦")
+CHAMPIONSHIP = re.compile(r"(?<!準)優勝戦|(?<!準)優勝決定戦")
 VENUES = motor_k.VENUES
 
 
@@ -44,7 +44,7 @@ def scan_day(path: Path, day: date):
     entries = []
 
     def flush():
-        if not header or not CHAMPIONSHIP.search(header):
+        if not header or "準優勝" in header or not CHAMPIONSHIP.search(header):
             return
         key = (venue, race)
         official_rows = confirmed.get(key, {})
@@ -110,7 +110,7 @@ def scan_day(path: Path, day: date):
         if motor:
             rank = int(rank_raw) if rank_raw.isdigit() and 1 <= int(rank_raw) <= 6 else None
             entries.append((int(boat_raw), rank, reg, str(int(motor.group(1)))))
-        elif CHAMPIONSHIP.search(header):
+        elif "準優勝" not in header and CHAMPIONSHIP.search(header):
             raise ValueError(f"Missing motor in championship result {day} {venue} {race}R")
     flush()
     return candidate
