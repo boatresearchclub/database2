@@ -100,7 +100,7 @@ def official_k_events(content: str, target: date):
             boatnums=[r[0] for r in rows]
             positions=[r[3] for r in finishing]
             if len(boatnums)!=len(set(boatnums)) or len(positions)!=len(set(positions)):
-                raise ValueError(f'Duplicate boat/rank {expected} {venue} {race}R')
+                raise ValueError(f'Duplicate boat/rank {expected} {venue} {race}R rows={rows}')
             if len(rows)>6:raise ValueError(f'Excess entries {expected} {venue} {race}R')
             actual_entries+=len(finishing)
             for boat,reg,course,rank in finishing:
