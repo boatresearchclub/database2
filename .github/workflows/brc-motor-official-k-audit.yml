@@ -147,6 +147,29 @@ jobs:
               variants['subset_'+('_'.join(sorted(allowed)) if allowed else 'none')]={'exact':good,'total':count,'absolute_difference_sum':distance}
           best_variants=sorted(({'policy':key,**val} for key,val in variants.items()),
               key=lambda x:(x['absolute_difference_sum'],-x['exact']))[:12]
+          # Venue-specific diagnostic: independent best subset is useful for
+          # tracing inconsistent source conventions but NEVER authorizes
+          # per-venue production policies (would overfit frozen snapshot).
+          per_venue_best={}
+          for vname,meta in base['venues'].items():
+              if meta['cycle_start']<start.isoformat():continue
+              venue_candidates=[]
+              for mask in range(1<<len(all_st)):
+                  allowed={st for k,st in enumerate(all_st) if mask&(1<<k)}
+                  exact_for_venue=0;abs_error=0;num=0
+                  for mno,record in meta['motors'].items():
+                      n=counts.get((vname,mno),0)+sum(
+                        status_counts.get((vname,mno,st),0)+other_start_counts.get((vname,mno,st),0)
+                        for st in allowed)
+                      abs_error+=abs(n-int(record['n']))
+                      exact_for_venue+=int(n==int(record['n']))
+                      num+=1
+                  venue_candidates.append((abs_error,-exact_for_venue,mask,num))
+              venue_candidates.sort()
+              error,negmatches,mask,total=venue_candidates[0]
+              per_venue_best[vname]={'total':total,'exact':-negmatches,
+                  'absolute_difference_sum':error,
+                  'candidate_statuses':[st for k,st in enumerate(all_st) if mask&(1<<k)]}
           preferred={'F','S1','S2','L0','L1'};residual=[];venue_residual={}
           for vname,meta in base['venues'].items():
               if meta['cycle_start']<start.isoformat():continue
@@ -164,6 +187,8 @@ jobs:
               'other_status_totals':{st:sum(n for (v,m,s),n in other_start_counts.items() if s==st) for st in sorted({k[2] for k in other_start_counts})},
               'candidate_n_definitions':variants,
               'best_candidate_N_policies':best_variants,
+              'per_venue_research_best_status_policy':per_venue_best,
+              'per_venue_policy_warning':'Retrospective fit on 2026-09-05 only. Do not apply to production N.',
               'best_policy_residuals':residual,'best_policy_residuals_by_venue':venue_residual,
               'unparsed_race_row_labels':dict(unparsed_codes),'unparsed_race_row_examples':unparsed_samples,
               'nonfinish_race_row_labels':dict(no_finisher_codes),
