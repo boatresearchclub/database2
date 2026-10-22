@@ -41,6 +41,15 @@ def test_good():
     assert nr==2 and nboats==10 and counts[('3788','1')]==[1,1,1,1]
     print('PASS official K samples (including S0/S2 exclusion)')
 
+def test_payout_summary_is_not_a_race():
+    # Official K files contain [払戻金] 1R/2R summary lines before race body.
+    # Those rows must NOT be interpreted as duplicate race headers.
+    body=K.replace('    1R       一般',
+        ' [払戻金]\n  1R  1-4-5 1970 1-4-5 950\n  2R  2-1-3 1590 1-2-3 300\n    1R       一般')
+    events,n,_=p.official_k_events(body,date(2025,3,10))
+    assert n==2 and len(events)==10
+    print('PASS K payout summary excluded from race-header detection')
+
 def test_change():
     text=K.replace('6.71   1    0.07','6.71   2    0.07')
     ev,n,info=p.official_k_events(text,date(2025,3,10)); assert info['entry_changes_ignored']==1
@@ -63,4 +72,4 @@ def test_disk():
     print('PASS cp932 local archive load')
 
 if __name__=='__main__':
-    for t in [test_good,test_change,test_fail_closed,test_disk]:t()
+    for t in [test_good,test_payout_summary_is_not_a_race,test_change,test_fail_closed,test_disk]:t()
