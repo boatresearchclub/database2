@@ -1,5 +1,6 @@
 <!-- BRC_MOTOR_RESTORE_PUBLIC_CLEAN_ADMIN_DIAG_V1_20261022: restores established motor overview and historical cards for verified live records, keeps daily freshness/rollover guards, places stale/verification notices in admin only, no motor/prediction recalculation. -->
-<!-- BRC_ADMIN_DATA_HEALTH_V1_20261022: admin Verify panel status for course365 and motor daily feeds. UI diagnostics only; existing data ingestion, TimeX, predictions, member rights unaffected. -->
+<!-- BRC_MEMBER_LOGIN_PREVIEW_V2_20261022: admin session retained; member-only visualization matched, member slit preserved; no auth changes. -->
+<!-- BRC_ADMIN_DATA_HEALTH_V1_20261022: UI diagnostics only; existing data ingestion, TimeX, predictions, member rights unaffected. -->
 <!-- BRC_COURSE365_DUAL_SOURCE_SAFE_V1_20261022: prefer same-site daily JSON, fall back to database2 raw file; choose newer verified 365-day snapshot. No TimeX/predictions changes. -->
 <!-- BRC_MOTOR_LATEST_SOURCE_FRESHNESS_V3_20261022: motor history requires recent day-stamped JSON, current on-focus reload, no stale previous-user / finals / fixed foot history claims. Existing TimeX/course365/absence fixes retained. -->
 <!-- BRC_ABSENCE_UNAVAILABLE_LABEL_CLARITY_V2_20261022: Live API unavailable means BRC data not synchronized, NOT confirmed absence or absence of official exhibition. No inference from missing boats. -->
@@ -353,7 +354,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261022-MOTOR-RESTORE-PUBLIC-CLEAN-V1">
+<meta name="brc-build" content="20261022-MEMBER-LOGIN-PREVIEW-V2">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -5454,7 +5455,8 @@ table.brc-val-table td.accent{color:var(--wave);font-weight:800;}
 .brc-admin-view-switch-note{margin-top:7px;max-width:560px;font-size:10px;line-height:1.55;color:rgba(255,255,255,.68);}
 .brc-admin-view-restore{display:none;position:fixed;right:12px;bottom:14px;z-index:9999;appearance:none;border:1px solid rgba(10,31,51,.18);border-radius:999px;background:#0a1f33;color:#fff;padding:9px 12px;font:inherit;font-size:11px;font-weight:800;box-shadow:0 8px 24px rgba(10,31,51,.22);cursor:pointer;}
 body.brc-admin-public-view .brc-admin-view-restore{display:inline-flex;}
-/* 管理者ログインを維持したまま、公開ユーザーに近い見え方へ。 */
+/* 管理者ログインを維持したまま、ログイン済み一般会員向け表示をプレビュー。
+   表示上の切替のみ。認証トークン/サーバー側権限/計算処理は不変更。 */
 body.brc-admin-public-view #brcAdminMainTab,
 body.brc-admin-public-view #page-admin,
 body.brc-admin-public-view #brcAdminSocial,
@@ -7795,10 +7797,10 @@ body.brc-landing-guest .page-tabs{margin-top:0;}
         <div class="brc-admin-workspace-title">⚙ 管理</div>
         <div class="brc-admin-workspace-copy">公開ユーザー向けの「出走表AI」と切り分けた、管理者専用の運営スペースです。会員発行・検証・投稿・UI確認などの入口をここへ集約しました。</div>
         <div class="brc-admin-view-switch" role="group" aria-label="管理者表示モード">
-          <button type="button" class="brc-admin-view-switch-btn" data-brc-admin-view-mode="public">通常表示</button>
+          <button type="button" class="brc-admin-view-switch-btn" data-brc-admin-view-mode="public">一般会員表示</button>
           <button type="button" class="brc-admin-view-switch-btn active" data-brc-admin-view-mode="admin">管理表示</button>
         </div>
-        <div class="brc-admin-view-switch-note">通常表示にすると管理者専用UIだけを隠し、一般ユーザーに近い見え方で確認できます。ログイン・管理権限は維持されます。</div>
+        <div class="brc-admin-view-switch-note">一般会員表示では、有料会員がログインしたときの画面をプレビューします。管理者ログイン・権限は維持します。※実際の会員認証によるAPI応答までは切り替えません。</div>
         <div class="brc-admin-workspace-pills">
           <span>公開UIは極力固定</span>
           <span>運営機能はここに集約</span>
@@ -7864,7 +7866,7 @@ body.brc-landing-guest .page-tabs{margin-top:0;}
     </div>
   </div><!-- /page-admin -->
 
-  <button type="button" id="brcAdminViewRestore" class="brc-admin-view-restore" aria-hidden="true">⚙ 管理表示に戻る</button>
+  <button type="button" id="brcAdminViewRestore" class="brc-admin-view-restore" aria-hidden="true">一般会員表示中｜⚙ 管理表示に戻る</button>
 
   <div id="page-today" style="display:none;">
     <section class="card today-picks-card">
@@ -19663,6 +19665,7 @@ function brcV3AdminClearDisplay(){
   if(hadV3){try{brcV3AdminSyncDetail();}catch(_e){}}
 }
 function brcV3AdminRenderDisplay(){
+  if(document.body?.classList.contains('brc-admin-public-view')){brcV3AdminClearDisplay();return false;}
   if(!BRC_ADMIN_ACTIVE||!BRC_MEMBER_ACTIVE){ brcV3AdminClearDisplay(); return false; }
   const state=__brcV3AdminDisplay;
   if(!state){brcV3AdminRestoreExistingTimeX();return false;}
@@ -19824,6 +19827,7 @@ function brcV3AdminUnmount(){
 let __brcV3AutoStamp='',__brcV3AutoLastAt=0;
 function brcV3AdminRecoveryTick(){
   if(!BRC_ADMIN_ACTIVE||!BRC_MEMBER_ACTIVE){brcV3AdminUnmount();return;}
+  if(document.body?.classList.contains('brc-admin-public-view'))return;
   if(document.visibilityState==='hidden')return;
   const selected=brcCurrentLiveExhibitionSelection();
   if(!selected?.venue||!Number.isInteger(Number(selected.raceNo))||Number(selected.raceNo)<1||Number(selected.raceNo)>12)return;
@@ -19842,6 +19846,7 @@ function brcV3AdminEnsureRecovery(){
 }
 function brcV3AdminAutoTry(box){
   if(!BRC_ADMIN_ACTIVE||!BRC_MEMBER_ACTIVE||!box||!box.isConnected)return;
+  if(document.body?.classList.contains('brc-admin-public-view'))return;
   const btn=box.querySelector('button');
   const status=box.querySelector('[data-brc-v3-status]');
   if(!btn||btn.disabled||!status)return;
@@ -19902,6 +19907,7 @@ window.brcV3AdminRecheck=function(){
 };
 function brcV3AdminMount(venue,raceNo,liveRace){
   if(!BRC_ADMIN_ACTIVE||!BRC_MEMBER_ACTIVE){brcV3AdminUnmount();return;}
+  if(document.body?.classList.contains('brc-admin-public-view'))return;
   // BRC_TIMEX_V3_ADMIN_MOUNT_ANCHOR_HOTFIX_20261014
   // The production prediction template does not initially create liveExhibitionCard.
   // Mount the admin-only v3 diagnostic after the existing race table instead.
@@ -29536,7 +29542,7 @@ https://brcdatabase.pages.dev/
   }
 
   function isAdmin(){ return typeof BRC_ADMIN_ACTIVE!=='undefined' && !!BRC_ADMIN_ACTIVE; }
-  const ADMIN_VIEW_STORAGE_KEY='brc_admin_view_mode_v1';
+  const ADMIN_VIEW_STORAGE_KEY='brc_admin_view_mode_v1'; // 管理権限は一切切り替えない
   let adminViewMode='admin';
   function readAdminViewMode(){
     try{
@@ -29558,6 +29564,8 @@ https://brcdatabase.pages.dev/
     adminViewMode=(mode==='public')?'public':'admin';
     try{ localStorage.setItem(ADMIN_VIEW_STORAGE_KEY,adminViewMode); }catch(_e){}
     document.body?.classList.toggle('brc-admin-public-view',adminViewMode==='public' && isAdmin());
+    // 会員プレビュー中は管理者専用v3の実値オーバーレイを表に残さない。
+    if(isAdmin() && adminViewMode==='public'){try{brcV3AdminClearDisplay();}catch(_e){}}
     try{ if(typeof brcSetAdminRaceToolsUi==='function') brcSetAdminRaceToolsUi(isAdmin() && adminViewMode!=='public'); }catch(_e){}
     const adminTab=q('#brcAdminMainTab');
     if(adminTab && isAdmin()){
@@ -31944,9 +31952,8 @@ body.brc-admin-home-active .brc-admin-login-top-preview-note{display:none;}
       if(postRace) return true;
       if(!member) return false;
 
-      const adminPublic=document.body?.classList.contains('brc-admin-public-view');
-      if(adminPublic) return false;
-
+      // 管理者が『一般会員表示』を選んでも会員資格は有効のまま。
+      // 一般のログイン会員が使える想定スリットを誤って隠さない。
       if(protectedRoot && (
         protectedRoot.classList.contains('brc-free-preview-mode') ||
         protectedRoot.classList.contains('brc-public-browser-mode')
