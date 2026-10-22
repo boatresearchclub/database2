@@ -76,6 +76,21 @@ def official_k_events(content: str, target: date):
                 try: dates.append(date(*map(int,match.groups())).isoformat())
                 except ValueError: pass
         if not dates or expected not in dates:
+            # BOAT RACE official raceindex confirms Amagasaki's May 16-18, 2026
+            # events were fully cancelled after the May 15 emergency suspension.
+            # Such venues can appear as date-less K blocks. Skip ONLY the
+            # precisely verified (date, venue) pairs and ONLY if no numeric
+            # finisher is present. Never skip a possible real race or any other
+            # malformed/missing-date venue block.
+            verified_cancelled = venue == '13' and expected in {
+                '2026-05-16', '2026-05-17', '2026-05-18'
+            }
+            recorded_finish = any(
+                (m is not None and m.group(1).isdigit())
+                for m in (RE_ENTRY.match(line) for line in vl)
+            )
+            if verified_cancelled and not dates and not recorded_finish:
+                continue
             raise ValueError(f'K date verification failed: {venue} / {dates[:3]} / expected {expected}')
         race=None;rows=[]
         def flush(race,rows):
