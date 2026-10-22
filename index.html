@@ -1,3 +1,4 @@
+<!-- BRC_ABSENCE_STATUS_ALERT_V1_20261022: Confirmed absence overrides cached deadline signs; partial exhibition is labeled without inferring a scratch; TOP and race banner share the same state; predictions/odds/TimeX computation unchanged. -->
 <!-- BRC_V3_TABLE_DRIFT_GUARDED_V3_20261021: admin v3 6-boat atomic display and post-verification DOM repair; ineligible races not masked; no Worker, AI, bets changes -->
 <!-- BRC_V3_DETAIL_SINGLE_SOURCE_V1_20261021: fix v3 KPI late legacy personal & delta overwrite; display only -->
 <!-- BRC_WIND_175_17_REINTEGRATED_R1_20261021: 11 verified wind classifications restored; 17 no-observation cases held; previous UI changes retained. No rates or prediction algorithm changes. -->
@@ -347,7 +348,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261021-V3-TABLE-DRIFT-GUARDED-WIND-R3">>
+<meta name="brc-build" content="20261022-ABSENCE-DEADLINE-STATUS-R1">>
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -1022,6 +1023,29 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
     .deadline-pill .dp-signal{font-size:8.8px;}
     .deadline-pill .dp-signal.good,.deadline-pill .dp-signal.bad{padding-left:8px;}
     .deadline-pill .dp-boat-no{width:17px; height:17px; font-size:10px;}
+  }
+
+  /* BRC_ABSENCE_STATUS_ALERT_V1_20261022 */
+  .dp-signals .brc-dp-race-alert{
+    width:100%;max-width:100%;display:block;padding:3px 1px 0;
+    color:#b4232c;font-size:10px;font-weight:900;text-align:center;
+    line-height:1.3;white-space:normal;overflow-wrap:anywhere;
+  }
+  .dp-signals .brc-dp-race-alert.is-partial{color:#946200;}
+  .dp-signals .brc-dp-race-sub{
+    display:block;width:100%;color:#b4232c;font-size:9px;font-weight:800;
+    text-align:center;white-space:normal;line-height:1.4;
+  }
+  .dp-signals .brc-dp-race-sub.is-partial{color:#946200;}
+  .deadline-pill:has(.brc-dp-race-alert.is-absent){border-color:#d1373f;background:#fffafa;}
+  .brc-admin-top-venue:has(.brc-dp-race-alert.is-absent){border-color:#d1373f;}
+  #raceConditionBannerSlot .brc-condition-absence .direct-info-banner-note{
+    white-space:normal;overflow-wrap:anywhere;
+  }
+  #exhibitionRaceNotice .ern-absence{font-weight:900;}
+  @media(max-width:640px){
+    .dp-signals .brc-dp-race-alert{font-size:9.5px;}
+    .dp-signals .brc-dp-race-sub{font-size:8.5px;}
   }
 
   /* ---- イン逃げ信頼度：1行コンパクト表示 ---- */
@@ -17248,7 +17272,8 @@ async function brcFetchLiveExhibition(venue, raceNo){
     // 進入変更・欠場表示のため、艇データが6艇未満でもレース情報自体は受け取る。
     // 展示確率補正は別関数側で6艇完全データを要求するため、部分データが誤って補正に使われることはない。
     const nums = obj.race.boats.map(x=>Number(x.boat_no)).filter(n=>Number.isInteger(n)&&n>=1&&n<=6);
-    if(!nums.length || new Set(nums).size !== nums.length) return null;
+    if(new Set(nums).size !== nums.length) return null;
+    if(!nums.length && !brcCollectConfirmedAbsentBoats(obj.race).size) return null;
     return obj.race;
   }catch(err){
     window.__brcV3LiveFetchStatus={date,venue_code:code,race_no:r,http:null,reason:String(err?.message||err),checkedAt:new Date().toISOString()};
@@ -17307,6 +17332,8 @@ function brcBuildExhibitionRaceNoticeHtml(liveRace){
   for(let n=1;n<=6;n++) if(!byBoat.has(n) && !confirmedAbsent.has(n)) missing.push(n);
 
   const items=[];
+  // 既存の展示進入注意書きにも欠場番号を明示する。
+  confirmedAbsent.forEach(n=>items.push(`<span class="ern-item ern-absence">※${n}号艇 欠場・取消</span>`));
 
   // 「展示情報未取得」は展示前の6艇未取得では出さない。
   // 他艇で実際の展示データが取得できているのに、一部の艇だけ欠ける場合に限り表示する。
@@ -21088,6 +21115,59 @@ const BRC_DEADLINE_SIGNAL_PRED_TTL_MS=5*60*1000;
 // 2分だけ「更新確認中」を併記し、期限切れの表示は明確な待機表示へ切り替える。
 const BRC_DEADLINE_SIGNAL_VIEW_CACHE=new Map();
 const BRC_DEADLINE_SIGNAL_VIEW_HOLD_MS=2*60*1000;
+// BRC_ABSENCE_STATUS_ALERT_V1_20261022:
+// Live APIに明示的な欠場・取消があれば、期限付き予測サインより優先する。
+// 展示の艇数不足だけで「欠場確定」とは決して表示しない。
+const BRC_DEADLINE_RACE_STATUS_CACHE=new Map();
+function brcDeadlineRaceStatusFromLive(liveRace){
+  if(!liveRace || !Array.isArray(liveRace.boats)) return null;
+  const absent=Array.from(brcCollectConfirmedAbsentBoats(liveRace)).sort((a,b)=>a-b);
+  if(absent.length) return {kind:'absent',boats:absent};
+  // 他の艇の展示がある程度届いていて、まだ届いていない艇を区別する。
+  // sequential配信中もあり得るため、欠場かどうかは公式情報の確認を促すに留める。
+  const missing=brcExhibitionMissingBoats(liveRace);
+  if(missing.length) return {kind:'partial',boats:missing};
+  return null;
+}
+function brcDeadlineRaceStatusSync(key,liveRace,venue='',raceNo=0){
+  if(!liveRace){
+    // APIが404/不通で艇数も不明な場合、欠場とは断定しない。
+    // 締切直前まで完全な展示情報が無ければ公式確認を促す。
+    if(!BRC_DEADLINE_RACE_STATUS_CACHE.has(key) &&
+       !BRC_DEADLINE_SIGNAL_VIEW_CACHE.get(key)?.timexApplied && venue && raceNo){
+      const m=brcLiveExhibitionMinutesToDeadline(venue,raceNo);
+      if(Number.isFinite(m) && m<=10 && m>=-5){
+        BRC_DEADLINE_RACE_STATUS_CACHE.set(key,{kind:'unavailable',boats:[]});
+        brcDeadlineSignalPublish(key);
+      }
+    }
+    return;
+  }
+  const before=BRC_DEADLINE_RACE_STATUS_CACHE.get(key);
+  const after=brcDeadlineRaceStatusFromLive(liveRace);
+  // 同一日・同一レースで一度確定した欠場は、後続の不完全/遅延payloadで取り消さない。
+  if(before?.kind==='absent' && after?.kind!=='absent') return;
+  if(after) BRC_DEADLINE_RACE_STATUS_CACHE.set(key,after);
+  else BRC_DEADLINE_RACE_STATUS_CACHE.delete(key);
+  if(before?.kind!==after?.kind || JSON.stringify(before?.boats||[])!==JSON.stringify(after?.boats||[])){
+    brcDeadlineSignalPublish(key);
+  }
+}
+function brcDeadlineRaceStatusHtml(status){
+  if(status?.kind==='unavailable'){
+    return '<span class="brc-dp-race-alert is-partial" role="status">直前データ未取得</span><span class="brc-dp-race-sub is-partial">欠場有無は公式確認</span>';
+  }
+  if(!status || !Array.isArray(status.boats) || !status.boats.length) return '';
+  const boats=status.boats.filter(n=>Number.isInteger(n)&&n>=1&&n<=6);
+  if(!boats.length) return '';
+  const text=boats.map(n=>n+'号艇').join('・');
+  const safe=brcDeadlineEsc(text);
+  if(status.kind==='absent'){
+    return `<span class="brc-dp-race-alert is-absent" role="status" title="公式欠場・取消情報が展示APIに記録されています">⚠ ${safe} 欠場・取消</span><span class="brc-dp-race-sub">直前TimeX対象外</span>`;
+  }
+  const caution=boats.length===1?'欠場有無は公式確認':'展示データ受信中';
+  return `<span class="brc-dp-race-alert is-partial" role="status" title="展示配信の不足であり欠場確定ではありません">${safe} 直前未取得</span><span class="brc-dp-race-sub is-partial">${caution}</span>`;
+}
 // BRC_TOP_SIGNALS_4_SHORT_V1_20261009:
 // TOPだけイン信頼度 + 直前/SLサイン最大4件（2列×2行）に圧縮。
 // 締切カードは正式表記のまま。判定・しきい値・データ取得は変更しない。
@@ -21096,6 +21176,8 @@ function brcAdminTopSignalSummaryHtml(rawHtml){
   if(!raw.trim()) return '';
   const tmp=document.createElement('div');
   tmp.innerHTML=raw;
+  // 異常レース警告をTOPのサイン最大4件フィルタで消さない。
+  if(tmp.querySelector('.brc-dp-race-alert')) return raw;
   const nodes=Array.from(tmp.querySelectorAll('.dp-signal'));
   const inSig=nodes.find(n=>n.classList.contains('in'));
   const signs=nodes.filter(n=>!n.classList.contains('in') &&
@@ -21133,6 +21215,8 @@ function brcAdminTopSignalSummaryHtml(rawHtml){
   return out.join('');
 }
 function brcDeadlineSignalCachedHtml(key){
+  const status=BRC_DEADLINE_RACE_STATUS_CACHE.get(key);
+  if(status?.kind==='absent' || status?.kind==='partial' || status?.kind==='unavailable') return brcDeadlineRaceStatusHtml(status);
   const c=BRC_DEADLINE_SIGNAL_VIEW_CACHE.get(key);
   if(!c) return '';
   const age=Date.now()-Number(c.at||0);
@@ -21157,6 +21241,11 @@ function brcDeadlineSignalPublish(key){
   });
 }
 function brcDeadlineSignalCommit(key,spec,pred,liveRace){
+  brcDeadlineRaceStatusSync(key,liveRace,spec?.venue,spec?.raceNo);
+  if(BRC_DEADLINE_RACE_STATUS_CACHE.has(key)){
+    brcDeadlineSignalPublish(key);
+    return;
+  }
   const current=BRC_DEADLINE_SIGNAL_VIEW_CACHE.get(key);
   const data=pred ? brcDeadlineSignalData(spec,pred,liveRace) : null;
   const now=Date.now();
@@ -21341,24 +21430,32 @@ function brcDeadlineSignalsAdminVisible(){
   return true;
 }
 async function brcHydrateDeadlineSignals(entries){
-  // 締切カードのサインは公開表示。管理者認証の有無で分岐しない。
+  // 状態取得を予測APIより先に開始。予測計算が遅い/失敗しても欠場情報を先に通知する。
   if(!Array.isArray(entries)||!entries.length) return;
   const date=String(TODAY_LABEL||'');
   if(!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
   const seq=++BRC_DEADLINE_SIGNAL_SEQ;
-  const specs=entries.map(e=>buildTodayRaceSpec(e.venue,e.raceNo)).filter(s=>s&&Array.isArray(s.apiBoats)&&s.apiBoats.length===6);
-  if(!specs.length) return;
+  const targets=entries.filter(e=>e?.venue&&Number.isInteger(Number(e.raceNo)));
+  const livePromise=Promise.all(targets.map(e=>brcFetchLiveExhibition(e.venue,e.raceNo).catch(()=>null)))
+    .then(lives=>{
+      if(seq!==BRC_DEADLINE_SIGNAL_SEQ||String(TODAY_LABEL||'')!==date) return null;
+      const byKey=new Map();
+      targets.forEach((e,i)=>{
+        const key=brcDeadlineSignalKey(e.venue,e.raceNo);
+        byKey.set(key,lives[i]);
+        brcDeadlineRaceStatusSync(key,lives[i],e.venue,e.raceNo);
+      });
+      return byKey;
+    });
 
-  // FIX V4:
-  // /predict-batch はS/A抽出などの軽量走査用で、締切サインに必要な
-  // top3s / baselines / seconds まで常に揃う前提ではない。
-  // 締切カードは通常の出走データと同じ /predict を使い、詳細結果を5分キャッシュする。
+  // 既存の詳細予測 API と全艇条件は維持。状態表示だけは予測取得を要件としない。
+  const specs=targets.map(e=>buildTodayRaceSpec(e.venue,e.raceNo))
+    .filter(s=>s&&Array.isArray(s.apiBoats)&&s.apiBoats.length===6);
   const now=Date.now();
   const missing=specs.filter(spec=>{
     const cached=BRC_DEADLINE_SIGNAL_PRED_CACHE.get(brcDeadlineSignalKey(spec.venue,spec.raceNo));
     return !cached || now-cached.at>BRC_DEADLINE_SIGNAL_PRED_TTL_MS || !cached.pred;
   });
-
   if(missing.length){
     let cursor=0;
     const concurrency=Math.min(4,missing.length);
@@ -21385,17 +21482,15 @@ async function brcHydrateDeadlineSignals(entries){
     }
     await Promise.all(Array.from({length:concurrency},()=>worker()));
   }
-
-  // 直前/スリットは最新展示が必要なので、ここだけ毎回取り直す。
-  const lives=await Promise.all(specs.map(s=>brcFetchLiveExhibition(s.venue,s.raceNo).catch(()=>null)));
-  if(seq!==BRC_DEADLINE_SIGNAL_SEQ||String(TODAY_LABEL||'')!==date) return;
-
-  specs.forEach((spec,i)=>{
+  const liveByKey=await livePromise;
+  if(!liveByKey || seq!==BRC_DEADLINE_SIGNAL_SEQ||String(TODAY_LABEL||'')!==date) return;
+  specs.forEach(spec=>{
     const key=brcDeadlineSignalKey(spec.venue,spec.raceNo);
     const pred=BRC_DEADLINE_SIGNAL_PRED_CACHE.get(key)?.pred;
-    brcDeadlineSignalCommit(key,spec,pred,lives[i]);
+    brcDeadlineSignalCommit(key,spec,pred,liveByKey.get(key)||null);
   });
 }
+
 function renderDeadlineSchedule(){
   const box = document.getElementById('deadlineSchedule');
   if(!box) return;
@@ -23053,11 +23148,18 @@ function brcExhibitionMissingBoats(liveRace){
 }
 function brcBuildRaceConditionBannerHtml(liveRace,venue='',raceNo=0){
   const blocks=[];
-  if(!liveRace) return '';
-  const absent=[...brcCollectConfirmedAbsentBoats(liveRace)].sort((a,b)=>a-b);
+  const key=venue&&raceNo?brcDeadlineSignalKey(venue,raceNo):'';
+  if(key) brcDeadlineRaceStatusSync(key,liveRace,venue,raceNo);
+  const saved=key?BRC_DEADLINE_RACE_STATUS_CACHE.get(key):null;
+  if(!liveRace && saved?.kind==='unavailable'){
+    return '<div class="slit-eval-compact direct-info-banner brc-condition-banner brc-condition-exhibition brc-condition-lap" role="status"><span class="direct-info-banner-label">直前データ未取得</span><span class="direct-info-banner-note">締切直前の展示情報を取得できません。欠場・取消の有無を公式で確認してください。</span></div>';
+  }
+  if(!liveRace && saved?.kind!=='absent') return '';
+  const absent=saved?.kind==='absent'?saved.boats:
+    [...brcCollectConfirmedAbsentBoats(liveRace)].sort((a,b)=>a-b);
   if(absent.length){
     const items=absent.map(n=>brcSlitBoatBadgeHtml(n)).join('');
-    blocks.push(`<div class="slit-eval-compact direct-info-banner brc-condition-banner brc-condition-absence brc-condition-exhibition" role="status"><span class="direct-info-banner-label">欠場・取消</span><span class="direct-info-banner-items">${items}</span><span class="direct-info-banner-note">該当艇の欠場・取消が確認されたため、このレースはBRCタイムXの直前補正を反映できません。</span></div>`);
+    blocks.push(`<div class="slit-eval-compact direct-info-banner brc-condition-banner brc-condition-absence brc-condition-exhibition" role="alert"><span class="direct-info-banner-label">⚠ 欠場・取消</span><span class="direct-info-banner-items">${items}</span><span class="direct-info-banner-note">6艇前提の表示着率・AI予測・参考買い目は欠場反映済みではありません。BRC TimeXの直前補正も対象外です。</span></div>`);
   }else{
     const missing=brcExhibitionMissingBoats(liveRace);
     if(missing.length){
@@ -23066,16 +23168,16 @@ function brcBuildRaceConditionBannerHtml(liveRace,venue='',raceNo=0){
       const closed=Number.isFinite(minutes)&&minutes<=0;
       const items=missing.map(n=>brcSlitBoatBadgeHtml(n)).join('');
       const message=closed
-        ? '号艇の直前情報が取得できないため、このレースはBRCタイムXの直前補正を反映できません。'
-        : '号艇の直前情報が未取得です。全艇のデータが揃うまでBRCタイムXの直前補正は反映されません（取得確認中）。';
-      blocks.push(`<div class="slit-eval-compact direct-info-banner brc-condition-banner brc-condition-exhibition ${closed?'brc-condition-absence':'brc-condition-lap'}" role="status"><span class="direct-info-banner-label">直前情報${closed?'未取得':'取得待ち'}</span><span class="direct-info-banner-items">${items}</span><span class="direct-info-banner-note">${message}</span></div>`);
+        ? '号艇の直前情報が未取得です。欠場・取消の有無を公式で確認してください。BRC TimeXの直前補正は未反映です。'
+        : '号艇の直前情報がまだ届いていません。欠場・取消の有無は公式で確認してください（未確定）。';
+      blocks.push(`<div class="slit-eval-compact direct-info-banner brc-condition-banner brc-condition-exhibition ${closed?'brc-condition-absence':'brc-condition-lap'}" role="status"><span class="direct-info-banner-label">直前情報一部未取得</span><span class="direct-info-banner-items">${items}</span><span class="direct-info-banner-note">${message}</span></div>`);
     }
   }
 
   // 展示タイムは届いてもラップタイムが遅延することがある。艇別の欠測が確定した場合のみ案内。
   const code=String(liveRace?.venue_code ?? '').padStart(2,'0');
-  const lap=brcTimeXLapState(liveRace);
-  if(code!=='03' && !absent.length && lap.started && lap.allSix && !lap.ready){
+  const lap=liveRace?brcTimeXLapState(liveRace):{started:false,allSix:false,ready:false};
+  if(liveRace && code!=='03' && !absent.length && lap.started && lap.allSix && !lap.ready){
     const minutes=venue&&raceNo?brcLiveExhibitionMinutesToDeadline(venue,raceNo):null;
     const closed=Number.isFinite(minutes)&&minutes<=0;
     if(lap.shortened){
