@@ -54,7 +54,7 @@ class ChampionshipResearchTests(unittest.TestCase):
         self.assertIsNotNone(mod.CHAMPIONSHIP.search('優勝決定戦'))
 
     def test_no_publication_even_complete(self):
-        with patch.object(mod,'championship_label_audit',return_value=[]), \
+        with patch.object(mod,'championship_label_audit',return_value=[{'date':'2026-09-06','venue':'桐生','race':12,'kind':'explicit_championship'}]), \
                 patch.object(mod,'scan_day',return_value=[{
             'date':'2026-09-06','venue':'桐生','race':12,'motors':['11','12','13','14','15','16'],
             'winning_motor':'11'}]):
@@ -66,7 +66,7 @@ class ChampionshipResearchTests(unittest.TestCase):
         self.assertFalse(data['app_data_published'])
 
     def test_championship_reconciliation_and_venue_coverage(self):
-        with patch.object(mod,'championship_label_audit',return_value=[]), \
+        with patch.object(mod,'championship_label_audit',return_value=[{'date':'2026-09-06','venue':'桐生','race':12,'kind':'explicit_championship'}]), \
                 patch.object(mod,'scan_day',return_value=[{
             'date':'2026-09-06','venue':'桐生','race':12,
             'motors':['11','12','13','14','15','16'],'winning_motor':'11'}]):
@@ -80,7 +80,7 @@ class ChampionshipResearchTests(unittest.TestCase):
     def test_duplicate_final_event_rejected(self):
         item={'date':'2026-09-06','venue':'桐生','race':12,
               'motors':['11','12','13','14','15','16'],'winning_motor':'11'}
-        with patch.object(mod,'championship_label_audit',return_value=[]), \
+        with patch.object(mod,'championship_label_audit',return_value=[{'date':'2026-09-06','venue':'桐生','race':12,'kind':'explicit_championship'}]), \
                 patch.object(mod,'scan_day',return_value=[item,item]):
             with self.assertRaisesRegex(ValueError,'Duplicate championship'):
                 mod.build({date(2026,9,6):pathlib.Path('unused')},date(2026,9,7))
