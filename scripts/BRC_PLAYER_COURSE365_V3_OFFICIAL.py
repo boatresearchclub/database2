@@ -82,9 +82,11 @@ def official_k_events(content: str, target: date):
             # precisely verified (date, venue) pairs and ONLY if no numeric
             # finisher is present. Never skip a possible real race or any other
             # malformed/missing-date venue block.
-            verified_cancelled = venue == '13' and expected in {
+            verified_cancelled = (venue == '13' and expected in {
                 '2026-05-16', '2026-05-17', '2026-05-18'
-            }
+            }) or (venue == '09' and expected in {
+                '2026-07-29', '2026-07-30', '2026-07-31', '2026-08-01'
+            })
             recorded_finish = any(
                 (m is not None and m.group(1).isdigit())
                 for m in (RE_ENTRY.match(line) for line in vl)
