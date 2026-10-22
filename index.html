@@ -1,3 +1,4 @@
+<!-- BRC_PUBLIC_PREVIEW_V3_GATE_FIX_V4_20261022: member preview must never mask existing v2 rates as admin-only v3 verification pending; actual admin v3 gate preserved. -->
 <!-- BRC_PUBLIC_DIAGNOSTIC_VISIBILITY_V3_20261022: public/member preview hides admin-only motor freshness and D research; authorized admin view remains intact. -->
 <!-- BRC_MOTOR_RESTORE_PUBLIC_CLEAN_ADMIN_DIAG_V1_20261022: restores established motor overview and historical cards for verified live records, keeps daily freshness/rollover guards, places stale/verification notices in admin only, no motor/prediction recalculation. -->
 <!-- BRC_MEMBER_LOGIN_PREVIEW_V2_20261022: admin session retained; member-only visualization matched, member slit preserved; no auth changes. -->
@@ -355,7 +356,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261022-PUBLIC-CLEAN-DIAGNOSTICS-V3">
+<meta name="brc-build" content="20261022-PUBLIC-RATES-FIX-V4">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -19475,7 +19476,12 @@ function brcV3TableGateRefresh(){
   const host=document.querySelector('#predictResult #predictTableWrap');
   if(!host)return;
   const selected=brcCurrentLiveExhibitionSelection();
-  const active=!!(BRC_ADMIN_ACTIVE&&BRC_MEMBER_ACTIVE&&selected?.venue&&Number(selected.raceNo)>=1&&Number(selected.raceNo)<=12);
+  // Only gate TimeX v3 rates in the actual administrator view.
+  // A logged-in member and the administrator's member-preview must keep the
+  // established TimeX v2 rate cells visible while v3 remains unverified.
+  const adminView=!!(BRC_ADMIN_ACTIVE && BRC_MEMBER_ACTIVE &&
+    !document.body?.classList.contains('brc-admin-public-view'));
+  const active=!!(adminView&&selected?.venue&&Number(selected.raceNo)>=1&&Number(selected.raceNo)<=12);
   const date=String(TODAY_LABEL||''),code=selected?.venue?brcVenueCodeFromName(selected.venue):'';
   const key=[date,code,Number(selected?.raceNo)].join('|');
   // Do not allow the verified gate from a previous race to unlock this race.
@@ -29571,6 +29577,9 @@ https://brcdatabase.pages.dev/
     document.body?.classList.toggle('brc-admin-public-view',adminViewMode==='public' && isAdmin());
     // 会員プレビュー中は管理者専用v3の実値オーバーレイを表に残さない。
     if(isAdmin() && adminViewMode==='public'){try{brcV3AdminClearDisplay();}catch(_e){}}
+    // Reevaluate the v3 pending mask on every view switch; do not leave
+    // '照合中' painted over member-facing probabilities.
+    try{if(typeof brcV3TableGateRefresh==='function')brcV3TableGateRefresh();}catch(_e){}
     try{ if(typeof brcSetAdminRaceToolsUi==='function') brcSetAdminRaceToolsUi(isAdmin() && adminViewMode!=='public'); }catch(_e){}
     const adminTab=q('#brcAdminMainTab');
     if(adminTab && isAdmin()){
