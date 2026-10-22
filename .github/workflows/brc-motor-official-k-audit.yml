@@ -8,6 +8,7 @@ on:
     paths:
       - '.github/workflows/brc-motor-official-k-audit.yml'
       - 'scripts/BRC_MOTOR_K_ROLLING_RESEARCH_V1.py'
+      - 'scripts/test_motor_k_rolling_research_v1.py'
 permissions:
   contents: read
 concurrency:
@@ -346,6 +347,8 @@ jobs:
                           f"first {item['first_events'][:1]}; last {item['last_events'][-1:]}\n")
               f.write(f"### Release decision: {'GO' if validation_gates['can_publish_motor_detail'] else 'NO GO'}\n")
           PY
+      - name: Test rolling motor audit safety and missing-day classification
+        run: python scripts/test_motor_k_rolling_research_v1.py
       - name: Research K records since September snapshot without publishing
         shell: bash
         run: |
