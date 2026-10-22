@@ -209,6 +209,20 @@ jobs:
               remainder=item['delta']+s0
               key=str(remainder)
               residual_s0_remainder_histogram[key]=residual_s0_remainder_histogram.get(key,0)+1
+          # Triage hypothetical S0 inclusion into under-count, exact, over-count.
+          # This diagnostic is not an accounting rule or release authorization.
+          residual_after_s0_triage={'still_missing':[], 'exact_if_S0_added':[], 'would_overcount':[]}
+          residual_after_s0_by_venue={}
+          for item in residual_status_diagnostics:
+              remainder=item['delta']+item['possible_S0_accounting_gap']
+              label=('still_missing' if remainder<0 else 'would_overcount' if remainder>0 else 'exact_if_S0_added')
+              detail={'venue':item['venue'],'motor':item['motor'],'original_delta':item['delta'],
+                  'S0_count':item['possible_S0_accounting_gap'],'remaining_delta':remainder}
+              residual_after_s0_triage[label].append(detail)
+              counts_for_venue=residual_after_s0_by_venue.setdefault(item['venue'],
+                  {'still_missing':0,'exact_if_S0_added':0,'would_overcount':0})
+              counts_for_venue[label]+=1
+          assert sum(map(len,residual_after_s0_triage.values()))==len(candidate_residual_samples)
           residual_event_traces=[]
           for sample in candidate_residual_samples:
               key=(sample['venue'],sample['motor'])
@@ -278,6 +292,8 @@ jobs:
               'candidate_residual_s0_summary':residual_s0_summary,
               'candidate_residual_s0_count_histogram':residual_s0_delta_histogram,
               'candidate_residual_after_s0_histogram':residual_s0_remainder_histogram,
+              'candidate_residual_after_s0_triage':residual_after_s0_triage,
+              'candidate_residual_after_s0_by_venue':residual_after_s0_by_venue,
               'candidate_policy_not_approved':True,
               'candidate_residual_delta_histogram':candidate_residual_delta_histogram,
               'candidate_residual_boundary_groups':candidate_residual_boundary_groups,
@@ -309,6 +325,10 @@ jobs:
               f.write("### Meeting-boundary cohorts\n")
               for group,info in candidate_residual_boundary_groups.items():
                   f.write(f"- {group}: {info['motors']} motors / {info['abs_delta']} starts\n")
+              f.write("### Hypothetical S0 triage (NOT a production rule)\n")
+              for label in ('still_missing','exact_if_S0_added','would_overcount'):
+                  examples=residual_after_s0_triage[label]
+                  f.write(f"- {label}: {len(examples)} motors; first examples: {examples[:5]}\n")
               f.write("### Residual examples (research only)\n")
               for item in residual_event_traces[:12]:
                   f.write(f"- {item['venue']} motor {item['motor']}: delta {item['delta']}; "
