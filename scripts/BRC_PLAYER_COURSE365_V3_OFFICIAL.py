@@ -115,7 +115,7 @@ def official_k_events(content: str, target: date):
             cm=RE_COURSE.search(body)
             if not cm:
                 # Do not silently fabricate entry courses or turn unparsed rows into a smaller N.
-                raise ValueError(f'Missing K entry course {expected} {venue} {race}R boat={boat} reg={reg}')
+                raise ValueError(f'Missing K entry course {expected} {venue} {race}R boat={boat} reg={reg} row={line[:180]!r}')
             course=int(cm.group(1));rows.append((boat,reg,course,rank))
         flush(race,rows)
     complete=len({(a,b,c) for a,b,c,*_ in events})
