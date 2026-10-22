@@ -253,7 +253,18 @@ jobs:
           pathlib.Path('motor_official_K_baseline_audit.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
           print(json.dumps({k:v for k,v in report.items() if k not in ('parse_errors','sample_nonmatches')},ensure_ascii=False))
           with open(__import__('os').environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf-8') as f:
-              f.write(f"Motor K audit: parsed {days_good} days, {exact}/{compared} N cells matched. NO PUBLISH.\n")
+              f.write(f"Motor K audit: parsed {days_good} days, {exact}/{compared} numeric-only N cells matched. NO PUBLISH.\n")
+              f.write("### Best retrospective policy (NOT approved for production)\n")
+              if best_variants:
+                  top=best_variants[0]
+                  f.write(f"{top['exact']}/{top['total']} matched; total absolute difference {top['absolute_difference_sum']} starts.\n")
+              f.write("### Remaining count deltas\n")
+              for delta,n in sorted(candidate_residual_delta_histogram.items(),key=lambda x:int(x[0])):
+                  f.write(f"- Delta {delta}: {n} motors\n")
+              f.write("### Meeting-boundary cohorts\n")
+              for group,info in candidate_residual_boundary_groups.items():
+                  f.write(f"- {group}: {info['motors']} motors / {info['abs_delta']} starts\n")
+              f.write(f"### Release decision: {'GO' if validation_gates['can_publish_motor_detail'] else 'NO GO'}\n")
           PY
       - name: Save research-only motor K audit
         if: always()
