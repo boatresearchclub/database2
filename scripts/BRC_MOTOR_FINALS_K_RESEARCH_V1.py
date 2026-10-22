@@ -188,6 +188,16 @@ def main():
     if os.getenv("GITHUB_STEP_SUMMARY"):
         with open(os.environ["GITHUB_STEP_SUMMARY"],"a",encoding="utf-8") as f:
             f.write("### Championship final research (NOT PRODUCTION)\n")
+            f.write("#### Venue and race coverage (research only)\n")
+            for venue, count in sorted(report["championships_by_venue"].items()):
+                f.write(f"- {venue}: {count} finals\n")
+            f.write("#### Final race number distribution\n")
+            for race, count in sorted(report["championships_by_race_number"].items(), key=lambda x:int(x[0])):
+                f.write(f"- {race}R: {count} finals\n")
+            f.write(f"Entrants {report['championship_entrant_count']}; "
+                    f"winners {report['championship_winner_count']}; "
+                    f"validations {report['championship_validation_assertions']}\n")
+
             f.write(f"Explicitly labelled finals: {report['championship_races_explicitly_labelled']}; "
                     f"missing days: {len(report['days_missing'])}; NO PUBLISH.\n")
 
