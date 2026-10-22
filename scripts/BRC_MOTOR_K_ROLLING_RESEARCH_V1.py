@@ -74,14 +74,43 @@ def build(files, today):
     }
 
 
+def fetch_recent_missing_k(files, archive_root, today, lookback_days=7):
+    """Refresh recent gaps from the official K source, without app publication.
+
+    Missing official files may simply reflect a later release; failures remain
+    visible in the coverage report rather than being silently treated as zero.
+    """
+    yesterday = today - timedelta(days=1)
+    start = max(START, yesterday - timedelta(days=lookback_days-1))
+    attempts = []
+    d = start
+    while d <= yesterday:
+        if d not in files:
+            try:
+                path = official.official_k_download(d, archive_root, timeout=20)
+                if not path or not pathlib.Path(path).is_file():
+                    raise ValueError("Official downloader returned no file")
+                files[d] = pathlib.Path(path)
+                attempts.append({"date": d.isoformat(), "result": "downloaded"})
+            except Exception as exc:
+                attempts.append({"date": d.isoformat(), "result": "unavailable",
+                                 "error": str(exc)[:180]})
+        d += timedelta(days=1)
+    return attempts
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--archive-dir", default=".cache/brc-course365-k")
     ap.add_argument("--output", required=True)
+    ap.add_argument("--fetch-recent-missing", action="store_true")
     args = ap.parse_args()
     root = pathlib.Path(args.archive_dir)
     files = official.discover_k(root) if root.exists() else {}
-    result = build(files, datetime.now(JST).date())
+    today = datetime.now(JST).date()
+    attempts = fetch_recent_missing_k(files, root, today) if args.fetch_recent_missing else []
+    result = build(files, today)
+    result["official_recent_download_attempts"] = attempts
     out = pathlib.Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(result, ensure_ascii=False, indent=2)+"\n", encoding="utf-8")
