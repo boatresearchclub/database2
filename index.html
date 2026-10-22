@@ -1,3 +1,4 @@
+<!-- BRC_COURSE365_DUAL_SOURCE_SAFE_V1_20261022: prefer same-site daily JSON, fall back to database2 raw file; choose newer verified 365-day snapshot. No TimeX/predictions changes. -->
 <!-- BRC_MOTOR_LATEST_SOURCE_FRESHNESS_V3_20261022: motor history requires recent day-stamped JSON, current on-focus reload, no stale previous-user / finals / fixed foot history claims. Existing TimeX/course365/absence fixes retained. -->
 <!-- BRC_ABSENCE_UNAVAILABLE_LABEL_CLARITY_V2_20261022: Live API unavailable means BRC data not synchronized, NOT confirmed absence or absence of official exhibition. No inference from missing boats. -->
 <!-- BRC_ABSENCE_STATUS_ALERT_V1_20261022: Confirmed absence overrides cached deadline signs; partial exhibition is labeled without inferring a scratch; TOP and race banner share the same state; predictions/odds/TimeX computation unchanged. -->
@@ -32030,7 +32031,14 @@ body.brc-admin-home-active .brc-admin-login-top-preview-note{display:none;}
 (function(){
   'use strict';
   const VERSION='BRC_PLAYER_COURSE365_DAILY_DISPLAY_V2_20261022';
-  const PATH='/data/player_course_1y_daily.json';
+  // The BRC UI and the public data repo may use different URL roots.
+  // Prefer the site's own file when it is current, and fail over to the
+  // public database2 raw file when it is missing or older. Never accept a
+  // date beyond yesterday JST and never fabricate updated percentages.
+  const PATHS=[
+    '/data/player_course_1y_daily.json',
+    'https://raw.githubusercontent.com/boatresearchclub/database2/main/data/player_course_1y_daily.json'
+  ];
   const SNAPSHOT_START='2025-09-23', SNAPSHOT_END='2026-09-22';
   const DATA_NODE=document.getElementById('brc-apd8-recent-course-1y');
   let snapshot=Object.create(null);
@@ -32104,12 +32112,26 @@ body.brc-admin-home-active .brc-admin-login-top-preview-note{display:none;}
     lastAttempt=Date.now();
     running=(async()=>{
       try{
-        const response=await fetch(PATH+'?day='+encodeURIComponent(today),{cache:'no-store',credentials:'same-origin'});
-        if(!response.ok)throw Error('HTTP '+response.status);
-        const payload=await response.json();
-        const dates=checkPayload(payload);
-        if(dates.end<meta.end)throw Error('older than current feed');
-        current=payload.players;meta={...dates,source:'daily'};
+        let chosen=null, lastError=null;
+        for(const path of PATHS){
+          try{
+            const url=path+'?day='+encodeURIComponent(today);
+            const external=/^https:\/\//i.test(path);
+            const response=await fetch(url,{cache:'no-store',credentials:external?'omit':'same-origin'});
+            if(!response.ok)throw Error('HTTP '+response.status+' from '+path);
+            const payload=await response.json();
+            const dates=checkPayload(payload);
+            if(dates.end<meta.end)throw Error('older than current feed: '+dates.end);
+            if(!chosen||dates.end>chosen.dates.end){
+              chosen={payload,dates,source:external?'database2':'site'};
+            }
+            // Only the previous JST day's finalized snapshot is fully current.
+            if(dates.end===previousJstDay())break;
+          }catch(error){lastError=error;}
+        }
+        if(!chosen)throw(lastError||Error('daily source unavailable'));
+        current=chosen.payload.players;
+        meta={...chosen.dates,source:chosen.source};
         checkedDay=today;
         // The two existing low-sample guards parse this node on demand.
         if(DATA_NODE)DATA_NODE.textContent=JSON.stringify(current);
@@ -39528,6 +39550,177 @@ setInterval(()=>{
   else redraw();
   setInterval(redraw,1600);
 })();
+
+</script>
+<script id="brc-admin-d-v3-post-shadow-v1">
+/* BRC_D_V3_POST_SHADOW_V1_20261022
+ * Administrator-only, display-only RESEARCH estimate in existing player detail > 展開.
+ * Explicitly UNVALIDATED. No mutation of rates, AI, bets, Worker or D1.
+ * A/B research conditional 3rd probabilities (2023 model) weighted once by
+ * (strictly verified v3 third rate / SHA-audited pre-exhibition third rate).
+ * This is a heuristic, NOT an observed/post-exhibition conditional probability.
+ */
+(function(root, create){
+  'use strict';
+  const api=create();
+  if(typeof module==='object' && module.exports) module.exports=api;
+  if(root && root.document){root.BRC_D_V3_POST_SHADOW=api;api.install(root);}
+})(typeof window!=='undefined'?window:null,function(){
+  'use strict';
+  const BUILD='BRC_D_V3_POST_SHADOW_V1_20261022';
+  const tabs=['全体','差し','まくり','まくり差し'];
+  function numeric(v){return typeof v==='number' && Number.isFinite(v)?v:null;}
+  function calculate(preview, thirdMetrics){
+    if(!preview || !Array.isArray(preview.original) || preview.original.length!==5 ||
+       !Array.isArray(preview.cases) || preview.cases.length!==5 ||
+       !Array.isArray(thirdMetrics) || thirdMetrics.length!==6) throw Error('6艇・5列の研究条件が不足');
+    const ratios=new Map();
+    for(const x of thirdMetrics){
+      const c=Number(x.course),before=numeric(x.before),after=numeric(x.after);
+      if(!Number.isInteger(c)||c<1||c>6||ratios.has(c)||before===null||after===null||
+         before<0.05||after<0||before>100||after>100)throw Error('v3の事前・展示後3着率が不適合');
+      const factor=after/before;
+      // Safety cap is a stop condition, NOT probability clipping.
+      if(!Number.isFinite(factor)||factor<0.2||factor>5)throw Error('極端な倍率のため試算停止');
+      ratios.set(c,factor);
+    }
+    const result=[];const seen=new Set();
+    for(const c of preview.cases){
+      const first=Number(c.winner),second=Number(c.second);
+      if(!Number.isInteger(first)||!Number.isInteger(second)||first<1||first>6||second<1||second>6||
+         first===second||seen.has(second)||!['A','B'].includes(c.d_selected)||
+         !Array.isArray(c.rows)||c.rows.length!==4)throw Error('D方式の2着別構造が不正');
+      seen.add(second);
+      const out=[];let sum=0;const thirds=new Set();let baseSum=0;
+      for(const r of c.rows){
+        const third=Number(r.third),base=numeric(r.d_conditional_probability_exact);
+        const n=Number(r.n_candidate_strict);
+        if(!Number.isInteger(third)||third<1||third>6||third===first||third===second||thirds.has(third)||
+           base===null||base<=0||base>1||!Number.isInteger(n)||n<0||!ratios.has(third))throw Error('D方式の3着候補が不正');
+        thirds.add(third);baseSum+=base;
+        const weight=base*ratios.get(third);out.push({third,weight,n});sum+=weight;
+      }
+      if(thirds.size!==4||Math.abs(baseSum-1)>1e-6||!Number.isFinite(sum)||sum<=0)throw Error('条件付き列の総和が不正');
+      const rows=out.map(x=>({third:x.third,probability:x.weight/sum,n:x.n}));
+      if(Math.abs(rows.reduce((s,x)=>s+x.probability,0)-1)>1e-9)throw Error('展示後の列合計が不正');
+      result.push({first,second,method:c.d_selected,rows});
+    }
+    if(result.length!==5||seen.size!==5||thirdMetrics.length!==6)throw Error('5列分の条件付き値が不足');
+    const winners=new Set(result.map(x=>x.first));
+    if(winners.size!==1||preview.original.some(x=>Number(x.course)===result[0].first) ||
+      result.some(x=>!preview.original.some(y=>Number(y.course)===x.second)))throw Error('1着・2着艇が不整合');
+    return result.sort((a,b)=>a.second-b.second);
+  }
+  function admin(w){
+    try{return typeof BRC_ADMIN_ACTIVE!=='undefined' && BRC_ADMIN_ACTIVE===true &&
+      typeof BRC_MEMBER_ACTIVE!=='undefined' && BRC_MEMBER_ACTIVE===true && !(typeof w.brcGetAdminViewMode==='function' && w.brcGetAdminViewMode()==='public');}
+    catch(_){return false;}
+  }
+  // Deliberately require the existing, fully verified v3 displayed-rate overlay.
+  function liveV3Context(w){
+    if(!admin(w))throw Error('管理者表示が必要');
+    if(w.__currentExhibitionApplied!==true)throw Error('展示後ではありません');
+    const bs=w.__predictBoatsCurrent;
+    if(!Array.isArray(bs)||bs.length!==6||bs.some(b=>b?.exhibitionApplied!==true))throw Error('展示6艇が未確定');
+    const seen=new Set();
+    for(const b of bs){
+      const c=Number(b.course);
+      if(!Number.isInteger(c)||c<1||c>6||seen.has(c)||!String(b?.player?.reg||''))throw Error('選手構成が未確定');
+      seen.add(c);
+    }
+    if(typeof w.brcV3AdminDiagnostics!=='function')throw Error('v3診断が存在しません');
+    const d=w.brcV3AdminDiagnostics();
+    if(!d || d.v3Verified!==true||d.admin!==true||d.member!==true||d.sameRaceLive!==true||
+       d.strictExhibition!==true)throw Error('v3実値が未照合');
+    const host=w.document.querySelector('#predictResult #predictTableWrap');
+    if(!host || host.dataset.brcV3RateMode!=='v3')throw Error('出走表がv3表示ではありません');
+    // __brcV3AdminDisplay is defined with a top-level `let` in original INDEX.
+    const state=typeof __brcV3AdminDisplay!=='undefined'?__brcV3AdminDisplay:null;
+    if(!state||!state.four)throw Error('v3実値がありません');
+    if(typeof brcCurrentLiveExhibitionSelection!=='function' ||
+       typeof brcVenueCodeFromName!=='function' ||typeof brcV3AdminLiveMatches!=='function' ||
+       typeof brcV3AdminLiveSignature!=='function' ||typeof brcV3AdminPriorCanonical!=='function')
+       throw Error('v3公式照合関数が不足');
+    const sel=brcCurrentLiveExhibitionSelection(),date=String(TODAY_LABEL||'');
+    const venue=brcVenueCodeFromName(sel?.venue||''),race=Number(sel?.raceNo);
+    if(!venue||!date||!Number.isInteger(race)||state.key!==[date,venue,race].join('|')||
+       !brcV3AdminLiveMatches(w.__currentLiveExhibition,date,venue,race)||
+       state.signature!==brcV3AdminLiveSignature(w.__currentLiveExhibition)||
+       state.priorCanonical!==brcV3AdminPriorCanonical())throw Error('レース・展示・事前着率が変化しました');
+    const metrics=bs.map(b=>{
+      const c=Number(b.course),win=numeric(b.basePctFloat),top3=numeric(b.basePct3Float),second=numeric(b.brcV3PriorSecondPctFloat);
+      const after=state.four.thirds?.get?.(c);
+      if(win===null||top3===null||second===null||numeric(after)===null||win<0||top3>100||second<0)
+        throw Error('事前・v3の3着率に欠損');
+      const before=top3-win-second;
+      if(before<0.05)throw Error('事前3着率の母数が小さいため停止');
+      return {course:c,before,after};
+    });
+    return {metrics,signature:String(state.key)+'#'+String(state.signature)+'#'+String(state.priorCanonical),roster:bs.map(b=>String(b.player.reg)).join('|')};
+  }
+  function htmlEscape(value){return String(value??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));}
+  function renderRows(winner,result){
+    const boats=[1,2,3,4,5,6].filter(x=>x!==winner);
+    const head=result.map(c=>`<th scope="col" style="padding:6px 1px;font-size:10px;text-align:center">${winner}-${c.second}<small style="display:block;color:#64748b;font-size:8px">${c.method}方式</small></th>`).join('');
+    const rows=boats.map(third=>`<tr><th scope="row" style="padding:6px 1px;font-size:10px">${third}</th>`+
+      result.map(c=>{
+        if(c.second===third)return '<td style="padding:5px 1px;text-align:center;background:#f1f5f9;color:#94a3b8">—</td>';
+        const r=c.rows.find(x=>x.third===third);
+        return `<td title="本人の厳密条件 N=${r.n}｜研究試算・未検証" style="padding:5px 1px;text-align:center;font-size:10px;font-weight:700">${(r.probability*100).toFixed(1)}%<small style="display:block;font-size:8px;color:#64748b">N=${r.n}</small></td>`;
+      }).join('')+'</tr>').join('');
+    return `<div style="width:100%;overflow-x:hidden"><table style="width:100%;table-layout:fixed;border-collapse:collapse"><thead><tr><th scope="col" style="font-size:9px">3着\\2着</th>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
+  }
+  function render(w,winner){
+    const parent=w.document.getElementById('predict-sc-box-'+winner);
+    if(!parent||!admin(w))return;
+    // Do not modify the existing pre-exhibition research matrix.
+    if(w.__currentExhibitionApplied!==true)return;
+    const old=parent.querySelector('.brc-d-v05-panel');
+    if(!old)return;
+    const tag='<div style="font-size:13px;font-weight:800;color:#123149">2着別3着率｜展示後v3試算（管理者研究）</div>';
+    const msg='2023年実績を使ったD研究モデルの条件付き3着率に、照合済みv3の各艇3着率変化の倍率を1回だけ掛け、2着列ごとに再正規化。実測された展示後条件付き確率ではなく、精度未検証の試算です。';
+    let markup=tag+'<p style="font-size:10px;color:#64748b;line-height:1.55">'+msg+'</p>';
+    try{
+      if(w.__BRC_D09_READY!==true||typeof w.BRC_SCENARIO_D_PREVIEW_FOR_QA!=='function')throw Error('D研究モデルの読み込み前');
+      const context=liveV3Context(w);
+      const tab=tabs.includes(w.__predictScenarioKimariteCurrent)?w.__predictScenarioKimariteCurrent:'全体';
+      const preview=w.BRC_SCENARIO_D_PREVIEW_FOR_QA(winner,tab);
+      const result=calculate(preview,context.metrics);
+      // Re-check context after model generation to avoid using a changed race.
+      const recheck=liveV3Context(w);
+      if(recheck.signature!==context.signature||recheck.roster!==context.roster)throw Error('レースが更新されたため試算停止');
+      markup+=renderRows(winner,result);
+      markup+='<p style="font-size:9px;color:#64748b">各2着列の4候補の合計＝100%。Nは個別実績数。購入判断に用いる正式な確率ではありません。元の2着率・3着率・AI予測・買い目は変更しません。</p>';
+      w.__BRC_D_V3_POST_STATUS={status:'RESEARCH_RENDERED',tab,winner,version:BUILD};
+    }catch(e){
+      markup+='<p style="font-size:11px;color:#92400e">展示後の試算は停止中：'+htmlEscape(e?.message||e)+'</p>';
+      w.__BRC_D_V3_POST_STATUS={status:'HELD',reason:String(e?.message||e),version:BUILD};
+    }
+    old.innerHTML=markup;
+    old.classList.add('brc-d-v3-post-shadow');
+    old.setAttribute('data-brc-d-v3-post-shadow',BUILD);
+  }
+  function install(w){
+    if(w.__BRC_D_V3_POST_HOOK_INSTALLED)return;
+    w.__BRC_D_V3_POST_HOOK_INSTALLED=true;
+    let done=false;
+    const attach=()=>{
+      const old=w.renderInlinePredictScenario;
+      if(done||typeof old!=='function'||old.__brc_d_v05_wrapped!==true)return false;
+      if(old.__brc_d_v3_post_wrapped===true){done=true;return true;}
+      function wrapped(course){const v=old.apply(this,arguments);try{render(w,Number(course));}catch(_e){}return v;}
+      Object.defineProperty(wrapped,'__brc_d_v05_wrapped',{value:true});
+      Object.defineProperty(wrapped,'__brc_d_v3_post_wrapped',{value:true});
+      w.renderInlinePredictScenario=wrapped;done=true;return true;
+    };
+    if(!attach()){
+      const timer=w.setInterval(()=>{if(attach())w.clearInterval(timer);},1200);
+      // No forced rebuild; existing D09 hook activates on administrator login.
+    }
+    w.BRC_D_V3_POST_DIAGNOSTICS=()=>admin(w)?(w.__BRC_D_V3_POST_STATUS||{status:'NOT_YET_RENDERED',version:BUILD}):{status:'NOT_ADMIN'};
+  }
+  return {BUILD,calculate,install,renderRows};
+});
 
 </script>
 </body>
