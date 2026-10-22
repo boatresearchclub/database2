@@ -66,12 +66,16 @@ jobs:
               if int(row['出走数'])<int(old['n']):
                   mismatches.append({'venue':venue,'motor':motor,'old_n':old['n'],
                       'new_source_n':int(row['出走数']),'date':row['記録日']})
+          # Fail closed: a daily meet-scoped N is not a cumulative-cycle N.
+          if same_cycle and len(mismatches)==same_cycle:
+              print('All same-cycle source N values regress; source is not cumulative.')
           report={'date':asof,'reference_date':base['date'],'covered_venues':len(covered),
               'same_cycle_motor_count':same_cycle,
               'motor_n_regressions':len(mismatches),'different_cycle_count':other_cycle,
               'examples':mismatches[:25],
               'source':'BoatraceCSV motor_stats public daily snapshots',
               'release_decision':'NO_GO',
+              'source_scope_warning':'Daily motor_stats 出走数 must not replace cumulative motor starts',
               'published':False,
               'reason':'Daily source is not proven equivalent to complete-cycle BRC counts; verified per-meet history and finals not integrated'}
           pathlib.Path('motor_integrity_audit.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
