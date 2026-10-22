@@ -1,0 +1,43 @@
+name: BRC Motor Previous Meet Review (NO PUBLISH)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/brc-motor-previous-review.yml'
+      - 'scripts/BRC_MOTOR_PREVIOUS_FEED_V1.py'
+      - 'scripts/test_motor_previous_feed_v1.py'
+  schedule:
+    - cron: '25 2 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: brc-motor-previous-review
+  cancel-in-progress: false
+
+jobs:
+  read-only-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Provenance and 24-venue safety tests
+        run: python scripts/test_motor_previous_feed_v1.py
+      - name: Build dated third-party review only, do not publish
+        shell: bash
+        run: |
+          python scripts/BRC_MOTOR_PREVIOUS_FEED_V1.py \
+            --output .cache/motor_previous_review.json
+      - name: Preserve review for human verification only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: brc-motor-previous-review-no-publish
+          path: .cache/motor_previous_review.json
+          if-no-files-found: ignore
+          retention-days: 14
