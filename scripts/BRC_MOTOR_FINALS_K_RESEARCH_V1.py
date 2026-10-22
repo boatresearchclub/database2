@@ -219,6 +219,9 @@ def main():
     args.output.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     print("Motor final K research:",report["championship_races_explicitly_labelled"],
           "candidate finals; missing K days",len(report["days_missing"]),"NO PUBLISH")
+    print("Motor final classification:", json.dumps(report["win_related_header_classification"],ensure_ascii=False),
+          "unclassified:", report["unclassified_win_related_header_total"],
+          "header/candidate discrepancy:",report["explicit_label_candidate_discrepancy"])
     import os
     if os.getenv("GITHUB_STEP_SUMMARY"):
         with open(os.environ["GITHUB_STEP_SUMMARY"],"a",encoding="utf-8") as f:
