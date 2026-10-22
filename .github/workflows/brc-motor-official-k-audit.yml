@@ -9,6 +9,8 @@ on:
       - '.github/workflows/brc-motor-official-k-audit.yml'
       - 'scripts/BRC_MOTOR_K_ROLLING_RESEARCH_V1.py'
       - 'scripts/test_motor_k_rolling_research_v1.py'
+      - 'scripts/BRC_MOTOR_FINALS_K_RESEARCH_V1.py'
+      - 'scripts/test_motor_finals_k_research_v1.py'
 permissions:
   contents: read
 concurrency:
@@ -402,6 +404,14 @@ jobs:
             --archive-dir .cache/brc-course365-k \
             --fetch-recent-missing \
             --output motor_official_K_rolling_research.json
+      - name: Test official-K championship final detection safeguards
+        run: python scripts/test_motor_finals_k_research_v1.py
+      - name: Research explicitly labelled final races and winners (no publish)
+        shell: bash
+        run: |
+          python scripts/BRC_MOTOR_FINALS_K_RESEARCH_V1.py \
+            --archive-dir .cache/brc-course365-k \
+            --output motor_official_K_finals_research.json
       - name: Preserve official K download cache for next scheduled audit
         if: always()
         uses: actions/cache/save@v4
@@ -416,5 +426,6 @@ jobs:
           path: |
             motor_official_K_baseline_audit.json
             motor_official_K_rolling_research.json
+            motor_official_K_finals_research.json
           if-no-files-found: ignore
           retention-days: 14
