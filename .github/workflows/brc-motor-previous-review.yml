@@ -1,4 +1,4 @@
-name: BRC Motor Previous Meet Review (NO PUBLISH)
+name: BRC Motor Previous Meet Verified Daily Feed
 
 on:
   workflow_dispatch:
@@ -8,11 +8,13 @@ on:
       - 'scripts/BRC_MOTOR_PREVIOUS_FEED_V1.py'
       - 'scripts/test_motor_previous_feed_v1.py'
       - 'scripts/BRC_MOTOR_PREVIOUS_VERIFY_K_V1.py'
+      - 'scripts/BRC_MOTOR_PREVIOUS_RELEASE_V1.py'
+      - 'scripts/test_motor_previous_release_v1.py'
   schedule:
     - cron: '25 2 * * *'
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: brc-motor-previous-review
@@ -28,7 +30,9 @@ jobs:
         with:
           python-version: '3.12'
       - name: Provenance and 24-venue safety tests
-        run: python scripts/test_motor_previous_feed_v1.py
+        run: |
+          python scripts/test_motor_previous_feed_v1.py
+          python scripts/test_motor_previous_release_v1.py
       - name: Build dated third-party review only, do not publish
         shell: bash
         run: |
@@ -47,6 +51,24 @@ jobs:
           python scripts/BRC_MOTOR_PREVIOUS_VERIFY_K_V1.py \
             --feed .cache/motor_previous_review.json \
             --output .cache/motor_previous_official_K_audit.json
+      - name: Release only independently verified previous-user fields (not motor N)
+        shell: bash
+        run: |
+          python scripts/BRC_MOTOR_PREVIOUS_RELEASE_V1.py \
+            --feed .cache/motor_previous_review.json \
+            --audit .cache/motor_previous_official_K_audit.json \
+            --output racecards/motor_previous_daily.json
+      - name: Commit only independently verified dated previous-user feed
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'BRC Motor Previous Bot'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add -- racecards/motor_previous_daily.json
+          if git diff --cached --quiet; then echo 'Already up to date'; exit 0; fi
+          git commit -m 'data: update K-verified motor previous-meet identity snapshot'
+          git pull --rebase origin main
+          git push origin HEAD:main
       - name: Preserve review for human verification only
         if: always()
         uses: actions/upload-artifact@v4
