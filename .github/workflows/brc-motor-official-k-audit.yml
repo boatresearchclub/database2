@@ -45,7 +45,7 @@ jobs:
           root=pathlib.Path('.cache/brc-course365-k')
           official_files=official.discover_k(root) if root.exists() else {}
           start=date(2025,9,23);end=date(2026,9,5);day=start
-          counts=collections.Counter();status_counts=collections.Counter();unparsed_codes=collections.Counter();unparsed_samples=[];no_finisher_codes=collections.Counter();missing=[];errors=[];days_good=0;joined=0
+          counts=collections.Counter();status_counts=collections.Counter();unparsed_codes=collections.Counter();unparsed_samples=[];no_finisher_codes=collections.Counter();other_start_counts=collections.Counter();missing=[];errors=[];days_good=0;joined=0
           motor_pat=re.compile(r'\s+(\d{1,3})\s+\d{1,3}\s+\d(?:\.\d{1,2})?\s+[1-6]\s+')
           venue_pat=official.RE_VENUE_START;end_pat=official.RE_VENUE_END
           while day<=end:
@@ -72,12 +72,20 @@ jobs:
                               detected=re.match(r'^\s*(\S+)\s+([1-6])\s+\d{4}\s+',line)
                               if detected:
                                   unparsed_codes[detected.group(1)]+=1
+                                  motor=motor_pat.search(line)
+                                  vname=venue_by_code[venue];meta=base['venues'][vname]
+                                  if motor and meta['cycle_start']<=day.isoformat()<meta['event_start']:
+                                      other_start_counts[(vname,str(int(motor.group(1))),detected.group(1))]+=1
                                   if len(unparsed_samples)<40:
                                       unparsed_samples.append({'date':day.isoformat(),'venue':venue,'race':race,'label':detected.group(1),'sample':line[:150]})
                           continue
                       rank_s,boat_s,reg,body=m.groups()
                       if (venue,race) not in completed and not rank_s.isdigit():
                           no_finisher_codes[rank_s]+=1
+                          motor=motor_pat.search(body)
+                          vname=venue_by_code[venue];meta=base['venues'][vname]
+                          if motor and meta['cycle_start']<=day.isoformat()<meta['event_start']:
+                              other_start_counts[(vname,str(int(motor.group(1))),'NF_'+rank_s)]+=1
                       if not rank_s.isdigit():
                           if (venue,race) in completed:
                               stat_motor=motor_pat.search(body)
@@ -125,25 +133,25 @@ jobs:
                       n=counts.get((vname,mno),0)+sum(status_counts.get((vname,mno,st),0) for st in accepted)
                       total+=1;matches+=int(n==int(record['n']));mae+=abs(n-int(record['n']))
               variants[label]={'exact':matches,'total':total,'absolute_difference_sum':mae}
-          # Exhaustive diagnostics over observed F/S0/S1/S2 statuses;
+          # Exhaustive research diagnostics over observed status candidates;
           # this does not select production count policy.
-          all_st=['F','S0','S1','S2']
+          all_st=['F','S0','S1','S2','L0','L1','NF_F','NF_S1','NF_S0','NF_S2']
           for mask in range(1<<len(all_st)):
               allowed={st for k,st in enumerate(all_st) if mask&(1<<k)}
               count=0;good=0;distance=0
               for vname,meta in base['venues'].items():
                   if meta['cycle_start']<start.isoformat():continue
                   for mno,record in meta['motors'].items():
-                      n=counts.get((vname,mno),0)+sum(status_counts.get((vname,mno,st),0) for st in allowed)
+                      n=counts.get((vname,mno),0)+sum(status_counts.get((vname,mno,st),0)+other_start_counts.get((vname,mno,st),0) for st in allowed)
                       count+=1;good+=int(n==int(record['n']));distance+=abs(n-int(record['n']))
               variants['subset_'+('_'.join(sorted(allowed)) if allowed else 'none')]={'exact':good,'total':count,'absolute_difference_sum':distance}
           best_variants=sorted(({'policy':key,**val} for key,val in variants.items()),
               key=lambda x:(x['absolute_difference_sum'],-x['exact']))[:12]
-          preferred={'F','S1','S2'};residual=[];venue_residual={}
+          preferred={'F','S1','S2','L0','L1'};residual=[];venue_residual={}
           for vname,meta in base['venues'].items():
               if meta['cycle_start']<start.isoformat():continue
               for mno,record in meta['motors'].items():
-                  derived=counts.get((vname,mno),0)+sum(status_counts.get((vname,mno,st),0) for st in preferred)
+                  derived=counts.get((vname,mno),0)+sum(status_counts.get((vname,mno,st),0)+other_start_counts.get((vname,mno,st),0) for st in preferred)
                   delta=derived-int(record['n'])
                   if delta:
                       venue_residual[vname]=venue_residual.get(vname,0)+1
@@ -153,6 +161,7 @@ jobs:
                               'excluded_current_meet_start':meta['event_start'],
                               'statuses':{st:status_counts.get((vname,mno,st),0) for st in ('F','S0','S1','S2')}})
           report={'status_totals':{st:sum(n for (v,m,s),n in status_counts.items() if s==st) for st in sorted({k[2] for k in status_counts})},
+              'other_status_totals':{st:sum(n for (v,m,s),n in other_start_counts.items() if s==st) for st in sorted({k[2] for k in other_start_counts})},
               'candidate_n_definitions':variants,
               'best_candidate_N_policies':best_variants,
               'best_policy_residuals':residual,'best_policy_residuals_by_venue':venue_residual,
