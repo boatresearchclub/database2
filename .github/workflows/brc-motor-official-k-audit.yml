@@ -130,9 +130,23 @@ jobs:
               variants['subset_'+('_'.join(sorted(allowed)) if allowed else 'none')]={'exact':good,'total':count,'absolute_difference_sum':distance}
           best_variants=sorted(({'policy':key,**val} for key,val in variants.items()),
               key=lambda x:(x['absolute_difference_sum'],-x['exact']))[:12]
+          preferred={'F','S1','S2'};residual=[];venue_residual={}
+          for vname,meta in base['venues'].items():
+              if meta['cycle_start']<start.isoformat():continue
+              for mno,record in meta['motors'].items():
+                  derived=counts.get((vname,mno),0)+sum(status_counts.get((vname,mno,st),0) for st in preferred)
+                  delta=derived-int(record['n'])
+                  if delta:
+                      venue_residual[vname]=venue_residual.get(vname,0)+1
+                      if len(residual)<150:
+                          residual.append({'venue':vname,'motor':mno,'baseline_n':record['n'],
+                              'K_derived_n':derived,'diff':delta,'cycle':meta['cycle_start'],
+                              'excluded_current_meet_start':meta['event_start'],
+                              'statuses':{st:status_counts.get((vname,mno,st),0) for st in ('F','S0','S1','S2')}})
           report={'status_totals':{st:sum(n for (v,m,s),n in status_counts.items() if s==st) for st in sorted({k[2] for k in status_counts})},
               'candidate_n_definitions':variants,
               'best_candidate_N_policies':best_variants,
+              'best_policy_residuals':residual,'best_policy_residuals_by_venue':venue_residual,
               'snapshot_reference':'2026-09-05','period_start':start.isoformat(),
               'days_expected':(end-start).days+1,'days_parsed':days_good,
               'days_missing':len(missing),'missing_examples':missing[:20],
