@@ -1,3 +1,4 @@
+<!-- BRC_DICTIONARY_PLAYER_DAILY_AUDIT_V6_20261022: admin-only visible freshness check for static dictionary and racer details. No data-generation, prediction or public view modification. -->
 <!-- BRC_PUBLIC_PREVIEW_V3_GATE_FIX_V4_20261022: member preview must never mask existing v2 rates as admin-only v3 verification pending; actual admin v3 gate preserved. -->
 <!-- BRC_PUBLIC_DIAGNOSTIC_VISIBILITY_V3_20261022: public/member preview hides admin-only motor freshness and D research; authorized admin view remains intact. -->
 <!-- BRC_MOTOR_RESTORE_PUBLIC_CLEAN_ADMIN_DIAG_V1_20261022: restores established motor overview and historical cards for verified live records, keeps daily freshness/rollover guards, places stale/verification notices in admin only, no motor/prediction recalculation. -->
@@ -356,7 +357,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261022-PUBLIC-COMPACT-V5">
+<meta name="brc-build" content="20261022-DATA-DICTIONARY-DAILY-AUDIT-V6">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -7452,6 +7453,7 @@ body:not(.brc-admin-diagnostics-visible) .brc-dp-race-alert.is-partial{font-size
             <p class="brc-v3-operator-help">閲覧中のブラウザが受信できたデータの日付を確認します。INDEXのプッシュだけでは、日次JSONの生成やD1保存までは実行されません。</p>
             <div id="brcAdminDailySourceCourse" class="brc-v3-operator-state" style="margin-bottom:7px" aria-live="polite">選手365日成績：確認中</div>
             <div id="brcAdminDailySourceMotor" class="brc-v3-operator-state" aria-live="polite">モーター履歴：確認中</div>
+            <div id="brcAdminDailySourceDictionary" class="brc-v3-operator-state" style="margin-top:7px" aria-live="polite">データ辞典・選手詳細：確認中</div>
             <p class="brc-v3-operator-help" style="margin-top:8px">結果取得・D1保存、風データの生成状況はこのINDEXだけでは判定できません。別途バックエンドの処理ログを照合してください。</p>
             <div class="brc-v3-operator-actions">
               <button type="button" id="brcAdminDailySourceRefresh">再取得して確認</button>
@@ -39828,7 +39830,7 @@ setInterval(()=>{
   const $=id=>document.getElementById(id);
   const panel=$('brcAdminDailySourceHealth');
   if(!panel)return;
-  const courseEl=$('brcAdminDailySourceCourse'),motorEl=$('brcAdminDailySourceMotor');
+  const courseEl=$('brcAdminDailySourceCourse'),motorEl=$('brcAdminDailySourceMotor'),dictionaryEl=$('brcAdminDailySourceDictionary');
   const brief=$('brcAdminDailySourceBrief'),feedback=$('brcAdminDailySourceFeedback');
   const refresh=$('brcAdminDailySourceRefresh'),check=$('brcAdminDailySourceCheck'),copy=$('brcAdminDailySourceCopy');
   let running=false,latest=null;
@@ -39854,6 +39856,12 @@ setInterval(()=>{
         is_fresh:motor.is_fresh===true,venue_count:Number(motor.venue_count)||0,
         source:clean(motor.source),last_attempt_at:clean(motor.last_attempt_at),
         last_success_at:clean(motor.last_success_at),last_error:clean(motor.last_error)}:null,
+      dictionary_player:{
+        grade_and_venue:{last_aggregated_period:'2026/07',source:'INDEX embedded snapshot',daily_update_verified:false},
+        course_st:{last_aggregated_date:'2026-09-22',source:'INDEX embedded ST archive',daily_update_verified:false},
+        player_course365:{as_of:clean(course?.as_of||''),source:clean(course?.source||''),is_fresh:course?.is_fresh===true},
+        official_results_reaggregation:'not_verified_by_index'
+      },
       external_jobs:{daily_json_generation:'not_verified_by_index',race_results_d1:'not_verified_by_index'}
     };
   }
@@ -39877,10 +39885,21 @@ setInterval(()=>{
     panel.hidden=false;latest=d;
     courseEl.textContent=textFor('選手・コース別365日成績',d.course365,true);
     motorEl.textContent=textFor('モーター前節・累計履歴',d.motor,false);
-    const ok=d.course365?.is_fresh===true&&d.motor?.is_fresh===true;
-    brief.textContent=ok?'2系統：日付確認済み':'更新状況：要確認';
-    panel.classList.toggle('brc-v3-op-ready',ok);
-    panel.classList.toggle('brc-v3-op-blocked',!ok);
+    if(dictionaryEl){
+      const course=d.dictionary_player?.player_course365;
+      dictionaryEl.textContent=[
+        'データ辞典・選手詳細：集計元の更新状況',
+        'グレード・会場別：2026/07までの固定集計（日次更新未接続）',
+        '選手・コース別ST：2026/09/22までの固定集計（日次更新未接続）',
+        '選手・コース別365日：'+(course?.as_of||'日付未取得')+' ／ '+(course?.is_fresh?'前日分まで確認':'更新要確認'),
+        '注：この診断は元データの最新性を確認するもので、公式結果の再集計完了を保証しません。'
+      ].join('\n');
+    }
+    const feedsOk=d.course365?.is_fresh===true&&d.motor?.is_fresh===true;
+    brief.textContent=feedsOk?'辞典固定集計あり／更新要確認':'日次更新：要確認';
+    // Some embedded dictionary aggregates remain fixed even if both JSON feeds are fresh.
+    panel.classList.remove('brc-v3-op-ready');
+    panel.classList.add('brc-v3-op-blocked');
   }
   check?.addEventListener('click',()=>{if(!authorized()){paint();return;}paint();feedback.textContent='画面内の最新状態を確認しました';});
   refresh?.addEventListener('click',async()=>{
