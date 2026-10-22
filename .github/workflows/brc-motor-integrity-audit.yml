@@ -27,10 +27,10 @@ jobs:
           from datetime import datetime,timedelta,timezone
           JST=timezone(timedelta(hours=9))
           manifest=json.loads(pathlib.Path('data/.brc_split_manifest.json').read_text(encoding='utf-8'))
-          files=[x for x in manifest['files'] if re.fullmatch(r'data-motor-detail-[a-f0-9]+-001\\.js',x)]
+          files=[x for x in manifest['files'] if re.fullmatch(r'data-motor-detail-[a-f0-9]+-001\.js',x)]
           if len(files)!=1:raise ValueError('Expected exactly one BRC motor baseline chunk')
           content=(pathlib.Path('data')/files[0]).read_text(encoding='utf-8')
-          parts=re.findall(r'e\\.textContent\\s*\\+=\\s*("(?:\\\\.|[^"\\\\])*")',content,re.S)
+          parts=re.findall(r'e\.textContent\s*\+=\s*("(?:\\.|[^"\\])*")',content,re.S)
           if not parts:raise ValueError('Motor source JSON could not be decoded')
           base=json.loads(''.join(json.loads(x) for x in parts))
           if base.get('date')!='2026-09-05' or len(base.get('venues',{}))!=24:
@@ -74,12 +74,12 @@ jobs:
               'release_decision':'NO_GO',
               'published':False,
               'reason':'Daily source is not proven equivalent to complete-cycle BRC counts; verified per-meet history and finals not integrated'}
-          pathlib.Path('motor_integrity_audit.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\\n',encoding='utf-8')
+          pathlib.Path('motor_integrity_audit.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
           print(json.dumps({k:v for k,v in report.items() if k!='examples'},ensure_ascii=False))
           with open(__import__('os').environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf-8') as f:
-              f.write('## Motor source audit: NO PUBLISH\\n')
-              f.write(f'As of {asof}; same-cycle {same_cycle}; N regressions {len(mismatches)}.\\n')
-              f.write('No BRC user-facing motor history, index, or predictions were changed.\\n')
+              f.write('## Motor source audit: NO PUBLISH\n')
+              f.write(f'As of {asof}; same-cycle {same_cycle}; N regressions {len(mismatches)}.\n')
+              f.write('No BRC user-facing motor history, index, or predictions were changed.\n')
           PY
       - name: Save source audit for developer investigation
         if: always()
