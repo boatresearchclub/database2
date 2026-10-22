@@ -116,18 +116,49 @@ def scan_day(path: Path, day: date):
     return candidate
 
 
+def championship_label_audit(path: Path, day: date):
+    """Inventory race headers mentioning 優勝 to expose unclassified race types.
+
+    Read-only evidence: labels alone never authorize counting a final.
+    """
+    text = path.read_text(encoding="cp932", errors="strict")
+    venue = None
+    labels = []
+    for line in text.splitlines():
+        v = official.RE_VENUE_START.match(line)
+        if v:
+            venue = v.group(1)
+            continue
+        if official.RE_VENUE_END.match(line):
+            venue = None
+            continue
+        if venue is None:
+            continue
+        m = official.RE_RACE.match(line)
+        if not m or "優勝" not in line:
+            continue
+        kind = ("semifinal" if "準優勝" in line else
+                "explicit_championship" if CHAMPIONSHIP.search(line) else
+                "unclassified")
+        labels.append({"date":day.isoformat(),"venue":VENUES[int(venue)-1],
+                       "race":int(m.group(1)),"kind":kind,"header":line.strip()[:160]})
+    return labels
+
+
 def build(files: dict[date, Path], today: date):
     end = today - timedelta(days=1)
     if end < START:
         raise ValueError("Before reference date")
     missing = []
     championship = []
+    all_win_labels = []
     for n in range((end-START).days+1):
         day = START + timedelta(days=n)
         if day not in files:
             missing.append(day.isoformat())
             continue
         championship.extend(scan_day(files[day],day))
+        all_win_labels.extend(championship_label_audit(files[day],day))
     counts = collections.defaultdict(lambda: {"final_appearances":0,"final_wins":0})
     for race in championship:
         for motor in race["motors"]:
@@ -151,6 +182,10 @@ def build(files: dict[date, Path], today: date):
         "from_date":START.isoformat(), "through_date":end.isoformat(),
         "days_expected":(end-START).days+1, "days_missing":missing,
         "championship_races_explicitly_labelled":len(championship),
+        "win_related_header_classification":dict(collections.Counter(x["kind"] for x in all_win_labels)),
+        "unclassified_win_related_headers":[x for x in all_win_labels if x["kind"]=="unclassified"][:100],
+        "unclassified_win_related_header_total":sum(x["kind"]=="unclassified" for x in all_win_labels),
+        "explicit_label_candidate_discrepancy":sum(x["kind"]=="explicit_championship" for x in all_win_labels)!=len(championship),
         "championships_by_venue":dict(sorted(collections.Counter(x["venue"] for x in championship).items())),
         "championships_by_race_number":dict(sorted(collections.Counter(str(x["race"]) for x in championship).items())),
         "candidate_race_ids":[{"date":x["date"],"venue":x["venue"],
