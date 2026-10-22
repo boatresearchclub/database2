@@ -25,12 +25,15 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Install 7-Zip for official result archive retrieval
+        run: sudo apt-get update -qq && sudo apt-get install -y p7zip-full
       - name: Restore verified official K files from prior course365 runs
         uses: actions/cache/restore@v4
         with:
           path: .cache/brc-course365-k
-          key: brc-motor-k-audit-no-write
+          key: brc-motor-rolling-k-${{ github.run_id }}
           restore-keys: |
+            brc-motor-rolling-k-
             brc-course365-k-
       - name: Count actual official K motor starts versus frozen BRC baseline
         shell: bash
@@ -354,7 +357,14 @@ jobs:
         run: |
           python scripts/BRC_MOTOR_K_ROLLING_RESEARCH_V1.py \
             --archive-dir .cache/brc-course365-k \
+            --fetch-recent-missing \
             --output motor_official_K_rolling_research.json
+      - name: Preserve official K download cache for next scheduled audit
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-motor-rolling-k-${{ github.run_id }}
       - name: Save research-only motor K audit
         if: always()
         uses: actions/upload-artifact@v4
