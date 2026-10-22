@@ -86,6 +86,21 @@ def test_cancelled_amagasaki_may_2026():
     else:raise AssertionError('Must reject unverified dateless venue block')
     print('PASS verified Amagasaki cancellation with strict finisher guard')
 
+def test_cancelled_tsu_july_2026():
+    # Official Tsu meeting cancelled 2026-07-29 through 2026-08-01.
+    for day in (date(2026,7,29),date(2026,7,30),date(2026,7,31),date(2026,8,1)):
+        body=K.replace('2025/ 3/10',f'{day.year}/ {day.month}/{day.day}')
+        body=body.replace('19KEND','19KEND\n09KBGN\n津　開催中止\n09KEND',1)
+        events,n,_=p.official_k_events(body,day)
+        assert n==2 and len(events)==10
+        # A recorded first place must never be silently skipped.
+        unsafe=body.replace('09KEND',
+            '   01  1 3788 一宮稔弘 53 59 6.71 1 0.07 2.03.6\n09KEND',1)
+        try:p.official_k_events(unsafe,day)
+        except ValueError:pass
+        else:raise AssertionError('Numeric finish row in dateless Tsu block must be rejected')
+    print('PASS Tsu July/Aug cancelled K placeholders')
+
 def test_disk():
     with TemporaryDirectory() as t:
         root=Path(t);f=root/'K250310.TXT';f.write_bytes(K.encode('cp932'))
@@ -94,4 +109,4 @@ def test_disk():
     print('PASS cp932 local archive load')
 
 if __name__=='__main__':
-    for t in [test_good,test_payout_summary_is_not_a_race,test_change,test_fail_closed,test_cancelled_amagasaki_may_2026,test_disk]:t()
+    for t in [test_good,test_payout_summary_is_not_a_race,test_change,test_fail_closed,test_cancelled_amagasaki_may_2026,test_cancelled_tsu_july_2026,test_disk]:t()
