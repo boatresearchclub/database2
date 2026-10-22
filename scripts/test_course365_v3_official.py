@@ -69,18 +69,18 @@ def test_cancelled_amagasaki_may_2026():
     # contain no race date at all. Keep other venues' real results.
     for day in (date(2026,5,16), date(2026,5,17), date(2026,5,18)):
         block=K.replace('2025/ 3/10', f'{day.year}/ {day.month}/{day.day}')
-        block=block.replace('19KEND', '19KEND\\n13KBGN\\n尼崎　開催中止\\n13KEND', 1)
+        block=block.replace('19KEND', '19KEND\n13KBGN\n尼崎　開催中止\n13KEND', 1)
         events,n,_=p.official_k_events(block,day)
         assert n==2 and len(events)==10
         # A numeric finishing row in the cancelled venue must still fail closed.
         unsafe=block.replace('13KEND',
-            '   01  1 3788 一　宮　稔　弘 53 59 6.71 1 0.07 2.03.6\\n13KEND',1)
+            '   01  1 3788 一　宮　稔　弘 53 59 6.71 1 0.07 2.03.6\n13KEND',1)
         try:p.official_k_events(unsafe,day)
         except ValueError:pass
         else:raise AssertionError('Must reject actual result rows from dateless cancelled venue')
     # No exception for a cancellation-shaped block on an unrelated date.
     ordinary=K.replace('2025/ 3/10','2026/ 5/19')
-    ordinary=ordinary.replace('19KEND','19KEND\\n13KBGN\\n尼崎　開催中止\\n13KEND',1)
+    ordinary=ordinary.replace('19KEND','19KEND\n13KBGN\n尼崎　開催中止\n13KEND',1)
     try:p.official_k_events(ordinary,date(2026,5,19))
     except ValueError:pass
     else:raise AssertionError('Must reject unverified dateless venue block')
