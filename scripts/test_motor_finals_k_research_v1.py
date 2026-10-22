@@ -55,7 +55,7 @@ class ChampionshipResearchTests(unittest.TestCase):
 
     def test_no_publication_even_complete(self):
         with patch.object(mod,'scan_day',return_value=[{
-            'date':'2026-09-06','venue':'桐生','motors':['11','12','13','14','15','16'],
+            'date':'2026-09-06','venue':'桐生','race':12,'motors':['11','12','13','14','15','16'],
             'winning_motor':'11'}]):
             data=mod.build({date(2026,9,6):pathlib.Path('unused')},date(2026,9,7))
         self.assertEqual(data['research_final_appearances_and_wins']['桐生']['11']['final_wins'],1)
