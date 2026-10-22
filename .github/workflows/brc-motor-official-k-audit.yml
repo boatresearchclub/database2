@@ -88,6 +88,7 @@ jobs:
                           vname=venue_by_code[venue];meta=base['venues'][vname]
                           if motor and meta['cycle_start']<=day.isoformat()<meta['event_start']:
                               other_start_counts[(vname,str(int(motor.group(1))),'NF_'+rank_s)]+=1
+                              event_trace[(vname,str(int(motor.group(1))))].append((day.isoformat(),venue,race,boat_s,'NF_'+rank_s))
                       if not rank_s.isdigit():
                           if (venue,race) in completed:
                               stat_motor=motor_pat.search(body)
@@ -181,6 +182,9 @@ jobs:
                   'meet_start_after_snapshot' if meet>base['date'] else 'other')
               candidate_residual_boundary_groups[bucket]['motors']+=1
               candidate_residual_boundary_groups[bucket]['abs_delta']+=abs(delta)
+          # A status belonging to a race without numeric finishers must also
+          # appear in the evidence trail; previously it affected counts but
+          # was absent from event_trace.
           # Expose concise actionable examples without needing artifact download.
           residual_status_diagnostics=[]
           for sample in candidate_residual_samples:
