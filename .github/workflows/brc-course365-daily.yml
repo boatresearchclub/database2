@@ -1,0 +1,117 @@
+name: BRC Player Course 365D Auto Update
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/brc-course365-daily.yml'
+  schedule:
+    # 10:35 JST / 01:35 UTC. Past day's K file must exist.
+    - cron: '35 1 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: brc-player-course365-daily
+  cancel-in-progress: false
+
+jobs:
+  publish-if-verified:
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    steps:
+      - name: Checkout only the active BRC database
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install 7-Zip to unpack official K files
+        run: sudo apt-get update -qq && sudo apt-get install -y p7zip-full
+      - name: Restore verified official K files
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-course365-k-${{ github.run_id }}
+          restore-keys: |
+            brc-course365-k-
+      - name: Official result parser tests
+        run: |
+          python scripts/test_course365_v2.py
+          python scripts/test_course365_v3_official.py
+      - name: Locate existing 2026-09-22 BRC course reference
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json,pathlib
+          manifest=json.loads(pathlib.Path('data/.brc_split_manifest.json').read_text(encoding='utf-8'))
+          files=[x for x in manifest['files'] if x.startswith('brc-apd8-recent-course-1y-') and x.endswith('.js')]
+          if len(files)!=1:raise ValueError('Exactly one reference JS is required: '+repr(files))
+          base=pathlib.Path('data')/files[0]
+          if not base.is_file():raise ValueError('Reference JS missing: '+str(base))
+          pathlib.Path('.cache').mkdir(exist_ok=True)
+          pathlib.Path('.cache/brc-course365-baseline-path').write_text(str(base),encoding='utf-8')
+          print('Reference:',base)
+          PY
+      - name: Strict official historical agreement check (no writes)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/BRC_PLAYER_COURSE365_V3_OFFICIAL.py \
+            --archive-dir .cache/brc-course365-k --download-k \
+            --as-of 2026-09-22 --baseline-max-bad 0 \
+            --baseline-js "$(cat .cache/brc-course365-baseline-path)" \
+            --check-only --report .cache/brc-course365-baseline-report.json
+      - name: Create current rolling 365-day JSON only if checks passed
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/BRC_PLAYER_COURSE365_V3_OFFICIAL.py \
+            --archive-dir .cache/brc-course365-k --download-k \
+            --out data/player_course_1y_daily.json \
+            --report .cache/brc-course365-daily-report.json
+      - name: Ensure snapshot was built for yesterday JST
+        shell: bash
+        run: |
+          python - <<'PY'
+          from datetime import date,datetime,timedelta,timezone
+          import pathlib,json
+          f=pathlib.Path('data/player_course_1y_daily.json')
+          p=json.loads(f.read_text(encoding='utf-8'))
+          yesterday=(datetime.now(timezone(timedelta(hours=9))).date()-timedelta(days=1)).isoformat()
+          if p.get('as_of')!=yesterday:raise ValueError(f'Expected {yesterday}, got {p.get("as_of")}')
+          if len(p['players'])<1500:raise ValueError('Player coverage too small')
+          print('Safe publish candidate:',p['as_of'],'players',len(p['players']))
+          PY
+      - name: Commit only the validated daily dataset
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'BRC Course365 Bot'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add -- data/player_course_1y_daily.json
+          if git diff --cached --quiet; then
+            echo 'Data already current; no commit.'
+            exit 0
+          fi
+          git commit -m 'data: update verified player course 365-day snapshot'
+          git push origin HEAD:main
+      - name: Save official K archive for later runs
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-course365-k-${{ github.run_id }}
+      - name: Keep audits for investigation
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: brc-course365-audits-${{ github.run_id }}
+          path: |
+            .cache/brc-course365-baseline-report.json
+            .cache/brc-course365-daily-report.json
+          if-no-files-found: ignore
+          retention-days: 14
