@@ -64,6 +64,24 @@ class ChampionshipResearchTests(unittest.TestCase):
         self.assertEqual(data['release_decision'],'NO_GO')
         self.assertFalse(data['app_data_published'])
 
+    def test_championship_reconciliation_and_venue_coverage(self):
+        with patch.object(mod,'scan_day',return_value=[{
+            'date':'2026-09-06','venue':'桐生','race':12,
+            'motors':['11','12','13','14','15','16'],'winning_motor':'11'}]):
+            data=mod.build({date(2026,9,6):pathlib.Path('unused')},date(2026,9,7))
+        self.assertEqual(data['championships_by_venue']['桐生'],1)
+        self.assertEqual(data['championships_by_race_number']['12'],1)
+        self.assertEqual(data['championship_entrant_count'],6)
+        self.assertEqual(data['championship_winner_count'],1)
+        self.assertTrue(all(data['championship_validation_assertions'].values()))
+
+    def test_duplicate_final_event_rejected(self):
+        item={'date':'2026-09-06','venue':'桐生','race':12,
+              'motors':['11','12','13','14','15','16'],'winning_motor':'11'}
+        with patch.object(mod,'scan_day',return_value=[item,item]):
+            with self.assertRaisesRegex(ValueError,'Duplicate championship'):
+                mod.build({date(2026,9,6):pathlib.Path('unused')},date(2026,9,7))
+
     def test_duplicate_motor_rejected(self):
         with TemporaryDirectory() as tmp:
             p=pathlib.Path(tmp)/'K260906.TXT'
