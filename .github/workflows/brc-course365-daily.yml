@@ -5,6 +5,8 @@ on:
   push:
     paths:
       - '.github/workflows/brc-course365-daily.yml'
+      - 'scripts/BRC_PLAYER_COURSE365_V3_OFFICIAL.py'
+      - 'scripts/test_course365_v3_official.py'
   schedule:
     # 10:35 JST / 01:35 UTC. Past day's K file must exist.
     - cron: '35 1 * * *'
