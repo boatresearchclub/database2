@@ -27,7 +27,7 @@ import BRC_PLAYER_COURSE365_V2_SAFE as base
 JST = timezone(timedelta(hours=9))
 RE_VENUE_START = re.compile(r'^\s*(\d{2})KBGN\s*$')
 RE_VENUE_END = re.compile(r'^\s*(\d{2})KEND\s*$')
-RE_RACE = re.compile(r'^\s*(\d{1,2})R\s+')
+RE_RACE = re.compile(r'^\s*(\d{1,2})R\s+.*?H\s*\d{3,4}m(?:\s|$)', re.I)
 RE_DATE = re.compile(r'(20\d\d)\s*/\s*(\d{1,2})\s*/\s*(\d{1,2})')
 RE_ENTRY = re.compile(r'^\s*(0[1-6]|[1-6]|F|L|K|S[0-2])\s+([1-6])\s+(\d{4})\s+(.+)$')
 # Racing record after player name: motor number, boat part, exhibition time, entry course.
