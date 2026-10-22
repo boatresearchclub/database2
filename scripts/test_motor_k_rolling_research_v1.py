@@ -10,7 +10,8 @@ import BRC_MOTOR_K_ROLLING_RESEARCH_V1 as research
 
 class RollingKTests(unittest.TestCase):
     def test_delivery_lag_is_distinct_from_older_gap(self):
-        with patch.object(research.motor_k, 'read_k', return_value=[('01', '22', 'ABC', '1234', '1')]):
+        with patch.object(research.official, 'load_k', return_value=([('event',)], 1, {})), \
+                patch.object(research.motor_k, 'read_k', return_value=[('01', '22', 'ABC', '1234', '1')]):
             result = research.build({date(2026,9,6):pathlib.Path('unused')}, date(2026,9,9))
         self.assertEqual(result['official_K_days_found'], 1)
         self.assertEqual(result['latest_day_pending_source_delivery'], ['2026-09-08'])
@@ -19,6 +20,12 @@ class RollingKTests(unittest.TestCase):
         self.assertEqual(result['official_numeric_finisher_starts_by_venue_motor']['桐生']['22'], 1)
         self.assertEqual(result['release_decision'], 'NO_GO')
         self.assertFalse(result['app_data_published'])
+
+    def test_invalid_official_results_are_rejected(self):
+        with patch.object(research.official, 'load_k',
+                          side_effect=ValueError('bad K date')):
+            with self.assertRaisesRegex(ValueError, 'bad K date'):
+                research.build({date(2026,9,6):pathlib.Path('bad')}, date(2026,9,7))
 
     def test_missing_official_day_is_retried_without_fabricating_data(self):
         from tempfile import TemporaryDirectory
@@ -45,7 +52,8 @@ class RollingKTests(unittest.TestCase):
         self.assertNotIn(date(2026,9,6), files)
 
     def test_complete_window_remains_not_approved(self):
-        with patch.object(research.motor_k, 'read_k', return_value=[]):
+        with patch.object(research.official, 'load_k', return_value=([('event',)], 1, {})), \
+                patch.object(research.motor_k, 'read_k', return_value=[('01', '11', 'R', '0001', '2')]):
             result = research.build({date(2026,9,6):pathlib.Path('unused')}, date(2026,9,7))
         self.assertTrue(result['official_K_archive_complete_through_yesterday'])
         self.assertFalse(result['full_cycle_n_verified'])
