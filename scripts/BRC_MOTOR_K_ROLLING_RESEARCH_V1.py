@@ -47,7 +47,10 @@ def build(files, today):
     for (code, motor), n in sorted(counts.items()):
         observed[VENUES[int(code)-1]][motor] = n
     missing_last_7 = [x for x in missing if x >= (end-timedelta(days=6)).isoformat()]
-    is_complete = len(missing) == 0
+    # Yesterday's file may not yet have been delivered at the time the job runs.
+    # Older missing dates require a separate retrieval/integrity investigation.
+    missing_recent = [x for x in missing if x == end.isoformat()]
+    missing_older = [x for x in missing if x < end.isoformat()]
     return {
         "version": "BRC-Motor-K-Rolling-Research-V1",
         "snapshot_reference_date": "2026-09-05",
@@ -55,10 +58,14 @@ def build(files, today):
         "expected_days": (end-START).days+1, "official_K_days_found": processed,
         "days_missing": len(missing), "missing_day_examples": missing[:25],
         "missing_days_last_7": missing_last_7,
+        "latest_day_pending_source_delivery": missing_recent,
+        "older_days_missing_requiring_investigation": missing_older,
+        "days_complete_through_previous_to_yesterday": len(missing_older) == 0,
         "venue_days_with_entries": len(race_days),
         "official_numeric_finisher_starts_by_venue_motor": observed,
         "special_status_occurrences": dict(status_counts),
         "rows_per_day_last_7": {(end-timedelta(days=i)).isoformat(): by_date.get((end-timedelta(days=i)).isoformat()) for i in range(6,-1,-1)},
+        "official_K_archive_complete_through_yesterday": len(missing) == 0,
         "full_cycle_n_verified": False, "motor_cycle_rollovers_verified": False,
         "finals_verified": False, "wins_verified": False,
         "release_decision": "NO_GO",
@@ -80,7 +87,10 @@ def main():
     out.write_text(json.dumps(result, ensure_ascii=False, indent=2)+"\n", encoding="utf-8")
     summary = ("Motor rolling K research: " + str(result["official_K_days_found"]) + "/"
         + str(result["expected_days"]) + " days; last 7 missing "
-        + str(len(result["missing_days_last_7"])) + "; NO PUBLISH.\n")
+        + str(len(result["missing_days_last_7"])) + "; older missing "
+        + str(len(result["older_days_missing_requiring_investigation"]))
+        + "; pending latest " + str(result["latest_day_pending_source_delivery"])
+        + "; NO PUBLISH.\n")
     print(summary.strip())
     import os
     if os.environ.get("GITHUB_STEP_SUMMARY"):
