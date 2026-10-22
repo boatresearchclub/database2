@@ -193,6 +193,12 @@ jobs:
                   'included_status_counts':{k:v for k,v in statuses.items() if k in candidate and v},
                   'possible_S0_accounting_gap':statuses['S0']+statuses['NF_S0'],
               })
+          residual_s0_summary={
+              'motors_with_S0':sum(bool(x['possible_S0_accounting_gap']) for x in residual_status_diagnostics),
+              'motors_without_S0':sum(not x['possible_S0_accounting_gap'] for x in residual_status_diagnostics),
+              'S0_events_in_residual_motors':sum(x['possible_S0_accounting_gap'] for x in residual_status_diagnostics),
+              'motors_exactly_explained_if_S0_added':sum(x['possible_S0_accounting_gap']==-x['delta'] for x in residual_status_diagnostics),
+          }
           residual_event_traces=[]
           for sample in candidate_residual_samples:
               key=(sample['venue'],sample['motor'])
@@ -259,6 +265,7 @@ jobs:
               'candidate_policy_residual_samples':candidate_residual_samples,
               'candidate_residual_event_traces':residual_event_traces,
               'candidate_residual_status_diagnostics':residual_status_diagnostics,
+              'candidate_residual_s0_summary':residual_s0_summary,
               'candidate_policy_not_approved':True,
               'candidate_residual_delta_histogram':candidate_residual_delta_histogram,
               'candidate_residual_boundary_groups':candidate_residual_boundary_groups,
