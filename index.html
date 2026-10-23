@@ -1,3 +1,4 @@
+<!-- BRC_V3_FOUR_METRIC_GATE_AUDIT_V2_20261023: diagnostic bridge for admin two-tab v3 gate; same-race four rates and 12 DOM cells, no probabilities or public/member changes. -->
 <!-- BRC_V3_PT_SOURCE_ADMIN_DIAG_V1_20261023: Admin-only verified Worker response version / pt-source; no TimeX computation, API, public or course365 changes. -->
 <!-- BRC_PLAYER365_SCHEDULE_DIAG_V1_20261023: Show daily feed publication schedule accurately; preserve fixed dictionary stats and prediction logic. -->
 <!-- BRC_V3_DIAG_OUTPUT_FIX_V2_20261023: admin-only worker code/reason export and course365 status error clearing; no probability or motor data changes. -->
@@ -364,7 +365,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261023-PLAYER365-V3-PTSOURCE-DIAG-V1">
+<meta name="brc-build" content="20261023-V3-4METRIC-AIGATE-AUDIT-V2">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -19668,6 +19669,114 @@ function brcV3AdminRestoreExistingTimeX(force=false){
   brcV3AdminSetTableRateLabel('（v2参考・v3未適用）','legacy');
   return true;
 }
+// BRC_V3_FOUR_METRIC_GATE_AUDIT_V2_20261023
+// Read-only administrator diagnostics. This supplies the existing AI 2-tab
+// adapter with a verified, same-race tableGate signal; it NEVER sets that signal
+// based only on the worker success flag, and it never changes rates/DOM/AI/bets.
+function brcV3AdminFourMetricGateAudit(){
+  const report={
+    tableGate:{status:'unverified',referenceLocked:true,reason:'NO_VERIFIED_CURRENT_V3'},
+    fourMetricAudit:{checked:false,perBoat:[],totals:null,tableDomCellsChecked:0,tableDomCellsMatched:0,
+      detailKpi:'not_open',note:'Worker値と出走表表示の照合は管理者の同一レースのみ'}
+  };
+  try{
+    if(!BRC_ADMIN_ACTIVE||!BRC_MEMBER_ACTIVE ||
+       document.body?.classList.contains('brc-admin-public-view')){
+      report.tableGate.reason='NOT_ADMIN_VIEW';return report;
+    }
+    const state=__brcV3AdminDisplay;
+    const select=brcCurrentLiveExhibitionSelection();
+    const date=String(TODAY_LABEL||''),code=brcVenueCodeFromName(select?.venue||'');
+    const raceNo=Number(select?.raceNo);
+    const host=document.querySelector('#predictResult #predictTableWrap');
+    const key=[date,code,raceNo].join('|');
+    if(!state||!host||!code||!Number.isInteger(raceNo)||raceNo<1||raceNo>12||state.key!==key){
+      report.tableGate.reason='RACE_NOT_VERIFIED';return report;
+    }
+    if(!brcV3AdminLiveMatches(window.__currentLiveExhibition,date,code,raceNo)||
+       state.signature!==brcV3AdminLiveSignature(window.__currentLiveExhibition)){
+      report.tableGate.reason='LIVE_SIGNATURE_CHANGED';return report;
+    }
+    if(!state.priorCanonical||state.priorCanonical!==brcV3AdminPriorCanonical()){
+      report.tableGate.reason='PRIOR_CHANGED';return report;
+    }
+    if(__brcV3TableGateMode!=='verified'||host.dataset.brcV3RateMode!=='v3'||
+       host.classList.contains('brc-v3-rates-pending')){
+      report.tableGate.reason='TABLE_NOT_V3';return report;
+    }
+    const sourceBoats=window.__predictBoatsCurrent;
+    if(!Array.isArray(sourceBoats)||sourceBoats.length!==6){
+      report.tableGate.reason='ROSTER_NOT_SIX';return report;
+    }
+    const four=state.four,types=['wins','seconds','thirds','top3s'];
+    if(!types.every(t=>four?.[t] instanceof Map && four[t].size===6)){
+      report.tableGate.reason='FOUR_METRIC_MISSING';return report;
+    }
+    const totals={wins:0,seconds:0,thirds:0,top3s:0},rows=[];
+    const used=new Set();
+    for(let c=1;c<=6;c++){
+      const b=sourceBoats.find(x=>Number(x?.course)===c);
+      if(!b||used.has(c)) {report.tableGate.reason='ROSTER_MISMATCH';return report;}
+      used.add(c);
+      const vals=types.map(t=>four[t].get(c));
+      if(vals.some(v=>typeof v!=='number'||!Number.isFinite(v)||v<0||v>100)){
+        report.tableGate.reason='INVALID_PROBABILITY';return report;
+      }
+      const [win,second,third,top3]=vals;
+      if(Math.abs(win+second+third-top3)>0.02){
+        report.tableGate.reason='BOAT_4_METRIC_SUM_MISMATCH';return report;
+      }
+      const priorWin=Number(b.basePctFloat),priorTop3=Number(b.basePct3Float);
+      if(![priorWin,priorTop3].every(x=>Number.isFinite(x)&&x>=0&&x<=100)){
+        report.tableGate.reason='PRIOR_NUMERIC_INVALID';return report;
+      }
+      const winCell=document.getElementById('predict-win-cell-'+c);
+      const top3Cell=document.getElementById('predict-top3-cell-'+c);
+      if(!winCell||!top3Cell){report.tableGate.reason='DOM_CELLS_MISSING';return report;}
+      const expectedWin=brcBuildProbabilityCell(Math.round(win),
+        brcBuildExhibitionProbabilityArrowIcon(win-priorWin,0.75));
+      const expectedTop3=brcBuildProbabilityCell(Math.round(top3),
+        brcBuildExhibitionProbabilityArrowIcon(top3-priorTop3,0.75));
+      const matchedWin=winCell.innerHTML===expectedWin;
+      const matchedTop3=top3Cell.innerHTML===expectedTop3;
+      report.fourMetricAudit.tableDomCellsChecked+=2;
+      report.fourMetricAudit.tableDomCellsMatched+=Number(matchedWin)+Number(matchedTop3);
+      types.forEach((t,i)=>{totals[t]+=vals[i];});
+      rows.push({course:c,winPct:win,secondPct:second,thirdPct:third,top3Pct:top3,
+        displayedWinPct:Math.round(win),displayedTop3Pct:Math.round(top3),
+        domWinMatch:matchedWin,domTop3Match:matchedTop3});
+    }
+    report.fourMetricAudit.checked=true;
+    report.fourMetricAudit.perBoat=rows;
+    report.fourMetricAudit.totals=Object.fromEntries(
+      types.map(t=>[t,Math.round(totals[t]*1e6)/1e6]));
+    if(types.some(t=>Math.abs(totals[t]-(t==='top3s'?300:100))>0.02)){
+      report.tableGate.reason='SIX_BOAT_TOTAL_INVALID';return report;
+    }
+    if(report.fourMetricAudit.tableDomCellsMatched!==12){
+      report.tableGate.reason='TABLE_DOM_12_CELL_DRIFT';return report;
+    }
+    // Player detail verification is advisory; unopened detail must not be treated as a failure.
+    const detail=document.getElementById('predictDetailBody');
+    const kpis=detail?.querySelector('.brc-apd2-head .brc-apd2-kpis');
+    const detailCourse=Number(detail?.querySelector('.brc-apd2-head .brc-apd2-lane')?.textContent?.trim());
+    if(kpis&&Number.isInteger(detailCourse)&&detailCourse>=1&&detailCourse<=6){
+      const row=rows[detailCourse-1];
+      const vals=Array.from(kpis.querySelectorAll('.brc-apd2-kpi')).map(x=>({
+        label:x.querySelector('.k')?.textContent?.trim()||'',value:x.querySelector('.v')?.textContent?.trim()||''}));
+      const checks=[['1着率',row.winPct],['2着率',row.secondPct],['3着率',row.thirdPct],['3連対率',row.top3Pct]];
+      report.fourMetricAudit.detailKpi=checks.every(([name,v])=>vals.some(x=>
+        x.label.includes('v3')&&x.label.includes(name)&&x.value===Math.round(v)+'%'))?'matched':'mismatch';
+    }
+    report.tableGate={status:'verified',referenceLocked:false,reason:'CURRENT_RACE_4METRIC_AND_12_DOM_CELLS_VERIFIED'};
+    return report;
+  }catch(e){
+    report.tableGate={status:'unverified',referenceLocked:true,reason:'AUDIT_EXCEPTION_'+String(e?.name||'Error').slice(0,30)};
+    return report;
+  }
+}
+// END BRC_V3_FOUR_METRIC_GATE_AUDIT_V2_20261023
+
 window.brcV3AdminDiagnostics=function(){
   const selected=typeof brcCurrentLiveExhibitionSelection==='function'?brcCurrentLiveExhibitionSelection():{};
   const live=window.__currentLiveExhibition||null;
@@ -19676,6 +19785,7 @@ window.brcV3AdminDiagnostics=function(){
   const same=!!live && String(live.date||'')===current &&
     String(live.venue_code||'').padStart(2,'0')===String(code).padStart(2,'0') &&
     Number(live.race_no)===Number(selected.raceNo);
+  const v3Audit=brcV3AdminFourMetricGateAudit();
   return {
     build:document.querySelector('meta[name="brc-build"]')?.content||'',
     admin:!!BRC_ADMIN_ACTIVE, member:!!BRC_MEMBER_ACTIVE,
@@ -19688,6 +19798,8 @@ window.brcV3AdminDiagnostics=function(){
     // Admin only: record the version from the verified Worker response, not a guessed setting.
     v3PtSource:__brcV3AdminDisplay?.ptSource||'',
     v3WorkerVersion:__brcV3AdminDisplay?.workerVersion||'',
+    tableGate:v3Audit.tableGate,
+    fourMetricAudit:v3Audit.fourMetricAudit,
     displayedRates:__brcV3AdminDisplay?'TimeX v3（照合済み）':'既存TimeX v2（参考）',
     v3Status:document.querySelector('#brcV3AdminCompare [data-brc-v3-status]')?.textContent||'検証パネル未生成',
     liveFetch:window.__brcV3LiveFetchStatus||null,
@@ -38408,6 +38520,18 @@ body.brc-admin-home-active .brc-admin-top-race .dp-boat-no{
       strictExhibition:!!d.strictExhibition, v3Verified:!!d.v3Verified,
       v3PtSource:!!d.v3Verified?String(d.v3PtSource||'unknown').slice(0,16):'',
       v3WorkerVersion:!!d.v3Verified?String(d.v3WorkerVersion||'').slice(0,96):'',
+      tableGate:{status:String(d.tableGate?.status||'unverified').slice(0,24),
+        referenceLocked:d.tableGate?.referenceLocked!==false,
+        reason:String(d.tableGate?.reason||'').slice(0,100)},
+      fourMetricAudit:{checked:d.fourMetricAudit?.checked===true,
+        totals:d.fourMetricAudit?.totals||null,
+        tableDomCellsChecked:Number(d.fourMetricAudit?.tableDomCellsChecked)||0,
+        tableDomCellsMatched:Number(d.fourMetricAudit?.tableDomCellsMatched)||0,
+        detailKpi:String(d.fourMetricAudit?.detailKpi||'not_open').slice(0,25),
+        perBoat:Array.isArray(d.fourMetricAudit?.perBoat)?d.fourMetricAudit.perBoat.slice(0,6).map(b=>({
+          course:Number(b.course),winPct:b.winPct,secondPct:b.secondPct,
+          thirdPct:b.thirdPct,top3Pct:b.top3Pct,
+          domWinMatch:b.domWinMatch===true,domTop3Match:b.domTop3Match===true})):[]},
       displayedRates:String(d.displayedRates||''),liveBlockReason:String(d.liveBlockReason||''),
       priorReady:!!d.priorReadiness?.ready,priorIssue:String(d.priorReadiness?.reason||''),
       workerHttp:w?.http??null,workerStatus:String(w?.status||w?.error||'').slice(0,160),
@@ -38425,7 +38549,10 @@ body.brc-admin-home-active .brc-admin-top-race .dp-boat-no{
     if(!s)return {status:'管理者認証待ち',detail:'管理者ログイン後に表示します。',ready:false};
     if(s.error)return {status:'診断エラー',detail:s.error,ready:false};
     if(!s.race||s.race==='未選択'||/\s0R$/.test(s.race))return {status:'レース未選択',detail:'出走表AIで会場とレースを選び、戻って確認してください。',ready:false};
-    if(s.v3Verified)return {status:'TimeX v3 適用中',detail:'管理者出走表4指標はv3照合済み。AI・買い目内部は別途対応です。',ready:true};
+    if(s.v3Verified && s.tableGate?.status!=='verified')
+      return {status:'v3 Worker照合済み・画面監査待ち',detail:s.tableGate?.reason||'6艇4指標と出走表DOMの一致を確認中',ready:false};
+    if(s.v3Verified && s.tableGate?.status==='verified')
+      return {status:'TimeX v3 表示整合済み',detail:'6艇×4指標の合計整合・出走表12セル一致。AI2タブと買い目は別途判定。',ready:true};
     if(!s.tableReady)return {status:'出走表データ待ち',detail:'レースを開いて出走表の表示完了を待ってください。',ready:false};
     if(!s.livePresent){
       if(s.liveApiHttp===404)return {status:'v3未適用：展示API 404',detail:'対象レースのライブ展示データがAPIにありません。取得元・レース日時を確認してください。',ready:false};
@@ -38451,7 +38578,10 @@ body.brc-admin-home-active .brc-admin-top-race .dp-boat-no{
     state.textContent=summary.status+'\n'+summary.detail+'\n'+
       '対象: '+(lastReport.race||'未選択')+' ／ 画面の着率: '+(lastReport.displayedRates||'未取得')+'\n'+
       '版: '+(lastReport.build||'不明')+'\n'+
-      (lastReport.v3Verified?'補正方式（Worker応答）: '+(lastReport.v3PtSource||'unknown'):'補正方式: v3未照合');
+      (lastReport.v3Verified?'補正方式（Worker応答）: '+(lastReport.v3PtSource||'unknown'):'補正方式: v3未照合')+'\n'+
+      '4指標監査: '+(lastReport.tableGate?.status||'未確認')+
+      ' ／ 出走表 '+(lastReport.fourMetricAudit?.tableDomCellsMatched||0)+'/'+
+      (lastReport.fourMetricAudit?.tableDomCellsChecked||0)+'セル';
     return lastReport;
   }
   refresh?.addEventListener('click',()=>{render();feedback.textContent='最新の状態を確認しました';});
