@@ -63,8 +63,8 @@ def approved_events(manifest, day, venues):
             raise ValueError('Independent official meeting URL not approved')
         if not str(event.get('reviewer','')).strip():
             raise ValueError('Independent official meeting reviewer missing')
-        if compact(event['title']) not in compact(venues[code]['header']):
-            raise ValueError('Racecard meeting title does not match approved official title')
+        if compact(event['title']) != compact(venues[code].get('meeting_title','')):
+            raise ValueError('Full official racecard meeting title does not match independently approved title')
         approvals[code]=event
     return approvals
 
@@ -90,6 +90,10 @@ def prepare_batch(raw,day,manifest):
         raise ValueError('Race roster cardinality mismatch')
     return ready, {'status':'READY_FOR_STAGE','day':day,
                    'races':len(ready),'venues':sorted(allowed),
+                   'eligible_venues':len(venues)-int('03' in venues),
+                   'approved_venues':len(allowed),
+                   'coverage':('FULL_SUPPORTED' if len(allowed)==len(venues)-int('03' in venues) else 'PARTIAL'),
+                   'edogawa_worker_unsupported':('03' in venues),
                    'source_sha256':hashlib.sha256(raw).hexdigest()}
 
 
@@ -178,6 +182,7 @@ def main(argv=None):
                 f.write('### BRC v3 verified official stage publisher\n')
                 f.write(f"- {status['day']}: {status['status']}\n")
                 f.write(f"- Verified race contexts: {status.get('races',0)}\n")
+                f.write(f"- Coverage: {status.get('coverage','NOT_VERIFIED')} ({status.get('approved_venues',0)}/{status.get('eligible_venues','?')} supported venues)\n")
                 f.write(f"- Worker save acknowledgments: {status['published']}\n")
                 f.write('- Staging only, no v2/INDEX changes; live prediction must be verified separately.\n')
 
