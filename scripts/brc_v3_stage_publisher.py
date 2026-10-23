@@ -97,6 +97,12 @@ def roster(raw, day):
         header_candidates=[x for x in lines[:15] if 'ボートレース' in x and '月' in x]
         if not header_candidates:fail(code+' 公式会場ヘッダー不足')
         header=header_candidates[0].strip()
+        # The first-line header truncates long meeting names. Verify against
+        # the complete official racecard title following the 番組表 marker.
+        title_marker=next((i for i,x in enumerate(lines[:12]) if '番組表' in x),None)
+        if title_marker is None:fail(code+' 公式番組表タイトル見出しなし')
+        meeting_title=next((x.strip() for x in lines[title_marker+1:title_marker+5] if x.strip()),'')
+        if len(meeting_title)<3:fail(code+' 公式開催名が取得できません')
         collapse=re.sub(r'\s+','',header)
         if 'ボートレース'+vname not in collapse:fail(code+' 公式会場名が不一致: '+header[:80])
         current=None; entries={}; venue_races=[]
@@ -119,7 +125,7 @@ def roster(raw, day):
         finish()
         if len(venue_races)!=12 or sorted(x['race_no'] for x in venue_races)!=list(range(1,13)):
             fail(f'{vname} の公式12Rが不足しています: {len(venue_races)}')
-        venues[code]={'venue':vname,'header':header,'grade':'','gradeLogicV1':True,
+        venues[code]={'venue':vname,'header':header,'meeting_title':meeting_title,'grade':'','gradeLogicV1':True,
                       'women':None,'title':'','official_source':'','reviewer':'','verified':False}
         # Narrow, date- and title-locked official cross-check. The official event schedule
         # independently identifies Ashiya 2026-10-23 as KBC Radio Cup, general grade.
