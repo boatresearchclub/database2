@@ -1,3 +1,4 @@
+<!-- BRC_MOTOR_PREVIOUS_SINGLE_SECTION_V3_20261024: 24-venue detail shows verified previous racer/ranks only under 前節分析; remove duplicate top-level card and admin-only stale global notice; cumulative history remains fail-closed; prediction/TimeX/public auth untouched. -->
 <!-- BRC_MOTOR_PREVIOUS_RANKS_VERIFIED_V2_20261024: Exact-crosschecked previous event ranks and final result only; no cumulative motor scores, predictions or public v3 changes. -->
 <!-- BRC_MOTOR_DAILY_SAFE_UI_V1: cross-source current motor detail; do not confuse sparse final history with no finals, require evidence for previous-final badge; no prediction math. -->
 <!-- BRC_MOTOR_BACKFILL_TAP_FAST_V3_20261024: Share race live fetch among motor cards, skip definitely future exhibition, protect TAP version and admin audit. -->
@@ -372,7 +373,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261024-MOTOR-PREVIOUS-RANKS-VERIFIED-V2">
+<meta name="brc-build" content="20261024-MOTOR-PREVIOUS-SINGLE-SECTION-V3">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -11568,7 +11569,7 @@ function renderPredictUnifiedMotor(course,target){
     const adminTraitHtml=brcBuildAdminTokuyamaMotorTraitHtml(venue,b.motorNo,publicInfo);
     if(BRC_MOTOR_PUBLIC_VENUES.has(String(venue||''))){
       const newBadge=staleCycle?`<div style="display:flex;align-items:center;gap:8px;margin:0 0 10px;flex-wrap:wrap;">${brcNewMotorBadgeHtml()}<strong style="font-size:12px;">${fmtMotorDate(resetDate)}から現モーターサイクル</strong></div>`:'';
-      target.innerHTML=newBadge+brcMotorHistoryNoticeHtml(md,false)+brcMotorVerifiedPreviousCardHtml(venue,b.motorNo)+(adminTraitHtml||'<div class="predict-unified-empty">BRCモーター分析データがありません。</div>');
+      target.innerHTML=newBadge+(adminTraitHtml||'<div class="predict-unified-empty">BRCモーター分析データがありません。</div>');
       return;
     }
     target.innerHTML=`<div class="motor-detail-topstats"><div class="motor-detail-stat"><b style="color:${gcol};">${escMotor(b.motorGrade||'―')}</b><span>相対評価</span></div><div class="motor-detail-stat"><b>${Number.isFinite(Number(b.motor2))?Math.round(Number(b.motor2))+'%':'―'}</b><span>2連対率</span></div><div class="motor-detail-stat"><b>${escMotor(b.motorNo)}</b><span>号機</span></div><div class="motor-detail-stat"><b>―</b><span>履歴N</span></div></div>${brcMotorVerifiedPreviousCardHtml(venue,b.motorNo)}<div class="predict-unified-empty">現モーターサイクルの累計履歴を蓄積中です。</div>`;
@@ -11584,7 +11585,7 @@ function renderPredictUnifiedMotor(course,target){
   const adminTraitHtml=brcBuildAdminTokuyamaMotorTraitHtml(venue,b.motorNo,publicInfo);
   if(BRC_MOTOR_PUBLIC_VENUES.has(String(venue||''))){
     // 全国24場は新BRCモーター分析へ一本化。旧モーター詳細は重複するため表示しない。
-    target.innerHTML=brcMotorHistoryNoticeHtml(md,true)+(adminTraitHtml||'<div class="predict-unified-empty">BRCモーター分析データがありません。</div>');
+    target.innerHTML=(adminTraitHtml||'<div class="predict-unified-empty">BRCモーター分析データがありません。</div>');
     return;
   }
   // フォールバック保険（通常は24場すべて上でreturn）。
