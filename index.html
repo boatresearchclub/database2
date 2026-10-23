@@ -1,3 +1,4 @@
+<!-- BRC_PLAYER365_SCHEDULE_DIAG_V1_20261023: Show daily feed publication schedule accurately; preserve fixed dictionary stats and prediction logic. -->
 <!-- BRC_V3_DIAG_OUTPUT_FIX_V2_20261023: admin-only worker code/reason export and course365 status error clearing; no probability or motor data changes. -->
 <!-- BRC_V3_422_ADMIN_REASON_DIAG_V1_20261023: admin-only Worker failure code/reason diagnostics; no math or request changes. -->
 <!-- BRC_MOTOR_FOUR_SECTION_ORDER_SAFE_V1_20261023: details/current/past/previous order; no motor arithmetic, TimeX, worker, or member rights changes. -->
@@ -362,7 +363,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261023-MOTOR4-V3-DIAG-EXPORT-FIX-V2">
+<meta name="brc-build" content="20261023-PLAYER365-SCHEDULE-DIAG-V1">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -32263,11 +32264,30 @@ body.brc-admin-home-active .brc-admin-login-top-preview-note{display:none;}
   function fmt(d){const m=String(d).match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?`${m[1]}/${Number(m[2])}/${Number(m[3])}`:String(d);}
   function isIsoDate(s){return /^\d{4}-\d{2}-\d{2}$/.test(s)&&isoDay(s+'T00:00:00Z')===s;}
   function get(reg,course){return current?.[String(reg)]?.[String(course)]||null;}
-  function label(){return `${fmt(meta.start)}〜${fmt(meta.end)}${meta.end<previousJstDay()?'（未更新）':''}`;}
+  // GitHub Actions starts at 10:35 JST, and validation/publication takes time.
+  // The day-before-yesterday snapshot is expected in the morning before publishing.
+  function scheduleState(){
+    const yesterday=previousJstDay();
+    if(meta.end===yesterday)return 'current';
+    const prior=isoDay(Date.parse(yesterday+'T00:00:00Z')-dayMs);
+    if(meta.end!==prior)return 'late';
+    const clock=new Date(Date.now()+9*3600000);
+    const minute=clock.getUTCHours()*60+clock.getUTCMinutes();
+    if(minute<10*60+35)return 'scheduled';
+    if(minute<14*60)return 'publishing';
+    return 'late';
+  }
+  function label(){
+    const state=scheduleState();
+    const suffix=state==='current'?'':state==='scheduled'?'（本日更新予定）':
+      state==='publishing'?'（更新確認中）':'（更新遅延）';
+    return `${fmt(meta.start)}〜${fmt(meta.end)}${suffix}`;
+  }
   function isFresh(){return meta.end===previousJstDay();}
+  function onSchedule(){return ['current','scheduled','publishing'].includes(scheduleState());}
   window.brcPlayerCourse365Get=get;
   window.brcPlayerCourse365PeriodLabel=label;
-  window.brcPlayerCourse365Status=()=>Object.freeze({as_of:meta.end,window_start:meta.start,source:meta.source,is_fresh:isFresh(),last_attempt_at:lastAttempt?new Date(lastAttempt).toISOString():'',last_success_at:lastSuccessAt,last_error:lastError});
+  window.brcPlayerCourse365Status=()=>Object.freeze({as_of:meta.end,window_start:meta.start,source:meta.source,is_fresh:isFresh(),on_schedule:onSchedule(),schedule_state:scheduleState(),publish_start_jst:'10:35',last_attempt_at:lastAttempt?new Date(lastAttempt).toISOString():'',last_success_at:lastSuccessAt,last_error:lastError});
   window.brcPlayerCourse365Map=()=>current;
   function validRecord(v){
     if(!v||Array.isArray(v)||typeof v!=='object')return false;
@@ -32315,7 +32335,7 @@ body.brc-admin-home-active .brc-admin-login-top-preview-note{display:none;}
     const today=jstToday();
     if(running)return running;
     if(!force&&checkedDay===today&&isFresh())return;
-    if(!force&&Date.now()-lastAttempt<30*60000)return;
+    if(!force&&Date.now()-lastAttempt<15*60000)return;
     lastAttempt=Date.now();
     running=(async()=>{
       try{
@@ -32357,7 +32377,7 @@ body.brc-admin-home-active .brc-admin-login-top-preview-note{display:none;}
   window.brcPlayerCourse365Refresh=()=>checkDaily(true);
   window.addEventListener('focus',()=>{void checkDaily(false);});
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)void checkDaily(false);});
-  setInterval(()=>{void checkDaily(false);},30*60000);
+  setInterval(()=>{void checkDaily(false);},15*60000);
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{void checkDaily(false);},{once:true});
   else void checkDaily(false);
 })();
@@ -39989,7 +40009,9 @@ setInterval(()=>{
     catch(e){motorPrevious={last_error:clean(e?.message||e)};}
     return {build:'BRC_ADMIN_DATA_HEALTH_V2_20261022',checked_at:new Date().toISOString(),
       course365:course?{as_of:clean(course.as_of),window_start:clean(course.window_start),
-        is_fresh:course.is_fresh===true,source:clean(course.source),last_attempt_at:clean(course.last_attempt_at),
+        is_fresh:course.is_fresh===true,on_schedule:course.on_schedule===true,
+        schedule_state:clean(course.schedule_state),publish_start_jst:clean(course.publish_start_jst),
+        source:clean(course.source),last_attempt_at:clean(course.last_attempt_at),
         last_success_at:clean(course.last_success_at),last_error:clean(course.last_error)}:null,
       motor:motor?{as_of:clean(motor.as_of),age_days:motor.age_days??null,
         is_fresh:motor.is_fresh===true,venue_count:Number(motor.venue_count)||0,
@@ -40018,7 +40040,9 @@ setInterval(()=>{
     const ok=d.is_fresh===true;
     const src=d.source==='site'?'同サイトJSON':d.source==='database2'?'database2 JSON':d.source==='embedded'?'HTML内の保存済みデータ':clean(d.source||'不明');
     const date=d.as_of||'不明';
-    return title+'：'+(ok?'日付基準に合格':'未更新・要確認')+'\n基準日：'+date+
+    const courseState=title==='選手・コース別365日成績'&&d.on_schedule===true;
+    const status=ok?'前日分まで取得済み':courseState?'日次更新予定内（異常とは限りません）':'未更新・要確認';
+    return title+'：'+status+'\n基準日：'+date+
       (period&&d.window_start?'（開始 '+d.window_start+'）':'')+
       '\n使用データ：'+src+
       (d.age_days!==null&&d.age_days!==undefined?' ／ 経過 '+d.age_days+'日':'')+
@@ -40039,7 +40063,9 @@ setInterval(()=>{
         'データ辞典・選手詳細：集計元の更新状況',
         'グレード・会場別：2026/07までの固定集計（日次更新未接続）',
         '選手・コース別ST：2026/09/22までの固定集計（日次更新未接続）',
-        '選手・コース別365日：'+(course?.as_of||'日付未取得')+' ／ '+(course?.is_fresh?'前日分まで確認':'更新要確認'),
+        '選手・コース別365日：'+(course?.as_of||'日付未取得')+' ／ '+
+          (course?.is_fresh?'前日分まで確認':course?.on_schedule?'更新予定内':'更新要確認'),
+        '365日JSONの更新開始：毎日10:35 JST（完了は検証・取得次第）',
         '注：この診断は元データの最新性を確認するもので、公式結果の再集計完了を保証しません。'
       ].join('\n');
     }
