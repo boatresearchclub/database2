@@ -1,3 +1,4 @@
+<!-- BRC_TAP_RESPONSIVE_SAFE_V1_20261024: delay hidden player directory initial render; narrow expensive global mutation observers; idempotent admin diagnostic DOM changes; pause hidden polling. No numeric/auth/prediction/Worker logic modifications. -->
 <!-- BRC_V3_AI_TWO_TAB_ADMIN_EXPORT_V3_20261024: Manager-only diagnostic export of BRC BRAIN/nige v3 eligibility and proven renderer usage. Does not modify calculations, predictions, worker access or public UI. -->
 <!-- BRC_INFO_PUBLIC_CLEAN_FROM_LATEST_20261023: Info historical outcome stats public to all visitors; invest/admin diagnostics remain restricted. Hide public-inappropriate labels; no data, TimeX, AI or math changes. -->
 <!-- BRC_V3_FOUR_METRIC_GATE_AUDIT_V2_20261023: diagnostic bridge for admin two-tab v3 gate; same-race four rates and 12 DOM cells, no probabilities or public/member changes. -->
@@ -367,7 +368,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261024-V3-AI2TAB-AUDIT-V3">
+<meta name="brc-build" content="20261024-TAP-RESPONSIVE-SAFE-V1">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -26070,7 +26071,18 @@ async function runPredict(){
 }
 
 // 描画後に別処理がDOMを書き換えた場合も、正式な開催日表示へ戻す。
-const __brcSemifinalObserver = new MutationObserver(() => enforceSemifinalDayUi());
+const __brcSemifinalObserver = new MutationObserver(records => {
+  // Narrow a formerly unconditional subtree observer: ignore changes in AI,
+  // motor, v3 diagnostics and other unrelated prediction widgets.
+  if(!records.some(rec=>{
+    const target=rec.target?.nodeType===1?rec.target:rec.target?.parentElement;
+    if(target?.closest?.('.race-summary-compact,.venue-pill'))return true;
+    return Array.from(rec.addedNodes||[]).some(n=>n.nodeType===1&&
+      (n.matches?.('.race-summary-compact,.venue-pill') ||
+       n.querySelector?.('.race-summary-compact,.venue-pill')));
+  }))return;
+  enforceSemifinalDayUi();
+});
 document.addEventListener('DOMContentLoaded', () => {
   const root = document.getElementById('page-predict') || document.body;
   __brcSemifinalObserver.observe(root, {subtree:true, childList:true, characterData:true});
@@ -26084,13 +26096,13 @@ function goToPlayerDetail(reg){
     const el = document.getElementById('page-'+id);
     if(el) el.style.display = (id==='database') ? '' : 'none';
   });
+  const alreadyRendered=!!window.__playersRendered;
+  const searchInput=document.getElementById('playerSearch');
+  playerSearchTerm=reg;
+  if(searchInput)searchInput.value=reg;
   showDatabasePage('players');
-  if(!window.__playersRendered){ renderPlayers(); window.__playersRendered = true; }
-
-  const searchInput = document.getElementById('playerSearch');
-  playerSearchTerm = reg;
-  if(searchInput) searchInput.value = reg;
-  renderPlayers();
+  // showDatabasePage does the initial filtered render on first visit.
+  if(alreadyRendered)renderPlayers();
 
   renderAllPlayerDetails(reg, 'grade');
   const shell = document.getElementById('playerDetailShell');
@@ -26110,8 +26122,9 @@ function brcSwitchPredictGuideTab(btn, tabKey){
   });
 }
 
-renderPlayers();
-window.__playersRendered = true;
+// BRC_TAP_RESPONSIVE_SAFE_V1: the player directory starts hidden. The existing
+// showDatabasePage('players') renders it on demand; no data or calculation changes.
+window.__playersRendered = false;
 </script>
 
 <!-- BRC_MOTOR_PUBLIC_7VENUES_V37_SHARE7_20260917: BRC_SHARE(7)内indexを母体に、現行7会場モーター分析のみ移植。徳山・宮島・芦屋・浜名湖・三国・唐津・大村。AI/展開/買い目へ加点なし。 -->
@@ -35764,7 +35777,17 @@ MEMBERS/管理者の履歴詳細へ本人着順を追加し、敗戦時に2〜6�
     });
   }
   labelGuard();
-  new MutationObserver(labelGuard).observe(document.body,{childList:true,subtree:true});
+  new MutationObserver(records=>{
+    const selector='[data-player-detail="weakness"]';
+    // The label only changes when a matching node is inserted or replaced.
+    if(!records.some(rec=>{
+      const target=rec.target?.nodeType===1?rec.target:rec.target?.parentElement;
+      if(target?.closest?.(selector))return true;
+      return Array.from(rec.addedNodes||[]).some(n=>
+        n.nodeType===1 && (n.matches?.(selector)||n.querySelector?.(selector)));
+    }))return;
+    labelGuard();
+  }).observe(document.body,{childList:true,subtree:true});
   console.info('['+VERSION+'] installed / player dictionary loss trend');
 })();
 </script>
@@ -38635,7 +38658,14 @@ body.brc-admin-home-active .brc-admin-top-race .dp-boat-no{
   });
   window.brcV3OperatorRefresh=render;
   render();
-  setInterval(()=>{if(document.visibilityState!=='hidden')render();},3000);
+  // Keep the manual refresh/copy actions authoritative; background diagnostics
+  // need not rebuild the report while their admin page is hidden.
+  setInterval(()=>{
+    if(document.visibilityState==='hidden')return;
+    const owner=panel.closest('[id^="page-"]');
+    if(owner && owner.style.display==='none')return;
+    render();
+  },3000);
 })();
 </script>
 
@@ -39462,7 +39492,13 @@ setInterval(()=>{
    }finally{working=false;}
  }
  // The original login/auth logic owns BRC_ADMIN_ACTIVE. No impersonation or credential changes.
- document.addEventListener('click',()=>{setTimeout(boot,0);},true);
+  // Only schedule a research boot after a page/login tab navigation when it is
+  // not installed. Do not allocate a task for every regular race/data tap.
+  document.addEventListener('click',ev=>{
+    if(installed || working || !admin())return;
+    if(!ev.target?.closest?.('.page-tab,.database-tab,[data-brc-admin-hub-tab]'))return;
+    setTimeout(boot,0);
+  },true);
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
  else boot();
  setInterval(()=>{
@@ -39613,14 +39649,15 @@ setInterval(()=>{
     host.appendChild(root);
   }
   function unmount(){if(root)root.remove();root=null;fields=null;}
-  function paint(el, val){el.state.textContent=val.state;el.detail.textContent=val.detail;}
+  function assignIfChanged(el,value){if(el.textContent!==value)el.textContent=value;}
+  function paint(el,val){assignIfChanged(el.state,val.state);assignIfChanged(el.detail,val.detail);}
   function tick(){
     if(!admin()){unmount();return;}
     if(!root?.isConnected)mount();
     const data=snapshot();if(!data)return;
     paint(fields.v3,data.v3);
-    fields.ai.state.textContent=data.aiTwoTabs.verifiedNow?'2タブv3適用中':'2タブ確認中／未適用';
-    fields.ai.detail.textContent=data.aiTwoTabs.detail;
+    assignIfChanged(fields.ai.state,data.aiTwoTabs.verifiedNow?'2タブv3適用中':'2タブ確認中／未適用');
+    assignIfChanged(fields.ai.detail,data.aiTwoTabs.detail);
     paint(fields.tt,data.trueTimeX);paint(fields.sc,data.scenario);
     const key = data.date+'|'+data.selectedRace;
     if(key!==lastKey){root.open=false;lastKey=key;}
@@ -39907,6 +39944,8 @@ setInterval(()=>{
     panel.appendChild(note);
   }
   function redraw() {
+    const predictionPage=document.getElementById('page-predict');
+    if(document.hidden || (predictionPage && predictionPage.style.display==='none'))return;
     const ai=document.getElementById('predictAiResult');
     if(!ai){lastSig='';lastPanelState='';return;}
     const admin=accessibleAdmin();
