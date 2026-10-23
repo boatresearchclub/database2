@@ -64,7 +64,10 @@ def approved_events(manifest, day, venues):
         if not str(event.get('reviewer','')).strip():
             raise ValueError('Independent official meeting reviewer missing')
         if compact(event['title']) != compact(venues[code].get('meeting_title','')):
-            raise ValueError('Full official racecard meeting title does not match independently approved title')
+            # One changed/mistyped event must never authorize a guess or block
+            # separately verified venues; report reduced coverage explicitly.
+            print('SKIP_OFFICIAL_TITLE_MISMATCH venue='+code, file=sys.stderr)
+            continue
         approvals[code]=event
     return approvals
 
