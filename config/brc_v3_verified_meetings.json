@@ -1,0 +1,19 @@
+{
+  "schema": "BRC_V3_VERIFIED_MEETINGS_V1",
+  "scope": "Stage-only, date-bounded official meeting verification. Missing meetings do not publish.",
+  "events": [
+    {
+      "venue_code": "21",
+      "venue": "芦屋",
+      "start": "2026-10-23",
+      "end": "2026-10-26",
+      "title": "ＫＢＣラジオ杯",
+      "grade": "一般",
+      "gradeLogicV1": true,
+      "women": false,
+      "official_source": "https://www.motorboatracing-association.jp/schedule-salelst/0019257.html",
+      "reviewer": "BRC_20261023_IndependentOfficialScheduleVerified",
+      "approved": true
+    }
+  ]
+}
