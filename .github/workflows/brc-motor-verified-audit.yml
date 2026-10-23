@@ -1,0 +1,33 @@
+name: BRC Motor Source Integrity Audit
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '38 20,1 * * *'
+permissions:
+  contents: read
+concurrency:
+  group: brc-motor-source-audit
+  cancel-in-progress: false
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Audit motor data without publishing
+        run: python scripts/brc_motor_detail_daily.py --audit-only
+      - name: Report data integrity
+        if: always()
+        run: |
+          cat brc_motor_detail_daily_summary.json
+          python -c 'import json,os; d=json.load(open("brc_motor_detail_daily_summary.json")); p=os.environ["GITHUB_STEP_SUMMARY"]; open(p,"a").write("\n".join(["### BRC motor source audit", "- Date: "+str(d.get("date")), "- Status: "+str(d.get("status")), "- Previous source: "+str(d.get("previous_source_date")), "- Previous source age days: "+str(d.get("previous_source_age_days")), "- Verified previous compared: "+str(d.get("cross_source_checked")), "- Conflicts: "+str(d.get("cross_source_n_conflicts")), "- Motor stats venue count: "+str(d.get("stats_venues")), "- No production JSON was changed."]) + "\n")'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: brc-motor-source-audit
+          path: brc_motor_detail_daily_summary.json
+          if-no-files-found: warn
+          retention-days: 7
