@@ -1,3 +1,4 @@
+<!-- BRC_V3_AI_TWO_TAB_ADMIN_EXPORT_V3_20261024: Manager-only diagnostic export of BRC BRAIN/nige v3 eligibility and proven renderer usage. Does not modify calculations, predictions, worker access or public UI. -->
 <!-- BRC_INFO_PUBLIC_CLEAN_FROM_LATEST_20261023: Info historical outcome stats public to all visitors; invest/admin diagnostics remain restricted. Hide public-inappropriate labels; no data, TimeX, AI or math changes. -->
 <!-- BRC_V3_FOUR_METRIC_GATE_AUDIT_V2_20261023: diagnostic bridge for admin two-tab v3 gate; same-race four rates and 12 DOM cells, no probabilities or public/member changes. -->
 <!-- BRC_V3_PT_SOURCE_ADMIN_DIAG_V1_20261023: Admin-only verified Worker response version / pt-source; no TimeX computation, API, public or course365 changes. -->
@@ -366,7 +367,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261023-V3-4METRIC-INFO-PUBLIC-CLEAN-V1">
+<meta name="brc-build" content="20261024-V3-AI2TAB-AUDIT-V3">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -38513,6 +38514,14 @@ body.brc-admin-home-active .brc-admin-top-race .dp-boat-no{
   function scrubReport(d){
     if(!d)return null;
     const f=d.liveFetch||null, p=d.progress||null, w=d.workerFailure||null;
+    // BRC_V3_AI_TWO_TAB_ADMIN_EXPORT_V3: read the existing two-tab audit
+    // only from the administrator's copy view. Never infer "used" from
+    // verified Worker data alone: the renderer must explicitly confirm it.
+    let ai=null, aiError='';
+    try{
+      if(typeof window.BRC_ADMIN_V3_AI_TWO_TABS_DIAGNOSTICS==='function')
+        ai=window.BRC_ADMIN_V3_AI_TWO_TABS_DIAGNOSTICS();
+    }catch(e){aiError=String(e?.name||'DiagnosticError').slice(0,48);}
     // Do not include any authentication/session/token fields, personal identities, or raw payloads.
     return {
       build:String(d.build||''),admin:!!d.admin,member:!!d.member,
@@ -38534,6 +38543,17 @@ body.brc-admin-home-active .brc-admin-top-race .dp-boat-no{
           course:Number(b.course),winPct:b.winPct,secondPct:b.secondPct,
           thirdPct:b.thirdPct,top3Pct:b.top3Pct,
           domWinMatch:b.domWinMatch===true,domTop3Match:b.domTop3Match===true})):[]},
+      aiTwoTabAudit:{
+        available:!!ai,
+        error:aiError,
+        brain:{status:String(ai?.brain?.status||'NOT_CHECKED').slice(0,80),
+          v3Eligible:ai?.brain?.v3Eligible===true,v3Used:ai?.brain?.v3Used===true},
+        nige:{status:String(ai?.nige?.status||'NOT_CHECKED').slice(0,80),
+          v3Eligible:ai?.nige?.v3Eligible===true,v3Used:ai?.nige?.v3Used===true},
+        bothV3Used:ai?.brain?.v3Used===true && ai?.nige?.v3Used===true,
+        liveWorkerIndependentlyTested:ai?.actualLiveWorkerTested===true,
+        publicReleased:ai?.productionApproved===true
+      },
       displayedRates:String(d.displayedRates||''),liveBlockReason:String(d.liveBlockReason||''),
       priorReady:!!d.priorReadiness?.ready,priorIssue:String(d.priorReadiness?.reason||''),
       workerHttp:w?.http??null,workerStatus:String(w?.status||w?.error||'').slice(0,160),
@@ -38583,7 +38603,11 @@ body.brc-admin-home-active .brc-admin-top-race .dp-boat-no{
       (lastReport.v3Verified?'補正方式（Worker応答）: '+(lastReport.v3PtSource||'unknown'):'補正方式: v3未照合')+'\n'+
       '4指標監査: '+(lastReport.tableGate?.status||'未確認')+
       ' ／ 出走表 '+(lastReport.fourMetricAudit?.tableDomCellsMatched||0)+'/'+
-      (lastReport.fourMetricAudit?.tableDomCellsChecked||0)+'セル';
+      (lastReport.fourMetricAudit?.tableDomCellsChecked||0)+'セル'+'\n'+
+      'BRC BRAIN: '+(lastReport.aiTwoTabAudit?.brain?.v3Used?'v3使用確認':
+        '未確認 ('+(lastReport.aiTwoTabAudit?.brain?.status||'NOT_CHECKED')+')')+' ／ '+
+      'イン逃げ: '+(lastReport.aiTwoTabAudit?.nige?.v3Used?'v3使用確認':
+        '未確認 ('+(lastReport.aiTwoTabAudit?.nige?.status||'NOT_CHECKED')+')');
     return lastReport;
   }
   refresh?.addEventListener('click',()=>{render();feedback.textContent='最新の状態を確認しました';});
