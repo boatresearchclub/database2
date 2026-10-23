@@ -1,0 +1,36 @@
+name: BRC Tide V12 shadow INDEX (staging only)
+on:
+  push:
+    branches:
+      - research/tide-pre-win-v12-20261023
+    paths:
+      - 'research/tide-v12/**'
+      - '.github/workflows/brc-tide-v12-staging.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  patch-index-on-research-branch:
+    if: github.ref == 'refs/heads/research/tide-pre-win-v12-20261023'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/tide-pre-win-v12-20261023
+          persist-credentials: true
+      - name: Create research-only index without touching main
+        run: |
+          python research/tide-v12/build_BRC_TIDE_V12_INDEX.py index.html index_TIDE_V12_STAGED.html
+          mv index_TIDE_V12_STAGED.html index.html
+          git diff --check
+          grep -q 'BRC_TIDE_PRE_V12_START_20261023' index.html
+          grep -q 'BRC_TIDE_PRE_V12_END_20261023' index.html
+      - name: Commit staging INDEX on research branch only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m 'Research only: embed Tide V12 admin shadow into staging index'
+            git push origin HEAD:research/tide-pre-win-v12-20261023
+          fi
