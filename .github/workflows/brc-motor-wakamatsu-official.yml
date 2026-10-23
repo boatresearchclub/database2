@@ -1,0 +1,43 @@
+name: BRC Motor Wakamatsu Official Feed Audit
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/brc_motor_official_wakamatsu.py'
+      - '.github/workflows/brc-motor-wakamatsu-official.yml'
+  schedule:
+    - cron: '49 20,1 * * *'
+permissions:
+  contents: read
+concurrency:
+  group: brc-wakamatsu-official-audit
+  cancel-in-progress: false
+jobs:
+  validate-official-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install verified parser dependency
+        run: python -m pip install 'beautifulsoup4>=4.12,<5'
+      - name: Parse and audit original official data without publishing
+        run: python scripts/brc_motor_official_wakamatsu.py --output /tmp/motor_wakamatsu_official.json
+      - name: Write source coverage summary
+        if: success()
+        run: |
+          python - <<'PY'
+          import json,os
+          a=json.load(open('/tmp/motor_wakamatsu_official.json'))
+          lines=['### 若松モーター公式データ監査','- Source date: '+a['source_as_of'],'- Cycle: '+a['cycle_start'],'- Motors: '+str(a['motor_count']),'- 2号機累計走数: '+str(a['motors']['2']['n']),'- Verified read-only; not published to production']
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:f.write('\n'.join(lines)+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: brc-motor-wakamatsu-official-audit
+          path: /tmp/motor_wakamatsu_official.json
+          retention-days: 7
