@@ -1,3 +1,4 @@
+<!-- BRC_V3_PT_SOURCE_ADMIN_DIAG_V1_20261023: Admin-only verified Worker response version / pt-source; no TimeX computation, API, public or course365 changes. -->
 <!-- BRC_PLAYER365_SCHEDULE_DIAG_V1_20261023: Show daily feed publication schedule accurately; preserve fixed dictionary stats and prediction logic. -->
 <!-- BRC_V3_DIAG_OUTPUT_FIX_V2_20261023: admin-only worker code/reason export and course365 status error clearing; no probability or motor data changes. -->
 <!-- BRC_V3_422_ADMIN_REASON_DIAG_V1_20261023: admin-only Worker failure code/reason diagnostics; no math or request changes. -->
@@ -363,7 +364,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261023-PLAYER365-SCHEDULE-DIAG-V1">
+<meta name="brc-build" content="20261023-PLAYER365-V3-PTSOURCE-DIAG-V1">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -19684,6 +19685,9 @@ window.brcV3AdminDiagnostics=function(){
     livePresent:!!live,liveBoats:Array.isArray(live?.boats)?live.boats.length:0,
     sameRaceLive:same,strictExhibition:brcV3AdminStrictEntry(live),
     v3Verified:!!__brcV3AdminDisplay,
+    // Admin only: record the version from the verified Worker response, not a guessed setting.
+    v3PtSource:__brcV3AdminDisplay?.ptSource||'',
+    v3WorkerVersion:__brcV3AdminDisplay?.workerVersion||'',
     displayedRates:__brcV3AdminDisplay?'TimeX v3（照合済み）':'既存TimeX v2（参考）',
     v3Status:document.querySelector('#brcV3AdminCompare [data-brc-v3-status]')?.textContent||'検証パネル未生成',
     liveFetch:window.__brcV3LiveFetchStatus||null,
@@ -20070,7 +20074,13 @@ function brcV3AdminMount(venue,raceNo,liveRace){
         // validated figures are rendered atomically in the existing race table
       }
       if(!stillSame())throw Error('レース・展示更新後の古い応答を破棄しました');
-      __brcV3AdminDisplay={key,signature,four,priorCanonical:requestPrior};
+      // Read only after 4-rate validation, prior SHA audit and same-race checks.
+      // Unknown response versions must not be mislabeled as candidate.
+      const verifiedWorkerVersion=String(data?.version||'').slice(0,96);
+      const verifiedPtSource=verifiedWorkerVersion==='timex-v3-four-metric-stage-candidate'?'candidate':
+        verifiedWorkerVersion==='timex-v3-four-metric-stage-empirical'?'empirical':'unknown';
+      __brcV3AdminDisplay={key,signature,four,priorCanonical:requestPrior,
+        ptSource:verifiedPtSource,workerVersion:verifiedWorkerVersion};
       window.__brcV3LastError=null;
       brcV3AdminRecordPhase('VERIFIED_V3');
       if(!brcV3AdminRenderDisplay())throw Error('4指標の画面反映条件が不一致です');
@@ -38396,6 +38406,8 @@ body.brc-admin-home-active .brc-admin-top-race .dp-boat-no{
       tableReady:!!d.tableReady,livePresent:!!d.livePresent,
       liveBoats:Number(d.liveBoats)||0,sameRaceLive:!!d.sameRaceLive,
       strictExhibition:!!d.strictExhibition, v3Verified:!!d.v3Verified,
+      v3PtSource:!!d.v3Verified?String(d.v3PtSource||'unknown').slice(0,16):'',
+      v3WorkerVersion:!!d.v3Verified?String(d.v3WorkerVersion||'').slice(0,96):'',
       displayedRates:String(d.displayedRates||''),liveBlockReason:String(d.liveBlockReason||''),
       priorReady:!!d.priorReadiness?.ready,priorIssue:String(d.priorReadiness?.reason||''),
       workerHttp:w?.http??null,workerStatus:String(w?.status||w?.error||'').slice(0,160),
@@ -38438,7 +38450,8 @@ body.brc-admin-home-active .brc-admin-top-race .dp-boat-no{
     brief.textContent=summary.status;
     state.textContent=summary.status+'\n'+summary.detail+'\n'+
       '対象: '+(lastReport.race||'未選択')+' ／ 画面の着率: '+(lastReport.displayedRates||'未取得')+'\n'+
-      '版: '+(lastReport.build||'不明');
+      '版: '+(lastReport.build||'不明')+'\n'+
+      (lastReport.v3Verified?'補正方式（Worker応答）: '+(lastReport.v3PtSource||'unknown'):'補正方式: v3未照合');
     return lastReport;
   }
   refresh?.addEventListener('click',()=>{render();feedback.textContent='最新の状態を確認しました';});
