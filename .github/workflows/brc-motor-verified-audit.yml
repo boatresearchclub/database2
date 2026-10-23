@@ -1,6 +1,11 @@
 name: BRC Motor Source Integrity Audit
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/brc_motor_detail_daily.py'
+      - '.github/workflows/brc-motor-verified-audit.yml'
   schedule:
     - cron: '38 20,1 * * *'
 permissions:
