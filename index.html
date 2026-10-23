@@ -1,3 +1,4 @@
+<!-- BRC_V3_DIAG_OUTPUT_FIX_V2_20261023: admin-only worker code/reason export and course365 status error clearing; no probability or motor data changes. -->
 <!-- BRC_V3_422_ADMIN_REASON_DIAG_V1_20261023: admin-only Worker failure code/reason diagnostics; no math or request changes. -->
 <!-- BRC_MOTOR_FOUR_SECTION_ORDER_SAFE_V1_20261023: details/current/past/previous order; no motor arithmetic, TimeX, worker, or member rights changes. -->
 <!-- BRC_MOTOR_PREVIOUS_VERIFIED_V8_LATEST_20261022: built from latest uploaded 144353 index (SHA256 matched V6); includes independently verified previous user/date/venue/motor only, no stale cumulative stats. -->
@@ -361,7 +362,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261023-MOTOR4-V3-422-DIAG-V1">
+<meta name="brc-build" content="20261023-MOTOR4-V3-DIAG-EXPORT-FIX-V2">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -20039,8 +20040,9 @@ function brcV3AdminMount(venue,raceNo,liveRace){
         const remoteStatus=String(data?.status||data?.error||'not_ready').slice(0,120);
         // BRC_V3_422_ADMIN_REASON_DIAG_V1: bounded admin-only server reason.
         // Never retain tokens, request headers, or an unfiltered response body.
-        const diagnosticCode=String(data?.code||data?.reason_code||'').slice(0,80);
-        const diagnosticReason=String(data?.reason||data?.message||data?.detail||'').slice(0,180);
+        const diagnosticCode=String(data?.code||data?.reason_code||data?.error?.code||data?.details?.code||'').slice(0,80);
+        const diagnosticReason=String(data?.reason||data?.message||data?.detail||data?.error?.reason||data?.error?.message||
+          (typeof data?.error==='string'&&data.error!==remoteStatus?data.error:'')||'').slice(0,180);
         window.__brcV3LastError={at:new Date().toISOString(),http:res.status,status:remoteStatus,
           code:diagnosticCode,reason:diagnosticReason};
         brcV3AdminRecordPhase('WORKER_NOT_READY',res.status+' '+remoteStatus+(diagnosticCode?' code='+diagnosticCode:'')+(diagnosticReason?' reason='+diagnosticReason:''));
@@ -32317,7 +32319,7 @@ body.brc-admin-home-active .brc-admin-login-top-preview-note{display:none;}
     lastAttempt=Date.now();
     running=(async()=>{
       try{
-        let chosen=null, lastError=null;
+        let chosen=null, fetchError=null;
         for(const path of PATHS){
           try{
             const url=path+'?day='+encodeURIComponent(today);
@@ -32332,9 +32334,9 @@ body.brc-admin-home-active .brc-admin-login-top-preview-note{display:none;}
             }
             // Only the previous JST day's finalized snapshot is fully current.
             if(dates.end===previousJstDay())break;
-          }catch(error){lastError=error;}
+          }catch(error){fetchError=error;}
         }
-        if(!chosen)throw(lastError||Error('daily source unavailable'));
+        if(!chosen)throw(fetchError||Error('daily source unavailable'));
         current=chosen.payload.players;
         meta={...chosen.dates,source:chosen.source};
         lastSuccessAt=new Date().toISOString();lastError='';
@@ -38377,6 +38379,10 @@ body.brc-admin-home-active .brc-admin-top-race .dp-boat-no{
       displayedRates:String(d.displayedRates||''),liveBlockReason:String(d.liveBlockReason||''),
       priorReady:!!d.priorReadiness?.ready,priorIssue:String(d.priorReadiness?.reason||''),
       workerHttp:w?.http??null,workerStatus:String(w?.status||w?.error||'').slice(0,160),
+      // BRC_V3_WORKER_REASON_EXPORT_V2: preserve sanitized server evidence in admin-only diagnostics.
+      workerCode:String(w?.code||'').slice(0,80),
+      workerReason:String(w?.reason||'').slice(0,180),
+      workerErrorAt:String(w?.at||'').slice(0,40),
       liveApiHttp:f?.http??null,liveApiReason:String(f?.reason||'').slice(0,160),
       phase:String(p?.phase||''),phaseDetail:String(p?.detail||'').slice(0,160),
       nextAutoRetrySec:Number(d.nextAutoRetrySec)||0,
@@ -38395,7 +38401,7 @@ body.brc-admin-home-active .brc-admin-top-race .dp-boat-no{
     }
     if(s.liveBlockReason&&s.liveBlockReason!=='READY')return {status:'v3未適用：展示照合条件',detail:translations[s.liveBlockReason]||s.liveBlockReason,ready:false};
     if(!s.priorReady)return {status:'v3未適用：事前着率照合',detail:s.priorIssue||'事前着率の取得・照合が必要です。',ready:false};
-    if(s.workerHttp&&s.workerHttp!==200)return {status:'v3未適用：Worker '+s.workerHttp,detail:'Worker応答: '+(s.workerStatus||'不明'),ready:false};
+    if(s.workerHttp&&s.workerHttp!==200)return {status:'v3未適用：Worker '+s.workerHttp,detail:'Worker応答: '+(s.workerStatus||'不明')+(s.workerCode?' ／ code='+s.workerCode:'')+(s.workerReason?' ／ reason='+s.workerReason:''),ready:false};
     if(s.workerStatus)return {status:'v3未適用：Worker / 照合',detail:s.workerStatus,ready:false};
     if(s.phase==='ERROR')return {status:'v3未適用：内部処理エラー',detail:s.phaseDetail,ready:false};
     if(s.phase==='THROTTLED')return {status:'v3再取得待ち',detail:'自動再取得まで約'+s.nextAutoRetrySec+'秒です。',ready:false};
