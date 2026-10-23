@@ -1,6 +1,17 @@
 name: BRC V3 Daily Verified Staging Context (STAGE ONLY)
 on:
   workflow_dispatch:
+  # Fast path: official B/TXT is normally committed after midnight by daily V10.
+  # Stage as soon as fresh verified racecards reach the default branch.
+  push:
+    branches: [main]
+    paths:
+      - 'racecards/today.TXT'
+      - 'config/brc_v3_verified_meetings.json'
+      - 'scripts/brc_v3_stage_daily.py'
+      - 'scripts/brc_v3_stage_publisher.py'
+      - '.github/workflows/brc-v3-stage-daily.yml'
+  # Fallback checks for delayed daily V10 uploads or transient scheduling delays.
   schedule:
     # JST morning: start 04:17, recheck frequently before early exhibitions.
     # Offset minutes from :00 to reduce GitHub Actions peak-load delays.
