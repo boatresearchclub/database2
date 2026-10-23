@@ -1,43 +1,87 @@
-name: BRC Motor Wakamatsu Official Feed Audit
+name: BRC Motor Wakamatsu Official Cumulative Update
 on:
   workflow_dispatch:
   push:
     branches: [main]
     paths:
       - 'scripts/brc_motor_official_wakamatsu.py'
+      - 'scripts/brc_motor_wakamatsu_test.py'
       - '.github/workflows/brc-motor-wakamatsu-official.yml'
   schedule:
+    # JST 05:49 and 10:49
     - cron: '49 20,1 * * *'
 permissions:
-  contents: read
+  contents: write
 concurrency:
-  group: brc-wakamatsu-official-audit
+  group: brc-wakamatsu-official-update
   cancel-in-progress: false
 jobs:
-  validate-official-source:
+  verify-and-publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install verified parser dependency
+      - name: Install official parser dependency
         run: python -m pip install 'beautifulsoup4>=4.12,<5'
-      - name: Parse and audit original official data without publishing
-        run: python scripts/brc_motor_official_wakamatsu.py --output /tmp/motor_wakamatsu_official.json
-      - name: Write source coverage summary
+      - name: Test official parser offline before accessing live data
+        run: python scripts/brc_motor_wakamatsu_test.py
+      - name: Preserve prior official snapshot for date guard
+        run: |
+          if [ -f racecards/motor_wakamatsu_official.json ]; then
+            cp racecards/motor_wakamatsu_official.json /tmp/brc_wakamatsu_prior.json
+          fi
+      - name: Validate and generate live official cumulative results
+        run: python scripts/brc_motor_official_wakamatsu.py --output racecards/motor_wakamatsu_official.json
+      - name: Reject an older or mismatched official motor cycle
+        run: |
+          python - <<'PY'
+          import json,os
+          path='racecards/motor_wakamatsu_official.json'
+          new=json.load(open(path,encoding='utf-8'))
+          if new['version']!='BRC_MOTOR_WAKAMATSU_OFFICIAL_V1' or new['motor_count']<55:
+              raise SystemExit('INVALID_OFFICIAL_SCHEMA_OR_COVERAGE')
+          prior='/tmp/brc_wakamatsu_prior.json'
+          if os.path.isfile(prior):
+              old=json.load(open(prior,encoding='utf-8'))
+              if (old['source_as_of']>new['source_as_of'] or
+                  old['cycle_start']>new['cycle_start']):
+                  raise SystemExit('OFFICIAL_SNAPSHOT_REGRESSION')
+          PY
+      - name: Publish only source-verified official JSON
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- racecards/motor_wakamatsu_official.json
+          if ! git diff --cached --quiet; then
+            git commit -m "BRC 若松公式モーター通算成績 $(TZ=Asia/Tokyo date +%Y-%m-%d)"
+            git push
+          else
+            echo 'Official motor totals already current'
+          fi
+      - name: Report official source coverage
         if: success()
         run: |
           python - <<'PY'
           import json,os
-          a=json.load(open('/tmp/motor_wakamatsu_official.json'))
-          lines=['### 若松モーター公式データ監査','- Source date: '+a['source_as_of'],'- Cycle: '+a['cycle_start'],'- Motors: '+str(a['motor_count']),'- 2号機累計走数: '+str(a['motors']['2']['n']),'- Verified read-only; not published to production']
+          d=json.load(open('racecards/motor_wakamatsu_official.json',encoding='utf-8'))
+          lines=['### 若松公式モーター通算成績',
+            '- 集計日: '+d['source_as_of'],
+            '- 使用開始日: '+d['cycle_start'],
+            '- 検証済み号機: '+str(d['motor_count']),
+            '- 2号機通算走数: '+str(d['motors']['2']['n']),
+            '- 優出: '+str(d['motors']['2']['finals_count']),
+            '- 優勝: '+str(d['motors']['2']['wins_count']),
+            '- 過去の未検証データとは混合しない']
           with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:f.write('\n'.join(lines)+'\n')
           PY
       - uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: brc-motor-wakamatsu-official-audit
-          path: /tmp/motor_wakamatsu_official.json
+          name: brc-motor-wakamatsu-official-verified
+          path: racecards/motor_wakamatsu_official.json
           retention-days: 7
