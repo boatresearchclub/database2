@@ -120,6 +120,24 @@ def main():
         actual=sum(bool(v['motors']) for v in venues.values())
         report.update(stats_venues=actual,verified_previous=totals['verified_previous'],verified_previous_ranks=totals['verified_previous_ranks'],final_history_records=totals['final_history_records'],motor_records=totals['motor_records'])
         if actual<20:raise ValueError('insufficient actual venue stats; refuse update')
+
+        # BRC_MOTOR_CROSS_SOURCE_N_GUARD_V1: reject inconsistent cumulative N.
+        # An independently verified completed previous meeting cannot have
+        # more actual race results than its claimed total motor-period races.
+        # 2026-10-24 cross-check: 310 contradictions among 596 matches.
+        checked=0; conflicts=0
+        for venue in NAMES:
+            for record in venues[venue]['motors'].values():
+                ranks=(record.get('previous') or {}).get('ranks') or []
+                if not ranks:continue
+                checked+=1
+                race_count=sum(x!='欠' for x in ranks)
+                if race_count>record['n']:conflicts+=1
+        report['cross_source_checked']=checked
+        report['cross_source_n_conflicts']=conflicts
+        if checked<30 or conflicts:
+            raise ValueError('Motor period totals fail independent K-history check; refuse update')
+
         out={'version':'BRC-Motor-Daily-Official-Stats-V1','date':today.isoformat(),
              'source':'BoatraceCSV validated motor_stats + official-K previous join',
              'notes':'Finals list may be partial; counted finals and wins use motor period stats. No foot-color scores inferred.',
