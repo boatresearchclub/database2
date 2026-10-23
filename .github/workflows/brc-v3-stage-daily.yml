@@ -2,9 +2,12 @@ name: BRC V3 Daily Verified Staging Context (STAGE ONLY)
 on:
   workflow_dispatch:
   schedule:
-    # JST 05:10-12:10 hourly; skip until official TXT is fresh.
-    - cron: '10 20,21,22,23 * * *'
-    - cron: '10 0,1,2,3 * * *'
+    # JST morning: start 04:17, recheck frequently before early exhibitions.
+    # Offset minutes from :00 to reduce GitHub Actions peak-load delays.
+    # Retries are safe: publisher verifies current JST official TXT and stage-only manifest.
+    - cron: '17,47 19,20,21 * * *'  # JST 04:17/04:47,05:17/05:47,06:17/06:47
+    - cron: '7,22,37,52 22,23 * * *' # JST 07:07..08:52 (15-minute cadence)
+    - cron: '17 0,1,2,3 * * *'      # JST 09:17,10:17,11:17,12:17
 permissions:
   contents: read
 concurrency:
