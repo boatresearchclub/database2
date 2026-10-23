@@ -1,3 +1,4 @@
+<!-- BRC_INFO_PUBLIC_CLEAN_FROM_LATEST_20261023: Info historical outcome stats public to all visitors; invest/admin diagnostics remain restricted. Hide public-inappropriate labels; no data, TimeX, AI or math changes. -->
 <!-- BRC_V3_FOUR_METRIC_GATE_AUDIT_V2_20261023: diagnostic bridge for admin two-tab v3 gate; same-race four rates and 12 DOM cells, no probabilities or public/member changes. -->
 <!-- BRC_V3_PT_SOURCE_ADMIN_DIAG_V1_20261023: Admin-only verified Worker response version / pt-source; no TimeX computation, API, public or course365 changes. -->
 <!-- BRC_PLAYER365_SCHEDULE_DIAG_V1_20261023: Show daily feed publication schedule accurately; preserve fixed dictionary stats and prediction logic. -->
@@ -365,7 +366,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261023-V3-4METRIC-AIGATE-AUDIT-V2">
+<meta name="brc-build" content="20261023-V3-4METRIC-INFO-PUBLIC-CLEAN-V1">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -13463,7 +13464,8 @@ function brcEnsureAiReferenceOddsAfterDeadline(){
 function setPredictMainTab(key){
   const valid=['data','odds','ai','info','invest'];
   let k=valid.includes(key)?key:'data';
-  if((k==='invest'||k==='info') && (!(typeof BRC_ADMIN_ACTIVE!=='undefined' && BRC_ADMIN_ACTIVE)
+  // 情報タブは全訪問者向け、投資管理は管理者限定を保持。
+  if(k==='invest' && (!(typeof BRC_ADMIN_ACTIVE!=='undefined' && BRC_ADMIN_ACTIVE)
     || (typeof window.brcGetAdminViewMode==='function' && window.brcGetAdminViewMode()==='public'))) k='data';
   document.querySelectorAll('.predict-main-tab').forEach(btn=>{
     const on=btn.dataset.predictMainTab===k;
@@ -38617,12 +38619,12 @@ body.brc-admin-home-active .brc-admin-top-race .dp-boat-no{
 <!-- BRC_DEME_CLICK_SORT_20261019: 出目確率の各列タップで昇順・降順切替。TimeXや予測・集計データは変更なし。 -->
 <!-- BRC_DEME_INFO_REVIEW_20261017_UI_FIX_20261018: Admin UI integration candidate / published only by manual PUSH -->
 <style id="brcDemeInfoStyle">
-/* BRC管理者専用「情報」タブ：見た目のみの調整。公開UIと既存計算への干渉なし。 */
+/* 情報タブは全訪問者へ。投資管理は管理者に限り5タブ目として追加する。 */
 #brcDemeInfoTab{display:none}
-.predict-main-tabs.brc-admin-deme-enabled{grid-template-columns:repeat(5,minmax(0,1fr))}
-body.brc-admin-public-view #brcDemeInfoTab{display:none!important}
 #brcDemeInfoTab.is-visible{display:block}
-#page-predict .predict-main-tabs.brc-admin-invest-enabled{grid-template-columns:repeat(5,minmax(0,1fr))}
+#page-predict .predict-main-tabs.brc-admin-deme-enabled{grid-template-columns:repeat(4,minmax(0,1fr))}
+#page-predict .predict-main-tabs.brc-admin-deme-enabled.brc-admin-invest-enabled{grid-template-columns:repeat(5,minmax(0,1fr))}
+body.brc-admin-public-view #page-predict .predict-main-tabs.brc-admin-deme-enabled{grid-template-columns:repeat(4,minmax(0,1fr))}
 @media(max-width:560px){
   #page-predict .predict-main-tabs.brc-admin-deme-enabled .predict-main-tab,
   #page-predict .predict-main-tabs.brc-admin-invest-enabled .predict-main-tab{font-size:11px;padding-left:2px;padding-right:2px}
@@ -38863,12 +38865,12 @@ body.brc-admin-public-view #brcDemeInfoTab{display:none!important}
 <script id="brcDemeInfoData" type="application/json"></script>
 <script src="data/brcDemeInfoData-e3fdccce0e-001.js"></script>
 <script id="brcDemeInfoLogic">
-// BRC_DEME_ALL_METRICS_COMPACT_PREVIEW_20261020: administrator-only UI; underlying historical statistics unchanged.
+// BRC_INFO_PUBLIC_CLEAN_V1_20261023: historical outcomes open to all; underlying historical statistics unchanged.
 (function(){
 'use strict';
 const ID='brcDemeInfoTab';
-const allowed=()=>!!(typeof BRC_ADMIN_ACTIVE!=='undefined'&&BRC_ADMIN_ACTIVE)
- && !(typeof window.brcGetAdminViewMode==='function'&&window.brcGetAdminViewMode()==='public');
+// 出目実績の情報タブは、管理者・会員・非会員を問わず表示する。
+const allowed=()=>true;
 let cache=null,lastVenue='',lastRace='',lastMode='',lastRaceMetaKey='';
 let sortBasis='selected',sortDirection='desc',sortMetric='prob';
 function byId(id){return document.getElementById(id);}
@@ -38980,14 +38982,14 @@ function render(){
  }
  const tbl=list.map(entry=>`<tr><td class="deme-outcome">${renderCombo(entry.combo)}</td><td>${metricRows(entry,'selected')}</td><td>${metricRows(entry,'all')}</td><td>${metricRows(entry,'diff')}</td></tr>`).join('');
  const meta=currentRaceMeta(name,raceNo);
- root.innerHTML=`<div class="deme-racehero"><div class="deme-racehero-main"><div class="deme-raceplace"><span class="deme-venue">${htmlEscape(name)}</span>${meta.dayLabel?`<span>${htmlEscape(meta.dayLabel)}</span>`:''}</div><div class="deme-race-mainline"><span class="deme-raceno">${raceNo}R</span>${meta.deadline?`<span class="deme-race-deadline">締切${htmlEscape(meta.deadline)}</span>`:''}${meta.raceTitle?`<span class="deme-race-title">${htmlEscape(meta.raceTitle)}</span>`:''}</div></div><span class="deme-admin-flag">管理者専用</span></div>
+ root.innerHTML=`<div class="deme-racehero"><div class="deme-racehero-main"><div class="deme-raceplace"><span class="deme-venue">${htmlEscape(name)}</span>${meta.dayLabel?`<span>${htmlEscape(meta.dayLabel)}</span>`:''}</div><div class="deme-race-mainline"><span class="deme-raceno">${raceNo}R</span>${meta.deadline?`<span class="deme-race-deadline">締切${htmlEscape(meta.deadline)}</span>`:''}${meta.raceTitle?`<span class="deme-race-title">${htmlEscape(meta.raceTitle)}</span>`:''}</div></div></div>
  <div class="deme-meta-mini">${htmlEscape(d.period[0])} ～ ${htmlEscape(d.period[1])} ｜ ${raceNo}R ${fmtInt(rN)}R ｜ 会場平均 ${fmtInt(venueN)}R</div>
  <div class="filters" id="brcDemeControls">
  <label>券種<select id="brcDemeKind"><option value="0" ${kind==='0'?'selected':''}>2連単</option><option value="1" ${kind==='1'?'selected':''}>3連単</option></select></label>
  <label>1着艇<select id="brcDemeHead"><option value="all" ${head==='all'?'selected':''}>全体</option>${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${head===String(n)?'selected':''}>${n}号艇</option>`).join('')}</select></label></div>
  <div class="deme-sorttoolbar" role="group" aria-label="並び替える指標"><span class="deme-sortcaption">並び替え</span>${[['prob','確率'],['median','中央値'],['roi','回収率']].map(([key,title])=>`<button type="button" data-deme-metric="${key}" class="deme-sortmetric ${sortMetric===key&&sortBasis!=='combo'?'active':''}" aria-pressed="${sortMetric===key&&sortBasis!=='combo'}">${title}<span class="deme-sortmetric-arrow" aria-hidden="true">${sortMetric===key&&sortBasis!=='combo'?(sortDirection==='desc'?'▼':'▲'):'↕'}</span></button>`).join('')}</div>
  <div class="tablewrap"><table class="deme-compact-table"><thead><tr>${headHtml}</tr></thead><tbody>${tbl}</tbody></table></div>
- <div class="deme-compact-foot">少数：${raceNo}Rの出現回数5回未満</div>`;
+ <div class="deme-compact-foot">少数＝このレースの出現4回以下</div>`;
  for(const id of ['brcDemeKind','brcDemeHead'])byId(id)?.addEventListener('change',render);
  root.querySelectorAll('[data-deme-metric]').forEach(btn=>btn.addEventListener('click',()=>{
   const metric=btn.getAttribute('data-deme-metric');if(!['prob','median','roi'].includes(metric))return;
