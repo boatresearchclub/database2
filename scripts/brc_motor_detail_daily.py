@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """BRC daily motor stats: fail-closed official period stats, bounded K-verified previous history."""
-import csv,io,json,re,sys,unicodedata,urllib.request,urllib.error
+import csv,io,json,re,sys,unicodedata,urllib.request,urllib.error,argparse
 from concurrent.futures import ThreadPoolExecutor,as_completed
 from datetime import date,timedelta,datetime,timezone
 from pathlib import Path
@@ -39,6 +39,10 @@ def downloads(tasks):
             result[d]=r
     return result
 def main():
+    # BRC_MOTOR_DAILY_AUDIT_ONLY_V1: verify in scheduled CI without writing to production.
+    parser=argparse.ArgumentParser()
+    parser.add_argument('--audit-only',action='store_true',help='Inspect feeds; never write motor-detail.json')
+    options=parser.parse_args()
     today=datetime.now(JST).date()
     report={'date':today.isoformat(),'status':'NOT_RUN','stats_venues':0}
     try:
@@ -47,6 +51,10 @@ def main():
             raise ValueError('previous verified source invalid')
         pd=day(pv.get('date'))
         if not pd or pd>today:raise ValueError('previous source date invalid')
+        status_date=pd.isoformat()
+        status_age=(today-pd).days
+        report['previous_source_date']=status_date
+        report['previous_source_age_days']=status_age
         verified={}
         if pd>=today-timedelta(days=2):
             for i,name in enumerate(NAMES,1):
@@ -119,7 +127,11 @@ def main():
                 venues[v]['source_as_of']=max(x['as_of'] for x in venues[v]['motors'].values())
         actual=sum(bool(v['motors']) for v in venues.values())
         report.update(stats_venues=actual,verified_previous=totals['verified_previous'],verified_previous_ranks=totals['verified_previous_ranks'],final_history_records=totals['final_history_records'],motor_records=totals['motor_records'])
-        if actual<20:raise ValueError('insufficient actual venue stats; refuse update')
+        if actual<20:
+            if options.audit_only:
+                report['status']='HOLD_INSUFFICIENT_VENUE_COVERAGE'
+                return 0
+            raise ValueError('insufficient actual venue stats; refuse update')
 
         # BRC_MOTOR_CROSS_SOURCE_N_GUARD_V1: reject inconsistent cumulative N.
         # An independently verified completed previous meeting cannot have
@@ -136,12 +148,20 @@ def main():
         report['cross_source_checked']=checked
         report['cross_source_n_conflicts']=conflicts
         if checked<30 or conflicts:
+            if options.audit_only:
+                report['status']=('HOLD_PREVIOUS_SOURCE_STALE' if status_age>2 else
+                                  'HOLD_CROSS_SOURCE_N_CONFLICT' if conflicts else
+                                  'HOLD_CROSS_SOURCE_UNVERIFIED')
+                return 0
             raise ValueError('Motor period totals fail independent K-history check; refuse update')
 
         out={'version':'BRC-Motor-Daily-Official-Stats-V1','date':today.isoformat(),
              'source':'BoatraceCSV validated motor_stats + official-K previous join',
              'notes':'Finals list may be partial; counted finals and wins use motor period stats. No foot-color scores inferred.',
              'venues':venues}
+        if options.audit_only:
+            report['status']='AUDIT_PASS_PUBLICATION_ELIGIBLE'
+            return 0
         Path('racecards/motor-detail.json').write_text(json.dumps(out,ensure_ascii=False,separators=(',',':'))+'\n','utf-8')
         report['status']='VALIDATED_READY_FOR_COMMIT'
         return 0
