@@ -50,7 +50,7 @@ def audit(src:str)->dict:
                 snippet=BLANK_RE.sub(" ",SAFE_CHARS.sub("?",snippet)).strip()[:380]
             examples.append({
                 "line":src.count("\n",0,m.start())+1,
-                "byte_offset_utf8":len(src[:m.start()].encode("utf-8")),
+                "char_offset":m.start(),
                 "preview":snippet,
             })
         result["matches"][key]={"count":len(matches),"examples":examples}
