@@ -1,4 +1,8 @@
 /**
+ * DEPRECATED FOR CURRENT WORKER: the historical Worker does not implement
+ * GET /stage-context-presence. Use brc_v3_admin_predict_diagnostic_candidate.mjs
+ * with authenticated POST /predict-timex-v3 instead.
+ *
  * BRC TimeX v3 admin-only staging diagnostic CLIENT CANDIDATE.
  *
  * READ-ONLY GET of fixed stage endpoint: /stage-context-presence
