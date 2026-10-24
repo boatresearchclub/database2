@@ -1,0 +1,85 @@
+name: BRC Motor Previous Live Source Rehearsal (NO DEPLOY)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/brc-motor-previous-real-nightly-rehearsal.yml'
+      - '.github/workflows/brc-motor-previous-review.yml'
+      - 'scripts/brc_motor_previous_k_gap_fill.py'
+      - 'scripts/test_motor_previous_k_gap_fill.py'
+permissions:
+  contents: read
+jobs:
+  live-source-readonly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Assert no-network fail-closed K download fixtures
+        run: |
+          python scripts/test_motor_previous_k_gap_fill.py
+          python scripts/test_motor_previous_k_rank_restore_candidate.py
+      - name: Restore previously verified public original K
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/brc-course365-k
+          key: motor-readonly-${{ github.run_id }}
+          restore-keys: |
+            brc-motor-previous-k-
+            brc-course365-k-
+      - name: Install original official K decompressor
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qq -y p7zip-full
+      - name: Rehearse real daily pipeline without publishing ANY data
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .cache /tmp/brc-rehearsal-private
+          python scripts/BRC_MOTOR_PREVIOUS_FEED_V1.py --output /tmp/brc-rehearsal-private/review.json
+          python scripts/brc_motor_previous_k_gap_fill.py --review /tmp/brc-rehearsal-private/review.json --archive-dir .cache/brc-course365-k --max-downloads 14 --audit /tmp/brc-rehearsal-private/gap_before_K.json
+          python scripts/BRC_MOTOR_PREVIOUS_VERIFY_K_V1.py --feed /tmp/brc-rehearsal-private/review.json --archive .cache/brc-course365-k --output /tmp/brc-rehearsal-private/identity_audit.json
+          python scripts/BRC_MOTOR_PREVIOUS_RELEASE_V1.py --feed /tmp/brc-rehearsal-private/review.json --audit /tmp/brc-rehearsal-private/identity_audit.json --output /tmp/brc-rehearsal-private/identity_feed.json
+          python scripts/brc_motor_previous_k_gap_fill.py --previous /tmp/brc-rehearsal-private/identity_feed.json --archive-dir .cache/brc-course365-k --max-downloads 0 --audit /tmp/brc-rehearsal-private/gap_after_K.json
+          python scripts/brc_motor_previous_k_summaries.py --archive-dir .cache/brc-course365-k --previous /tmp/brc-rehearsal-private/identity_feed.json --out /tmp/brc-rehearsal-private/race_rows_PRIVATE.json
+          python scripts/brc_motor_previous_k_coverage.py --source /tmp/brc-rehearsal-private/race_rows_PRIVATE.json --previous /tmp/brc-rehearsal-private/identity_feed.json --out /tmp/brc-rehearsal-private/coverage.json
+          python scripts/BRC_MOTOR_PREVIOUS_K_RANK_RESTORE_CANDIDATE.py --identity /tmp/brc-rehearsal-private/identity_feed.json --official-K-study /tmp/brc-rehearsal-private/race_rows_PRIVATE.json --out /tmp/brc-rehearsal-private/restored_PRIVATE.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('/tmp/brc-rehearsal-private')
+          d=lambda n: json.loads((p/n).read_text(encoding='utf-8'))
+          k=d('gap_before_K.json')
+          verified=d('restored_PRIVATE.json')
+          coverage=d('coverage.json')
+          assert k['source_phase']=='PRE_K_CANDIDATE_DATE_DISCOVERY_ONLY'
+          assert coverage['all_verified_previous_K_rank_histories_fit_INDEX']
+          assert verified['previous_ranks_verified_count']==coverage['official_K_previous_rank_summaries']
+          assert verified['cumulative_motor_stats_available'] is False
+          summary={'schema':'BRC_MOTOR_NIGHTLY_LIVE_REHEARSAL_NO_DEPLOY_V1',
+              'identity_snapshot_date':verified['date'],
+              'K_required_calendar_days':k['required_original_K_calendar_days'],
+              'K_missing_before_preverification':k['missing_before_fetch'],
+              'K_repaired_days':k['newly_verified_K_days'],
+              'K_identity_verified_motors':verified['official_K_matched_count'],
+              'K_original_numeric_ranks_verified':verified['previous_ranks_verified_count'],
+              'numeric_rank_histories_held':verified['previous_ranks_held_count'],
+              'max_numeric_prior_meet_finishes':coverage['max_official_K_numeric_races_per_previous_meet'],
+              'INDEX_or_main_changed':False,
+              'motor_cycle_N_approved':False,
+              'productionApproved':False}
+          Path('brc_motor_rehearsal_public_aggregate.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print('MOTOR_LIVE_SOURCE_REHEARSAL_READONLY',json.dumps(summary,ensure_ascii=False))
+          PY
+          git diff --exit-code -- index.html racecards/motor_previous_daily.json racecards/motor-detail.json
+      - name: Upload aggregate-only QA metadata; never raw rider data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motor-source-rehearsal-aggregate-only
+          path: brc_motor_rehearsal_public_aggregate.json
+          if-no-files-found: ignore
+          retention-days: 3
