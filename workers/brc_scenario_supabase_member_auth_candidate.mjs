@@ -49,10 +49,12 @@ async function getVerifiedJson(fetchImpl,url,headers){
  */
 export function createVerifiedBrcActor({
   fetchImpl,supabasePublishableKey,adminUserId,
+  verifyMembershipInWorker=null,
   supabaseOrigin=APPROVED_BRC_AUTH_ORIGINS.supabase,
   memberApiOrigin=APPROVED_BRC_AUTH_ORIGINS.memberApi
 }={}){
   if(typeof fetchImpl!=="function"||!validPublicKey(supabasePublishableKey)
+     ||(verifyMembershipInWorker!==null && typeof verifyMembershipInWorker!=="function")
      ||typeof adminUserId!=="string"||!UUID.test(adminUserId)
      ||supabaseOrigin!==APPROVED_BRC_AUTH_ORIGINS.supabase
      ||memberApiOrigin!==APPROVED_BRC_AUTH_ORIGINS.memberApi)
@@ -75,14 +77,27 @@ export function createVerifiedBrcActor({
     // Reject every user except the server-secret pinned UUID; no email check.
     // Also do not send a non-admin's token to the membership service.
     if(userId.toLowerCase()!==approvedId)return null;
-    let membership;
-    try{
-      membership=await getVerifiedJson(fetchImpl,memberApiOrigin+"/",{
-        "Accept":"application/json",
-        "Authorization":"Bearer "+token
-      });
-    }catch(_){return null;}
-    if(membership?.authorized!==true)return null;
+    // When mounted INSIDE the existing brc-api Worker, use its trusted
+    // already-present membership checker rather than fetching itself.
+    // A second Worker may use the independent BRC_API GET / protocol.
+    let verifiedMember=false;
+    if(verifyMembershipInWorker!==null){
+      try{
+        verifiedMember=(await verifyMembershipInWorker({
+          verifiedSupabaseUserId:userId.toLowerCase(),token
+        }))===true;
+      }catch(_){return null;}
+    }else{
+      let membership;
+      try{
+        membership=await getVerifiedJson(fetchImpl,memberApiOrigin+"/",{
+          "Accept":"application/json",
+          "Authorization":"Bearer "+token
+        });
+      }catch(_){return null;}
+      verifiedMember=membership?.authorized===true;
+    }
+    if(!verifiedMember)return null;
     return {authenticated:true,member:true,admin:true,subject:userId.toLowerCase()};
   };
 }
