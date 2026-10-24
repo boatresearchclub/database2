@@ -58,6 +58,26 @@ def run():
         assert audit(root,date(2026,10,24))["motor_detail"]["previous_identity_status"]=="CHECK_DATE_OR_PROVENANCE"
         fixtures(root)
 
+        # A release label alone, even with 24 nonempty venues, is NOT
+        # proof that the official cumulative motor-cycle N was reconciled.
+        put(root, "racecards/motor-detail.json", {
+            "version":"BRC-Motor-Daily-Official-Stats-V1",
+            "status":"READY",
+            "venues":{str(i):{"motors":{str(j):{"n":9} for j in range(35)}}
+                      for i in range(24)}
+        })
+        assert audit(root,date(2026,10,24))["motor_detail"]["status"]=="HOLD_CUMULATIVE_STATS"
+        # Explicit source reconciliation is mandatory for readiness.
+        put(root, "racecards/motor-detail.json", {
+            "version":"BRC-Motor-Daily-Official-Stats-V1",
+            "status":"READY",
+            "checks":{"official_cycle_n_reconciled":True},
+            "venues":{str(i):{"motors":{str(j):{"n":9} for j in range(35)}}
+                      for i in range(24)}
+        })
+        assert audit(root,date(2026,10,24))["motor_detail"]["status"]=="READY_VERIFIED_CYCLE_STATS"
+        fixtures(root)
+
         assert result["new_timex_v3"]["approved_meeting_venue_codes_today"]==["05"]
         assert result["new_timex_v3"]["authenticated_422_resolved"] is False
         assert result["true_timex"]["production_banner_allowed"] is False
