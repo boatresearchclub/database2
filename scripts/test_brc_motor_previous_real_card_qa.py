@@ -109,7 +109,7 @@ const window={};
  __brcVerifiedPrevLastAttempt=0;
  await brcFetchMotorPreviousVerified();
  assert.equal(calls.length,4);
- assert.equal(events,3,"repeated identical cached site must not roll back newest main");
+ assert.equal(events,6,"actual BRC emits two refresh events per accepted source; the older site is skipped");
  console.log("PASS REAL INDEX: official K render + source priority + 60-second throttle");
 })().catch(e=>{console.error(e);process.exitCode=1});
 """
