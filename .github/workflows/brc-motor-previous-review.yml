@@ -10,6 +10,12 @@ on:
       - 'scripts/BRC_MOTOR_PREVIOUS_VERIFY_K_V1.py'
       - 'scripts/BRC_MOTOR_PREVIOUS_RELEASE_V1.py'
       - 'scripts/test_motor_previous_release_v1.py'
+      - 'scripts/brc_motor_previous_k_summaries.py'
+      - 'scripts/brc_motor_previous_k_coverage.py'
+      - 'scripts/BRC_MOTOR_PREVIOUS_K_RANK_RESTORE_CANDIDATE.py'
+      - 'scripts/test_motor_previous_k_summaries.py'
+      - 'scripts/test_motor_previous_k_coverage.py'
+      - 'scripts/test_motor_previous_k_rank_restore_candidate.py'
   schedule:
     - cron: '25 2 * * *'
 
@@ -58,6 +64,44 @@ jobs:
             --feed .cache/motor_previous_review.json \
             --audit .cache/motor_previous_official_K_audit.json \
             --output racecards/motor_previous_daily.json
+      - name: Restore actual original-K chronological previous-meet numeric ranks (fail closed)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/test_motor_previous_k_summaries.py
+          python scripts/test_motor_previous_k_coverage.py
+          python scripts/test_motor_previous_k_rank_restore_candidate.py
+          # Keep racer-level K research inside the ephemeral Actions runner.
+          # Never upload these player-level rows in public Actions artifacts.
+          python scripts/brc_motor_previous_k_summaries.py \
+            --archive-dir .cache/brc-course365-k \
+            --previous racecards/motor_previous_daily.json \
+            --out .cache/previous_motor_original_K_private.json
+          python scripts/brc_motor_previous_k_coverage.py \
+            --source .cache/previous_motor_original_K_private.json \
+            --previous racecards/motor_previous_daily.json \
+            --out .cache/previous_motor_original_K_coverage_only.json
+          python scripts/BRC_MOTOR_PREVIOUS_K_RANK_RESTORE_CANDIDATE.py \
+            --identity racecards/motor_previous_daily.json \
+            --official-K-study .cache/previous_motor_original_K_private.json \
+            --out .cache/previous_motor_K_restored_release_candidate.json
+          # Replace working feed ONLY after K proves all preserved ranks.
+          # A failed prior K step prevents the subsequent git push entirely.
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          source=Path(".cache/previous_motor_K_restored_release_candidate.json")
+          candidate=json.loads(source.read_text(encoding="utf-8"))
+          assert candidate["cumulative_motor_stats_available"] is False
+          assert candidate["previous_ranks_verified_count"]>=1
+          assert candidate["official_K_matched_count"] == (
+              candidate["previous_ranks_verified_count"] +
+              candidate["previous_ranks_held_count"]
+          )
+          assert "previous_final_race_verified_count" not in candidate
+          os.replace(source,Path("racecards/motor_previous_daily.json"))
+          print("PREVIOUS_K_RANKS_SOURCE_VERIFIED_READY_FOR_VERSIONED_FEED_COMMIT")
+          PY
       - name: Commit only independently verified dated previous-user feed
         shell: bash
         run: |
