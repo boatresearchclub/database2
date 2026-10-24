@@ -81,6 +81,32 @@ def audit(root: Path, now: date | None = None) -> dict:
     d_model_present = len(model_files) == 1 and (root / "data" / model_files[0]).is_file()
     official_matrix = root / "racecards" / "scenario_2nd3rd_official_verified.json"
     official_matrix_present = official_matrix.is_file()
+    research_snapshot = root / "brc_scenario_union_windows_audit.json"
+    research_k_verified = False
+    research_k_stats = None
+    if research_snapshot.is_file():
+        # An Actions artifact from official K is an independently checked
+        # research sample, not an approved full-history product data feed.
+        research = load(root, "brc_scenario_union_windows_audit.json")
+        research_k_verified = (
+            research.get("schema") == "BRC_SCENARIO_OFFICIAL_K_DISJOINT_UNION_AUDIT_V1"
+            and research.get("full_history_verified") is False
+            and research.get("public_or_admin_feed_published") is False
+            and research.get("status") == "RESEARCH_ONLY_NO_PUBLISH"
+            and type(research.get("verified_1_2_3_races")) is int
+            and research["verified_1_2_3_races"] > 0
+            and type(research.get("N_ge_5_conditional_cells")) is int
+            and research["N_ge_5_conditional_cells"] > 0
+        )
+        if research_k_verified:
+            research_k_stats = {
+                "sample_races":research["verified_1_2_3_races"],
+                "sample_calendar_days":research["verified_calendar_days"],
+                "conditional_cells_N_ge_5":research["N_ge_5_conditional_cells"],
+                "full_history_verified":False
+            }
+        else:
+            findings.append("scenario official K research source lacks safe, partial-history flags")
     if official_matrix_present:
         obj = load(root, str(official_matrix.relative_to(root)))
         official_matrix_present = (
@@ -117,7 +143,18 @@ def audit(root: Path, now: date | None = None) -> dict:
             "production_banner_allowed": False,
         },
         "scenario_2nd_by_3rd": {
-            "status": "OFFICIAL_MATRIX_VERIFIED" if official_matrix_present else "D_RESEARCH_ONLY",
+            "status": "OFFICIAL_MATRIX_VERIFIED" if official_matrix_present else (
+                "VERIFIED_PARTIAL_OFFICIAL_K_RESEARCH_HOLD_API" if research_k_verified else "D_RESEARCH_ONLY"
+            ),
+            "source_verified_research_sample":research_k_stats,
+            "research_is_noncontiguous_2023_plus_history":True,
+            "worker_admin_read_route_candidate_present":(
+                root / "workers/brc_scenario_23_admin_route_candidate.mjs"
+            ).is_file(),
+            "live_worker_session_verifier_connected":False,
+            "private_research_binding_read_verified":False,
+            "anonymous_and_member_live_denial_verified":False,
+            "native_index_admin_session_parity_verified":False,
             "admin_d_model_present": d_model_present,
             "official_conditional_matrix_present": official_matrix_present,
             "exhibition_adjusted_consistency_verified": False,
@@ -132,6 +169,7 @@ def audit(root: Path, now: date | None = None) -> dict:
             "six-boat four-metric DOM parity in admin sessions",
             "true TimeX absolute-band original cohort and holdout validation",
             "D/E official 2nd-by-3rd matrix exhibition-before/after parity",
+            "scenario Worker authenticated read + private binding + denied member/public live probes",
         ],
     }
 
