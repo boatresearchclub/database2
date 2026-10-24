@@ -12,6 +12,7 @@ on:
       - 'scripts/brc_motor_index_display_contract_audit.py'
       - 'scripts/brc_motor_previous_index_qa_patch.py'
       - 'scripts/test_brc_motor_previous_index_qa_patch.py'
+      - 'scripts/test_brc_motor_previous_real_card_qa.py'
       - 'scripts/brc_motor_previous_k_coverage.py'
       - 'scripts/test_motor_previous_k_coverage.py'
       - 'scripts/BRC_MOTOR_PREVIOUS_K_RANK_RESTORE_CANDIDATE.py'
@@ -88,6 +89,7 @@ jobs:
       - name: Require reversible official-K-only motor previous INDEX candidate (DO NOT PUSH)
         run: |
           python scripts/test_brc_motor_previous_index_qa_patch.py
+          python scripts/test_brc_motor_previous_real_card_qa.py
           python scripts/brc_motor_previous_index_qa_patch.py \
             --index index.html \
             --out /tmp/BRC_MOTOR_K_QA_NOT_FOR_DEPLOY.html \
