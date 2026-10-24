@@ -1,0 +1,38 @@
+name: BRC V3 168R Stage ACK vs Public Live Inputs (NO DEPLOY)
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/brc-v3-live-vs-stage-qa.yml'
+      - 'scripts/brc_v3_public_live_vs_stage_ack_probe.py'
+      - 'scripts/test_brc_v3_public_live_vs_stage_ack_probe.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  live-read-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prove public live probe is bounded to verified stage scope
+        run: python scripts/test_brc_v3_public_live_vs_stage_ack_probe.py
+      - name: Check public BRC live 14 stage venues x 3 race numbers
+        run: |
+          python scripts/brc_v3_public_live_vs_stage_ack_probe.py \
+            --day 2026-10-24 \
+            --out brc_v3_public_live_vs_168_ack.json
+      - name: Upload only sanitized public status summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: brc-v3-live-stage-compare-20261024
+          path: brc_v3_public_live_vs_168_ack.json
+          retention-days: 3
+      - name: Explain strict interpretation
+        if: always()
+        run: |
+          echo "Stage KV ingestion ACK 168R/14 venues: independently observed, NOT proof of readback." >> "$GITHUB_STEP_SUMMARY"
+          echo "Public live-exhibition GET HTTP codes are external context only." >> "$GITHUB_STEP_SUMMARY"
+          echo "Admin-authenticated /predict-timex-v3 and four metrics still require actual run." >> "$GITHUB_STEP_SUMMARY"
