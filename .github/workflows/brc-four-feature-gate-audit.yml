@@ -78,6 +78,11 @@ jobs:
       - name: Probe public stage auth and live exhibition (NO JWT/POST/KV)
         continue-on-error: true
         run: python scripts/brc_v3_422_public_probe.py --run-live --out brc_v3_422_probe.json
+      - name: Stage KV-binding and ingest-key configuration negative probe
+        # The existing publisher sends deliberately UNAUTHORIZED {} to a fixed
+        # staging endpoint. No key, token, valid race data, or KV write.
+        continue-on-error: true
+        run: python scripts/brc_v3_stage_publisher.py probe
       - name: v3 official B-file and reviewed meeting preflight (NO WORKER)
         continue-on-error: true
         run: python scripts/brc_v3_stage_daily.py --summary brc_v3_offline_summary.json
