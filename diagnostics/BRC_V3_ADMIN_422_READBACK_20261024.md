@@ -54,3 +54,13 @@ Cloudflare Dashboardの**現在のWorkerソース**とバインディング (`BR
 逆に当日の**三国 1R・6R・12R**などは公開ライブAPI側でHTTP200＋6艇TimeX数値あり。管理者権限付きの**同一日・同一会場・同一レース `POST /predict-timex-v3`** を行い、もしまだ422なら `race_context_missing` / `metrics_failed` / 内部サービスのレスポンス差異などへ調査対象を絞れる。**当該管理者POSTはこの開発チャットから実行・証明できていない。**
 
 本番BRC一般会員はv2維持。モデルの「準備完了」と「送信受付だけ成功」を混同しない。
+
+
+## 2026-10-24 追加：KV原本のキーと6艇整合性を個別検査
+
+- 過去にユーザーから提供されたWorkerコード `BRC_TimeX_v3_Worker_422_Diagnostic_Patch.js` を直接確認。非公開KVキーを**`brc:race_context:{date}:{venue_code}:{race_no}`** として生成しており、`/ingest-race-context` と `/predict-timex-v3` の両方が同じ生成関数を使用していた。保存TTLは `expirationTtl:172800`（48時間）で、昔のレースの読戻しを今日の運用確認に代用できない。**保存済みWorkerファイルとデプロイ中のWorkerの一致は未証明**。
+- `workers/brc_v3_stage_kv_integrity_candidate.mjs` を追加。保存された日付・会場コード・レース番号、会場名・大会グレード・6艇のコース番号と4桁登録番号の完全性・重複を検査する。戻り値は `context_missing` / `context_invalid` / `context_valid_candidate` の**理由コードだけ**で、艇別データやモデル係数を返さない。
+- `workers/brc_v3_stage_context_readback_route_candidate.mjs` はこの理由コードに対応。既存の**Cloudflare Worker管理者サーバー認証と本物のKV bindingを注入**できなければ実装できない。本番には未接続。読み込みエラーは `KV_READBACK_UNAVAILABLE` で区別。
+- Node で **12 + 10 + 7 + 6 = 35件**の安全性・API契約テストが成功。GitHub Actions [#40078622850](https://github.com/boatresearchclub/database2/actions/runs/40078622850) が SUCCESS。模擬Worker・模擬KVであり、実管理者JWTを用いたテストではない。
+- **通常運用上の最短切り分け**は、実際の管理者画面から当日・展示確定後の同一レースに対し `POST /predict-timex-v3` を1回だけ呼ぶこと。422なら、安全な `reason`（`date_not_today_jst`, `race_context_missing`, `race_context_invalid`, `live_service_http_error`, `live_service_invalid_json`, `metrics_failed`）から原因を分ける。パッチがまだデプロイされていなければ422本文には理由コードがない可能性がある。現行WorkerのソースとKVバインディングの照合が最終的な必須作業。
+- **INDEXでの管理者v3表示完了を偽装しない**。計算API成功 + 6艇×4指標の整合 + 実際の画面反映が確認されるまで `v3Verified:false`。一般利用者の旧v2を維持。本番INDEX、Cloudflare Worker、KV、D1には変更を加えていない。
