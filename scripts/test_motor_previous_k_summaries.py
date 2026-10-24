@@ -61,6 +61,19 @@ def test():
     assert withheld["verified_previous_motor_summaries"] == 0
     assert withheld["suppressed"]["same_motor_conflicting_user"] == 1
 
+    # Two athletes sharing one normalized display name but different official
+    # 4-digit registration IDs cannot be merged into one prior-motor result.
+    same_name_new_reg = dict(result("2026-10-21", 4, race_no=10))
+    same_name_new_reg["reg"] = "9876"
+    withheld = summarize(feed, rows + [same_name_new_reg], needed, date(2026, 10, 24))
+    assert withheld["verified_previous_motor_summaries"] == 0
+    assert withheld["suppressed"]["same_motor_ambiguous_registration"] == 1
+    invalid_reg = dict(result("2026-10-21", 2, race_no=10))
+    invalid_reg["reg"] = ""
+    withheld = summarize(feed, rows + [invalid_reg], needed, date(2026, 10, 24))
+    assert withheld["verified_previous_motor_summaries"] == 0
+    assert withheld["suppressed"]["same_motor_ambiguous_registration"] == 1
+
     try:
         summarize(feed, rows, {date(2026, 10, 20)}, date(2026, 10, 24))
     except ValueError as exc:
