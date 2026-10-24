@@ -100,6 +100,18 @@ def test():
     denied(feed,bad)
     bad=copy.deepcopy(study);bad["verified_previous_motor_summaries"]=838
     denied(feed,bad)
+    # A fully verified 21-result previous meeting would silently vanish from
+    # the actual 20-entry INDEX renderer. Hold the data until UI is upgraded.
+    bad=copy.deepcopy(study)
+    target=bad["venues"]["桐生"]["motors"]["1"]
+    target["completed_races"]=21
+    target["observed_results"]=[
+        {"date":d,"race_no":race,"rank":(1 if d=="2026-10-20" and race==1 else
+            2 if d=="2026-10-20" and race==2 else 4),"reg":"1234"}
+        for d,limit in (("2026-10-20",12),("2026-10-21",9))
+        for race in range(1,limit+1)
+    ]
+    denied(feed,bad)
     bad=copy.deepcopy(feed);bad["cumulative_motor_stats_available"]=True
     denied(bad,study)
     workflow=(Path(__file__).resolve().parents[1] / ".github/workflows/brc-motor-previous-review.yml").read_text(encoding="utf-8")
