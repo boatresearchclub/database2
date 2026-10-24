@@ -11,6 +11,13 @@ function v3JstToday(){
  const field=k=>parts.find(x=>x.type===k)?.value;
  return field("year")+"-"+field("month")+"-"+field("day");
 }
+// The deployed staging Worker preflight was confirmed for the BRC Pages
+// origin only. Local file:// QA and GitHub Pages cannot authenticate against
+// it. Never attempt a bearer request from these blocked origins.
+function v3OriginAllowsWorker(){
+ try{return window.location?.origin==="https://brcdatabase.pages.dev";}
+ catch(_){return false;}
+}
 function v3AdminUi(){
  try{
   return typeof BRC_MEMBER_ACTIVE!=="undefined"&&BRC_MEMBER_ACTIVE===true&&
@@ -95,6 +102,10 @@ function v3Mount(){
  for(const el of [title,note,row,status])host.appendChild(el);
  run.addEventListener("click",async()=>{
   if(!v3AdminUi()){host.remove();return;}
+  if(!v3OriginAllowsWorker()){
+   status.textContent="このアクセス元からは診断できません。通信許可済みのBRC本体上でのみ検証可能です。";
+   return;
+  }
   if(v3Busy)return;
   const selected={date:date.value,venue_code:venue.value,race_no:Number(race.value)};
   if(selected.date!==v3JstToday()){
