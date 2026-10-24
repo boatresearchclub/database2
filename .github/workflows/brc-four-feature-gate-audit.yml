@@ -14,6 +14,9 @@ on:
       - 'scripts/test_motor_previous_k_summaries.py'
       - 'scripts/brc_true_timex_effect_research.py'
       - 'scripts/test_true_timex_effect_research.py'
+      - 'scripts/brc_motor_source_scope_audit.py'
+      - 'scripts/brc_v3_422_public_probe.py'
+      - 'scripts/test_motor_scope_and_v3_public_probe.py'
       - '.github/workflows/brc-four-feature-gate-audit.yml'
   pull_request:
     paths:
@@ -26,6 +29,9 @@ on:
       - 'scripts/test_motor_previous_k_summaries.py'
       - 'scripts/brc_true_timex_effect_research.py'
       - 'scripts/test_true_timex_effect_research.py'
+      - 'scripts/brc_motor_source_scope_audit.py'
+      - 'scripts/brc_v3_422_public_probe.py'
+      - 'scripts/test_motor_scope_and_v3_public_probe.py'
       - '.github/workflows/brc-four-feature-gate-audit.yml'
 permissions:
   contents: read
@@ -48,6 +54,13 @@ jobs:
         run: python scripts/test_motor_previous_k_summaries.py
       - name: True TimeX original-outcome cohort fixtures
         run: python scripts/test_true_timex_effect_research.py
+      - name: Motor source scope and v3 422 public probe offline fixtures
+        run: python scripts/test_motor_scope_and_v3_public_probe.py
+      - name: Audit quarantined motor period-N mismatch (NO PUBLISH)
+        run: python scripts/brc_motor_source_scope_audit.py --output brc_motor_scope_audit.json
+      - name: Probe public stage auth and live exhibition (NO JWT/POST/KV)
+        continue-on-error: true
+        run: python scripts/brc_v3_422_public_probe.py --run-live --out brc_v3_422_probe.json
       - name: v3 official B-file and reviewed meeting preflight (NO WORKER)
         continue-on-error: true
         run: python scripts/brc_v3_stage_daily.py --summary brc_v3_offline_summary.json
@@ -66,5 +79,7 @@ jobs:
           path: |
             brc_four_workstream_readiness.json
             brc_v3_offline_summary.json
+            brc_motor_scope_audit.json
+            brc_v3_422_probe.json
           if-no-files-found: ignore
           retention-days: 7
