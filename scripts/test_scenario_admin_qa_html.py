@@ -43,11 +43,23 @@ def test():
     assert "<script id=\"brc-research-data\"" in html
     assert "<script src=" not in html
     assert "__BRCDATA__" not in html
+    assert 'className="tile boat-"+no' in html
+    assert "font-weight:700;color:var(--ink)" in html
     m=sample()
-    m["research_rows"][0]["winner_reg"]="</script><script>alert(1)</script>"
+    m["source_windows"][0]["note"]="</script><script>alert(1)</script>"
     html=render(m)
     assert "</script><script>alert(1)</script>" not in html
     assert "\\u003c/script\\u003e" in html
+    m=sample();m["research_rows"][0]["winner_reg"]="</script><script>alert(1)</script>"
+    rejected(m,"registration")
+    m=sample();m["research_rows"][0]["third_boat_rates"][0]["n"]=3
+    rejected(m,"reconcile")
+    m=sample();m["research_rows"][0]["third_boat_rates"][0]["pct"]=39.9
+    rejected(m,"percentages")
+    m=sample();m["research_rows"][0]["third_boat_rates"][0]["boat"]=2
+    rejected(m,"exact four")
+    m=sample();m["research_rows"].append(dict(m["research_rows"][0]))
+    rejected(m,"Duplicate")
     m=sample();m["research_rows"][0]["denominator_n"]=4
     rejected(m,"N<5")
     m=sample();m["productionApproved"]=True
