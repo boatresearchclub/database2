@@ -10,6 +10,8 @@ on:
       - 'scripts/brc_motor_previous_k_summaries.py'
       - 'scripts/brc_motor_previous_k_coverage.py'
       - 'scripts/test_motor_previous_k_coverage.py'
+      - 'scripts/BRC_MOTOR_PREVIOUS_K_RANK_RESTORE_CANDIDATE.py'
+      - 'scripts/test_motor_previous_k_rank_restore_candidate.py'
       - 'scripts/brc_motor_source_scope_audit.py'
       - 'scripts/brc_scenario_123_coverage_audit.py'
       - 'scripts/brc_scenario_123_early_backfill.py'
@@ -115,6 +117,8 @@ jobs:
         run: python scripts/test_motor_previous_k_summaries.py
       - name: Previous official-K motor summary coverage safety fixtures
         run: python scripts/test_motor_previous_k_coverage.py
+      - name: Official-K ordered previous-rank restoration candidate fixtures
+        run: python scripts/test_motor_previous_k_rank_restore_candidate.py
       - name: True TimeX original-outcome cohort fixtures
         run: python scripts/test_true_timex_effect_research.py
       - name: Motor source scope and v3 422 public probe offline fixtures
@@ -207,6 +211,10 @@ jobs:
             --source /tmp/brc_motor_previous_k_real_offline_PRIVATE.json \
             --previous racecards/motor_previous_daily.json \
             --out brc_motor_previous_k_coverage.json
+          python scripts/BRC_MOTOR_PREVIOUS_K_RANK_RESTORE_CANDIDATE.py \
+            --identity racecards/motor_previous_daily.json \
+            --official-K-study /tmp/brc_motor_previous_k_real_offline_PRIVATE.json \
+            --out /tmp/brc_motor_previous_rank_candidate_DO_NOT_PUSH_PRIVATE.json
       - name: Cross-check frozen 2026-09-05 motor baseline against official K (NO PUBLISH)
         run: python scripts/brc_motor_baseline_k_parity.py --out brc_motor_sept_baseline_parity.json
       - name: Sample actual official K scenario method and 1-2-3 join
