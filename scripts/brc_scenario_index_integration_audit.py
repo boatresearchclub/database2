@@ -21,6 +21,15 @@ PATTERNS={
     "tabs_nav":r"(?:data-tab|activeTab|tab-button|tab-content|showTab|switchTab)",
     "security_access":r"/(?:api|auth|login)|authorization|bearer|worker|token",
 }
+DEEP_PATTERNS={
+    "player_detail_markup":r"""(?i)<[a-z][^>\n]{0,175}(?:id|class)=["'][^"']*(?:player|scenario|tenkai|trend)[^"']*["'][^>\n]{0,130}>""",
+    "scenario_named_ui":r"""(?i)["'](?:展開|展開傾向|2着別3着率)["']""",
+    "scenario_render_functions":r"(?i)\b(?:function\s+)?(?:render|show|open|build|draw)[a-zA-Z0-9_]{0,55}(?:scenario|player|tenkai|trend)[a-zA-Z0-9_]{0,55}\s*\(",
+    "existing_scenario_panels":r"""(?i)(?:id|data-[a-z-]+)=["'][^"']{0,72}(?:scenario|tenkai|trend)[^"']{0,72}["']""",
+    "admin_state_assignments":r"(?i)\b(?:let|const|var)\s+(?:isAdmin|adminMode|adminViewMode|adminActive|currentRole|userRole)\b",
+    "details_tab_binding":r"(?i)(?:detail|player|scenario)[A-Za-z0-9_-]{0,25}(?:tab|pane|panel)|(?:tab|pane|panel)[A-Za-z0-9_-]{0,25}(?:detail|player|scenario)"
+}
+
 SECRET_LINE=re.compile(r"(?i)(secret|password|api[_-]?key|access[_-]?token|bearer|authorization|cookie)")
 KNOWN_GUARDS=("isAdmin","adminOnly","adminMode","brcAdmin")
 MAX_SAMPLES=18
@@ -55,6 +64,31 @@ def inspect(raw:str):
     return result
 
 
+
+def inspect_deep(raw:str):
+    result={}
+    # Keep samples outside giant top-of-file patch history comments.
+    for label,pat in DEEP_PATTERNS.items():
+        matches=[m for m in re.finditer(pat,raw,re.I) if m.start()>50000]
+        if not matches:
+            result[label]={"hits":0,"samples":[]}
+            continue
+        indices=sorted(set(round(k*(len(matches)-1)/min(11,len(matches)-1))
+                           for k in range(min(12,len(matches))))) if len(matches)>1 else [0]
+        samples=[]
+        for idx in indices:
+            m=matches[idx]
+            before=raw[max(0,m.start()-150):m.start()]
+            after=raw[m.end():m.end()+215]
+            fragment=re.sub(r"\s+"," ",(before+" ⟪"+m.group()+"⟫ "+after))
+            if SECRET_LINE.search(fragment):
+                fragment="[REDACTED_CREDENTIAL_NEIGHBOR]"
+            samples.append({"line":raw.count("\n",0,m.start())+1,
+                           "pos":m.start(),"fragment":fragment[:420]})
+        result[label]={"hits":len(matches),"samples":samples}
+    return result
+
+
 def main():
     p=argparse.ArgumentParser()
     p.add_argument("--index",default="index.html",type=Path)
@@ -62,11 +96,16 @@ def main():
     a=p.parse_args()
     raw=a.index.read_text(encoding="utf-8")
     audit=inspect(raw)
+    audit["deep_integration_candidates"]=inspect_deep(raw)
     a.out.write_text(json.dumps(audit,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     for k,v in audit["groups"].items():
         print(f"INDEX_ANCHOR {k}: {v['hits']} matches")
         for s in v["sampled"][:8]:
             print(f"  line {s['line']} pos {s['pos']}: {s['fragment'][:290]}")
+    for category,group in audit["deep_integration_candidates"].items():
+        print(f"INDEX_DEEP {category}: {group['hits']} matches")
+        for record in group["samples"][:8]:
+            print(f"  deep line {record['line']} pos {record['pos']}: {record['fragment'][:280]}")
     print("INDEX_READONLY sha256="+audit["source_sha256"]+
           " bytes="+str(audit["index_utf8_bytes"])+" no files modified or UI published")
 
