@@ -1,8 +1,5 @@
 name: BRC Historical K July 8-14 (NO DEPLOY)
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/brc-scenario-july-8-14-official-k.yml'
   workflow_dispatch:
 permissions:
   contents: read
