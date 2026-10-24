@@ -69,6 +69,21 @@ def test():
         assert "absolute" in str(ex)
     else:
         raise AssertionError("relative TimeX may not masquerade as absolute bands")
+    # NaN used to pass the <5 comparison and would admit arbitrary tiny
+    # pt signals to the shortlist. Require finite numeric thresholds.
+    for opts in ({"threshold_pt":float("nan")},
+                 {"threshold_pt":float("inf")},
+                 {"threshold_pt":True},
+                 {"min_n":float("nan")},
+                 {"min_n":True},
+                 {"min_n":4}):
+        try:
+            evaluate(source(), **opts)
+        except ValueError as ex:
+            assert "gate" in str(ex)
+        else:
+            raise AssertionError("Unsafe numerical research threshold accepted: "+repr(opts))
+
     print("SELFTEST_PASS: four-cohort true effect, N gate, median/band scale isolation")
 
 
