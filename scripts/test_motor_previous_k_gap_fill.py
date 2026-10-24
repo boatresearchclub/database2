@@ -6,7 +6,7 @@ from datetime import date
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from brc_motor_previous_k_gap_fill import MAX_DOWNLOAD_DAYS,fill_k_gaps
+from brc_motor_previous_k_gap_fill import MAX_DOWNLOAD_DAYS,fill_k_gaps,required_dates_from_unverified_review
 from brc_motor_previous_k_summaries import NAMES
 
 
@@ -24,6 +24,31 @@ def fixture():
         "date":"2026-10-22",
         "cumulative_motor_stats_available":False,
         "venues":venues
+    }
+
+
+def review_fixture():
+    base=fixture()
+    venues={}
+    for venue in NAMES:
+        motors={}
+        for motor in range(1,36):
+            motors[str(motor)]={
+                "previous":{
+                    "start":"2026-10-20",
+                    "end":"2026-10-21",
+                    "users":[{"name":"確認前の外部候補"}],
+                    "ranks_raw":"654",
+                },
+                "source_meet_end":"2026-10-22",
+            }
+        venues[venue]={"source_meet_end":"2026-10-22","motors":motors}
+    return {
+        "schema":"brc_motor_previous_third_party_research_v1",
+        "as_of":"2026-10-23",
+        "source_trust":"third_party_public_not_officially_reconciled",
+        "publication_gate":"RESEARCH_ONLY_NOT_FOR_PRODUCTION_DISPLAY",
+        "venues":venues,
     }
 
 
@@ -92,6 +117,45 @@ def test():
         bad=deepcopy(source)
         bad["cumulative_motor_stats_available"]=True
         rejects(lambda:fill_k_gaps(bad,root,date(2026,10,24)))
+        review=review_fixture()
+        assert required_dates_from_unverified_review(review,date(2026,10,24))=={
+            date(2026,10,20),date(2026,10,21)
+        }
+        before=len(downloaded)
+        # A complete reviewed snapshot can prefetch only official K dates.
+        # The names and ranks are NOT approved by this step.
+        pre=fill_k_gaps(review,root,date(2026,10,24),
+                        downloader=fetch,validator=validate)
+        assert pre["source_phase"]=="PRE_K_CANDIDATE_DATE_DISCOVERY_ONLY"
+        assert pre["review_candidates_not_trusted_as_official_identity"] is True
+        assert len(downloaded)==before+1
+        for edit in (
+            lambda x:x.update({"as_of":"2026-10-22"}),
+            lambda x:x.update({"publication_gate":"READY_FOR_PUBLIC"}),
+            lambda x:x["venues"].pop("若松"),
+            lambda x:x["venues"]["若松"]["motors"].pop("35"),
+            lambda x:x["venues"]["若松"]["motors"]["1"]["previous"].update({
+                "end":"2026-10-24"
+            }),
+            lambda x:x["venues"]["若松"]["motors"]["1"]["previous"].update({
+                "start":"2026-09-01"
+            }),
+            lambda x:x["venues"]["若松"]["motors"]["1"]["previous"].update({
+                "users":[{"name":""}]
+            }),
+            lambda x:x["venues"]["若松"]["motors"]["1"].update({
+                "source_meet_end":"2026-10-23"
+            }),
+        ):
+            mutated=deepcopy(review)
+            edit(mutated)
+            rejects(lambda:fill_k_gaps(mutated,root,date(2026,10,24),
+                                        downloader=lambda *_args,**_kw: (
+                                            _ for _ in ()
+                                        ).throw(AssertionError("untrusted feed triggered HTTP"))))
+        (root/"K261021.TXT").unlink()
+        rejects(lambda:fill_k_gaps(review,root,date(2026,10,24),
+                                   max_downloads=0))
     print("PASS: missing official K fetch bounded, independently validated, no model/INDEX or feed writes")
 
 
