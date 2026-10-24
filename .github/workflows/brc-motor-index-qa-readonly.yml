@@ -22,6 +22,21 @@ jobs:
         run: |
           python scripts/brc_motor_index_display_contract_audit.py \
             --index index.html --out brc_motor_index_contract_readonly.json
+      - name: Test safe offline INDEX UI patch plus emulated K-only browser state
+        run: |
+          python scripts/test_brc_motor_previous_index_qa_patch.py
+      - name: Build fixed-source offline BRC motor QA INDEX (NEVER DEPLOY)
+        run: |
+          python scripts/brc_motor_previous_index_qa_patch.py \
+            --index index.html \
+            --out /tmp/BRC_MOTOR_PREVIOUS_K_OFFLINE_QA_DO_NOT_PUSH.html \
+            --audit brc_motor_previous_index_qa_audit.json
+      - name: Upload ONLY source SHA and reversible patch audit metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: brc-motor-previous-index-qa-audit-only
+          path: brc_motor_previous_index_qa_audit.json
+          retention-days: 2
       - name: Upload only redacted motor contract metadata
         uses: actions/upload-artifact@v4
         with:
