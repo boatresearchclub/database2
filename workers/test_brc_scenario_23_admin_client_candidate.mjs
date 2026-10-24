@@ -110,3 +110,47 @@ test("missing player cohort does not expose venue rows",async()=>{
  assert.equal(r.status,"NO_VERIFIED_COHORT_N_GE_5");
  assert.equal(r.denominatorN,null);
 });
+
+
+test("older in-flight responses never overwrite a newer selected player",async()=>{
+ let resolveFirst;let fetchCalls=0;
+ const client=createScenario23ReadClient({
+  workerOrigin,isAdminUi:()=>true,getSessionToken:async()=>token,
+  fetchImpl:async()=>{
+    fetchCalls++;
+    if(fetchCalls===1)return await new Promise(resolve=>{resolveFirst=resolve;});
+    return new Response(JSON.stringify({ok:true,status:"MISSING_OR_N_LT_5",
+     denominator_n:null,not_zero_percent:true}),{status:200});
+  }
+ });
+ const oldRequest=client.load(selection);
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(fetchCalls,1);
+ const newRequest=client.load({...selection,playerReg:"5678"});
+ const newest=await newRequest;
+ assert.equal(newest.status,"NO_VERIFIED_COHORT_N_GE_5");
+ resolveFirst(new Response(JSON.stringify({ok:true,status:"RESEARCH_N_GE_5",
+  scope:"player",venue_code:"10",winning_course:1,first_boat:1,second_boat:2,
+  method:"全体",winner_reg:"1234",denominator_n:5,
+  approvedForPredictions:false,complete_history_from_2023_approved:false,
+  third_boat_rates:[2,2,1,0].map((n,i)=>({boat:i+3,n,
+   pct:Math.round(1000*n/5)/10}))}),{status:200}));
+ const stale=await oldRequest;
+ assert.equal(stale.status,"STALE_REQUEST_SUPPRESSED");
+ assert.deepEqual(stale.rates,[]);
+});
+test("unmount invalidates pending scenario fetch even without next request",async()=>{
+ let release;
+ const client=createScenario23ReadClient({workerOrigin,isAdminUi:()=>true,
+  getSessionToken:async()=>token,
+  fetchImpl:async()=>await new Promise(resolve=>{release=resolve;})});
+ const pending=client.load(selection);
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(typeof release,"function");
+ client.invalidate();
+ release(new Response(JSON.stringify({ok:true,status:"MISSING_OR_N_LT_5",
+  not_zero_percent:true,denominator_n:null}),{status:200}));
+ const out=await pending;
+ assert.equal(out.status,"STALE_REQUEST_SUPPRESSED");
+ assert.deepEqual(out.rates,[]);
+});
