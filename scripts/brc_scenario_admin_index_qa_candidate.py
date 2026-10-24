@@ -51,7 +51,7 @@ def build(index:str,adapter:str,expected_hash:str)->tuple[str,dict]:
     tag="\n<!-- "+MARK+": OFFLINE QA ONLY; NOT APPROVED FOR INDEX PUSH -->\n"
     tag+="<script id=\"brc-scenario-2nd3rd-admin-qa-bridge\">\n"+safe_adapter+"\n</script>\n"
     idx=idx[:pos]+tag+idx[pos:]
-    if idx.count(MARK)!=2 or idx.count("onPlayerRendered(reg)")!=1:
+    if idx.count(MARK)!=2 or idx.count("window.BRC_Scenario23Admin?.onPlayerRendered(reg)")!=1:
         raise ValueError("Exactly one render hook and QA marker required")
     # Verify original HTML is bit-for-bit identical after removing the 2 additions.
     back=idx.replace(tag,"",1).replace("try{window.BRC_Scenario23Admin?.onPlayerRendered(reg);}catch(_e){} ","",1)
