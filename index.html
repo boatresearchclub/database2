@@ -1,3 +1,5 @@
+<!-- BRC_EXHIBITION_SYNC_RETRY_DIAG_20261024_V1: Bounded 8s display API fetch, per-race HTTP/identity diagnostics, concise admin-only error on unsynced exhibition. No API changes, TimeX/public rate/absence changes. -->
+<!-- BRC_MOTOR_WAKAMATSU_OFFICIAL_CUMULATIVE_V4_20261024: Official validated total motor rows, lazy Wakamatsu only; previous-racer stays under 前節分析; public v2, TimeX & odds untouched. -->
 <!-- BRC_MOTOR_PREVIOUS_SINGLE_SECTION_V3_20261024: 24-venue detail shows verified previous racer/ranks only under 前節分析; remove duplicate top-level card and admin-only stale global notice; cumulative history remains fail-closed; prediction/TimeX/public auth untouched. -->
 <!-- BRC_MOTOR_PREVIOUS_RANKS_VERIFIED_V2_20261024: Exact-crosschecked previous event ranks and final result only; no cumulative motor scores, predictions or public v3 changes. -->
 <!-- BRC_MOTOR_DAILY_SAFE_UI_V1: cross-source current motor detail; do not confuse sparse final history with no finals, require evidence for previous-final badge; no prediction math. -->
@@ -373,7 +375,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261024-MOTOR-PREVIOUS-SINGLE-SECTION-V3">
+<meta name="brc-build" content="20261024-LIVE-EXHIBITION-RETRY-DIAG-V1">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -8187,7 +8189,8 @@ body:not(.brc-admin-diagnostics-visible) .brc-dp-race-alert.is-partial{font-size
 <script src="data/data-players-3b146f12d0-002.js"></script>
 <script type="application/json" id="data-player-profile-seed"></script>
 <script src="data/data-player-profile-seed-98469868b0-001.js"></script>
-<script type="application/json" id="data-venue-course-national">{"桐生":{"1":{"n":8384,"win":51.35,"top2":69.63,"top3":78.83},"2":{"n":8384,"win":12.52,"top2":36.86,"top3":54.97},"3":{"n":8384,"win":12.99,"top2":34.58,"top3":54.65},"4":{"n":8383,"win":13.09,"top2":28.32,"top3":48.13},"5":{"n":8382,"win":7.89,"top2":21.92,"top3":41.55},"6":{"n":8293,"win":2.17,"top2":8.78,"top3":22.09}},"戸田":{"1":{"n":8545,"win":43.29,"top2":61.25,"top3":72.44},"2":{"n":8545,"win":16.55,"top2":39.79,"top3":57.98},"3":{"n":8545,"win":15.9,"top2":36.23,"top3":53.88},"4":{"n":8545,"win":14.53,"top2":31.63,"top3":50.83},"5":{"n":8544,"win":7.22,"top2":21.06,"top3":40.13},"6":{"n":8434,"win":2.53,"top2":10.16,"top3":25.02}},"江戸川":{"1":{"n":7617,"win":47.13,"top2":66.94,"top3":77.41},"2":{"n":7620,"win":17.95,"top2":41.09,"top3":59.25},"3":{"n":7621,"win":14.04,"top2":34.37,"top3":53.37},"4":{"n":7621,"win":11.99,"top2":27.19,"top3":44.97},"5":{"n":7617,"win":6.52,"top2":19.21,"top3":37.77},"6":{"n":7458,"win":2.43,"top2":11.48,"top3":27.8}},"平和島":{"1":{"n":7886,"win":45.03,"top2":63.67,"top3":75.18},"2":{"n":7886,"win":16.74,"top2":39.79,"top3":58.7},"3":{"n":7886,"win":14.73,"top2":33.87,"top3":51.95},"4":{"n":7885,"win":12.82,"top2":30.88,"top3":49.23},"5":{"n":7886,"win":7.52,"top2":20.53,"top3":37.66},"6":{"n":7764,"win":3.19,"top2":11.42,"top3":27.64}},"多摩川":{"1":{"n":8451,"win":53.27,"top2":70.13,"top3":79.29},"2":{"n":8451,"win":14.73,"top2":39.89,"top3":57.95},"3":{"n":8451,"win":12.73,"top2":33.55,"top3":53.38},"4":{"n":8451,"win":10.9,"top2":27.77,"top3":47.11},"5":{"n":8449,"win":6.44,"top2":19.6,"top3":38.48},"6":{"n":8360,"win":1.93,"top2":9.14,"top3":23.96}},"浜名湖":{"1":{"n":8943,"win":52.4,"top2":70.52,"top3":79.06},"2":{"n":8944,"win":14.27,"top2":39.17,"top3":56.97},"3":{"n":8944,"win":14.23,"top2":35.48,"top3":55.72},"4":{"n":8943,"win":10.66,"top2":27.55,"top3":47.55},"5":{"n":8942,"win":6.84,"top2":19.66,"top3":39.77},"6":{"n":8805,"win":1.64,"top2":7.77,"top3":21.29}},"蒲郡":{"1":{"n":8784,"win":56.34,"top2":72.6,"top3":81.91},"2":{"n":8785,"win":11.71,"top2":36.16,"top3":54.92},"3":{"n":8786,"win":12.43,"top2":34.51,"top3":54.25},"4":{"n":8786,"win":11.94,"top2":30.41,"top3":51.92},"5":{"n":8785,"win":5.77,"top2":19.48,"top3":37.85},"6":{"n":8671,"win":1.82,"top2":6.91,"top3":19.31}},"常滑":{"1":{"n":8940,"win":57.94,"top2":73.79,"top3":82.52},"2":{"n":8940,"win":12.16,"top2":36.95,"top3":55.87},"3":{"n":8940,"win":10.62,"top2":32.61,"top3":52.37},"4":{"n":8940,"win":11.04,"top2":28.65,"top3":48.65},"5":{"n":8938,"win":6.38,"top2":19.79,"top3":38.77},"6":{"n":8856,"win":1.89,"top2":8.31,"top3":22.02}},"津":{"1":{"n":8233,"win":56.54,"top2":74.03,"top3":82.57},"2":{"n":8233,"win":13.93,"top2":40.59,"top3":59.24},"3":{"n":8233,"win":11.72,"top2":32.24,"top3":53.26},"4":{"n":8231,"win":10.08,"top2":27.49,"top3":47.93},"5":{"n":8232,"win":5.94,"top2":18.16,"top3":36.14},"6":{"n":8139,"win":1.77,"top2":7.53,"top3":21.06}},"三国":{"1":{"n":8165,"win":53.01,"top2":71.81,"top3":80.24},"2":{"n":8164,"win":15.51,"top2":41.94,"top3":60.31},"3":{"n":8165,"win":14.04,"top2":35.38,"top3":55.11},"4":{"n":8164,"win":10.25,"top2":27.2,"top3":48.41},"5":{"n":8162,"win":5.7,"top2":16.67,"top3":34.91},"6":{"n":8064,"win":1.51,"top2":7.07,"top3":21.29}},"びわこ":{"1":{"n":8117,"win":54.06,"top2":72.39,"top3":81.22},"2":{"n":8119,"win":14.24,"top2":39.4,"top3":58.27},"3":{"n":8119,"win":13.25,"top2":34.82,"top3":54.55},"4":{"n":8119,"win":10.67,"top2":27.31,"top3":47.84},"5":{"n":8119,"win":6.06,"top2":18.72,"top3":37.07},"6":{"n":8017,"win":1.76,"top2":7.47,"top3":21.33}},"住之江":{"1":{"n":8628,"win":58.51,"top2":74.83,"top3":83.34},"2":{"n":8628,"win":13.57,"top2":38.73,"top3":57.34},"3":{"n":8628,"win":11.65,"top2":34.68,"top3":55.61},"4":{"n":8628,"win":9.46,"top2":27.8,"top3":48.01},"5":{"n":8628,"win":5.23,"top2":16.94,"top3":34.7},"6":{"n":8529,"win":1.58,"top2":7.08,"top3":21.16}},"尼崎":{"1":{"n":8177,"win":58.8,"top2":74.89,"top3":83.34},"2":{"n":8176,"win":11.85,"top2":36.34,"top3":54.56},"3":{"n":8178,"win":11.8,"top2":33.35,"top3":54.0},"4":{"n":8178,"win":10.25,"top2":28.44,"top3":49.6},"5":{"n":8175,"win":5.55,"top2":19.2,"top3":37.13},"6":{"n":8088,"win":1.77,"top2":7.9,"top3":21.64}},"鳴門":{"1":{"n":7959,"win":47.77,"top2":66.2,"top3":76.14},"2":{"n":7959,"win":14.88,"top2":39.13,"top3":57.08},"3":{"n":7959,"win":15.53,"top2":35.65,"top3":54.19},"4":{"n":7959,"win":11.76,"top2":29.19,"top3":48.91},"5":{"n":7957,"win":7.9,"top2":20.74,"top3":39.69},"6":{"n":7847,"win":2.19,"top2":9.24,"top3":24.38}},"丸亀":{"1":{"n":8416,"win":56.63,"top2":74.69,"top3":82.76},"2":{"n":8415,"win":13.62,"top2":38.91,"top3":57.77},"3":{"n":8416,"win":12.06,"top2":33.06,"top3":52.92},"4":{"n":8416,"win":9.59,"top2":26.97,"top3":48.78},"5":{"n":8415,"win":5.87,"top2":17.85,"top3":34.31},"6":{"n":8318,"win":2.24,"top2":8.61,"top3":23.61}},"児島":{"1":{"n":8400,"win":56.06,"top2":73.55,"top3":82.14},"2":{"n":8400,"win":12.82,"top2":38.0,"top3":56.05},"3":{"n":8400,"win":12.48,"top2":32.75,"top3":52.43},"4":{"n":8400,"win":10.56,"top2":28.95,"top3":50.05},"5":{"n":8400,"win":5.96,"top2":17.61,"top3":35.75},"6":{"n":8297,"win":2.15,"top2":9.26,"top3":23.88}},"宮島":{"1":{"n":8799,"win":56.14,"top2":72.69,"top3":81.09},"2":{"n":8800,"win":12.69,"top2":37.73,"top3":57.06},"3":{"n":8800,"win":12.68,"top2":35.9,"top3":56.16},"4":{"n":8800,"win":10.07,"top2":26.67,"top3":46.36},"5":{"n":8800,"win":6.6,"top2":19.31,"top3":38.11},"6":{"n":8675,"win":1.84,"top2":7.82,"top3":21.52}},"徳山":{"1":{"n":8478,"win":63.46,"top2":79.83,"top3":86.79},"2":{"n":8478,"win":13.18,"top2":41.51,"top3":60.34},"3":{"n":8478,"win":9.94,"top2":32.4,"top3":54.06},"4":{"n":8478,"win":7.95,"top2":24.77,"top3":46.57},"5":{"n":8478,"win":4.36,"top2":15.64,"top3":33.95},"6":{"n":8374,"win":1.12,"top2":5.92,"top3":18.59}},"下関":{"1":{"n":8423,"win":60.14,"top2":77.3,"top3":85.46},"2":{"n":8423,"win":11.3,"top2":36.6,"top3":56.0},"3":{"n":8423,"win":11.2,"top2":34.63,"top3":55.76},"4":{"n":8423,"win":9.7,"top2":25.68,"top3":46.38},"5":{"n":8423,"win":5.5,"top2":17.61,"top3":35.05},"6":{"n":8312,"win":2.18,"top2":8.28,"top3":21.6}},"若松":{"1":{"n":8498,"win":57.5,"top2":74.35,"top3":83.27},"2":{"n":8498,"win":12.01,"top2":36.27,"top3":55.97},"3":{"n":8498,"win":11.96,"top2":34.5,"top3":55.0},"4":{"n":8498,"win":10.43,"top2":27.68,"top3":46.99},"5":{"n":8497,"win":5.99,"top2":18.25,"top3":35.64},"6":{"n":8403,"win":2.12,"top2":9.03,"top3":23.35}},"芦屋":{"1":{"n":8569,"win":59.38,"top2":75.68,"top3":83.98},"2":{"n":8569,"win":10.46,"top2":33.78,"top3":52.79},"3":{"n":8569,"win":10.96,"top2":33.61,"top3":53.1},"4":{"n":8569,"win":10.78,"top2":28.94,"top3":48.22},"5":{"n":8568,"win":6.28,"top2":19.9,"top3":39.44},"6":{"n":8478,"win":2.17,"top2":8.17,"top3":22.65}},"福岡":{"1":{"n":8364,"win":56.86,"top2":74.22,"top3":83.13},"2":{"n":8364,"win":14.61,"top2":42.11,"top3":61.74},"3":{"n":8364,"win":14.9,"top2":38.3,"top3":57.58},"4":{"n":8364,"win":8.52,"top2":24.95,"top3":47.02},"5":{"n":8362,"win":4.09,"top2":15.63,"top3":34.35},"6":{"n":8239,"win":1.02,"top2":4.85,"top3":16.42}},"唐津":{"1":{"n":8497,"win":55.02,"top2":73.73,"top3":82.77},"2":{"n":8497,"win":14.56,"top2":40.84,"top3":59.28},"3":{"n":8497,"win":12.6,"top2":34.55,"top3":55.31},"4":{"n":8497,"win":10.14,"top2":26.27,"top3":47.33},"5":{"n":8495,"win":5.99,"top2":17.99,"top3":36.99},"6":{"n":8372,"win":1.68,"top2":6.69,"top3":18.5}},"大村":{"1":{"n":8840,"win":61.65,"top2":78.46,"top3":86.13},"2":{"n":8840,"win":12.34,"top2":38.57,"top3":57.99},"3":{"n":8840,"win":10.88,"top2":34.98,"top3":55.31},"4":{"n":8840,"win":8.7,"top2":24.39,"top3":45.25},"5":{"n":8840,"win":5.05,"top2":16.86,"top3":35.02},"6":{"n":8766,"win":1.36,"top2":6.76,"top3":20.4}}}</script>
+<script type="application/json" id="data-venue-course-national"></script>
+<script src="data/data-venue-course-national-90bdc9497d-001.js"></script>
 <script type="application/json" id="data-venuelane"></script>
 <script src="data/data-venuelane-6cc268c7cd-001.js"></script>
 <script type="application/json" id="data-venuegradestats"></script>
@@ -11550,6 +11553,7 @@ function renderPredictUnifiedMotor(course,target){
   const b=boats.find(x=>Number(x.course)===Number(course));
   if(!b||b.motorNo==null){ target.innerHTML='<div class="predict-unified-empty">モーターデータがありません。</div>'; return; }
   const venue=document.getElementById('predictVenue')?.value||'';
+  if(venue==='若松')brcLoadWakamatsuOfficialTotals().catch(()=>{});
   const md=motorDetailData(); const venueMeta=brcMotorPayloadFresh(md)?(md.venues?.[venue]||{}):{};
   if(!brcMotorPayloadFresh(md)) brcMotorRequestFreshHistory().catch(()=>{});
   const resetDate=(typeof brcMotorCycleResetDate==='function')?brcMotorCycleResetDate(venue):'';
@@ -17325,43 +17329,127 @@ function brcLiveExhibitionEligible(liveRace){
   return true;
 }
 
+// BRC_EXHIBITION_SYNC_RETRY_DIAG_20261024_V1
+// Per-race diagnostics only: capture why official display did not reach BRC.
+// No alternate unverified source is promoted to race predictions.
+const __brcLiveExhibitionSyncStates = new Map();
+function brcRecordLiveExhibitionSync(date,code,r,http,status,reason=''){
+  const key=[String(date),String(code).padStart(2,'0'),Number(r)].join('|');
+  const obj={date:String(date),venue_code:String(code).padStart(2,'0'),race_no:Number(r),
+    http:http??null,status:String(status||'UNKNOWN').slice(0,48),
+    reason:String(reason||'').slice(0,120),checkedAt:new Date().toISOString()};
+  if(__brcLiveExhibitionSyncStates.has(key)) __brcLiveExhibitionSyncStates.delete(key);
+  __brcLiveExhibitionSyncStates.set(key,obj);
+  // Bound the cache and avoid retaining private payloads or tokens.
+  while(__brcLiveExhibitionSyncStates.size>30) __brcLiveExhibitionSyncStates.delete(__brcLiveExhibitionSyncStates.keys().next().value);
+  window.__brcV3LiveFetchStatus={date:obj.date,venue_code:obj.venue_code,race_no:obj.race_no,
+    http:obj.http,reason:obj.reason||obj.status,checkedAt:obj.checkedAt};
+  return obj;
+}
+function brcLiveExhibitionSyncFor(venue,raceNo){
+  const code=brcVenueCodeFromName(venue);
+  const date=TODAY_LABEL||getJstDateLabel();
+  if(!code || !raceNo) return null;
+  return __brcLiveExhibitionSyncStates.get([String(date),String(code).padStart(2,'0'),Number(raceNo)].join('|'))||null;
+}
+// Admin copy/export only; never include auth, response payload, player identities or URLs.
+window.BRC_ADMIN_LIVE_EXHIBITION_SYNC_DIAGNOSTICS=function(){
+  if(!BRC_ADMIN_ACTIVE)return null;
+  const {venue,raceNo}=brcCurrentLiveExhibitionSelection();
+  const item=brcLiveExhibitionSyncFor(venue,raceNo);
+  return item?{...item}:{date:String(TODAY_LABEL||getJstDateLabel()),
+    venue_code:brcVenueCodeFromName(venue),race_no:Number(raceNo)||0,
+    http:null,status:'NOT_REQUESTED_OR_PENDING',reason:'選択中のレースの通信結果が未記録',checkedAt:''};
+};
+function brcLiveSyncAdminReasonHtml(venue,raceNo){
+  if(!BRC_ADMIN_ACTIVE) return '';
+  const d=brcLiveExhibitionSyncFor(venue,raceNo);
+  if(!d) return '<span class="brc-compact-admin direct-info-banner-note">BRC取得結果を確認中</span>';
+  const reasons={
+    API_404:'展示API 404：保存データなし',
+    HTTP_ERROR:'展示API応答エラー',
+    TIMEOUT:'通信タイムアウト（再試行中）',
+    NETWORK_ERROR:'通信エラー（再試行中）',
+    JSON_INVALID:'展示APIの応答形式不正',
+    RESPONSE_INVALID:'展示APIの構造不一致',
+    DATE_MISMATCH:'展示APIの日付が不一致',
+    VENUE_MISMATCH:'展示APIの会場が不一致',
+    RACE_MISMATCH:'展示APIのRが不一致',
+    BOAT_DUPLICATE:'展示APIの艇番号が重複',
+    NO_BOATS:'展示APIに艇データなし',
+    RECEIVED:'展示API受信済み・再描画待ち'
+  };
+  const label=reasons[d.status]||'展示APIの再取得待ち';
+  const checked=Date.parse(d.checkedAt);
+  const jst=Number.isFinite(checked)?new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date(checked)):'';
+  // All content here is produced from constants and the validated timestamp.
+  return `<span class="brc-compact-admin direct-info-banner-note">${label}${jst?'（確認 '+jst+'）':''}</span>`;
+}
 async function brcFetchLiveExhibition(venue, raceNo){
   if(!BRC_LIVE_EXHIBITION_API_URL) return null;
-  const code = brcVenueCodeFromName(venue);
-  const r = Number(raceNo);
-  if(!code || !Number.isFinite(r) || r < 1 || r > 12) return null;
-  const date = TODAY_LABEL || getJstDateLabel();
-  const qs = new URLSearchParams({date, venue_code:code, race_no:String(r)});
-  // Safari / PWA / 中間キャッシュ対策。毎回ユニークURLで最新KVを取得する。
-  qs.set('_', String(Date.now()));
+  const code=brcVenueCodeFromName(venue);
+  const r=Number(raceNo);
+  if(!code || !Number.isInteger(r) || r<1 || r>12) return null;
+  const date=TODAY_LABEL||getJstDateLabel();
+  const qs=new URLSearchParams({date,venue_code:code,race_no:String(r)});
+  qs.set('_',String(Date.now())); // bypass PWA/proxy caching
+  // A hung mobile GET previously blocked all subsequent polls indefinitely.
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),8000);
+  let http=null;
   try{
-    const res = await fetch(`${BRC_LIVE_EXHIBITION_API_URL}/live-exhibition?${qs.toString()}`, {
-      method:'GET', cache:'no-store', headers:{'Accept':'application/json'}
+    const res=await fetch(`${BRC_LIVE_EXHIBITION_API_URL}/live-exhibition?${qs.toString()}`,{
+      method:'GET',cache:'no-store',headers:{'Accept':'application/json'},signal:controller.signal
     });
-    window.__brcV3LiveFetchStatus={date,venue_code:code,race_no:r,http:res.status,
-      reason:res.status===404?'展示APIにこのレースの保存データなし':res.ok?'応答あり':'展示API HTTP '+res.status,
-      checkedAt:new Date().toISOString()};
-    if(res.status === 404){
+    http=res.status;
+    if(res.status===404){
+      brcRecordLiveExhibitionSync(date,code,r,http,'API_404','展示APIにこのレースの保存データなし');
       if(BRC_ADMIN_ACTIVE)brcV3AdminRecordPhase('LIVE_API_404',date+' '+code+' '+r+'R');
       return null;
     }
-    if(!res.ok) throw new Error(`live_exhibition_http_${res.status}`);
-    const obj = await res.json();
-    if(!obj || obj.ok !== true || !obj.race || !Array.isArray(obj.race.boats)) return null;
-    if(String(obj.race.date) !== String(date)) return null;
-    if(String(obj.race.venue_code).padStart(2,'0') !== String(code).padStart(2,'0')) return null;
-    if(Number(obj.race.race_no) !== r) return null;
-    // 進入変更・欠場表示のため、艇データが6艇未満でもレース情報自体は受け取る。
-    // 展示確率補正は別関数側で6艇完全データを要求するため、部分データが誤って補正に使われることはない。
-    const nums = obj.race.boats.map(x=>Number(x.boat_no)).filter(n=>Number.isInteger(n)&&n>=1&&n<=6);
-    if(new Set(nums).size !== nums.length) return null;
-    if(!nums.length && !brcCollectConfirmedAbsentBoats(obj.race).size) return null;
-    return obj.race;
+    if(!res.ok){
+      brcRecordLiveExhibitionSync(date,code,r,http,'HTTP_ERROR','展示API HTTP '+res.status);
+      return null;
+    }
+    let data=null;
+    try{data=await res.json();}catch(_){
+      brcRecordLiveExhibitionSync(date,code,r,http,'JSON_INVALID','展示APIのJSON応答が不正');
+      return null;
+    }
+    if(!data || data.ok!==true || !data.race || !Array.isArray(data.race.boats)){
+      brcRecordLiveExhibitionSync(date,code,r,http,'RESPONSE_INVALID','展示APIのrace/boatsが不正');
+      return null;
+    }
+    const live=data.race;
+    if(String(live.date)!==String(date)){
+      brcRecordLiveExhibitionSync(date,code,r,http,'DATE_MISMATCH','展示APIの日付が選択レースと不一致');
+      return null;
+    }
+    if(String(live.venue_code).padStart(2,'0')!==String(code).padStart(2,'0')){
+      brcRecordLiveExhibitionSync(date,code,r,http,'VENUE_MISMATCH','展示APIの会場が選択レースと不一致');
+      return null;
+    }
+    if(Number(live.race_no)!==r){
+      brcRecordLiveExhibitionSync(date,code,r,http,'RACE_MISMATCH','展示APIのRが選択レースと不一致');
+      return null;
+    }
+    const nums=live.boats.map(b=>Number(b.boat_no)).filter(n=>Number.isInteger(n)&&n>=1&&n<=6);
+    if(new Set(nums).size!==nums.length){
+      brcRecordLiveExhibitionSync(date,code,r,http,'BOAT_DUPLICATE','展示APIの艇番号が重複');
+      return null;
+    }
+    if(!nums.length && !brcCollectConfirmedAbsentBoats(live).size){
+      brcRecordLiveExhibitionSync(date,code,r,http,'NO_BOATS','展示APIの艇データが空');
+      return null;
+    }
+    brcRecordLiveExhibitionSync(date,code,r,http,'RECEIVED',`応答あり：${nums.length}艇`);
+    return live;
   }catch(err){
-    window.__brcV3LiveFetchStatus={date,venue_code:code,race_no:r,http:null,reason:String(err?.message||err),checkedAt:new Date().toISOString()};
-    console.warn('BRC live exhibition fetch failed:', err);
+    const timedOut=err?.name==='AbortError';
+    brcRecordLiveExhibitionSync(date,code,r,http,timedOut?'TIMEOUT':'NETWORK_ERROR',
+      timedOut?'展示APIの取得が8秒でタイムアウト':'展示APIの通信エラー');
     return null;
-  }
+  }finally{clearTimeout(timeout);}
 }
 
 function brcCircledBoatNo(n){
@@ -23369,7 +23457,9 @@ function brcBuildRaceConditionBannerHtml(liveRace,venue='',raceNo=0){
   if(key) brcDeadlineRaceStatusSync(key,liveRace,venue,raceNo);
   const saved=key?BRC_DEADLINE_RACE_STATUS_CACHE.get(key):null;
   if(!liveRace && saved?.kind==='unavailable'){
-    return '<div class="slit-eval-compact direct-info-banner brc-condition-banner brc-condition-exhibition brc-condition-lap" role="status" title="BRCの展示・欠場情報を未受信。公式の展示公開状況とは異なり、欠場確定を意味しません。"><span class="brc-compact-public">直前情報未取得 <small>（BRC）</small></span><span class="brc-compact-admin direct-info-banner-label">BRC直前データ未同期</span><span class="brc-compact-admin direct-info-banner-note">公式の展示公開状況とは別です。BRC側でまだ展示・欠場情報を受信できていないため、欠場か取得遅延かは断定できません。</span></div>';
+    // Show the verified HTTP/identity failure reason only to admins.
+    // Official exhibition and actual scratch status cannot be inferred from a 404.
+    return `<div class="slit-eval-compact direct-info-banner brc-condition-banner brc-condition-exhibition brc-condition-lap" role="status" title="BRC展示APIの対象レースの直前データが未取得。公式の展示・欠場確定とは別の状態です。"><span class="brc-compact-public">直前情報未取得 <small>（BRC）</small></span><span class="brc-compact-admin direct-info-banner-label">BRC直前データ未同期</span>${brcLiveSyncAdminReasonHtml(venue,raceNo)}</div>`;
   }
   if(!liveRace && saved?.kind!=='absent') return '';
   const absent=saved?.kind==='absent'?saved.boats:
@@ -27003,6 +27093,98 @@ function brcMotorPrevFinalBadgeHtml(info){
   const s=brcMotorPrevFinalStatus(info);
   return s ? `<span class="brc-motor-prev-status ${s.kind}">${s.label}</span>` : '';
 }
+// BRC_MOTOR_WAKAMATSU_OFFICIAL_CUMULATIVE_V4
+// Official season-to-date totals only; never combine them with the unverified
+// motor_stats period-N or the K-verified previous racer/meeting data.
+let __brcWakamatsuOfficialData=null;
+let __brcWakamatsuOfficialPromise=null;
+let __brcWakamatsuOfficialAttempt=0;
+let __brcWakamatsuOfficialError='';
+function brcWakamatsuOfficialCheck(data){
+  if(data?.version!=='BRC_MOTOR_WAKAMATSU_OFFICIAL_V1' || data.venue!=='若松' ||
+    String(data.venue_code)!=='20' ||
+    data.source_url!=='https://www.wmb.jp/modules/datafile/?page=index_motordata' ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(String(data.cycle_start||'')) ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(String(data.source_as_of||'')) ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(String(data.date||'')))return false;
+  const sourceAge=brcMotorAgeDays(data.source_as_of);
+  const snapshotAge=brcMotorAgeDays(data.date);
+  if(sourceAge<0 || sourceAge>4 || snapshotAge<0 || snapshotAge>2 ||
+    data.cycle_start>data.source_as_of || data.source_as_of>data.date)return false;
+  const motors=data.motors;
+  if(!motors || typeof motors!=='object' || Array.isArray(motors) ||
+    Object.keys(motors).length<55 || Object.keys(motors).length>70 ||
+    Number(data.motor_count)!==Object.keys(motors).length)return false;
+  for(const [no,m] of Object.entries(motors)){
+    if(!/^[1-9]\d{0,2}$/.test(no) || +no>150 || !m ||
+      m.cycle_start!==data.cycle_start || m.as_of!==data.source_as_of ||
+      m.source!=='wakamatsu_official')return false;
+    const ns=['n','win_count','second_count','third_count','finals_count','wins_count'].map(k=>m[k]);
+    if(ns.some(n=>!Number.isInteger(n) || n<0))return false;
+    const [n,w,s,t,finals,wins]=ns;
+    if(n<30 || n>1000 || w+s+t>n || wins>finals || finals>n ||
+      !Number.isFinite(m.two_rate) || m.two_rate<0 || m.two_rate>100 ||
+      Math.abs((w+s)*100/n-m.two_rate)>0.16 ||
+      !Number.isFinite(m.win_rate) || m.win_rate<0 || m.win_rate>10)return false;
+  }
+  return Object.prototype.hasOwnProperty.call(motors,'2');
+}
+async function brcLoadWakamatsuOfficialTotals(){
+  if(__brcWakamatsuOfficialPromise)return __brcWakamatsuOfficialPromise;
+  if(__brcWakamatsuOfficialData && brcWakamatsuOfficialCheck(__brcWakamatsuOfficialData))
+    return __brcWakamatsuOfficialData;
+  // No polling on every tap. A failed fetch is throttled too.
+  if(Date.now()-__brcWakamatsuOfficialAttempt<120000)return null;
+  __brcWakamatsuOfficialAttempt=Date.now();
+  const task=(async()=>{
+    const urls=[
+      'racecards/motor_wakamatsu_official.json',
+      'https://raw.githubusercontent.com/boatresearchclub/database2/main/racecards/motor_wakamatsu_official.json'
+    ];
+    let last='';
+    for(const url of urls){
+      try{
+        const response=await fetch(url,{cache:'no-store'});
+        if(!response.ok)throw Error('HTTP '+response.status);
+        const value=await response.json();
+        if(!brcWakamatsuOfficialCheck(value))throw Error('official source invalid/stale');
+        if(__brcWakamatsuOfficialData &&
+          value.source_as_of<__brcWakamatsuOfficialData.source_as_of)continue;
+        __brcWakamatsuOfficialData=value;__brcWakamatsuOfficialError='';
+        document.dispatchEvent(new CustomEvent('brc-motor-detail-updated',
+          {detail:{officialCumulative:'若松',sourceDate:value.source_as_of}}));
+        return value;
+      }catch(e){last=String(e?.message||e).slice(0,110);}
+    }
+    __brcWakamatsuOfficialError=last;
+    return null;
+  })();
+  __brcWakamatsuOfficialPromise=task;
+  try{return await task;}finally{__brcWakamatsuOfficialPromise=null;}
+}
+function brcWakamatsuOfficialMotor(venue,no){
+  if(String(venue)!=='若松' || !Number.isInteger(+no) || +no<1 || +no>150 ||
+    !brcWakamatsuOfficialCheck(__brcWakamatsuOfficialData))return null;
+  return __brcWakamatsuOfficialData.motors[String(+no)]||null;
+}
+function brcMotorOfficialCumulativeHtml(venue,no){
+  const motor=brcWakamatsuOfficialMotor(venue,no);
+  if(!motor)return '';
+  const data=__brcWakamatsuOfficialData;
+  return `<div class="brc-motor-official-cumulative" style="margin-top:10px;padding:11px 12px;border:1px solid rgba(10,31,51,.12);border-radius:10px;background:#f8fafc;">`+
+   `<div style="font-size:12px;font-weight:800;margin-bottom:8px;">公式通算成績 <span style="font-size:10px;color:#64748b;">${escMotor(data.source_as_of)}終了時点</span></div>`+
+   `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;text-align:center;">`+
+   ` <div><strong style="font-size:19px;">${motor.n}</strong><div style="font-size:11px;">出走数</div></div>`+
+   ` <div><strong style="font-size:19px;">${motor.finals_count}</strong><div style="font-size:11px;">優出</div></div>`+
+   ` <div><strong style="font-size:19px;">${motor.wins_count}</strong><div style="font-size:11px;">優勝</div></div>`+
+   `</div></div>`;
+}
+window.brcWakamatsuOfficialMotorStatus=()=>({
+  available:brcWakamatsuOfficialCheck(__brcWakamatsuOfficialData),
+  sourceAsOf:String(__brcWakamatsuOfficialData?.source_as_of||''),
+  totalMotors:Number(__brcWakamatsuOfficialData?.motor_count)||0,
+  lastError:__brcWakamatsuOfficialError
+});
 function brcBuildMotorPublicOverviewHtml(info){
   if(!info) return '';
   const grade=info.grade!=null?escMotor(info.grade):'―';
@@ -27063,7 +27245,7 @@ function brcBuildAdminTokuyamaMotorTraitHtml(venue,motorNo,publicInfo=null){
   const no=Number(motorNo),rawBase=brcMotorBaseForVenue(v)?.[String(no)]||null;
   const baseFresh=brcMotorFootRowFresh(rawBase);
   const t=(baseFresh?rawBase:null)||{n:0,longStretch:null,recent10:null,recent20:null,first:'',last:'',prevType:'判定不能',prevN:0,prevStart:'',prevEnd:'',prevStretch:null,prevTurn:null};
-  const overviewHtml=brcBuildMotorPublicOverviewHtml(publicInfo);
+  const overviewHtml=brcBuildMotorPublicOverviewHtml(publicInfo)+brcMotorOfficialCumulativeHtml(v,no);
   const publicHistoryHtml=brcBuildMotorPublicHistoryHtml(publicInfo);
   const headerMetaHtml=brcBuildMotorLabHeaderMetaHtml(publicInfo,no);
   const integratedOfficialHtml=''; // Previous-user/finals cards are rendered by the restored legacy public component below.
@@ -38699,6 +38881,12 @@ body.brc-admin-home-active .brc-admin-top-race .dp-boat-no{
       workerReason:String(w?.reason||'').slice(0,180),
       workerErrorAt:String(w?.at||'').slice(0,40),
       liveApiHttp:f?.http??null,liveApiReason:String(f?.reason||'').slice(0,160),
+      liveSync:(()=>{try{
+        const x=window.BRC_ADMIN_LIVE_EXHIBITION_SYNC_DIAGNOSTICS?.();
+        return x?{date:String(x.date||''),venue_code:String(x.venue_code||''),race_no:Number(x.race_no)||0,
+          http:x.http??null,status:String(x.status||'').slice(0,48),reason:String(x.reason||'').slice(0,120),
+          checkedAt:String(x.checkedAt||'').slice(0,40)}:null;
+      }catch(_){return null;}})(),
       phase:String(p?.phase||''),phaseDetail:String(p?.detail||'').slice(0,160),
       nextAutoRetrySec:Number(d.nextAutoRetrySec)||0,
       checkedAt:new Date().toISOString()
