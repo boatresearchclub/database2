@@ -13,6 +13,7 @@ on:
       - 'scripts/brc_scenario_admin_qa_html.py'
       - 'scripts/brc_scenario_index_integration_audit.py'
       - 'scripts/brc_scenario_index_target_audit.py'
+      - 'scripts/brc_session_source_tokenfree_audit.py'
       - 'scripts/brc_scenario_admin_index_bridge_qa.js'
       - 'scripts/brc_scenario_admin_index_qa_candidate.py'
       - 'scripts/test_scenario_admin_index_qa_candidate.py'
@@ -91,6 +92,8 @@ jobs:
           python scripts/test_scenario_index_integration_audit.py
           python scripts/brc_scenario_index_integration_audit.py \
             --index index.html --out brc_scenario_index_hooks.json
+      - name: Inspect actual BRC login provider (TOKEN-FREE READ ONLY)
+        run: python scripts/brc_session_source_tokenfree_audit.py --index index.html --out brc_session_source_tokenfree.json
       - name: Target actual player 展開 panel and admin state for future gated adapter
         run: python scripts/brc_scenario_index_target_audit.py --index index.html --out brc_scenario_index_target_hooks.json
       - name: Test native INDEX QA adapter is syntactically valid and strictly add-only
@@ -311,6 +314,7 @@ jobs:
             brc_scenario_admin_offline_QA.html
             brc_scenario_index_hooks.json
             brc_scenario_index_target_hooks.json
+            brc_session_source_tokenfree.json
             brc_scenario_admin_coverage.json
             brc_scenario_index_qa_candidate_audit.json
             BRC_SCENARIO_INDEX_QA_DO_NOT_PUSH.html
