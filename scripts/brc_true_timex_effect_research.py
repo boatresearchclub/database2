@@ -12,6 +12,7 @@ import argparse
 from datetime import date
 import hashlib
 import json
+import math
 from pathlib import Path
 import re
 
@@ -53,8 +54,12 @@ def validate_source(source: dict):
 
 
 def evaluate(source: dict, min_n: int = 5, threshold_pt: float = 5.0) -> dict:
-    if min_n < 5 or threshold_pt < 5:
-        raise ValueError("BRC agreed research gate N>=5 and |delta|>=5pt")
+    # Reject bool/NaN/infinity: otherwise an undefined pt threshold can
+    # silently admit sub-5pt candidates into a research shortlist.
+    if (type(min_n) is not int or min_n < 5
+        or type(threshold_pt) not in (float, int)
+        or not math.isfinite(threshold_pt) or threshold_pt < 5):
+        raise ValueError("BRC agreed research gate N>=5 and finite |delta|>=5pt")
     rows = validate_source(source)
     passed = []
     excluded = {"small_cohort":0}
