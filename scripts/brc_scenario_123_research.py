@@ -107,7 +107,10 @@ def compile_rows(records, today: date, minimum_n: int = 5) -> dict:
 
     return {
         "schema": "BRC_123_OFFICIAL_RESEARCH_V1",
-        "source_period_start": START.isoformat(),
+        "source_period_start": min((x[0] for x in seen), default=None),
+        "source_period_end": max((x[0] for x in seen), default=None),
+        "required_full_history_start": START.isoformat(),
+        "complete_history_from_2023_approved": False,
         "source_period_latest_allowed": today.isoformat(),
         "method": "count(3rd boat | exact 1st & 2nd boats and other dimensions)",
         "required_official_k_result_and_kimarite_verified": True,
@@ -137,6 +140,9 @@ def selftest():
     out = compile_rows(src, date(2026,10,24))
     overall = next(x for x in out["research_rows"]
                    if x["method"] == "全体" and x["winner_reg"] == "*")
+    assert out["source_period_start"] == "2026-10-10"
+    assert out["source_period_end"] == "2026-10-15"
+    assert out["complete_history_from_2023_approved"] is False
     assert overall["denominator_n"] == 6
     assert sum(x["n"] for x in overall["third_boat_rates"]) == 6
     method = next(x for x in out["research_rows"]
