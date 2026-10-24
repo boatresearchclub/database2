@@ -32,6 +32,36 @@ const v3Diagnostic=createIndexBrcV3AdminDiagnostic({
 });
 let v3Busy=false;
 const v3Attempted=new Set();
+// Frozen, non-sensitive Japanese cause labels. Never render arbitrary
+// error messages, HTTP response bodies, or private model output.
+const V3_QA_CAUSES=Object.freeze({
+ STAGE_JST_DATE_MISMATCH:"Worker判定の日付と日本時間の当日が一致しません",
+ STAGE_KV_RACE_CONTEXT_MISSING:"公式番組の該当レースがステージングKVで見つかりません",
+ STAGE_KV_RACE_CONTEXT_INVALID:"保存済み公式番組の会場・6艇情報が不整合です",
+ LIVE_EXHIBITION_KV_RACE_NOT_FOUND:"展示APIに同じレースの保存データがありません（展示前か取得失敗）",
+ UPSTREAM_LIVE_API_FAILURE:"展示APIへのWorker内部接続が失敗しました",
+ UPSTREAM_LIVE_API_JSON_INVALID:"展示APIからのデータ形式が不正です",
+ V3_MODEL_FOUR_METRIC_COMPUTATION_FAILED:"Worker内部の1・2・3・3連対率計算に失敗しました",
+ UNDIAGNOSED_422_CHECK_WORKER_PATCH:"Workerの422詳細理由が取得できません。診断パッチの反映状況を確認してください",
+ FOUR_METRIC_SERVER_RESPONSE_VALID:"APIの6艇×4指標は整合しています。BRC画面反映は未確認です",
+ REQUIRES_FOUR_RATE_VALIDATION:"APIはreadyですが6艇×4指標の整合確認に失敗しました",
+ EXHIBITION_OR_ENTRY_EXCLUDED:"展示6艇・進入固定などの条件不足で計算対象外です",
+ WORKER_ADMIN_IDENTITY_DENIED:"Worker側で管理者権限を確認できません",
+ WORKER_FORBIDDEN_OR_CORS:"Workerのアクセス元または権限の設定を確認してください",
+ SESSION_EXPIRED_OR_UNAUTHENTICATED:"管理者セッションの期限切れ・未認証です",
+ SESSION_UNVERIFIED:"BRCのログイン状態を確認できません",
+ ADMIN_VIEW_REQUIRED:"管理者専用表示でのみ診断できます",
+ V3_RATE_LIMITED:"Workerの実行回数制限に達しました",
+ PREDICT_ROUTE_NOT_INSTALLED:"Workerのv3予測ルートが見つかりません",
+ V3_WORKER_OR_UPSTREAM_INTERNAL_FAILURE:"Workerまたは展示情報取得先のサーバーエラーです",
+ NETWORK_OR_CORS_FAILURE:"Worker通信に失敗しました（ネットワークまたはCORS）",
+ UNEXPECTED_V3_STATUS:"予期しないWorker応答です",
+ UNEXPECTED_STAGE_RESPONSE:"予期しないHTTP応答です"
+});
+function v3QaCause(phase){
+ return Object.prototype.hasOwnProperty.call(V3_QA_CAUSES,phase)
+   ?V3_QA_CAUSES[phase]:"未分類の診断結果です";
+}
 function v3Element(tag,label){
  const el=document.createElement(tag);
  if(label!==undefined)el.textContent=label;
@@ -84,7 +114,7 @@ function v3Mount(){
    const phase=typeof result?.phase==="string"&&/^[A-Z0-9_]{1,90}$/.test(result.phase)
      ?result.phase:"UNKNOWN_DIAGNOSTIC_RESULT";
    const http=Number.isInteger(result?.http)?result.http:"-";
-   status.textContent="HTTP "+http+"｜"+phase+"｜画面反映未確認";
+   status.textContent="HTTP "+http+"｜"+phase+"｜"+v3QaCause(phase)+"｜本番未適用";
   }catch(_){
    if(v3AdminUi()&&host.isConnected)status.textContent="診断を安全に中止しました。";
   }finally{
