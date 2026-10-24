@@ -20,6 +20,8 @@ on:
       - 'scripts/test_motor_previous_k_rank_restore_candidate.py'
       - 'scripts/brc_motor_previous_k_gap_fill.py'
       - 'scripts/test_motor_previous_k_gap_fill.py'
+      - 'scripts/brc_motor_previous_publish_safety.py'
+      - 'scripts/test_motor_previous_publish_safety.py'
   schedule:
     - cron: '25 2 * * *'
 
@@ -99,6 +101,7 @@ jobs:
           python scripts/test_motor_previous_k_summaries.py
           python scripts/test_motor_previous_k_coverage.py
           python scripts/test_motor_previous_k_rank_restore_candidate.py
+          python scripts/test_motor_previous_publish_safety.py
           # Keep racer-level K research inside the ephemeral Actions runner.
           # Never upload these player-level rows in public Actions artifacts.
           python scripts/brc_motor_previous_k_summaries.py \
@@ -146,10 +149,25 @@ jobs:
           set -euo pipefail
           git config user.name 'BRC Motor Previous Bot'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
+          python scripts/test_motor_previous_publish_safety.py
+          git fetch --no-tags origin main
+          git show origin/main:racecards/motor_previous_daily.json > .cache/brc_previous_origin_main_before.json
+          python scripts/brc_motor_previous_publish_safety.py \
+            --candidate racecards/motor_previous_daily.json \
+            --origin-main .cache/brc_previous_origin_main_before.json \
+            --out .cache/brc_previous_publish_guard_before.json
           git add -- racecards/motor_previous_daily.json
           if git diff --cached --quiet; then echo 'Already up to date'; exit 0; fi
           git commit -m 'data: update K-verified motor previous-meet identity snapshot'
           git pull --rebase origin main
+          # Re-fetch and re-evaluate after rebase: a newer main feed may have
+          # landed while official K downloads were being verified.
+          git fetch --no-tags origin main
+          git show origin/main:racecards/motor_previous_daily.json > .cache/brc_previous_origin_main_after.json
+          python scripts/brc_motor_previous_publish_safety.py \
+            --candidate racecards/motor_previous_daily.json \
+            --origin-main .cache/brc_previous_origin_main_after.json \
+            --out .cache/brc_previous_publish_guard_after.json
           git push origin HEAD:main
       - name: Preserve only date-verified official K source cache for next daily run
         if: success() && github.ref == 'refs/heads/main'
