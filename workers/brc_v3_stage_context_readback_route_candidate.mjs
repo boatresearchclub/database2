@@ -66,10 +66,21 @@ export function createV3AdminContextReadbackCandidate({
    let context;
    try{context=await readExistingRaceContext(chosen,actor);}
    catch(_){return respond(503,{ok:false,error:"KV_READBACK_UNAVAILABLE"});}
-   if(context===null||context===undefined)
+   if(context===null||context===undefined ||
+      context?.integrity==="context_missing")
      return respond(200,{
        ok:true,present:false,status:"context_missing",
        v3Verified:false,productionApproved:false
+     });
+   if(context?.integrity==="context_invalid")
+     return respond(200,{
+       ok:true,present:true,status:"context_invalid",
+       v3Verified:false,modelVerified:false,productionApproved:false
+     });
+   if(context?.integrity==="context_valid_candidate")
+     return respond(200,{
+       ok:true,present:true,status:"context_valid_candidate",
+       v3Verified:false,modelVerified:false,productionApproved:false
      });
    // A stored object alone is NOT a proven valid model input. This route
    // intentionally does not check or expose cohort-specific contents.
