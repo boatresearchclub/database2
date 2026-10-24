@@ -1,0 +1,87 @@
+name: BRC Historical K July 29-Aug 4 (NO DEPLOY)
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/brc-scenario-july29-aug04-official-k.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  review-july:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Restore verified 174 historical K days
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-scenario-historic-k-40071442577
+          fail-on-cache-miss: true
+      - name: Require original 174 verified dates before downloads
+        run: |
+          python - <<'PY'
+          import sys
+          from datetime import date,timedelta
+          from pathlib import Path
+          sys.path.insert(0,"scripts")
+          import BRC_PLAYER_COURSE365_V3_OFFICIAL as k
+          found=k.discover_k(Path(".cache/brc-course365-k"))
+          dates=[date(y,6,1)+timedelta(days=i) for y in (2023,2024,2025) for i in range(58)]
+          missing=[str(d) for d in dates if d not in found]
+          if missing:raise SystemExit("HOLD: 174-day K seed missing "+str(missing[:7]))
+          print("OFFICIAL_K_174_DAY_SEED_PASS")
+          PY
+      - name: Install original K archive extractor
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq p7zip-full
+      - name: Download verified original K July 29-Aug 4 in 2023 2024 2025
+        run: |
+          python scripts/brc_scenario_123_early_backfill.py \
+            --archive-dir .cache/brc-course365-k \
+            --windows "2023-07-29:2023-08-04,2024-07-29:2024-08-04,2025-07-29:2025-08-04" \
+            --max-downloads 21 --allow-partial \
+            --audit brc_scenario_july29_aug04_source_audit.json \
+            --matrix brc_scenario_july29_aug04_private_discard.json
+      - name: Strictly gate 21 added days and 195 cumulative history days
+        run: |
+          python - <<'PY'
+          import json,sys
+          from pathlib import Path
+          from datetime import date,timedelta
+          sys.path.insert(0,"scripts")
+          import BRC_PLAYER_COURSE365_V3_OFFICIAL as k
+          a=json.loads(Path("brc_scenario_july29_aug04_source_audit.json").read_text())
+          assert a["window_complete"] is True and not a["missing_K_dates"]
+          assert a["verified_K_calendar_days_found"]==21
+          assert a["requested_K_calendar_days"]==21
+          assert len(a["source_windows"])==3
+          assert all(w["calendar_days"]==7 for w in a["source_windows"])
+          assert a["actual_eligible_1_2_3_races"]>2000
+          assert a["productionApproved"] is False
+          assert a["full_2023_to_present_history_verified"] is False
+          found=k.discover_k(Path(".cache/brc-course365-k"))
+          dates=[date(y,6,1)+timedelta(days=i) for y in (2023,2024,2025) for i in range(65)]
+          missing=[str(d) for d in dates if d not in found]
+          if missing:raise SystemExit("HOLD: 195-day official K gap "+str(missing[:10]))
+          print("HISTORIC_195_DAY_JUNE1_AUG04_K_PASS")
+          print("ADDED_123_R",a["actual_eligible_1_2_3_races"])
+          PY
+      - name: Save verified immutable K archive only after strict source checks
+        uses: actions/cache/save@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-scenario-aug-195-k-${{ github.run_id }}
+      - name: Upload aggregate provenance only (no racer matrices)
+        uses: actions/upload-artifact@v4
+        with:
+          name: brc-july29-aug04-source-metadata-only
+          path: brc_scenario_july29_aug04_source_audit.json
+          retention-days: 3
+      - name: Summary
+        if: always()
+        run: |
+          echo "RESEARCH ONLY: no public INDEX, Worker, KV or member prediction changes." >> "$GITHUB_STEP_SUMMARY"
+          echo "Raw player conditional matrix kept only on ephemeral runner, not uploaded." >> "$GITHUB_STEP_SUMMARY"
