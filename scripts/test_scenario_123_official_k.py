@@ -46,19 +46,31 @@ def test():
     assert out["productionApproved"] is False
 
     invalid = k_headers().replace("ﾚｰｽﾀｲﾑ 差し", "ﾚｰｽﾀｲﾑ 不明")
+    raw_headers = methods_in_official_k(invalid)
+    assert raw_headers[("05",1)] == "不明"
     try:
-        methods_in_official_k(invalid)
+        join_k_results(events, raw_headers, date_)
     except ValueError as e:
-        assert "unsupported" in str(e)
+        assert "no verified winning method" in str(e)
     else:
-        raise AssertionError("unknown method must fail closed")
+        raise AssertionError("unknown completed-race method must fail closed")
 
     try:
         join_k_results(events, {("05",2):"逃げ"}, date_)
     except ValueError as e:
-        assert "no verified method" in str(e)
+        assert "no verified winning method" in str(e)
     else:
         raise AssertionError("missing winning technique is not an inferred mode")
+
+    # Blank methods from an UNRUN official race are not a reason to fail
+    # valid completed races with independently verified decisions.
+    with_blank = k_headers().replace(
+        "05KEND", "        3R       一般                  H1800m\n"
+                  "       着 艇 登番 　選手名   モーター ﾎﾞｰﾄ 展示 進入 ｽﾀｰﾄﾀｲﾐﾝｸ ﾚｰｽﾀｲﾑ \n05KEND")
+    hb = methods_in_official_k(with_blank)
+    assert hb[("05",3)] == ""
+    validated_rows, _ = join_k_results(events, hb, date_)
+    assert len(validated_rows) == 2
     print("SELFTEST_PASS: K method, actual entry course, exact 1-2-3, no N<5 rates")
 
 
