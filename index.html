@@ -1,3 +1,4 @@
+<!-- BRC_3FEATURE_DIAG_EXPORT_V5_20261024: admin QA export of v3, True TimeX research readiness and second-by-third matrix; no calculations, public access, or live-fetch behavior changed. -->
 <!-- BRC_LIVE_INFLIGHT_DEDUP_AND_DEADLINE_V4_20261024: Share concurrent GETs for the exact same race, retain only verified last-good during short transient errors, and synchronize deadline signals. -->
 <!-- BRC_LIVE_KEEP_LAST_VERIFIED_V3_20261024: 5-minute same-race only measured exhibition fallback for transient HTTP failures; strict absence and mismatch handling. No model changes. -->
 <!-- BRC_LIVE_KEEP_LAST_VERIFIED_V2_20261024: Common public/admin exhibition resilience. Strict race-key, 40min in-memory verified response fallback only on failed API; successful official updates and absence overrides. No probability model changes. -->
@@ -378,7 +379,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261024-LIVE-EXHIBITION-STABLE-SYNC-V4">
+<meta name="brc-build" content="20261024-V3-TRUE-SCENARIO-DIAG-V5">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -38927,6 +38928,13 @@ body.brc-admin-home-active .brc-admin-top-race .dp-boat-no{
       if(typeof window.BRC_ADMIN_V3_AI_TWO_TABS_DIAGNOSTICS==='function')
         ai=window.BRC_ADMIN_V3_AI_TWO_TABS_DIAGNOSTICS();
     }catch(e){aiError=String(e?.name||'DiagnosticError').slice(0,48);}
+    // BRC_3FEATURE_DIAG_EXPORT_V5: only export whitelisted administrator QA state.
+    // No research probabilities, players, secrets or unapproved True TimeX banners.
+    let qa=null, qaError='';
+    try{
+      if(d.admin===true && typeof window.BRC_ADMIN_3FEATURES_DIAGNOSTICS==='function')
+        qa=window.BRC_ADMIN_3FEATURES_DIAGNOSTICS();
+    }catch(e){qaError=String(e?.name||'DiagnosticError').slice(0,48);}
     // Do not include any authentication/session/token fields, personal identities, or raw payloads.
     return {
       build:String(d.build||''),admin:!!d.admin,member:!!d.member,
@@ -38958,6 +38966,20 @@ body.brc-admin-home-active .brc-admin-top-race .dp-boat-no{
         bothV3Used:ai?.brain?.v3Used===true && ai?.nige?.v3Used===true,
         liveWorkerIndependentlyTested:ai?.actualLiveWorkerTested===true,
         publicReleased:ai?.productionApproved===true
+      },
+      featureAudit:{
+        available:!!qa,error:qaError,
+        v3:{code:String(qa?.v3?.code||'NOT_CHECKED').slice(0,52),
+          state:String(qa?.v3?.state||'').slice(0,80)},
+        trueTimeX:{code:String(qa?.trueTimeX?.code||'NOT_CHECKED').slice(0,52),
+          state:String(qa?.trueTimeX?.state||'').slice(0,80)},
+        scenario:{code:String(qa?.scenario?.code||'NOT_CHECKED').slice(0,52),
+          state:String(qa?.scenario?.state||'').slice(0,80)},
+        aiTwoTabs:{brain:String(qa?.aiTwoTabs?.brain||'NOT_CHECKED').slice(0,60),
+          nige:String(qa?.aiTwoTabs?.nige||'NOT_CHECKED').slice(0,60),
+          verifiedNow:qa?.aiTwoTabs?.verifiedNow===true},
+        fullIntegrationReady:qa?.fullIntegrationReady===true,
+        blockers:Array.isArray(qa?.incomplete)?qa.incomplete.slice(0,4).map(s=>String(s).slice(0,100)):[]
       },
       displayedRates:String(d.displayedRates||''),liveBlockReason:String(d.liveBlockReason||''),
       priorReady:!!d.priorReadiness?.ready,priorIssue:String(d.priorReadiness?.reason||''),
