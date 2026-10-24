@@ -10,6 +10,7 @@ on:
       - 'scripts/brc_motor_k_cycle_observations.py'
       - 'scripts/brc_motor_previous_k_summaries.py'
       - 'scripts/brc_motor_index_display_contract_audit.py'
+      - 'scripts/test_motor_index_display_contract.py'
       - 'scripts/brc_motor_previous_index_qa_patch.py'
       - 'scripts/test_brc_motor_previous_index_qa_patch.py'
       - 'scripts/test_brc_motor_previous_real_card_qa.py'
@@ -86,6 +87,8 @@ jobs:
             --index index.html --out brc_scenario_index_hooks.json
       - name: Audit current BRC INDEX motor last-meet display anchors (READ ONLY)
         run: python scripts/brc_motor_index_display_contract_audit.py --index index.html --out brc_motor_index_contract.json
+      - name: Verify original-K previous rank schema passes current BRC INDEX renderer gates
+        run: python scripts/test_motor_index_display_contract.py
       - name: Require reversible official-K-only motor previous INDEX candidate (DO NOT PUSH)
         run: |
           python scripts/test_brc_motor_previous_index_qa_patch.py
