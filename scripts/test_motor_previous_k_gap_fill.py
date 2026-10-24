@@ -135,6 +135,7 @@ def test():
         for edit in (
             lambda x:x.update({"as_of":"2026-10-22"}),
             lambda x:x.update({"publication_gate":"READY_FOR_PUBLIC"}),
+            lambda x:x["venues"]["若松"].update({"source_meet_end":"2026-09-99"}),
             lambda x:x["venues"].pop("若松"),
             lambda x:x["venues"]["若松"]["motors"].pop("35"),
             lambda x:x["venues"]["若松"]["motors"]["1"]["previous"].update({
