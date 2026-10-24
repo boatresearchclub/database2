@@ -66,6 +66,10 @@ def test():
     assert m["11"]["candidate_n_less_than_verified_numeric_finishes"] is True
     assert m["11"]["candidate_snapshot_calendar_K_days_missing"]==0
     assert m["16"]["K_nonnumeric_statuses_through_yesterday"]=={"F":1}
+    assert m["11"]["K_verified_finisher_rank_counts_1_to_6"]["1"]==1
+    assert m["11"]["K_numeric_finishers_top2_pct_NOT_start_rate"]==100.0
+    assert m["16"]["K_numeric_finishers_top2_pct_NOT_start_rate"] is None
+    assert m["16"]["rate_denominator_excludes_special_status_and_unranked_entries"] is True
     assert m["16"]["K_confirmed_numeric_finishes_to_candidate_as_of"]==0
     assert report["candidate_conflict_types"]["candidate_n_below_K_verified_numeric_finishes"]==1
     assert report["public_release_allowed"] is False
