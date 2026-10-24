@@ -87,3 +87,12 @@ GitHub ActionsのArtifactsは**非公開の秘密保存場所とは見なさな�
 - 現行非公開KV投入候補の研究用原本照合値は `f32d06191e89418f209812d4ef882a81746f9952bfb0b8935077144de8bad6a1`（1,132,967 bytes; 58,056R/377日/2,031セル）。内容を更新する際はSHAを再発行し、古い値で不一致なら公開を停止する。
 - 本番向けに未解決なのは、**元のBRC Worker認証・会員判定のソースコードと実バインディングへの挿入**、運営者管理UUIDの秘密設定、許可ユーザーの実ネットワーク認証、一般ユーザーの実拒否、KVの原本を配置して読戻すこと。GitHub `database2` には元Worker実装が無いため、開発ブランチだけで完了させたとは言えない。
 - 今回はBRC main/公開INDEX/Worker/KV/予測/買い目を変更していない。研究JSONのGitHub Actions新規公開添付を停止する既存ゲートも維持。
+
+
+## 2026-10-24 追加：実K全条件セル照合とPython/JS端数修正
+
+- `workers/brc_scenario_23_full_k_offline_audit.mjs` を開発ブランチへ追加。研究用原本 **58,056R / 377日 / 2,031条件セル / 1,132,967 bytes** を GitHub Actions runner に一時生成し、固定 SHA-256 と照合したのち、研究JSONをメモリ上の**模擬非公開KV**としてロード。匿名/一般ユーザー拒否、管理者仮認証時の本人・場別数値、未検証展示後拒否、KV改ざん時の拒否を原本データで確認。公衆Artifactへ元JSONを添付しない。
+- [GitHub Actions #214](https://github.com/boatresearchclub/database2/actions/runs/40063687660) SUCCESS。原本JSON全 2,031条件セル、合計**8,124艇別3着率**をチェックし、数値一致を確認。
+- Python `round(100*n/N,1)` と JavaScript `Math.round(...)/10` は、厳密に中間値になる境界で端数処理が異なる。原本では**65件の艇別率**が古いJS丸め式と異なっていた。これを誤って不一致・503扱いしないよう、`workers/brc_scenario_23_percent.mjs` に整数演算による **round half to even** を追加。Worker読込API、ブラウザクライアント、管理者QA INDEXブリッジ側の率照合を修正し、2つの丸め回帰試験と原本全率検査に成功。
+- 念のため「丸め境界が実際に生じている元データの1条件セル」を丸ごと模擬KV APIへ通す試験も追加（追加CI検証対象）。これは小さいサンプルだけのテストではなく実Kの検証済み個票をそのまま利用。
+- **本番Work​er、実ログイン、KV実読戻し、INDEX配布への接続は実施していない**。全件照合の成功は本番認証と完全2023以降履歴の成功を意味しない。従来の `HOLD_NO_PUBLICATION` を維持。
