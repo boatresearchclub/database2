@@ -135,6 +135,12 @@ jobs:
           restore-keys: |
             brc-scenario-historic-k-
             brc-course365-k-
+      - name: Restore newly source-verified complete June 2023 2024 2025 K archive
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-scenario-june-90-k-40065076462
+          fail-on-cache-miss: true
       - name: Assert approved seed K coverage survived cache overlays
         run: |
           python - <<'PY'
@@ -205,7 +211,7 @@ jobs:
             --max-downloads 15 --allow-partial \
             --audit brc_scenario_2025_june_audit.json \
             --matrix brc_scenario_2025_june_matrix.json
-      - name: Ensure historical K 2023-2025 three 15-day windows are intact
+      - name: Ensure original K 2023-2025 full June 90 days are intact
         run: |
           python - <<'PY'
           import sys
@@ -214,16 +220,16 @@ jobs:
           sys.path.insert(0, "scripts")
           import BRC_PLAYER_COURSE365_V3_OFFICIAL as official
           found=official.discover_k(Path(".cache/brc-course365-k"))
-          required=[date(y,6,1)+timedelta(days=i) for y in (2023,2024,2025) for i in range(15)]
+          required=[date(y,6,1)+timedelta(days=i) for y in (2023,2024,2025) for i in range(30)]
           missing=[str(d) for d in required if d not in found]
           if missing:raise SystemExit("HOLD: historical K years missing "+str(missing))
-          print("HISTORIC_45_DAY_K_PASS: 2023, 2024 and 2025 June 1-15 / no gaps")
+          print("HISTORIC_90_DAY_K_PASS: 2023, 2024 and 2025 June 1-30 / no gaps")
           PY
       - name: Combine 2023/2024/2025 and 2026 source windows into one gated research matrix
         run: |
           python scripts/brc_scenario_k_union_research.py \
             --archive-dir .cache/brc-course365-k \
-            --windows "2023-06-01:2023-06-15,2024-06-01:2024-06-15,2025-06-01:2025-06-15,2025-11-26:2026-10-23" \
+            --windows "2023-06-01:2023-06-30,2024-06-01:2024-06-30,2025-06-01:2025-06-30,2025-11-26:2026-10-23" \
             --report brc_scenario_union_windows_audit.json \
             --matrix brc_scenario_union_windows_matrix.json
       - name: Produce exact original K matrix private-KV import review manifest (NO UPLOAD)
