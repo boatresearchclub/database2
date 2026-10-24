@@ -317,19 +317,11 @@ jobs:
             brc_motor_sept_baseline_parity.json
             brc_v3_422_probe.json
             brc_scenario_k_sample_audit.json
-            brc_scenario_k_sample_matrix.json
             brc_scenario_k_archive_audit.json
-            brc_scenario_k_archive_matrix.json
             brc_scenario_early_k_probe.json
             brc_scenario_early_windows_audit.json
-            brc_scenario_early_windows_matrix.json
             brc_scenario_2025_june_audit.json
-            brc_scenario_2025_june_matrix.json
             brc_scenario_union_windows_audit.json
-            brc_scenario_union_windows_matrix.json
-            brc_scenario_admin_qa_before.json
-            brc_scenario_admin_qa_after.json
-            brc_scenario_admin_offline_QA.html
             brc_scenario_index_hooks.json
             brc_scenario_index_target_hooks.json
             brc_session_source_tokenfree.json
@@ -339,4 +331,4 @@ jobs:
             BRC_SCENARIO_INDEX_QA_DO_NOT_PUSH.html
             brc_motor_finals_claimed_cycle_research.json
           if-no-files-found: ignore
-          retention-days: 7
+          retention-days: 3
