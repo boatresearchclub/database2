@@ -1,9 +1,7 @@
 name: BRC Scenario Historical June K Backfill (NO DEPLOY)
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - brc-four-track-source-gates-20261024
+  pull_request:
     paths:
       - '.github/workflows/brc-scenario-june-extended-k-backfill.yml'
 permissions:
@@ -22,6 +20,13 @@ jobs:
         with:
           path: .cache/brc-course365-k
           key: brc-scenario-historic-k-40063831140
+      - name: Restore current PR-scope historical K overlay
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-june-k-overlay-${{ github.run_id }}
+          restore-keys: |
+            brc-scenario-historic-k-
       - name: Confirm 2023 2024 2025 June 1 to 15 source complete before extension
         run: |
           python - <<'PY'
