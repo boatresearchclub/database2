@@ -72,7 +72,7 @@ def main():
     for target in ("function brcVerifiedPrevCheck(payload)", "const validRanks=", "async function brcFetchMotorPreviousVerified(force=false)"):
         start=src.find(target)
         if start<0: continue
-        a=max(0,start-250)
+        a=max(0,start-(1100 if target=="const validRanks=" else 250))
         b=min(len(src),start+2600)
         excerpt=src[a:b]
         if SECRET_RE.search(excerpt):
