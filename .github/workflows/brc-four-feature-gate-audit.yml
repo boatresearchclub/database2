@@ -21,6 +21,8 @@ on:
       - 'scripts/brc_scenario_index_integration_audit.py'
       - 'scripts/brc_scenario_index_target_audit.py'
       - 'scripts/brc_scenario_k_union_research.py'
+      - 'scripts/brc_scenario_history_coverage.py'
+      - 'scripts/test_scenario_history_coverage.py'
       - 'scripts/brc_scenario_private_kv_review_manifest.py'
       - 'scripts/brc_session_source_tokenfree_audit.py'
       - 'scripts/brc_true_timex_effect_research.py'
@@ -101,6 +103,8 @@ jobs:
         run: python scripts/test_scenario_public_artifact_gate.py
       - name: Private-KV source SHA256 source-gate fixtures (NO PUBLISH)
         run: python scripts/test_scenario_private_kv_review_manifest.py
+      - name: Verify 2023+ official K coverage by year and leap year boundaries
+        run: python scripts/test_scenario_history_coverage.py
       - name: Disjoint verified K scenario union fixtures
         run: python scripts/test_scenario_k_union_research.py
       - name: Official-K conditional-matrix offline fixtures
@@ -251,6 +255,11 @@ jobs:
           assert len(m["research_rows"])==2188
           print("OFFICIAL_K_422_DAY_65325_R_BASELINE_PASS / NO_PUBLICATION")
           PY
+      - name: Publish per-year K sample coverage metadata only (NO RAW K DATA)
+        run: |
+          python scripts/brc_scenario_history_coverage.py \
+            --audit brc_scenario_union_windows_audit.json \
+            --out brc_scenario_history_coverage.json
       - name: Produce exact original K matrix private-KV import review manifest (NO UPLOAD)
         run: |
           python scripts/brc_scenario_private_kv_review_manifest.py \
@@ -329,6 +338,7 @@ jobs:
             brc_scenario_early_windows_audit.json
             brc_scenario_2025_june_audit.json
             brc_scenario_union_windows_audit.json
+            brc_scenario_history_coverage.json
             brc_scenario_index_hooks.json
             brc_scenario_index_target_hooks.json
             brc_session_source_tokenfree.json
