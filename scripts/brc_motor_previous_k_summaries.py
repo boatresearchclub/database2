@@ -147,6 +147,9 @@ def summarize(feed: dict, rows: list[dict], available_days: set[date], today: da
             if any(r["name"] != expected_user for r in subset):
                 suppressed["same_motor_conflicting_user"] += 1
                 continue
+            if not subset:
+                suppressed["no_completed_K_race"] += 1
+                continue
             # A display name is NOT the unique K racer identity. Different
             # registration IDs sharing a normalized name must never have
             # their previous-meet finishes merged into one motor history.
