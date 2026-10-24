@@ -52,7 +52,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: .cache/brc-course365-k
-          key: brc-motor-previous-k-\${{ github.run_id }}
+          key: brc-motor-previous-k-${{ github.run_id }}
           restore-keys: |
             brc-motor-previous-k-
             brc-course365-k-
@@ -147,7 +147,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: .cache/brc-course365-k
-          key: brc-motor-previous-k-\${{ github.run_id }}
+          key: brc-motor-previous-k-${{ github.run_id }}
       - name: Preserve review for human verification only
         if: always()
         uses: actions/upload-artifact@v4
