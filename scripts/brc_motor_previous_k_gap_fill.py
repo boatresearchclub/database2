@@ -51,6 +51,10 @@ def required_dates_from_unverified_review(feed:dict,today:date)->set[date]:
         meet_end=venue.get("source_meet_end")
         if not isinstance(meet_end,str) or len(meet_end)!=10 or meet_end>as_of:
             raise ValueError("Invalid previous meeting end")
+        try:
+            date.fromisoformat(meet_end)
+        except ValueError as e:
+            raise ValueError("Invalid previous meeting calendar date") from e
         motors=venue.get("motors")
         if not isinstance(motors,dict) or len(motors)<35 or len(motors)>100:
             raise ValueError("Unexpected source motor count")
