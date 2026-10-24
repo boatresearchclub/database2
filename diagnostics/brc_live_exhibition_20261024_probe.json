@@ -1,0 +1,46 @@
+{
+  "scope": "no auth, no KV access, public GET only; 2026-10-24 incident replay",
+  "checked_at_utc": "2026-10-24T00:08:58.239638+00:00",
+  "results": [
+    {
+      "label": "mikuni_1r_20261024",
+      "http": 200,
+      "json_valid": true,
+      "ok": true,
+      "race_present": true,
+      "race_date_matches": true,
+      "venue_code_matches": true,
+      "race_no_matches": true,
+      "boat_count": 6
+    },
+    {
+      "label": "mikuni_2r_20261024",
+      "http": 200,
+      "json_valid": true,
+      "ok": true,
+      "race_present": true,
+      "race_date_matches": true,
+      "venue_code_matches": true,
+      "race_no_matches": true,
+      "boat_count": 6
+    },
+    {
+      "label": "naruto_2r_20261024",
+      "http": 200,
+      "json_valid": true,
+      "ok": true,
+      "race_present": true,
+      "race_date_matches": true,
+      "venue_code_matches": true,
+      "race_no_matches": true,
+      "boat_count": 6
+    },
+    {
+      "label": "schedule_20261024",
+      "http": 200,
+      "json_valid": true,
+      "ok": true,
+      "schedule_present": true
+    }
+  ]
+}
