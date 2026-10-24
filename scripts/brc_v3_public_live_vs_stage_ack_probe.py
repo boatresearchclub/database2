@@ -100,6 +100,7 @@ def main():
  print(json.dumps({
   "date":a["date"],"public_live_queries":len(a["checks"]),
   "http_counts":a["http_counts"],"six_boat_raw_timex_ready":a["six_boat_raw_timex_ready"],
+  "public_live_404_slots":[x["venue_code"]+"-"+str(x["race_no"])+"R" for x in a["checks"] if x.get("http")==404],
   "authenticated_stage_prediction_verified":False,
   "kv_readback_verified":False
  },ensure_ascii=False))
