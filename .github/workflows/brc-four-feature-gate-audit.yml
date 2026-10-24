@@ -16,6 +16,7 @@ on:
       - 'scripts/brc_scenario_admin_index_bridge_qa.js'
       - 'scripts/brc_scenario_admin_index_qa_candidate.py'
       - 'scripts/test_scenario_admin_index_qa_candidate.py'
+      - 'scripts/test_scenario_admin_index_bridge_qa.cjs'
       - 'scripts/brc_scenario_123_coverage_audit.py'
       - 'scripts/test_scenario_index_integration_audit.py'
       - 'scripts/test_scenario_admin_qa_html.py'
@@ -91,6 +92,7 @@ jobs:
       - name: Test native INDEX QA adapter is syntactically valid and strictly add-only
         run: |
           node --check scripts/brc_scenario_admin_index_bridge_qa.js
+          node scripts/test_scenario_admin_index_bridge_qa.cjs
           python scripts/test_scenario_admin_index_qa_candidate.py
       - name: Pure offline regression tests
         run: python scripts/test_four_workstream_readiness.py
