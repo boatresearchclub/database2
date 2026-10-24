@@ -21,7 +21,10 @@ def fixtures(root: Path):
     put(root, "racecards/motor_previous_daily.json",
         {"version":"BRC-Motor-Previous-Official-K-Verified-V1",
          "date":"2026-10-22","cumulative_motor_stats_available":False,
-         "venues":{str(i):{} for i in range(24)}})
+         "official_K_matched_count":840,
+         "venues":{str(i):{"motors":{
+             str(j):{"verification":"motor_venue_racer_and_date_in_official_K"}
+             for j in range(35)}} for i in range(24)}})
     put(root, "racecards/true_timex_research_status.json",
         {"schema":"BRC_TRUE_TIMEX_SOURCE_STATUS_V7","source_dataset":None,
          "productionApproved":False})
@@ -44,6 +47,17 @@ def run():
         result = audit(root, date(2026,10,24))
         assert result["motor_detail"]["status"]=="HOLD_CUMULATIVE_STATS"
         assert result["motor_detail"]["previous_identity_status"]=="VERIFIED_CURRENT"
+        # A fresh file with 24 named venues but NO verified motor records
+        # must never be advertised as a verified prior-meet identity feed.
+        put(root, "racecards/motor_previous_daily.json",{
+            "version":"BRC-Motor-Previous-Official-K-Verified-V1",
+            "date":"2026-10-24","cumulative_motor_stats_available":False,
+            "official_K_matched_count":840,
+            "venues":{str(i):{"motors":{}} for i in range(24)}
+        })
+        assert audit(root,date(2026,10,24))["motor_detail"]["previous_identity_status"]=="CHECK_DATE_OR_PROVENANCE"
+        fixtures(root)
+
         assert result["new_timex_v3"]["approved_meeting_venue_codes_today"]==["05"]
         assert result["new_timex_v3"]["authenticated_422_resolved"] is False
         assert result["true_timex"]["production_banner_allowed"] is False
