@@ -72,6 +72,9 @@ def test():
     reject(changed,"SOURCE_VERIFIED_RACE_DAY_SUM")
     changed=fixture()
     changed["research_rows"][0]["third_boat_rates"][0]["n"]+=1
+    changed["research_rows"][0]["third_boat_rates"][0]["pct"]=round(
+        100*changed["research_rows"][0]["third_boat_rates"][0]["n"]/
+        changed["research_rows"][0]["denominator_n"],1)
     reject(changed,"CONDITIONAL_N_NOT_PARTITIONED")
     changed=fixture()
     changed["research_rows"][0]["third_boat_rates"][0]["pct"]+=2
