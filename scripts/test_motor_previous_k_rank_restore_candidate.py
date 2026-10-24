@@ -120,6 +120,22 @@ def test():
     assert workflow.index("Restore actual original-K chronological previous-meet numeric ranks") < (
         workflow.index("Commit only independently verified dated previous-user feed")
     )
+    # The original nightly flow formerly checked K identities BEFORE
+    # repairing cache gaps. That made its "self-healing" step unreachable.
+    # Prevent this production-relevant ordering regression.
+    pre_k="Repair ONLY official K dates cited in fresh 24-venue REVIEW before K identity check"
+    verification="Cross-check motor/racer/date against official K archive"
+    date_check="Verify every released rider's official K date is present before ranking"
+    release="Release only independently verified previous-user fields"
+    assert workflow.index(pre_k)<workflow.index(verification)<workflow.index(release)
+    assert workflow.index(release)<workflow.index(date_check)<workflow.index(
+        "Restore actual original-K chronological previous-meet numeric ranks"
+    )
+    assert "--review .cache/motor_previous_review.json" in workflow
+    assert "--max-downloads 14" in workflow
+    assert "--max-downloads 0" in workflow
+    assert "brc-motor-previous-k-${{ github.run_id }}" in workflow
+    assert "if: github.ref == 'refs/heads/main'" in workflow
     assert workflow.index("PREVIOUS_K_RANKS_SOURCE_VERIFIED_READY_FOR_VERSIONED_FEED_COMMIT") < (
         workflow.index("git push origin HEAD:main")
     )
