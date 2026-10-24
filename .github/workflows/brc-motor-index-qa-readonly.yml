@@ -7,6 +7,7 @@ on:
       - 'scripts/brc_motor_index_display_contract_audit.py'
       - 'scripts/brc_motor_previous_index_qa_patch.py'
       - 'scripts/test_brc_motor_previous_index_qa_patch.py'
+      - 'scripts/test_brc_motor_previous_real_card_qa.py'
 permissions:
   contents: read
 jobs:
@@ -25,6 +26,8 @@ jobs:
       - name: Test safe offline INDEX UI patch plus emulated K-only browser state
         run: |
           python scripts/test_brc_motor_previous_index_qa_patch.py
+      - name: Execute the REAL original INDEX motor card renderer and loader with official K fixtures
+        run: python scripts/test_brc_motor_previous_real_card_qa.py
       - name: Build fixed-source offline BRC motor QA INDEX (NEVER DEPLOY)
         run: |
           python scripts/brc_motor_previous_index_qa_patch.py \
