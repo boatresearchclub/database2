@@ -82,6 +82,15 @@ jobs:
             --output-jsonl brc_scenario_k_sample.jsonl \
             --audit-json brc_scenario_k_sample_audit.json \
             --matrix-json brc_scenario_k_sample_matrix.json
+      - name: Build archive-span official K 1-2-3 matrix (RESEARCH ONLY)
+        continue-on-error: true
+        run: |
+          python scripts/brc_scenario_123_official_k.py \
+            --archive-dir .cache/brc-course365-k \
+            --start 2025-11-26 --end 2026-10-23 \
+            --output-jsonl brc_scenario_k_archive.jsonl \
+            --audit-json brc_scenario_k_archive_audit.json \
+            --matrix-json brc_scenario_k_archive_matrix.json
       - name: Audit quarantined motor period-N mismatch (NO PUBLISH)
         run: python scripts/brc_motor_source_scope_audit.py --output brc_motor_scope_audit.json
       - name: Probe public stage auth and live exhibition (NO JWT/POST/KV)
@@ -115,5 +124,7 @@ jobs:
             brc_v3_422_probe.json
             brc_scenario_k_sample_audit.json
             brc_scenario_k_sample_matrix.json
+            brc_scenario_k_archive_audit.json
+            brc_scenario_k_archive_matrix.json
           if-no-files-found: ignore
           retention-days: 7
