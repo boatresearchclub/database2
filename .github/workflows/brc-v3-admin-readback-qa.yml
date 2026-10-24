@@ -1,0 +1,79 @@
+name: BRC V3 Admin Readback Diagnosis (NO DEPLOY)
+on:
+  pull_request:
+    paths:
+      - 'workers/brc_v3_admin_stage_readonly_probe_candidate.mjs'
+      - 'workers/test_brc_v3_admin_stage_readonly_probe_candidate.mjs'
+      - 'workers/brc_v3_admin_predict_diagnostic_candidate.mjs'
+      - 'workers/test_brc_v3_admin_predict_diagnostic_candidate.mjs'
+      - 'workers/brc_v3_index_session_adapter_candidate.mjs'
+      - 'workers/test_brc_v3_index_session_adapter_candidate.mjs'
+      - 'scripts/brc_v3_admin_index_qa_bridge.js'
+      - 'scripts/brc_v3_admin_index_qa_build.py'
+      - 'scripts/test_v3_admin_index_qa_build.py'
+      - 'scripts/test_v3_admin_index_qa_dom.cjs'
+      - 'workers/brc_v3_stage_context_readback_route_candidate.mjs'
+      - 'workers/test_brc_v3_stage_context_readback_route_candidate.mjs'
+      - 'workers/brc_v3_stage_kv_integrity_candidate.mjs'
+      - 'workers/test_brc_v3_stage_kv_integrity_candidate.mjs'
+      - 'diagnostics/BRC_V3_ADMIN_422_READBACK_20261024.md'
+      - '.github/workflows/brc-v3-admin-readback-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  v3-admin-diagnosis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check admin-only V3 diagnostic module syntax
+        run: node --check workers/brc_v3_admin_stage_readonly_probe_candidate.mjs
+      - name: Test authenticated read-only staging presence probe without real JWT
+        run: node --test workers/test_brc_v3_admin_stage_readonly_probe_candidate.mjs
+      - name: Run actual authenticated v3 POST contract diagnostic regression tests
+        run: |
+          node --check workers/brc_v3_admin_predict_diagnostic_candidate.mjs
+          node --test workers/test_brc_v3_admin_predict_diagnostic_candidate.mjs
+          node --check workers/brc_v3_index_session_adapter_candidate.mjs
+          node --test workers/test_brc_v3_index_session_adapter_candidate.mjs
+      - name: Validate readback route authorization and immutable context presence only
+        run: |
+          node --check workers/brc_v3_stage_context_readback_route_candidate.mjs
+          node --test workers/test_brc_v3_stage_context_readback_route_candidate.mjs
+          node --test workers/test_brc_v3_stage_kv_integrity_candidate.mjs
+      - name: Build and syntax-check reversible V3 admin INDEX candidate (OFFLINE ONLY)
+        run: |
+          python scripts/test_v3_admin_index_qa_build.py
+          python scripts/brc_v3_admin_index_qa_build.py \
+            --index index.html \
+            --out /tmp/brc-v3-admin-offline-qa-not-for-deploy.html \
+            --audit /tmp/brc-v3-admin-offline-qa-audit.json
+          node --test scripts/test_v3_admin_index_qa_dom.cjs
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          audit=json.loads(Path("/tmp/brc-v3-admin-offline-qa-audit.json").read_text())
+          assert audit["productionApproved"] is False
+          assert audit["publicDeployApproved"] is False
+          assert audit["admin_live_422_resolved"] is False
+          print("V3_INDEX_QA_BUILD_OK_NOT_DEPLOYED")
+          PY
+      - name: Confirm no production artifacts, no v2 code changes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          js=Path("workers/brc_v3_admin_stage_readonly_probe_candidate.mjs").read_text()
+          assert '"/stage-context-presence"' in js
+          assert '"GET"' in js
+          assert '"POST"' not in js
+          assert "localStorage" not in js.replace('NEVER reads localStorage','')
+          assert "v3Verified:false" in js
+          print("V3_ADMIN_DIAGNOSTIC_SAFE: no writes, no v3 release, no v2 changes")
+          PY
+      - name: Handoff note
+        if: always()
+        run: |
+          echo "BRC v3 admin staging GET probe is ready for code review ONLY." >> "$GITHUB_STEP_SUMMARY"
+          echo "Existing stage logs show 168R ingest ACK, NOT authenticated KV readback." >> "$GITHUB_STEP_SUMMARY"
+          echo "Real admin session + actual deployed Worker/INDEX wiring remains a release blocker." >> "$GITHUB_STEP_SUMMARY"

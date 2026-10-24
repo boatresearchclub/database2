@@ -1,0 +1,438 @@
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/brc-four-feature-gate-audit.yml'
+      - '.github/workflows/brc-motor-previous-review.yml'
+      - 'scripts/brc_four_workstream_readiness.py'
+      - 'scripts/brc_motor_baseline_k_parity.py'
+      - 'scripts/brc_motor_finals_claimed_cycle_research.py'
+      - 'scripts/brc_motor_k_cycle_observations.py'
+      - 'scripts/brc_motor_previous_k_summaries.py'
+      - 'scripts/brc_motor_index_display_contract_audit.py'
+      - 'scripts/test_motor_index_display_contract.py'
+      - 'scripts/brc_motor_previous_index_qa_patch.py'
+      - 'scripts/test_brc_motor_previous_index_qa_patch.py'
+      - 'scripts/test_brc_motor_previous_real_card_qa.py'
+      - 'scripts/brc_motor_previous_k_coverage.py'
+      - 'scripts/test_motor_previous_k_coverage.py'
+      - 'scripts/brc_motor_previous_k_gap_fill.py'
+      - 'scripts/test_motor_previous_k_gap_fill.py'
+      - 'scripts/brc_motor_previous_publish_safety.py'
+      - 'scripts/test_motor_previous_publish_safety.py'
+      - 'scripts/BRC_MOTOR_PREVIOUS_K_RANK_RESTORE_CANDIDATE.py'
+      - 'scripts/test_motor_previous_k_rank_restore_candidate.py'
+      - 'scripts/brc_motor_source_scope_audit.py'
+      - 'scripts/brc_scenario_123_coverage_audit.py'
+      - 'scripts/brc_scenario_123_early_backfill.py'
+      - 'scripts/brc_scenario_123_official_k.py'
+      - 'scripts/brc_scenario_123_research.py'
+      - 'scripts/brc_scenario_admin_index_bridge_qa.js'
+      - 'scripts/brc_scenario_admin_index_qa_candidate.py'
+      - 'scripts/brc_scenario_admin_qa_html.py'
+      - 'scripts/brc_scenario_admin_qa_preview.py'
+      - 'scripts/brc_scenario_early_k_probe.py'
+      - 'scripts/brc_scenario_index_integration_audit.py'
+      - 'scripts/brc_scenario_index_target_audit.py'
+      - 'scripts/brc_scenario_k_union_research.py'
+      - 'scripts/brc_scenario_history_coverage.py'
+      - 'scripts/test_scenario_history_coverage.py'
+      - 'scripts/brc_scenario_private_kv_review_manifest.py'
+      - 'scripts/brc_session_source_tokenfree_audit.py'
+      - 'scripts/brc_true_timex_effect_research.py'
+      - 'scripts/brc_v3_422_public_probe.py'
+      - 'scripts/test_four_workstream_readiness.py'
+      - 'scripts/test_motor_baseline_k_parity.py'
+      - 'scripts/test_motor_finals_claimed_cycle_research.py'
+      - 'scripts/test_motor_k_cycle_observations.py'
+      - 'scripts/test_motor_previous_k_summaries.py'
+      - 'scripts/test_motor_scope_and_v3_public_probe.py'
+      - 'scripts/test_scenario_123_early_backfill.py'
+      - 'scripts/test_scenario_123_official_k.py'
+      - 'scripts/test_scenario_admin_index_bridge_qa.cjs'
+      - 'scripts/test_scenario_admin_index_qa_candidate.py'
+      - 'scripts/test_scenario_admin_qa_html.py'
+      - 'scripts/test_scenario_admin_qa_preview.py'
+      - 'scripts/test_scenario_index_integration_audit.py'
+      - 'scripts/test_scenario_k_union_research.py'
+      - 'scripts/test_scenario_private_kv_review_manifest.py'
+      - 'scripts/test_scenario_public_artifact_gate.py'
+      - 'scripts/test_true_timex_effect_research.py'
+      - 'workers/brc_scenario_23_admin_client_candidate.mjs'
+      - 'workers/brc_scenario_23_admin_route_candidate.mjs'
+      - 'workers/brc_scenario_23_full_k_offline_audit.mjs'
+      - 'workers/brc_scenario_23_integrated_candidate.mjs'
+      - 'workers/brc_scenario_23_percent.mjs'
+      - 'workers/brc_scenario_23_private_loader_candidate.mjs'
+      - 'workers/brc_scenario_index_session_adapter_candidate.mjs'
+      - 'workers/brc_scenario_supabase_member_auth_candidate.mjs'
+      - 'workers/test_brc_scenario_23_admin_client_candidate.mjs'
+      - 'workers/test_brc_scenario_23_admin_route_candidate.mjs'
+      - 'workers/test_brc_scenario_23_integrated_candidate.mjs'
+      - 'workers/test_brc_scenario_23_percent.mjs'
+      - 'workers/test_brc_scenario_23_private_loader_candidate.mjs'
+      - 'workers/test_brc_scenario_index_session_adapter_candidate.mjs'
+      - 'workers/test_brc_scenario_supabase_member_auth_candidate.mjs'
+permissions:
+  contents: read
+jobs:
+  offline-safety-gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Read-only inspect actual INDEX player 展開 anchors and admin gate
+        run: |
+          python scripts/test_scenario_index_integration_audit.py
+          python scripts/brc_scenario_index_integration_audit.py \
+            --index index.html --out brc_scenario_index_hooks.json
+      - name: Audit current BRC INDEX motor last-meet display anchors (READ ONLY)
+        run: python scripts/brc_motor_index_display_contract_audit.py --index index.html --out brc_motor_index_contract.json
+      - name: Verify original-K previous rank schema passes current BRC INDEX renderer gates
+        run: python scripts/test_motor_index_display_contract.py
+      - name: Require reversible official-K-only motor previous INDEX candidate (DO NOT PUSH)
+        run: |
+          python scripts/test_brc_motor_previous_index_qa_patch.py
+          python scripts/test_brc_motor_previous_real_card_qa.py
+          python scripts/brc_motor_previous_index_qa_patch.py \
+            --index index.html \
+            --out /tmp/BRC_MOTOR_K_QA_NOT_FOR_DEPLOY.html \
+            --audit brc_motor_previous_index_qa_audit.json
+      - name: Inspect actual BRC login provider (TOKEN-FREE READ ONLY)
+        run: python scripts/brc_session_source_tokenfree_audit.py --index index.html --out brc_session_source_tokenfree.json
+      - name: Target actual player 展開 panel and admin state for future gated adapter
+        run: python scripts/brc_scenario_index_target_audit.py --index index.html --out brc_scenario_index_target_hooks.json
+      - name: Test native INDEX QA adapter is syntactically valid and strictly add-only
+        run: |
+          node --check scripts/brc_scenario_admin_index_bridge_qa.js
+          node scripts/test_scenario_admin_index_bridge_qa.cjs
+          node --test workers/test_brc_scenario_23_admin_route_candidate.mjs
+          node --test workers/test_brc_scenario_23_admin_client_candidate.mjs
+          node --test workers/test_brc_scenario_23_private_loader_candidate.mjs
+          node --test workers/test_brc_scenario_23_integrated_candidate.mjs
+          node --test workers/test_brc_scenario_23_percent.mjs
+          node --test workers/test_brc_scenario_supabase_member_auth_candidate.mjs
+          node --test workers/test_brc_scenario_index_session_adapter_candidate.mjs
+          python scripts/test_scenario_admin_index_qa_candidate.py
+      - name: Pure offline regression tests
+        run: python scripts/test_four_workstream_readiness.py
+      - name: Verify 1st-2nd-3rd conditional research aggregation
+        run: python scripts/brc_scenario_123_research.py --self-test
+      - name: Standalone scenario admin offline visual QA security fixtures
+        run: python scripts/test_scenario_admin_qa_html.py
+      - name: Offline admin matrix QA preview security and denominator guards
+        run: python scripts/test_scenario_admin_qa_preview.py
+      - name: Ensure PUBLIC Actions artifact never exports private 1-2-3 matrices
+        run: python scripts/test_scenario_public_artifact_gate.py
+      - name: Private-KV source SHA256 source-gate fixtures (NO PUBLISH)
+        run: python scripts/test_scenario_private_kv_review_manifest.py
+      - name: Verify 2023+ official K coverage by year and leap year boundaries
+        run: python scripts/test_scenario_history_coverage.py
+      - name: Disjoint verified K scenario union fixtures
+        run: python scripts/test_scenario_k_union_research.py
+      - name: Official-K conditional-matrix offline fixtures
+        run: python scripts/test_scenario_123_official_k.py
+      - name: Verified previous-motor offline fixtures
+        run: python scripts/test_motor_previous_k_summaries.py
+      - name: Previous official-K motor summary coverage safety fixtures
+        run: python scripts/test_motor_previous_k_coverage.py
+      - name: Missing daily original K auto-repair source-only fixtures (NO NETWORK)
+        run: python scripts/test_motor_previous_k_gap_fill.py
+      - name: Official-K ordered previous-rank restoration candidate fixtures
+        run: python scripts/test_motor_previous_k_rank_restore_candidate.py
+      - name: Reject previous-meet motor K publication rollback, racer swap and origin/main downgrade
+        run: python scripts/test_motor_previous_publish_safety.py
+      - name: True TimeX original-outcome cohort fixtures
+        run: python scripts/test_true_timex_effect_research.py
+      - name: Motor source scope and v3 422 public probe offline fixtures
+        run: python scripts/test_motor_scope_and_v3_public_probe.py
+      - name: Verify official K motor-cycle reconstruction fixtures (NO PUBLISH)
+        run: python scripts/test_motor_k_cycle_observations.py
+      - name: Frozen motor cumulative baseline vs official K fixtures
+        run: python scripts/test_motor_baseline_k_parity.py
+      - name: Bounded 2023-2024 official K backfill fixtures
+        run: python scripts/test_scenario_123_early_backfill.py
+      - name: Official K championship motor finals cycle fixture tests
+        run: python scripts/test_motor_finals_claimed_cycle_research.py
+      - name: Restore verified 2023/2024 historic K seed cache
+        # Fixed 30-day official K seed run: 2023-06-01..15 and 2024-06-01..15.
+        # GitHub caches are not monotonic; restoring ONLY the newest prefix
+        # can silently discard completed dates from another concurrent job.
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-scenario-historic-k-40054612066
+      - name: Overlay newest additional verified official K archive
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-motor-cycle-audit-readonly-${{ github.run_id }}
+          restore-keys: |
+            brc-scenario-historic-k-
+            brc-course365-k-
+      - name: Restore newly source-verified complete June 2023 2024 2025 K archive
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-scenario-june-90-k-40065076462
+          fail-on-cache-miss: true
+      - name: Restore complete verified 2023 2024 2025 July 1-7 original K
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-scenario-july-111-k-\40066143173
+          fail-on-cache-miss: true
+      - name: Restore 132-day official K research archive including July 8-14
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-scenario-july-132-k-40066966491
+          fail-on-cache-miss: true
+      - name: Restore 153-day verified original K research archive including July 15–21
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-scenario-july-153-k-40067776136
+          fail-on-cache-miss: true
+      - name: Restore 174-day verified original K archive through July 28
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-scenario-july-174-k-40070927673
+          fail-on-cache-miss: true
+      - name: Restore 195-day verified historical K through August 4
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-scenario-aug-195-k-40071850766
+          fail-on-cache-miss: true
+      - name: Assert approved seed K coverage survived cache overlays
+        run: |
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+          from datetime import date,timedelta
+          sys.path.insert(0, "scripts")
+          import BRC_PLAYER_COURSE365_V3_OFFICIAL as k
+          found=k.discover_k(Path(".cache/brc-course365-k"))
+          required=[date(y,6,1)+timedelta(days=i) for y in (2023,2024) for i in range(15)]
+          missing=[d.isoformat() for d in required if d not in found]
+          if missing:raise SystemExit("HOLD: validated 30-day old K seed missing "+str(missing[:8]))
+          print("OFFICIAL_K_CACHE_OK: historic verified 30/30 days preserved, no app changes")
+          PY
+      - name: Install official K extractor for recent missing archive only
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq p7zip-full
+      - name: Reconstruct research K motor-cycle coverage (no production write)
+        run: python scripts/brc_motor_k_cycle_observations.py --fetch-recent-missing --out brc_motor_k_cycle_research.json
+      - name: Reconstruct prior motor users' actual last-meet official K results (PRIVATE QA ONLY)
+        run: |
+          python scripts/brc_motor_previous_k_gap_fill.py \
+            --previous racecards/motor_previous_daily.json \
+            --archive-dir .cache/brc-course365-k \
+            --max-downloads 0 \
+            --audit brc_motor_previous_k_gap_fill_verified_existing.json
+          python scripts/brc_motor_previous_k_summaries.py \
+            --archive-dir .cache/brc-course365-k \
+            --previous racecards/motor_previous_daily.json \
+            --out /tmp/brc_motor_previous_k_real_offline_PRIVATE.json
+          python scripts/brc_motor_previous_k_coverage.py \
+            --source /tmp/brc_motor_previous_k_real_offline_PRIVATE.json \
+            --previous racecards/motor_previous_daily.json \
+            --out brc_motor_previous_k_coverage.json
+          python scripts/BRC_MOTOR_PREVIOUS_K_RANK_RESTORE_CANDIDATE.py \
+            --identity racecards/motor_previous_daily.json \
+            --official-K-study /tmp/brc_motor_previous_k_real_offline_PRIVATE.json \
+            --out /tmp/brc_motor_previous_rank_candidate_DO_NOT_PUSH_PRIVATE.json
+      - name: Cross-check frozen 2026-09-05 motor baseline against official K (NO PUBLISH)
+        run: python scripts/brc_motor_baseline_k_parity.py --out brc_motor_sept_baseline_parity.json
+      - name: Sample actual official K scenario method and 1-2-3 join
+        continue-on-error: true
+        run: |
+          python scripts/brc_scenario_123_official_k.py \
+            --archive-dir .cache/brc-course365-k \
+            --start 2026-10-15 --end 2026-10-22 \
+            --output-jsonl brc_scenario_k_sample.jsonl \
+            --audit-json brc_scenario_k_sample_audit.json \
+            --matrix-json brc_scenario_k_sample_matrix.json
+      - name: Build archive-span official K 1-2-3 matrix (RESEARCH ONLY)
+        continue-on-error: true
+        run: |
+          python scripts/brc_scenario_123_official_k.py \
+            --archive-dir .cache/brc-course365-k \
+            --start 2025-11-26 --end 2026-10-23 \
+            --output-jsonl brc_scenario_k_archive.jsonl \
+            --audit-json brc_scenario_k_archive_audit.json \
+            --matrix-json brc_scenario_k_archive_matrix.json
+      - name: Probe 2023/2024/2025 original K technique compatibility (NO PUBLISH)
+        continue-on-error: true
+        run: |
+          python scripts/brc_scenario_early_k_probe.py \
+            --archive-dir .cache/brc-course365-k \
+            --audit brc_scenario_early_k_probe.json \
+            --strict
+      - name: Verify real official K championship motor finals in current held cycles
+        continue-on-error: true
+        run: |
+          python scripts/brc_motor_finals_claimed_cycle_research.py \
+            --archive-dir .cache/brc-course365-k \
+            --out brc_motor_finals_claimed_cycle_research.json
+      - name: Official K bounded 2023-2024 June research backfill (NO PUBLISH)
+        continue-on-error: true
+        run: |
+          python scripts/brc_scenario_123_early_backfill.py \
+            --windows "2023-06-01:2023-06-15,2024-06-01:2024-06-15" \
+            --archive-dir .cache/brc-course365-k \
+            --max-downloads 5 \
+            --allow-partial \
+            --audit brc_scenario_early_windows_audit.json \
+            --matrix brc_scenario_early_windows_matrix.json
+      - name: Backfill 2025 June original K to make third complete 15-day source window
+        continue-on-error: true
+        run: |
+          python scripts/brc_scenario_123_early_backfill.py \
+            --archive-dir .cache/brc-course365-k \
+            --windows "2025-06-01:2025-06-15" \
+            --max-downloads 15 --allow-partial \
+            --audit brc_scenario_2025_june_audit.json \
+            --matrix brc_scenario_2025_june_matrix.json
+      - name: Ensure original K 2023-2025 June 1 to August 4 full 195 days are intact
+        run: |
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+          from datetime import date,timedelta
+          sys.path.insert(0, "scripts")
+          import BRC_PLAYER_COURSE365_V3_OFFICIAL as official
+          found=official.discover_k(Path(".cache/brc-course365-k"))
+          required=[date(y,6,1)+timedelta(days=i) for y in (2023,2024,2025) for i in range(65)]
+          missing=[str(d) for d in required if d not in found]
+          if missing:raise SystemExit("HOLD: historical K years missing "+str(missing))
+          print("HISTORIC_195_DAY_K_PASS: 2023, 2024 and 2025 June 1 - August 4 / no gaps")
+          PY
+      - name: Combine 2023/2024/2025 and 2026 source windows into one gated research matrix
+        run: |
+          python scripts/brc_scenario_k_union_research.py \
+            --archive-dir .cache/brc-course365-k \
+            --windows "2023-06-01:2023-08-04,2024-06-01:2024-08-04,2025-06-01:2025-08-04,2025-11-26:2026-10-23" \
+            --report brc_scenario_union_windows_audit.json \
+            --matrix brc_scenario_union_windows_matrix.json
+      - name: Gate 2023-2025 June to August 4 official K plus 2026 union totals
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          a=json.loads(Path("brc_scenario_union_windows_audit.json").read_text())
+          m=json.loads(Path("brc_scenario_union_windows_matrix.json").read_text())
+          assert a["verified_calendar_days"]==527
+          assert a["verified_1_2_3_races"]==82200
+          assert a["N_ge_5_conditional_cells"]==2596
+          assert a["missing_2023_to_latest_calendar_days"]==865
+          assert len(a["source_windows"])==4
+          assert [w["verified_calendar_days"] for w in a["source_windows"]]==[65,65,65,332]
+          assert [w["eligible_1_2_3_races"] for w in a["source_windows"]]==[10276,10162,10606,51156]
+          assert a["full_history_verified"] is False and a["public_or_admin_feed_published"] is False
+          assert m["complete_history_from_2023_approved"] is False and m["publicVisible"] is False
+          assert len(m["research_rows"])==2596
+          print("OFFICIAL_K_527_DAY_82200_R_BASELINE_PASS / NO_PUBLICATION")
+          PY
+      - name: Publish per-year K sample coverage metadata only (NO RAW K DATA)
+        run: |
+          python scripts/brc_scenario_history_coverage.py \
+            --audit brc_scenario_union_windows_audit.json \
+            --out brc_scenario_history_coverage.json
+      - name: Produce exact original K matrix private-KV import review manifest (NO UPLOAD)
+        run: |
+          python scripts/brc_scenario_private_kv_review_manifest.py \
+            --matrix brc_scenario_union_windows_matrix.json \
+            --out brc_scenario_private_kv_review_manifest.json
+      - name: Exercise full original-K matrix via in-memory private KV and server-admin simulation (NO DEPLOY)
+        run: |
+          node workers/brc_scenario_23_full_k_offline_audit.mjs \
+            brc_scenario_union_windows_matrix.json \
+            brc_scenario_private_kv_review_manifest.json
+      - name: Measure actual player-specific vs venue baseline N>=5 coverage
+        run: python scripts/brc_scenario_123_coverage_audit.py --matrix brc_scenario_union_windows_matrix.json --out brc_scenario_admin_coverage.json
+      - name: Generate sample four-mode admin QA preview without any deployed endpoint
+        run: |
+          python scripts/brc_scenario_admin_qa_preview.py \
+            --matrix brc_scenario_union_windows_matrix.json \
+            --venue 10 --course 1 --first 1 --second 2 --player-reg "*" \
+            --stage before --output brc_scenario_admin_qa_before.json
+          python scripts/brc_scenario_admin_qa_preview.py \
+            --matrix brc_scenario_union_windows_matrix.json \
+            --venue 10 --course 1 --first 1 --second 2 --player-reg "*" \
+            --stage after --output brc_scenario_admin_qa_after.json
+      - name: Render standalone BRC-like admin-offline 4-tab preview (ARTIFACT ONLY)
+        run: |
+          python scripts/brc_scenario_admin_qa_html.py \
+            --matrix brc_scenario_union_windows_matrix.json \
+            --output brc_scenario_admin_offline_QA.html
+      - name: Build SHA-locked native BRC INDEX admin preview (DO NOT PUSH)
+        run: |
+          python scripts/brc_scenario_admin_index_qa_candidate.py \
+            --index index.html \
+            --bridge scripts/brc_scenario_admin_index_bridge_qa.js \
+            --output BRC_SCENARIO_INDEX_QA_DO_NOT_PUSH.html \
+            --audit brc_scenario_index_qa_candidate_audit.json
+      - name: Audit quarantined motor period-N mismatch (NO PUBLISH)
+        run: python scripts/brc_motor_source_scope_audit.py --output brc_motor_scope_audit.json
+      - name: Probe public stage auth and live exhibition (NO JWT/POST/KV)
+        continue-on-error: true
+        run: python scripts/brc_v3_422_public_probe.py --run-live --out brc_v3_422_probe.json
+      - name: Stage KV-binding and ingest-key configuration negative probe
+        # The existing publisher sends deliberately UNAUTHORIZED {} to a fixed
+        # staging endpoint. No key, token, valid race data, or KV write.
+        continue-on-error: true
+        run: python scripts/brc_v3_stage_publisher.py probe
+      - name: v3 official B-file and reviewed meeting preflight (NO WORKER)
+        continue-on-error: true
+        run: python scripts/brc_v3_stage_daily.py --summary brc_v3_offline_summary.json
+      - name: Read-only audit of four research feature sources
+        run: python scripts/brc_four_workstream_readiness.py --out brc_four_workstream_readiness.json
+      - name: Preserve research-only validated official K downloads for next review
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-scenario-historic-k-${{ github.run_id }}
+      - name: Explain what this job does not release
+        if: always()
+        shell: bash
+        run: |
+          echo '## BRC: research gate audit only' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No deployed INDEX, probabilities, KV, live Worker or public UI changed.' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: brc-four-workstreams-readonly
+          path: |
+            brc_four_workstream_readiness.json
+            brc_v3_offline_summary.json
+            brc_motor_scope_audit.json
+            brc_motor_index_contract.json
+            brc_motor_previous_index_qa_audit.json
+            brc_motor_k_cycle_research.json
+            brc_motor_previous_k_coverage.json
+            brc_motor_previous_k_gap_fill_verified_existing.json
+            brc_motor_sept_baseline_parity.json
+            brc_v3_422_probe.json
+            brc_scenario_k_sample_audit.json
+            brc_scenario_k_archive_audit.json
+            brc_scenario_early_k_probe.json
+            brc_scenario_early_windows_audit.json
+            brc_scenario_2025_june_audit.json
+            brc_scenario_union_windows_audit.json
+            brc_scenario_history_coverage.json
+            brc_scenario_index_hooks.json
+            brc_scenario_index_target_hooks.json
+            brc_session_source_tokenfree.json
+            brc_scenario_admin_coverage.json
+            brc_scenario_private_kv_review_manifest.json
+            brc_scenario_index_qa_candidate_audit.json
+            BRC_SCENARIO_INDEX_QA_DO_NOT_PUSH.html
+            brc_motor_finals_claimed_cycle_research.json
+          if-no-files-found: ignore
+          retention-days: 3

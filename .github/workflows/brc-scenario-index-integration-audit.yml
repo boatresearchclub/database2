@@ -1,0 +1,27 @@
+name: BRC INDEX scenario integration read-only audit
+on:
+  push:
+    branches:
+      - brc-four-track-source-gates-20261024
+    paths:
+      - scripts/brc_scenario_index_integration_audit.py
+      - scripts/test_scenario_index_integration_audit.py
+      - .github/workflows/brc-scenario-index-integration-audit.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect-index:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify audit never includes adjacent secret literals
+        run: python scripts/test_scenario_index_integration_audit.py
+      - name: Inspect current BRC INDEX admin gates and 展開 hooks (NO PATCH)
+        run: python scripts/brc_scenario_index_integration_audit.py --index index.html --out brc_scenario_index_hooks.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brc-scenario-index-hooks-readonly
+          path: brc_scenario_index_hooks.json
+          retention-days: 3

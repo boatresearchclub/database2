@@ -1,0 +1,92 @@
+name: BRC Scenario Historical June K Backfill (NO DEPLOY)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  official-june-backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 23
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Restore immutable full 2023 to 2026 official K cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-scenario-historic-k-40063831140
+      - name: Restore current PR-scope historical K overlay
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-june-k-overlay-${{ github.run_id }}
+          restore-keys: |
+            brc-scenario-historic-k-
+      - name: Confirm 2023 2024 2025 June 1 to 15 source complete before extension
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from datetime import date,timedelta
+          import sys
+          sys.path.insert(0,"scripts")
+          import BRC_PLAYER_COURSE365_V3_OFFICIAL as official
+          found=official.discover_k(Path(".cache/brc-course365-k"))
+          dates=[date(year,6,1)+timedelta(days=i) for year in (2023,2024,2025) for i in range(15)]
+          missing=[str(d) for d in dates if d not in found]
+          if missing:raise SystemExit("STOP: historical official K seed not complete "+str(missing))
+          print("OFFICIAL_K_SEED_45_DAYS_COMPLETE")
+          PY
+      - name: Install original K archive extractor
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq p7zip-full
+      - name: Fetch verified June 16 through 30 official K for 2023 2024 2025
+        run: |
+          python scripts/brc_scenario_123_early_backfill.py \
+            --archive-dir .cache/brc-course365-k \
+            --windows "2023-06-16:2023-06-30,2024-06-16:2024-06-30,2025-06-16:2025-06-30" \
+            --max-downloads 45 \
+            --allow-partial \
+            --audit brc_scenario_june_16_30_backfill_audit.json \
+            --matrix brc_scenario_june_16_30_local_matrix.json
+      - name: Require 45 official K calendar days and exact 3 source windows
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from datetime import date,timedelta
+          import sys
+          sys.path.insert(0,"scripts")
+          import BRC_PLAYER_COURSE365_V3_OFFICIAL as official
+          a=json.loads(Path("brc_scenario_june_16_30_backfill_audit.json").read_text())
+          assert a["window_complete"] is True,a["missing_K_dates"]
+          assert a["requested_K_calendar_days"] == 45
+          assert a["verified_K_calendar_days_found"] == 45
+          assert len(a["source_windows"]) == 3
+          assert all(x["calendar_days"]==15 for x in a["source_windows"])
+          assert a["actual_eligible_1_2_3_races"] > 5000
+          assert a["productionApproved"] is False
+          assert a["full_2023_to_present_history_verified"] is False
+          found=official.discover_k(Path(".cache/brc-course365-k"))
+          dates=[date(year,6,1)+timedelta(days=i) for year in (2023,2024,2025) for i in range(30)]
+          missing=[str(d) for d in dates if d not in found]
+          if missing:raise SystemExit("STOP: full June historical K gap "+str(missing))
+          print("OFFICIAL_K_JUNE_90_DAYS_PASS: 2023 2024 2025 complete June")
+          print("JUNE_ADDITIONAL_ELIGIBLE_RACES",a["actual_eligible_1_2_3_races"])
+          PY
+      - name: Cache verified extended original K only after integrity test
+        uses: actions/cache/save@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-scenario-june-90-k-${{ github.run_id }}
+      - name: Publish metadata audit ONLY and do not leak research racer rows
+        uses: actions/upload-artifact@v4
+        with:
+          name: brc-90day-official-K-metadata-only
+          path: brc_scenario_june_16_30_backfill_audit.json
+          retention-days: 3
+      - name: Summary
+        if: always()
+        run: |
+          echo "Original official K June extension research; no public/Worker/INDEX/KV updates." >> "$GITHUB_STEP_SUMMARY"
+          echo "Research matrix remains inside ephemeral runner and is never an artifact." >> "$GITHUB_STEP_SUMMARY"

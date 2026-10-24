@@ -3,6 +3,8 @@ name: BRC Motor Previous Meet Verified Daily Feed
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     paths:
       - '.github/workflows/brc-motor-previous-review.yml'
       - 'scripts/BRC_MOTOR_PREVIOUS_FEED_V1.py'
@@ -10,6 +12,16 @@ on:
       - 'scripts/BRC_MOTOR_PREVIOUS_VERIFY_K_V1.py'
       - 'scripts/BRC_MOTOR_PREVIOUS_RELEASE_V1.py'
       - 'scripts/test_motor_previous_release_v1.py'
+      - 'scripts/brc_motor_previous_k_summaries.py'
+      - 'scripts/brc_motor_previous_k_coverage.py'
+      - 'scripts/BRC_MOTOR_PREVIOUS_K_RANK_RESTORE_CANDIDATE.py'
+      - 'scripts/test_motor_previous_k_summaries.py'
+      - 'scripts/test_motor_previous_k_coverage.py'
+      - 'scripts/test_motor_previous_k_rank_restore_candidate.py'
+      - 'scripts/brc_motor_previous_k_gap_fill.py'
+      - 'scripts/test_motor_previous_k_gap_fill.py'
+      - 'scripts/brc_motor_previous_publish_safety.py'
+      - 'scripts/test_motor_previous_publish_safety.py'
   schedule:
     - cron: '25 2 * * *'
 
@@ -38,13 +50,28 @@ jobs:
         run: |
           python scripts/BRC_MOTOR_PREVIOUS_FEED_V1.py \
             --output .cache/motor_previous_review.json
-      - name: Restore verified daily official K archive
+      - name: Restore cumulative verified public official K archive (NO APP FEED)
         uses: actions/cache/restore@v4
         with:
           path: .cache/brc-course365-k
-          key: brc-motor-previous-k-readonly
+          key: brc-motor-previous-k-${{ github.run_id }}
           restore-keys: |
+            brc-motor-previous-k-
             brc-course365-k-
+      - name: Install official K archive decompressor
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qq -y p7zip-full
+      - name: Repair ONLY official K dates cited in fresh 24-venue REVIEW before K identity check
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/test_motor_previous_k_gap_fill.py
+          python scripts/brc_motor_previous_k_gap_fill.py \
+            --review .cache/motor_previous_review.json \
+            --archive-dir .cache/brc-course365-k \
+            --max-downloads 14 \
+            --audit .cache/brc_motor_previous_k_gap_fill_review_dates_only.json
       - name: Cross-check motor/racer/date against official K archive
         shell: bash
         run: |
@@ -58,17 +85,96 @@ jobs:
             --feed .cache/motor_previous_review.json \
             --audit .cache/motor_previous_official_K_audit.json \
             --output racecards/motor_previous_daily.json
+      - name: Verify every released rider's official K date is present before ranking
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/brc_motor_previous_k_gap_fill.py \
+            --previous racecards/motor_previous_daily.json \
+            --archive-dir .cache/brc-course365-k \
+            --max-downloads 0 \
+            --audit .cache/brc_motor_previous_k_gap_fill_verified.json
+      - name: Restore actual original-K chronological previous-meet numeric ranks (fail closed)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/test_motor_previous_k_summaries.py
+          python scripts/test_motor_previous_k_coverage.py
+          python scripts/test_motor_previous_k_rank_restore_candidate.py
+          python scripts/test_motor_previous_publish_safety.py
+          # Keep racer-level K research inside the ephemeral Actions runner.
+          # Never upload these player-level rows in public Actions artifacts.
+          python scripts/brc_motor_previous_k_summaries.py \
+            --archive-dir .cache/brc-course365-k \
+            --previous racecards/motor_previous_daily.json \
+            --out .cache/previous_motor_original_K_private.json
+          python scripts/brc_motor_previous_k_coverage.py \
+            --source .cache/previous_motor_original_K_private.json \
+            --previous racecards/motor_previous_daily.json \
+            --out .cache/previous_motor_original_K_coverage_only.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path(".cache/previous_motor_original_K_coverage_only.json").read_text(encoding="utf-8"))
+          assert report["all_verified_previous_K_rank_histories_fit_INDEX"] is True, (
+              "HOLD: official-K prior-meet 21+ numeric finishes cannot fit current INDEX"
+          )
+          print("PREVIOUS_K_INDEX_20_ROW_COMPATIBLE",report["max_official_K_numeric_races_per_previous_meet"])
+          PY
+          python scripts/BRC_MOTOR_PREVIOUS_K_RANK_RESTORE_CANDIDATE.py \
+            --identity racecards/motor_previous_daily.json \
+            --official-K-study .cache/previous_motor_original_K_private.json \
+            --out .cache/previous_motor_K_restored_release_candidate.json
+          # Replace working feed ONLY after K proves all preserved ranks.
+          # A failed prior K step prevents the subsequent git push entirely.
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          source=Path(".cache/previous_motor_K_restored_release_candidate.json")
+          candidate=json.loads(source.read_text(encoding="utf-8"))
+          assert candidate["cumulative_motor_stats_available"] is False
+          assert candidate["previous_ranks_verified_count"]>=1
+          assert candidate["official_K_matched_count"] == (
+              candidate["previous_ranks_verified_count"] +
+              candidate["previous_ranks_held_count"]
+          )
+          assert "previous_final_race_verified_count" not in candidate
+          os.replace(source,Path("racecards/motor_previous_daily.json"))
+          print("PREVIOUS_K_RANKS_SOURCE_VERIFIED_READY_FOR_VERSIONED_FEED_COMMIT")
+          PY
       - name: Commit only independently verified dated previous-user feed
+        if: github.ref == 'refs/heads/main'
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'BRC Motor Previous Bot'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
+          python scripts/test_motor_previous_publish_safety.py
+          git fetch --no-tags origin main
+          git show origin/main:racecards/motor_previous_daily.json > .cache/brc_previous_origin_main_before.json
+          python scripts/brc_motor_previous_publish_safety.py \
+            --candidate racecards/motor_previous_daily.json \
+            --origin-main .cache/brc_previous_origin_main_before.json \
+            --out .cache/brc_previous_publish_guard_before.json
           git add -- racecards/motor_previous_daily.json
           if git diff --cached --quiet; then echo 'Already up to date'; exit 0; fi
           git commit -m 'data: update K-verified motor previous-meet identity snapshot'
           git pull --rebase origin main
+          # Re-fetch and re-evaluate after rebase: a newer main feed may have
+          # landed while official K downloads were being verified.
+          git fetch --no-tags origin main
+          git show origin/main:racecards/motor_previous_daily.json > .cache/brc_previous_origin_main_after.json
+          python scripts/brc_motor_previous_publish_safety.py \
+            --candidate racecards/motor_previous_daily.json \
+            --origin-main .cache/brc_previous_origin_main_after.json \
+            --out .cache/brc_previous_publish_guard_after.json
           git push origin HEAD:main
+      - name: Preserve only date-verified official K source cache for next daily run
+        if: success() && github.ref == 'refs/heads/main'
+        uses: actions/cache/save@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-motor-previous-k-${{ github.run_id }}
       - name: Preserve review for human verification only
         if: always()
         uses: actions/upload-artifact@v4

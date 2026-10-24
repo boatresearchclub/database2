@@ -1,0 +1,85 @@
+name: BRC Scenario July Official K Research (NO DEPLOY)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  july-original-k:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Restore exact verified June ninety-day K seed
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-scenario-june-90-k-40065076462
+          fail-on-cache-miss: true
+      - name: Assert earlier verified K is complete, not silently discarded
+        run: |
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+          from datetime import date,timedelta
+          sys.path.insert(0,"scripts")
+          import BRC_PLAYER_COURSE365_V3_OFFICIAL as official
+          found=official.discover_k(Path(".cache/brc-course365-k"))
+          days=[date(y,6,1)+timedelta(days=i) for y in (2023,2024,2025) for i in range(30)]
+          missing=[str(d) for d in days if d not in found]
+          if missing:raise SystemExit("HOLD_90_DAY_SEED_K_MISSING: "+str(missing[:10]))
+          print("SOURCE_90_JUNE_K_PRESERVED")
+          PY
+      - name: Install official K archive extractor
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq p7zip-full
+      - name: Fetch 2023 2024 2025 July first week official K (21 total days)
+        run: |
+          python scripts/brc_scenario_123_early_backfill.py \
+            --archive-dir .cache/brc-course365-k \
+            --windows "2023-07-01:2023-07-07,2024-07-01:2024-07-07,2025-07-01:2025-07-07" \
+            --max-downloads 21 --allow-partial \
+            --audit brc_scenario_july_21day_audit.json \
+            --matrix brc_scenario_july_21day_local_private_matrix.json
+      - name: Strict source checks 21 of 21 days and no date overlap
+        run: |
+          python - <<'PY'
+          import json,sys
+          from pathlib import Path
+          from datetime import date,timedelta
+          sys.path.insert(0,"scripts")
+          import BRC_PLAYER_COURSE365_V3_OFFICIAL as official
+          a=json.loads(Path("brc_scenario_july_21day_audit.json").read_text())
+          assert a["window_complete"] is True and not a["missing_K_dates"]
+          assert a["verified_K_calendar_days_found"]==21
+          assert a["requested_K_calendar_days"]==21
+          assert len(a["source_windows"])==3
+          assert all(x["calendar_days"]==7 for x in a["source_windows"])
+          assert a["actual_eligible_1_2_3_races"]>2000
+          assert a["productionApproved"] is False
+          assert a["full_2023_to_present_history_verified"] is False
+          found=official.discover_k(Path(".cache/brc-course365-k"))
+          dates=[date(y,6,1)+timedelta(days=i) for y in (2023,2024,2025) for i in range(37)]
+          missing=[str(d) for d in dates if d not in found]
+          if missing:raise SystemExit("HOLD_111_DAY_JUNE_JULY_K_MISSING "+str(missing[:10]))
+          print("OFFICIAL_K_111_HISTORICAL_DAYS_PASS")
+          print("JULY_21_DAY_ELIGIBLE_RACES "+str(a["actual_eligible_1_2_3_races"]))
+          PY
+      - name: Save verified K archive, only after all strict checks pass
+        uses: actions/cache/save@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-scenario-july-111-k-${{ github.run_id }}
+      - name: Export source provenance metadata ONLY, no player matrix
+        uses: actions/upload-artifact@v4
+        with:
+          name: brc-july-official-K-source-metadata-only
+          path: brc_scenario_july_21day_audit.json
+          retention-days: 3
+      - name: Limitations
+        if: always()
+        run: |
+          echo "Research only. Original source windows are non-contiguous 2023 onward." >> "$GITHUB_STEP_SUMMARY"
+          echo "The private racer-level JSON is never uploaded as an artifact." >> "$GITHUB_STEP_SUMMARY"
+          echo "Worker, KV and publicly deployed BRC INDEX remain untouched." >> "$GITHUB_STEP_SUMMARY"

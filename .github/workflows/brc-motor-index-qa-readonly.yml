@@ -1,0 +1,48 @@
+name: BRC Motor INDEX Previous Rank QA (NO DEPLOY)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/brc-motor-index-qa-readonly.yml'
+      - 'scripts/brc_motor_index_display_contract_audit.py'
+      - 'scripts/brc_motor_previous_index_qa_patch.py'
+      - 'scripts/test_brc_motor_previous_index_qa_patch.py'
+      - 'scripts/test_brc_motor_previous_real_card_qa.py'
+permissions:
+  contents: read
+jobs:
+  source-contract-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact INDEX motor previous card source anchors (NO WRITES)
+        run: |
+          python scripts/brc_motor_index_display_contract_audit.py \
+            --index index.html --out brc_motor_index_contract_readonly.json
+      - name: Test safe offline INDEX UI patch plus emulated K-only browser state
+        run: |
+          python scripts/test_brc_motor_previous_index_qa_patch.py
+      - name: Execute the REAL original INDEX motor card renderer and loader with official K fixtures
+        run: python scripts/test_brc_motor_previous_real_card_qa.py
+      - name: Build fixed-source offline BRC motor QA INDEX (NEVER DEPLOY)
+        run: |
+          python scripts/brc_motor_previous_index_qa_patch.py \
+            --index index.html \
+            --out /tmp/BRC_MOTOR_PREVIOUS_K_OFFLINE_QA_DO_NOT_PUSH.html \
+            --audit brc_motor_previous_index_qa_audit.json
+      - name: Upload ONLY source SHA and reversible patch audit metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: brc-motor-previous-index-qa-audit-only
+          path: brc_motor_previous_index_qa_audit.json
+          retention-days: 2
+      - name: Upload only redacted motor contract metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: brc-motor-index-source-contract-redacted
+          path: brc_motor_index_contract_readonly.json
+          retention-days: 2
