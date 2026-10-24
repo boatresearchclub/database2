@@ -212,6 +212,8 @@ def aggregate(scope: dict, files: dict[date, Path], yesterday: date):
         "through":yesterday.isoformat(),
         "earliest_claimed_cycle_start":first.isoformat(),
         "official_K_days_read":len(dates_observed),
+        "official_K_calendar_days_expected":len(expected_days),
+        "missing_official_K_calendar_days":[d.isoformat() for d in expected_days if d not in dates_observed],
         "all_required_official_K_calendar_days_available":len(dates_observed)==len(expected_days),
         "source_provenance":"same-official-K-motor-and-numeric-finisher",
         "motor_cycle_starts_officially_verified":False,
@@ -240,6 +242,8 @@ def main():
     print(json.dumps({
         "scope_venues":len(scope), "first_cycle_start":first.isoformat(),
         "K_days_read":report["official_K_days_read"],
+        "K_days_expected":report["official_K_calendar_days_expected"],
+        "missing_K_dates":report["missing_official_K_calendar_days"],
         "full_calendar_K_coverage":report["all_required_official_K_calendar_days_available"],
         "candidate_conflicts":report["candidate_conflict_types"],
         "decision":report["decision"],
