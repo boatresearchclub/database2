@@ -38,7 +38,8 @@ def methods_in_official_k(text: str) -> dict[tuple[str,int],str]:
         stripped = line.strip()
         m = PLACE_START.fullmatch(stripped)
         if m:
-            if venue is not None: raise ValueError("Nested venue in official K")
+            # The existing official.load_k parser accepts older valid K files
+            # which omit explicit KEND between venue blocks.
             venue, race = m.group(1), None
             continue
         m = PLACE_END.fullmatch(stripped)
@@ -65,8 +66,8 @@ def methods_in_official_k(text: str) -> dict[tuple[str,int],str]:
                 # A blank/unknown method is not silently relabeled '全体'.
                 raise ValueError("Official K decision missing or unsupported for "+venue+" "+str(race)+"R")
             headers[key] = raw_method
-    if venue is not None:
-        raise ValueError("Unclosed official K venue")
+    # Valid K archives can omit a final KEND. Day/venue/race integrity is
+    # verified independently by official.load_k before these labels are joined.
     return headers
 
 
