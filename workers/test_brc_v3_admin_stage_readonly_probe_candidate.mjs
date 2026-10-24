@@ -99,3 +99,11 @@ test("unknown origin is never selected based on a user-supplied destination",asy
  assert.equal(v.status,"STAGE_CONTEXT_PRESENT_CALCULATION_UNTESTED");
  assert.ok(x.last().url.startsWith(V3_STAGE_ORIGIN));
 });
+
+test("Worker metadata pretending to be a JWT in status cannot be reflected",async()=>{
+ const x=harness({payload:{status:TOKEN,reason:TOKEN,code:TOKEN,probe_version:TOKEN}});
+ const v=await x.probe.run(params);
+ assert.equal(v.status,"STAGE_METADATA_ROUTE_REACHED_CONTENT_UNCONFIRMED");
+ assert.deepEqual(v.metadata,{});
+ assert.equal(JSON.stringify(v).includes(TOKEN),false);
+});
