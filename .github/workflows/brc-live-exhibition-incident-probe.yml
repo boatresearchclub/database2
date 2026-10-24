@@ -1,0 +1,76 @@
+name: BRC Live Exhibition Incident Probe
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/brc-live-exhibition-incident-probe.yml'
+permissions:
+  contents: write
+jobs:
+  read-only-live-worker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Read public worker status without any secret
+        run: |
+          python - <<'PY'
+          import json, urllib.request, urllib.error, urllib.parse
+          from datetime import datetime,timezone
+          from pathlib import Path
+          base='https://brc-live-exhibition.sk48159212.workers.dev'
+          cases=[('mikuni_1r_20261024','live-exhibition',{'date':'2026-10-24','venue_code':'10','race_no':'1'}),
+                 ('mikuni_2r_20261024','live-exhibition',{'date':'2026-10-24','venue_code':'10','race_no':'2'}),
+                 ('naruto_2r_20261024','live-exhibition',{'date':'2026-10-24','venue_code':'14','race_no':'2'}),
+                 ('schedule_20261024','live-schedule',{'date':'2026-10-24'})]
+          results=[]
+          for label,route,params in cases:
+              query=urllib.parse.urlencode(params)
+              url=base+'/'+route+'?'+query
+              request=urllib.request.Request(url,headers={'User-Agent':'BRC-READONLY-INCIDENT-PROBE','Accept':'application/json'})
+              status=None;data=b''
+              try:
+                  try:
+                      with urllib.request.urlopen(request,timeout=8) as res:
+                          status=res.status;data=res.read(65536)
+                  except urllib.error.HTTPError as exc:
+                      status=exc.code;data=exc.read(65536)
+                  try:obj=json.loads(data.decode('utf-8'))
+                  except (ValueError,UnicodeError):obj={}
+                  row={'label':label,'http':status,'json_valid':bool(obj),'ok':obj.get('ok') if isinstance(obj,dict) and isinstance(obj.get('ok'),bool) else None}
+                  if route=='live-exhibition' and isinstance(obj,dict):
+                      race=obj.get('race') or {}
+                      if isinstance(race,dict):
+                          row.update({'race_present':bool(race),'race_date_matches':str(race.get('date'))==params['date'],
+                          'venue_code_matches':str(race.get('venue_code')).zfill(2)==params['venue_code'],
+                          'race_no_matches':str(race.get('race_no'))==params['race_no'],
+                          'boat_count':len(race.get('boats')) if isinstance(race.get('boats'),list) else None})
+                      for key in ('code','reason','status','error'):
+                          val=obj.get(key)
+                          if isinstance(val,str) and len(val)<=70 and all(c.isalnum() or c in '_.-' for c in val):row[key]=val
+                  if route=='live-schedule' and isinstance(obj,dict):row['schedule_present']=bool(obj.get('schedule'))
+              except Exception as e:
+                  row={'label':label,'transport_error_type':type(e).__name__,'http':status}
+              results.append(row)
+          report={'scope':'no auth, no KV access, public GET only; 2026-10-24 incident replay',
+             'checked_at_utc':datetime.now(timezone.utc).isoformat(),'results':results}
+          p=Path('diagnostics/brc_live_exhibition_20261024_probe.json')
+          p.parent.mkdir(parents=True,exist_ok=True)
+          p.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n','utf-8')
+          print(json.dumps(report,ensure_ascii=False))
+          PY
+      - name: Save sanitized incident probe only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- diagnostics/brc_live_exhibition_20261024_probe.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'diagnostics: store safe live exhibition route status for Mikuni 1R'
+            git push
+          fi
