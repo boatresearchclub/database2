@@ -8,6 +8,8 @@ on:
       - 'scripts/brc_four_workstream_readiness.py'
       - 'scripts/test_four_workstream_readiness.py'
       - 'scripts/brc_scenario_123_research.py'
+      - 'scripts/brc_scenario_k_union_research.py'
+      - 'scripts/test_scenario_k_union_research.py'
       - 'scripts/brc_scenario_123_official_k.py'
       - 'scripts/brc_scenario_early_k_probe.py'
       - 'scripts/brc_scenario_123_early_backfill.py'
@@ -32,6 +34,8 @@ on:
       - 'scripts/brc_four_workstream_readiness.py'
       - 'scripts/test_four_workstream_readiness.py'
       - 'scripts/brc_scenario_123_research.py'
+      - 'scripts/brc_scenario_k_union_research.py'
+      - 'scripts/test_scenario_k_union_research.py'
       - 'scripts/brc_scenario_123_official_k.py'
       - 'scripts/brc_scenario_early_k_probe.py'
       - 'scripts/brc_scenario_123_early_backfill.py'
@@ -66,6 +70,8 @@ jobs:
         run: python scripts/test_four_workstream_readiness.py
       - name: Verify 1st-2nd-3rd conditional research aggregation
         run: python scripts/brc_scenario_123_research.py --self-test
+      - name: Disjoint verified K scenario union fixtures
+        run: python scripts/test_scenario_k_union_research.py
       - name: Official-K conditional-matrix offline fixtures
         run: python scripts/test_scenario_123_official_k.py
       - name: Verified previous-motor offline fixtures
@@ -159,6 +165,13 @@ jobs:
             --allow-partial \
             --audit brc_scenario_early_windows_audit.json \
             --matrix brc_scenario_early_windows_matrix.json
+      - name: Combine 2023/2024/2025 and 2026 source windows into one gated research matrix
+        run: |
+          python scripts/brc_scenario_k_union_research.py \
+            --archive-dir .cache/brc-course365-k \
+            --windows "2023-06-01:2023-06-15,2024-06-01:2024-06-15,2025-06-15:2025-06-15,2025-11-26:2026-10-23" \
+            --report brc_scenario_union_windows_audit.json \
+            --matrix brc_scenario_union_windows_matrix.json
       - name: Audit quarantined motor period-N mismatch (NO PUBLISH)
         run: python scripts/brc_motor_source_scope_audit.py --output brc_motor_scope_audit.json
       - name: Probe public stage auth and live exhibition (NO JWT/POST/KV)
@@ -204,6 +217,8 @@ jobs:
             brc_scenario_early_k_probe.json
             brc_scenario_early_windows_audit.json
             brc_scenario_early_windows_matrix.json
+            brc_scenario_union_windows_audit.json
+            brc_scenario_union_windows_matrix.json
             brc_motor_finals_claimed_cycle_research.json
           if-no-files-found: ignore
           retention-days: 7
