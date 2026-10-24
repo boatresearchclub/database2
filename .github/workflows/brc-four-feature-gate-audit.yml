@@ -269,14 +269,14 @@ jobs:
           m=json.loads(Path("brc_scenario_union_windows_matrix.json").read_text())
           assert a["verified_calendar_days"]==506
           assert a["verified_1_2_3_races"]==78831
-          assert a["N_ge_5_conditional_cells"]>=2445
+          assert a["N_ge_5_conditional_cells"]==2518
           assert a["missing_2023_to_latest_calendar_days"]==886
           assert len(a["source_windows"])==4
           assert [w["verified_calendar_days"] for w in a["source_windows"]]==[58,58,58,332]
           assert [w["eligible_1_2_3_races"] for w in a["source_windows"]]==[9114,9131,9430,51156]
           assert a["full_history_verified"] is False and a["public_or_admin_feed_published"] is False
           assert m["complete_history_from_2023_approved"] is False and m["publicVisible"] is False
-          assert len(m["research_rows"])>=2445
+          assert len(m["research_rows"])==2518
           print("OFFICIAL_K_506_DAY_78831_R_BASELINE_PASS / NO_PUBLICATION")
           PY
       - name: Publish per-year K sample coverage metadata only (NO RAW K DATA)
