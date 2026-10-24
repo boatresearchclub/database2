@@ -58,6 +58,12 @@ def restore_verified_previous_ranks(feed:dict,study:dict)->dict:
             data=original.get("observed_results")
             if not isinstance(data,list) or len(data)!=original.get("completed_races"):
                 raise ValueError("Official K race ordering lacks one-to-one finishing rows")
+            # Verify the original K registration ID, not merely the display
+            # name. Prevent name-collision data from becoming a verified rank
+            # sequence even if the preprocessor changes in a future update.
+            regs={str(row.get("reg","")).strip() for row in data if isinstance(row,dict)}
+            if len(regs)!=1 or any(len(reg)!=4 or not reg.isdecimal() for reg in regs):
+                raise ValueError("Official K previous meeting includes conflicting racer registrations")
             checked=[]
             used=set()
             for row in data:
