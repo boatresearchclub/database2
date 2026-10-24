@@ -59,17 +59,27 @@ def audit(root: Path, now: date | None = None) -> dict:
     # fresh snapshot date. This remains previous-meet identity ONLY, not cycle N.
     prior_venues = prev.get("venues")
     prior_coverage_ok = (
-        isinstance(prior_venues, dict) and len(prior_venues) == 24
+        isinstance(prior_venues, dict)
+        and set(prior_venues) == {
+            "桐生", "戸田", "江戸川", "平和島", "多摩川", "浜名湖",
+            "蒲郡", "常滑", "津", "三国", "びわこ", "住之江",
+            "尼崎", "鳴門", "丸亀", "児島", "宮島", "徳山",
+            "下関", "若松", "芦屋", "福岡", "唐津", "大村"
+        }
         and all(
             isinstance(v, dict)
             and isinstance(v.get("motors"), dict)
             and len(v["motors"]) >= 35
-            and any(
+            and all(
                 isinstance(m, dict)
                 and m.get("verification") == "motor_venue_racer_and_date_in_official_K"
                 for m in v["motors"].values()
             )
             for v in prior_venues.values()
+        )
+        and type(prev.get("official_K_matched_count")) is int
+        and prev["official_K_matched_count"] == sum(
+            len(v["motors"]) for v in prior_venues.values()
         )
     )
     prior_ok = (
