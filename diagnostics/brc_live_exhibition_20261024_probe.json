@@ -1,6 +1,6 @@
 {
   "scope": "no auth, no KV access, public GET only; 2026-10-24 incident replay",
-  "checked_at_utc": "2026-10-24T00:08:58.239638+00:00",
+  "checked_at_utc": "2026-10-24T00:10:05.265485+00:00",
   "results": [
     {
       "label": "mikuni_1r_20261024",
@@ -11,7 +11,20 @@
       "race_date_matches": true,
       "venue_code_matches": true,
       "race_no_matches": true,
-      "boat_count": 6
+      "boat_count": 6,
+      "race_field_names": [
+        "date",
+        "venue_code",
+        "venue",
+        "race_no",
+        "deadline",
+        "captured_at_jst",
+        "fixed_course",
+        "eligible_for_exhibition_adjustme",
+        "absent_boats",
+        "missing_boats",
+        "weather"
+      ]
     },
     {
       "label": "mikuni_2r_20261024",
@@ -22,7 +35,20 @@
       "race_date_matches": true,
       "venue_code_matches": true,
       "race_no_matches": true,
-      "boat_count": 6
+      "boat_count": 6,
+      "race_field_names": [
+        "date",
+        "venue_code",
+        "venue",
+        "race_no",
+        "deadline",
+        "captured_at_jst",
+        "fixed_course",
+        "eligible_for_exhibition_adjustme",
+        "absent_boats",
+        "missing_boats",
+        "weather"
+      ]
     },
     {
       "label": "naruto_2r_20261024",
@@ -33,7 +59,20 @@
       "race_date_matches": true,
       "venue_code_matches": true,
       "race_no_matches": true,
-      "boat_count": 6
+      "boat_count": 6,
+      "race_field_names": [
+        "date",
+        "venue_code",
+        "venue",
+        "race_no",
+        "deadline",
+        "captured_at_jst",
+        "fixed_course",
+        "eligible_for_exhibition_adjustme",
+        "absent_boats",
+        "missing_boats",
+        "weather"
+      ]
     },
     {
       "label": "schedule_20261024",
