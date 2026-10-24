@@ -22,6 +22,8 @@ on:
       - 'workers/test_brc_scenario_23_admin_route_candidate.mjs'
       - 'workers/brc_scenario_23_admin_client_candidate.mjs'
       - 'workers/test_brc_scenario_23_admin_client_candidate.mjs'
+      - 'workers/brc_scenario_supabase_member_auth_candidate.mjs'
+      - 'workers/test_brc_scenario_supabase_member_auth_candidate.mjs'
       - 'scripts/brc_scenario_123_coverage_audit.py'
       - 'scripts/test_scenario_index_integration_audit.py'
       - 'scripts/test_scenario_admin_qa_html.py'
@@ -102,6 +104,7 @@ jobs:
           node scripts/test_scenario_admin_index_bridge_qa.cjs
           node --test workers/test_brc_scenario_23_admin_route_candidate.mjs
           node --test workers/test_brc_scenario_23_admin_client_candidate.mjs
+          node --test workers/test_brc_scenario_supabase_member_auth_candidate.mjs
           python scripts/test_scenario_admin_index_qa_candidate.py
       - name: Pure offline regression tests
         run: python scripts/test_four_workstream_readiness.py
