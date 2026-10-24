@@ -84,10 +84,12 @@ def patch(src: str, *, expected_sha: str = EXPECTED_SHA256) -> tuple[str, dict]:
         raise ValueError("Renderer source unexpected")
     output=src[:start]+NEW_RANK_GUARD+src[end:]
     output=_once(output,LEGACY_LABEL,K_LABEL)
-    if output.count(LOADER_START)!=1 or output.count(LOADER_END)!=1:
+    if output.count(LOADER_START)!=1:
         raise ValueError("Cannot uniquely locate BRC prior-feed loader")
     first=output.index(LOADER_START)
-    last=output.index(LOADER_END,first)
+    last=output.find(LOADER_END,first)
+    if last<0 or last-first>6000:
+        raise ValueError("BRC prior-feed loader boundary moved unexpectedly")
     old_loader=output[first:last]
     if "brcVerifiedPrevCheck" not in old_loader or (
         "BRC_VERIFIED_PREVIOUS_FEEDS" not in old_loader
