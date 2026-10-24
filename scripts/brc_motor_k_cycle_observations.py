@@ -181,9 +181,12 @@ def aggregate(scope: dict, files: dict[date, Path], yesterday: date):
             records = events[(code, motor)]
             snapshot = [r for r in records if r["date"] <= as_of.isoformat()]
             historic_gaps = [x for x in gaps if x <= as_of]
-            numeric_current = sum(r["numeric_rank"] is not None for r in records)
+            rank_counts = Counter(r["numeric_rank"] for r in records if r["numeric_rank"] is not None)
+            numeric_current = sum(rank_counts.values())
             numeric_snapshot = sum(r["numeric_rank"] is not None for r in snapshot)
             special = Counter(r["status"] for r in records if r["numeric_rank"] is None)
+            numeric_top2 = rank_counts[1] + rank_counts[2]
+            numeric_top3 = numeric_top2 + rank_counts[3]
             contradiction = numeric_snapshot > entry["third_party_n"]
             if contradiction: reasons["candidate_n_below_K_verified_numeric_finishes"] += 1
             if historic_gaps: reasons["candidate_snapshot_official_K_incomplete"] += 1
@@ -193,6 +196,18 @@ def aggregate(scope: dict, files: dict[date, Path], yesterday: date):
                 "third_party_candidate_n": entry["third_party_n"],
                 "K_confirmed_numeric_finishes_to_candidate_as_of": numeric_snapshot,
                 "K_confirmed_numeric_finishes_through_yesterday": numeric_current,
+                "K_verified_finisher_rank_counts_1_to_6": {
+                    str(rank): rank_counts[rank] for rank in range(1,7)
+                },
+                "K_numeric_finishers_top2_count": numeric_top2,
+                "K_numeric_finishers_top3_count": numeric_top3,
+                "K_numeric_finishers_top2_pct_NOT_start_rate": (
+                    round(100*numeric_top2/numeric_current,1) if numeric_current else None
+                ),
+                "K_numeric_finishers_top3_pct_NOT_start_rate": (
+                    round(100*numeric_top3/numeric_current,1) if numeric_current else None
+                ),
+                "rate_denominator_excludes_special_status_and_unranked_entries": True,
                 "K_nonnumeric_statuses_through_yesterday": dict(sorted(special.items())),
                 "candidate_n_less_than_verified_numeric_finishes": contradiction,
                 "candidate_snapshot_calendar_K_days_missing": len(historic_gaps),
