@@ -137,6 +137,29 @@ test("unavailable/unsafe source never exposes partial research",async()=>{
  const {handler}=setup({loadThrows:true});
  assert.equal((await result(handler,req())).status,503);
 });
+test("official K research windows must be calendar-valid and non-overlapping",async()=>{
+ const base=fixture().source_windows[0];
+ const badWindows=[
+  [{...base,start:"2023-02-30"}],
+  [{...base,end:"2023-05-31"}],
+  [{...base,verified_calendar_days:16}],
+  [base,{start:"2023-06-15",end:"2023-07-01",verified_calendar_days:10}],
+  [base,{start:"2023-06-01",end:"2023-06-05",verified_calendar_days:5}],
+  [base,{start:"2023-07-01",end:"2023-07-10",verified_calendar_days:11}]
+ ];
+ for(const windows of badWindows){
+  const {handler,calls}=setup({source:{...fixture(),source_windows:windows}});
+  const x=await result(handler,req());
+  assert.equal(x.status,503,JSON.stringify(windows));
+  assert.equal(x.data.error,"RESEARCH_DATA_UNAVAILABLE");
+  assert.equal(calls.load,1);
+ }
+ const accepted=[base,{start:"2023-06-16",end:"2023-06-20",verified_calendar_days:3}];
+ const {handler}=setup({source:{...fixture(),source_windows:accepted}});
+ const good=await result(handler,req());
+ assert.equal(good.status,200);
+ assert.equal(good.data.source_windows.length,2);
+});
 test("unrecognized route does not call database",async()=>{
  const {handler,calls}=setup(),x=await result(handler,
   req(query,{host:"https://example-worker.invalid/race/research"}));
