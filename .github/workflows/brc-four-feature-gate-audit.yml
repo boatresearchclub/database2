@@ -31,6 +31,7 @@ on:
       - 'scripts/brc_scenario_123_coverage_audit.py'
       - 'scripts/brc_scenario_private_kv_review_manifest.py'
       - 'scripts/test_scenario_private_kv_review_manifest.py'
+      - 'scripts/test_scenario_public_artifact_gate.py'
       - 'scripts/test_scenario_index_integration_audit.py'
       - 'scripts/test_scenario_admin_qa_html.py'
       - 'scripts/test_scenario_admin_qa_preview.py'
@@ -122,6 +123,8 @@ jobs:
         run: python scripts/test_scenario_admin_qa_html.py
       - name: Offline admin matrix QA preview security and denominator guards
         run: python scripts/test_scenario_admin_qa_preview.py
+      - name: Ensure PUBLIC Actions artifact never exports private 1-2-3 matrices
+        run: python scripts/test_scenario_public_artifact_gate.py
       - name: Private-KV source SHA256 source-gate fixtures (NO PUBLISH)
         run: python scripts/test_scenario_private_kv_review_manifest.py
       - name: Disjoint verified K scenario union fixtures
