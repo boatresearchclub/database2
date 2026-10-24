@@ -32,7 +32,7 @@ export function createScenario23ReadClient({getSessionToken,isAdminUi,fetchImpl,
   // One mounted player/venue panel may switch race or account while an
   // async read is in flight. The newest selection owns the render result.
   let generation=0;
-  const stale=(mine)=>mine!==generation || isAdminUi()!==true;
+  const stale=(mine)=>mine!==generation;
   return {
     invalidate(){generation++;},
     async load(selection){
@@ -57,6 +57,7 @@ export function createScenario23ReadClient({getSessionToken,isAdminUi,fetchImpl,
         });
       }catch(_){return {status:"SERVER_UNAVAILABLE",rates:[]};}
       if(stale(mine))return {status:"STALE_REQUEST_SUPPRESSED",rates:[]};
+      if(isAdminUi()!==true)return {status:"ADMIN_VIEW_REQUIRED",rates:[]};
       if(resp.status===401||resp.status===403)
         return {status:"SERVER_ADMIN_AUTH_DENIED",rates:[]};
       if(resp.status===409)return {status:"AFTER_EXHIBITION_NOT_VERIFIED",rates:[]};
