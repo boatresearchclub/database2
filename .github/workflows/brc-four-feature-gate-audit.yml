@@ -82,7 +82,15 @@ jobs:
         run: python scripts/test_scenario_123_early_backfill.py
       - name: Official K championship motor finals cycle fixture tests
         run: python scripts/test_motor_finals_claimed_cycle_research.py
-      - name: Restore pre-existing official K archive cache (read only)
+      - name: Restore verified 2023/2024 historic K seed cache
+        # Fixed 30-day official K seed run: 2023-06-01..15 and 2024-06-01..15.
+        # GitHub caches are not monotonic; restoring ONLY the newest prefix
+        # can silently discard completed dates from another concurrent job.
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-scenario-historic-k-40054612066
+      - name: Overlay newest additional verified official K archive
         uses: actions/cache/restore@v4
         with:
           path: .cache/brc-course365-k
@@ -90,6 +98,20 @@ jobs:
           restore-keys: |
             brc-scenario-historic-k-
             brc-course365-k-
+      - name: Assert approved seed K coverage survived cache overlays
+        run: |
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+          from datetime import date,timedelta
+          sys.path.insert(0, "scripts")
+          import BRC_PLAYER_COURSE365_V3_OFFICIAL as k
+          found=k.discover_k(Path(".cache/brc-course365-k"))
+          required=[date(y,6,1)+timedelta(days=i) for y in (2023,2024) for i in range(15)]
+          missing=[d.isoformat() for d in required if d not in found]
+          if missing:raise SystemExit("HOLD: validated 30-day old K seed missing "+str(missing[:8]))
+          print("OFFICIAL_K_CACHE_OK: historic verified 30/30 days preserved, no app changes")
+          PY
       - name: Install official K extractor for recent missing archive only
         run: sudo apt-get update -qq && sudo apt-get install -y -qq p7zip-full
       - name: Reconstruct research K motor-cycle coverage (no production write)
