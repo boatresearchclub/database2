@@ -171,6 +171,15 @@ jobs:
             --allow-partial \
             --audit brc_scenario_early_windows_audit.json \
             --matrix brc_scenario_early_windows_matrix.json
+      - name: Backfill 2025 June original K to make third complete 15-day source window
+        continue-on-error: true
+        run: |
+          python scripts/brc_scenario_123_early_backfill.py \
+            --archive-dir .cache/brc-course365-k \
+            --windows "2025-06-01:2025-06-15" \
+            --max-downloads 15 --allow-partial \
+            --audit brc_scenario_2025_june_audit.json \
+            --matrix brc_scenario_2025_june_matrix.json
       - name: Combine 2023/2024/2025 and 2026 source windows into one gated research matrix
         run: |
           python scripts/brc_scenario_k_union_research.py \
@@ -233,6 +242,8 @@ jobs:
             brc_scenario_early_k_probe.json
             brc_scenario_early_windows_audit.json
             brc_scenario_early_windows_matrix.json
+            brc_scenario_2025_june_audit.json
+            brc_scenario_2025_june_matrix.json
             brc_scenario_union_windows_audit.json
             brc_scenario_union_windows_matrix.json
             brc_scenario_admin_qa_before.json
