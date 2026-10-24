@@ -66,3 +66,14 @@ GitHub ActionsのArtifactsは**非公開の秘密保存場所とは見なさな�
 - `workers/test_brc_scenario_23_private_loader_candidate.mjs` に、原本一致・改ざん・不正JSON・不正公開フラグ・バインディング停止のテストを追加。
 - 現時点でKVの**実際のバインディング名・キー投入・SHA-256固定値は未設定**。本番のログイン認証も未接続。これは動く設計を検査するオフラインの候補であり、Cloudflare上で読戻しが成功した意味ではない。
 - Worker・INDEX・KV のデプロイ、会員の着率変更、研究JSONの一般公開は実施していない。
+
+
+## 2026-10-24 追補：公開Actionsへの研究マトリックス添付停止・非公開KV原本検査
+
+- GitHub Actions run [#193](https://github.com/boatresearchclub/database2/actions/runs/40062277134) で**新しい研究原本の完全性検査に成功**。集計 58,056R / 377日 / 条件付き確率 2,031セル（会場1,901・本人130・105選手）。
+- 非公開KV登録候補の原本JSONは**1,132,967 bytes**。その**完全に変更していないUTF-8生バイト**のSHA-256は `f32d06191e89418f209812d4ef882a81746f9952bfb0b8935077144de8bad6a1`。正確なファイルへの照合であり、改行や整形を変えると値は変化する。ソースが追加更新されれば再生成する。
+- 検査には、公式Kの非重複日付区間・日付数、完備R総数、1→2→3の候補4艇の件数・母数一致、場全体/本人データの重複防止、偽の全期間・展示後・本番承認状態の拒否を含む。
+- `scripts/brc_scenario_private_kv_review_manifest.py` は**読取専用**で、ハッシュ・件数・日付・保留判定を `brc_scenario_private_kv_review_manifest.json` に出力する。**原本の選手別データを成果物に含めない**。
+- リポジトリが公開であることを踏まえ、GitHub Actionsのアップロード対象から **公式Kの研究マトリックスJSON、選手別表示用JSON、実績内包の単体オフラインHTML** を除外。 `scripts/test_scenario_public_artifact_gate.py` が将来の再追加を拒否。公開してよいハッシュ・日付・件数等のレビュー情報は継続して保存する。
+- 以前の公開GitHub Actionsの一部成果物に研究マトリックスが含まれていた事実は**今回の変更で遡って無効にならない**。既存成果物を消去した/秘密保護済みだとは主張しない。今後の保管場所は実際の認証付き非公開KV等に限定する。
+- **公開・投入判定は HOLD_NO_PUBLICATION**。本番Workerに `verifyBearerToken` と `loadPrivateMatrix` を実結合し、匿名/一般会員のネットワーク拒否、KV実書込・SHA読戻しが成功するまで本番投入しない。INDEX / Worker / KV / 購入者の予測画面には変更を加えていない。
