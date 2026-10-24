@@ -132,6 +132,30 @@ def test():
     bad=deepcopy(candidate)
     bad["venues"]["若松"]["motors"]["15"]["previous"]["users"][0]["name"]="別選手"
     must_fail(bad,with_k)
+    bad=deepcopy(candidate)
+    bad["venues"]["若松"]["motors"].pop("15")
+    bad["venues"]["若松"]["motors"]["66"]=deepcopy(candidate["venues"]["若松"]["motors"]["1"])
+    must_fail(bad,with_k)
+    # Same-date original K corrections must never rewrite verified observations.
+    bad=deepcopy(candidate)
+    bad["venues"]["若松"]["motors"]["15"]["previous"]["ranks_races"][0]["race_no"]=8
+    must_fail(bad,with_k)
+    # Appending a newly published official K finish is allowed, as long as
+    # old ranks/date/race keys remain a strictly ordered immutable prefix.
+    appended=deepcopy(candidate)
+    series=appended["venues"]["若松"]["motors"]["15"]["previous"]
+    series["ranks"].append("3")
+    series["ranks_races"].append({
+        "date":"2026-10-20","race_no":4,"rank":"3"
+    })
+    series["official_K_numeric_finish_count"]=3
+    assert assess(appended,with_k,today=TODAY)["safe_to_stage_commit"] is True
+    shortened=deepcopy(candidate)
+    p=shortened["venues"]["若松"]["motors"]["15"]["previous"]
+    p["ranks"].pop()
+    p["ranks_races"].pop()
+    p["official_K_numeric_finish_count"]=1
+    must_fail(shortened,with_k)
 
     # One unobserved motor in the official K is OK at 99.5% or greater,
     # but must carry NO stale ranks from previous third-party data.
