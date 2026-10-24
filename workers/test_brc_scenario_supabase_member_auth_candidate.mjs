@@ -141,3 +141,41 @@ test("BRC login protocol adapter can be injected into scenario route, but no dep
  assert.equal(requests.length,2);
  assert.equal(reads,1);
 });
+
+
+test("same BRC Worker can reuse INTERNAL membership verifier with no self-fetch",async()=>{
+ const requests=[],ids=[];
+ const fetchImpl=async(url,options)=>{
+  requests.push(url);
+  assert.equal(url,supabase+"/auth/v1/user");
+  assert.equal(options.headers.Authorization,"Bearer "+JWT);
+  return resp({id:ID});
+ };
+ const verify=createVerifiedBrcActor({fetchImpl,
+  adminUserId:ID,supabasePublishableKey:PUB,
+  verifyMembershipInWorker:async context=>{
+   ids.push(context.verifiedSupabaseUserId);
+   assert.equal(context.token,JWT);
+   return true;
+  }
+ });
+ assert.equal((await verify(JWT)).admin,true);
+ assert.deepEqual(requests,[supabase+"/auth/v1/user"]);
+ assert.deepEqual(ids,[ID]);
+});
+test("internal member verifier must explicitly return boolean true; failures DENY",async()=>{
+ for(const bad of [false,"true",null,undefined]){
+  const verify=createVerifiedBrcActor({
+   fetchImpl:async()=>resp({id:ID}),
+   adminUserId:ID,supabasePublishableKey:PUB,
+   verifyMembershipInWorker:async()=>bad
+  });
+  assert.equal(await verify(JWT),null);
+ }
+ const verify=createVerifiedBrcActor({
+   fetchImpl:async()=>resp({id:ID}),
+   adminUserId:ID,supabasePublishableKey:PUB,
+   verifyMembershipInWorker:async()=>{throw Error("internal outage");}
+ });
+ assert.equal(await verify(JWT),null);
+});
