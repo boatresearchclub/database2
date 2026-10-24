@@ -12,6 +12,8 @@
  * - No production approval. No data/prediction/INDEX changes.
  */
 
+import {officialKPercent} from "./brc_scenario_23_percent.mjs";
+
 const MODES = new Set(["全体", "差し", "まくり", "まくり差し"]);
 const DATA_SCHEMA = "BRC_123_OFFICIAL_RESEARCH_V1";
 const COVERAGE = "DISJOINT_VERIFIED_OFFICIAL_K_WINDOWS";
@@ -98,7 +100,7 @@ function validateCohort(row,p) {
     if(!x||!allowed.includes(x.boat)||boats.has(x.boat)
       ||!Number.isInteger(x.n)||x.n<0
       ||!Number.isFinite(x.pct)
-      ||Math.abs(x.pct-Math.round(1000*x.n/row.denominator_n)/10)>0.011)
+      ||Math.abs(x.pct-officialKPercent(x.n,row.denominator_n))>0.001)
       throw Error("BAD_COHORT");
     boats.add(x.boat);count+=x.n;
   }
@@ -205,7 +207,7 @@ export function createScenario23AdminHandler({
       first_boat:p.first,second_boat:p.second,
       denominator_n:row.denominator_n,
       third_boat_rates:row.third_boat_rates.map(x=>({
-        boat:x.boat,n:x.n,pct:Math.round(100*x.n/row.denominator_n*10)/10
+        boat:x.boat,n:x.n,pct:officialKPercent(x.n,row.denominator_n)
       })),
       source_windows:source.source_windows.map(x=>({
         start:x.start,end:x.end,verified_calendar_days:x.verified_calendar_days
