@@ -1,0 +1,33 @@
+{
+  "schema": "BRC_TRUE_TIMEX_MEDIAN_BASELINE_AUDIT_V9",
+  "build": "20261024-TRUE-TIMEX-YEAR-STABILITY-V9",
+  "source_file": "真TimeX全選手中央値.xlsx",
+  "source_sha256": "8b690ef46bf7a591d920fa9c655693882871d58c025baead6076126e7828927b",
+  "sheet": "全選手×コース",
+  "coverage_years": [
+    2025,
+    2026
+  ],
+  "athletes": 1654,
+  "player_entry_pairs": 9525,
+  "total_n": 265962,
+  "n_2025": 129000,
+  "n_2026": 136962,
+  "annual_comparison": {
+    "method": "same-player same-entry 2026 median minus 2025 median",
+    "min_n_per_year": 5,
+    "qualified_pairs": 8757,
+    "abs_shift_threshold": 0.2,
+    "pairs_at_or_above_threshold": 1626,
+    "pct_at_or_above_threshold": 18.57,
+    "median_abs_shift": 0.1,
+    "statistical_significance": "NOT_TESTED"
+  },
+  "metric_equivalence_to_live_relative_diff": "UNVERIFIED",
+  "worker_v3_4metric_evidence": "NOT_COVERED",
+  "absolute_band_outcome_cohorts": "MISSING",
+  "pt_deviation_approved": false,
+  "production_banner_approved": false,
+  "public_ui_visible": false,
+  "notes": "Year drift is descriptive. It does not validate significance, live scale equivalence, a TimeX effect, or win-rate adjustments. Embedded HTML baseline is publicly inspectable even though admin UI hides it."
+}
