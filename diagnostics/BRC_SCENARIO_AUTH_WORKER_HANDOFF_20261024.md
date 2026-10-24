@@ -39,3 +39,21 @@ GitHub ActionsのArtifactsは**非公開の秘密保存場所とは見なさな�
 合計377日・58,056R、N≥5の条件付き研究セル2,031件。うち会場1901セル、選手固有130セル（105選手）。2023-01-01〜2026-10-23の1392日のうち**1015日が未収録**。真TimeXの「絶対帯別着順実績」や展示後データの欠損とは独立した案件。
 
 このドキュメントとAPI・クライアントは **Draft PR #2 の研究限定**です。
+
+
+## 2026-10-24 追記：本体ソースに一致するログイン連携候補
+
+確認元はBRC本体INDEX SHA256 7a4e6bd63fa576587851fc5c0d5e886827b9da6e716bd4567b6b74ac8ffefe39（2026-10-24）。認証秘密・会員情報は取得・記録していない。
+
+- INDEX 8375付近の brcStoreSession はSupabase access_token・refresh_token・期限を保持する。
+- INDEX 8440付近の brcEnsureFreshSession は1DAYのJST日付期限とアクセストークン更新をチェックする。
+- INDEX 8454付近の brcGetUser はSupabase REST /auth/v1/user をベアラートークン付きで呼ぶ。
+- INDEX 8466付近の brcCheckMembership は同じアクセストークンを用いて既存BRC API https://brc-api.sk48159212.workers.dev/ の authorized === true を確認する。
+- INDEX 8658付近の brcIsAdminUser はブラウザ側メール比較であり、管理者APIを許可する証拠に使わない。
+
+追加候補:
+- workers/brc_scenario_supabase_member_auth_candidate.mjs: Supabase本人確認と既存BRC API会員確認が両方成功し、かつWorker側で秘密設定した管理者SupabaseユーザーUUIDに一致する場合だけ管理者として許可する。メール比較や自己申告ロールは拒否。
+- workers/brc_scenario_index_session_adapter_candidate.mjs: 既存 brcEnsureFreshSession を使用。管理者・会員・公開表示モードを検査してからトークン取得。新規Cookie/localStorage管理なし。
+- workers/brc_scenario_23_admin_client_candidate.mjs: ログアウトや選択切替後の古い非同期結果を破棄するためgeneration/invalidateを実装。
+
+本番条件: 管理者の正しいSupabaseユーザーUUIDをWorker secretとして運営者が設定し、Supabase公開可能なpublishable keyをBRC既存の設定から注入。Worker内でのみ非公開D1/KVの研究行列を読むこと。現在のリポジトリには既存のbrc-api Worker本体実装が無いため、そのルートへの結線、権限情報の本番確認、非公開データ読戻しは**未完成**。研究用の上記ファイルを直接本番にデプロイしない。模擬認証テストの成功を本番認証の証拠としない。
