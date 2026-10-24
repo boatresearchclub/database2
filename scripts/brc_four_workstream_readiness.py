@@ -162,6 +162,16 @@ def audit(root: Path, now: date | None = None) -> dict:
             "approved_meeting_venue_count": len(approved_today),
             "authenticated_422_resolved": False,
             "four_metrics_dom_and_prediction_verified": False,
+            "native_brc_admin_session_adapter_candidate_present": (
+                root / "workers/brc_v3_index_session_adapter_candidate.mjs"
+            ).is_file(),
+            "manual_admin_index_diagnostic_candidate_present": (
+                root / "scripts/brc_v3_admin_index_qa_bridge.js"
+            ).is_file() and (
+                root / "scripts/brc_v3_admin_index_qa_build.py"
+            ).is_file(),
+            "live_admin_authenticated_predict_verified": False,
+            "offline_qa_artifact_is_not_deployed": True,
         },
         "true_timex": {
             "status": "HOLD_MISSING_ABSOLUTE_BAND_COHORTS" if cohort_missing else "RESEARCH_SOURCE_PRESENT_NOT_RELEASED",
