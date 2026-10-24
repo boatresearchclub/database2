@@ -61,6 +61,11 @@ for(const name of ["全体","差し","まくり","まくり差し"]){
   }
 }
 assert.ok(choices.length>=5);
+const halfTieRow=matrix.research_rows.find(r=>r.third_boat_rates.some(
+  x=>officialKPercent(x.n,r.denominator_n)!==Math.round(1000*x.n/r.denominator_n)/10
+));
+assert.ok(halfTieRow,"Expected actual-K half-tie fixture to test API integration");
+if(!choices.includes(halfTieRow))choices.push(halfTieRow);
 let response=await handle(request(choices[0]));
 assert.equal(response.status,403);
 assert.equal(kvReads,0);
