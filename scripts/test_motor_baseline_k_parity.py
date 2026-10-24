@@ -54,10 +54,11 @@ def test():
         assert result["decision"]=="RESEARCH_NO_CUMULATIVE_N_RELEASE"
 
         baseline["venues"]["桐生"]["cycle_start"]="2026-09-04"
-        with patch("BRC_PLAYER_COURSE365_V3_OFFICIAL.load_k",return_value=(events,1,{})):
-            try:audit_parity(baseline,{date(2026,9,5):p})
-            except ValueError as ex:assert "missing K days" in str(ex)
-            else:raise AssertionError("Baseline period with missing K must stop")
+        # A Sept-4 K is present, but Sept-5 is missing: the day inside
+        # the eligible claimed cycle window cannot silently become zero.
+        try:audit_parity(baseline,{date(2026,9,4):p})
+        except ValueError as ex:assert "missing K days" in str(ex)
+        else:raise AssertionError("Baseline period with missing K must stop")
     print("SELFTEST_PASS: frozen motor split extraction, numeric finishers vs N and missing-K guard")
 
 
