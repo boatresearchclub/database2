@@ -1,0 +1,30 @@
+name: BRC Motor INDEX Previous Rank QA (NO DEPLOY)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/brc-motor-index-qa-readonly.yml'
+      - 'scripts/brc_motor_index_display_contract_audit.py'
+      - 'scripts/brc_motor_previous_index_qa_patch.py'
+      - 'scripts/test_brc_motor_previous_index_qa_patch.py'
+permissions:
+  contents: read
+jobs:
+  source-contract-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact INDEX motor previous card source anchors (NO WRITES)
+        run: |
+          python scripts/brc_motor_index_display_contract_audit.py \
+            --index index.html --out brc_motor_index_contract_readonly.json
+      - name: Upload only redacted motor contract metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: brc-motor-index-source-contract-redacted
+          path: brc_motor_index_contract_readonly.json
+          retention-days: 2
