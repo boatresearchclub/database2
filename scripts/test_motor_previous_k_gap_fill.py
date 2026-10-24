@@ -121,6 +121,9 @@ def test():
         assert required_dates_from_unverified_review(review,date(2026,10,24))=={
             date(2026,10,20),date(2026,10,21)
         }
+        # Earlier malformed-download fixtures may have written dummy files
+        # before their validator rejected them. Remove that fixture cache.
+        (root/"K261021.TXT").unlink(missing_ok=True)
         before=len(downloaded)
         # A complete reviewed snapshot can prefetch only official K dates.
         # The names and ranks are NOT approved by this step.
