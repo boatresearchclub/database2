@@ -132,6 +132,12 @@ export function createAdminV3PredictionDiagnostic({
        if(raw.length<=16384){const parsed=JSON.parse(raw);if(parsed&&typeof parsed==="object"&&!Array.isArray(parsed))json=parsed;}
       }catch(_){}
     }
+    // The user may log out, lose membership or switch to public view while
+    // the authenticated request is in flight. Discard even a valid 200 response
+    // instead of presenting stale admin-only diagnostic information.
+    if(isAdminUi()!==true)return {
+      phase:"ADMIN_VIEW_REQUIRED",serverFourMetricsValid:false,displayedV3Verified:false
+    };
     // A successful HTTP request alone does not prove v3 is applied in INDEX.
     const code=Number.isInteger(resp?.status)?resp.status:0;
     const meta=metadata(json);
