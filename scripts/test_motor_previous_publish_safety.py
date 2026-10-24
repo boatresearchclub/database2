@@ -3,6 +3,7 @@
 """Pure offline original K previous motor safe-publication downgrade fixtures."""
 from copy import deepcopy
 from datetime import date,timedelta
+from pathlib import Path
 
 from brc_motor_previous_publish_safety import assess
 from brc_motor_previous_k_summaries import NAMES
@@ -177,7 +178,19 @@ def test():
     bad_main=deepcopy(existing)
     bad_main["venues"].pop("若松")
     must_fail(candidate,bad_main)
-    print("PASS: K motor publication candidate cannot downgrade newer main or same-date verified racer/rank histories")
+    # Enforce wiring of this guard into the ACTUAL proposed nightly
+    # publication flow, not merely passing unused pure unit tests.
+    wf=(Path(__file__).resolve().parents[1]/".github/workflows/brc-motor-previous-review.yml").read_text(encoding="utf-8")
+    first=wf.index("--out .cache/brc_previous_publish_guard_before.json")
+    commit=wf.index("git commit -m 'data: update K-verified")
+    pull=wf.index("git pull --rebase origin main")
+    second=wf.index("--out .cache/brc_previous_publish_guard_after.json")
+    push=wf.index("git push origin HEAD:main")
+    assert first<commit<pull<second<push
+    assert wf.count("git show origin/main:racecards/motor_previous_daily.json")==2
+    assert wf.count("python scripts/brc_motor_previous_publish_safety.py")==2
+    assert "if: github.ref == 'refs/heads/main'" in wf
+    print("PASS: official-K motor nightly publishing guarded before commit and after rebase; no old main regression")
 
 
 if __name__=="__main__":
