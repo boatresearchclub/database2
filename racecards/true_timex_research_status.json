@@ -1,0 +1,15 @@
+{
+  "schema": "BRC_TRUE_TIMEX_SOURCE_STATUS_V7",
+  "version": "20261024-V7",
+  "status": "SOURCE_REQUIRED",
+  "source_dataset": null,
+  "source_sha256": null,
+  "training_period": "2023 onward; not yet verified",
+  "research_candidates_verified": 0,
+  "actual_v3_4metrics_compared": 0,
+  "holdout_validation": "NOT_RUN",
+  "productionApproved": false,
+  "publicVisible": false,
+  "liveBannerCount": 0,
+  "notes": "No original player x entry course x absolute TimeX band cohort table has been verified. The 303 historical candidate groups are not reproduced. Never infer deviations from 2023 race master exhibition_time alone."
+}
