@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - '.github/workflows/brc-four-feature-gate-audit.yml'
+      - '.github/workflows/brc-motor-previous-review.yml'
       - 'scripts/brc_four_workstream_readiness.py'
       - 'scripts/brc_motor_baseline_k_parity.py'
       - 'scripts/brc_motor_finals_claimed_cycle_research.py'
