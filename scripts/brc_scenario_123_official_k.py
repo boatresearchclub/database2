@@ -62,9 +62,9 @@ def methods_in_official_k(text: str) -> dict[tuple[str,int],str]:
             if key in headers:
                 raise ValueError("Duplicate method header in official K")
             raw_method = re.sub(r"\s+", "", h.group(1))
-            if raw_method not in VALID_DECISIONS:
-                # A blank/unknown method is not silently relabeled '全体'.
-                raise ValueError("Official K decision missing or unsupported for "+venue+" "+str(race)+"R")
+            # Defer validation until official.load_k confirms this race
+            # actually had a complete podium. Cancelled/unrun races can
+            # legitimately print a blank method field.
             headers[key] = raw_method
     # Valid K archives can omit a final KEND. Day/venue/race integrity is
     # verified independently by official.load_k before these labels are joined.
@@ -81,14 +81,15 @@ def join_k_results(events, headers, source_day: date):
     rows = []
     skipped = {"incomplete_or_tied_podium": 0}
     for key, racers in sorted(grouped.items()):
-        if key not in headers:
-            raise ValueError("Completed official K race has no verified method header: "+str(key))
         top = {rank:[] for rank in (1,2,3)}
         for rank, boat, reg, course in racers:
             if rank in top: top[rank].append((boat, reg, course))
         if any(len(top[n]) != 1 for n in (1,2,3)):
             skipped["incomplete_or_tied_podium"] += 1
             continue
+        if key not in headers or headers[key] not in VALID_DECISIONS:
+            # Do not guess the technique for a race with an official 1-2-3.
+            raise ValueError("Completed official K race has no verified winning method: "+str(key))
         b1, winner, course = top[1][0]
         b2, _, _ = top[2][0]
         b3, _, _ = top[3][0]
