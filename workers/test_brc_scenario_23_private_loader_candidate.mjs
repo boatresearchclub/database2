@@ -52,3 +52,16 @@ test("binding errors do not trigger public-network fallback",async()=>{
   expectedSha256:sha(fixture())});
  await assert.rejects(load("verified:manager"),/KV_UNAVAILABLE/);
 });
+
+test("multi-megabyte official K source remains allowed only with exact UTF-8 SHA",async()=>{
+ const research=JSON.parse(fixture());
+ research.note="検証".repeat(800000);
+ const content=JSON.stringify(research);
+ assert.ok(Buffer.byteLength(content,"utf8")>2_000_000);
+ assert.ok(Buffer.byteLength(content,"utf8")<12_000_000);
+ const reader=createPrivateScenarioMatrixLoader({
+  binding:{get:async()=>content},expectedSha256:sha(content)
+ });
+ const v=await reader("verified:manager");
+ assert.equal(v.research_rows.length,1);
+});
