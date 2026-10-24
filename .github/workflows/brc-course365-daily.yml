@@ -2,14 +2,10 @@ name: BRC Player Course 365D Auto Update
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - '.github/workflows/brc-course365-daily.yml'
-      - 'scripts/BRC_PLAYER_COURSE365_V3_OFFICIAL.py'
-      - 'scripts/test_course365_v3_official.py'
   schedule:
-    # 10:35 JST / 01:35 UTC. Past day's K file must exist.
-    - cron: '35 1 * * *'
+    # 01:00 JST / 16:00 UTC (previous UTC day).
+    # Official K files must be available; existing verification blocks incomplete data.
+    - cron: '0 16 * * *'
 
 permissions:
   contents: write
