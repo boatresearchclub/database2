@@ -13,6 +13,9 @@ on:
       - 'scripts/brc_scenario_admin_qa_html.py'
       - 'scripts/brc_scenario_index_integration_audit.py'
       - 'scripts/brc_scenario_index_target_audit.py'
+      - 'scripts/brc_scenario_admin_index_bridge_qa.js'
+      - 'scripts/brc_scenario_admin_index_qa_candidate.py'
+      - 'scripts/test_scenario_admin_index_qa_candidate.py'
       - 'scripts/brc_scenario_123_coverage_audit.py'
       - 'scripts/test_scenario_index_integration_audit.py'
       - 'scripts/test_scenario_admin_qa_html.py'
@@ -85,6 +88,10 @@ jobs:
             --index index.html --out brc_scenario_index_hooks.json
       - name: Target actual player 展開 panel and admin state for future gated adapter
         run: python scripts/brc_scenario_index_target_audit.py --index index.html --out brc_scenario_index_target_hooks.json
+      - name: Test native INDEX QA adapter is syntactically valid and strictly add-only
+        run: |
+          node --check scripts/brc_scenario_admin_index_bridge_qa.js
+          python scripts/test_scenario_admin_index_qa_candidate.py
       - name: Pure offline regression tests
         run: python scripts/test_four_workstream_readiness.py
       - name: Verify 1st-2nd-3rd conditional research aggregation
@@ -235,6 +242,13 @@ jobs:
           python scripts/brc_scenario_admin_qa_html.py \
             --matrix brc_scenario_union_windows_matrix.json \
             --output brc_scenario_admin_offline_QA.html
+      - name: Build SHA-locked native BRC INDEX admin preview (DO NOT PUSH)
+        run: |
+          python scripts/brc_scenario_admin_index_qa_candidate.py \
+            --index index.html \
+            --bridge scripts/brc_scenario_admin_index_bridge_qa.js \
+            --output BRC_SCENARIO_INDEX_QA_DO_NOT_PUSH.html \
+            --audit brc_scenario_index_qa_candidate_audit.json
       - name: Audit quarantined motor period-N mismatch (NO PUBLISH)
         run: python scripts/brc_motor_source_scope_audit.py --output brc_motor_scope_audit.json
       - name: Probe public stage auth and live exhibition (NO JWT/POST/KV)
@@ -290,6 +304,8 @@ jobs:
             brc_scenario_index_hooks.json
             brc_scenario_index_target_hooks.json
             brc_scenario_admin_coverage.json
+            brc_scenario_index_qa_candidate_audit.json
+            BRC_SCENARIO_INDEX_QA_DO_NOT_PUSH.html
             brc_motor_finals_claimed_cycle_research.json
           if-no-files-found: ignore
           retention-days: 7
