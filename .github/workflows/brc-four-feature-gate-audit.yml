@@ -18,6 +18,8 @@ on:
       - 'scripts/test_motor_previous_k_coverage.py'
       - 'scripts/brc_motor_previous_k_gap_fill.py'
       - 'scripts/test_motor_previous_k_gap_fill.py'
+      - 'scripts/brc_motor_previous_publish_safety.py'
+      - 'scripts/test_motor_previous_publish_safety.py'
       - 'scripts/BRC_MOTOR_PREVIOUS_K_RANK_RESTORE_CANDIDATE.py'
       - 'scripts/test_motor_previous_k_rank_restore_candidate.py'
       - 'scripts/brc_motor_source_scope_audit.py'
@@ -141,6 +143,8 @@ jobs:
         run: python scripts/test_motor_previous_k_gap_fill.py
       - name: Official-K ordered previous-rank restoration candidate fixtures
         run: python scripts/test_motor_previous_k_rank_restore_candidate.py
+      - name: Reject previous-meet motor K publication rollback, racer swap and origin/main downgrade
+        run: python scripts/test_motor_previous_publish_safety.py
       - name: True TimeX original-outcome cohort fixtures
         run: python scripts/test_true_timex_effect_research.py
       - name: Motor source scope and v3 422 public probe offline fixtures
