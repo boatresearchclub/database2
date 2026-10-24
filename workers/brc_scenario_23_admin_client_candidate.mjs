@@ -45,6 +45,7 @@ export function createScenario23ReadClient({getSessionToken,isAdminUi,fetchImpl,
       try{token=await getSessionToken();}
       catch(_){return {status:"SESSION_UNVERIFIED",rates:[]};}
       if(stale(mine))return {status:"STALE_REQUEST_SUPPRESSED",rates:[]};
+      if(isAdminUi()!==true)return {status:"ADMIN_VIEW_REQUIRED",rates:[]};
       if(typeof token!=="string"||!/^[-._~+\/A-Za-z0-9]{16,4096}$/.test(token))
         return {status:"SESSION_UNVERIFIED",rates:[]};
       if(isAdminUi()!==true)return {status:"ADMIN_VIEW_REQUIRED",rates:[]};
