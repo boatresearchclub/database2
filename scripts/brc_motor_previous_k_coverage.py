@@ -43,6 +43,8 @@ def summarize_coverage(feed: dict, source: dict) -> dict:
             raise ValueError("Unverified previous-motor identity record")
     summary={}
     observed_total=0
+    max_numeric_races=0
+    over_display_cap=0
     for venue in NAMES:
         observed=source["venues"][venue].get("motors", {})
         if not isinstance(observed,dict):
@@ -55,6 +57,9 @@ def summarize_coverage(feed: dict, source: dict) -> dict:
             for field in ("first_count","second_count","third_count","top2_count","top3_count"):
                 if type(record.get(field)) is not int or not 0 <= record[field] <= record["completed_races"]:
                     raise ValueError("Previous-motor summary has invalid rank counts")
+            max_numeric_races=max(max_numeric_races,record["completed_races"])
+            if record["completed_races"]>20:
+                over_display_cap+=1
             if record["top2_count"] != record["first_count"]+record["second_count"] or (
                 record["top3_count"] != record["top2_count"]+record["third_count"]
             ):
@@ -85,6 +90,9 @@ def summarize_coverage(feed: dict, source: dict) -> dict:
         "official_K_matched_previous_identity_records":expected_count,
         "official_K_previous_rank_summaries":observed_total,
         "not_displayable_previous_motors":expected_count-observed_total,
+        "max_official_K_numeric_races_per_previous_meet":max_numeric_races,
+        "prior_motors_exceeding_current_INDEX_20_rank_display_limit":over_display_cap,
+        "all_verified_previous_K_rank_histories_fit_INDEX":over_display_cap==0,
         "suppressed_reasons":dict(sorted(suppressed.items())),
         "by_venue":summary,
         "full_cycle_starts_verified":False,
@@ -112,6 +120,8 @@ def main():
         "verified_previous_ranks":report["official_K_previous_rank_summaries"],
         "held":report["not_displayable_previous_motors"],
         "K_days":report["official_K_days_checked"],
+        "max_previous_numeric_races":report["max_official_K_numeric_races_per_previous_meet"],
+        "over_INDEX_20_rank_limit":report["prior_motors_exceeding_current_INDEX_20_rank_display_limit"],
         "productionApproved":False
     },ensure_ascii=False))
 
