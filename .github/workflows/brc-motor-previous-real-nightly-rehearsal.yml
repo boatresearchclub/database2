@@ -7,6 +7,8 @@ on:
       - '.github/workflows/brc-motor-previous-review.yml'
       - 'scripts/brc_motor_previous_k_gap_fill.py'
       - 'scripts/test_motor_previous_k_gap_fill.py'
+      - 'scripts/brc_motor_previous_publish_safety.py'
+      - 'scripts/test_motor_previous_publish_safety.py'
 permissions:
   contents: read
 jobs:
@@ -22,6 +24,7 @@ jobs:
         run: |
           python scripts/test_motor_previous_k_gap_fill.py
           python scripts/test_motor_previous_k_rank_restore_candidate.py
+          python scripts/test_motor_previous_publish_safety.py
       - name: Restore previously verified public original K
         uses: actions/cache/restore@v4
         with:
@@ -47,6 +50,12 @@ jobs:
           python scripts/brc_motor_previous_k_summaries.py --archive-dir .cache/brc-course365-k --previous /tmp/brc-rehearsal-private/identity_feed.json --out /tmp/brc-rehearsal-private/race_rows_PRIVATE.json
           python scripts/brc_motor_previous_k_coverage.py --source /tmp/brc-rehearsal-private/race_rows_PRIVATE.json --previous /tmp/brc-rehearsal-private/identity_feed.json --out /tmp/brc-rehearsal-private/coverage.json
           python scripts/BRC_MOTOR_PREVIOUS_K_RANK_RESTORE_CANDIDATE.py --identity /tmp/brc-rehearsal-private/identity_feed.json --official-K-study /tmp/brc-rehearsal-private/race_rows_PRIVATE.json --out /tmp/brc-rehearsal-private/restored_PRIVATE.json
+          git fetch --no-tags origin main
+          git show origin/main:racecards/motor_previous_daily.json > /tmp/brc-rehearsal-private/origin_main_preexisting_PRIVATE.json
+          python scripts/brc_motor_previous_publish_safety.py \
+            --candidate /tmp/brc-rehearsal-private/restored_PRIVATE.json \
+            --origin-main /tmp/brc-rehearsal-private/origin_main_preexisting_PRIVATE.json \
+            --out /tmp/brc-rehearsal-private/no_downgrade_metadata.json
           python - <<'PY'
           import json
           from pathlib import Path
@@ -57,6 +66,9 @@ jobs:
           coverage=d('coverage.json')
           assert k['source_phase']=='PRE_K_CANDIDATE_DATE_DISCOVERY_ONLY'
           assert coverage['all_verified_previous_K_rank_histories_fit_INDEX']
+          guard=d('no_downgrade_metadata.json')
+          assert guard['safe_to_stage_commit'] is True
+          assert guard['official_K_ranked_motors']==verified['previous_ranks_verified_count']
           assert verified['previous_ranks_verified_count']==coverage['official_K_previous_rank_summaries']
           assert verified['cumulative_motor_stats_available'] is False
           summary={'schema':'BRC_MOTOR_NIGHTLY_LIVE_REHEARSAL_NO_DEPLOY_V1',
@@ -68,6 +80,8 @@ jobs:
               'K_original_numeric_ranks_verified':verified['previous_ranks_verified_count'],
               'numeric_rank_histories_held':verified['previous_ranks_held_count'],
               'max_numeric_prior_meet_finishes':coverage['max_official_K_numeric_races_per_previous_meet'],
+              'origin_main_snapshot_date':guard['origin_main_date'],
+              'no_newer_main_data_overwritten':True,
               'INDEX_or_main_changed':False,
               'motor_cycle_N_approved':False,
               'productionApproved':False}
