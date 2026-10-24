@@ -69,8 +69,10 @@ jobs:
           key: brc-motor-cycle-audit-readonly-${{ github.run_id }}
           restore-keys: |
             brc-course365-k-
-      - name: Reconstruct research K motor-cycle coverage from available local archive
-        run: python scripts/brc_motor_k_cycle_observations.py --out brc_motor_k_cycle_research.json
+      - name: Install official K extractor for recent missing archive only
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq p7zip-full
+      - name: Reconstruct research K motor-cycle coverage (no production write)
+        run: python scripts/brc_motor_k_cycle_observations.py --fetch-recent-missing --out brc_motor_k_cycle_research.json
       - name: Audit quarantined motor period-N mismatch (NO PUBLISH)
         run: python scripts/brc_motor_source_scope_audit.py --output brc_motor_scope_audit.json
       - name: Probe public stage auth and live exhibition (NO JWT/POST/KV)
