@@ -70,7 +70,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: .cache/brc-course365-k
-          key: brc-scenario-july-111-k-\${{ github.run_id }}
+          key: brc-scenario-july-111-k-${{ github.run_id }}
       - name: Export source provenance metadata ONLY, no player matrix
         uses: actions/upload-artifact@v4
         with:
