@@ -46,6 +46,20 @@ def test():
     assert report["official_K_matched_previous_identity_records"]==840
     assert report["official_K_previous_rank_summaries"]==1
     assert report["not_displayable_previous_motors"]==839
+    assert report["max_official_K_numeric_races_per_previous_meet"]==4
+    assert report["prior_motors_exceeding_current_INDEX_20_rank_display_limit"]==0
+    assert report["all_verified_previous_K_rank_histories_fit_INDEX"] is True
+    long_source=copy.deepcopy(study)
+    long_record=long_source["venues"]["桐生"]["motors"]["0"]
+    long_record.update({
+        "completed_races":21,
+        "top2_count":2,
+        "top3_count":3
+    })
+    long_report=summarize_coverage(feed,long_source)
+    assert long_report["max_official_K_numeric_races_per_previous_meet"]==21
+    assert long_report["prior_motors_exceeding_current_INDEX_20_rank_display_limit"]==1
+    assert long_report["all_verified_previous_K_rank_histories_fit_INDEX"] is False
     assert report["by_venue"]["桐生"]["official_K_rank_history_motors"]==1
     assert report["full_cycle_starts_verified"] is False
     assert report["prior_meet_only"] is True
