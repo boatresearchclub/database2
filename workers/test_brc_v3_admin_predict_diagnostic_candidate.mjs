@@ -140,3 +140,31 @@ test("unrecognized Worker fields never returned as private metadata",async()=>{
  assert.equal(JSON.stringify(r).includes(token),false);
  assert.equal(JSON.stringify(r).includes("secret@example.org"),false);
 });
+
+test("admin logs out or switches to public display while staging response is in flight: reject even a valid 200",async()=>{
+ for(const gate of ["fetch","body"]){
+  let admin=true,called=0;
+  const diag=createAdminV3PredictionDiagnostic({
+   isAdminUi:()=>admin,
+   getFreshSession:async()=>({access_token:token}),
+   fetchImpl:async()=>{
+    called++;
+    if(gate==="fetch")admin=false;
+    return {
+     status:200,
+     headers:{get:k=>k==="content-type"?"application/json":null},
+     text:async()=>{
+      if(gate==="body")admin=false;
+      return JSON.stringify({...good,secret:token});
+     }
+    };
+   }
+  });
+  const v=await diag.check(sel);
+  assert.equal(called,1);
+  assert.equal(v.phase,"ADMIN_VIEW_REQUIRED");
+  assert.equal(v.serverFourMetricsValid,false);
+  assert.equal(v.displayedV3Verified,false);
+  assert.equal(JSON.stringify(v).includes(token),false);
+ }
+});
