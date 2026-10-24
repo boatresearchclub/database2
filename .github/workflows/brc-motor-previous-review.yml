@@ -83,6 +83,15 @@ jobs:
             --source .cache/previous_motor_original_K_private.json \
             --previous racecards/motor_previous_daily.json \
             --out .cache/previous_motor_original_K_coverage_only.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path(".cache/previous_motor_original_K_coverage_only.json").read_text(encoding="utf-8"))
+          assert report["all_verified_previous_K_rank_histories_fit_INDEX"] is True, (
+              "HOLD: official-K prior-meet 21+ numeric finishes cannot fit current INDEX"
+          )
+          print("PREVIOUS_K_INDEX_20_ROW_COMPATIBLE",report["max_official_K_numeric_races_per_previous_meet"])
+          PY
           python scripts/BRC_MOTOR_PREVIOUS_K_RANK_RESTORE_CANDIDATE.py \
             --identity racecards/motor_previous_daily.json \
             --official-K-study .cache/previous_motor_original_K_private.json \
