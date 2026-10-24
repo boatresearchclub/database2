@@ -69,7 +69,7 @@ def main():
         print("MOTOR_INDEX",key,json.dumps(item,ensure_ascii=False))
     # Review two exact, non-login public motor rendering branches, with
     # sanitized source excerpt only; never print full source or embedded data.
-    for target in ("function brcVerifiedPrevCheck(payload)", "const validRanks="):
+    for target in ("function brcVerifiedPrevCheck(payload)", "const validRanks=", "async function brcFetchMotorPreviousVerified(force=false)"):
         start=src.find(target)
         if start<0: continue
         a=max(0,start-250)
