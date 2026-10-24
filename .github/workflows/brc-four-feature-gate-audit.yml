@@ -17,6 +17,8 @@ on:
       - 'scripts/brc_motor_source_scope_audit.py'
       - 'scripts/brc_v3_422_public_probe.py'
       - 'scripts/test_motor_scope_and_v3_public_probe.py'
+      - 'scripts/brc_motor_k_cycle_observations.py'
+      - 'scripts/test_motor_k_cycle_observations.py'
       - '.github/workflows/brc-four-feature-gate-audit.yml'
   pull_request:
     paths:
@@ -32,6 +34,8 @@ on:
       - 'scripts/brc_motor_source_scope_audit.py'
       - 'scripts/brc_v3_422_public_probe.py'
       - 'scripts/test_motor_scope_and_v3_public_probe.py'
+      - 'scripts/brc_motor_k_cycle_observations.py'
+      - 'scripts/test_motor_k_cycle_observations.py'
       - '.github/workflows/brc-four-feature-gate-audit.yml'
 permissions:
   contents: read
@@ -56,6 +60,10 @@ jobs:
         run: python scripts/test_true_timex_effect_research.py
       - name: Motor source scope and v3 422 public probe offline fixtures
         run: python scripts/test_motor_scope_and_v3_public_probe.py
+      - name: Verify official K motor-cycle reconstruction fixtures (NO PUBLISH)
+        run: python scripts/test_motor_k_cycle_observations.py
+      - name: Reconstruct research K motor-cycle coverage from available local archive
+        run: python scripts/brc_motor_k_cycle_observations.py --out brc_motor_k_cycle_research.json
       - name: Audit quarantined motor period-N mismatch (NO PUBLISH)
         run: python scripts/brc_motor_source_scope_audit.py --output brc_motor_scope_audit.json
       - name: Probe public stage auth and live exhibition (NO JWT/POST/KV)
@@ -80,6 +88,7 @@ jobs:
             brc_four_workstream_readiness.json
             brc_v3_offline_summary.json
             brc_motor_scope_audit.json
+            brc_motor_k_cycle_research.json
             brc_v3_422_probe.json
           if-no-files-found: ignore
           retention-days: 7
