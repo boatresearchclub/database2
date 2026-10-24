@@ -40,7 +40,16 @@ def audit(root: Path, now: date | None = None) -> dict:
     motor_valid = (
         not motor_hold
         and motor.get("version") == "BRC-Motor-Daily-Official-Stats-V1"
-        and len(motor.get("venues", {})) == 24
+        and isinstance(motor.get("venues"), dict)
+        and len(motor["venues"]) == 24
+        and all(
+            isinstance(v, dict)
+            and isinstance(v.get("motors"), dict)
+            and len(v["motors"]) >= 35
+            for v in motor["venues"].values()
+        )
+        and isinstance(motor.get("checks"), dict)
+        and motor["checks"].get("official_cycle_n_reconciled") is True
     )
     if motor_hold and any(v.get("motors") for v in motor.get("venues", {}).values()):
         findings.append("motor HOLD source contains public venue motor values")
