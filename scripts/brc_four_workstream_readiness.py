@@ -45,11 +45,31 @@ def audit(root: Path, now: date | None = None) -> dict:
     if motor_hold and any(v.get("motors") for v in motor.get("venues", {}).values()):
         findings.append("motor HOLD source contains public venue motor values")
     previous_age = age_days(prev.get("date"), now)
+    # A version label and 24 empty venue objects do not establish official-K
+    # reconciliation. Require actual motor evidence in each venue, not only a
+    # fresh snapshot date. This remains previous-meet identity ONLY, not cycle N.
+    prior_venues = prev.get("venues")
+    prior_coverage_ok = (
+        isinstance(prior_venues, dict) and len(prior_venues) == 24
+        and all(
+            isinstance(v, dict)
+            and isinstance(v.get("motors"), dict)
+            and len(v["motors"]) >= 35
+            and any(
+                isinstance(m, dict)
+                and m.get("verification") == "motor_venue_racer_and_date_in_official_K"
+                for m in v["motors"].values()
+            )
+            for v in prior_venues.values()
+        )
+    )
     prior_ok = (
         prev.get("version") == "BRC-Motor-Previous-Official-K-Verified-V1"
         and prev.get("cumulative_motor_stats_available") is False
         and previous_age is not None and 0 <= previous_age <= 2
-        and len(prev.get("venues", {})) == 24
+        and type(prev.get("official_K_matched_count")) is int
+        and prev["official_K_matched_count"] >= 24
+        and prior_coverage_ok
     )
     if prev.get("cumulative_motor_stats_available") is not False:
         findings.append("previous identity feed unexpectedly claims cumulative motor verification")
