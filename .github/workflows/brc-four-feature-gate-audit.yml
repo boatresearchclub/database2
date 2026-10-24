@@ -42,7 +42,7 @@ permissions:
 jobs:
   offline-safety-gates:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -62,6 +62,13 @@ jobs:
         run: python scripts/test_motor_scope_and_v3_public_probe.py
       - name: Verify official K motor-cycle reconstruction fixtures (NO PUBLISH)
         run: python scripts/test_motor_k_cycle_observations.py
+      - name: Restore pre-existing official K archive cache (read only)
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-motor-cycle-audit-readonly-${{ github.run_id }}
+          restore-keys: |
+            brc-course365-k-
       - name: Reconstruct research K motor-cycle coverage from available local archive
         run: python scripts/brc_motor_k_cycle_observations.py --out brc_motor_k_cycle_research.json
       - name: Audit quarantined motor period-N mismatch (NO PUBLISH)
