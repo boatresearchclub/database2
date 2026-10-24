@@ -27,6 +27,8 @@ def count_with_claimed_cycles(scope: dict, races: list[dict], yesterday: date) -
     motors = defaultdict(lambda: {"final_appearances":0, "final_wins":0})
     seen=set()
     outside=0
+    unknown_candidate_motor_entries=0
+    partially_outside_candidate_races=0
     for event in races:
         d=date.fromisoformat(event["date"])
         venue_code=str(event["venue_code"]).zfill(2)
@@ -47,11 +49,15 @@ def count_with_claimed_cycles(scope: dict, races: list[dict], yesterday: date) -
         if d < venue["claimed_start"]:
             outside+=1
             continue
+        outside_entries=[motor for motor in event["motors"] if motor not in venue["motors"]]
+        unknown_candidate_motor_entries+=len(outside_entries)
+        if outside_entries:
+            partially_outside_candidate_races+=1
         for motor in event["motors"]:
-            if motor not in venue["motors"]:
-                raise ValueError("Verified championship motor absent from frozen period candidate map")
-            motors[(venue_code,motor)]["final_appearances"]+=1
-        motors[(venue_code,event["winning_motor"])]["final_wins"]+=1
+            if motor in venue["motors"]:
+                motors[(venue_code,motor)]["final_appearances"]+=1
+        if event["winning_motor"] in venue["motors"]:
+            motors[(venue_code,event["winning_motor"])]["final_wins"]+=1
     payload={}
     for code, venue in scope.items():
         payload[venue["venue"]]={
@@ -64,14 +70,16 @@ def count_with_claimed_cycles(scope: dict, races: list[dict], yesterday: date) -
             }
         }
     selected=len(seen)-outside
-    assert sum(x["final_appearances"] for v in payload.values() for x in v["motors"].values())==selected*6
-    assert sum(x["final_wins"] for v in payload.values() for x in v["motors"].values())==selected
+    assert sum(x["final_appearances"] for v in payload.values() for x in v["motors"].values())==selected*6-unknown_candidate_motor_entries
+    assert sum(x["final_wins"] for v in payload.values() for x in v["motors"].values())<=selected
     return {
         "schema":"BRC_MOTOR_EXPLICIT_FINALS_CLAIMED_CYCLE_K_RESEARCH_V1",
         "as_of":yesterday.isoformat(),
         "official_K_explicit_final_races_found":len(seen),
         "finals_excluded_before_claimed_cycle":outside,
         "within_claimed_cycle_explicit_final_races":selected,
+        "outside_frozen_candidate_motor_entries":unknown_candidate_motor_entries,
+        "race_count_with_outside_candidate_motors":partially_outside_candidate_races,
         "official_finished_race_headers_verified":True,
         "claimed_motor_cycle_start_officially_verified":False,
         "unknown_and_ambiguous_final_labels_not_assumed":True,
@@ -93,9 +101,19 @@ def build(held: dict, archive: Path, today: date):
         raise ValueError("Official K calendar incomplete: "+repr(missing[:10]))
     race_list=[]
     unclassified=[]
+    held_days=[]
     for d in days:
         path=files[d]
-        race_list.extend(finals_k.scan_day(path,d))
+        try:
+            confirmed=finals_k.scan_day(path,d)
+        except ValueError as err:
+            # One cancelled or ambiguous final makes this DAY incomplete.
+            # Never silently count a partial day's finals as fully reconciled.
+            held_days.append({"date":d.isoformat(),
+                              "reason":"OFFICIAL_FINAL_HAS_INCOMPLETE_OR_AMBIGUOUS_SIX_MOTOR_ROWS",
+                              "error_type":type(err).__name__})
+            continue
+        race_list.extend(confirmed)
         for item in finals_k.championship_label_audit(path,d):
             if item["kind"]=="unclassified":
                 unclassified.append({"date":item["date"],"venue":item["venue"],"race":item["race"]})
@@ -106,6 +124,9 @@ def build(held: dict, archive: Path, today: date):
         "official_K_days_checked":len(days),
         "unclassified_win_related_headers":unclassified[:30],
         "unclassified_win_related_header_count":len(unclassified),
+        "days_with_unverifiable_finals":held_days,
+        "days_with_verified_final_parsing":len(days)-len(held_days),
+        "official_final_classification_complete":not held_days and not unclassified,
         "full_cycle_final_history_approved":False
     })
     return report
@@ -124,7 +145,8 @@ def main():
     a.out.write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     print(json.dumps({k:result[k] for k in ("range_start","range_end","official_K_days_checked",
     "official_K_explicit_final_races_found","within_claimed_cycle_explicit_final_races",
-    "unclassified_win_related_header_count","decision")},ensure_ascii=False))
+    "unclassified_win_related_header_count","days_with_unverifiable_finals",
+    "outside_frozen_candidate_motor_entries","decision")},ensure_ascii=False))
     print("RESEARCH_ONLY: physical motor exchange dates unverified; NO DISPLAY OR CUMULATIVE FINALS RELEASE")
 
 
