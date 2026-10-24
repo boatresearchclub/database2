@@ -88,7 +88,7 @@ def test():
     changed=fixture()
     changed["calendar_dates_missing_from_2023_target"]=0
     reject(changed,"PARTIAL_HISTORY_NOT_EXPLICIT")
-    try:analyze(b'{"invalid-json":')
+    try:analyze(b'{"invalid-json":'+b"x"*150)
     except ValueError as ex:assert "INVALID_UTF8_JSON" in str(ex)
     else:raise AssertionError("truncated source accepted")
     print("SELFTEST_PASS: strict private KV source review; checksum, race/day provenance, all 3rd cells and hold/no-publish")
