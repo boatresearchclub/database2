@@ -41,6 +41,8 @@ border-radius:8px;padding:7px 14px;cursor:pointer;font-size:14px}
 .grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin:12px 0}
 .tile{text-align:center;border:1px solid var(--line);border-radius:8px;
 padding:10px 2px;background:#0b1d32;min-width:0}
+.tile{position:relative;overflow:hidden}.tile::before{content:"";display:block;height:5px;position:absolute;left:0;right:0;top:0;background:var(--boat,#8493aa)}
+.tile.boat-1{--boat:#edf3ff}.tile.boat-2{--boat:#858b95}.tile.boat-3{--boat:#e85d63}.tile.boat-4{--boat:#5aa6ff}.tile.boat-5{--boat:#f5cd59}.tile.boat-6{--boat:#55c786}
 .tile.exclude{opacity:.38}.num{font-size:20px;font-weight:700}
 .count{color:var(--muted);font-size:12px}.absent{color:#efc28c}
 @media(max-width:460px){.num{font-size:16px}.tile{padding:9px 1px}.count{font-size:10px}}
@@ -63,7 +65,7 @@ padding:10px 2px;background:#0b1d32;min-width:0}
 <div class="tabs" id="tabs"></div></section>
 <section class="panel" aria-live="polite">
 <h2 id="method-heading">全体</h2><p id="status" class="note"></p>
-<div id="third" class="grid"></div><p id="denominator" class="note"></p>
+<p id="denominator" class="note" style="font-weight:700;color:var(--ink)"></p><div id="third" class="grid"></div>
 </section>
 <section class="panel"><h2>出典・利用範囲</h2>
 <p id="coverage" class="note"></p><div id="windows" class="note"></div>
@@ -92,7 +94,7 @@ for(const name of modes){
   b.addEventListener("click",()=>{mode=name;draw()});$("tabs").appendChild(b);
 }
 function cell(no,pct,n,excluded){
- const tile=document.createElement("div");tile.className="tile"+(excluded?" exclude":"");
+ const tile=document.createElement("div");tile.className="tile boat-"+no+(excluded?" exclude":"");
  const title=document.createElement("div");title.textContent=no+"号艇";tile.appendChild(title);
  const num=document.createElement("div");num.className="num";
  num.textContent=excluded?"—":pct===null?"—":pct.toFixed(1)+"%";
@@ -168,6 +170,36 @@ def render(matrix:dict)->str:
             raise ValueError("Unknown conditional method or winner")
         if type(r.get("denominator_n")) is not int or r["denominator_n"]<5:
             raise ValueError("Unsafe N<5 conditional group")
+        venue=r.get("venue_code")
+        course=r.get("winning_course")
+        first,second=r.get("first_boat"),r.get("second_boat")
+        racer=r.get("winner_reg")
+        if (not isinstance(venue,str) or len(venue)!=2 or not venue.isdigit()
+                or not 1<=int(venue)<=24 or type(course) is not int
+                or not 1<=course<=6 or type(first) is not int or type(second) is not int
+                or not 1<=first<=6 or not 1<=second<=6 or first==second):
+            raise ValueError("Invalid official venue/entry-course/finish identity")
+        if racer!="*" and (not isinstance(racer,str) or len(racer)!=4 or not racer.isdigit()):
+            raise ValueError("Unverified player registration in research row")
+        cells=r.get("third_boat_rates")
+        eligible=set(range(1,7))-{first,second}
+        if (not isinstance(cells,list) or len(cells)!=4 or
+                any(type(x.get("boat")) is not int for x in cells if isinstance(x,dict)) or
+                any(not isinstance(x,dict) for x in cells)):
+            raise ValueError("Invalid third-boat cell structure")
+        if {x["boat"] for x in cells}!=eligible:
+            raise ValueError("Third-place boats must be exact four non-finish boats")
+        if (any(type(x.get("n")) is not int or x["n"]<0 for x in cells)
+                or sum(x["n"] for x in cells)!=r["denominator_n"]):
+            raise ValueError("Conditional N and third-place counts must reconcile")
+        if any(type(x.get("pct")) not in (int,float) or
+                abs(x["pct"]-round(100*x["n"]/r["denominator_n"],1))>0.001 for x in cells):
+            raise ValueError("Conditional percentages not derived from verified N")
+    # The source can carry one row per exact venue/course/mode/player/1st/2nd.
+    keys=[(r["venue_code"],r["winning_course"],r["method"],r["winner_reg"],
+           r["first_boat"],r["second_boat"]) for r in matrix["research_rows"]]
+    if len(set(keys))!=len(keys):
+        raise ValueError("Duplicate conditional scenario research cohort")
     public_fields={
         "schema":matrix["schema"],"source_coverage_kind":matrix["source_coverage_kind"],
         "source_windows":matrix["source_windows"],
