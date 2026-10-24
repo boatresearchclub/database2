@@ -1,0 +1,41 @@
+# BRC 展開「2着別3着率」管理者読み取りAPI｜2026-10-24 引継ぎ
+
+これは実際のBRC Workerにデプロイした実装ではなく、**安全性を明示する接続契約と候補コード**です。
+
+## 今回実装した範囲
+
+- `workers/brc_scenario_23_admin_route_candidate.mjs` — 管理者限定・read-only GET API候補。存在しない/不正な認証、一般会員、不正パラメータ、未検証の展示後、母数不足、研究原本異常のいずれも情報を広げない。
+- `workers/test_brc_scenario_23_admin_route_candidate.mjs` — 未ログイン、一般会員、偽装、不正CORS、JWT検証例外、日付・期間保留、分母一致など11件の模擬テスト。**CI #142 で11/11 PASS**。
+- `workers/brc_scenario_23_admin_client_candidate.mjs` — 将来の本体UIで使う読み取りクライアント候補。実際の管理者画面判定とセッショントークン取得は外部から注入する設計。Cookie/localStorageへの新規保存なし。公開表示ではリクエスト前に中止。
+- `workers/test_brc_scenario_23_admin_client_candidate.mjs` — 実際のAPI候補とブラウザー候補を**模擬認証・模擬データで結合**し、本人実績と会場実績を混同しないことを確認する回帰テスト。
+- `scripts/brc_four_workstream_readiness.py` — 公式Kの研究結果と、**本番Worker認証・KV読み戻し未完了**を別々のステータスにした。
+
+## API契約
+
+- 予定GET: `/api/admin/scenario/2nd3rd`
+- 必須パラメータ: `venue=10&course=1&first=1&second=2&method=全体&scope=player&player_reg=1234&stage=before`
+- `scope=venue` の場合は `player_reg` を送らない。会場別平均を**本人実績として自動代替しない**。
+- `stage=after` は展示後元データの突合がないので拒否。2着別3着の公表値は現状は**2023年以降の全期間ではない**。
+- ログイン認証: `Authorization: Bearer ...` は**既存のBRC認証サービスでサーバー側検証して初めて有効**。Token内のメールアドレス、HTML内の `BRC_ADMIN_ACTIVE`、`admin=true` パラメータ等は許可条件にしない。
+- Token確認後にのみWorker内の**非公開D1/KVなどのデータ結合**を読む。GitHub Pagesの静的JSONやINDEX内への埋め込みは管理者限定の秘密保護にはならない。
+- エラー応答は `no-store` とし、BRCログイン情報の生の値や詳細な障害ログをブラウザーへ出さない。
+
+## なぜINDEXだけでは完成しないのか
+
+現行INDEXの管理者表示判定は画面表示の制御です。開発者ツール等で変えられるため、**研究用集計値を本当に管理者だけへ配信したい場合、Worker側で認証が必須**です。
+
+GitHub ActionsのArtifactsは**非公開の秘密保存場所とは見なさない**でください。今までの研究用マトリックスやオフラインプレビューはレビュー目的で生成していますが、管理者限定機能の正式な安全なデータ配信場所ではありません。
+
+## 本番移行の未解決条件（自動テスト成功と混同しない）
+
+1. BRCが**実際に使用する**ログイン認証の署名・期限・権限検証コードを確認し、Workerの `verifyBearerToken` に接続（期限切れ、一般会員、管理者の公開表示切替も否定試験）。
+2. Cloudflareの**実際の管理者向け非公開読み取りバインディング**を用意し、`loadPrivateMatrix` に接続。現状はいずれも未接続。
+3. 本体INDEXの `renderPlayerScenario` / `BRC_ADMIN_ACTIVE` / `brc-admin-public-view` という**確認済みの既存表示位置**へAPIクライアントを接続。元の着率・予測・買い目を変更しない。
+4. バックエンドから本番同等データで母数・勝者実進入・選手本人/会場全体の一致を読戻し検証し、PC・スマホ・PWAで一般ユーザーへの露出がないか確認。
+5. Operatorが本番承認するまで**main / 本番INDEX / KV / Worker を変更しない**。画面・APIどちらも本番導入済みと表記しない。
+
+## 公式Kの現在の検証範囲
+
+合計377日・58,056R、N≥5の条件付き研究セル2,031件。うち会場1901セル、選手固有130セル（105選手）。2023-01-01〜2026-10-23の1392日のうち**1015日が未収録**。真TimeXの「絶対帯別着順実績」や展示後データの欠損とは独立した案件。
+
+このドキュメントとAPI・クライアントは **Draft PR #2 の研究限定**です。
