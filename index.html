@@ -1,3 +1,6 @@
+<!-- BRC_LIVE_INFLIGHT_DEDUP_AND_DEADLINE_V4_20261024: Share concurrent GETs for the exact same race, retain only verified last-good during short transient errors, and synchronize deadline signals. -->
+<!-- BRC_LIVE_KEEP_LAST_VERIFIED_V3_20261024: 5-minute same-race only measured exhibition fallback for transient HTTP failures; strict absence and mismatch handling. No model changes. -->
+<!-- BRC_LIVE_KEEP_LAST_VERIFIED_V2_20261024: Common public/admin exhibition resilience. Strict race-key, 40min in-memory verified response fallback only on failed API; successful official updates and absence overrides. No probability model changes. -->
 <!-- BRC_EXHIBITION_SYNC_RETRY_DIAG_20261024_V1: Bounded 8s display API fetch, per-race HTTP/identity diagnostics, concise admin-only error on unsynced exhibition. No API changes, TimeX/public rate/absence changes. -->
 <!-- BRC_MOTOR_WAKAMATSU_OFFICIAL_CUMULATIVE_V4_20261024: Official validated total motor rows, lazy Wakamatsu only; previous-racer stays under 前節分析; public v2, TimeX & odds untouched. -->
 <!-- BRC_MOTOR_PREVIOUS_SINGLE_SECTION_V3_20261024: 24-venue detail shows verified previous racer/ranks only under 前節分析; remove duplicate top-level card and admin-only stale global notice; cumulative history remains fail-closed; prediction/TimeX/public auth untouched. -->
@@ -375,7 +378,7 @@ AI予測内の重複見出し「AI予測 / 管理者β」を削除。
 <html lang="ja">
 <head>
 <!-- BRC_CLOUDFLARE_SPLIT_V2_SAFE -->
-<meta name="brc-build" content="20261024-LIVE-EXHIBITION-RETRY-DIAG-V1">
+<meta name="brc-build" content="20261024-LIVE-EXHIBITION-STABLE-SYNC-V4">
 
 <!-- BRC_ADMIN_NARAIME_4CARDS_ONLY_V1_20260926: 管理者狙い目からレース頭判定を非表示。4項目のみ表示し、各項目◎○の2艇を表示。 -->
 <!-- BRC_ADMIN_NARAIME_COMPARE_UI_V1_20260926: 狙い目を 勝ちやすさ/BRC・会場×グレード比較・市場支持・市場妙味 の4軸に分離。予測ロジック非変更。 -->
@@ -8201,7 +8204,8 @@ body:not(.brc-admin-diagnostics-visible) .brc-dp-race-alert.is-partial{font-size
 <script src="data/data-player-st365-23efc8d86b-001.js"></script>
 <script type="application/json" id="data-st-recent10"></script>
 <script src="data/data-st-recent10-0758c875b5-001.js"></script>
-<script type="application/json" id="data-nige">{"overall":{"total_races":103991,"dist_pct":{"2":34.0,"3":29.2,"4":19.7,"5":11.9,"6":5.2}},"by_venue":{"びわこ":{"total_races":4162,"dist_pct":{"2":34.8,"3":29.1,"4":19.3,"5":11.8,"6":4.9}},"三国":{"total_races":4022,"dist_pct":{"2":36.0,"3":28.2,"4":20.2,"5":10.8,"6":4.8}},"下関":{"total_races":4717,"dist_pct":{"2":33.2,"3":30.7,"4":19.0,"5":11.6,"6":5.4}},"丸亀":{"total_races":4489,"dist_pct":{"2":34.6,"3":28.0,"4":20.9,"5":11.0,"6":5.5}},"住之江":{"total_races":4752,"dist_pct":{"2":33.0,"3":31.5,"4":20.1,"5":10.5,"6":4.8}},"児島":{"total_races":4395,"dist_pct":{"2":33.1,"3":27.1,"4":22.2,"5":11.1,"6":6.5}},"唐津":{"total_races":4370,"dist_pct":{"2":36.1,"3":29.5,"4":18.4,"5":11.9,"6":4.2}},"多摩川":{"total_races":4233,"dist_pct":{"2":35.0,"3":28.0,"4":18.9,"5":12.1,"6":6.1}},"大村":{"total_races":5133,"dist_pct":{"2":34.5,"3":31.1,"4":17.5,"5":12.1,"6":4.7}},"宮島":{"total_races":4656,"dist_pct":{"2":33.4,"3":30.9,"4":18.7,"5":12.0,"6":5.0}},"尼崎":{"total_races":4549,"dist_pct":{"2":33.1,"3":27.6,"4":21.1,"5":12.8,"6":5.5}},"常滑":{"total_races":4873,"dist_pct":{"2":33.2,"3":28.9,"4":19.9,"5":12.5,"6":5.5}},"平和島":{"total_races":3254,"dist_pct":{"2":30.8,"3":27.4,"4":21.5,"5":13.5,"6":6.8}},"徳山":{"total_races":5056,"dist_pct":{"2":37.0,"3":29.2,"4":19.1,"5":10.5,"6":4.1}},"戸田":{"total_races":3403,"dist_pct":{"2":33.3,"3":28.1,"4":19.9,"5":12.7,"6":6.1}},"桐生":{"total_races":4040,"dist_pct":{"2":34.1,"3":30.2,"4":18.1,"5":12.4,"6":5.0}},"江戸川":{"total_races":3294,"dist_pct":{"2":32.7,"3":28.3,"4":17.8,"5":13.4,"6":7.9}},"津":{"total_races":4363,"dist_pct":{"2":35.8,"3":27.1,"4":19.8,"5":12.0,"6":5.3}},"浜名湖":{"total_races":4349,"dist_pct":{"2":34.6,"3":27.6,"4":19.8,"5":12.8,"6":5.2}},"福岡":{"total_races":4393,"dist_pct":{"2":37.5,"3":31.3,"4":17.6,"5":10.8,"6":2.8}},"芦屋":{"total_races":4715,"dist_pct":{"2":30.3,"3":30.4,"4":21.3,"5":13.3,"6":4.6}},"若松":{"total_races":4523,"dist_pct":{"2":32.5,"3":31.0,"4":20.2,"5":10.9,"6":5.4}},"蒲郡":{"total_races":4729,"dist_pct":{"2":32.4,"3":29.4,"4":21.3,"5":12.7,"6":4.2}},"鳴門":{"total_races":3521,"dist_pct":{"2":33.6,"3":27.7,"4":20.5,"5":12.1,"6":6.2}}}}</script>
+<script type="application/json" id="data-nige"></script>
+<script src="data/data-nige-2552fcf119-001.js"></script>
 <script type="application/json" id="data-winner-scenario-v1"></script>
 <script src="data/data-winner-scenario-v1-a7370443ef-001.js"></script>
 <script type="application/json" id="data-course-kimarite-opp"></script>
@@ -17352,6 +17356,61 @@ function brcLiveExhibitionSyncFor(venue,raceNo){
   if(!code || !raceNo) return null;
   return __brcLiveExhibitionSyncStates.get([String(date),String(code).padStart(2,'0'),Number(raceNo)].join('|'))||null;
 }
+// BRC_LIVE_KEEP_LAST_VERIFIED_V2: common-display resilience; no localStorage.
+// Only an API-verified exact race is cached. Cache is bounded by age and count.
+const __brcLiveLastVerified=new Map();
+// Limit temporary display retention to five minutes; never treat it as a fresh API result.
+const BRC_LIVE_LAST_VERIFIED_MAX_AGE_MS=5*60*1000;
+function brcLiveRaceExactKey(venue,raceNo,date=TODAY_LABEL||getJstDateLabel()){
+  const code=brcVenueCodeFromName(venue);
+  const r=Number(raceNo);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(date)) || !code || !Number.isInteger(r) || r<1 || r>12)return '';
+  return [String(date),String(code).padStart(2,'0'),r].join('|');
+}
+function brcLiveRaceVerifiedForKey(live,venue,raceNo){
+  const key=brcLiveRaceExactKey(venue,raceNo);
+  if(!key || !live || !Array.isArray(live.boats) || !live.boats.length)return false;
+  const [day,code,r]=key.split('|');
+  if(String(live.date)!==day || String(live.venue_code).padStart(2,'0')!==code || Number(live.race_no)!==Number(r))return false;
+  const nums=live.boats.map(b=>Number(b?.boat_no));
+  if(!nums.every(n=>Number.isInteger(n)&&n>=1&&n<=6))return false;
+  const present=new Set(nums);
+  if(present.size!==nums.length)return false;
+  // A racecard carrying six empty boat stubs is NOT an actual exhibition.
+  // Cache only complete, measured results. Confirmed scratches may be absent.
+  const absent=brcCollectConfirmedAbsentBoats(live);
+  if(![1,2,3,4,5,6].every(n=>present.has(n)||absent.has(n)))return false;
+  const hasSample=b=>[b?.exhibition_time,b?.display_st,b?.lap_time,b?.turn_time,b?.straight_time]
+    .some(v=>v!==null && v!==undefined && String(v).trim()!=='');
+  return live.boats.every(b=>absent.has(Number(b.boat_no))||hasSample(b));
+}
+function brcRememberVerifiedLiveRace(live,venue,raceNo){
+  if(!brcLiveRaceVerifiedForKey(live,venue,raceNo))return;
+  const key=brcLiveRaceExactKey(venue,raceNo);
+  if(__brcLiveLastVerified.has(key))__brcLiveLastVerified.delete(key);
+  __brcLiveLastVerified.set(key,{live,at:Date.now()});
+  while(__brcLiveLastVerified.size>12)__brcLiveLastVerified.delete(__brcLiveLastVerified.keys().next().value);
+}
+function brcResolveVerifiedLiveOnFetchFailure(live,venue,raceNo){
+  // New valid data, including changed boat/absence state, is ALWAYS preferred.
+  if(live)return live;
+  const key=brcLiveRaceExactKey(venue,raceNo);
+  if(!key)return null;
+  const saved=__brcLiveLastVerified.get(key);
+  // Identity/boat validation failures must not be masked by an older result.
+  // A 404, network interruption or malformed HTTP reply may be temporary.
+  const state=__brcLiveExhibitionSyncStates.get(key);
+  const blocked=new Set(['DATE_MISMATCH','VENUE_MISMATCH','RACE_MISMATCH','BOAT_DUPLICATE','NO_BOATS']);
+  if(state && blocked.has(state.status))return null;
+  if(!saved || Date.now()-saved.at>BRC_LIVE_LAST_VERIFIED_MAX_AGE_MS ||
+      !brcLiveRaceVerifiedForKey(saved.live,venue,raceNo)){
+    if(saved)__brcLiveLastVerified.delete(key);
+    return null;
+  }
+  // Keep the failed HTTP status visible in admin diagnostics, not masked as success.
+  if(state){state.cacheRetained=true;state.lastGoodAt=new Date(saved.at).toISOString();}
+  return saved.live;
+}
 // Admin copy/export only; never include auth, response payload, player identities or URLs.
 window.BRC_ADMIN_LIVE_EXHIBITION_SYNC_DIAGNOSTICS=function(){
   if(!BRC_ADMIN_ACTIVE)return null;
@@ -17379,13 +17438,31 @@ function brcLiveSyncAdminReasonHtml(venue,raceNo){
     NO_BOATS:'展示APIに艇データなし',
     RECEIVED:'展示API受信済み・再描画待ち'
   };
-  const label=reasons[d.status]||'展示APIの再取得待ち';
+  const label=(reasons[d.status]||'展示APIの再取得待ち')+(d.cacheRetained?'・前回取得分を一時保持':'');
   const checked=Date.parse(d.checkedAt);
   const jst=Number.isFinite(checked)?new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date(checked)):'';
   // All content here is produced from constants and the validated timestamp.
   return `<span class="brc-compact-admin direct-info-banner-note">${label}${jst?'（確認 '+jst+'）':''}</span>`;
 }
-async function brcFetchLiveExhibition(venue, raceNo){
+// Share concurrent public/admin requests; retain no response here beyond in-flight lifetime.
+// A completed/failed request is removed immediately so the next poll can retry.
+const __brcLiveExhibitionInFlight=new Map();
+function brcFetchLiveExhibition(venue,raceNo){
+  const key=brcLiveRaceExactKey(venue,raceNo);
+  if(!key)return Promise.resolve(null);
+  const pending=__brcLiveExhibitionInFlight.get(key);
+  if(pending)return pending;
+  const request=brcFetchLiveExhibitionNetwork(venue,raceNo);
+  __brcLiveExhibitionInFlight.set(key,request);
+  // Attach a rejection handler so cleanup never creates an unhandled promise.
+  request.then(()=>{
+    if(__brcLiveExhibitionInFlight.get(key)===request)__brcLiveExhibitionInFlight.delete(key);
+  },()=>{
+    if(__brcLiveExhibitionInFlight.get(key)===request)__brcLiveExhibitionInFlight.delete(key);
+  });
+  return request;
+}
+async function brcFetchLiveExhibitionNetwork(venue, raceNo){
   if(!BRC_LIVE_EXHIBITION_API_URL) return null;
   const code=brcVenueCodeFromName(venue);
   const r=Number(raceNo);
@@ -17443,6 +17520,7 @@ async function brcFetchLiveExhibition(venue, raceNo){
       return null;
     }
     brcRecordLiveExhibitionSync(date,code,r,http,'RECEIVED',`応答あり：${nums.length}艇`);
+    brcRememberVerifiedLiveRace(live,venue,r);
     return live;
   }catch(err){
     const timedOut=err?.name==='AbortError';
@@ -19380,7 +19458,9 @@ function buildLiveExhibitionStatusHtml(liveRace, venue='', raceNo=0){
     }
   }
   const sub=historical ? `<span style="display:block;margin-top:3px;font-size:10px;font-weight:600;color:var(--ink-soft);">${TODAY_LABEL} / ${venue} ${Number(raceNo)}R の保存データのみ使用</span>` : '';
-  return `<div id="liveExhibitionCard" style="margin:10px 0 12px;border:1px solid rgba(0,102,255,.18);background:rgba(0,102,255,.025);border-radius:10px;padding:10px 12px;"><span style="font-size:12px;font-weight:800;color:${color};">${label}</span>${sub}</div>`;
+  const retained=!!liveRace && !historical && brcLiveExhibitionSyncFor(venue,raceNo)?.cacheRetained===true;
+  const retryNote=retained?'<span style="display:block;margin-top:3px;font-size:10px;font-weight:650;color:#8a5a00;">前回取得データを表示中・更新確認中</span>':'';
+  return `<div id="liveExhibitionCard" style="margin:10px 0 12px;border:1px solid rgba(0,102,255,.18);background:rgba(0,102,255,.025);border-radius:10px;padding:10px 12px;"><span style="font-size:12px;font-weight:800;color:${color};">${label}</span>${sub}${retryNote}</div>`;
 }
 
 function brcRefreshExhibitionAdjustedDom(liveRace,venue,raceNo){
@@ -20312,6 +20392,7 @@ function brcV3AdminMount(venue,raceNo,liveRace){
 // END BRC_TIMEX_V3_ADMIN_4_SHADOW_20261012
 
 function brcUpdateLiveExhibitionDom(liveRace,venue,raceNo){
+  liveRace=brcResolveVerifiedLiveOnFetchFailure(liveRace,venue,raceNo);
   try{ if(typeof brcTokuyamaCaptureLiveRace==='function') brcTokuyamaCaptureLiveRace(liveRace,venue,raceNo); }catch(_e){}
   const card=document.getElementById('liveExhibitionCard');
   if(card){
@@ -21747,8 +21828,11 @@ async function brcHydrateDeadlineSignals(entries){
       const byKey=new Map();
       targets.forEach((e,i)=>{
         const key=brcDeadlineSignalKey(e.venue,e.raceNo);
-        byKey.set(key,lives[i]);
-        brcDeadlineRaceStatusSync(key,lives[i],e.venue,e.raceNo);
+        // The deadline card uses the same short-lived verified race fallback
+        // as the race table; a transient 404 must not regress a prior display.
+        const effective=brcResolveVerifiedLiveOnFetchFailure(lives[i],e.venue,e.raceNo);
+        byKey.set(key,effective);
+        brcDeadlineRaceStatusSync(key,effective,e.venue,e.raceNo);
       });
       return byKey;
     });
@@ -25908,9 +25992,11 @@ async function runPredict(){
   }
 
 
-  const liveExhibitionRace = await liveExhibitionPromise;
+  const freshLiveExhibitionRace = await liveExhibitionPromise;
   // APIより展示通信が遅く返る場合も、旧レースの応答はここで破棄する。
   if(!brcPredictRequestIsCurrent(requestCtx)) return;
+  // A transient failed GET must not erase a recently verified same-race exhibition.
+  const liveExhibitionRace=brcResolveVerifiedLiveOnFetchFailure(freshLiveExhibitionRace,venue,raceNoLive);
   const liveExhibitionByBoat = new Map(
     Array.isArray(liveExhibitionRace?.boats)
       ? liveExhibitionRace.boats.map(x => [Number(x.boat_no), x])
@@ -38885,7 +38971,8 @@ body.brc-admin-home-active .brc-admin-top-race .dp-boat-no{
         const x=window.BRC_ADMIN_LIVE_EXHIBITION_SYNC_DIAGNOSTICS?.();
         return x?{date:String(x.date||''),venue_code:String(x.venue_code||''),race_no:Number(x.race_no)||0,
           http:x.http??null,status:String(x.status||'').slice(0,48),reason:String(x.reason||'').slice(0,120),
-          checkedAt:String(x.checkedAt||'').slice(0,40)}:null;
+          checkedAt:String(x.checkedAt||'').slice(0,40),
+           cacheRetained:x.cacheRetained===true,lastGoodAt:String(x.lastGoodAt||'').slice(0,40)}:null;
       }catch(_){return null;}})(),
       phase:String(p?.phase||''),phaseDetail:String(p?.detail||'').slice(0,160),
       nextAutoRetrySec:Number(d.nextAutoRetrySec)||0,

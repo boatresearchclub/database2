@@ -1,8 +1,8 @@
 {
   "version": "BRC_CLOUDFLARE_SPLIT_V2_SAFE",
-  "generated_at": "2026-10-24T00:31:44.902262+00:00",
+  "generated_at": "2026-10-24T00:36:27.064535+00:00",
   "source_index": "index.html",
-  "index_bytes": 24112176,
+  "index_bytes": 24115758,
   "files": [
     "brc-apd8-recent-course-1y-a2227c2fb8-001.js",
     "brc-d08-model-9af8b5d6fa-001.js",
@@ -16,6 +16,7 @@
     "data-lose1-417577c3ba-001.js",
     "data-losecourse-48ef2ee719-001.js",
     "data-motor-detail-c493224826-001.js",
+    "data-nige-2552fcf119-001.js",
     "data-player-profile-seed-98469868b0-001.js",
     "data-player-st365-23efc8d86b-001.js",
     "data-players-3b146f12d0-001.js",
@@ -74,6 +75,11 @@
     {
       "id": "data-st-recent10",
       "bytes": 1095662,
+      "chunks": 1
+    },
+    {
+      "id": "data-nige",
+      "bytes": 2207,
       "chunks": 1
     },
     {
