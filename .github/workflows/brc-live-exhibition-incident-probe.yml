@@ -53,7 +53,7 @@ jobs:
                           'boat_count':len(race.get('boats')) if isinstance(race.get('boats'),list) else None})
                       # Record only date-like metadata, never racer names or raw payloads.
                       for src, prefix in ((obj,'response_'),(race,'race_')):
-                          for k in ('saved_at','created_at','updated_at','fetched_at','collected_at','received_at','recorded_at','published_at','as_of','last_updated','timestamp'):
+                          for k in ('saved_at','created_at','updated_at','fetched_at','collected_at','received_at','recorded_at','published_at','as_of','last_updated','timestamp','captured_at_jst','captured_at'):
                               val=src.get(k)
                               if isinstance(val,str) and 16<=len(val)<=40 and val[:4].isdigit() and 'T' in val:
                                   row[prefix+k]=val
