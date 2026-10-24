@@ -40725,5 +40725,1065 @@ setInterval(()=>{
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',paint,{once:true});else paint();
 })();
 </script>
+
+<!-- BRC_TIDE_PRE_V12_START_20261023 -->
+<script data-brc-tide-pre-v12="brc_tide_research_v2.js">
+/* BRC 潮汐補正・研究版 v1
+ * 元データ: ユーザー提供 index潮汐表.html 内の2021～2025年イン逃げ率
+ * 注意: イン逃げ率 != 1コース1着率。予測性能未検証。
+ * 既存BRC本体の計算には自動的に介入しない。
+ */
+(function (root) {
+"use strict";
+const DATA = {"kojima":{"label":"児島","point":"下津井","avg":55.6,"races":"11,218","rows":{"大潮":[[69.4,85],[49.8,641],[55.2,1606],[72.7,231]],"中潮":[[53.0,1143],[49.1,1011],[58.8,1956],[61.8,411]],"小潮":[[50.7,1576],[59.6,456],[69.7,142],[59.5,388]],"若潮":[[64.2,193],null,[53.8,325],[58.0,226]],"長潮":[[61.6,359],[50.0,6],[57.6,191],[50.7,272]]}},"heiwajima":{"label":"平和島","point":"築地","avg":44.7,"races":"10,453","rows":{"大潮":[[44.5,1706],[57.7,215],[27.9,43],[36.3,581]],"中潮":[[46.3,1935],[51.1,370],[42.3,832],[42.9,961]],"小潮":[[44.9,276],[39.6,182],[44.1,1377],[49.6,452]],"若潮":[[41.3,288],[42.6,244],[48.8,211],null],"長潮":[[34.4,163],[46.0,226],[51.3,372],[52.6,19]]}},"shimonoseki":{"label":"下関","point":"岩黒","avg":59.7,"races":"10,764","rows":{"大潮":[[57.6,1633],[67.4,325],[66.7,30],[46.9,448]],"中潮":[[62.3,2123],[69.1,475],[54.8,869],[54.6,1047]],"小潮":[[74.3,140],[55.0,202],[59.1,1481],[71.2,504]],"若潮":[[55.0,240],[59.6,250],[68.7,230],null],"長潮":[[51.3,113],[55.7,235],[63.7,408],[54.5,11]]}},"fukuoka":{"label":"福岡","point":"博多船だまり","avg":55.0,"races":"11,344","rows":{"大潮":[[66.5,409],[51.2,80],[49.5,1478],[58.2,867]],"中潮":[[60.5,837],[46.9,646],[53.3,2287],[56.9,897]],"小潮":[[54.0,882],[53.0,673],[62.2,645],[66.0,47]],"若潮":[[60.5,473],[56.0,25],[53.4,58],[50.0,224]],"長潮":[[53.1,550],[62.4,101],[52.2,23],[50.0,142]]}},"wakamatsu":{"label":"若松","point":"若松","avg":56.9,"races":"11,648","rows":{"大潮":[[60.3,1855],[60.3,121],[42.2,135],[47.2,868]],"中潮":[[60.9,2020],[60.7,410],[49.4,1244],[60.2,1194]],"小潮":[[52.9,189],[51.6,378],[57.7,1375],[63.6,305]],"若潮":[[47.8,441],[59.8,261],[65.1,109],null],"長潮":[[47.0,266],[60.7,262],[68.9,212],[100.0,3]]}},"marugame":{"label":"丸亀","point":"丸亀","avg":56.1,"races":"11,549","rows":{"大潮":[[66.1,1085],[100.0,3],[50.2,711],[57.9,986]],"中潮":[[59.3,1233],[63.8,235],[48.3,1944],[61.1,1272]],"小潮":[[45.8,286],[48.1,752],[60.2,1352],[78.7,47]],"若潮":[[47.4,500],[65.9,220],[71.4,28],[48.6,37]],"長潮":[[47.2,422],[60.1,291],[62.8,145],null]}}};
+const PHASES = ["上げ潮","満潮付近","下げ潮","干潮付近"];
+const SETTINGS = Object.freeze({influence:0.5, priorRaces:500, minSample:100, maxChangePt:3});
+const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+const logit=p=>Math.log(p/(1-p));
+const sigmoid=x=>1/(1+Math.exp(-x));
+function oneDecimalSum100(a) {
+  // Largest remainder rounding in 0.1pt, sum exactly 100.0
+  const units=a.map(x=>x*10);
+  const lows=units.map(x=>Math.floor(x+1e-10));
+  let diff=1000-lows.reduce((s,n)=>s+n,0);
+  const order=units.map((v,i)=>({i,frac:v-lows[i]})).sort((a,b)=>b.frac-a.frac||a.i-b.i);
+  for(let k=0;k<diff;k++) lows[order[k%6].i]++;
+  return lows.map(x=>x/10);
+}
+function unchanged(result, reason) {
+  return {...result, status:"skip", reason, applied:false, after:result.before.slice(), displayedAfter:oneDecimalSum100(result.before)};
+}
+function condition({venueId, tideName, phase}) {
+  const venue=DATA[venueId];
+  const phaseIndex=PHASES.indexOf(phase);
+  if (!venue || phaseIndex<0 || !(tideName in venue.rows)) return null;
+  const hit=venue.rows[tideName][phaseIndex];
+  return hit ? {venue:venue.label, avg:venue.avg, tideName, phase, p:hit[0], n:hit[1]} : null;
+}
+function adjust({venueId,tideName,phase,probabilities,firstCourseBoat=1,
+  influence=SETTINGS.influence,priorRaces=SETTINGS.priorRaces,
+  minSample=SETTINGS.minSample,maxChangePt=SETTINGS.maxChangePt}={}) {
+  if(!Array.isArray(probabilities)||probabilities.length!==6||probabilities.some(x=>!Number.isFinite(x)||x<0))
+    throw new Error("probabilities は0以上の有限数値6件（%）が必要です");
+  const s=probabilities.reduce((a,b)=>a+b,0);
+  if(!(s>0)||Math.abs(s-100)>2) throw new Error("6艇の確率合計は約100%にしてください");
+  if(!Number.isInteger(firstCourseBoat)||firstCourseBoat<1||firstCourseBoat>6)
+    throw new Error("firstCourseBoat は1～6の艇番です");
+  if(![influence,priorRaces,minSample,maxChangePt].every(Number.isFinite)
+    || influence<0||influence>1||priorRaces<0||minSample<0||maxChangePt<0||maxChangePt>100)
+    throw new Error("補正パラメータが範囲外です");
+  const before=probabilities.map(x=>x/s*100);
+  const found=condition({venueId,tideName,phase});
+  const base={before,firstCourseBoat,venueId,tideName,phase,condition:found,
+    settings:{influence,priorRaces,minSample,maxChangePt},shiftPt:0,rawDiffPt:null,weight:null};
+  if(!found) return unchanged(base,"該当条件の集計がありません");
+  if(found.n<minSample) return unchanged({...base,rawDiffPt:found.p-found.avg},"サンプル数不足");
+  if(!Number.isFinite(found.avg)||found.avg<=0||found.avg>=100)
+    return unchanged(base,"基準データが不正です");
+  const i=firstCourseBoat-1, p=before[i]/100;
+  if(p<=0||p>=1) return unchanged(base,"基準1着率が0%または100%で補正できません");
+  const safeCond=clamp((found.p/100*found.n+0.5)/(found.n+1),1e-6,1-1e-6);
+  const reference=clamp(found.avg/100,1e-6,1-1e-6);
+  const weight=influence*(found.n/(found.n+priorRaces));
+  const logOddsShift=weight*(logit(safeCond)-logit(reference));
+  const theoretical=sigmoid(logit(p)+logOddsShift);
+  const revised=clamp(theoretical,p-maxChangePt/100,p+maxChangePt/100);
+  const after=before.map((v,j)=>(j===i ? revised*100 : v*(1-revised)/(1-p)));
+  // Roundoff: after should sum to 100, and the remainder goes to non-first boats pro rata
+  const sumAfter=after.reduce((a,b)=>a+b,0);
+  const normalized=after.map(x=>x/sumAfter*100);
+  return {...base,status:"ok",reason:"潮汐条件による探索的補正",applied:true,
+    rawDiffPt:found.p-found.avg,weight,logOddsShift,shiftPt:normalized[i]-before[i],
+    after:normalized,displayedAfter:oneDecimalSum100(normalized)};
+}
+root.BRCTideCorrectionV1=Object.freeze({
+  data:DATA,phases:PHASES,defaults:SETTINGS,condition,adjust
+});
+})(typeof window!=="undefined"?window:globalThis);
+
+
+/* V2: 本番計算に触れない潮汐分類と管理者シャドー判定 */
+(function(root){
+'use strict';
+const core=root.BRCTideCorrectionV1;
+const VALID_TIDES=new Set(['大潮','中潮','小潮','若潮','長潮']);
+const DAY=86400000;
+const fail=(reason, meta={})=>({status:'skip',reason,...meta});
+function localParts(targetJst){
+  if(typeof targetJst!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?$/.test(targetJst)) return null;
+  const iso=targetJst.length===16?targetJst+':00':targetJst;
+  const epoch=Date.parse(iso+'+09:00');
+  if(!Number.isFinite(epoch))return null;
+  const d=new Date(epoch+9*3600000);
+  if([d.getUTCFullYear(),d.getUTCMonth()+1,d.getUTCDate(),d.getUTCHours(),d.getUTCMinutes()].join('|')!==
+    [Number(iso.slice(0,4)),Number(iso.slice(5,7)),Number(iso.slice(8,10)),Number(iso.slice(11,13)),Number(iso.slice(14,16))].join('|'))return null;
+  return {epoch,day:iso.slice(0,10),clock:iso.slice(11,16),min:Number(iso.slice(11,13))*60+Number(iso.slice(14,16))};
+}
+function parseUnix(v){
+  const n=Number(v);
+  if(!Number.isFinite(n)||n<=0)return NaN;
+  return n>=1e11?n:n*1000;
+}
+function getMap(payload){
+  if(payload&&payload.tide&&payload.tide.chart)return payload.tide.chart;
+  if(payload&&payload.chart)return payload.chart;
+  return payload;
+}
+function chooseChart(payload,date){
+  const map=getMap(payload);
+  return map&&typeof map==='object'&&Object.prototype.hasOwnProperty.call(map,date)?map[date]:null;
+}
+function eventTimes(chart,day){
+  const evs=[];
+  for(const [k,label] of [['flood','満潮付近'],['edd','干潮付近']]){
+    for(const ev of (Array.isArray(chart[k])?chart[k]:[])){
+      if(typeof ev.time!=='string'||!/^\d{1,2}:\d{2}$/.test(ev.time))continue;
+      const [h,m]=ev.time.split(':').map(Number);
+      if(h>23||m>59)continue;
+      const t=Date.parse(`${day}T${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00+09:00`);
+      evs.push({t,label});
+    }
+  }
+  return evs;
+}
+function classify({tidePayload,targetJst,nearMinutes=25,flatCmPerMinute=0.015}={}){
+  const at=localParts(targetJst);
+  if(!at)return fail('発走予定時刻が不正です');
+  if(!Number.isFinite(nearMinutes)||nearMinutes<0||nearMinutes>90||!Number.isFinite(flatCmPerMinute)||flatCmPerMinute<0)return fail('潮汐分類設定が不正です');
+  const chart=chooseChart(tidePayload,at.day);
+  if(!chart || !Array.isArray(chart.tide) || chart.tide.length<2)return fail('指定日の潮汐データなし（他の日付への代用禁止）',{day:at.day});
+  const tideName=chart.moon?.title||chart.tide_name||'';
+  if(!VALID_TIDES.has(tideName))return fail('潮回り名が不明です',{day:at.day});
+  if(at.min<=nearMinutes || at.min>=1440-nearMinutes){
+    // 近接日の潮時刻が省略されると境界を誤判定するため安全側で停止
+    const baseDay=Date.parse(at.day+'T00:00:00+09:00');
+    const prev=new Date(baseDay-DAY+9*3600000).toISOString().slice(0,10);
+    const next=new Date(baseDay+DAY+9*3600000).toISOString().slice(0,10);
+    if(!chooseChart(tidePayload,prev)||!chooseChart(tidePayload,next))return fail('日付境界付近：前日と翌日の潮汐が必要',{day:at.day});
+  }
+  const points=chart.tide.map(p=>({t:parseUnix(p.unix),cm:Number(p.cm)}));
+  if(points.some(x=>!Number.isFinite(x.t)||!Number.isFinite(x.cm)) ||points.some((x,i)=>i>0&&x.t<=points[i-1].t))return fail('潮位点の形式・時刻順が不正です',{day:at.day});
+  if(at.epoch<points[0].t||at.epoch>points[points.length-1].t)return fail('時刻が潮位点の観測範囲外です',{day:at.day});
+  let pos=-1;
+  for(let i=0;i<points.length-1;i++)if(points[i].t<=at.epoch&&at.epoch<=points[i+1].t){pos=i;break;}
+  if(pos<0)return fail('潮位点を補間できません',{day:at.day});
+  const p=points[pos], q=points[pos+1], frac=(at.epoch-p.t)/(q.t-p.t);
+  const cm=p.cm+(q.cm-p.cm)*frac;
+  const events=eventTimes(chart,at.day);
+  if(at.min<=nearMinutes||at.min>=1440-nearMinutes){
+    // Correct calendar keys in Asia/Tokyo
+    const midnightLocal=Date.parse(at.day+'T00:00:00+09:00');
+    const prevKey=new Date(midnightLocal-DAY+9*3600000).toISOString().slice(0,10);
+    const nextKey=new Date(midnightLocal+DAY+9*3600000).toISOString().slice(0,10);
+    events.push(...eventTimes(chooseChart(tidePayload,prevKey),prevKey),...eventTimes(chooseChart(tidePayload,nextKey),nextKey));
+  }
+  const nearest=events.filter(e=>Math.abs(e.t-at.epoch)<=nearMinutes*60000)
+      .sort((a,b)=>Math.abs(a.t-at.epoch)-Math.abs(b.t-at.epoch));
+  if(nearest.length>1&&nearest[0].label!==nearest[1].label&&Math.abs(nearest[0].t-at.epoch)===Math.abs(nearest[1].t-at.epoch))
+    return fail('満干潮局面が同時に最接近（判定不可）',{day:at.day});
+  let phase,method;
+  if(nearest.length){phase=nearest[0].label;method='event';}
+  else {
+    const rate=(q.cm-p.cm)/((q.t-p.t)/60000);
+    if(Math.abs(rate)<flatCmPerMinute)return fail('潮位変化が小さく、潮の向きを確定できません',{day:at.day});
+    phase=rate>0?'上げ潮':'下げ潮';method='slope';
+  }
+  return {status:'ok',day:at.day,time:at.clock,tideName,phase,cm,method,
+    note:'元集計における潮の局面分類と完全一致する保証はありません'};
+}
+function shadow({serverVerifiedAdmin=false,v3Verified=false,exhibitionConfirmed=false,
+                   venueId,targetJst,tidePayload,probabilities,firstCourseBoat,...options}={}){
+  if(serverVerifiedAdmin!==true)return {status:'hidden',reason:'管理者以外には表示しない（サーバー認証必須）'};
+  if(v3Verified!==true)return fail('TimeX v3未検証：予測値への接続は停止');
+  if(exhibitionConfirmed!==true)return fail('展示・進入が未確定のため停止');
+  const tide=classify({tidePayload,targetJst});
+  if(tide.status!=='ok')return {status:'skip',reason:tide.reason,tide};
+  const result=core.adjust({venueId,tideName:tide.tideName,phase:tide.phase,probabilities,firstCourseBoat,...options});
+  return {status:result.status,reason:result.reason,tide,result,
+    note:'シャドー比較のみ。BRC表示・確率本体は変更しない'};
+}
+root.BRCTideResearchV2=Object.freeze({classify,shadow,chooseChart});
+})(typeof window!=='undefined'?window:globalThis);
+
+</script>
+<script data-brc-tide-pre-v12="brc_tide_admin_bridge_v7.js">
+/* BRC TIDE SHADOW V7 — strictly read-only diagnostic UI, no prediction writes.
+   Client-side admin UI check is NOT security enforcement. No credentials/secrets included.
+   Uses rounded displayed v3 rates for a demonstrative estimate only. */
+(function(root){
+'use strict';
+const CORRECTION=root.BRCTideCorrectionV1;
+const RESEARCH=root.BRCTideResearchV2;
+if(!CORRECTION || !RESEARCH) return;
+const VENUES={
+ '児島':{id:'kojima',code:'16',pc:28,hc:9},
+ '平和島':{id:'heiwajima',code:'04',pc:13,hc:1},
+ '下関':{id:'shimonoseki',code:'19',pc:35,hc:16},
+ '福岡':{id:'fukuoka',code:'22',pc:40,hc:20},
+ '若松':{id:'wakamatsu',code:'20',pc:40,hc:10},
+ '丸亀':{id:'marugame',code:'15',pc:37,hc:10}
+};
+const API='https://api.tide736.net/get_tide.php';
+const BUILDTAG='BRC_TIDE_SHADOW_READONLY_V7_20261023';
+const escapeText=x=>String(x==null?'':x);
+function fail(reason){return {status:'skip',reason};}
+function readPct(text){
+ const hits=escapeText(text).match(/(?:^|[^\d])(\d{1,3}(?:\.\d+)?)\s*%/g)||[];
+ if(hits.length!==1)return null;
+ const m=hits[0].match(/(\d{1,3}(?:\.\d+)?)\s*%/);
+ const x=m?Number(m[1]):NaN;
+ return Number.isFinite(x)&&x>=0&&x<=100?x:null;
+}
+// A same-race display can retain the same rounded rates after exhibition data changes.
+// Fingerprint raw race/entry/exhibition inputs; invalid/stale asynchronous results must be discarded.
+function liveFingerprint(live){
+ if(!live || !Array.isArray(live.boats) || live.boats.length!==6)return null;
+ const cells=live.boats.map(b=>[String(b.boat_no),String(b.entry_course),
+    String(b.relative_diff??''),String(b.lap_time??''),String(b.status??'')]);
+ cells.sort((a,b)=>Number(a[0])-Number(b[0]));
+ return [String(live.date||''),String(live.venue_code||''),String(live.race_no||''),
+    String(live.fixed_course??''),...cells.map(a=>a.join('/'))].join('|');
+}
+function nowBeforeDeadline({day,deadline,nowMs=Date.now()}={}){
+ if(typeof day!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(day)||
+    typeof deadline!=='string'|| !/^\d{2}:\d{2}$/.test(deadline))return false;
+ const epoch=Date.parse(`${day}T${deadline}:00+09:00`);
+ return Number.isFinite(epoch) && new Date(epoch+9*3600000).toISOString().slice(0,16)===`${day}T${deadline}` && Number.isFinite(nowMs) && nowMs<epoch;
+}
+function snapshot({diag,live,rateTexts,verifiedV3SameRace=false}={}){
+ if(!diag||diag.admin!==true||diag.member!==true)return fail('管理者ログインが必要です');
+ if(diag.v3Verified!==true||verifiedV3SameRace!==true)return fail('最新レースのTimeX v3照合が未成立です');
+ if(diag.sameRaceLive!==true || diag.strictExhibition!==true || diag.tableReady!==true)
+   return fail('展示確定・レース照合・出走表の条件が未成立です');
+ const match=escapeText(diag.selectedRace).match(/^(児島|平和島|下関|福岡|若松|丸亀)\s+(\d{1,2})R$/);
+ if(!match)return fail('潮汐対象6会場のレースではありません');
+ const venueName=match[1],raceNo=Number(match[2]);
+ const venue=VENUES[venueName];
+ if(!Number.isInteger(raceNo)||raceNo<1||raceNo>12)return fail('レース番号が不正です');
+ const day=escapeText(diag.date), raceCode=escapeText(live?.venue_code).padStart(2,'0');
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(day) || escapeText(live?.date)!==day || raceCode!==venue.code ||
+    Number(live?.race_no)!==raceNo)return fail('展示データの開催日・会場・レース番号が一致しません');
+ if(!Array.isArray(live.boats)||live.boats.length!==6)return fail('展示の6艇が揃っていません');
+ const boatSet=new Set(),courseSet=new Set();let firstCourseBoat=null;
+ for(const row of live.boats){
+   const boat=Number(row.boat_no), course=Number(row.entry_course);
+   if(!Number.isInteger(boat)||boat<1||boat>6||!Number.isInteger(course)||course<1||course>6||boatSet.has(boat)||courseSet.has(course))
+      return fail('艇番・実際の進入コースが不正です');
+   boatSet.add(boat);courseSet.add(course);
+   if(course===1)firstCourseBoat=boat;
+ }
+ if(boatSet.size!==6||courseSet.size!==6||!firstCourseBoat)return fail('進入1コースの艇番を確定できません');
+ const raceFingerprint=liveFingerprint(live);
+ if(!raceFingerprint)return fail('展示のレース指紋を作成できません');
+ if(!Array.isArray(rateTexts)||rateTexts.length!==6)return fail('表示されたv3の1着率を取得できません');
+ const displayedPct=rateTexts.map(readPct);
+ if(displayedPct.some(x=>x===null))return fail('v3表示に複数または不正な着率があります');
+ const total=displayedPct.reduce((a,b)=>a+b,0);
+ if(Math.abs(total-100)>3.001)return fail('v3表示の6艇合計が100±3%の範囲外です');
+ // The displayed six rates are individually rounded. Normalize only for the study,
+ // retaining both their observed sum and the raw display for later audit.
+ const probabilities=displayedPct.map(v=>v/total*100);
+ // IMPORTANT: BRC cells display rounded integer v3 rates. Do not claim this is original raw v3 model output.
+ return {status:'ok',venueId:venue.id,venueName,raceNo,day,firstCourseBoat,
+   probabilities,displayedPct,displayTotal:total,raceKey:`${day}|${venue.code}|${raceNo}`,raceFingerprint,source:'v3_display_rounded_normalized',
+   note:'画面の丸め済みv3着率からの概算。v3内部の高精度値やAI・買い目は変更しない'};
+}
+function inferJstDateTime(text){
+ if(typeof text!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(text))return null;
+ // V2 classifier checks real calendar date and time.
+ return text;
+}
+function classifyAndCompare({snapshotData,startJst,tidePayload}={}){
+ if(!snapshotData || snapshotData.status!=='ok')return fail('v3着率の取得・照合が未完了です');
+ if(!inferJstDateTime(startJst)||startJst.slice(0,10)!==snapshotData.day)
+   return fail('対象レースと同日の発走予定日時（JST）を指定してください');
+ const r=RESEARCH.shadow({serverVerifiedAdmin:true,v3Verified:true,exhibitionConfirmed:true,
+    venueId:snapshotData.venueId,targetJst:startJst,tidePayload,
+    probabilities:snapshotData.probabilities,firstCourseBoat:snapshotData.firstCourseBoat});
+ return {status:r.status,reason:r.reason,shadow:r,context:snapshotData};
+}
+function showIfAuthorized(diag,doc){
+ return !!(diag&&diag.admin===true&&diag.member===true&&!doc.body?.classList.contains('brc-admin-public-view'));
+}
+
+// BRC holds *deadline*, NOT actual race start. Never silently label it "start time".
+// Exact selected venue and race must agree with same-race V3 diagnostics.
+function deadlineFromRaceInfo({diag,raceInfo,selectedVenue,selectedRaceNo}={}){
+ if(!diag||diag.admin!==true||diag.member!==true)return fail('管理者確認不可');
+ const m=escapeText(diag.selectedRace).match(/^(児島|平和島|下関|福岡|若松|丸亀)\s+(\d{1,2})R$/);
+ if(!m||escapeText(selectedVenue)!==m[1]||Number(selectedRaceNo)!==Number(m[2]))
+   return fail('選択中のレースが診断結果と一致しません');
+ const day=escapeText(diag.date);
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(day))return fail('開催日が不明です');
+ const info=raceInfo?.[m[1]];
+ const time=info?.deadlines?.[String(Number(m[2]))];
+ if(typeof time!=='string'||!/^\d{1,2}:\d{2}$/.test(time))return fail('BRC内の締切予定時刻が未取得です');
+ const parts=time.split(':').map(Number);
+ if(parts[0]>23||parts[1]>59)return fail('締切予定時刻の範囲外です');
+ const hhmm=String(parts[0]).padStart(2,'0')+':'+String(parts[1]).padStart(2,'0');
+ const value=day+'T'+hhmm;
+ if(!RESEARCH.classify)return fail('潮汐分類処理が利用できません');
+ return {status:'ok',value,time:hhmm,source:'brc_deadline_proxy',label:'BRC内の締切予定時刻（発走時刻ではありません）'};
+}
+function addJstMinutes(value,mins){
+ if(!inferJstDateTime(value)||!Number.isInteger(mins)||mins<0||mins>60)return null;
+ const t=Date.parse(value+':00+09:00');
+ if(!Number.isFinite(t))return null;
+ // Explicitly format as JST regardless of browser locale.
+ return new Date(t+mins*60000+9*3600000).toISOString().slice(0,16);
+}
+function validateTidePort(payload,venueId){
+ const v=Object.values(VENUES).find(x=>x.id===venueId);
+ if(!v)return fail('対象会場が未定義です');
+ if(payload?.status!==1)return fail('潮汐APIの正常応答ではありません');
+ const port=payload?.tide?.port;
+ if(!port||typeof port!=='object')return fail('潮汐JSONに地点の識別情報がありません');
+ const pc=Number(port.prefecture_code),hc=Number(port.harbor_code);
+ if(!Number.isInteger(pc)||!Number.isInteger(hc)||pc!==v.pc||hc!==v.hc)
+   return fail('潮汐JSONの地点コードがBRC対象会場と異なります');
+ return {status:'ok',point:port.harbor_namej||''};
+}
+// BRC deadline is a proxy: require identical tide condition at 0, +5, +10 min.
+// At low water/slack transitions this deliberately fails closed rather than guessing.
+function stableComparison({snapshotData,referenceJst,tidePayload}={}){
+ if(!snapshotData||snapshotData.status!=='ok')return fail('TimeX v3照合値がありません');
+ const port=validateTidePort(tidePayload,snapshotData.venueId);
+ if(port.status!=='ok')return port;
+ if(!inferJstDateTime(referenceJst)||referenceJst.slice(0,10)!==snapshotData.day)
+   return fail('対象レースと同一日付のJST時刻が必要です');
+ let first=null;
+ const checks=[];
+ for(const offset of [0,5,10]){
+  const t=addJstMinutes(referenceJst,offset);
+  if(!t||t.slice(0,10)!==snapshotData.day)return fail('締切時刻から10分先まで同日の照合ができません');
+  const c=RESEARCH.classify({tidePayload,targetJst:t});
+  if(c.status!=='ok')return fail('潮汐が安定して判定できません（+'+offset+'分）：'+c.reason);
+  if(first&&(first.tideName!==c.tideName||first.phase!==c.phase))
+    return fail('締切〜10分後に潮汐局面が変わるため、発走時刻確定まで補正なし');
+  if(!first)first=c;
+  checks.push({offset,phase:c.phase,tideName:c.tideName,levelCm:c.cm});
+ }
+ const result=classifyAndCompare({snapshotData,startJst:referenceJst,tidePayload});
+ if(result.status!=='ok')return result;
+ return {...result,referenceKind:'deadline_or_manually_entered_time',stabilityMinutes:10,stabilityChecks:checks,portName:port.point};
+}
+
+const API_OBJ=Object.freeze({snapshot,classifyAndCompare,deadlineFromRaceInfo,stableComparison,validateTidePort,addJstMinutes,readPct,showIfAuthorized,liveFingerprint,nowBeforeDeadline,VENUES,API,BUILDTAG});
+root.BRCTideAdminBridgeV7=API_OBJ;
+
+if(!root.document||typeof root.setInterval!=='function')return;
+const doc=root.document;
+let ui=null, currentKey='', cachedTide=null, cachedKey='', lastExport=null;
+function diagnostics(){try{return typeof root.brcV3AdminDiagnostics==='function'?root.brcV3AdminDiagnostics():null;}catch(_){return null}}
+function selectedDeadline(diag){
+ const venue=doc.getElementById('predictRaceDay')?.value||doc.getElementById('predictVenue')?.value||'';
+ const race=doc.getElementById('predictRaceNo')?.value||'';
+ const schedule=(typeof RACE_INFO_TODAY==='undefined')?(root.RACE_INFO_TODAY||null):RACE_INFO_TODAY;
+ return deadlineFromRaceInfo({diag,raceInfo:schedule,selectedVenue:venue,selectedRaceNo:race});
+}
+
+function rateTextsFromDom(){return Array.from({length:6},(_,i)=>doc.getElementById('predict-win-cell-'+(i+1))?.textContent||'')}
+function state(){return snapshot({diag:diagnostics(),live:root.__currentLiveExhibition,rateTexts:rateTextsFromDom(),
+  verifiedV3SameRace:typeof root.brcV3VerifiedDetailVisible==='function' && root.brcV3VerifiedDetailVisible()===true})}
+function status(message){if(ui)ui.querySelector('[data-tide-status]').textContent=message}
+function clearResult(){lastExport=null;if(ui){ui.querySelector('[data-tide-output]').replaceChildren();const csv=ui.querySelector('[data-tide-csv]');if(csv)csv.disabled=true}}
+function putText(tag,txt,className){const el=doc.createElement(tag);if(className)el.className=className;el.textContent=txt;return el}
+function display(r){
+ clearResult();const host=ui.querySelector('[data-tide-output]');
+ if(r.status!=='ok'){status('補正なし：'+(r.reason||'判定不可'));return}
+ const {result,tide}=r.shadow;
+ if(!result || result.status!=='ok'){status('補正なし：'+(result?.reason||'該当条件不明'));return}
+ lastExport={observed_at:new Date().toISOString(),venue:r.context.venueName,race_no:r.context.raceNo,
+   race_date:r.context.day,deadline_or_start_time:ui?.querySelector('[data-tide-start]')?.value||'',
+   v3_live_fingerprint:r.context.raceFingerprint,
+   study_recorded_before_deadline:r.validPreDeadline===true,
+   time_kind:r.timeSource||'unverified_user_reference',time_stability_window_min:r.stabilityMinutes||0,port_name:r.portName||'',first_course_boat_no:r.context.firstCourseBoat,
+   tide_name:tide.tideName,tide_phase:tide.phase,tide_level_cm:tide.cm,
+   sample_n:result.condition.n,baseline_in_escape_pct:result.condition.avg,
+   conditional_in_escape_pct:result.condition.p,study_shift_pt:result.shiftPt,
+   v3_display_sum:r.context.displayTotal,source:r.context.source,
+   ...Object.fromEntries(r.context.displayedPct.map((x,i)=>['displayed_v3_boat_'+(i+1),x])),
+   ...Object.fromEntries(result.after.map((x,i)=>['tide_study_boat_'+(i+1),x])),
+   winner_boat_no:''};
+ const csvButton=ui.querySelector('[data-tide-csv]');if(csvButton)csvButton.disabled=r.validPreDeadline!==true;
+ status(`${r.context.venueName} ${r.context.raceNo}R ／ ${tide.tideName}・${tide.phase} ／ n=${result.condition.n} ／ 進入1コース ${r.context.firstCourseBoat}号艇 ／ +0〜10分で局面一致 ／ ${r.validPreDeadline?'締切前記録':'時刻未検証・精度評価対象外'}`);
+ const table=putText('table','');
+ const head=doc.createElement('thead'),tr=doc.createElement('tr');
+ for(const col of ['艇番','v3画面表示','正規化後','潮汐試算','差'])tr.appendChild(putText('th',col));
+ head.appendChild(tr);table.appendChild(head);
+ const body=doc.createElement('tbody');
+ for(let i=0;i<6;i++){
+  const row=doc.createElement('tr'),arr=[`${i+1}号艇`,r.context.displayedPct[i].toFixed(1)+'%',result.before[i].toFixed(1)+'%',result.displayedAfter[i].toFixed(1)+'%',
+   (result.after[i]-result.before[i]>=0?'+':'')+(result.after[i]-result.before[i]).toFixed(2)+'pt'];
+  for(const val of arr)row.appendChild(putText('td',val));
+  body.appendChild(row);
+ }
+ table.appendChild(body);host.appendChild(table);
+ host.appendChild(putText('p','※v3画面の丸め済み着率を使った探索値です。締切を発走時刻として断定していません。元集計と潮汐局面定義は未照合で予測に採用不可。','brc-tide-small'));
+}
+async function fetchTideForDay(snap){
+ const venue=Object.values(VENUES).find(v=>v.id===snap.venueId);
+ if(!venue)throw Error('会場未定義');
+ if(cachedKey===`${snap.venueId}|${snap.day}`&&cachedTide)return cachedTide;
+ const [yr,mn,dy]=snap.day.split('-');
+ const query=new URLSearchParams({pc:String(venue.pc),hc:String(venue.hc),yr,mn,dy,rg:'day'});
+ const endpoint=API+'?'+query.toString();
+ const controller=new AbortController();const cancel=root.setTimeout(()=>controller.abort(),10000);
+ try{
+  const response=await root.fetch(endpoint,{method:'GET',signal:controller.signal,cache:'no-store',credentials:'omit'});
+  if(!response.ok)throw Error('API HTTP '+response.status);
+  const data=await response.json();if(data?.status!==1)throw Error('API不正応答');
+  cachedKey=`${snap.venueId}|${snap.day}`;cachedTide=data;return data;
+ }finally{root.clearTimeout(cancel)}
+}
+async function runStudy(){
+ const start=ui?.querySelector('[data-tide-start]')?.value||'';
+ const captured=state();clearResult();
+ if(captured.status!=='ok'){status('補正なし：'+captured.reason);return}
+ if(!inferJstDateTime(start)||start.slice(0,10)!==captured.day){status('締切予定時刻または手動JST参照時刻を確認してください');return}
+ status('潮汐APIを照会中…');
+ const identity=JSON.stringify([captured.raceKey,captured.firstCourseBoat,captured.displayedPct,captured.raceFingerprint]);
+ const button=ui.querySelector('[data-tide-run]');button.disabled=true;
+ try{
+   const pasted=ui.querySelector('[data-tide-json]')?.value.trim()||'';
+   if(pasted.length>2_000_000)throw Error('貼付JSONが2MBを超えています');
+   const payload=pasted?JSON.parse(pasted):await fetchTideForDay(captured);
+   const latest=state();
+   if(latest.status!=='ok'||JSON.stringify([latest.raceKey,latest.firstCourseBoat,latest.displayedPct,latest.raceFingerprint])!==identity ||
+      ui?.querySelector('[data-tide-start]')?.value!==start){status('レース・v3着率・時刻が更新されました。古い結果を破棄します');return}
+   const schedule=selectedDeadline(diagnostics());
+   const officialReference=schedule.status==='ok' && schedule.value===start;
+   const deadlineGuard=officialReference && nowBeforeDeadline({day:captured.day,deadline:schedule.time});
+   // No new records after the source deadline; this prevents result-informed retrospective
+   // estimates from being mistaken for genuine out-of-sample predictions.
+   if(officialReference && !deadlineGuard){status('締切時刻を過ぎたため新規の事前試算は記録できません。');return}
+   const compared=stableComparison({snapshotData:latest,referenceJst:start,tidePayload:payload});
+   display(compared.status==='ok' ? {...compared,timeSource:officialReference?'brc_deadline_proxy':'unverified_user_reference',validPreDeadline:deadlineGuard} : compared);
+ }catch(e){status('潮汐照会不可：'+String(e.message||e)+'。外部APIの接続/CORS/利用条件を確認してください');}
+ finally{if(ui)button.disabled=false}
+}
+function exportCsv(){
+ if(!lastExport||lastExport.study_recorded_before_deadline!==true){status('締切前に記録した検証値のみCSV保存できます');return}
+ // V7: generation time must ALSO be predeadline. Never export a stale in-memory
+ // study after deadline and pass it off as a committed preregistered forecast.
+ const currentDeadline=selectedDeadline(diagnostics());
+ if(currentDeadline.status!=='ok'||currentDeadline.value!==lastExport.deadline_or_start_time||
+    !nowBeforeDeadline({day:lastExport.race_date,deadline:currentDeadline.time})){
+   status('締切後の新規CSV保存は禁止です。事前記録として扱いません。');clearResult();return;
+ }
+ const checked=state();
+ if(checked.status!=='ok'||ui?.querySelector('[data-tide-start]')?.value!==lastExport.deadline_or_start_time||checked.raceKey!==`${lastExport.race_date}|${VENUES[checked.venueName]?.code||''}|${lastExport.race_no}` ||
+     (checked.raceFingerprint!==lastExport.v3_live_fingerprint) ||
+     checked.displayedPct.some((v,i)=>v!==lastExport['displayed_v3_boat_'+(i+1)])){status('現在のレースまたは着率が変わったためCSVを出力しません');clearResult();return}
+ const cols=Object.keys(lastExport);
+ const escapeCsv=x=>'"'+String(x==null?'':x).replaceAll('\"','\"\"')+'"';
+ const content='\ufeff'+cols.map(escapeCsv).join(',')+'\r\n'+cols.map(k=>escapeCsv(lastExport[k])).join(',')+'\r\n';
+ const blob=new Blob([content],{type:'text/csv;charset=utf-8'});
+ const url=URL.createObjectURL(blob);const link=doc.createElement('a');link.href=url;link.download=`brc_tide_study_${lastExport.race_date}_${lastExport.venue}_${lastExport.race_no}R.csv`;
+ link.click();root.setTimeout(()=>URL.revokeObjectURL(url),5000);
+}
+function mount(){
+ const diag=diagnostics();const authorized=showIfAuthorized(diag,doc);
+ if(!authorized){if(ui){ui.remove();ui=null;currentKey='';}return}
+ const host=doc.querySelector('#predictResult #predictTableWrap');
+ if(!host||!host.isConnected){if(ui){ui.remove();ui=null;currentKey='';}return}
+ if(ui && (!ui.isConnected||ui.previousElementSibling!==host)){ui.remove();ui=null}
+ if(!ui){
+  ui=doc.createElement('details');ui.className='brc-tide-v7';ui.id='brc-tide-shadow-v7';
+  const sum=putText('summary','🌊 潮汐補正（管理者研究・着率には未反映）');ui.appendChild(sum);
+  const line=putText('div','BRCの締切予定時刻を自動入力します。締切〜10分後まで潮汐局面が一致する場合だけ試算します。','brc-tide-small');ui.appendChild(line);
+  const field=doc.createElement('div');field.className='brc-tide-controls';
+  const label=putText('label','締切予定日時（JST・自動候補）');
+  const inp=doc.createElement('input');inp.setAttribute('data-tide-start','');inp.type='datetime-local';inp.step='60';label.appendChild(inp);inp.addEventListener('input',()=>{clearResult();status('参照時刻が変更されました。再度照会してください。')});
+  const button=putText('button','潮汐を照会して試算');button.type='button';button.setAttribute('data-tide-run','');
+  button.addEventListener('click',runStudy);field.append(label,button);
+  const csvButton=putText('button','試算結果をCSV保存');csvButton.type='button';csvButton.disabled=true;csvButton.setAttribute('data-tide-csv','');
+  csvButton.addEventListener('click',exportCsv);field.appendChild(csvButton);ui.appendChild(field);
+  const advanced=doc.createElement('details');advanced.className='brc-tide-advanced';
+  advanced.appendChild(putText('summary','APIに接続できない場合：潮汐JSONを貼り付ける'));
+  const json=doc.createElement('textarea');json.setAttribute('data-tide-json','');json.placeholder='指定日・対象地点のJSON（未入力時はAPI照会）';
+  json.rows=3;advanced.appendChild(json);ui.appendChild(advanced);
+  const info=putText('p','現状確認中','brc-tide-small');info.setAttribute('data-tide-status','');ui.appendChild(info);
+  const output=doc.createElement('div');output.setAttribute('data-tide-output','');ui.appendChild(output);
+  const note=putText('p','重要：イン逃げ率≠進入1コース1着率。2021〜25年の参考集計を使う探索的試算です。結果取得後の後付け検証を防ぐため、CSV記録は公式締切前のみ可能です。表のBRC着率、AI予測、買い目、TimeXには書き込みません。','brc-tide-small');ui.appendChild(note);
+  host.insertAdjacentElement('afterend',ui);
+ }
+ const liveSnapshot=state();
+ const nextKey=String(diag.date)+'|'+String(diag.selectedRace)+'|'+String(diag.v3Verified)+'|'+String(diag.sameRaceLive)+'|'+
+  String(liveSnapshot.firstCourseBoat||'')+'|'+(liveSnapshot.displayedPct||[]).join(',')+'|'+String(liveSnapshot.raceFingerprint||'')+'|'+String(liveSnapshot.status);
+ if(nextKey!==currentKey){
+  currentKey=nextKey;clearResult();
+  const snap=state();status(snap.status==='ok' ? `${snap.venueName} ${snap.raceNo}R：v3照合済み。締切予定時刻を自動照合します。`:snap.reason);
+  const input=ui.querySelector('[data-tide-start]');
+  if(input){const sd=selectedDeadline(diag);input.value=sd.status==='ok'?sd.value:'';if(snap.status==='ok'&&sd.status!=='ok')status('締切予定時刻の自動取得不可：手入力による研究用照合のみ可能です。');}
+ }
+}
+function initialize(){
+ if(doc.getElementById('brc-tide-v7-styles'))return;
+ const style=doc.createElement('style');style.id='brc-tide-v7-styles';
+ style.textContent='.brc-tide-v7{margin:12px 0;padding:11px 13px;border:1px solid #7a99ca;border-radius:10px;background:#f7faff;color:#18314f;font-size:12px}.brc-tide-v7 summary{cursor:pointer;font-weight:700;font-size:13px}.brc-tide-v7 .brc-tide-small{font-size:11px;line-height:1.6;color:#45617a;margin:8px 0}.brc-tide-v7 .brc-tide-controls{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;padding:9px 0}.brc-tide-v7 label{font-size:11px;display:flex;flex-direction:column;gap:4px}.brc-tide-v7 input{padding:6px;border:1px solid #afbdd0;border-radius:5px;color:#142d4f;background:white}.brc-tide-v7 button{padding:7px 10px;background:#135bc0;color:white;border:0;border-radius:6px;font-weight:700;cursor:pointer}.brc-tide-v7 button:disabled{opacity:.5}.brc-tide-v7 .brc-tide-advanced textarea{margin-top:7px;width:100%;box-sizing:border-box;min-height:60px;font-size:11px;border:1px solid #d2ddeb;border-radius:5px}.brc-tide-v7 .brc-tide-advanced summary{font-size:11px;color:#45617a}.brc-tide-v7 table{border-collapse:collapse;width:100%;font-size:11px}.brc-tide-v7 th,.brc-tide-v7 td{text-align:right;border-bottom:1px solid #dce5f1;padding:6px 3px}.brc-tide-v7 th:first-child,.brc-tide-v7 td:first-child{text-align:left}';
+ doc.head.appendChild(style);mount();root.setInterval(mount,3000);
+}
+if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',initialize,{once:true});else initialize();
+})(typeof window!=='undefined'?window:globalThis);
+
+</script>
+<script data-brc-tide-pre-v12="brc_tide_autocapture_v10.js">
+/* BRC TIDE V10 - ADMIN SHADOW AUTO-CAPTURE
+ * Read-only to BRC forecasts/TimeX. Captures earliest valid predeadline record
+ * for the CURRENTLY OPEN eligible race into browser localStorage. No server sync.
+ * The user's PC clock is not independent timestamp evidence.
+ */
+(function(root){
+'use strict';
+const bridge=root.BRCTideAdminBridgeV7;
+if(!bridge)return;
+const STORAGE_KEY='brc_tide_v10_first_prerace_snapshots';
+const VERSION='BRC_TIDE_V10_AUTOCAPTURE_20261023';
+const MAX_ROWS=1500;
+const CSV_FIELDS=['observed_at','venue','race_no','race_date','deadline_or_start_time','v3_live_fingerprint',
+ 'study_recorded_before_deadline','time_kind','time_stability_window_min','port_name','first_course_boat_no',
+ 'tide_name','tide_phase','tide_level_cm','sample_n','baseline_in_escape_pct','conditional_in_escape_pct',
+ 'study_shift_pt','v3_display_sum','source',
+ ...Array.from({length:6},(_,i)=>'displayed_v3_boat_'+(i+1)),
+ ...Array.from({length:6},(_,i)=>'tide_study_boat_'+(i+1)),'winner_boat_no'];
+const guard=(ok,msg)=>{if(!ok)throw new Error(msg)};
+function blank(){return {version:VERSION,records:{}};}
+function load(storage){
+ const v=storage.getItem(STORAGE_KEY);if(!v)return blank();
+ const obj=JSON.parse(v);
+ guard(obj && obj.version===VERSION && obj.records && typeof obj.records==='object' && !Array.isArray(obj.records), '保存形式が不明です（安全停止）');
+ guard(Object.keys(obj.records).length<=MAX_ROWS,'保存上限超過（安全停止）');
+ return obj;
+}
+function appendFirst(storage, key, record){
+ guard(/^\d{4}-\d{2}-\d{2}\|\d{2}\|(?:[1-9]|1[012])$/.test(key),'レース識別子が不正です');
+ guard(record && record.study_recorded_before_deadline===true && record.time_kind==='brc_deadline_proxy','締切前の正式参照記録だけ保存できます');
+ const obj=load(storage);
+ if(Object.prototype.hasOwnProperty.call(obj.records,key))return {status:'duplicate',count:Object.keys(obj.records).length};
+ const count=Object.keys(obj.records).length;
+ guard(count<MAX_ROWS,'記録上限です。先にCSVを書き出してください');
+ // No clock- or content-based replacement of earlier observations.
+ obj.records[key]=record;
+ storage.setItem(STORAGE_KEY,JSON.stringify(obj));
+ const saved=load(storage);
+ guard(Object.prototype.hasOwnProperty.call(saved.records,key),'保存確認に失敗しました');
+ return {status:'saved',count:count+1};
+}
+function rows(storage){return Object.values(load(storage).records).sort((a,b)=>a.observed_at.localeCompare(b.observed_at));}
+function csvEscape(x){return '"'+String(x===undefined||x===null?'':x).replaceAll('"','""')+'"';}
+function toCsv(items){return '\ufeff'+CSV_FIELDS.map(csvEscape).join(',')+'\r\n'+items.map(r=>CSV_FIELDS.map(k=>csvEscape(r[k])).join(',')).join('\r\n')+'\r\n';}
+function makeRecord(snap, result, cutoff, capturedAt){
+ guard(snap && snap.status==='ok','照合済みの現在レースが必要です');
+ guard(result && result.status==='ok' && result.shadow?.result?.status==='ok','潮汐試算が成功していません');
+ guard(result.stabilityMinutes>=10 && result.referenceKind==='deadline_or_manually_entered_time','潮汐10分安定条件がありません');
+ guard(cutoff && cutoff.status==='ok' && cutoff.value.slice(0,10)===snap.day,'対象締切の取得不一致');
+ const now=Date.parse(capturedAt);
+ guard(Number.isFinite(now) && now<Date.parse(cutoff.value+':00+09:00'),'締切後に取得した値は保存できません');
+ const {tide}=result.shadow;
+ const prediction=result.shadow.result;
+ const r={observed_at:capturedAt,venue:snap.venueName,race_no:snap.raceNo,race_date:snap.day,
+   deadline_or_start_time:cutoff.value,v3_live_fingerprint:snap.raceFingerprint,
+   study_recorded_before_deadline:true,time_kind:'brc_deadline_proxy',time_stability_window_min:10,
+   port_name:result.portName||'',first_course_boat_no:snap.firstCourseBoat,
+   tide_name:tide.tideName,tide_phase:tide.phase,tide_level_cm:tide.cm,
+   sample_n:prediction.condition.n,baseline_in_escape_pct:prediction.condition.avg,
+   conditional_in_escape_pct:prediction.condition.p,study_shift_pt:prediction.shiftPt,
+   v3_display_sum:snap.displayTotal,source:'v3_display_rounded_normalized',
+   winner_boat_no:''};
+ for(let i=0;i<6;i++){
+   r['displayed_v3_boat_'+(i+1)]=snap.displayedPct[i];
+   r['tide_study_boat_'+(i+1)]=prediction.after[i];
+ }
+ return r;
+}
+function hasAuth(diag,doc){return bridge.showIfAuthorized(diag,doc) && diag.v3Verified===true && diag.sameRaceLive===true && diag.strictExhibition===true;}
+const core=Object.freeze({STORAGE_KEY,VERSION,CSV_FIELDS,appendFirst,load,rows,toCsv,makeRecord,hasAuth});
+root.BRCTideAutoCaptureV10=core;
+if(!root.document || typeof root.setInterval!=='function')return;
+const doc=root.document;
+let ui=null,pending=false,attemptKey='',attemptAt=0,cachedPayload=null,cachedVenueDay='',errorMessage='';
+function diag(){try{return root.brcV3AdminDiagnostics?.()||null}catch(_){return null}}
+function current(){
+ const d=diag();if(!hasAuth(d,doc))return {reason:'v3未照合・管理者権限待ち'};
+ const texts=Array.from({length:6},(_,i)=>doc.getElementById('predict-win-cell-'+(i+1))?.textContent||'');
+ const snap=bridge.snapshot({diag:d,live:root.__currentLiveExhibition,rateTexts:texts,
+   verifiedV3SameRace:root.brcV3VerifiedDetailVisible?.()===true});
+ if(snap.status!=='ok')return {reason:snap.reason};
+ const selectedVenue=doc.getElementById('predictRaceDay')?.value||doc.getElementById('predictVenue')?.value||'';
+ const selectedRaceNo=doc.getElementById('predictRaceNo')?.value||'';
+ const schedule=typeof RACE_INFO_TODAY!=='undefined'?RACE_INFO_TODAY:root.RACE_INFO_TODAY;
+ const cutoff=bridge.deadlineFromRaceInfo({diag:d,raceInfo:schedule,selectedVenue,selectedRaceNo});
+ if(cutoff.status!=='ok')return {reason:cutoff.reason};
+ const todayJst=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+ if(snap.day!==todayJst)return {reason:'現在のJST日付と選択レースの開催日が異なります'};
+ if(!bridge.nowBeforeDeadline({day:snap.day,deadline:cutoff.time}))return {reason:'締切前ではありません'};
+ // 60-second buffer for in-flight responses and client clock jitter.
+ const remaining=Date.parse(cutoff.value+':00+09:00')-Date.now();
+ if(remaining<=60000)return {reason:'締切まで60秒以内のため自動記録しません'};
+ return {snap,cutoff,identity:JSON.stringify([snap.raceKey,snap.raceFingerprint,snap.displayedPct,snap.firstCourseBoat,cutoff.value])};
+}
+function setStatus(){
+ if(!ui)return;
+ let count='—';try{count=String(rows(root.localStorage).length)}catch(e){count='記録庫エラー'}
+ ui.querySelector('[data-auto-count]').textContent='ブラウザ内の事前記録: '+count+'件';
+ ui.querySelector('[data-auto-message]').textContent=errorMessage||'照合済みのレースを開いている間だけ、自動で事前記録します。';
+}
+async function tide(snap){
+ const cacheKey=snap.venueId+'|'+snap.day;
+ if(cachedVenueDay===cacheKey && cachedPayload)return cachedPayload;
+ const v=Object.values(bridge.VENUES).find(x=>x.id===snap.venueId);
+ guard(v,'観測地点が未登録');
+ const [yr,mn,dy]=snap.day.split('-');
+ const url=bridge.API+'?'+new URLSearchParams({pc:v.pc,hc:v.hc,yr,mn,dy,rg:'day'}).toString();
+ const controller=new AbortController();const timer=root.setTimeout(()=>controller.abort(),10000);
+ try{
+   const response=await root.fetch(url,{method:'GET',signal:controller.signal,cache:'no-store',credentials:'omit'});
+   guard(response.ok,'潮汐API HTTP '+response.status);
+   const payload=await response.json();
+   guard(bridge.validateTidePort(payload,snap.venueId).status==='ok','潮汐地点を照合できません');
+   cachedPayload=payload;cachedVenueDay=cacheKey;
+   return payload;
+ }finally{root.clearTimeout(timer)}
+}
+async function capture(){
+ if(pending)return;
+ let c=current();if(!c.snap)return;
+ let existing;
+ try{existing=load(root.localStorage);if(existing.records[c.snap.raceKey])return}
+ catch(e){errorMessage='記録領域を確認できません: '+String(e.message||e);setStatus();return}
+ const key=c.snap.raceKey;
+ if(attemptKey===key && Date.now()-attemptAt<90000)return;
+ attemptKey=key;attemptAt=Date.now();pending=true;errorMessage='潮汐確認中…';setStatus();
+ try{
+  const payload=await tide(c.snap);
+  const latest=current();
+  if(!latest.snap || latest.identity!==c.identity)throw Error('レース・展示・着率・締切が更新されました');
+  const cmp=bridge.stableComparison({snapshotData:latest.snap,referenceJst:latest.cutoff.value,tidePayload:payload});
+  if(cmp.status!=='ok' || cmp.shadow?.result?.status!=='ok')throw Error('補正なし: '+(cmp.reason||cmp.shadow?.result?.reason||'不適格'));
+  // Re-validate race context and deadline immediately before first write.
+  const final=current();
+  if(!final.snap || final.identity!==c.identity)throw Error('記録直前にレースが切り替わりました');
+  const observedAt=new Date().toISOString();
+  const row=makeRecord(final.snap,cmp,final.cutoff,observedAt);
+  const status=appendFirst(root.localStorage,final.snap.raceKey,row);
+  errorMessage=status.status==='saved'?`${row.venue} ${row.race_no}R：締切前の潮汐試算を自動保存しました`:'同レースの先行記録を保持しています';
+ }catch(e){errorMessage='記録なし: '+String(e.message||e)}
+ finally{pending=false;setStatus()}
+}
+function saveFile(){
+ try{
+   if(!hasAuth(diag(),doc))throw Error('管理者ログイン中のみ出力できます');
+   const data=rows(root.localStorage);
+   if(!data.length)throw Error('締切前の有効な事前記録はまだありません');
+   const text=toCsv(data),blob=new Blob([text],{type:'text/csv;charset=utf-8'});
+   const url=URL.createObjectURL(blob),a=doc.createElement('a');
+   a.href=url;a.download='BRC_TIDE_PREDEADLINE_AUTO_'+new Date().toISOString().slice(0,10)+'.csv';
+   doc.body.append(a);a.click();a.remove();root.setTimeout(()=>URL.revokeObjectURL(url),5000);
+   errorMessage=data.length+'件の保存済み記録をCSV出力しました（記録内容は変更しません）';setStatus();
+ }catch(e){errorMessage=String(e.message||e);setStatus()}
+}
+function mount(){
+ const d=diag();if(!bridge.showIfAuthorized(d,doc)){
+  if(ui){ui.remove();ui=null}return;
+ }
+ const host=doc.getElementById('brc-tide-shadow-v7') || doc.querySelector('#predictResult #predictTableWrap');
+ if(!host || !host.isConnected){if(ui){ui.remove();ui=null}return}
+ if(ui && (!ui.isConnected || ui.previousElementSibling!==host)){ui.remove();ui=null}
+ if(!ui){
+  ui=doc.createElement('details');ui.id='brc-tide-autosave-v10';ui.style.cssText='margin:9px 0;padding:10px;border:1px solid #9eafc8;border-radius:9px;background:#f7faff;font-size:12px;color:#18314f';
+  const summary=doc.createElement('summary');summary.textContent='🌊 潮汐V10｜締切前の自動研究記録（管理者専用）';summary.style.cssText='font-weight:700;cursor:pointer';ui.append(summary);
+  const explain=doc.createElement('p');explain.textContent='対象レースが管理者画面に表示され、TimeX v3が照合済みの場合のみ記録します。アプリを閉じている間は動作しません。サーバー同期はありません。';ui.append(explain);
+  const count=doc.createElement('p');count.setAttribute('data-auto-count','');ui.append(count);
+  const button=doc.createElement('button');button.textContent='保存済み全レースをCSV出力';button.type='button';button.style.cssText='padding:7px 10px;border:0;border-radius:6px;background:#135bc0;color:white;cursor:pointer';button.addEventListener('click',saveFile);ui.append(button);
+  const status=doc.createElement('p');status.setAttribute('data-auto-message','');ui.append(status);
+  const note=doc.createElement('p');note.textContent='ブラウザの保存データは消えることがあります。早めにCSVを退避してください。勝率改善は未確認で、BRC本体の予測・買い目には反映しません。';note.style.fontSize='11px';ui.append(note);
+  host.insertAdjacentElement('afterend',ui);
+ }
+ setStatus();
+}
+function poll(){try{mount();if(ui)capture()}catch(e){errorMessage='監視停止: '+String(e.message||e);setStatus()}}
+function init(){poll();root.setInterval(poll,6000);root.addEventListener?.('focus',poll)}
+if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})(typeof window!=='undefined'?window:globalThis);
+
+</script>
+<script data-brc-tide-pre-v12="brc_tide_baseline_capture_v11.js">
+/* BRC TIDE V11: optional independent retrospective-context baseline capture.
+ * Saves the existing BRC six-boat pctFloat vector BEFORE the deadline,
+ * whether or not TimeX v3 is verified and whether or not the tide API is reachable.
+ * DOES NOT claim pctFloat is a verified v3 forecast or a user-visible rate.
+ * Stored separately from V10 / V9. No mutation of BRC calculations.
+ */
+(function(root){
+'use strict';
+const KEY='brc_tide_v11_existing_float_prerace_snapshots';
+const VERSION='BRC_TIDE_V11_EXISTING_FLOAT_RESEARCH_20261023';
+const MAX=3000;
+const VENUES={
+ '児島':'16','平和島':'04','下関':'19','福岡':'22','若松':'20','丸亀':'15'
+};
+const FIELDS=['observed_at','race_date','venue','venue_code','race_no',
+ 'deadline_jst','minutes_before_deadline','source','baseline_pct_sum','first_course_boat_no',
+ 'v3_verified_at_capture','live_fingerprint','race_selection_fingerprint',
+ ...Array.from({length:6},(_,i)=>'existing_float_boat_'+(i+1)),
+ ...Array.from({length:6},(_,i)=>'normalized_existing_boat_'+(i+1))];
+const fail=reason=>({status:'skip',reason});
+function jstDay(ms){return new Date(ms+9*3600000).toISOString().slice(0,10)}
+function cutoff(day,hhmm){
+ if(typeof day!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(day)||typeof hhmm!=='string'||!/^\d{1,2}:\d{2}$/.test(hhmm))return null;
+ const [h,m]=hhmm.split(':').map(Number);
+ if(h>23||m>59)return null;
+ const text=day+'T'+String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+ const epoch=Date.parse(text+':00+09:00');
+ if(!Number.isFinite(epoch)||jstDay(epoch)!==day||new Date(epoch+9*3600000).toISOString().slice(0,16)!==text)return null;
+ return {text,epoch};
+}
+function buildSnapshot({diag,live,boats,raceInfo,selectedVenue,selectedRaceNo,nowMs=Date.now(),publicPreview=false}={}){
+ if(publicPreview||!diag||diag.admin!==true||diag.member!==true)return fail('管理者ログインが必要です');
+ if(diag.sameRaceLive!==true||diag.strictExhibition!==true||diag.tableReady!==true)return fail('展示照合・出走表が未完了');
+ const match=String(diag.selectedRace||'').match(/^(児島|平和島|下関|福岡|若松|丸亀)\s+(\d{1,2})R$/);
+ if(!match)return fail('潮汐対象6会場以外');
+ const [_,venue,noText]=match,no=Number(noText),code=VENUES[venue],day=String(diag.date||'');
+ if(!Number.isInteger(no)||no<1||no>12||String(selectedVenue)!==venue||Number(selectedRaceNo)!==no)return fail('表示レースの選択状態が不一致');
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(day)||!Number.isFinite(nowMs)||jstDay(nowMs)!==day)return fail('開催日と現在日付が不一致');
+ if(!live||String(live.date||'')!==day||String(live.venue_code||'').padStart(2,'0')!==code||Number(live.race_no)!==no)return fail('展示のレース不一致');
+ const c=cutoff(day,raceInfo?.[venue]?.deadlines?.[String(no)]);
+ if(!c)return fail('公式番組由来の締切時刻がありません');
+ const remaining=c.epoch-nowMs;
+ if(remaining<=60_000)return fail('締切まで60秒以内または締切後');
+ if(!Array.isArray(live.boats)||live.boats.length!==6||!Array.isArray(boats)||boats.length!==6)return fail('6艇不揃い');
+ const liveBoats=new Map(),courseSet=new Set();let first=null;
+ for(const r of live.boats){
+   const b=Number(r.boat_no),entry=Number(r.entry_course);
+   if(!Number.isInteger(b)||b<1||b>6||liveBoats.has(b)||!Number.isInteger(entry)||entry<1||entry>6||courseSet.has(entry))return fail('展示艇番・進入コースが不正');
+   liveBoats.set(b,r);courseSet.add(entry);if(entry===1)first=b;
+ }
+ if(courseSet.size!==6||liveBoats.size!==6||!first)return fail('進入情報の不足');
+ const probs=Array(6).fill(null), regs=Array(6).fill('');
+ for(const b of boats){
+   // Existing BRC boats.course is boat number, not actual exhibition entry course.
+   const no=Number(b?.course),v=Number(b?.pctFloat);
+   if(!Number.isInteger(no)||no<1||no>6||probs[no-1]!==null||!Number.isFinite(v)||v<0||v>100)return fail('既存1着率または艇番が不正');
+   probs[no-1]=v;regs[no-1]=String(b?.player?.reg||'');
+ }
+ const sum=probs.reduce((a,b)=>a+b,0);
+ if(probs.some(x=>x===null)||Math.abs(sum-100)>5||sum<=0)return fail('既存着率が合計100%と整合しません');
+ const fingerprint=[day,code,no,String(live.fixed_course??''),...Array.from(liveBoats.entries()).sort((a,b)=>a[0]-b[0]).map(([n,b])=>[
+    n,Number(b.entry_course),String(b.relative_diff??''),String(b.lap_time??''),String(b.status??'')].join(':'))].join('|');
+ const context=[day,code,no,...regs,...probs.map(x=>x.toFixed(8)),fingerprint].join('|');
+ const record={
+   observed_at:new Date(nowMs).toISOString(),race_date:day,venue,venue_code:code,race_no:no,
+   deadline_jst:c.text,minutes_before_deadline:remaining/60000,
+   source:'existing_boats_pctFloat_not_verified_as_v3',baseline_pct_sum:sum,
+   first_course_boat_no:first,v3_verified_at_capture:diag.v3Verified===true,
+   live_fingerprint:fingerprint,race_selection_fingerprint:context
+ };
+ for(let i=0;i<6;i++){record['existing_float_boat_'+(i+1)]=probs[i];record['normalized_existing_boat_'+(i+1)]=100*probs[i]/sum;}
+ return {status:'ok',key:`${day}|${code}|${no}`,record};
+}
+function readStore(storage){
+ const raw=storage.getItem(KEY);
+ if(!raw)return {version:VERSION,records:{}};
+ const v=JSON.parse(raw);
+ if(!v||v.version!==VERSION||!v.records||typeof v.records!=='object'||Array.isArray(v.records)||Object.keys(v.records).length>MAX)throw Error('保存庫形式が不正: 自動上書きしません');
+ return v;
+}
+function saveFirst(storage,key,record){
+ if(!/^\d{4}-\d{2}-\d{2}\|\d{2}\|(?:[1-9]|1[012])$/.test(key))throw Error('レースID不正');
+ if(!record||record.source!=='existing_boats_pctFloat_not_verified_as_v3')throw Error('記録ソースが不正');
+ if(record.race_date!==key.slice(0,10)||record.venue_code!==key.slice(11,13)||Number(record.race_no)!==Number(key.split('|')[2]))throw Error('レースID不一致');
+ const now=Date.parse(record.observed_at),end=Date.parse(record.deadline_jst+':00+09:00');
+ if(!Number.isFinite(now)||!Number.isFinite(end)||end-now<=60000)throw Error('締切前60秒超の記録ではありません');
+ const db=readStore(storage);
+ if(Object.prototype.hasOwnProperty.call(db.records,key))return {status:'duplicate',count:Object.keys(db.records).length};
+ if(Object.keys(db.records).length>=MAX)throw Error('保存上限。CSVへ退避してください');
+ db.records[key]=record;
+ storage.setItem(KEY,JSON.stringify(db));
+ if(!Object.prototype.hasOwnProperty.call(readStore(storage).records,key))throw Error('保存結果の読み戻し失敗');
+ return {status:'saved',count:Object.keys(db.records).length};
+}
+function list(storage){return Object.values(readStore(storage).records).sort((a,b)=>String(a.observed_at).localeCompare(String(b.observed_at)));}
+function csvEscape(v){return '"'+String(v===undefined||v===null?'':v).replaceAll('"','""')+'"';}
+function exportCsv(records){return '\ufeff'+FIELDS.map(csvEscape).join(',')+'\r\n'+records.map(x=>FIELDS.map(f=>csvEscape(x[f])).join(',')).join('\r\n')+'\r\n';}
+const api=Object.freeze({KEY,VERSION,FIELDS,cutoff,buildSnapshot,readStore,saveFirst,list,exportCsv});
+root.BRCTideBaselineCaptureV11=api;
+if(!root.document||typeof root.setInterval!=='function')return;
+const doc=root.document;
+let ui=null,lastMsg='';
+function isAdmin(d){return d?.admin===true&&d?.member===true&&!doc.body?.classList.contains('brc-admin-public-view')}
+function selected(){
+ const d=typeof root.brcV3AdminDiagnostics==='function'?root.brcV3AdminDiagnostics():null;
+ if(!isAdmin(d))return fail('管理者認証待ち');
+ const raceInfo=(typeof RACE_INFO_TODAY!=='undefined'?RACE_INFO_TODAY:root.RACE_INFO_TODAY);
+ return buildSnapshot({diag:d,live:root.__currentLiveExhibition,
+   boats:root.__predictBoatsCurrent,raceInfo,
+   selectedVenue:doc.getElementById('predictRaceDay')?.value||doc.getElementById('predictVenue')?.value||'',
+   selectedRaceNo:doc.getElementById('predictRaceNo')?.value||'',
+   nowMs:Date.now(),publicPreview:doc.body?.classList.contains('brc-admin-public-view')});
+}
+function exportFile(){
+ try{
+   const d=root.brcV3AdminDiagnostics?.();if(!isAdmin(d))throw Error('管理者モードが必要です');
+   const saved=list(root.localStorage);if(!saved.length)throw Error('記録はまだありません');
+   const csv=exportCsv(saved),url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+   const link=doc.createElement('a');link.href=url;link.download='BRC_TIDE_V11_EXISTING_BASELINE_'+jstDay(Date.now())+'.csv';doc.body.append(link);link.click();link.remove();
+   root.setTimeout(()=>URL.revokeObjectURL(url),5000);
+   lastMsg=`既存TimeX系の締切前記録${saved.length}件をCSV保存しました。V3用CSVには混ぜないでください。`;
+ }catch(e){lastMsg='CSV出力停止: '+String(e.message||e)}
+ refresh();
+}
+function refresh(){
+ if(!ui)return;
+ let count='—';try{count=list(root.localStorage).length}catch(e){count='記録庫の確認が必要'}
+ ui.querySelector('[data-tide-v11-status]').textContent=`記録数 ${count}件。`+lastMsg;
+}
+function mount(){
+ const d=root.brcV3AdminDiagnostics?.();if(!isAdmin(d)){
+   if(ui){ui.remove();ui=null}return;
+ }
+ const host=doc.getElementById('brc-tide-autosave-v10')||doc.getElementById('brc-tide-shadow-v7')||doc.querySelector('#predictResult #predictTableWrap');
+ if(!host||!host.isConnected){if(ui){ui.remove();ui=null}return;}
+ if(ui && (!ui.isConnected||ui.previousElementSibling!==host)){ui.remove();ui=null}
+ if(!ui){
+   ui=doc.createElement('details');ui.id='brc-tide-baseline-v11';
+   ui.style.cssText='margin:8px 0;padding:10px;border:1px solid #b9c9dc;border-radius:8px;background:#fff;font-size:12px;color:#28324a';
+   const title=doc.createElement('summary');title.textContent='🌊 潮汐V11｜既存TimeX系の事前記録（管理者研究）';title.style.fontWeight='bold';ui.append(title);
+   const note=doc.createElement('p');note.textContent='v3照合や潮汐API接続に依存せず、画面で開いたレースの既存1着率内部値を保存します。v3予測とは別ソースです。';ui.append(note);
+   const btn=doc.createElement('button');btn.type='button';btn.textContent='既存着率の記録CSVを出力';btn.style.cssText='padding:8px;background:#2d5ab5;color:white;border:0;border-radius:6px';btn.addEventListener('click',exportFile);ui.append(btn);
+   const state=doc.createElement('p');state.setAttribute('data-tide-v11-status','');ui.append(state);
+   const caveat=doc.createElement('p');caveat.textContent='このCSVをV9のv3検証CSVへ混ぜないでください。サーバー同期はなく、ブラウザの保存データは消える場合があります。';caveat.style.fontSize='11px';ui.append(caveat);
+   host.insertAdjacentElement('afterend',ui);
+ }
+ refresh();
+}
+function poll(){
+ try{
+   mount();if(!ui)return;
+   const result=selected();if(result.status!=='ok')return;
+   const saved=saveFirst(root.localStorage,result.key,result.record);
+   if(saved.status==='saved')lastMsg=`${result.record.venue} ${result.record.race_no}R 締切前の既存着率を記録しました`;refresh();
+ }catch(e){lastMsg='記録できません: '+String(e.message||e);refresh()}
+}
+function init(){poll();root.setInterval(poll,8000);root.addEventListener?.('focus',poll)}
+if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})(typeof window!=='undefined'?window:globalThis);
+
+</script>
+<script data-brc-tide-pre-v12="brc_tide_prior_v12.js">
+/* BRC TIDE V12 — 事前1着率 basePctFloat × 潮汐：管理者研究用シャドー
+ * NOT a production prior model. No mutation of basePctFloat, pctFloat, AI, bets.
+ * The source table is historical "イン逃げ率", NOT identical to 1コース1着率.
+ * Requires same-race pre-forecast, official deadline, exact JST date and tide port.
+ */
+(function(root){
+'use strict';
+const CORE=root.BRCTideCorrectionV1,RESEARCH=root.BRCTideResearchV2;
+if(!CORE || !RESEARCH)return;
+const KEY='brc_tide_v12_pre_win_shadow_first';
+const VERSION='BRC_TIDE_V12_PRE_WIN_SHADOW_20261023';
+const CODES={'児島':['kojima','16',28,9],'平和島':['heiwajima','04',13,1],'下関':['shimonoseki','19',35,16],'福岡':['fukuoka','22',40,20],'若松':['wakamatsu','20',40,10],'丸亀':['marugame','15',37,10]};
+const FIELDS=['captured_at','race_date','venue','venue_code','race_no','deadline_jst','time_proxy','status','source','first_course_boat','first_course_basis','tide_name','tide_phase','sample_n','tide_level_cm','shift_pt','pre_base_total','pre_roster_fingerprint',...Array.from({length:6},(_,i)=>'pre_base_boat_'+(i+1)),...Array.from({length:6},(_,i)=>'tide_shadow_pre_boat_'+(i+1))];
+const fail=(reason)=>({status:'skip',reason});
+const localDay=ms=>new Date(ms+9*3600000).toISOString().slice(0,10);
+const hhmmValid=s=>typeof s==='string'&&/^\d{1,2}:\d{2}$/.test(s)&&Number(s.slice(0,s.indexOf(':')))<24&&Number(s.split(':')[1])<60;
+function deadlineEpoch(day,time){
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(String(day||''))||!hhmmValid(time))return null;
+ const [h,m]=time.split(':').map(Number);const iso=`${day}T${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+ const t=Date.parse(iso+':00+09:00');
+ return Number.isFinite(t)&&new Date(t+9*3600000).toISOString().slice(0,16)===iso?{iso,ms:t}:null;
+}
+function buildPreSnapshot({diag,boats,rosters,schedule,selectedVenue,selectedRaceNo,nowMs=Date.now(),publicPreview=false,live=null}={}){
+ if(publicPreview||!diag||diag.admin!==true||diag.member!==true)return fail('管理者ログインが必要です');
+ if(!diag.tableReady)return fail('出走表の計算完了待ち');
+ const m=String(diag.selectedRace||'').match(/^(児島|平和島|下関|福岡|若松|丸亀)\s+(\d{1,2})R$/);
+ if(!m)return fail('潮汐対象6会場以外');
+ const venue=m[1],number=Number(m[2]),codes=CODES[venue],day=String(diag.date||'');
+ if(!Number.isInteger(number)||number<1||number>12||selectedVenue!==venue||Number(selectedRaceNo)!==number)return fail('選択中の会場・レースが不一致');
+ if(!Number.isFinite(nowMs)||localDay(nowMs)!==day)return fail('選択レースが当日ではありません');
+ const cutoff=deadlineEpoch(day,schedule?.[venue]?.deadlines?.[String(number)]);
+ if(!cutoff)return fail('締切予定時刻が不明');
+ if(cutoff.ms-nowMs<=60000)return fail('締切60秒以内または締切後');
+ const r=rosters?.[venue]?.[String(number)];
+ if(!Array.isArray(r)||r.length!==6)return fail('当日の出走表が未照合');
+ if(!Array.isArray(boats)||boats.length!==6)return fail('事前1着率6艇が未取得');
+ const pre=Array(6).fill(null),regs=Array(6).fill(null);
+ for(const b of boats){
+  // BRC code explicitly assigns basePctFloat from Worker BEFORE TimeX.
+  // b.course is original boat number. Must not take b.pctFloat (post exhibition).
+  const no=Number(b?.course),x=b?.basePctFloat,reg=String(b?.player?.reg||'');
+  if(!Number.isInteger(no)||no<1||no>6||pre[no-1]!==null||typeof x!=='number'||!Number.isFinite(x)||x<0||x>100||!reg)return fail('事前1着率・艇番・選手登録番号が不正');
+  pre[no-1]=x;regs[no-1]=reg;
+ }
+ if(regs.some((v,i)=>String(r[i])!==v))return fail('事前1着率の出走選手と当日番組が一致しません');
+ const sum=pre.reduce((a,b)=>a+b,0);
+ if(pre.some(x=>x===null)||!(sum>0)||Math.abs(sum-100)>2)return fail('事前1着率の合計が100%と整合しません');
+ let first=1,basis='枠なり仮定（展示前）';
+ // An explicitly known entry change cannot be folded into pre-race lane-1 assumption.
+ if(live && String(live.date||'')===day && String(live.venue_code||'').padStart(2,'0')===codes[1] && Number(live.race_no)===number && Array.isArray(live.boats) && live.boats.length===6){
+   const nums=new Set(),courses=new Set();let inBoat=null;
+   for(const b of live.boats){
+     const no=Number(b.boat_no),course=Number(b.entry_course);
+     if(!Number.isInteger(no)||!Number.isInteger(course)||no<1||no>6||course<1||course>6||nums.has(no)||courses.has(course))return fail('展示の進入データに欠損・重複があります');
+     nums.add(no);courses.add(course);if(course===1)inBoat=no;
+   }
+   if(nums.size!==6||courses.size!==6||!inBoat)return fail('展示の進入データが不完全です');
+   if(inBoat!==1)return fail('進入変更あり：事前1コース仮定を適用しません');
+   basis='展示進入確認済み（1号艇が1コース）';
+ }
+ return {status:'ok',raceKey:`${day}|${codes[1]}|${number}`,day,venue,code:codes[1],venueId:codes[0],pc:codes[2],hc:codes[3],number,
+   firstCourseBoat:first,firstCourseBasis:basis,cutoffJst:cutoff.iso,cutoffMs:cutoff.ms,
+   before:pre.map(v=>v/sum*100),rawBefore:pre,rawSum:sum,
+   rosterFingerprint:[day,codes[1],number,...regs,...pre.map(v=>v.toFixed(8))].join('|')};
+}
+function validatePort(payload,snapshot){
+ if(payload?.status!==1)return fail('潮汐APIの正常応答ではありません');
+ const port=payload?.tide?.port;
+ if(!port || Number(port.prefecture_code)!==snapshot.pc || Number(port.harbor_code)!==snapshot.hc)return fail('潮汐地点コード不一致');
+ return {status:'ok'};
+}
+function compare({snapshot:ctx,tidePayload}={}){
+ if(!ctx||ctx.status!=='ok')return fail('事前1着率のレース照合が未完了');
+ const checked=validatePort(tidePayload,ctx);if(checked.status!=='ok')return checked;
+ // Deadline is not a verified start time. Use 0/5/10 min stability only for research.
+ const t0=Date.parse(ctx.cutoffJst+':00+09:00');let tide=null;
+ for(const min of [0,5,10]){
+  const candidate=new Date(t0+min*60000+9*3600000).toISOString().slice(0,16);
+  if(candidate.slice(0,10)!==ctx.day)return fail('潮位照会時刻が開催日を越えました');
+  const c=RESEARCH.classify({tidePayload,targetJst:candidate});
+  if(c.status!=='ok')return fail('潮汐分類不可（+'+min+'分）：'+c.reason);
+  if(tide&&(c.tideName!==tide.tideName||c.phase!==tide.phase))return fail('締切から10分以内に潮汐局面が変わるため補正なし');
+  tide=c;
+ }
+ const result=CORE.adjust({venueId:ctx.venueId,tideName:tide.tideName,phase:tide.phase,probabilities:ctx.before,firstCourseBoat:ctx.firstCourseBoat});
+ if(result.status!=='ok')return fail(result.reason);
+ return {status:'ok',snapshot:ctx,tide,result,
+   note:'basePctFloat事前着率からの潮汐シャドー補正。イン逃げ率と1コース勝率は別。実績検証まで本番不採用'};
+}
+function recordFromComparison(v,nowMs=Date.now()){
+ if(!v||v.status!=='ok')throw Error('未検証の補正は保存できません');
+ const s=v.snapshot;
+ if(!Number.isFinite(nowMs)||nowMs>=s.cutoffMs-60000)throw Error('締切60秒以内/締切後の保存禁止');
+ const record={captured_at:new Date(nowMs).toISOString(),race_date:s.day,venue:s.venue,venue_code:s.code,race_no:s.number,
+  deadline_jst:s.cutoffJst,time_proxy:'BRC公式番組の締切時刻（発走時刻の代用）',status:'research_only',
+  source:'worker_pre_exhibition_basePctFloat',first_course_boat:s.firstCourseBoat,first_course_basis:s.firstCourseBasis,
+  tide_name:v.tide.tideName,tide_phase:v.tide.phase,sample_n:v.result.condition.n,tide_level_cm:v.tide.cm,
+  shift_pt:v.result.shiftPt,pre_base_total:s.rawSum,pre_roster_fingerprint:s.rosterFingerprint};
+ for(let i=0;i<6;i++){record['pre_base_boat_'+(i+1)]=s.before[i];record['tide_shadow_pre_boat_'+(i+1)]=v.result.after[i];}
+ return record;
+}
+function readStore(storage){
+ const str=storage.getItem(KEY);
+ if(!str)return {version:VERSION,records:{}};
+ const v=JSON.parse(str);
+ if(!v||v.version!==VERSION||!v.records||typeof v.records!=='object'||Array.isArray(v.records)||Object.keys(v.records).length>3000)throw Error('保存庫が不正です。上書きしません');
+ return v;
+}
+function saveFirst(storage,r){
+ if(!r||r.source!=='worker_pre_exhibition_basePctFloat'||r.status!=='research_only')throw Error('不正な保存データ');
+ const key=`${r.race_date}|${r.venue_code}|${r.race_no}`;
+ if(!/^\d{4}-\d{2}-\d{2}\|\d{2}\|(?:[1-9]|1[012])$/.test(key))throw Error('レースキー不正');
+ const captured=Date.parse(r.captured_at),cutoff=Date.parse(r.deadline_jst+':00+09:00');
+ if(!Number.isFinite(captured)||!Number.isFinite(cutoff)||captured>=cutoff-60000)throw Error('保存時刻が締切直前/締切後');
+ const db=readStore(storage);
+ if(Object.hasOwn(db.records,key))return {status:'duplicate',count:Object.keys(db.records).length};
+ if(Object.keys(db.records).length>=3000)throw Error('保存件数上限');
+ db.records[key]=r;storage.setItem(KEY,JSON.stringify(db));
+ if(!Object.hasOwn(readStore(storage).records,key))throw Error('書込後の照合失敗');
+ return {status:'saved',count:Object.keys(db.records).length};
+}
+function csv(records){
+ const esc=v=>'"'+String(v??'').replaceAll('"','""')+'"';
+ return '\ufeff'+FIELDS.map(esc).join(',')+'\r\n'+records.map(r=>FIELDS.map(k=>esc(r[k])).join(',')).join('\r\n')+'\r\n';
+}
+const API=Object.freeze({KEY,VERSION,FIELDS,CODES,deadlineEpoch,buildPreSnapshot,validatePort,compare,recordFromComparison,saveFirst,readStore,csv});
+root.BRCTidePriorV12=API;
+if(!root.document||typeof root.setInterval!=='function')return;
+const doc=root.document;
+let panel=null,lastStatus='',autoAttemptKey='',running=false;
+const admin=()=>{try{const d=root.brcV3AdminDiagnostics?.();return d?.admin===true&&d?.member===true&&!doc.body.classList.contains('brc-admin-public-view')?d:null;}catch(_){return null}};
+const schedule=()=>typeof RACE_INFO_TODAY!=='undefined'?RACE_INFO_TODAY:root.RACE_INFO_TODAY;
+const roster=()=>typeof RACE_CARDS_TODAY!=='undefined'?RACE_CARDS_TODAY:root.RACE_CARDS_TODAY;
+function current(){
+ const diag=admin();if(!diag)return fail('管理者権限なし');
+ return buildPreSnapshot({diag,boats:root.__predictBoatsCurrent,rosters:roster(),schedule:schedule(),
+  selectedVenue:doc.getElementById('predictRaceDay')?.value||doc.getElementById('predictVenue')?.value,
+  selectedRaceNo:doc.getElementById('predictRaceNo')?.value,live:root.__currentLiveExhibition,nowMs:Date.now()});
+}
+function showStatus(t){lastStatus=t;if(panel)panel.querySelector('[data-brc-tide12-status]').textContent=t}
+function showTable(v){
+ const body=panel.querySelector('[data-brc-tide12-result]');body.replaceChildren();
+ const heading=doc.createElement('p');heading.textContent=`${v.snapshot.venue} ${v.snapshot.number}R 事前着率／${v.tide.tideName}・${v.tide.phase}（n=${v.result.condition.n}、補正 ${v.result.shiftPt>=0?'+':''}${v.result.shiftPt.toFixed(2)}pt）`;body.append(heading);
+ const table=doc.createElement('table');table.style.cssText='width:100%;font-size:12px;border-collapse:collapse';
+ const titles=doc.createElement('tr');for(const col of ['艇','事前1着率','潮汐研究値','差']){const td=doc.createElement('th');td.textContent=col;td.style.textAlign='right';titles.append(td)}table.append(titles);
+ for(let i=0;i<6;i++){const tr=doc.createElement('tr'),row=[`${i+1}号艇`,v.snapshot.before[i].toFixed(1)+'%',v.result.after[i].toFixed(1)+'%',(v.result.after[i]-v.snapshot.before[i]).toFixed(2)+'pt'];for(const val of row){const cell=doc.createElement('td');cell.textContent=val;cell.style.textAlign='right';cell.style.borderTop='1px solid #ddd';tr.append(cell)}table.append(tr)}
+ body.append(table);const foot=doc.createElement('p');foot.textContent='締切時刻を参照した研究値です。事前率・TimeX・AI予測・買い目は変更していません。';body.append(foot);
+}
+function exportCsv(){
+ try{if(!admin())throw Error('管理者ログインが必要です');const records=Object.values(readStore(root.localStorage).records);if(!records.length)throw Error('まだ記録はありません');
+ const blob=new Blob([csv(records)],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=doc.createElement('a');a.href=url;a.download='BRC_TIDE_PRE_V12_'+localDay(Date.now())+'.csv';doc.body.append(a);a.click();a.remove();root.setTimeout(()=>URL.revokeObjectURL(url),5000);
+ showStatus(`${records.length}件の事前着率研究CSVを出力しました`);
+ }catch(e){showStatus('CSV出力不可：'+String(e.message||e))}
+}
+async function run(){
+ if(running)return;
+ running=true;
+ const s=current();if(s.status!=='ok'){showStatus('補正なし：'+s.reason);running=false;return}
+ const requested=[s.raceKey,s.rosterFingerprint,s.cutoffJst].join('|');
+ const runButton=panel.querySelector('[data-brc-tide12-run]');runButton.disabled=true;showStatus('対象レースの潮汐を照会中…');
+ try{
+  const json=panel.querySelector('[data-brc-tide12-json]')?.value.trim()||'';if(json.length>2_000_000)throw Error('潮汐JSONが2MB超');
+  let payload;
+  if(json)payload=JSON.parse(json);
+  else{
+    const controller=new AbortController(),abort=root.setTimeout(()=>controller.abort(),9000);
+    try{const p=new URLSearchParams({pc:String(s.pc),hc:String(s.hc),yr:s.day.slice(0,4),mn:String(Number(s.day.slice(5,7))),dy:String(Number(s.day.slice(8,10))),rg:'day'});
+    const r=await root.fetch('https://api.tide736.net/get_tide.php?'+p.toString(),{method:'GET',cache:'no-store',credentials:'omit',signal:controller.signal});
+    if(!r.ok)throw Error('潮汐API HTTP '+r.status);payload=await r.json();
+    }finally{root.clearTimeout(abort)}
+  }
+  const latest=current();if(latest.status!=='ok'||[latest.raceKey,latest.rosterFingerprint,latest.cutoffJst].join('|')!==requested)throw Error('レース・事前着率・締切が変化。古い結果を破棄');
+  const v=compare({snapshot:s,tidePayload:payload});if(v.status!=='ok'){showStatus('補正なし：'+v.reason);return}
+  showTable(v);
+  const rec=recordFromComparison(v,Date.now());
+  const saved=saveFirst(root.localStorage,rec);showStatus(saved.status==='saved'?'事前着率の潮汐比較を初回保存しました':'同一レースの初回保存済み記録を保持しています');
+ }catch(e){showStatus('補正なし：'+String(e.message||e))}
+ finally{runButton.disabled=false;running=false}
+}
+function mount(){
+ const diag=admin(),host=doc.getElementById('brc-tide-baseline-v11')||doc.getElementById('brc-tide-shadow-v7')||doc.querySelector('#predictResult #predictTableWrap');
+ if(!diag||!host||!host.isConnected){if(panel){panel.remove();panel=null}return}
+ if(panel&&(!panel.isConnected||panel.previousElementSibling!==host)){panel.remove();panel=null}
+ if(panel)return;
+ panel=doc.createElement('details');panel.id='brc-tide-pre-v12';panel.style.cssText='margin:8px 0;padding:12px;border:1px solid #afc8e6;border-radius:8px;background:#fff;font-size:12px;color:#243547';
+ const title=doc.createElement('summary');title.style.fontWeight='bold';title.textContent='🌊 事前1着率 × 潮汐補正（管理者研究・V12）';panel.append(title);
+ const desc=doc.createElement('p');desc.textContent='BRC Workerの展示前 basePctFloat を使用します。展示後 pctFloat やv3整数表示とは別の研究値です。';panel.append(desc);
+ const b=doc.createElement('button');b.type='button';b.textContent='現在のレースを潮汐補正して比較';b.setAttribute('data-brc-tide12-run','');b.style.cssText='padding:8px;border:0;border-radius:6px;background:#1466ae;color:white;font-weight:bold;margin-right:8px';b.addEventListener('click',run);panel.append(b);
+ const ex=doc.createElement('button');ex.type='button';ex.textContent='締切前の研究記録をCSV出力';ex.style.cssText='padding:8px;border:1px solid #1466ae;border-radius:6px;background:#fff;color:#1466ae';ex.addEventListener('click',exportCsv);panel.append(ex);
+ const sub=doc.createElement('details');const ss=doc.createElement('summary');ss.textContent='潮汐APIが使えない場合：当日の潮汐JSONを貼り付け';sub.append(ss);const textarea=doc.createElement('textarea');textarea.setAttribute('data-brc-tide12-json','');textarea.style.cssText='width:100%;min-height:70px';sub.append(textarea);panel.append(sub);
+ const status=doc.createElement('p');status.setAttribute('data-brc-tide12-status','');status.textContent=lastStatus||'研究用です。実レースでの予測精度改善は未確認。';panel.append(status);
+ const result=doc.createElement('div');result.setAttribute('data-brc-tide12-result','');panel.append(result);
+ host.insertAdjacentElement('afterend',panel);
+}
+function tick(){
+ try{
+   mount();if(!panel)return;
+   const s=current();if(s.status!=='ok')return;
+   const key=s.raceKey+'|'+s.rosterFingerprint+'|'+s.cutoffJst;
+   if(autoAttemptKey===key)return;
+   // The API is queried at most once per exact pre-race snapshot in this page session.
+   // Failure is left to the manual retry button; no repeated network polling.
+   autoAttemptKey=key;
+   const db=readStore(root.localStorage);
+   if(Object.hasOwn(db.records,s.raceKey))return;
+   run();
+ }catch(e){showStatus('自動照合を見合わせました：'+String(e.message||e))}
+}
+root.setInterval(tick,4000);
+if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',tick,{once:true});else tick();
+})(typeof window!=='undefined'?window:globalThis);
+
+</script>
+<!-- BRC_TIDE_PRE_V12_END_20261023 -->
 </body>
 </html>
