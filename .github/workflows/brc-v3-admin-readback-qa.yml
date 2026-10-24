@@ -11,6 +11,7 @@ on:
       - 'scripts/brc_v3_admin_index_qa_bridge.js'
       - 'scripts/brc_v3_admin_index_qa_build.py'
       - 'scripts/test_v3_admin_index_qa_build.py'
+      - 'scripts/test_v3_admin_index_qa_dom.cjs'
       - 'workers/brc_v3_stage_context_readback_route_candidate.mjs'
       - 'workers/test_brc_v3_stage_context_readback_route_candidate.mjs'
       - 'workers/brc_v3_stage_kv_integrity_candidate.mjs'
@@ -48,6 +49,7 @@ jobs:
             --index index.html \
             --out /tmp/brc-v3-admin-offline-qa-not-for-deploy.html \
             --audit /tmp/brc-v3-admin-offline-qa-audit.json
+          node --test scripts/test_v3_admin_index_qa_dom.cjs
           python - <<'PY'
           import json
           from pathlib import Path
