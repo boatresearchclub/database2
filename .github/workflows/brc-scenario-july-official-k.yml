@@ -1,8 +1,5 @@
 name: BRC Scenario July Official K Research (NO DEPLOY)
 on:
-  pull_request:
-    paths:
-      - .github/workflows/brc-scenario-july-official-k.yml
   workflow_dispatch:
 permissions:
   contents: read
