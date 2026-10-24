@@ -10,6 +10,8 @@ on:
       - 'scripts/brc_scenario_123_research.py'
       - 'scripts/brc_scenario_123_official_k.py'
       - 'scripts/brc_scenario_early_k_probe.py'
+      - 'scripts/brc_scenario_123_early_backfill.py'
+      - 'scripts/test_scenario_123_early_backfill.py'
       - 'scripts/brc_motor_finals_claimed_cycle_research.py'
       - 'scripts/test_motor_finals_claimed_cycle_research.py'
       - 'scripts/test_scenario_123_official_k.py'
@@ -30,6 +32,8 @@ on:
       - 'scripts/brc_scenario_123_research.py'
       - 'scripts/brc_scenario_123_official_k.py'
       - 'scripts/brc_scenario_early_k_probe.py'
+      - 'scripts/brc_scenario_123_early_backfill.py'
+      - 'scripts/test_scenario_123_early_backfill.py'
       - 'scripts/brc_motor_finals_claimed_cycle_research.py'
       - 'scripts/test_motor_finals_claimed_cycle_research.py'
       - 'scripts/test_scenario_123_official_k.py'
@@ -68,6 +72,8 @@ jobs:
         run: python scripts/test_motor_scope_and_v3_public_probe.py
       - name: Verify official K motor-cycle reconstruction fixtures (NO PUBLISH)
         run: python scripts/test_motor_k_cycle_observations.py
+      - name: Bounded 2023-2024 official K backfill fixtures
+        run: python scripts/test_scenario_123_early_backfill.py
       - name: Official K championship motor finals cycle fixture tests
         run: python scripts/test_motor_finals_claimed_cycle_research.py
       - name: Restore pre-existing official K archive cache (read only)
@@ -76,6 +82,7 @@ jobs:
           path: .cache/brc-course365-k
           key: brc-motor-cycle-audit-readonly-${{ github.run_id }}
           restore-keys: |
+            brc-scenario-historic-k-
             brc-course365-k-
       - name: Install official K extractor for recent missing archive only
         run: sudo apt-get update -qq && sudo apt-get install -y -qq p7zip-full
@@ -112,6 +119,15 @@ jobs:
           python scripts/brc_motor_finals_claimed_cycle_research.py \
             --archive-dir .cache/brc-course365-k \
             --out brc_motor_finals_claimed_cycle_research.json
+      - name: Official K bounded 2023-2024 June research backfill (NO PUBLISH)
+        continue-on-error: true
+        run: |
+          python scripts/brc_scenario_123_early_backfill.py \
+            --windows "2023-06-01:2023-06-15,2024-06-01:2024-06-15" \
+            --archive-dir .cache/brc-course365-k \
+            --max-downloads 32 \
+            --audit brc_scenario_early_windows_audit.json \
+            --matrix brc_scenario_early_windows_matrix.json
       - name: Audit quarantined motor period-N mismatch (NO PUBLISH)
         run: python scripts/brc_motor_source_scope_audit.py --output brc_motor_scope_audit.json
       - name: Probe public stage auth and live exhibition (NO JWT/POST/KV)
@@ -127,6 +143,12 @@ jobs:
         run: python scripts/brc_v3_stage_daily.py --summary brc_v3_offline_summary.json
       - name: Read-only audit of four research feature sources
         run: python scripts/brc_four_workstream_readiness.py --out brc_four_workstream_readiness.json
+      - name: Preserve research-only validated official K downloads for next review
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-scenario-historic-k-${{ github.run_id }}
       - name: Explain what this job does not release
         if: always()
         shell: bash
@@ -148,6 +170,8 @@ jobs:
             brc_scenario_k_archive_audit.json
             brc_scenario_k_archive_matrix.json
             brc_scenario_early_k_probe.json
+            brc_scenario_early_windows_audit.json
+            brc_scenario_early_windows_matrix.json
             brc_motor_finals_claimed_cycle_research.json
           if-no-files-found: ignore
           retention-days: 7
