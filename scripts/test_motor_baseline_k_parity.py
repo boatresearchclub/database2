@@ -53,6 +53,14 @@ def test():
         assert result["productionApproved"] is False
         assert result["decision"]=="RESEARCH_NO_CUMULATIVE_N_RELEASE"
 
+        # Isolated historical samples cannot be misread as continuous 2023+
+        # K coverage when auditing a Sep-2026 motor snapshot.
+        with patch("BRC_PLAYER_COURSE365_V3_OFFICIAL.load_k",return_value=(events,1,{})), \
+             patch("brc_motor_baseline_k_parity.scan_verified_k_text",return_value=rows):
+            isolated=audit_parity(baseline,{
+                date(2023,6,15):p,date(2026,9,5):p})
+        assert isolated["official_K_calendar_days_checked"]==1
+
         baseline["venues"]["桐生"]["cycle_start"]="2026-09-04"
         # A Sept-4 K is present, but Sept-5 is missing: the day inside
         # the eligible claimed cycle window cannot silently become zero.
