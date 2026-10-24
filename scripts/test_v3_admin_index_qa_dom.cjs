@@ -34,7 +34,8 @@ class Element {
   return node.tag==="body"||node.tag==="head";}
 }
 
-function mock({member=true,admin=true,publicView=false,gateDuringFetch=false}={}){
+function mock({member=true,admin=true,publicView=false,gateDuringFetch=false,
+  http=422,apiPayload=null}={}){
  const root=new Element("body"),head=new Element("head");
  const pane=new Element("div");pane.id="playerScenarioDetail";root.appendChild(pane);
  const flags={publicView,admin,member};
@@ -54,10 +55,10 @@ function mock({member=true,admin=true,publicView=false,gateDuringFetch=false}={}
   fetch:async()=>{
    network++;
    if(gateDuringFetch)flags.publicView=true;
-   return new Response(JSON.stringify({
+   return new Response(JSON.stringify(apiPayload||{
     status:"unavailable",reason:"race_context_missing",
     diagnostic_version:"brc-v3-422-phase-v1",secret:TOKEN
-   }),{status:422,headers:{"content-type":"application/json"}});
+   }),{status:http,headers:{"content-type":"application/json"}});
   }
  };
  vm.runInNewContext(script,context,{timeout:1500});
@@ -94,6 +95,7 @@ test("manual-only diagnostic invokes one fixed authenticated staging call, 422 i
  assert.deepEqual(x.counters(),{network:1,sessionCalls:1});
  const result=locate(panel.children[3],"p");
  assert.match(result.textContent,/STAGE_KV_RACE_CONTEXT_MISSING/);
+ assert.match(result.textContent,/ステージングKVで見つかりません/);
  assert.equal(result.textContent.includes(TOKEN),false);
  assert.equal(result.textContent.includes("pctFloat"),false);
  await button.listeners.click();
@@ -114,4 +116,39 @@ test("public-view switch during v3 request removes the QA panel without exposing
  assert.equal(x.counters().network,1);
  assert.equal(JSON.stringify({output:panel.children.map(c=>c.textContent)}).includes(TOKEN),false);
  assert.equal(x.api.mount(),false);
+});
+
+test("422 cause labels are fixed Japanese text: upstream 404, invalid context and model failure",async()=>{
+ const causes=[
+  ["live_service_http_error",404,"LIVE_EXHIBITION_KV_RACE_NOT_FOUND","展示API"],
+  ["race_context_invalid",null,"STAGE_KV_RACE_CONTEXT_INVALID","6艇情報"],
+  ["metrics_failed",null,"V3_MODEL_FOUR_METRIC_COMPUTATION_FAILED","計算に失敗"],
+ ];
+ for(const [reason,upstream_http,phase,human] of causes){
+  const x=mock({apiPayload:{
+   status:"unavailable",reason,upstream_http,
+   diagnostic_version:"brc-v3-422-phase-v1",secret:TOKEN
+  }});
+  x.api.mount();
+  const panel=x.pane.children[0],button=locate(panel,"button");
+  await button.listeners.click();
+  const message=panel.children[3].textContent;
+  assert.ok(message.includes(phase));
+  assert.ok(message.includes(human));
+  assert.ok(!message.includes(TOKEN));
+  assert.equal(x.counters().network,1);
+ }
+});
+test("unknown Worker error text is NEVER shown in admin QA panel",async()=>{
+ const x=mock({apiPayload:{status:"unavailable",reason:TOKEN,
+  secret:"secret@example.com",payload:{reg:"1234"}}});
+ x.api.mount();
+ const panel=x.pane.children[0],button=locate(panel,"button");
+ await button.listeners.click();
+ const message=panel.children[3].textContent;
+ assert.match(message,/UNDIAGNOSED_422_CHECK_WORKER_PATCH/);
+ assert.match(message,/診断パッチ/);
+ assert.equal(message.includes(TOKEN),false);
+ assert.equal(message.includes("secret@example.com"),false);
+ assert.equal(message.includes("1234"),false);
 });
