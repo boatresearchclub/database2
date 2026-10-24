@@ -7,11 +7,13 @@ on:
     paths:
       - 'scripts/brc_four_workstream_readiness.py'
       - 'scripts/test_four_workstream_readiness.py'
+      - 'scripts/brc_scenario_123_research.py'
       - '.github/workflows/brc-four-feature-gate-audit.yml'
   pull_request:
     paths:
       - 'scripts/brc_four_workstream_readiness.py'
       - 'scripts/test_four_workstream_readiness.py'
+      - 'scripts/brc_scenario_123_research.py'
       - '.github/workflows/brc-four-feature-gate-audit.yml'
 permissions:
   contents: read
@@ -26,6 +28,8 @@ jobs:
           python-version: '3.12'
       - name: Pure offline regression tests
         run: python scripts/test_four_workstream_readiness.py
+      - name: Verify 1st-2nd-3rd conditional research aggregation
+        run: python scripts/brc_scenario_123_research.py --self-test
       - name: Read-only audit of four research feature sources
         run: python scripts/brc_four_workstream_readiness.py --out brc_four_workstream_readiness.json
       - name: Explain what this job does not release
