@@ -12,9 +12,14 @@ export function createPrivateScenarioMatrixLoader({binding, expectedSha256, fixe
     if(typeof subject!=="string"||!subject||subject.length>256)
       throw Error("VERIFIED_SUBJECT_REQUIRED");
     const text=await binding.get(fixedKey,{type:"text"});
-    if(typeof text!=="string"||text.length<20||text.length>2_000_000)
+    if(typeof text!=="string")
       throw Error("PRIVATE_SOURCE_MISSING");
-    const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(text));
+    // The K cohort grows as verified dates are added; check UTF-8 bytes
+    // rather than JS character count, and keep a bounded 12 MB limit.
+    const encoded=new TextEncoder().encode(text);
+    if(encoded.byteLength<20||encoded.byteLength>12_000_000)
+      throw Error("PRIVATE_SOURCE_MISSING");
+    const digest=await crypto.subtle.digest("SHA-256",encoded);
     const actual=Array.from(new Uint8Array(digest),x=>x.toString(16).padStart(2,"0")).join("");
     if(actual!==expectedSha256)throw Error("PRIVATE_SOURCE_DIGEST_MISMATCH");
     let obj;
