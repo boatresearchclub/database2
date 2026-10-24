@@ -19,7 +19,11 @@ export const V3_STAGE_ORIGIN="https://brc-timex-v3-test.sk48159212.workers.dev";
 const PATH="/stage-context-presence";
 const ALLOWED_CODES=new Set(Array.from({length:24},(_,i)=>String(i+1).padStart(2,"0")));
 const TOKEN=/^[A-Za-z0-9._~+/-]{16,4096}$/;
-const SAFE_MESSAGE=/^[A-Za-z0-9._-]{1,80}$/;
+const SAFE_META_CODES=new Set([
+ "ok","ready","available","unavailable","missing","context_missing",
+ "stored_context_found","not_logged_in","unauthorized","not_found",
+ "error","stale","no_context","BRC_V3_STAGE_KV_READONLY_V3"
+]);
 
 function classify(code,details){
   if(code===401)return "AUTH_REQUIRED_OR_SESSION_EXPIRED";
@@ -43,7 +47,7 @@ function sanitizePayload(json) {
   if(!json||typeof json!=="object"||Array.isArray(json))return {};
   const x={};
   for(const key of ["status","error","reason","code","probe_version"]){
-    if(typeof json[key]==="string"&&SAFE_MESSAGE.test(json[key])) x[key]=json[key];
+    if(typeof json[key]==="string"&&SAFE_META_CODES.has(json[key])) x[key]=json[key];
   }
   // Presence booleans are metadata only, no boat data, names, rates or tokens.
   for(const key of ["present","exists"]){
