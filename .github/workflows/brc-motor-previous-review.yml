@@ -56,6 +56,20 @@ jobs:
           restore-keys: |
             brc-motor-previous-k-
             brc-course365-k-
+      - name: Install official K archive decompressor
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qq -y p7zip-full
+      - name: Repair ONLY official K dates cited in fresh 24-venue REVIEW before K identity check
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/test_motor_previous_k_gap_fill.py
+          python scripts/brc_motor_previous_k_gap_fill.py \
+            --review .cache/motor_previous_review.json \
+            --archive-dir .cache/brc-course365-k \
+            --max-downloads 14 \
+            --audit .cache/brc_motor_previous_k_gap_fill_review_dates_only.json
       - name: Cross-check motor/racer/date against official K archive
         shell: bash
         run: |
@@ -69,20 +83,15 @@ jobs:
             --feed .cache/motor_previous_review.json \
             --audit .cache/motor_previous_official_K_audit.json \
             --output racecards/motor_previous_daily.json
-      - name: Install original K official archive decompressor
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -qq -y p7zip-full
-      - name: Fill only source-verified previous meetings' missing K days (at most 14)
+      - name: Verify every released rider's official K date is present before ranking
         shell: bash
         run: |
           set -euo pipefail
-          python scripts/test_motor_previous_k_gap_fill.py
           python scripts/brc_motor_previous_k_gap_fill.py \
             --previous racecards/motor_previous_daily.json \
             --archive-dir .cache/brc-course365-k \
-            --max-downloads 14 \
-            --audit .cache/brc_motor_previous_k_gap_fill_readonly.json
+            --max-downloads 0 \
+            --audit .cache/brc_motor_previous_k_gap_fill_verified.json
       - name: Restore actual original-K chronological previous-meet numeric ranks (fail closed)
         shell: bash
         run: |
