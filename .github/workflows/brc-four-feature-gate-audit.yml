@@ -29,6 +29,8 @@ on:
       - 'workers/brc_scenario_index_session_adapter_candidate.mjs'
       - 'workers/test_brc_scenario_index_session_adapter_candidate.mjs'
       - 'scripts/brc_scenario_123_coverage_audit.py'
+      - 'scripts/brc_scenario_private_kv_review_manifest.py'
+      - 'scripts/test_scenario_private_kv_review_manifest.py'
       - 'scripts/test_scenario_index_integration_audit.py'
       - 'scripts/test_scenario_admin_qa_html.py'
       - 'scripts/test_scenario_admin_qa_preview.py'
@@ -120,6 +122,8 @@ jobs:
         run: python scripts/test_scenario_admin_qa_html.py
       - name: Offline admin matrix QA preview security and denominator guards
         run: python scripts/test_scenario_admin_qa_preview.py
+      - name: Private-KV source SHA256 source-gate fixtures (NO PUBLISH)
+        run: python scripts/test_scenario_private_kv_review_manifest.py
       - name: Disjoint verified K scenario union fixtures
         run: python scripts/test_scenario_k_union_research.py
       - name: Official-K conditional-matrix offline fixtures
@@ -245,6 +249,11 @@ jobs:
             --windows "2023-06-01:2023-06-15,2024-06-01:2024-06-15,2025-06-01:2025-06-15,2025-11-26:2026-10-23" \
             --report brc_scenario_union_windows_audit.json \
             --matrix brc_scenario_union_windows_matrix.json
+      - name: Produce exact original K matrix private-KV import review manifest (NO UPLOAD)
+        run: |
+          python scripts/brc_scenario_private_kv_review_manifest.py \
+            --matrix brc_scenario_union_windows_matrix.json \
+            --out brc_scenario_private_kv_review_manifest.json
       - name: Measure actual player-specific vs venue baseline N>=5 coverage
         run: python scripts/brc_scenario_123_coverage_audit.py --matrix brc_scenario_union_windows_matrix.json --out brc_scenario_admin_coverage.json
       - name: Generate sample four-mode admin QA preview without any deployed endpoint
@@ -325,6 +334,7 @@ jobs:
             brc_scenario_index_target_hooks.json
             brc_session_source_tokenfree.json
             brc_scenario_admin_coverage.json
+            brc_scenario_private_kv_review_manifest.json
             brc_scenario_index_qa_candidate_audit.json
             BRC_SCENARIO_INDEX_QA_DO_NOT_PUSH.html
             brc_motor_finals_claimed_cycle_research.json
