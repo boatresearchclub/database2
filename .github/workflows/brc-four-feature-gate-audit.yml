@@ -10,6 +10,8 @@ on:
       - 'scripts/brc_motor_k_cycle_observations.py'
       - 'scripts/brc_motor_previous_k_summaries.py'
       - 'scripts/brc_motor_index_display_contract_audit.py'
+      - 'scripts/brc_motor_previous_index_qa_patch.py'
+      - 'scripts/test_brc_motor_previous_index_qa_patch.py'
       - 'scripts/brc_motor_previous_k_coverage.py'
       - 'scripts/test_motor_previous_k_coverage.py'
       - 'scripts/BRC_MOTOR_PREVIOUS_K_RANK_RESTORE_CANDIDATE.py'
@@ -83,6 +85,13 @@ jobs:
             --index index.html --out brc_scenario_index_hooks.json
       - name: Audit current BRC INDEX motor last-meet display anchors (READ ONLY)
         run: python scripts/brc_motor_index_display_contract_audit.py --index index.html --out brc_motor_index_contract.json
+      - name: Require reversible official-K-only motor previous INDEX candidate (DO NOT PUSH)
+        run: |
+          python scripts/test_brc_motor_previous_index_qa_patch.py
+          python scripts/brc_motor_previous_index_qa_patch.py \
+            --index index.html \
+            --out /tmp/BRC_MOTOR_K_QA_NOT_FOR_DEPLOY.html \
+            --audit brc_motor_previous_index_qa_audit.json
       - name: Inspect actual BRC login provider (TOKEN-FREE READ ONLY)
         run: python scripts/brc_session_source_tokenfree_audit.py --index index.html --out brc_session_source_tokenfree.json
       - name: Target actual player 展開 panel and admin state for future gated adapter
@@ -386,6 +395,7 @@ jobs:
             brc_v3_offline_summary.json
             brc_motor_scope_audit.json
             brc_motor_index_contract.json
+            brc_motor_previous_index_qa_audit.json
             brc_motor_k_cycle_research.json
             brc_motor_previous_k_coverage.json
             brc_motor_sept_baseline_parity.json
