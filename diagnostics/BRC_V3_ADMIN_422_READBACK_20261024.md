@@ -64,3 +64,25 @@ Cloudflare Dashboardの**現在のWorkerソース**とバインディング (`BR
 - Node で **12 + 10 + 7 + 6 = 35件**の安全性・API契約テストが成功。GitHub Actions [#40078622850](https://github.com/boatresearchclub/database2/actions/runs/40078622850) が SUCCESS。模擬Worker・模擬KVであり、実管理者JWTを用いたテストではない。
 - **通常運用上の最短切り分け**は、実際の管理者画面から当日・展示確定後の同一レースに対し `POST /predict-timex-v3` を1回だけ呼ぶこと。422なら、安全な `reason`（`date_not_today_jst`, `race_context_missing`, `race_context_invalid`, `live_service_http_error`, `live_service_invalid_json`, `metrics_failed`）から原因を分ける。パッチがまだデプロイされていなければ422本文には理由コードがない可能性がある。現行WorkerのソースとKVバインディングの照合が最終的な必須作業。
 - **INDEXでの管理者v3表示完了を偽装しない**。計算API成功 + 6艇×4指標の整合 + 実際の画面反映が確認されるまで `v3Verified:false`。一般利用者の旧v2を維持。本番INDEX、Cloudflare Worker、KV、D1には変更を加えていない。
+
+
+## 2026-10-24 18:58 JST：実ステージングCORS検証と非公開QAの到達範囲
+
+[PR検証Run #40084036981](https://github.com/boatresearchclub/database2/actions/runs/40084036981)で、認証なし・保存なしの**OPTIONSプリフライト**を2つのBRC既知オリジンから模擬し、稼働中のステージングWorkerに問い合わせた。
+
+| 送信Origin | ステータス | POST/Authorization/CORSの許可 |
+| --- | --- | --- |
+| `https://brcdatabase.pages.dev` | HTTP 204 | 許可 |
+| `https://boatresearchclub.github.io` | HTTP 403 | 拒否 |
+
+実際の保存済みv3 Workerには、許可Originの既定値 `https://brcdatabase.pages.dev` と環境変数 `BRC_TIMEX_V3_ALLOWED_ORIGIN` がある。今回の実測は既定Pagesホストからの通信可能性を支持する。ただし**現在のWorkerコードとLibrary保管ソースの同一性、ユーザーが使っている実際のBRCアクセス元、管理者POSTの成功、422の原因は未確認**。
+
+**実装改善：**
+
+- `scripts/brc_v3_stage_cors_preflight_probe.py`：Authorization/JWTの値を使わずOPTIONSのみ送信し、上記2オリジンのステータスと許可ヘッダーをサニタイズして保存。`scripts/test_brc_v3_stage_cors_preflight_probe.py`がno token/no POSTの境界をテスト。どちらもモデルやKVへアクセスしない。
+- `scripts/brc_v3_admin_index_qa_bridge.js`：422の公開可能な理由コード（KV欠落、公開展示API 404、Workerの内部計算失敗、日付不一致など）を固定された日本語ガイドへ変換する。**外部Workerが返す任意テキストは表示しない**。
+- 同QAブリッジは、診断を実行するページが現在確認済みの `https://brcdatabase.pages.dev` 以外なら**JWT取得もWorkerへの送信も行わない**。GitHub Pages・`file://`のオフラインHTMLでボタンを押しても、そのファイルから実運用Workerへの認証付き通信は実行できない。`scripts/test_v3_admin_index_qa_dom.cjs`に拒否回帰テストを追加。これはオフラインのブラウザUI試験だけを提供し、実ステージング経路のHTTP422を再現できないことを明示するためのガードである。
+
+**次に必要な実運用検証：** BRC本体の許可済みPagesオリジン上で、管理者セッションを保持した状態で**展示確定済みの当日レース1件のみ**実Workerへ認証付き `POST /predict-timex-v3` を実行。公開してよい短い `reason` を確認。もし422が `live_service_http_error` かつ `upstream_http=404` なら同一race/date/venueの `BRC_LIVE_SERVICE` バインディング経由の展示保存データを調べる。 `race_context_missing`なら同じWorkerに結びつく `BRC_RACE_CONTEXT` KVの有効期限とreadbackを確認。`metrics_failed`なら非公開でWorkerの4指標演算を調査する。
+
+**本番INDEX/Worker/KV/D1は未変更。GitHubにある診断パネルは本番へデプロイせず、一般会員v2を維持。**
