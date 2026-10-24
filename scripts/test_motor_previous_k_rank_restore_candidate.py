@@ -84,7 +84,9 @@ def test():
     denied(feed,bad)
     bad=copy.deepcopy(study);bad["venues"]["桐生"]["motors"]["1"]["previous_user"]="別の選手"
     denied(feed,bad)
-    bad=copy.deepcopy(study);bad["venues"]["桐生"]["motors"]["1"]["observed_results"][1]["race_no"]=7
+    bad=copy.deepcopy(study)
+    bad["venues"]["桐生"]["motors"]["1"]["observed_results"][1]["race_no"]=7
+    bad["venues"]["桐生"]["motors"]["1"]["observed_results"][1]["date"]="2026-10-20"
     denied(feed,bad)
     bad=copy.deepcopy(study);bad["venues"]["桐生"]["motors"]["1"]["observed_results"][1]["date"]="2026-10-20"
     denied(feed,bad)
