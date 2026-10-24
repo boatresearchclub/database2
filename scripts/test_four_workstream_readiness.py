@@ -80,6 +80,23 @@ def run():
 
         assert result["new_timex_v3"]["approved_meeting_venue_codes_today"]==["05"]
         assert result["new_timex_v3"]["authenticated_422_resolved"] is False
+        assert result["new_timex_v3"]["live_admin_authenticated_predict_verified"] is False
+        assert result["new_timex_v3"]["manual_admin_index_diagnostic_candidate_present"] is False
+        assert result["new_timex_v3"]["offline_qa_artifact_is_not_deployed"] is True
+        for candidate in (
+            "workers/brc_v3_index_session_adapter_candidate.mjs",
+            "scripts/brc_v3_admin_index_qa_bridge.js",
+            "scripts/brc_v3_admin_index_qa_build.py",
+        ):
+            p=root/candidate
+            p.parent.mkdir(parents=True,exist_ok=True)
+            p.write_text("// offline QA only",encoding="utf-8")
+        with_candidates=audit(root,date(2026,10,24))["new_timex_v3"]
+        assert with_candidates["native_brc_admin_session_adapter_candidate_present"] is True
+        assert with_candidates["manual_admin_index_diagnostic_candidate_present"] is True
+        assert with_candidates["authenticated_422_resolved"] is False
+        assert with_candidates["four_metrics_dom_and_prediction_verified"] is False
+        assert with_candidates["live_admin_authenticated_predict_verified"] is False
         assert result["true_timex"]["production_banner_allowed"] is False
         assert result["scenario_2nd_by_3rd"]["admin_d_model_present"] is True
         assert result["scenario_2nd_by_3rd"]["official_conditional_matrix_present"] is False
