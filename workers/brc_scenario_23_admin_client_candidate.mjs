@@ -29,8 +29,14 @@ export function createScenario23ReadClient({getSessionToken,isAdminUi,fetchImpl,
     if(scope==="player")q.set("player_reg",playerReg);
     return q;
   }
+  // One mounted player/venue panel may switch race or account while an
+  // async read is in flight. The newest selection owns the render result.
+  let generation=0;
+  const stale=(mine)=>mine!==generation || isAdminUi()!==true;
   return {
+    invalidate(){generation++;},
     async load(selection){
+      const mine=++generation;
       // No storage, cookie, broad response/cache, redirects, generic requests
       // or personal-identifying contact details are needed.
       if(isAdminUi()!==true)return {status:"ADMIN_VIEW_REQUIRED",rates:[]};
@@ -38,6 +44,7 @@ export function createScenario23ReadClient({getSessionToken,isAdminUi,fetchImpl,
       let token;
       try{token=await getSessionToken();}
       catch(_){return {status:"SESSION_UNVERIFIED",rates:[]};}
+      if(stale(mine))return {status:"STALE_REQUEST_SUPPRESSED",rates:[]};
       if(typeof token!=="string"||!/^[-._~+\/A-Za-z0-9]{16,4096}$/.test(token))
         return {status:"SESSION_UNVERIFIED",rates:[]};
       if(isAdminUi()!==true)return {status:"ADMIN_VIEW_REQUIRED",rates:[]};
@@ -49,6 +56,7 @@ export function createScenario23ReadClient({getSessionToken,isAdminUi,fetchImpl,
           credentials:"omit",redirect:"error",cache:"no-store",mode:"cors"
         });
       }catch(_){return {status:"SERVER_UNAVAILABLE",rates:[]};}
+      if(stale(mine))return {status:"STALE_REQUEST_SUPPRESSED",rates:[]};
       if(resp.status===401||resp.status===403)
         return {status:"SERVER_ADMIN_AUTH_DENIED",rates:[]};
       if(resp.status===409)return {status:"AFTER_EXHIBITION_NOT_VERIFIED",rates:[]};
@@ -56,6 +64,7 @@ export function createScenario23ReadClient({getSessionToken,isAdminUi,fetchImpl,
       let out;
       try{out=await resp.json();}
       catch(_){return {status:"UNTRUSTED_RESPONSE",rates:[]};}
+      if(stale(mine))return {status:"STALE_REQUEST_SUPPRESSED",rates:[]};
       if(isAdminUi()!==true)return {status:"ADMIN_VIEW_REQUIRED",rates:[]};
       if(out?.ok!==true)return {status:"UNTRUSTED_RESPONSE",rates:[]};
       if(out.status==="MISSING_OR_N_LT_5"&&out.denominator_n===null
