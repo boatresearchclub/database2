@@ -48,6 +48,9 @@ jobs:
         run: python scripts/test_motor_previous_k_summaries.py
       - name: True TimeX original-outcome cohort fixtures
         run: python scripts/test_true_timex_effect_research.py
+      - name: v3 official B-file and reviewed meeting preflight (NO WORKER)
+        continue-on-error: true
+        run: python scripts/brc_v3_stage_daily.py --summary brc_v3_offline_summary.json
       - name: Read-only audit of four research feature sources
         run: python scripts/brc_four_workstream_readiness.py --out brc_four_workstream_readiness.json
       - name: Explain what this job does not release
@@ -60,6 +63,8 @@ jobs:
         if: always()
         with:
           name: brc-four-workstreams-readonly
-          path: brc_four_workstream_readiness.json
+          path: |
+            brc_four_workstream_readiness.json
+            brc_v3_offline_summary.json
           if-no-files-found: ignore
           retention-days: 7
