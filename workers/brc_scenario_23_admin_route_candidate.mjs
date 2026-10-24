@@ -79,12 +79,30 @@ function validateStoredMatrix(m) {
     ||!Array.isArray(m.research_rows)||!m.research_rows.length
     ||!Number.isInteger(m.number_of_verified_races)
     ||m.number_of_verified_races<1)throw Error("SOURCE_NOT_VERIFIED");
+  // A "DISJOINT" label is not proof: reject malformed, reversed,
+  // impossible-day and overlapping source windows before exposing any cohort.
+  const intervals=[];
+  const utcDay=(v)=>{
+    if(typeof v!=="string"||!/^\d{4}-\d\d-\d\d$/.test(v))return null;
+    const ms=Date.parse(v+"T00:00:00Z");
+    if(!Number.isFinite(ms)||new Date(ms).toISOString().slice(0,10)!==v)
+      return null;
+    return ms;
+  };
   for(const win of m.source_windows) {
-    if(!/^\d{4}-\d\d-\d\d$/.test(win.start)
-        || !/^\d{4}-\d\d-\d\d$/.test(win.end)
-        || !Number.isInteger(win.verified_calendar_days)
-        || win.verified_calendar_days<1)throw Error("SOURCE_NOT_VERIFIED");
+    if(!win||typeof win!=="object")throw Error("SOURCE_NOT_VERIFIED");
+    const start=utcDay(win.start),end=utcDay(win.end);
+    if(start===null||end===null||end<start
+       ||!Number.isSafeInteger(win.verified_calendar_days)
+       ||win.verified_calendar_days<1
+       ||win.verified_calendar_days>(end-start)/86400000+1)
+      throw Error("SOURCE_NOT_VERIFIED");
+    intervals.push([start,end]);
   }
+  intervals.sort((a,b)=>a[0]-b[0]);
+  for(let i=1;i<intervals.length;i++)
+    if(intervals[i][0]<=intervals[i-1][1])
+      throw Error("SOURCE_NOT_VERIFIED");
 }
 function validateCohort(row,p) {
   if(row.venue_code!==p.venue||row.winning_course!==p.course
