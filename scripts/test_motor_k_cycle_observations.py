@@ -9,12 +9,12 @@ import BRC_PLAYER_COURSE365_V3_OFFICIAL as official
 
 
 def official_fixture(motors=(11,12,13,14,15,16)):
-    lines=["STARTK", "05KBGN", "　2026/10/20 三国 公式結果",
+    lines=["STARTK", "10KBGN", "　2026/10/20 三国 公式結果",
            " 1R       一般                H1800m"]
     for boat,motor in enumerate(motors,1):
         rank=str(boat) if boat <=5 else "F"
         lines.append(f"  {rank} {boat} {1233+boat:04d} 山田太郎 {motor:02d} 22 6.85 {boat} 0.14 1.50")
-    lines.extend(["05KEND","FINALK"])
+    lines.extend(["10KEND","FINALK"])
     return "\n".join(lines)+"\n"
 
 
