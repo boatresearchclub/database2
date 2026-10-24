@@ -26,6 +26,7 @@ on:
       - 'workers/test_brc_scenario_23_private_loader_candidate.mjs'
       - 'workers/brc_scenario_23_integrated_candidate.mjs'
       - 'workers/test_brc_scenario_23_integrated_candidate.mjs'
+      - 'workers/brc_scenario_23_full_k_offline_audit.mjs'
       - 'workers/brc_scenario_supabase_member_auth_candidate.mjs'
       - 'workers/test_brc_scenario_supabase_member_auth_candidate.mjs'
       - 'workers/brc_scenario_index_session_adapter_candidate.mjs'
@@ -260,6 +261,11 @@ jobs:
           python scripts/brc_scenario_private_kv_review_manifest.py \
             --matrix brc_scenario_union_windows_matrix.json \
             --out brc_scenario_private_kv_review_manifest.json
+      - name: Exercise full original-K matrix via in-memory private KV and server-admin simulation (NO DEPLOY)
+        run: |
+          node workers/brc_scenario_23_full_k_offline_audit.mjs \
+            brc_scenario_union_windows_matrix.json \
+            brc_scenario_private_kv_review_manifest.json
       - name: Measure actual player-specific vs venue baseline N>=5 coverage
         run: python scripts/brc_scenario_123_coverage_audit.py --matrix brc_scenario_union_windows_matrix.json --out brc_scenario_admin_coverage.json
       - name: Generate sample four-mode admin QA preview without any deployed endpoint
