@@ -124,8 +124,15 @@ def audit(root: Path, now: date | None = None) -> dict:
             "expected_modes": ["全体", "差し", "まくり", "まくり差し"],
         },
         "release_blockers": findings,
-        "all_four_ready": bool(motor_valid and prior_ok and official_matrix_present and
-                               not cohort_missing and not findings and False),
+        # This audit cannot certify authenticated Worker/KV calculations or
+        # actual end-user DOM parity. Source-only success must never mark GO.
+        "all_four_ready": False,
+        "integration_blockers_unchecked": [
+            "authenticated v3 Worker 422 and KV readback",
+            "six-boat four-metric DOM parity in admin sessions",
+            "true TimeX absolute-band original cohort and holdout validation",
+            "D/E official 2nd-by-3rd matrix exhibition-before/after parity",
+        ],
     }
 
 
