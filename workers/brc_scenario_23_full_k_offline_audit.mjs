@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {createHash} from "node:crypto";
 import {createScenario23AdminHandler} from "./brc_scenario_23_admin_route_candidate.mjs";
+import {officialKPercent} from "./brc_scenario_23_percent.mjs";
 import {createPrivateScenarioMatrixLoader} from "./brc_scenario_23_private_loader_candidate.mjs";
 
 const [matrixPath, manifestPath]=process.argv.slice(2);
@@ -18,6 +19,14 @@ assert.equal(Buffer.byteLength(text),manifest.exact_unmodified_utf8_source_bytes
 const matrix=JSON.parse(text);
 assert.equal(matrix.research_rows.length,manifest.N_ge_5_conditional_cells);
 assert.equal(matrix.number_of_verified_races,manifest.verified_races);
+let halfEvenSourceCells=0;
+for(const row of matrix.research_rows){
+  for(const x of row.third_boat_rates){
+    const value=officialKPercent(x.n,row.denominator_n);
+    assert.equal(x.pct,value,"Official K source vs Worker percentage mismatch");
+    if(value!==Math.round(1000*x.n/row.denominator_n)/10)halfEvenSourceCells++;
+  }
+}
 let authorized=false, kvReads=0, savedText=text;
 const getMatrix=createPrivateScenarioMatrixLoader({
   binding:{get:async()=>{kvReads++;return savedText}},
@@ -80,6 +89,7 @@ console.log(JSON.stringify({
   verified_days:matrix.verified_calendar_days,
   conditional_cells:matrix.research_rows.length,
   tested_valid_cohorts:checked,
+  cells_needing_Python_rounding:halfEvenSourceCells,
   public_and_invalid_data_blocked:true,
   full_source_digest_verified:true,
   production_deployed:false
