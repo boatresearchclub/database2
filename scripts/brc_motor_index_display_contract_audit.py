@@ -67,6 +67,21 @@ def main():
     args.out.write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     for key,item in result["matches"].items():
         print("MOTOR_INDEX",key,json.dumps(item,ensure_ascii=False))
+    # Review two exact, non-login public motor rendering branches, with
+    # sanitized source excerpt only; never print full source or embedded data.
+    for target in ("function brcVerifiedPrevCheck(payload)", "const validRanks="):
+        start=src.find(target)
+        if start<0: continue
+        a=max(0,start-250)
+        b=min(len(src),start+2600)
+        excerpt=src[a:b]
+        if SECRET_RE.search(excerpt):
+            excerpt="[REDACTED]"
+        else:
+            excerpt=SAFE_CHARS.sub("?",excerpt)
+        print("MOTOR_INDEX_SOURCE_REVIEW "+json.dumps({
+            "anchor":target,"source":excerpt
+        },ensure_ascii=False))
     print("MOTOR_INDEX_NO_INDEX_MUTATION")
 
 
