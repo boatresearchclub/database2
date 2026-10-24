@@ -45,3 +45,12 @@
 ### 実稼働の解放条件
 
 Cloudflare Dashboardの**現在のWorkerソース**とバインディング (`BRC_RACE_CONTEXT`, `BRC_LIVE_SERVICE`, `BRC_TIMEX_RATE_LIMITER`) をまず確認。管理者ログインで当日かつ展示確定後の1レースについて `POST /predict-timex-v3` の安全な理由コードとHTTP状態を取得。もし `live_service_http_error` + `upstream_http:404` なら同一date/venue/raceのlive Worker保存状況を修復する。もし `metrics_failed` ならWorker内部のモデル計算入力・基礎率を秘密のまま再検証。再計算成功 + 6艇×4指標整合 + INDEX反映の確認が揃うまでは `v3Verified:false` とし、管理者も旧v2参照・一般会員はv2維持。
+
+
+### 公開展示API 404の具体的レース（10/24 JST16:35ごろ）
+
+[第2回読み取り検証 #40074719721](https://github.com/boatresearchclub/database2/actions/runs/40074719721) でも 35/42=HTTP200＋6艇数値、7/42=HTTP404 の結果を再確認。404は次のレースに集中：**住之江 6R・12R、若松 1R・6R・12R、大村 6R・12R**。いずれも夜の開催を含む場のため、**展示確定前404である可能性がある**。この7Rをもって「Workerの恒常的故障」だとは判断しない。
+
+逆に当日の**三国 1R・6R・12R**などは公開ライブAPI側でHTTP200＋6艇TimeX数値あり。管理者権限付きの**同一日・同一会場・同一レース `POST /predict-timex-v3`** を行い、もしまだ422なら `race_context_missing` / `metrics_failed` / 内部サービスのレスポンス差異などへ調査対象を絞れる。**当該管理者POSTはこの開発チャットから実行・証明できていない。**
+
+本番BRC一般会員はv2維持。モデルの「準備完了」と「送信受付だけ成功」を混同しない。
