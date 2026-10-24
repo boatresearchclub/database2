@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Offline regression fixtures for K-only previous-motor ranking restoration."""
 import copy
+from pathlib import Path
 
 from BRC_MOTOR_PREVIOUS_K_RANK_RESTORE_CANDIDATE import restore_verified_previous_ranks
 from brc_motor_previous_k_summaries import NAMES
@@ -101,7 +102,16 @@ def test():
     denied(feed,bad)
     bad=copy.deepcopy(feed);bad["cumulative_motor_stats_available"]=True
     denied(bad,study)
-    print("PASS: 839/840 real-K ordered ranks restored, old series never retained, one absent suppressed")
+    workflow=(Path(__file__).resolve().parents[1] / ".github/workflows/brc-motor-previous-review.yml").read_text(encoding="utf-8")
+    assert "  push:\\n    branches:\\n      - main\\n" in workflow
+    assert "        if: github.ref == 'refs/heads/main'" in workflow
+    assert workflow.index("Restore actual original-K chronological previous-meet numeric ranks") < (
+        workflow.index("Commit only independently verified dated previous-user feed")
+    )
+    assert workflow.index("PREVIOUS_K_RANKS_SOURCE_VERIFIED_READY_FOR_VERSIONED_FEED_COMMIT") < (
+        workflow.index("git push origin HEAD:main")
+    )
+    print("PASS: 839/840 real-K ordered ranks restored; nightly feed commits only after K and on main")
 
 
 if __name__=="__main__":
