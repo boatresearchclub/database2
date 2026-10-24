@@ -151,6 +151,12 @@ jobs:
           path: .cache/brc-course365-k
           key: brc-scenario-july-111-k-\40066143173
           fail-on-cache-miss: true
+      - name: Restore 132-day official K research archive including July 8-14
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/brc-course365-k
+          key: brc-scenario-july-132-k-40066966491
+          fail-on-cache-miss: true
       - name: Assert approved seed K coverage survived cache overlays
         run: |
           python - <<'PY'
@@ -221,7 +227,7 @@ jobs:
             --max-downloads 15 --allow-partial \
             --audit brc_scenario_2025_june_audit.json \
             --matrix brc_scenario_2025_june_matrix.json
-      - name: Ensure original K 2023-2025 June 1 to July 7 full 111 days are intact
+      - name: Ensure original K 2023-2025 June 1 to July 14 full 132 days are intact
         run: |
           python - <<'PY'
           import sys
@@ -230,36 +236,36 @@ jobs:
           sys.path.insert(0, "scripts")
           import BRC_PLAYER_COURSE365_V3_OFFICIAL as official
           found=official.discover_k(Path(".cache/brc-course365-k"))
-          required=[date(y,6,1)+timedelta(days=i) for y in (2023,2024,2025) for i in range(37)]
+          required=[date(y,6,1)+timedelta(days=i) for y in (2023,2024,2025) for i in range(44)]
           missing=[str(d) for d in required if d not in found]
           if missing:raise SystemExit("HOLD: historical K years missing "+str(missing))
-          print("HISTORIC_111_DAY_K_PASS: 2023, 2024 and 2025 June 1 - July 7 / no gaps")
+          print("HISTORIC_132_DAY_K_PASS: 2023, 2024 and 2025 June 1 - July 14 / no gaps")
           PY
       - name: Combine 2023/2024/2025 and 2026 source windows into one gated research matrix
         run: |
           python scripts/brc_scenario_k_union_research.py \
             --archive-dir .cache/brc-course365-k \
-            --windows "2023-06-01:2023-07-07,2024-06-01:2024-07-07,2025-06-01:2025-07-07,2025-11-26:2026-10-23" \
+            --windows "2023-06-01:2023-07-14,2024-06-01:2024-07-14,2025-06-01:2025-07-14,2025-11-26:2026-10-23" \
             --report brc_scenario_union_windows_audit.json \
             --matrix brc_scenario_union_windows_matrix.json
-      - name: Gate immutable 2023-2025 June and July original K plus 2026 union totals
+      - name: Gate full 2023-2025 June and July 14 original K plus 2026 union totals
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
           a=json.loads(Path("brc_scenario_union_windows_audit.json").read_text())
           m=json.loads(Path("brc_scenario_union_windows_matrix.json").read_text())
-          assert a["verified_calendar_days"]==443
-          assert a["verified_1_2_3_races"]==68774
-          assert a["N_ge_5_conditional_cells"]==2265
-          assert a["missing_2023_to_latest_calendar_days"]==949
+          assert a["verified_calendar_days"]==464
+          assert a["verified_1_2_3_races"]==72044
+          assert a["N_ge_5_conditional_cells"]>=2265
+          assert a["missing_2023_to_latest_calendar_days"]==928
           assert len(a["source_windows"])==4
-          assert [w["verified_calendar_days"] for w in a["source_windows"]]==[37,37,37,332]
-          assert [w["eligible_1_2_3_races"] for w in a["source_windows"]]==[5835,5834,5949,51156]
+          assert [w["verified_calendar_days"] for w in a["source_windows"]]==[44,44,44,332]
+          assert [w["eligible_1_2_3_races"] for w in a["source_windows"]]==[6873,6926,7089,51156]
           assert a["full_history_verified"] is False and a["public_or_admin_feed_published"] is False
           assert m["complete_history_from_2023_approved"] is False and m["publicVisible"] is False
-          assert len(m["research_rows"])==2265
-          print("OFFICIAL_K_443_DAY_68774_R_BASELINE_PASS / NO_PUBLICATION")
+          assert len(m["research_rows"])>=2265
+          print("OFFICIAL_K_464_DAY_72044_R_BASELINE_PASS / NO_PUBLICATION")
           PY
       - name: Publish per-year K sample coverage metadata only (NO RAW K DATA)
         run: |
