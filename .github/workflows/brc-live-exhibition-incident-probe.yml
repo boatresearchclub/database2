@@ -58,6 +58,10 @@ jobs:
                               if isinstance(val,str) and 16<=len(val)<=40 and val[:4].isdigit() and 'T' in val:
                                   row[prefix+k]=val
                       row['race_field_names']=[str(k)[:32] for k in race.keys() if isinstance(k,str) and k!='boats'][:20]
+                      collection=race.get('captured_at_jst')
+                      if isinstance(collection,str) and len(collection)<=64 and all(c.isdigit() or c in '-/:.+ TZ' for c in collection):
+                          row['captured_at_jst']=collection
+                      else: row['captured_at_jst_type']=type(collection).__name__
                       for key in ('code','reason','status','error'):
                           val=obj.get(key)
                           if isinstance(val,str) and len(val)<=70 and all(c.isalnum() or c in '_.-' for c in val):row[key]=val
