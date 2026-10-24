@@ -11,6 +11,8 @@ on:
       - 'scripts/brc_scenario_k_union_research.py'
       - 'scripts/brc_scenario_admin_qa_preview.py'
       - 'scripts/brc_scenario_admin_qa_html.py'
+      - 'scripts/brc_scenario_index_integration_audit.py'
+      - 'scripts/test_scenario_index_integration_audit.py'
       - 'scripts/test_scenario_admin_qa_html.py'
       - 'scripts/test_scenario_admin_qa_preview.py'
       - 'scripts/test_scenario_k_union_research.py'
@@ -74,6 +76,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Read-only inspect actual INDEX player 展開 anchors and admin gate
+        run: |
+          python scripts/test_scenario_index_integration_audit.py
+          python scripts/brc_scenario_index_integration_audit.py \
+            --index index.html --out brc_scenario_index_hooks.json
       - name: Pure offline regression tests
         run: python scripts/test_four_workstream_readiness.py
       - name: Verify 1st-2nd-3rd conditional research aggregation
@@ -274,6 +281,7 @@ jobs:
             brc_scenario_admin_qa_before.json
             brc_scenario_admin_qa_after.json
             brc_scenario_admin_offline_QA.html
+            brc_scenario_index_hooks.json
             brc_motor_finals_claimed_cycle_research.json
           if-no-files-found: ignore
           retention-days: 7
