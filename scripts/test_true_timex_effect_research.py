@@ -37,9 +37,11 @@ def test():
 
     record=data["rows"][0]
     record["player_band_n"]=4
+    record["player_band_wins"]=2
     assert evaluate(data)["candidate_count"] == 0
     assert evaluate(data)["rejected_small_n"] == 1
     record["player_band_n"]=20
+    record["player_band_wins"]=12
 
     bad=source()
     bad["schema"]="BRC_TRUE_TIMEX_MEDIAN_BASELINE_AUDIT_V9"
