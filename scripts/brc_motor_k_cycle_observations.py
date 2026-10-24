@@ -231,12 +231,32 @@ def main():
     p.add_argument("--held",type=Path,default=Path("racecards/motor-detail.json"))
     p.add_argument("--archive-dir",type=Path,default=Path(".cache/brc-course365-k"))
     p.add_argument("--out",required=True,type=Path)
+    p.add_argument("--fetch-recent-missing",action="store_true",
+                   help="Read-only official K fetch of last three completed days; never updates production")
     a=p.parse_args()
     today=datetime.now(JST).date()
     held=json.loads(a.held.read_text(encoding="utf-8"))
     scope,first=make_scope(held,today)
     files=official.discover_k(a.archive_dir)
+    fetch_attempts=[]
+    if a.fetch_recent_missing:
+        for offset in range(3,0,-1):
+            day=today-timedelta(days=offset)
+            if day < first or day in files:
+                continue
+            try:
+                path=official.official_k_download(day,a.archive_dir,timeout=25)
+                if not path or not Path(path).is_file():
+                    raise ValueError("Official K source did not yield a file")
+                # Parse now to avoid treating a downloaded file as validated.
+                official.load_k(Path(path),day)
+                files[day]=Path(path)
+                fetch_attempts.append({"date":day.isoformat(),"status":"DOWNLOADED_AND_K_VALIDATED"})
+            except Exception as exc:
+                fetch_attempts.append({"date":day.isoformat(),"status":"SOURCE_UNAVAILABLE",
+                                       "error_type":type(exc).__name__})
     report=aggregate(scope,files,today-timedelta(days=1))
+    report["official_recent_missing_K_fetch_attempts"]=fetch_attempts
     a.out.parent.mkdir(parents=True,exist_ok=True)
     a.out.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     print(json.dumps({
@@ -244,6 +264,7 @@ def main():
         "K_days_read":report["official_K_days_read"],
         "K_days_expected":report["official_K_calendar_days_expected"],
         "missing_K_dates":report["missing_official_K_calendar_days"],
+        "recent_source_attempts":fetch_attempts,
         "full_calendar_K_coverage":report["all_required_official_K_calendar_days_available"],
         "candidate_conflicts":report["candidate_conflict_types"],
         "decision":report["decision"],
