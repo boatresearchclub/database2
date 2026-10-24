@@ -8,12 +8,24 @@ on:
       - 'scripts/brc_four_workstream_readiness.py'
       - 'scripts/test_four_workstream_readiness.py'
       - 'scripts/brc_scenario_123_research.py'
+      - 'scripts/brc_scenario_123_official_k.py'
+      - 'scripts/test_scenario_123_official_k.py'
+      - 'scripts/brc_motor_previous_k_summaries.py'
+      - 'scripts/test_motor_previous_k_summaries.py'
+      - 'scripts/brc_true_timex_effect_research.py'
+      - 'scripts/test_true_timex_effect_research.py'
       - '.github/workflows/brc-four-feature-gate-audit.yml'
   pull_request:
     paths:
       - 'scripts/brc_four_workstream_readiness.py'
       - 'scripts/test_four_workstream_readiness.py'
       - 'scripts/brc_scenario_123_research.py'
+      - 'scripts/brc_scenario_123_official_k.py'
+      - 'scripts/test_scenario_123_official_k.py'
+      - 'scripts/brc_motor_previous_k_summaries.py'
+      - 'scripts/test_motor_previous_k_summaries.py'
+      - 'scripts/brc_true_timex_effect_research.py'
+      - 'scripts/test_true_timex_effect_research.py'
       - '.github/workflows/brc-four-feature-gate-audit.yml'
 permissions:
   contents: read
@@ -30,6 +42,12 @@ jobs:
         run: python scripts/test_four_workstream_readiness.py
       - name: Verify 1st-2nd-3rd conditional research aggregation
         run: python scripts/brc_scenario_123_research.py --self-test
+      - name: Official-K conditional-matrix offline fixtures
+        run: python scripts/test_scenario_123_official_k.py
+      - name: Verified previous-motor offline fixtures
+        run: python scripts/test_motor_previous_k_summaries.py
+      - name: True TimeX original-outcome cohort fixtures
+        run: python scripts/test_true_timex_effect_research.py
       - name: Read-only audit of four research feature sources
         run: python scripts/brc_four_workstream_readiness.py --out brc_four_workstream_readiness.json
       - name: Explain what this job does not release
