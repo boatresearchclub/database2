@@ -7,6 +7,10 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from brc_four_workstream_readiness import audit
 
+VENUES=("桐生","戸田","江戸川","平和島","多摩川","浜名湖","蒲郡","常滑",
+        "津","三国","びわこ","住之江","尼崎","鳴門","丸亀","児島",
+        "宮島","徳山","下関","若松","芦屋","福岡","唐津","大村")
+
 
 def put(root: Path, name: str, obj: dict):
     path = root / name
@@ -22,9 +26,9 @@ def fixtures(root: Path):
         {"version":"BRC-Motor-Previous-Official-K-Verified-V1",
          "date":"2026-10-22","cumulative_motor_stats_available":False,
          "official_K_matched_count":840,
-         "venues":{str(i):{"motors":{
+         "venues":{venue:{"motors":{
              str(j):{"verification":"motor_venue_racer_and_date_in_official_K"}
-             for j in range(35)}} for i in range(24)}})
+             for j in range(35)}} for venue in VENUES}})
     put(root, "racecards/true_timex_research_status.json",
         {"schema":"BRC_TRUE_TIMEX_SOURCE_STATUS_V7","source_dataset":None,
          "productionApproved":False})
@@ -55,6 +59,25 @@ def run():
             "official_K_matched_count":840,
             "venues":{str(i):{"motors":{}} for i in range(24)}
         })
+        assert audit(root,date(2026,10,24))["motor_detail"]["previous_identity_status"]=="CHECK_DATE_OR_PROVENANCE"
+        fixtures(root)
+
+        # Source-count must exactly equal individually verified motors. A
+        # plausible aggregate number cannot hide a single unchecked record.
+        previous_path=root/"racecards/motor_previous_daily.json"
+        previous=json.loads(previous_path.read_text(encoding="utf-8"))
+        previous["official_K_matched_count"]=841
+        put(root,"racecards/motor_previous_daily.json",previous)
+        assert audit(root,date(2026,10,24))["motor_detail"]["previous_identity_status"]=="CHECK_DATE_OR_PROVENANCE"
+        fixtures(root)
+        previous=json.loads(previous_path.read_text(encoding="utf-8"))
+        previous["venues"]["桐生"]["motors"]["1"]["verification"]="UNVERIFIED"
+        put(root,"racecards/motor_previous_daily.json",previous)
+        assert audit(root,date(2026,10,24))["motor_detail"]["previous_identity_status"]=="CHECK_DATE_OR_PROVENANCE"
+        fixtures(root)
+        previous=json.loads(previous_path.read_text(encoding="utf-8"))
+        previous["venues"]["UNKNOWN"]=previous["venues"].pop("桐生")
+        put(root,"racecards/motor_previous_daily.json",previous)
         assert audit(root,date(2026,10,24))["motor_detail"]["previous_identity_status"]=="CHECK_DATE_OR_PROVENANCE"
         fixtures(root)
 
@@ -110,22 +133,22 @@ def run():
         # release, and MUST NOT be promoted as live Worker source.
         put(root, "brc_scenario_union_windows_audit.json",{
             "schema":"BRC_SCENARIO_OFFICIAL_K_DISJOINT_UNION_AUDIT_V1",
-            "verified_1_2_3_races":58056,
-            "verified_calendar_days":377,
-            "N_ge_5_conditional_cells":2031,
+            "verified_1_2_3_races":82200,
+            "verified_calendar_days":527,
+            "N_ge_5_conditional_cells":2596,
             "full_history_verified":False,
             "public_or_admin_feed_published":False,
             "status":"RESEARCH_ONLY_NO_PUBLISH"
         })
         research_result=audit(root,date(2026,10,24))
         assert research_result["scenario_2nd_by_3rd"]["status"]=="VERIFIED_PARTIAL_OFFICIAL_K_RESEARCH_HOLD_API"
-        assert research_result["scenario_2nd_by_3rd"]["source_verified_research_sample"]["sample_races"]==58056
+        assert research_result["scenario_2nd_by_3rd"]["source_verified_research_sample"]["sample_races"]==82200
         assert research_result["scenario_2nd_by_3rd"]["live_worker_session_verifier_connected"] is False
         assert research_result["all_four_ready"] is False
         put(root, "brc_scenario_union_windows_audit.json",{
             "schema":"BRC_SCENARIO_OFFICIAL_K_DISJOINT_UNION_AUDIT_V1",
-            "verified_1_2_3_races":58056,"verified_calendar_days":377,
-            "N_ge_5_conditional_cells":2031,
+            "verified_1_2_3_races":82200,"verified_calendar_days":527,
+            "N_ge_5_conditional_cells":2596,
             "full_history_verified":True,"public_or_admin_feed_published":False,
             "status":"RESEARCH_ONLY_NO_PUBLISH"
         })
