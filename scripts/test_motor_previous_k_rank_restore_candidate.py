@@ -98,6 +98,12 @@ def test():
     denied(feed,bad)
     bad=copy.deepcopy(study);bad["venues"]["桐生"]["motors"]["1"]["first_count"]=2
     denied(feed,bad)
+    bad=copy.deepcopy(study)
+    bad["venues"]["桐生"]["motors"]["1"]["observed_results"][1]["reg"]="9876"
+    denied(feed,bad)
+    bad=copy.deepcopy(study)
+    bad["venues"]["桐生"]["motors"]["1"]["observed_results"][1]["reg"]=""
+    denied(feed,bad)
     bad=copy.deepcopy(study);bad["verified_previous_motor_summaries"]=838
     denied(feed,bad)
     # A fully verified 21-result previous meeting would silently vanish from
