@@ -25,6 +25,14 @@ def test():
     assert x["11"]["final_wins"]==0
     assert report["claimed_motor_cycle_start_officially_verified"] is False
     assert report["productionApproved"] is False
+    assert report["outside_frozen_candidate_motor_entries"]==0
+    missing,races=example()
+    del missing["10"]["motors"]["16"]
+    partial=count_with_claimed_cycles(missing,races,date(2026,10,23))
+    assert partial["outside_frozen_candidate_motor_entries"]==1
+    assert partial["race_count_with_outside_candidate_motors"]==1
+    assert sum(v["final_appearances"] for v in partial["per_venue"]["三国"]["motors"].values())==5
+    assert partial["productionApproved"] is False
 
     early,races=example(date(2026,10,21))
     result=count_with_claimed_cycles(early,races,date(2026,10,23))
