@@ -3,6 +3,8 @@ name: BRC Motor Previous Meet Verified Daily Feed
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     paths:
       - '.github/workflows/brc-motor-previous-review.yml'
       - 'scripts/BRC_MOTOR_PREVIOUS_FEED_V1.py'
@@ -103,6 +105,7 @@ jobs:
           print("PREVIOUS_K_RANKS_SOURCE_VERIFIED_READY_FOR_VERSIONED_FEED_COMMIT")
           PY
       - name: Commit only independently verified dated previous-user feed
+        if: github.ref == 'refs/heads/main'
         shell: bash
         run: |
           set -euo pipefail
