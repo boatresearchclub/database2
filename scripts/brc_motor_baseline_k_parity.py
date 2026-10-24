@@ -49,7 +49,14 @@ def audit_parity(baseline:dict,files:dict[date,Path])->dict:
     if baseline.get("date")!=BASELINE_DATE.isoformat():
         raise ValueError("Snapshot cannot be silently rebased")
     if not files:raise ValueError("No official K cache")
-    earliest=min(files)
+    if BASELINE_DATE not in files:
+        raise ValueError("Cannot claim baseline N parity with missing K days: frozen baseline day not cached")
+    # Archive caches can contain disjoint June 2023/2024 samples. Do NOT
+    # treat min(files) as a full consecutive official K archive start.
+    # Find only the continuous historical tail ending at the baseline.
+    earliest=BASELINE_DATE
+    while earliest-timedelta(days=1) in files:
+        earliest-=timedelta(days=1)
     eligible={}
     excluded=[]
     for venue_code,name in enumerate(SOURCE_24_NAMES,1):
