@@ -1,9 +1,6 @@
 name: BRC Scenario Historical June K Backfill (NO DEPLOY)
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - '.github/workflows/brc-scenario-june-extended-k-backfill.yml'
 permissions:
   contents: read
 jobs:
