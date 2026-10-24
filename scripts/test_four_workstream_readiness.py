@@ -51,6 +51,36 @@ def run():
         assert result["scenario_2nd_by_3rd"]["official_conditional_matrix_present"] is False
         assert result["all_four_ready"] is False
         assert not result["release_blockers"]
+        assert result["scenario_2nd_by_3rd"]["live_worker_session_verifier_connected"] is False
+        assert result["scenario_2nd_by_3rd"]["source_verified_research_sample"] is None
+        assert not result["scenario_2nd_by_3rd"]["private_research_binding_read_verified"]
+
+        # An official K research audit may be valid without authorizing any
+        # release, and MUST NOT be promoted as live Worker source.
+        put(root, "brc_scenario_union_windows_audit.json",{
+            "schema":"BRC_SCENARIO_OFFICIAL_K_DISJOINT_UNION_AUDIT_V1",
+            "verified_1_2_3_races":58056,
+            "verified_calendar_days":377,
+            "N_ge_5_conditional_cells":2031,
+            "full_history_verified":False,
+            "public_or_admin_feed_published":False,
+            "status":"RESEARCH_ONLY_NO_PUBLISH"
+        })
+        research_result=audit(root,date(2026,10,24))
+        assert research_result["scenario_2nd_by_3rd"]["status"]=="VERIFIED_PARTIAL_OFFICIAL_K_RESEARCH_HOLD_API"
+        assert research_result["scenario_2nd_by_3rd"]["source_verified_research_sample"]["sample_races"]==58056
+        assert research_result["scenario_2nd_by_3rd"]["live_worker_session_verifier_connected"] is False
+        assert research_result["all_four_ready"] is False
+        put(root, "brc_scenario_union_windows_audit.json",{
+            "schema":"BRC_SCENARIO_OFFICIAL_K_DISJOINT_UNION_AUDIT_V1",
+            "verified_1_2_3_races":58056,"verified_calendar_days":377,
+            "N_ge_5_conditional_cells":2031,
+            "full_history_verified":True,"public_or_admin_feed_published":False,
+            "status":"RESEARCH_ONLY_NO_PUBLISH"
+        })
+        assert any("scenario official K research source" in x
+                   for x in audit(root,date(2026,10,24))["release_blockers"])
+        (root/"brc_scenario_union_windows_audit.json").unlink()
 
         # Cumulative records accidentally leaked into a held release must be caught.
         put(root, "racecards/motor-detail.json",
