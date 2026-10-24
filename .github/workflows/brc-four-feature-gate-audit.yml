@@ -1,0 +1,43 @@
+name: BRC Four-Workstream Source Gates (READ ONLY)
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - brc-four-track-source-gates-20261024
+    paths:
+      - 'scripts/brc_four_workstream_readiness.py'
+      - 'scripts/test_four_workstream_readiness.py'
+      - '.github/workflows/brc-four-feature-gate-audit.yml'
+  pull_request:
+    paths:
+      - 'scripts/brc_four_workstream_readiness.py'
+      - 'scripts/test_four_workstream_readiness.py'
+      - '.github/workflows/brc-four-feature-gate-audit.yml'
+permissions:
+  contents: read
+jobs:
+  offline-safety-gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Pure offline regression tests
+        run: python scripts/test_four_workstream_readiness.py
+      - name: Read-only audit of four research feature sources
+        run: python scripts/brc_four_workstream_readiness.py --out brc_four_workstream_readiness.json
+      - name: Explain what this job does not release
+        if: always()
+        shell: bash
+        run: |
+          echo '## BRC: research gate audit only' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No deployed INDEX, probabilities, KV, live Worker or public UI changed.' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: brc-four-workstreams-readonly
+          path: brc_four_workstream_readiness.json
+          if-no-files-found: ignore
+          retention-days: 7
