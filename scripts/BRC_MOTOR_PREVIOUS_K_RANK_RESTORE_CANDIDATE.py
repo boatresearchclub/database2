@@ -79,6 +79,11 @@ def restore_verified_previous_ranks(feed:dict,study:dict)->dict:
             if checked!=sorted(checked):
                 raise ValueError("Original K results are not in date/race order")
             numeric_n=len(checked)
+            # The shipped INDEX accepts at most 20 race-result labels. Refuse
+            # to silently mark a longer legitimate K series "verified" only
+            # to hide it at render time; require a separately reviewed UI fix.
+            if numeric_n>20:
+                raise ValueError("Official K last-meet ranks exceed current BRC INDEX 20-entry display limit")
             if (original["first_count"]+original["second_count"]+
                 original["third_count"] > numeric_n):
                 raise ValueError("Rank counts exceed official numeric finishes")
