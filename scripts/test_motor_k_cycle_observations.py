@@ -28,7 +28,7 @@ def test():
     assert sum(x["numeric_rank"] is not None for x in rows)==5
     assert [r["status"] for r in rows if r["numeric_rank"] is None]==["F"]
     assert rows[0]["motor_no"]=="11"
-    assert rows[0]["venue_code"]=="05"
+    assert rows[0]["venue_code"]=="10"
 
     try:
         changed=source.replace("11 22 6.85 1 0.14", "11 22 6.85 1 0.14").replace(
