@@ -18,6 +18,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import BRC_PLAYER_COURSE365_V3_OFFICIAL as official
 import BRC_MOTOR_PREVIOUS_VERIFY_K_V1 as k_motor
+from brc_motor_k_cycle_observations import scan_verified_k_text
 
 JST = timezone(timedelta(hours=9))
 NAMES = k_motor.VENUES
@@ -65,6 +66,7 @@ def required_dates(feed: dict, today: date) -> set[date]:
 
 
 def official_motor_rows(files: dict[date, Path], needed: set[date]) -> list[dict]:
+    """Join original-K race number + motor + user, without a third-party finish order."""
     missing = sorted(needed - set(files))
     if missing:
         raise ValueError("Incomplete official K archive: " + ",".join(x.isoformat() for x in missing[:10]))
@@ -75,26 +77,47 @@ def official_motor_rows(files: dict[date, Path], needed: set[date]) -> list[dict
         if race_count == 0 or not verified:
             raise ValueError("Empty official K day " + day.isoformat())
         raw = k_motor.read_k(file)
-        # Each accepted numeric motor row must represent EXACTLY one validated
-        # official numeric finish (venue, player reg, finishing rank).
-        verified_counter = Counter((venue, reg, int(rank)) for _, venue, _, _, reg, _, rank in verified)
+        # Existing independent K parser checks venue/registration/placing.
+        verified_counter = Counter(
+            (venue, reg, int(rank)) for _, venue, _, _, reg, _, rank in verified
+        )
         parsed_counter = Counter(
             (venue, reg, int(status)) for venue, motor, name, reg, status in raw
             if status.isdigit() and 1 <= int(status) <= 6
         )
         if verified_counter != parsed_counter:
             raise ValueError("Official result to parsed motor row cardinality mismatch " + day.isoformat())
+
+        # The motor+registration identity and racer name come from exactly
+        # the same original K file, never from the held third-party ranking.
+        names = defaultdict(set)
         for venue, motor, name, reg, status in raw:
             if not venue.isdigit() or not 1 <= int(venue) <= 24:
                 raise ValueError("Bad K venue code")
+            names[(venue, str(int(motor)), reg)].add(k_motor.norm_name(name))
+        contents = file.read_bytes().decode("cp932", errors="strict")
+        joined = scan_verified_k_text(contents, day, verified)
+        numeric_joined = Counter(
+            (x["venue_code"], x["player_reg"], x["numeric_rank"])
+            for x in joined if x["numeric_rank"] is not None
+        )
+        if numeric_joined != verified_counter:
+            raise ValueError("Official K motor join lost numeric finishers " + day.isoformat())
+        for row in joined:
+            venue = row["venue_code"]
+            motor = row["motor_no"]
+            reg = row["player_reg"]
+            who = names.get((venue, motor, reg), set())
+            if len(who) != 1 or not next(iter(who)):
+                raise ValueError("Original K motor+registration has ambiguous user")
             result.append({
                 "day": day.isoformat(), "venue": NAMES[int(venue)-1],
-                "motor": str(int(motor)), "name": k_motor.norm_name(name),
-                "reg": reg, "finish": int(status) if status.isdigit() and 1 <= int(status) <= 6 else None,
-                "special": "" if status.isdigit() and 1 <= int(status) <= 6 else status,
+                "race_no": row["race_no"], "boat_no": row["boat"],
+                "motor": motor, "name": next(iter(who)),
+                "reg": reg, "finish": row["numeric_rank"],
+                "special": row["status"],
             })
     return result
-
 
 def summarize(feed: dict, rows: list[dict], available_days: set[date], today: date):
     needed = required_dates(feed, today)
@@ -144,8 +167,9 @@ def summarize(feed: dict, rows: list[dict], available_days: set[date], today: da
                 "top3_pct": round(100 * (counts[1] + counts[2] + counts[3]) / n, 1),
                 "official_K_checked_days": len(span),
                 "observed_results": [
-                    {"date": r["day"], "rank": r["finish"], "reg": r["reg"]}
-                    for r in sorted(runs, key=lambda x: (x["day"], x["reg"], x["finish"]))
+                    {"date": r["day"], "race_no": r["race_no"],
+                     "rank": r["finish"], "reg": r["reg"]}
+                    for r in sorted(runs, key=lambda x: (x["day"], x["race_no"]))
                 ],
             }
         output[venue] = {"motors": verified}
