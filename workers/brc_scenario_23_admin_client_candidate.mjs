@@ -5,6 +5,8 @@
  * The UI check below is convenience only. Authorization occurs exclusively
  * in the server's verifyBearerToken, and API route is not live yet.
  */
+import {officialKPercent} from "./brc_scenario_23_percent.mjs";
+
 const METHODS=new Set(["全体","差し","まくり","まくり差し"]);
 export function createScenario23ReadClient({getSessionToken,isAdminUi,fetchImpl,workerOrigin}={}){
   if(typeof getSessionToken!=="function"||typeof isAdminUi!=="function"
@@ -92,13 +94,13 @@ export function createScenario23ReadClient({getSessionToken,isAdminUi,fetchImpl,
         if(!x||!allowed.includes(x.boat)||unique.has(x.boat)
            ||!Number.isInteger(x.n)||x.n<0
            ||!Number.isFinite(x.pct)
-           ||Math.abs(x.pct-Math.round(1000*x.n/n)/10)>.011)
+           ||Math.abs(x.pct-officialKPercent(x.n,n))>.001)
           return {status:"UNTRUSTED_RESPONSE",rates:[]};
         unique.add(x.boat);total+=x.n;
       }
       if(total!==n)return {status:"UNTRUSTED_RESPONSE",rates:[]};
       return {status:"RESEARCH_N_GE_5",denominatorN:n,rates:rates.map(x=>({
-        boat:x.boat,n:x.n,pct:Math.round(1000*x.n/n)/10
+        boat:x.boat,n:x.n,pct:officialKPercent(x.n,n)
       })),scope:selection.scope,productionApproved:false};
     },
     readyForProduction:false
