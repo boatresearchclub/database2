@@ -9,6 +9,7 @@ on:
       - 'scripts/test_four_workstream_readiness.py'
       - 'scripts/brc_scenario_123_research.py'
       - 'scripts/brc_scenario_123_official_k.py'
+      - 'scripts/brc_scenario_early_k_probe.py'
       - 'scripts/test_scenario_123_official_k.py'
       - 'scripts/brc_motor_previous_k_summaries.py'
       - 'scripts/test_motor_previous_k_summaries.py'
@@ -26,6 +27,7 @@ on:
       - 'scripts/test_four_workstream_readiness.py'
       - 'scripts/brc_scenario_123_research.py'
       - 'scripts/brc_scenario_123_official_k.py'
+      - 'scripts/brc_scenario_early_k_probe.py'
       - 'scripts/test_scenario_123_official_k.py'
       - 'scripts/brc_motor_previous_k_summaries.py'
       - 'scripts/test_motor_previous_k_summaries.py'
@@ -91,6 +93,13 @@ jobs:
             --output-jsonl brc_scenario_k_archive.jsonl \
             --audit-json brc_scenario_k_archive_audit.json \
             --matrix-json brc_scenario_k_archive_matrix.json
+      - name: Probe 2023/2024/2025 original K technique compatibility (NO PUBLISH)
+        continue-on-error: true
+        run: |
+          python scripts/brc_scenario_early_k_probe.py \
+            --archive-dir .cache/brc-course365-k \
+            --audit brc_scenario_early_k_probe.json \
+            --strict
       - name: Audit quarantined motor period-N mismatch (NO PUBLISH)
         run: python scripts/brc_motor_source_scope_audit.py --output brc_motor_scope_audit.json
       - name: Probe public stage auth and live exhibition (NO JWT/POST/KV)
@@ -126,5 +135,6 @@ jobs:
             brc_scenario_k_sample_matrix.json
             brc_scenario_k_archive_audit.json
             brc_scenario_k_archive_matrix.json
+            brc_scenario_early_k_probe.json
           if-no-files-found: ignore
           retention-days: 7
