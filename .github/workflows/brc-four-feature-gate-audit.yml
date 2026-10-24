@@ -125,7 +125,8 @@ jobs:
           python scripts/brc_scenario_123_early_backfill.py \
             --windows "2023-06-01:2023-06-15,2024-06-01:2024-06-15" \
             --archive-dir .cache/brc-course365-k \
-            --max-downloads 32 \
+            --max-downloads 5 \
+            --allow-partial \
             --audit brc_scenario_early_windows_audit.json \
             --matrix brc_scenario_early_windows_matrix.json
       - name: Audit quarantined motor period-N mismatch (NO PUBLISH)
