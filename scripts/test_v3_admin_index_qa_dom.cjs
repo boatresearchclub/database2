@@ -23,7 +23,8 @@ class Element {
   this.attributes={};this.disabled=false;
   this.classList={contains:()=>false};
  }
- appendChild(child){this.children.push(child);child.parent=this;return child;}
+ appendChild(child){if(this.tag==="select"&&child.tag==="option"&&this.children.length===0)this.value=child.value;
+  this.children.push(child);child.parent=this;return child;}
  remove(){if(!this.parent)return;const a=this.parent.children;
   a.splice(a.indexOf(this),1);this.parent=null;}
  setAttribute(k,v){this.attributes[k]=String(v);}
