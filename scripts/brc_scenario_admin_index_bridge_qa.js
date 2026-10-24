@@ -6,6 +6,7 @@
 "use strict";
 if(window.BRC_Scenario23Admin)return;
 const ID="brcScenario23AdminContainer",PANEL="playerScenarioDetail";
+function officialPct(n,d){const q=Math.floor(1000*n/d),r=1000*n%d;return (q+(2*r>d||(2*r===d&&q%2===1)?1:0))/10;}
 const MODES=["全体","差し","まくり","まくり差し"];
 const VENUES=["桐生","戸田","江戸川","平和島","多摩川","浜名湖","蒲郡","常滑","津","三国","びわこ","住之江","尼崎","鳴門","丸亀","児島","宮島","徳山","下関","若松","芦屋","福岡","唐津","大村"];
 let data=null,selectedReg="";
@@ -40,7 +41,7 @@ function validate(m){
       throw Error("BAD_COHORT");
     const available=[1,2,3,4,5,6].filter(b=>b!==f&&b!==s);
     if(cells.some(x=>!x||!available.includes(x.boat)||!Number.isInteger(x.n)
-      ||x.n<0||!Number.isFinite(x.pct)||Math.abs(x.pct-Math.round(1000*x.n/n)/10)>0.011)
+      ||x.n<0||!Number.isFinite(x.pct)||Math.abs(x.pct-officialPct(x.n,n))>0.001)
       ||new Set(cells.map(x=>x.boat)).size!==4
       ||cells.reduce((z,x)=>z+x.n,0)!==n)throw Error("BAD_COUNTS");
     const key=[v,c,r.method,reg,f,s].join("|");
