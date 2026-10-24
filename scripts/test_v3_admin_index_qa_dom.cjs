@@ -35,7 +35,7 @@ class Element {
 }
 
 function mock({member=true,admin=true,publicView=false,gateDuringFetch=false,
-  http=422,apiPayload=null}={}){
+  http=422,apiPayload=null,origin="https://brcdatabase.pages.dev"}={}){
  const root=new Element("body"),head=new Element("head");
  const pane=new Element("div");pane.id="playerScenarioDetail";root.appendChild(pane);
  const flags={publicView,admin,member};
@@ -47,7 +47,7 @@ function mock({member=true,admin=true,publicView=false,gateDuringFetch=false,
   getElementById:id=>find(root,id)||find(head,id)
  };
  let network=0,sessionCalls=0;
- const context={window:{},document,Date,Intl,Response,Set,Map,Object,Array,Error,JSON,
+ const context={window:{location:{origin}},document,Date,Intl,Response,Set,Map,Object,Array,Error,JSON,
   Number,String,RegExp,Promise,Math,URL,
   BRC_MEMBER_ACTIVE:member,BRC_ADMIN_ACTIVE:admin,
   brcGetAdminViewMode:()=>flags.publicView?"public":"admin",
@@ -151,4 +151,16 @@ test("unknown Worker error text is NEVER shown in admin QA panel",async()=>{
  assert.equal(message.includes(TOKEN),false);
  assert.equal(message.includes("secret@example.com"),false);
  assert.equal(message.includes("1234"),false);
+});
+
+test("real staging CORS: blocked GitHub Pages, file preview and unverified domains cannot read native JWT",async()=>{
+ for(const origin of ["https://boatresearchclub.github.io","null","file://","https://evil.invalid"]){
+  const x=mock({origin});
+  assert.equal(x.api.mount(),true);
+  const panel=x.pane.children[0],button=locate(panel,"button");
+  await button.listeners.click();
+  assert.deepEqual(x.counters(),{network:0,sessionCalls:0});
+  assert.match(panel.children[3].textContent,/アクセス元からは診断できません/);
+  assert.equal(panel.children[3].textContent.includes(TOKEN),false);
+ }
 });
