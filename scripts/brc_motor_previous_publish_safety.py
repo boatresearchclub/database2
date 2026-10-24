@@ -173,13 +173,15 @@ def assess(candidate:dict,existing:dict,*,today:date)->dict:
             if not isinstance(old,dict):
                 raise ValueError("Current main motor records malformed")
             for no,old_rec in old.items():
-                if no not in new or not isinstance(old_rec,dict):
-                    continue
+                if not isinstance(old_rec,dict):
+                    raise ValueError("Malformed prior motor in main snapshot")
                 if old_rec.get("verification")!="motor_venue_racer_and_date_in_official_K":
                     continue
                 prev=old_rec.get("previous")
                 if not isinstance(prev,dict) or prev.get("ranks_verified") is not True:
                     continue
+                if no not in new:
+                    raise ValueError("Existing main K-verified motor disappeared")
                 old_identity=_verified_identity(old_rec)
                 new_identity=_verified_identity(new[no])
                 if old_identity!=new_identity:
@@ -187,11 +189,25 @@ def assess(candidate:dict,existing:dict,*,today:date)->dict:
                     # rather than destroying the former verified observation.
                     raise ValueError("Same-date rider identity changed under K-verified rank")
                 old_ranks=tuple(map(str,prev.get("ranks",[])))
-                new_ranks=tuple(row[2] for row in _rank_series(
-                    new[no],new_identity,candidate=True
-                ) or ())
-                if not new_ranks or old_ranks!=new_ranks:
+                candidate_series=_rank_series(new[no],new_identity,candidate=True)
+                new_ranks=tuple(row[2] for row in candidate_series or ())
+                if not old_ranks or not new_ranks or (
+                    len(new_ranks)<len(old_ranks) or
+                    new_ranks[:len(old_ranks)]!=old_ranks
+                ):
                     raise ValueError("Existing same-date K ranks would regress/change")
+                # An official K file may gain later numeric results for the
+                # same meeting. Permit only appends with the same old race keys.
+                old_events=prev.get("ranks_races")
+                if old_events is not None:
+                    if (not isinstance(old_events,list) or
+                        len(old_events)!=len(old_ranks)):
+                        raise ValueError("Existing main original K race keys malformed")
+                    for i,row in enumerate(old_events):
+                        if not isinstance(row,dict) or (
+                            row.get("date"),row.get("race_no"),str(row.get("rank"))
+                        )!=candidate_series[i]:
+                            raise ValueError("Previously verified original K race key changed")
     return {
         "schema":"BRC_MOTOR_PREVIOUS_PUBLICATION_COMPARE_V1",
         "candidate_date":checked["date"].isoformat(),
