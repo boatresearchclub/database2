@@ -30,3 +30,18 @@
 接続済みGitHubの `database2` 等には**実際のv3 Worker本体コードが見つからない**。研究ブランチだけでは本物のKV結線や422の原因を修正できない。Cloudflare Workers上で稼働しているコード／認証依存・バインディングを照合する必要がある。
 
 **管理者でも現状「確実にv3使用中」と断言できない**。本番Worker・INDEX・KVのデプロイや秘密鍵送信は今回行っていない。
+
+
+## 2026-10-24 実Workerソース照合後の訂正・追加結果
+
+- 過去のBRC Libraryアップロード `brc-timex-v3-admin-stage.js`（2026-10-12）と、既存の `BRC_TimeX_v3_Worker_422_Diagnostic_Patch.js` を発見し、422を返す実装条件を確認した。Libraryに保管されていることは**現在デプロイ中のWorkerとバイト単位で一致する証拠ではない**。これらのモデル係数を研究用GitHub公開ブランチへ複製しない。
+- 実際の公開コードでは、対象APIは**管理者認証後の `POST /predict-timex-v3`** で、入力は `{date,venue_code,race_no}`。以前設計していた `GET /stage-context-presence` は2026-10-12の保存済みWorkerソースにはルートが**存在しない**。そのGETを頼りに現在のWorkerのKV状態を断定しない。既存の保護されたKV存在確認GETは、Worker本体へ追加して初めて使用可能になる。
+- 保存済みWorkerソースの422条件には、JST当日付の不一致、`brc:race_context:{date}:{venue_code}:{race_no}` のKV欠落・無効、`BRC_LIVE_SERVICE` 経由の展示APIが2xxでない、展示API JSON不正、内部4指標計算失敗がある。展示6艇・進入・TimeX完全性不足は条件により`excluded` 200となるため「確率0%」として扱わない。
+- Libraryの既存422診断パッチには `reason=date_not_today_jst`, `race_context_missing`, `race_context_invalid`, `live_service_http_error`（`upstream_http`）、`live_service_invalid_json`, `metrics_failed` が実装済み。**ただし実際にそのパッチがデプロイされているか未確認**。未デプロイなら422応答は従来の `status=unavailable` のみである可能性がある。
+- 現在のAPI契約を直接検査するため、`workers/brc_v3_admin_predict_diagnostic_candidate.mjs` を追加。BRC既存の `brcEnsureFreshSession()` で取得したトークンだけを使い、固定ステージングへ**1回だけ**POSTする。管理者表示でない場合は認証情報を取得せず、HTTP422の安全な短縮理由コードだけを保持し、JWTや予測ベクトルを記録しない。成功時は1/2/3/3連対率の6艇×4指標を検算する。**4指標API正常応答だけでは実際のINDEXへのv3適用を証明できない**。
+- 2026-10-24の168R/14会場のステージング受付に対し、独立した公開展示APIを14会場×1R/6R/12Rの計42RでGET確認した。**HTTP200＋6艇数値あり35R、HTTP404 7R**。[CI #40074480217](https://github.com/boatresearchclub/database2/actions/runs/40074480217) 成功。後半Rの展示前404は正常な場合もある。**同一レースがWorkerの内部サービスバインディングでも404なら、422の `live_service_http_error` を直接説明する**。公開APIの200から内部バインディングの成功までは推定しない。
+- 管理者用POST契約の負ケース、各422理由、4指標整合性の模擬テストは [BRC V3 Admin Readback CI](https://github.com/boatresearchclub/database2/actions/runs/40074291654) 成功。実際の管理者JWTを保存したりログへ出したりする検証はしていない。 **BRC本番INDEX/Cloudflare Worker/KVは未変更**。
+
+### 実稼働の解放条件
+
+Cloudflare Dashboardの**現在のWorkerソース**とバインディング (`BRC_RACE_CONTEXT`, `BRC_LIVE_SERVICE`, `BRC_TIMEX_RATE_LIMITER`) をまず確認。管理者ログインで当日かつ展示確定後の1レースについて `POST /predict-timex-v3` の安全な理由コードとHTTP状態を取得。もし `live_service_http_error` + `upstream_http:404` なら同一date/venue/raceのlive Worker保存状況を修復する。もし `metrics_failed` ならWorker内部のモデル計算入力・基礎率を秘密のまま再検証。再計算成功 + 6艇×4指標整合 + INDEX反映の確認が揃うまでは `v3Verified:false` とし、管理者も旧v2参照・一般会員はv2維持。
