@@ -30,7 +30,7 @@ jobs:
           sys.path.insert(0,"scripts")
           import BRC_PLAYER_COURSE365_V3_OFFICIAL as k
           found=k.discover_k(Path(".cache/brc-course365-k"))
-          dates=[date(y,6,1)+timedelta(days=i) for y in (2023,2024,2025) for i in range(51)]
+          dates=[date(y,6,1)+timedelta(days=i) for y in (2023,2024,2025) for i in range(44)]
           missing=[str(d) for d in dates if d not in found]
           if missing:raise SystemExit("HOLD: 132-day K seed missing "+str(missing[:7]))
           print("OFFICIAL_K_132_DAY_SEED_PASS")
