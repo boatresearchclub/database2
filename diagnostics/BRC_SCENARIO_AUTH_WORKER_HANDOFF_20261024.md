@@ -57,3 +57,12 @@ GitHub ActionsのArtifactsは**非公開の秘密保存場所とは見なさな�
 - workers/brc_scenario_23_admin_client_candidate.mjs: ログアウトや選択切替後の古い非同期結果を破棄するためgeneration/invalidateを実装。
 
 本番条件: 管理者の正しいSupabaseユーザーUUIDをWorker secretとして運営者が設定し、Supabase公開可能なpublishable keyをBRC既存の設定から注入。Worker内でのみ非公開D1/KVの研究行列を読むこと。現在のリポジトリには既存のbrc-api Worker本体実装が無いため、そのルートへの結線、権限情報の本番確認、非公開データ読戻しは**未完成**。研究用の上記ファイルを直接本番にデプロイしない。模擬認証テストの成功を本番認証の証拠としない。
+
+
+## 2026-10-24 追加：非公開KV読戻しアダプターの検証
+
+- `workers/brc_scenario_23_private_loader_candidate.mjs` を開発ブランチに追加。Workerにのみ渡される **非公開KVバインディング** から固定キー `BRC_SCENARIO_23_RESEARCH_PRIVATE_V1` を読む候補で、GitHub Pages/公開URLへの代替取得は行わない。
+- 原本マトリックスのUTF-8テキストに対する事前固定 **SHA-256** が不一致ならデータを返さない。想定外のソース公開状態・欠落した研究行・権限未確認のセッション識別子も保留。
+- `workers/test_brc_scenario_23_private_loader_candidate.mjs` に、原本一致・改ざん・不正JSON・不正公開フラグ・バインディング停止のテストを追加。
+- 現時点でKVの**実際のバインディング名・キー投入・SHA-256固定値は未設定**。本番のログイン認証も未接続。これは動く設計を検査するオフラインの候補であり、Cloudflare上で読戻しが成功した意味ではない。
+- Worker・INDEX・KV のデプロイ、会員の着率変更、研究JSONの一般公開は実施していない。
