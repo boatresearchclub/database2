@@ -103,7 +103,7 @@ def test():
     bad=copy.deepcopy(feed);bad["cumulative_motor_stats_available"]=True
     denied(bad,study)
     workflow=(Path(__file__).resolve().parents[1] / ".github/workflows/brc-motor-previous-review.yml").read_text(encoding="utf-8")
-    assert "  push:\\n    branches:\\n      - main\\n" in workflow
+    assert "  push:\n    branches:\n      - main\n" in workflow
     assert "        if: github.ref == 'refs/heads/main'" in workflow
     assert workflow.index("Restore actual original-K chronological previous-meet numeric ranks") < (
         workflow.index("Commit only independently verified dated previous-user feed")
