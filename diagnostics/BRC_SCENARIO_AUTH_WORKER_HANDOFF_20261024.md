@@ -77,3 +77,13 @@ GitHub ActionsのArtifactsは**非公開の秘密保存場所とは見なさな�
 - リポジトリが公開であることを踏まえ、GitHub Actionsのアップロード対象から **公式Kの研究マトリックスJSON、選手別表示用JSON、実績内包の単体オフラインHTML** を除外。 `scripts/test_scenario_public_artifact_gate.py` が将来の再追加を拒否。公開してよいハッシュ・日付・件数等のレビュー情報は継続して保存する。
 - 以前の公開GitHub Actionsの一部成果物に研究マトリックスが含まれていた事実は**今回の変更で遡って無効にならない**。既存成果物を消去した/秘密保護済みだとは主張しない。今後の保管場所は実際の認証付き非公開KV等に限定する。
 - **公開・投入判定は HOLD_NO_PUBLICATION**。本番Workerに `verifyBearerToken` と `loadPrivateMatrix` を実結合し、匿名/一般会員のネットワーク拒否、KV実書込・SHA読戻しが成功するまで本番投入しない。INDEX / Worker / KV / 購入者の予測画面には変更を加えていない。
+
+
+## 2026-10-24 13時台追加：実際のBRC認証・会員判定・KVの統合候補
+
+- `workers/brc_scenario_23_integrated_candidate.mjs`: 既存BRC Workerの**信頼済み内部会員判定コールバック**を必須とし、Supabase `/auth/v1/user`、許可済み管理者UUID、会員有効判定、固定キーの非公開KV SHA-256検査、正確な2着別3着率ルートを**ひとつの読取処理候補**として接続。現在のBRC API Worker自身へのHTTP自己呼出しを避けるため、会員判定callbackの注入が欠けたら初期化を拒否。
+- `workers/test_brc_scenario_23_integrated_candidate.mjs`: 統合の**8件**を実行。正規管理者の本人条件、一般/匿名/第三者の拒否、会員失効、KV改ざん/停止、展示後拒否、本人と会場の条件分離をテスト。
+- GitHub Actions `BRC Four-Workstream Source Gates` [run #198](https://github.com/boatresearchclub/database2/actions/runs/40062995560) で**統合8/8成功・全ジョブSUCCESS**。これはダミーSupabase応答と模擬プライベートKVでの契約テストであり、**本番Workerの実認証・実KV読戻しではない**。
+- 現行非公開KV投入候補の研究用原本照合値は `f32d06191e89418f209812d4ef882a81746f9952bfb0b8935077144de8bad6a1`（1,132,967 bytes; 58,056R/377日/2,031セル）。内容を更新する際はSHAを再発行し、古い値で不一致なら公開を停止する。
+- 本番向けに未解決なのは、**元のBRC Worker認証・会員判定のソースコードと実バインディングへの挿入**、運営者管理UUIDの秘密設定、許可ユーザーの実ネットワーク認証、一般ユーザーの実拒否、KVの原本を配置して読戻すこと。GitHub `database2` には元Worker実装が無いため、開発ブランチだけで完了させたとは言えない。
+- 今回はBRC main/公開INDEX/Worker/KV/予測/買い目を変更していない。研究JSONのGitHub Actions新規公開添付を停止する既存ゲートも維持。
