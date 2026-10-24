@@ -20,7 +20,7 @@ MODES={"全体","差し","まくり","まくり差し"}
 
 
 def analyze(raw: bytes)->dict:
-    if not isinstance(raw,bytes) or len(raw)>2_000_000 or len(raw)<100:
+    if not isinstance(raw,bytes) or len(raw)>12_000_000 or len(raw)<100:
         raise ValueError("PRIVATE_KV_JSON_SIZE_NOT_APPROVED")
     try:
         body=json.loads(raw.decode("utf-8"))
